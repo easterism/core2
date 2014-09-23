@@ -1,0 +1,18 @@
+@CHARSET "UTF-8";
+.roleModules {
+	background-color:transparent;
+	border:0 none;
+	font-size:11px;
+	font-weight:bold;
+	padding:3px;
+	text-align:right;
+}
+.access {
+	width:130px;
+}
+.access2 {
+	width:170px;
+}
+.modRoles {
+	height:20px;
+}
