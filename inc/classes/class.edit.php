@@ -429,16 +429,16 @@ class editTable extends initEdit {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"$this->fieldClass\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"{$value['default']}\">";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"{$value['default']}\">";
 							}
 						} elseif ($value['type'] == 'number') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"$this->fieldClass\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
 							}
 						} elseif ($value['type'] == 'file') {
-							$controlGroups[$cellId]['html'][$key] .= "<input class=\"$this->fieldClass\" id=\"".$fieldId."\" type=\"file\" name=\"control[$field]\" ".$attrs.">";
+							$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"file\" name=\"control[$field]\" ".$attrs.">";
 						} elseif ($value['type'] == 'link') {
 							$controlGroups[$cellId]['html'][$key] .= "<span id='".$fieldId."' ".$attrs."><a href='".$value['default']."'>{$value['default']}</a></span>";
 						} elseif ($value['type'] == 'search') {
@@ -460,7 +460,7 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= $insert;
 							} else {
 								$prefix = $fieldId;
-								$beh = 'onblur="dateBlur(\'' . $prefix . '\')" onkeypress="return checkInt(event);" onkeyup="dateKeyup(\'' . $prefix . '\', this)"';
+								$beh = 'onblur="edit.dateBlur(\'' . $prefix . '\')" onkeypress="return checkInt(event);" onkeyup="edit.dateKeyup(\'' . $prefix . '\', this)"';
 								$day	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_day" value="' . substr($value['default'], 8, 2) . '" ' . $beh . '/>';
 								$month 	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_month" value="' . substr($value['default'], 5, 2) . '" ' . $beh . '/>';
 								$year 	= '<input class="input" type="text" size="3" maxlength="4" autocomplete="OFF" id="' . $prefix . '_year" value="' . substr($value['default'], 0, 4) . '" ' . $beh . '/>';
@@ -477,14 +477,14 @@ class editTable extends initEdit {
 								if ($value['type'] == 'datetime') {
 									$h = substr($value['default'], 11, 2);
 									$mi = substr($value['default'], 14, 2);
-									$beh = 'onblur="timeBlur(\'' . $prefix . '\')" onkeypress="return checkInt(event);" onkeyup="timeKeyup(\'' . $prefix . '\', this)"';
+									$beh = 'onblur="edit.dateBlur(\'' . $prefix . '\')" onkeypress="return checkInt(event);" onkeyup="edit.timeKeyup(\'' . $prefix . '\', this)"';
 									$tpl->datetime->assign('[h]', $h);
 									$tpl->datetime->assign('[i]', $mi);
 									$tpl->datetime->assign('onblur=""', $beh);
 								}
 								$controlGroups[$cellId]['html'][$key] .= $tpl->parse();
 								if ($value['in']) {
-									$controlGroups[$cellId]['html'][$key] .= "<script>edit.ev['{$prefix}'] = " . Zend_Json::encode($value['in']) . ";</script>";
+									$controlGroups[$cellId]['html'][$key] .= "<script>edit.ev['{$prefix}'] = " . json_encode($value['in']) . ";</script>";
 								} else {
 									$controlGroups[$cellId]['html'][$key] .= "<script>delete edit.ev['{$prefix}'];</script>";
 								}
@@ -553,8 +553,8 @@ class editTable extends initEdit {
 									$disabled = ' disabled="disabled" ';
 									$change = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="изменить"/>';
 								}
-								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"$this->fieldClass\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
-								$controlGroups[$cellId]['html'][$key] .= " повторите <input $disabled class=\"$this->fieldClass\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />".
+								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
+								$controlGroups[$cellId]['html'][$key] .= " повторите <input $disabled class=\"input\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />".
 								$change;
 							}
 						} elseif ($value['type'] == 'textarea') {
@@ -997,9 +997,9 @@ $(function () {
 								}
 								$controlGroups[$cellId]['html'][$key] .= '<table><tr><td>';
 								if (!empty($this->modal[$modal]['textarea'])) {
-									$controlGroups[$cellId]['html'][$key] .= '<textarea id="' . $fieldId . '_text" class="' . $this->fieldClass . '" ' . $attrs . '>' . (!empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '') . '</textarea>';
+									$controlGroups[$cellId]['html'][$key] .= '<textarea id="' . $fieldId . '_text" class="input" ' . $attrs . '>' . (!empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '') . '</textarea>';
 								} else {
-									$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '_text" class="' . $this->fieldClass . '"  type="text" ' . $attrs . ' value="' . (!empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '') . '"/>';
+									$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '_text" class="input"  type="text" ' . $attrs . ' value="' . (!empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '') . '"/>';
 								}
 								$controlGroups[$cellId]['html'][$key] .= '</td><td><input type="button" class="buttonSmall" value="' . $this->classText['MODAL_BUTTON'] . '"
 									onclick="' . (!empty($this->modal[$modal]['script']) ? trim($this->modal[$modal]['script'], ';') . ';' : '') . '$(\'#modal_' . $field . '\').modal(' . $options . ');"/>' .

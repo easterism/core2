@@ -1,6 +1,5 @@
 <?
 
-
 /**
  * Class Email
  */

@@ -118,7 +118,7 @@ require_once 'Common.php';
 require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php';
 if ($config->debug->firephp) {
-	require_once(DOC_ROOT. 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
+	require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
 }
 
 class Init extends Db {

@@ -1,40 +1,4 @@
 
-function dateBlur(id) {
-	var year = document.getElementById(id + '_year').value;
-	var month = document.getElementById(id + '_month').value;
-	var day = document.getElementById(id + '_day').value;
-	if (year && month && day) {
-		document.getElementById('date_' + id).value = year + '-' + month + '-' + day;
-	}
-}
-function dateKeyup(id, obj) {
-	if (obj.id == id + '_day' && Number(obj.value) > 31) {
-		obj.value = ''; 
-		obj.focus(); 
-		return;
-	}
-	if (obj.id == id + '_month' && Number(obj.value) > 12) {
-		obj.value = ''; 
-		obj.focus(); 
-		return;
-	}
-}
-function timeBlur(id) {
-	dateBlur(id);
-	document.getElementById('date_' + id).value += ' ' + document.getElementById(id + '_hour').value + ':' + document.getElementById(id + '_min').value; 
-}
-function timeKeyup(id, obj) {
-	if (obj.id == id + '_hour' && Number(obj.value) > 23) {
-		obj.value = ''; 
-		obj.focus(); 
-		return;
-	}
-	if (obj.id == id + '_min' && Number(obj.value) > 59) {
-		obj.value = ''; 
-		obj.focus(); 
-		return;
-	}
-}
 
 function lastFocus(f){
 	f.elements[f.elements.length - 1].focus();
@@ -48,14 +12,58 @@ function radioClick(o) {
 }
 
 var edit = {
+	ev: {},
+	xfiles: {},
+	dateBlur : function(id) {
+		var year = document.getElementById(id + '_year').value;
+		var month = document.getElementById(id + '_month').value;
+		var day = document.getElementById(id + '_day').value;
+		document.getElementById('date_' + id).value = year + '-' + month + '-' + day;
+		if (document.getElementById(id + '_hour')) {
+			var h = document.getElementById(id + '_hour').value;
+			var m = document.getElementById(id + '_min').value;
+			if (!h) {
+				if (m) {
+					h = '00';
+					document.getElementById(id + '_hour').value = h;
+				}
+			}
+			else if (!m) {
+				m = '00';
+			}
+			if (h && m) {
+				document.getElementById('date_' + id).value += ' ' + h + ':' + m;
+			}
+		}
+	},
+	dateKeyup : function (id, obj) {
+		if (obj.id == id + '_day' && Number(obj.value) > 31) {
+			obj.value = 31;
+			obj.focus();
+		}
+		if (obj.id == id + '_month' && Number(obj.value) > 12) {
+			obj.value = 12;
+			obj.focus();
+		}
+		this.dateBlur(id);
+	},
+	timeKeyup : function (id, obj) {
+		if (obj.id == id + '_hour' && Number(obj.value) > 23) {
+			obj.value = 23;
+			obj.focus();
+		}
+		if (obj.id == id + '_min' && Number(obj.value) > 59) {
+			obj.value = 59;
+			obj.focus();
+		}
+		this.dateBlur(id);
+	},
 	onsubmit: function (obj) {
 		lastFocus(obj);
 		if (typeof PrepareSave == 'function') {
 			PrepareSave();
 		}
 	},
-	ev: {},
-	xfiles: {},
 	showMark : function(obj) {
 		$(obj).find('.helpMark').show();
 	},

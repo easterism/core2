@@ -30,8 +30,6 @@ class initList extends Acl {
 
 class initEdit extends Acl {
 	public $tableClass				= "editTable";
-	public $fieldClass				= "input";
-	public $firstCellClass			= "eFirstCell";
 	public $date_mask				= "dd-mm-yyyy";
 	public $imgDir   				= "core/img";
 	public $FCKPath					= "core/ext";
