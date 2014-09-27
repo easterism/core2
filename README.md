@@ -9,7 +9,6 @@ Usage
 1. Put the sources inside *core2* folder anywhere on your server. 
 2. Create index.php file. Make sure that *core2* folder is available from its place.
 ```php
- header('Content-Type: text/html; charset=utf-8');
  try {
  	require_once("core2/inc/classes/Error.php");
  	require_once("core2/inc/classes/Init.php");

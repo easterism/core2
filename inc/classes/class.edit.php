@@ -906,7 +906,7 @@ $(function () {
     'use strict';
 
     // Initialize the jQuery File Upload widget:
-    $('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", Zend_Json::encode($options)) . ");
+    $('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", json_encode($options)) . ");
     $('#fileupload-{$un}').bind('fileuploaddone', function (e, data) {
     	var f = data.response().result.files[0];
     	$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');

@@ -1,4 +1,5 @@
 <?
+header('Content-Type: text/html; charset=utf-8');
 require_once 'Tool.php';
 
 class Error {
@@ -8,26 +9,40 @@ class Error {
 	 *
 	 * @param exception $exception
 	 */
-	public static function catchException(Exception $exception) {
+	public static function Exception($msg, $code = '') {
+		$isXajax = self::isXajax();
+		if ($isXajax) {
+			header('Content-type: text/xml; charset="utf-8"');
+			echo '<?xml version="1.0" encoding="utf-8" ?><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
+		} else {
+			if ($code == 13) {//ошибки для js объекта с наличием error
+				echo json_encode(array("error" => $msg));
+			} else {
+				echo $msg;
+			}
+		}
+		die;
+	}
+
+	protected static function isXajax() {
 		$isXajax = false;
 		if (!empty($_POST['xjxr'])) {
 			$isXajax = true;
 		}
+		return $isXajax;
+	}
+
+	public static function catchException(Exception $exception) {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
-		if ($code == 99) {
-			die($message);
-		}
-		if (!Tool::file_exists_ip("/Zend/Registry.php")) {
-			throw new Exception("SYSTEM:Требуется ZF компонент \"Registry\"");
-		}
-		require_once("Zend/Registry.php");
+
+		// Zend_Registry MUST present
 		try {
 			$cnf = Zend_Registry::get('config');
 		} catch (Zend_Exception $e) {
-			die($e->getMessage());
+			self::Exception($e->getMessage(), $code);
 		}
-		
+
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
@@ -37,29 +52,13 @@ class Error {
 		}
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
-			if ($isXajax) {
-				header('Content-type:	text/xml; charset="utf-8"');
-				echo '<?xml version="1.0" encoding="utf-8" ?><xjx><cmd n="js">alert(\'' . $text . '\');top.document.location=\'index.php\';</cmd></xjx>';
-			} else {
-				echo $text;
-			}
-			die();
+			self::Exception($text, $code);
 		} elseif ($message == '404') {
-			echo 'Нет такой страницы';
-			die();
-		} elseif ($code == '13') { //ошибки для js объекта с наличием error
-			echo json_encode(array("error" => $message));
-			die();
+			self::Exception('Нет такой страницы', $code);
 		} elseif ($message == 'expired') {
 			header('HTTP/1.1 203 Non-Authoritative Information');
 			die();
 		}
-		if (substr($message, 0, 7) == 'SYSTEM:') {
-			header('Content-type:	text/xml; charset="utf-8"');
-			echo substr($message, 7);
-			die();
-		}
-
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
 		if ($cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
@@ -71,17 +70,17 @@ class Error {
 	}
 
 	public static function catchDbException($exception) {
-		$message = $exception->getMessage();
 		$code = $exception->getCode();
 		if ($code == 1044) {
-			die('Нет доступа к базе данных.');
+			$message = 'Нет доступа к базе данных.';
 		} elseif ($code == 2002) {
-			die('Не верный адрес базы данных.');
+			$message = 'Не верный адрес базы данных.';
 		} elseif ($code == 1049) {
-			die('Нет соединения с базой данных.');
+			$message = 'Нет соединения с базой данных.';
 		} else {
-			Error::catchException($exception);
+			$message = $exception->getMessage();
 		}
+		self::Exception($message, $code);
 
 	}
 
@@ -103,13 +102,7 @@ class Error {
 	public static function catchZendException($exception) {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
-		Error::catchException($exception);
-	}
-
-	public static function catchZendConfigException($exception) {
-		$message = $exception->getMessage();
-		$code = $exception->getCode();
-		die($message);
+		self::Exception($message, $code);
 	}
 
 	public static function catchXajax(Exception $e, xajaxResponse $res) {

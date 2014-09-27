@@ -1,10 +1,14 @@
 <?
+header('Content-Type: text/html; charset=utf-8');
 
+	// Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
 define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . "/");
 
 require_once 'Tool.php';
+require_once 'Error.php';
+
 if (!Tool::file_exists_ip("/Zend/Config.php")) {
-	throw new Exception("SYSTEM:Требуется ZF компонент \"Config\"");
+	Error::Exception("Требуется ZF компонент \"Config\"");
 }
 
 require_once("Zend/Config.php");
@@ -13,50 +17,49 @@ require_once("Zend/Config/Ini.php");
 $conf_file = DOC_ROOT . "conf.ini";
 
 if (!file_exists($conf_file)) {
-	throw new Exception("Отсутствует конфигурационный файл.", 99);
-} else {
-	$config = array(
-		'system'       => array('name' => 'CORE'),
-		'include_path' => '',
-		'cache'        => 'cache',
-		'temp'         => getenv('TMP'),
-		'debug'        => array('on' => false),
-		'database'     => array(
-			'adapter'                    => 'Pdo_Mysql',
-			'params'                     => array(
-				'charset' => 'utf8',
-				'adapterNamespace' => 'Core_Db_Adapter'
-			),
-			'isDefaultTableAdapter'      => true,
-			'profiler'                   => array(
-				'enabled' => false,
-				'class'   => 'Zend_Db_Profiler_Firebug'
-			),
-			'caseFolding'                => true,
-			'autoQuoteIdentifiers'       => true,
-			'allowSerialization'         => true,
-			'autoReconnectOnUnserialize' => true
-		)
-	);
-	if (empty($config['temp'])) {
-		$config['temp'] = getenv('TEMP');
-		if (empty($config['temp'])) {
-			$config['temp'] = "/tmp";
-		}
-	}
-	try {
-		$config = new Zend_Config($config, true);
-		if (!empty($_SERVER['SERVER_NAME'])) {
-			$config2 = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
-		} else {
-			$config2 = new Zend_Config_Ini($conf_file, 'production');
-		}
-		$config->merge($config2);
-	} catch (Zend_Config_Exception $e) {
-		Error::catchZendConfigException($e);
-	}
-
+	Error::Exception("Отсутствует конфигурационный файл.");
 }
+$config = array(
+	'system'       => array('name' => 'CORE'),
+	'include_path' => '',
+	'cache'        => 'cache',
+	'temp'         => getenv('TMP'),
+	'debug'        => array('on' => false),
+	'database'     => array(
+		'adapter'                    => 'Pdo_Mysql',
+		'params'                     => array(
+			'charset'          => 'utf8',
+			'adapterNamespace' => 'Core_Db_Adapter'
+		),
+		'isDefaultTableAdapter'      => true,
+		'profiler'                   => array(
+			'enabled' => false,
+			'class'   => 'Zend_Db_Profiler_Firebug'
+		),
+		'caseFolding'                => true,
+		'autoQuoteIdentifiers'       => true,
+		'allowSerialization'         => true,
+		'autoReconnectOnUnserialize' => true
+	)
+);
+if (empty($config['temp'])) {
+	$config['temp'] = getenv('TEMP');
+	if (empty($config['temp'])) {
+		$config['temp'] = "/tmp";
+	}
+}
+try {
+	$config = new Zend_Config($config, true);
+	if (!empty($_SERVER['SERVER_NAME'])) {
+		$config2 = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
+	} else {
+		$config2 = new Zend_Config_Ini($conf_file, 'production');
+	}
+	$config->merge($config2);
+} catch (Zend_Config_Exception $e) {
+	Error::Exception($e->getMessage());
+}
+
 //подключаем собственный адаптер
 require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
 
@@ -71,22 +74,22 @@ if (isset($config->auth) && $config->auth->on) {
 	$realm = $config->auth->params->realm;
 	$users = $config->auth->params->users;
 	if ($code = Tool::httpAuth($realm, $users)) {
-		if ($code == 1) throw new Exception("Неверный пользователь.", 99);
-		if ($code == 2) throw new Exception("Неверный пароль.", 99);
+		if ($code == 1) Error::Exception("Неверный пользователь.");
+		if ($code == 2) Error::Exception("Неверный пароль.");
 	}
 }
 
 if (!Tool::file_exists_ip("/Zend/Registry.php")) {
-	throw new Exception("SYSTEM:Требуется ZF компонент \"Registry\"");
+	Error::Exception("Требуется ZF компонент \"Registry\"");
 }
 if (!Tool::file_exists_ip("/Zend/Db.php")) {
-	throw new Exception("SYSTEM:Требуется ZF компонент \"Db\"");
+	Error::Exception("Требуется ZF компонент \"Db\"");
 }
 if (!Tool::file_exists_ip("/Zend/Session.php")) {
-	throw new Exception("SYSTEM:Требуется ZF компонент \"Session\"");
+	Error::Exception("Требуется ZF компонент \"Session\"");
 }
 if (!Tool::file_exists_ip("/Zend/Acl.php")) {
-	throw new Exception("SYSTEM:Требуется ZF компонент \"Acl\"");
+	Error::Exception("Требуется ZF компонент \"Acl\"");
 }
 
 require_once("Zend/Registry.php");
@@ -188,11 +191,11 @@ class Init extends Db {
 			require_once($file_path);
 
 			if (!class_exists("Mod" . ucfirst($lower) . "Controller")) {
-				throw new Exception("SYSTEM:Module broken");
+				throw new Exception("Module broken");
 			}
 
 			if (!$this->isModuleActive($lower)) {
-				throw new Exception("SYSTEM:Module does not active");
+				throw new Exception("Module does not active");
 			}
             switch ($lower) {
                 case 'cron' :
@@ -204,7 +207,7 @@ class Init extends Db {
                         if (is_callable(array($cron_controller, $action))) {
                             $cron_controller->$action();
                         } else {
-                            throw new Exception("SYSTEM:No action");
+                            throw new Exception("No action");
                         }
                         return null;
                     }
@@ -226,22 +229,21 @@ class Init extends Db {
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
-                throw new Exception("SYSTEM:Module webservice does not active");
+                throw new Exception("Module webservice does not active");
             }
 
             $webservice_location        = $this->getModuleLocation('webservice');
             $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                throw new Exception("SYSTEM:Module does not exists");
+                throw new Exception("Module does not exists");
             }
 
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                throw new Exception("SYSTEM:Module broken");
+                throw new Exception("Module broken");
             }
-
 
             if (isset($matches[2]) && $matches[2]) {
                 $service_request_action = 'wsdl';
