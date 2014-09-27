@@ -6,6 +6,8 @@ NOTE: Currently it's russian framework. So you'll get no way to translate any in
 
 Usage
 =====
+1. Put the *core2* folder anywhere on your server. 
+2. Create index.php file. Make sure that *core2* folder is available from its place.
 ```php
  header('Content-Type: text/html; charset=utf-8');
  try {
