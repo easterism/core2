@@ -6,7 +6,7 @@ NOTE: Currently it's russian framework. So you'll get no way to translate any in
 
 Usage
 =====
-`<?
+```php
  header('Content-Type: text/html; charset=utf-8');
  try {
  	require_once("core2/inc/classes/Error.php");
@@ -19,4 +19,4 @@ Usage
  } catch (Exception $e) {
  	Error::catchException($e);
  }
-`
+```
