@@ -69,6 +69,26 @@ function logout() {
 	}
 }
 
+function jsToHead(src) {
+	var s = document.head.childNodes;
+	var h = '';
+	for (var i = 0; i < s.length; i++) {
+		if (s[i].src) {
+			if (!h) {
+				var temp = s[i].src.split('core2');
+				if (temp[1]) {
+					h = temp[0];
+				}
+			}
+			if (s[i].src == src) return;
+			if (s[i].src == h + src) return;
+		}
+	}
+	s = document.createElement("script");
+	s.src = src;
+	document.head.appendChild(s);
+}
+
 function toAnchor(id){
 	$('html,body').animate({scrollTop: $("#"+id).offset().top - $("#menuContainer").height()}, 'fast');
 }

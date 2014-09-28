@@ -180,12 +180,8 @@ class Common extends Acl {
 	 */
 	protected function printJs($src, $chachable = false) {
 		if ($chachable) {
-			//кеширование
-			$key = md5($src);
-			if (!($this->cache->test($key))) {
-				echo '<script type="text/javascript" language="JavaScript" src="' . $src . '"></script>';
-				$this->cache->save($src, $key, array('js'));
-			}
+			//помещаем скрипт в head
+			echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
 		} else {
 			echo '<script type="text/javascript" language="JavaScript" src="' . $src . '"></script>';
 		}
