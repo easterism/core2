@@ -270,6 +270,7 @@ class ajaxFunc extends Common {
 			$fileFlagDel = array();
 			$table = trim($data['table']);
 			foreach ($data['control'] as $key => $value) {
+				if (!is_array($value)) $value = trim($value);
 				if (substr($key, -3) == '%re') continue;
 				if (substr($key, -4) == '%tru') continue;
 				if (substr($key, 0, 9) == 'filesdel|') {
@@ -281,15 +282,10 @@ class ajaxFunc extends Common {
 					continue;
 				}
 
-				if (is_array($value)) {
-					if ($value) $data['control'][$key] = implode(",", $value);
-					else {
-						$data['control'][$key] = new Zend_Db_Expr('NULL');
-					}
-				} else {
-					if ((int)$value !== 0 && (empty($value) || !trim($value))) {
-						$data['control'][$key] = new Zend_Db_Expr('NULL');
-					}
+				if ($value !== '0' && $value !== 0 && $value !== 0.0 && empty($value)) {
+					$data['control'][$key] = new Zend_Db_Expr('NULL');
+				} elseif (is_array($value)) {
+					$data['control'][$key] = implode(",", $value);
 				}
 				/*else {
 					if (!is_object($value) && !is_array(@unserialize((string)$value))) {

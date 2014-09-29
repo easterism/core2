@@ -70,7 +70,7 @@ function logout() {
 }
 
 function jsToHead(src) {
-	var s = document.head.childNodes;
+	var s = $('head').children();
 	var h = '';
 	for (var i = 0; i < s.length; i++) {
 		if (s[i].src) {
@@ -86,7 +86,7 @@ function jsToHead(src) {
 	}
 	s = document.createElement("script");
 	s.src = src;
-	document.head.appendChild(s);
+	$('head').append(s);
 }
 
 function toAnchor(id){
