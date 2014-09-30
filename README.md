@@ -35,6 +35,6 @@ Usage
   database.params.host      = localhost
   database.params.port      = 3306
   database.params.dbname    = <database name>
-  database.params.username  = admin
-  database.params.password  = admin
+  database.params.username  = <database user>
+  database.params.password  = <user password>
  ```
