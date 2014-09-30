@@ -4,10 +4,18 @@ PHP framework for business application.
 
 NOTE: Currently it's russian framework. So you'll get no way to translate any inner locutions. In the future the translator will be available as a system module.
 
+Minimum Server Requirements
+---------------------------
+
+* PHP 5.2 or greater
+* PDO PHP extension
+* MySQL or PostgreSQL Database
+
+
 Installation
 ------------
 1. Put the sources inside *core2* folder anywhere on your server.
-2. Create MySQL schema with *db.sql*
+2. Create MySQL schema with [db.sql](db.sql)
 3. Create *admin* user with the same password.
  
  ```sql
