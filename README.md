@@ -4,8 +4,8 @@ PHP framework for business application.
 
 NOTE: Currently it's russian framework. So you'll get no way to translate any inner locutions. In the future the translator will be available as a system module.
 
-Usage
-=====
+Installation
+------------
 1. Put the sources inside *core2* folder anywhere on your server.
 2. Create MySQL schema with *db.sql*
 3. Create *admin* user with the same password.
@@ -38,3 +38,6 @@ Usage
   database.params.username  = <database user>
   database.params.password  = <user password>
  ```
+
+Usage
+-----
