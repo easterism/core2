@@ -48,4 +48,4 @@ Installation
 
 Usage
 -----
-Open URL of new index.php file in your browser
+Open URL of new index.php file in your browser. Use 'admin' username and 'admin' password.
