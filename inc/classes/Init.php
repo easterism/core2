@@ -124,7 +124,6 @@ if ($config->debug->firephp) {
 	require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
 }
 
-	echo Tool::pass_salt(md5('admin'));
 
 class Init extends Db {
 	
