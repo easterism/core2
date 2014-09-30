@@ -7,10 +7,9 @@ NOTE: Currently it's russian framework. So you'll get no way to translate any in
 Minimum Server Requirements
 ---------------------------
 
-* PHP 5.2 or greater
+* PHP 5.2 or greater (Zend Framework library in include_path)
 * PDO PHP extension
 * MySQL or PostgreSQL Database
-* Zend Framework components
 
 
 Installation
