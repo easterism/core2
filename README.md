@@ -10,7 +10,7 @@ Minimum Server Requirements
 * PHP 5.2 or greater
 * PDO PHP extension
 * MySQL or PostgreSQL Database
-* Zend framework components
+* Zend Framework components
 
 
 Installation
