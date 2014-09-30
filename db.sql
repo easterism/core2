@@ -8,7 +8,7 @@ CREATE TABLE `core_available_modules` (
   `name`         VARCHAR(60)
                  COLLATE utf8_general_ci          DEFAULT NULL,
   `version`      VARCHAR(10)
-                 COLLATE utf8_general_ci NOT NULL DEFAULT '1.0.0',
+                 COLLATE utf8_general_ci NOT NULL DEFAULT '1.0',
   `descr`        VARCHAR(128)
                  COLLATE utf8_general_ci          DEFAULT NULL,
   `data`         LONGBLOB,
