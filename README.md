@@ -17,7 +17,6 @@ Installation
 1. Put the sources inside *core2* folder anywhere on your server.
 2. Create MySQL schema with [db.sql](db.sql)
 3. Create *admin* user with the same password.
- 
  ```sql
   INSERT INTO `core_users` (`u_login`, `u_pass`, `visible`, `is_admin_sw`) VALUES ('admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y');
   ```
@@ -49,3 +48,4 @@ Installation
 
 Usage
 -----
+Open URL of new index.php file in your browser
