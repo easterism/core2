@@ -4,22 +4,30 @@
 <html>
 <head>
 	<title>{system_name}</title>
-	<link href="core2/html/default/mstyle2.css" type="text/css" rel="stylesheet" />
-    <link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.9.0.custom.min.css" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/style2.css" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
+		  rel="stylesheet"/>
+	<link href="core2/html/default/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.8.2.min.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.9.0.custom.min.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
+	<script type="text/javascript" language="javascript"
+			src="core2/js/jquery/plugins/jquery.simplemodal-1.4.4.min.js"></script>
+
+	<script type="text/javascript" language="javascript"
+			src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/js.js"></script>
-
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="author" content="easter.by@gmail.com" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta name="author" content="easter.by@gmail.com"/>
 	<link rel="icon" type="image/png" href="favicon.png" />
 	<!--xajax-->
 </head>
