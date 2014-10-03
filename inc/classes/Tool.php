@@ -162,7 +162,7 @@ class Tool {
 
     	$cnf = Zend_Registry::get('config');
     	if ($cnf->log->on) {
-    		require_once('core2/ext/FirePHPCore/fb.php');
+    		require_once('core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
 			fb($text);
 		}
     }

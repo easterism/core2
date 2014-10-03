@@ -225,7 +225,7 @@ class Init extends Db {
 
         // Веб-сервис (SOAP)
         $matches = array();
-        if (preg_match('~(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+        if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
@@ -255,6 +255,33 @@ class Init extends Db {
 
             $webservice_controller = new ModWebserviceController();
             return $webservice_controller->dispatch_soap($module_name, $service_request_action);
+        }
+
+        // Веб-сервис (REST)
+        $matches = array();
+        if (preg_match('~api/([a-zA-Z0-9_]+)(\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+
+            // Инициализация модуля вебсервиса
+            if ( ! $this->isModuleActive('webservice')) {
+                throw new Exception("SYSTEM:Module webservice does not active");
+            }
+
+            $webservice_location        = $this->getModuleLocation('webservice');
+            $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
+
+            if ( ! file_exists($webservice_controller_path)) {
+                throw new Exception("SYSTEM:Module does not exists");
+            }
+
+            require_once($webservice_controller_path);
+
+            if ( ! class_exists('ModWebserviceController')) {
+                throw new Exception("SYSTEM:Module broken");
+            }
+
+
+            $webservice_controller = new ModWebserviceController();
+            return $webservice_controller->dispatch_rest(strtolower($matches[1]));
         }
 
 

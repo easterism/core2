@@ -186,7 +186,7 @@ class Email {
             $db = new Db();
 
             if ($db->isModuleActive('queue')) {
-                require_once($db->getModuleLocation('queue') . '/modQueueController.php');
+                require_once($db->getModuleLocation('queue') . '/ModQueueController.php');
                 $queue = new modQueueController();
 
                 $queue->createEmail(
