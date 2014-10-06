@@ -468,6 +468,12 @@ class ModAjax extends ajaxFunc {
 		if (!$last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
+		if ($data['refid']) {
+			$this->cache->clean(
+				Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+				array('role' . $data['refid'])
+			);
+		}
 		
 		$this->done($data);
 		return $this->response;

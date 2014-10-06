@@ -263,20 +263,20 @@ class Init extends Db {
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
-                throw new Exception("SYSTEM:Module webservice does not active");
+                throw new Exception("Module webservice does not active");
             }
 
             $webservice_location        = $this->getModuleLocation('webservice');
             $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                throw new Exception("SYSTEM:Module does not exists");
+                throw new Exception("Module does not exists");
             }
 
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                throw new Exception("SYSTEM:Module broken");
+                throw new Exception("Module broken");
             }
 
 
@@ -311,19 +311,7 @@ class Init extends Db {
             ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
-			$backendOptions = array(
-				'cache_dir' => $this->config->cache
-			);
-			$cache = Zend_Cache::factory('Core',
-				'File',
-				array(),
-				$backendOptions);
-			$cache->clean(
-				Zend_Cache::CLEANING_MODE_MATCHING_TAG,
-				array('js')
-			);
 			return $this->getMenu();
-
 		} else {
 			if (empty($_GET['module'])) throw new Exception("Модуль не найден");
 			$module = strtolower($_GET['module']);

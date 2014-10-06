@@ -5,6 +5,12 @@ require_once("Zend/Registry.php");
 
 class Db {
 	protected $config;
+	protected $frontendOptions = array(
+		'lifetime'                => 40000,
+		'automatic_serialization' => true
+	);
+	protected $backendOptions = array();
+	protected $backend = 'File';
 
 	public function __construct($config = null) {
 		if (is_null($config)) {
@@ -25,6 +31,14 @@ class Db {
 				$db = Zend_Registry::getInstance()->get('db');
 			}
 			$v = $this->{$k} = $db;
+			return $v;
+		}
+		// Получение указанного кэша
+		if ($k == 'cache') {
+			$v = $this->{$k} = Zend_Cache::factory('Core',
+					$this->backend,
+					$this->frontendOptions,
+					array('cache_dir' => $this->config->cache));
 			return $v;
 		}
 	}

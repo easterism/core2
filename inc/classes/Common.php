@@ -8,12 +8,6 @@ class Common extends Acl {
 	protected $actionURL;
 	protected $resId;
 	protected $config;
-	protected $frontendOptions = array(
-		'lifetime'                => 40000,
-		'automatic_serialization' => true
-	);
-	protected $backendOptions = array();
-	protected $backend = 'File';
 
 	private $_p = array();
 	private $AR = array(
@@ -35,9 +29,7 @@ class Common extends Acl {
 		}
 		
 		$this->config = Zend_Registry::get('config');
-		$this->backendOptions = array(
-			'cache_dir' => $this->config->cache
-		);
+
 	}
 
 	public function __isset($k) {

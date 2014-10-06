@@ -172,7 +172,7 @@ class CoreController extends Common {
 				}
 
 				if (empty($res)) {
-					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role
+					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
 								 FROM `core_users` AS u
 								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
 								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
@@ -225,6 +225,7 @@ class CoreController extends Common {
 						$authNamespace->MN 		= $res['middlename'];
 						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
+						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : -1;
 						$this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
