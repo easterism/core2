@@ -4,19 +4,41 @@ require_once 'Tool.php';
 
 class Error {
 
-	/**
-	 * Global error exception
-	 *
-	 * @param exception $exception
-	 */
-	public static function Exception($msg, $code = '') {
+    /**
+     * Global error exception
+     * @param string $msg
+     * @param int $code
+     * @return string|void
+     */
+	public static function Exception($msg, $code = 0) {
 		$isXajax = self::isXajax();
 		if ($isXajax) {
 			header('Content-type: text/xml; charset="utf-8"');
 			echo '<?xml version="1.0" encoding="utf-8" ?><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
 		} else {
 			if ($code == 13) {//ошибки для js объекта с наличием error
-				echo json_encode(array("error" => $msg));
+                echo json_encode(array("error" => $msg));
+
+            } elseif ($code == 400) {
+                header("HTTP/1.1 400 Bad Request");
+                header('Content-type: application/json; charset="utf-8"');
+                return $msg;
+
+            } elseif ($code == 403) {
+                header("HTTP/1.1 403 Forbidden");
+                header('Content-type: application/json; charset="utf-8"');
+                return $msg;
+
+            } elseif ($code == 500) {
+                header("HTTP/1.1 500 Internal Server Error");
+                header('Content-type: application/json; charset="utf-8"');
+                return $msg;
+
+            } elseif ($code == 503) {
+                header("HTTP/1.1 503 Service Unavailable");
+                header('Content-type: application/json; charset="utf-8"');
+                return $msg;
+
 			} else {
 				echo $msg;
 			}
@@ -50,6 +72,10 @@ class Error {
 			fwrite($f, $str . chr(10) . chr(13));
 			fclose($f);
 		}
+        if ($code == 503) {
+            header("HTTP/1.1 503 Internal Server Error");
+            die($message);
+        }
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
@@ -63,7 +89,11 @@ class Error {
 		if ($cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
-			echo "<PRE>";print_r($str);echo"</PRE>";
+			if ($cnf->debug->firephp) {
+				Tool::fb($str);
+			} else {
+				echo "<PRE>";print_r($str);echo "</PRE>";
+			}
 		} else {
 			die($message);
 		}
@@ -103,6 +133,16 @@ class Error {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
 		self::Exception($message, $code);
+	}
+
+    /**
+     * @param array $out
+     * @param int $code
+     * @return string|void
+     */
+	public static function catchJsonException($out, $code = 0) {
+
+		return self::Exception(json_encode($out), $code);
 	}
 
 	public static function catchXajax(Exception $e, xajaxResponse $res) {

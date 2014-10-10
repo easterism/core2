@@ -24,21 +24,26 @@ class Db {
 
 	public function __get($k) {
 		if ($k == 'db') {
-			$this->config = Zend_Registry::getInstance()->get('config');
-			if (!Zend_Registry::getInstance()->isRegistered('db')) {
+			$reg = Zend_Registry::getInstance();
+			if (!$reg->isRegistered('db')) {
 				$db = $this->establishConnection($this->config->database);
 			} else {
-				$db = Zend_Registry::getInstance()->get('db');
+				$db = $reg->get('db');
 			}
-			$v = $this->{$k} = $db;
-			return $v;
+			return $db;
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-			$v = $this->{$k} = Zend_Cache::factory('Core',
-					$this->backend,
-					$this->frontendOptions,
-					array('cache_dir' => $this->config->cache));
+			$reg = Zend_Registry::getInstance();
+			if (!$reg->isRegistered($k)) {
+				$v = Zend_Cache::factory('Core',
+						$this->backend,
+						$this->frontendOptions,
+						array('cache_dir' => $this->config->cache));
+				$reg->set($k, $v);
+			} else {
+				$v = $reg->get($k);
+			}
 			return $v;
 		}
 	}
@@ -169,7 +174,9 @@ class Db {
 			if ($arr) {
 				$data['action'] = serialize($arr);
 			}
-			if ($this->config->log && $this->config->log->system->writer == 'file') {
+			if (isset($this->config->log) && $this->config->log &&
+                isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
+            ) {
 				if (!$this->config->log->system->file) {
 					throw new Exception('Не задан файл журнала');
 				}

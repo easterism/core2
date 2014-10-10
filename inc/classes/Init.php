@@ -120,9 +120,7 @@ require_once 'Db.php';
 require_once 'Common.php';
 require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php';
-if ($config->debug->firephp) {
-	require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
-}
+
 
 class Init extends Db {
 	
@@ -263,20 +261,20 @@ class Init extends Db {
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
-                throw new Exception("Module webservice does not active");
+                return Error::catchJsonException(array('message' => 'Module webservice does not active'), 503);
             }
 
             $webservice_location        = $this->getModuleLocation('webservice');
             $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                throw new Exception("Module does not exists");
+                return Error::catchJsonException(array('message' => 'Module does not exists'), 500);
             }
 
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                throw new Exception("Module broken");
+                return Error::catchJsonException(array('message' => 'Module broken'), 500);
             }
 
 
@@ -312,6 +310,7 @@ class Init extends Db {
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
 			return $this->getMenu();
+
 		} else {
 			if (empty($_GET['module'])) throw new Exception("Модуль не найден");
 			$module = strtolower($_GET['module']);

@@ -159,12 +159,8 @@ class Tool {
      * @param $text
      */
     public static function fb($text) {
-
-    	$cnf = Zend_Registry::get('config');
-    	if ($cnf->log->on) {
-    		require_once('core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
-			fb($text);
-		}
+    	require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php');
+		fb($text);
     }
 
 
@@ -327,6 +323,20 @@ class Tool {
 			$headers[$header] = $value;
 		}
 		return $headers;
+	}
+
+	/**
+	 * will execute $cmd in the background (no cmd window) without PHP waiting for it to finish, on both Windows and Unix
+	 *
+	 * @param $cmd - command to execute
+	 */
+	public static function execInBackground($cmd)
+	{
+		if (substr(php_uname(), 0, 7) == "Windows") {
+			pclose(popen("start /B " . $cmd, "r"));
+		} else {
+			exec($cmd . " > /dev/null &");
+		}
 	}
 
 

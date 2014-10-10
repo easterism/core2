@@ -8,12 +8,10 @@ class Common extends Acl {
 	protected $actionURL;
 	protected $resId;
 	protected $config;
-
 	private $_p = array();
 	private $AR = array(
         'module',
-        'action',
-        'PHPSESSID'
+        'action'
     );
 	
 	public function __construct() {
@@ -29,7 +27,6 @@ class Common extends Acl {
 		}
 		
 		$this->config = Zend_Registry::get('config');
-
 	}
 
 	public function __isset($k) {
@@ -48,17 +45,9 @@ class Common extends Acl {
     public function __get($k) {
 
 		$v = NULL;
-		//исключение для герета базы, выполняется всегда
-		if ($k == 'db') {
-			$reg = Zend_Registry::getInstance();
-			$this->config = $reg->get('config');
-			if (!$reg->isRegistered('db')) {
-				$db = $this->establishConnection($this->config->database);
-			} else {
-				$db = $reg->get('db');
-			}
-			$v = $this->{$k} = $db;
-			return $v;
+		//исключение для герета базы или кеша, выполняется всегда
+		if ($k == 'db' || $k == 'cache') {
+			return parent::__get($k);
 		}
 
         // Получение экземпляра класса для работы с правами пользователей
@@ -67,19 +56,6 @@ class Common extends Acl {
 				$v = $this->_p[$k];
 			} else {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
-			}
-			return $v;
-		}
-
-        // Получение указанного кэша
-		if ($k == 'cache') {
-			if (array_key_exists($k, $this->_p)) {
-				$v = $this->_p[$k];
-			} else {
-				$v = $this->{$k} = Zend_Cache::factory('Core',
-					$this->backend,
-					$this->frontendOptions,
-					$this->backendOptions);
 			}
 			return $v;
 		}
@@ -96,15 +72,29 @@ class Common extends Acl {
                     $v = $this->modAdmin = new CoreController();
                     $v->module = $module;
 
-                } elseif ($this->isModuleActive($module)) {
-                    $location = $this->getModuleLocation($module);
-                    $cl       = ucfirst($k) . 'Controller';
-                    require_once($location . '/' . $cl . '.php');
+                } elseif ($location = $this->getModuleSrc($module)) {
+                    if ( ! $this->isModuleActive($module)) {
+                        throw new Exception("Модуль \"{$module}\" не активен");
+                    }
+
+                    $cl = ucfirst($k) . 'Controller';
+                    $controller_path = DOC_ROOT . $location . '/' . $cl . '.php';
+
+                    if ( ! file_exists($controller_path)) {
+                        throw new Exception("Модуль \"{$module}\" сломан");
+                    }
+
+                    require_once($controller_path);
+
+                    if ( ! class_exists($cl)) {
+                        throw new Exception("Модуль \"{$module}\" сломан");
+                    }
+
                     $v = $this->{$k} = new $cl();
                     $v->module = $module;
 
                 } else {
-                    throw new Exception('Запрашиваемый модуль не найден.');
+                    throw new Exception("Модуль \"{$module}\" не найден");
                 }
 			}
 			return $v;
@@ -148,7 +138,7 @@ class Common extends Acl {
 	 * @param array $r - key->value array
 	 */
 	protected function checkRequest(Array $r) {
-		$r = array_merge($this->AR, $r);
+		$r = array_merge($this->AR, $r); //TODO сдалать фильтр для запросов
 		foreach ($_REQUEST as $k => $v) {
 			if (!in_array($k, $r)) {
 				unset($_REQUEST[$k]);
