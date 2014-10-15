@@ -172,14 +172,13 @@ class Email {
 
 
     /**
-     * Сохранение в таблицу рассылки новое письмо
+     * Сохранение в таблицу рассылки нового письма
      *
-     * @param bool $in_transaction
-     *      Указывает, находтся ли уже функция в транзакции или нет
-     * @return array
-     *      Массив с содержимым (ok => true) или (error => текст ошибки)
+     * @param bool $immediately Немедленная отправка письма
+     *
+     * @return array  Массив с содержимым (ok => true) или (error => текст ошибки)
      */
-    public function send($in_transaction = false) {
+    public function send($immediately = false) {
 
         try {
             require_once 'Db.php';
@@ -189,6 +188,10 @@ class Email {
                 require_once($db->getModuleLocation('queue') . '/ModQueueController.php');
                 $queue = new modQueueController();
 
+                $this->mail_data['date_send'] = $immediately
+                    ? new Zend_Db_Expr('NOW()')
+                    : new Zend_Db_Expr('NULL');
+
                 $queue->createEmail(
                     $this->mail_data['from'],
                     $this->mail_data['to'],
@@ -196,7 +199,8 @@ class Email {
                     $this->mail_data['body'],
                     $this->mail_data['cc'],
                     $this->mail_data['bcc'],
-                    $this->mail_data['importance']
+                    $this->mail_data['importance'],
+                    $this->mail_data['date_send']
                 );
 
                 if ( ! empty($this->mail_data['files'])) {
@@ -218,6 +222,22 @@ class Email {
 
                 } elseif ( ! $in_transaction) {
                     $zend_db->commit();
+                }
+
+                if ($immediately) {
+                    $is_send = $this->zend_send(
+                        $this->mail_data['from'],
+                        $this->mail_data['to'],
+                        $this->mail_data['subject'],
+                        $this->mail_data['body'],
+                        $this->mail_data['cc'],
+                        $this->mail_data['bcc'],
+                        $this->mail_data['files']
+                    );
+
+                    if ( ! $is_send) {
+                        throw new Exception('Не удалось отправить сообщение');
+                    }
                 }
 
             } else {
@@ -245,9 +265,9 @@ class Email {
 
 
     /**
+     * DEPRECATED
      * Отправка мгновенного сообщения
-     * @return array
-     *      Массив с содержимым (ok => true) или (error => текст ошибки)
+     * @return array Массив с содержимым (ok => true) или (error => текст ошибки)
      */
     public function sendImmediately() {
 
@@ -285,8 +305,7 @@ class Email {
      * @param string $bcc
      * @param array $files
      *
-     * @return bool
-     *      Успешна или нет отправка
+     * @return bool Успешна или нет отправка
      */
     private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
 

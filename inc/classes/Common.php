@@ -39,12 +39,35 @@ class Common extends Acl {
      * инстансы подключенных объектов хранятся в массиве $_p
      *
      * @param string $k
-     * @return Common|null|Zend_Db_Adapter_Abstract
+     * @return Common|null|Zend_Db_Adapter_Abstract|CoreController|mixed
      * @throws Exception
      */
     public function __get($k) {
 
 		$v = NULL;
+		if ($k == 'moduleConfig') {
+			if (array_key_exists($k, $this->_p)) {
+				$v = $this->_p[$k];
+			} else {
+				$conf_file = "mod/{$this->module}/conf.ini";
+				if (is_file($conf_file)) {
+					$configExt = new Zend_Config_Ini("conf.ini");
+					$configMod = new Zend_Config_Ini($conf_file);
+					$ext	    = $configExt->getExtends();
+					$extMod    = $configMod->getExtends();
+					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
+						$modConfig = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
+					} else {
+						$modConfig = new Zend_Config_Ini($conf_file, 'production');
+					}
+					$modConfig->setReadOnly();
+					$v = $this->{$k} = $modConfig;
+				} else {
+					Error::Exception("Не найден конфигурационный файл модуля.", 500);
+				}
+			}
+			return $v;
+		}
 		//исключение для герета базы или кеша, выполняется всегда
 		if ($k == 'db' || $k == 'cache') {
 			return parent::__get($k);

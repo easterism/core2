@@ -26,7 +26,7 @@ class Templater2 {
 	/**
 	 * nested blocks will be stored inside $_p
 	 * @param $k
-	 * @return Common|null
+	 * @return Common|null|self
 	 */
 	public function __get($k)
 	{
