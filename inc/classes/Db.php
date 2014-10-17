@@ -14,7 +14,7 @@ class Db {
 
 	public function __construct($config = null) {
 		if (is_null($config)) {
-			$this->config = Zend_Registry::getInstance()->get('config');
+			$this->config = Zend_Registry::get('config');
 		} else {
 			$this->config = $config;
 		}
@@ -26,6 +26,7 @@ class Db {
 		if ($k == 'db') {
 			$reg = Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
+				if (!$this->config) $this->config = $reg->get('config');
 				$db = $this->establishConnection($this->config->database);
 			} else {
 				$db = $reg->get('db');

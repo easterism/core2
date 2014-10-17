@@ -18,7 +18,7 @@
                 <table>
                     <!-- BEGIN fields -->
                     <tr>
-                        <td width="120" align="right">{FIELD_CAPTION}:</td>
+                        <td align="right">{FIELD_CAPTION}:</td>
                         <td>{FIELD_CONTROL}</td>
                     </tr>
                     <!-- END fields -->

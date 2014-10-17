@@ -1,18 +1,8 @@
-<?php
-/*
- * jQuery File Upload Plugin PHP Example 5.2.4
- * https://github.com/blueimp/jQuery-File-Upload
- *
- * Copyright 2010, Sebastian Tschan
- * https://blueimp.net
- *
- * Licensed under the MIT license:
- * http://creativecommons.org/licenses/MIT/
- */
+<?
 
 require_once("core2/inc/classes/Image.php");
 
-class UploadHandler
+class UploadHandler extends Db
 {
     private $options;
     
@@ -102,7 +92,7 @@ class UploadHandler
     private function get_db_objects($tbl, $refid, $fieldid = '') {
 
 		//echo "<PRE>";print_r($this->options);echo "</PRE>";die;
-    	$db = Zend_Registry::get('db');
+    	$db = $this->db;
     	$SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
 		$arr = array($refid);
 		if ($fieldid) {
@@ -372,4 +362,3 @@ switch ($_SERVER['REQUEST_METHOD']) {
     default:
         header('HTTP/1.0 405 Method Not Allowed');
 }
-?>
