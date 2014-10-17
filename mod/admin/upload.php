@@ -12,7 +12,7 @@
 
 require_once("core2/inc/classes/Image.php");
 
-class UploadHandler
+class UploadHandler extends Db
 {
     private $options;
     
@@ -102,7 +102,7 @@ class UploadHandler
     private function get_db_objects($tbl, $refid, $fieldid = '') {
 
 		//echo "<PRE>";print_r($this->options);echo "</PRE>";die;
-    	$db = Zend_Registry::get('db');
+    	$db = $this->db;
     	$SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
 		$arr = array($refid);
 		if ($fieldid) {

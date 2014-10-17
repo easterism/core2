@@ -183,7 +183,7 @@ class Init extends Db {
             $file_path = $this->getModuleLocation($_GET['module']) . "/Mod" . ucfirst($lower) . "Controller.php";
 
 			if (!file_exists($file_path)) {
-                throw new Exception("SYSTEM:Module does not exists");
+                throw new Exception("Module does not exists");
             }
 
 			require_once($file_path);
@@ -324,11 +324,11 @@ class Init extends Db {
 				if (method_exists($core, $action)) {
 					return $core->$action();
 				} else {
-					throw new Exception("SYSTEM:No action");
+					throw new Exception("No action");
 				}
 
 			} else {
-				if (empty($_GET['action'])) {
+				if (empty($_GET['action']) || $_GET['action'] == 'index') {
 					if (!$this->acl->checkAcl($module, 'access')) {
 						throw new Exception(911);
 					}
@@ -360,18 +360,18 @@ class Init extends Db {
 					$modController = "Mod" . ucfirst(strtolower($mods['module_id'])) . "Controller";
                     $file_path = $location . "/" . $modController . ".php";
 					if (!file_exists($file_path)) {
-						throw new Exception("SYSTEM:Module does not exists");
+						throw new Exception("Module does not exists");
 					}
 					require_once $file_path;
 					if (!class_exists($modController)) {
-						throw new Exception("SYSTEM:Module broken");
+						throw new Exception("Module broken");
 					}
 					$modController = new $modController();
 					$action = "action_" . $_GET['action'];
 					if (method_exists($modController, $action)) {
 						return $modController->$action();
 					} else {
-						throw new Exception("SYSTEM:No action");
+						throw new Exception("No action");
 					}
 				} else {
 					header("Location: " . $mods['sm_path']);
