@@ -125,6 +125,7 @@ class UploadHandler extends Db
         return $res;
     }
 
+
     private function create_scaled_image($file_name, $options) {
         $file_path = $this->options['upload_dir'].$file_name;
         $new_file_path = $options['upload_dir'].$file_name;
