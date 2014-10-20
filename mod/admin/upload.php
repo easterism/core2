@@ -92,14 +92,13 @@ class UploadHandler extends Db
     private function get_db_objects($tbl, $refid, $fieldid = '') {
 
 		//echo "<PRE>";print_r($this->options);echo "</PRE>";die;
-    	$db = $this->db;
     	$SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
 		$arr = array($refid);
 		if ($fieldid) {
 			$SQL .= ' AND fieldid=?';
 			$arr[] = $fieldid;
 		}
-		$res = $db->fetchAll($SQL, $arr);
+		$res = $this->db->fetchAll($SQL, $arr);
 
 		$Image = new Image();
 		foreach ($res as $key => $value) {
