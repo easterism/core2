@@ -134,6 +134,7 @@ class Common extends Acl {
                     : $this->getModuleLocation($this->module);
 
                 if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
+				$this->db; //FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
                 require_once($location . "/Model/$model.php");
 				$v = $this->{$k} = new $model();
 			}

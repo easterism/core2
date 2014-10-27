@@ -581,6 +581,20 @@ button:active, .button:active, .buttonSmall:active {
 	border-radius: 3px 3px 3px 3px;
 }
 
+.buttonX {
+	background-image: url(img/icon_delete.png);
+	background-repeat: no-repeat;
+	width: 17px;
+	height: 17px;
+	border: 0;
+	background-color: transparent;
+	margin: 3px;
+}
+
+.buttonX:active {
+	background-position: 1px;
+}
+
 .help {
 	font-weight:normal;
 	font-size:11px;

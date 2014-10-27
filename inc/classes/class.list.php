@@ -1163,7 +1163,21 @@ class listTable extends initList {
 			if ($tkey == 0) {
 				$tres2 .= $tvalue;
 			} elseif (isset($row[$index])) {
-				$tres2 .= base64_encode(htmlspecialchars_decode($row[$index])) . substr($tvalue, 2);
+				$row[$index] = htmlspecialchars_decode($row[$index]);
+				$row[$index] = base64_encode($row[$index]);
+				$tres2 .= $row[$index] . substr($tvalue, 2);
+			} else {
+				$tres2 .= substr($tvalue, 2);
+			}
+		}
+		$temp  = explode("TCOL64URL_", $tres);
+		$tres2 = "";
+		foreach ($temp as $tkey => $tvalue) {
+			$index = substr($tvalue, 0, 2) * 1;
+			if ($tkey == 0) {
+				$tres2 .= $tvalue;
+			} elseif (isset($row[$index])) {
+				$tres2 .= Tool::base64url_encode($row[$index]) . substr($tvalue, 2);
 			} else {
 				$tres2 .= substr($tvalue, 2);
 			}

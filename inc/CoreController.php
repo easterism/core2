@@ -727,7 +727,8 @@ class CoreController extends Common {
 		$dataUser = $this->db->fetchRow("SELECT lastname, firstname, middlename
 			   							 FROM core_users AS cu
 			   							 LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
-			   							 WHERE cu.u_id = '" . $this->auth->ID . "'"
+			   							 WHERE cu.u_id = ?",
+			$this->auth->ID
 		);
 
         $body  = "";

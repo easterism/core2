@@ -423,27 +423,34 @@ class editTable extends initEdit {
 							} else {*/
 								$controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}>" . $value['default'] . "</span>";
 							//}
-						} elseif ($value['type'] == 'custom') {
+						}
+						elseif ($value['type'] == 'custom') {
 							$controlGroups[$cellId]['html'][$key] .= $attrs;
-						} elseif ($value['type'] == 'text' || $value['type'] == 'edit') {
+						}
+						elseif ($value['type'] == 'text' || $value['type'] == 'edit') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"{$value['default']}\">";
 							}
-						} elseif ($value['type'] == 'number') {
+						}
+						elseif ($value['type'] == 'number') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
 							}
-						} elseif ($value['type'] == 'file') {
+						}
+						elseif ($value['type'] == 'file') {
 							$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"file\" name=\"control[$field]\" ".$attrs.">";
-						} elseif ($value['type'] == 'link') {
+						}
+						elseif ($value['type'] == 'link') {
 							$controlGroups[$cellId]['html'][$key] .= "<span id='".$fieldId."' ".$attrs."><a href='".$value['default']."'>{$value['default']}</a></span>";
-						} elseif ($value['type'] == 'search') {
+						}
+						elseif ($value['type'] == 'search') {
 							$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '" type="hidden" name="control[' . $field . ']" value="' . $value['default'] . '"/>';
-						} elseif ($value['type'] == 'date' || $value['type'] == 'datetime') {
+						}
+						elseif ($value['type'] == 'date' || $value['type'] == 'datetime') {
 							if ($this->readOnly) {
 								$day	= substr($value['default'], 8, 2);
 								$month 	= substr($value['default'], 5, 2);
@@ -464,9 +471,7 @@ class editTable extends initEdit {
 								$day	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_day" value="' . substr($value['default'], 8, 2) . '" ' . $beh . '/>';
 								$month 	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_month" value="' . substr($value['default'], 5, 2) . '" ' . $beh . '/>';
 								$year 	= '<input class="input" type="text" size="3" maxlength="4" autocomplete="OFF" id="' . $prefix . '_year" value="' . substr($value['default'], 0, 4) . '" ' . $beh . '/>';
-								$insert = str_replace("dd", $day, strtolower($this->date_mask));
-								$insert = str_replace("mm", $month, $insert);
-								$insert = str_replace("yyyy", $year, $insert);
+								$insert = str_replace(array("dd", "mm", "yyyy"), array($day, $month, $year), strtolower($this->date_mask));
 								$insert = str_replace("yy", $year, $insert);
 
 								$tpl = new Templater2('core2/html/' . THEME . '/edit/datetime.tpl');
@@ -495,7 +500,8 @@ class editTable extends initEdit {
 								}
 
 							}
-						} elseif ($value['type'] == 'daterange') {
+						}
+						elseif ($value['type'] == 'daterange') {
 							$dates = explode(" - ", $value['default']);
 							//echo "<pre>"; print_r($value['default']); die;
 							if ($this->readOnly) {
@@ -543,7 +549,8 @@ class editTable extends initEdit {
 									}
 								}
 							}
-						} elseif ($value['type'] == 'password') {
+						}
+						elseif ($value['type'] == 'password') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= "*****";
 							} else {
@@ -557,14 +564,15 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= " повторите <input $disabled class=\"input\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />".
 								$change;
 							}
-						} elseif ($value['type'] == 'textarea') {
+						}
+						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= "<pre><span>" . htmlspecialchars_decode($value['default']) . "</span></pre>";
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
 						}
-						if (strpos($value['type'], 'fck') === 0) {
+						elseif (strpos($value['type'], 'fck') === 0) {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= "<div style=\"border:1px solid silver;width:100%;height:300px;overflow:auto\">" . htmlspecialchars_decode($value['default']) . "</div>";
 							} else {
@@ -595,7 +603,8 @@ class editTable extends initEdit {
 								$onload .= "mceSetup('" . $id . "', $mce_params);";
 								$PrepareSave .= "document.getElementById('" . $id . "').value = tinyMCE.get('" . $id . "').getContent();";
 							}
-						} elseif ($value['type'] == 'radio') {
+						}
+						elseif ($value['type'] == 'radio') {
 							$temp = array();
 							if (is_array($this->selectSQL[$select])) {
 								foreach ($this->selectSQL[$select] as $k => $v) {
@@ -634,7 +643,8 @@ class editTable extends initEdit {
 								}
 							}
 							$select++;
-						} elseif ($value['type'] == 'checkbox') {
+						}
+						elseif ($value['type'] == 'checkbox') {
 							$temp = array();
 							if (is_array($this->selectSQL[$select])) {
 								foreach ($this->selectSQL[$select] as $k=>$v) {
@@ -667,7 +677,8 @@ class editTable extends initEdit {
 								}
 							}
 							$select++;
-						} elseif ($value['type'] == 'checkbox2') {
+						}
+						elseif ($value['type'] == 'checkbox2') {
 							$temp = array();
 							if (is_array($this->selectSQL[$select])) {
 								foreach ($this->selectSQL[$select] as $k=>$v) {
@@ -701,7 +712,7 @@ class editTable extends initEdit {
 							}
 							$select++;
 						}
-						if ($value['type'] == 'select' || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
+						elseif ($value['type'] == 'select' || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
 							$temp = array();
 
 							if (is_array($this->selectSQL[$select])) {
@@ -767,7 +778,8 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "</select>";
 							}
 							$select++;
-						} elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
+						}
+						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=?", $refid);
 								if ($files) {
@@ -958,7 +970,8 @@ $(function () {
 </script>";
 
 							}
-						} elseif ($value['type'] == 'modal') {
+						}
+						elseif ($value['type'] == 'modal') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= !empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '';
 							} else {
