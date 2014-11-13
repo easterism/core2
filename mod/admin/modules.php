@@ -66,8 +66,6 @@ if (!empty($_GET['download_mod_tpl'])) {
 }
 
 
-
-
 $this->printJs("core2/mod/admin/mod.js");
 
 $tab = new tabs('mod'); 
@@ -513,13 +511,28 @@ $sid = session_id();
         $errorNamespace = new Zend_Session_Namespace('Error');
         $edit->error = $errorNamespace->ERROR;
 
-		if (isset($_GET['add_mod']) && $_GET['add_mod'] != '' && $_GET['add_mod'] != 0) {
+		/* Добавление нового модуля */
+		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
+
+			$edit->SQL = "SELECT id,
+							   name
+						FROM core_available_modules
+						WHERE id = 0";
+			$edit->addControl("Файл архива(.zip)", "XFILE", "", "", "");
+			$edit->classText['SAVE'] = "Загрузить";
+			$edit->back              = $app . "&tab_mod=" . $tab->activeTab;
+			$edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
+			$edit->showTable();
+
+		}
+		elseif (!empty($_GET['add_mod'])) { // Инфа о модуле
 				
             $edit = new editTable('modules_install');
             $edit->SQL = "SELECT 1";
 
             $res = $this->db->fetchRow("SELECT name, version, readme, install_info
-                                        FROM core_available_modules WHERE id=?", $_GET['add_mod']);
+                                        FROM core_available_modules
+                                        WHERE id=?", $_GET['add_mod']);
             $title = "<h2><b>Инструкция по установке модуля</b></h2>";
             $content = $res['readme'];
             $inf = unserialize($res['install_info']);
@@ -527,8 +540,9 @@ $sid = session_id();
             $modId = $inf['install']['module_id'];
             $modVers = $inf['install']['version'];
             $modName = $inf['install']['name'];
-            $is_module = $this->db->fetchRow("SELECT m_id FROM core_modules
-                                            WHERE module_id=? and version=?",array($modId, $modVers));
+            $is_module = $this->db->fetchRow("SELECT m_id FROM core_modules WHERE module_id=? and version=?",
+					array($modId, $modVers)
+			);
 
             if (empty($content)) {
                 $content = $title . "<br>Информация по установке отсутствует";
@@ -549,32 +563,13 @@ $sid = session_id();
 
             $edit->addButton("Вернуться к скиску модулей", "load('$app&tab_mod=2')");
 
-            $edit->addButtonCustom('<input class="button" type="button" value="Скачать файлы модуля" onclick="loadPDF(\'index.php?module=admin&action=modules&loc=core&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
+            $edit->addButtonCustom('<input class="button" type="button" value="Скачать файлы модуля" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
 
             $edit->showTable();
 
             die;
         }
 
-
-        /* Добавление нового модуля */
-				
-        if (isset($_GET['add_mod']) && $_GET['add_mod'] == 0) {
-
-
-
-             $edit->SQL = "SELECT id,
-                                   name
-                            FROM core_available_modules
-                            WHERE id = '".$_GET['add_mod']."'";
-             $edit->addControl("Файл архива(.zip)", "XFILE", "", "", "");
-             $edit->classText['SAVE'] = "Загрузить";
-             $edit->back = $app . "&tab_mod=2";
-             $edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
-             $edit->showTable();
-
-
-        }
 
 
         /* Инсталяция модуля */
@@ -609,34 +604,35 @@ $sid = session_id();
         /* Инсталяция модуля из репозитория */
         if (!empty($_POST['install_from_repo'])) {
 
-            $this->db->beginTransaction();
-            $install = new InstallModule();
+            //готовим ссылку для запроса модуля из репозитория
+            $key = base64_encode(serialize(array(
+                "server"    => strtolower(str_replace(array('http://','index.php'), array('',''), $_SERVER['HTTP_REFERER'])),
+                "request"   => $_POST['install_from_repo']
+            )));
 
-            try {
+            $repo = trim($_POST['repo']);
+            $repo = explode("?apikey=", $repo);
+            $url = "{$repo[0]}/api/repo?apikey={$repo[1]}&key={$key}";
+            $curl = $this->doCurlRequest($url);
+            //если чет пошло не так
+            if (!empty($curl['error']) || $curl['http_code'] != 200)
+            {
+                if (!empty($curl['error'])) {
+                    $html = "Ошибка CURL:<br><font>{$curl['error']}</font>";
+                } else {
+                    $out = json_decode($curl['answer']);
+                    $html = "Ошибка подключения:<br><font>{$out->message}</font>";
+                }
+                echo "<div class=\"mod_danger\">{$html}</div>";
+            }
+            else
+            {
+                $out = json_decode($curl['answer']);
 
-                //готовим ссылку для запроса модуля из репозитория
-                $key = base64_encode(serialize(array(
-                    "server"    => strtolower(str_replace(array('http://','index.php'), array('',''), $_SERVER['HTTP_REFERER'])),
-                    "request"   => $_POST['install_from_repo']
-                )));
+                $this->db->beginTransaction();
+                $install = new InstallModule();
 
-                $repo = trim($_POST['repo']);
-                $url = $repo . "&module=repo&key=" . $key;
-
-                //делаем запрос
-                $curl = curl_init();
-                curl_setopt($curl, CURLOPT_URL, $url);
-                curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-                $curl_out = curl_exec($curl);
-                $curl_error = curl_errno($curl) > 0 ? curl_errno($curl) . ": ". curl_error($curl) : "";
-                curl_close($curl);
-
-                $out = json_decode($curl_out);
-
-                //обрабатываем результат
-                if($out->status != 'success'){//если ошибка репозитория
-                    throw new Exception("CURL - {$curl_error} {$curl_out}");
-                } else {//если есть отсвет
+                try {
                     $data = base64_decode($out->data);
                     if (!empty($data) && empty($out->massage)){//если есть данные и пустые сообщения устанавливаем модуль
                         $install->moduleData['data'] = $data;
@@ -653,58 +649,62 @@ $sid = session_id();
                     }else{//если есть сообщение значит что-то не так
                         throw new Exception($out->massage);
                     }
+                } catch (Exception $e) {
+                    $this->db->rollback();
+                    $error = $e->getMessage();
+                    $install->add_notice("Установщик", "Установка прервана, произведен откат транзакции", "Ошибка: {$error}", "mod_danger");
+                    echo $install->print_notice($tab->activeTab);
                 }
-
-            } catch (Exception $e) {
-                $this->db->rollback();
-                $error = $e->getMessage();
-                $install->add_notice("Установщик", "Установка прервана, произведен откат транзакции", "Ошибка: {$error}", "mod_danger");
-                echo $install->print_notice($tab->activeTab);
             }
             die;
         }
 
 
+        //список доступных одулей
 		$list = new listTable('mod_available');
-		$our_available_modules = $this->db->fetchAll("
-            SELECT id,
+        $list->SQL = "SELECT 1";
+        $list->addColumn("Имя модуля", "", "TEXT");
+        $list->addColumn("Описание", "", "TEXT");
+        $list->addColumn("Версия", "150px", "BLOCK");
+        $list->addColumn("Действие", "3%", "BLOCK", 'align=center');
+
+        $list->getData();
+        $list->data = array();
+
+        $copy_list = $this->db->fetchAll(
+            "SELECT id,
                  name,
                  descr,
                  version,
                  install_info
             FROM core_available_modules
-        ");
-        $list->SQL = "SELECT id,
-							 name,
-							 descr,
-							 version,
-							 install_info
-						FROM core_available_modules";
-        $list->addColumn("Имя модуля", "", "TEXT");
-        $list->addColumn("Описание", "", "TEXT");
-        $list->addColumn("Версия", "150px", "TEXT");
-        $list->addColumn("Действие", "3%", "BLOCK", 'align=center');
+        ORDER BY name"
+        );
 
-        $copy_list = $list->getData();
         $tmp = array();
         $listAllModules = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
-        foreach ($copy_list as $key=>$val) {
-            $mData = unserialize(htmlspecialchars_decode($val[4]));
-            $mVersion = $val[3];
+        $_GET['_page_mod_available'] = !empty($_GET['_page_mod_available']) ? (int)$_GET['_page_mod_available'] : 0;
+        foreach ($copy_list as $val) {
+            $arr = array();
+            $arr[0] = $val['id'];
+            $arr[1] = $val['name'];
+            $arr[2] = $val['descr'];
+            $arr[3] = $val['version'];
+            $arr[4] = $val['install_info'];
+            $mData = unserialize(htmlspecialchars_decode($arr[4]));
+            $mVersion = $arr[3];
             $mId = $mData['install']['module_id'];
-            $mName = $val[1];
-            $copy_list[$key][4] = "<div onclick=\"installModule('$mName', 'v$mVersion', '{$copy_list[$key][0]}')\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
+            $mName = $arr[1];
+            $arr[4] = "<div onclick=\"installModule('$mName', 'v$mVersion', '{$arr[0]}', {$_GET['_page_mod_available']})\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
             foreach ($listAllModules as $allval) {
                 if ($mId == $allval['module_id']) {
                     if ($mVersion == $allval['version']) {
-                        $copy_list[$key][4] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
+                        $arr[4] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
                     }
                 }
             }
-
-            $tmp[$mId][$mVersion] = $copy_list[$key];
+            $tmp[$mId][$mVersion] = $arr;
         }
-
         //смотрим есть-ли разные версии одного мода
         //если есть, показываем последнюю, осатльные в спойлер
         $copy_list = array();
@@ -717,15 +717,35 @@ $sid = session_id();
                 $copy_list[$module_id][3] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
                 $copy_list[$module_id][3] .= "<table width=\"100%\" class=\"mod_available_{$module_id}\" style=\"display: none;\"><tbody>";
                 foreach ($val as $version=>$val) {
-                    $copy_list[$module_id][3] .= "<tr><td style=\"border: 0px; padding: 0px;\">{$version}</td><td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[4]}</td></tr>";
+                    $copy_list[$module_id][3] .= "
+                        <tr>
+                            <td style=\"border: 0px; padding: 0px;\">{$version}</td>
+                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[4]}</td>
+                        </tr>
+                    ";
                 }
                 $copy_list[$module_id][3] .= "</tbody></table>";
             }
         }
+        //пагинация
+        $per_page = 25;
+        $list->recordsPerPage = $per_page;
+        $list->setRecordCount(count($copy_list));
+        $page = empty($_GET['_page_mod_available']) ? 1 : (int)$_GET['_page_mod_available'];
+        $from = ($page - 1) * $per_page;
+        $to = $page * $per_page;
+        $i = 0;
+        $tmp = array();
+        foreach ($copy_list as $val) {
+            $i++;
+            if ($i > $from && $i <= $to) {
+                $tmp[] = $val;
+            }
+        }
 
-        $list->data 		= $copy_list;
+        $list->data 		= $tmp;
         $list->addURL 		= $app . "&add_mod=0&tab_mod=2";
-        //$list->editURL 		= $app . "&tab_mod=2&add_mod=TCOL_00";
+        $list->editURL 		= $app . "&tab_mod=2&add_mod=TCOL_00";
         $list->deleteKey	= "core_available_modules.id";
 
 
@@ -754,6 +774,7 @@ $sid = session_id();
                 echo        "modules.repo('{$repo}', {$i});";
                 echo    "});";
                 echo "</script>";
+                echo "<br><br><br>";
             }
         }
 

@@ -22,6 +22,12 @@ class Db {
 
 	}
 
+
+    /**
+     * @param string $k
+     * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract
+     * @throws Zend_Exception
+     */
 	public function __get($k) {
 		if ($k == 'db') {
 			$reg = Zend_Registry::getInstance();

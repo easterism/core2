@@ -7,7 +7,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>{system_name}</title>
-	<meta name="description" content="">
+	<meta name="description" content="CORE2">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<link href="core2/html/default/style2.css" type="text/css" rel="stylesheet" />

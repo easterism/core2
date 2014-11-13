@@ -42,7 +42,7 @@ class ajaxFunc extends Common {
 		$phone = array();
 		
 		foreach ($control as $field => $val) {
-			$control[$field] = trim($val);
+			$control[$field] = $val ? trim($val) : '';
 			if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
 				$script .= "document.getElementById('" . $class_id . $field . "2').className='reqField';";
 				$this->error[] = "- Пароль не совпадает.<br/>";

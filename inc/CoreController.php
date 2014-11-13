@@ -768,49 +768,42 @@ class CoreController extends Common {
      */
     public function getRepoList() {
 
-        //готовим ссылку для запроса списка модулей из репозитория
+        $repo = trim($_GET['url']);
+        if (substr_count($repo, "?apikey=") == 0) {
+            $api_key = $this->getRepoKey();
+            $repo_ar = explode("?reg_apikey=", $repo);
+        } else {
+            $repo_ar = explode("?apikey=", $repo);
+            $api_key = $repo_ar[1];
+        }
+        $repo = $repo_ar[0];
+
+        //готовим ключ для repo
         $key = base64_encode(serialize(array(
             "server"    => strtolower(str_replace(array('http://','index.php'), array('',''), $_SERVER['HTTP_REFERER'])),
             "request"   => "repo_list"
         )));
 
-        $repo = trim($_GET['url']);
-        if (substr_count($repo, "token") == 0) {
-            $repo .= "?token=";
-        }
-        $url = $repo . "&module=repo&key=" . $key;
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $curl_out = curl_exec($curl);
-        $curl_error = curl_errno($curl) > 0 ? curl_errno($curl) . ": ". curl_error($curl) : "";
-        curl_close($curl);
-        $out = json_decode($curl_out);
-
-        if ($out->status == 'success') { //если запрос прошел без ошибок на сервере рисуем табличку
-            //достаём данные
-
-            $repo_list = unserialize(base64_decode($out->data));
-
-            //если пришел ключь, то записываем и выводим сообщение
-            if (isset($repo_list['token'])) {
-                $repos = $this->getCustomSetting("repo");
-                $repos = explode(";", $repos);
-                foreach($repos as $k=>$r){
-                    $r = trim($r);
-                    $r = explode("?token=", $r);
-                    if (substr_count($url, $r[0]) > 0) {
-                        $r[1] = $repo_list['token'];
-                    }
-                    $repos[$k] = implode("?token=", $r);
-                }
-                $repos = implode(";", $repos);
-                $this->db->update("core_settings", array("value" => $repos), "code = 'repo'");
-                echo "<div class=\"mod_danger\"><h4>При подключении к репозиторию - " . $repo . " произошла ошибка:</h4><p>{$out->massage}</p></div>";
-                die;
+        $repo_ar = explode("/", $repo);
+        $url = "http://{$repo_ar[2]}/api/repo?apikey={$api_key}&key={$key}";
+        $curl = $this->doCurlRequest($url);
+        //если чет пошло не так
+        if (!empty($curl['error']) || $curl['http_code'] != 200)
+        {
+            if (!empty($curl['error'])) {
+                $html = "Ошибка CURL:<br><font>{$curl['error']}</font>";
+            } else {
+                $out = json_decode($curl['answer']);
+                $html = "Ошибка подключения:<br><font>{$out->message}</font>";
             }
+            echo "<div class=\"mod_danger\">{$html}</div>";
+            die;
+        } else {
+
+            $out = json_decode($curl['answer']);
+
+            //достаём данные
+            $repo_list = unserialize(base64_decode($out->data));
 
             //готовим данные для таблицы
             $arr = array();
@@ -822,8 +815,9 @@ class CoreController extends Common {
                 $arr[$key]['install_info']  = $repo_list[$key];
             }
 
-            $list = new listTable("repo_table_" . $_GET['repo_id']);
-            $list->error = $out->massage;//информация от репозитория если есть
+            $list_id = "repo_table_" . $_GET['repo_id'];
+            $list = new listTable($list_id);
+            $list->error = !empty($out->massage) ? $out->massage : "";//информация от репозитория если есть
             $list->SQL = "SELECT 1";
             $list->addColumn("Имя модуля", "", "TEXT");
             $list->addColumn("Описание", "", "TEXT");
@@ -845,7 +839,7 @@ class CoreController extends Common {
                 ");
                 $listAllModules = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
             }
-			$tmp = array();
+            $tmp = array();
             foreach ($copy_list as $key=>$val) {
                 $mVersion = $val['version'];
                 $mId = $val['install_info']['install']['module_id'];
@@ -886,13 +880,105 @@ class CoreController extends Common {
                     $copy_list[$module_id]['version'] .= "</tbody></table>";
                 }
             }
+            //пагинация
+            $per_page = count($copy_list);
+            $list->recordsPerPage = $per_page;
+            $list->setRecordCount($per_page);
 
             $list->data 		    = $copy_list;
             $list->showTable();
-
-
-        } else { //если на сервере репозитория возникли ошибки выводим их
-            echo "<div class=\"mod_danger\"><h4>При подключении к репозиторию - " . $repo . " произошла ошибка:</h4><p>{$curl_error} {$curl_out}</p></div>";
         }
+    }
+
+
+    /**
+     * меняем регистрационный ключь на пользовательский чтоб получить доступ к репозиторию
+     * @return mixed
+     * @throws Zend_Db_Adapter_Exception
+     */
+    public function getRepoKey() {
+        $server = trim($_GET['url']);
+        if (substr_count($server, "?reg_apikey=") == 0) {
+            echo
+                "<div class=\"mod_danger\">
+                    Ошибка
+                    <br>
+                    <font>Не задан reg_apikey для репозитория \"{$server}\"</font>
+                </div>";
+            die;
+        } else {
+            $tmp = explode("?reg_apikey=", $server);
+            $key = $tmp[1];
+            $tmp = explode("/", $tmp[0]);
+            $server = $tmp[2];
+        }
+
+        $url =  "http://{$server}/api/webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
+        $curl = $this->doCurlRequest($url);
+
+        //если чет пошло не так
+        if (!empty($curl['error']) || $curl['http_code'] != 200)
+        {
+            if (!empty($curl['error'])) {
+                $html = "Ошибка CURL:<br><font>{$curl['error']}</font>";
+            } else {
+                $out = json_decode($curl['answer']);
+                $html = "Ошибка подключения:<br><font>{$out->message}</font>";
+            }
+            echo "<div class=\"mod_danger\">{$html}</div>";
+            die;
+        }
+        //если всё гуд
+        else
+        {
+            $out = json_decode($curl['answer']);
+            $repos = $this->getCustomSetting("repo");
+            $repos = explode(";", $repos);
+            foreach($repos as $k=>$r){
+                $r = trim($r);
+                $r = explode("?reg_apikey=", $r);
+                //если находим нашь репозиторий
+                if (substr_count($r[0], $server) > 0) {
+                    $repos[$k] = "http://{$server}/api/repo?apikey={$out->key}";
+                } else {
+                    $repos[$k] = implode("?reg_apikey=", $r);
+                }
+
+            }
+            $repos = implode(";", $repos);
+            $this->db->update("core_settings", array("value" => $repos), "code = 'repo'");
+        }
+
+
+        return $out->key;
+    }
+
+
+
+
+    /**
+     * делаем запрос через курл и отдаем ответ
+     * @param $url
+     * @return array
+     * @throws Exception
+     */
+    public function doCurlRequest($url) {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $curl_out = curl_exec($curl);
+        //если возникла ошибка
+        if (curl_errno($curl) > 0) {
+            return array(
+                'error'    => curl_errno($curl) . ": ". curl_error($curl)
+            );
+        }
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        return array(
+            'answer'    => $curl_out,
+            'http_code' => $http_code
+        );
     }
 }

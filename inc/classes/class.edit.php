@@ -36,8 +36,7 @@ class editTable extends initEdit {
 	
 	public function __get($data) {
 		if ($data == 'db') {
-			$this->db = Zend_Registry::get('db');
-			return $this->db;
+			return parent::__get('db');
 		}
 		$this->$data = new cell($this->main_table_id);
 		$this->cell[$data] = $this->$data;

@@ -72,9 +72,13 @@ var modules = {
 		} else return false;
 	}
 
-	function installModule(mod, v, modInstall) {
+	function installModule(mod, v, modInstall, page) {
 		if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-			load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install":modInstall});
+            var url = 'index.php?module=admin&action=modules&loc=core&tab_mod=2';
+            if (page >= 1) {
+                url = url + '&_page_mod_available=' + page;
+            }
+			load(url, {"install":modInstall});
 		} else return false;
 	}
 

@@ -178,7 +178,7 @@ class Init extends Db {
 		if (!empty($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'module=cron') { // получение параметров запуска cron
 			parse_str(implode('&', array_slice($_SERVER['argv'], 1)), $_GET);
 		}
-		if (isset($_GET['module']) && in_array($_GET['module'], array('cron', 'repo'))) {
+		if (isset($_GET['module']) && $_GET['module'] == 'cron') {
 			$lower = strtolower($_GET['module']);
             $file_path = $this->getModuleLocation($_GET['module']) . "/Mod" . ucfirst($lower) . "Controller.php";
 
@@ -209,15 +209,7 @@ class Init extends Db {
                         }
                         return null;
                     }
-                    break;
-
-                case 'repo' :
-                    if ( ! empty($_GET['key'])){
-                        $repo_controller = new ModRepoController();
-                        $repo_controller->process_request();
-                        return null;
-                    }
-                    break;
+                break;
             }
 		}
 

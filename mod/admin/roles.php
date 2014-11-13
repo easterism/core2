@@ -21,19 +21,19 @@ $tab->beginContainer("Роли и доступ");
 					  FROM (
 						(SELECT m_id, m_name, module_id, m.seq, m.access_add
 						  FROM core_modules AS m
-						  WHERE visible='Y'
-						  ORDER BY seq)
+						  WHERE visible='Y')
 						UNION ALL 
 						(SELECT `sm_id` AS m_id,
 								 CONCAT(m_name, ' / ', sm_name) AS m_name,
 								 CONCAT(m.module_id, '-', s.sm_key) AS module_id,
-								 m.seq,
+								 CONCAT(m.seq, '-', s.seq) AS seq,
 								 s.access_add
 							FROM `core_submodules` AS s
 								 INNER JOIN core_modules AS m ON m.m_id = s.m_id AND m.visible='Y'
-							WHERE sm_id > 0 AND s.visible='Y'
-						   ORDER BY m.seq, s.seq)
-					   ) AS a ORDER BY 4";
+							WHERE sm_id > 0
+							AND s.visible='Y')
+					   ) AS a
+					   ORDER BY 4";
 			$res = $this->db->fetchAll($SQL);
 			
 			$html = '<table>';

@@ -16,7 +16,9 @@ function changeSub(obj, path) {
 			parent.childNodes[i].className = 'submenu_items';
 			if (parent.childNodes[i] == obj) {
 				parent.childNodes[i].className = 'submenu_items_selected';
+				locData.title['smodule'] = $(parent.childNodes[i]).text();
 				if (path) load(path);
+				break;
 			}
 		}
 	}
@@ -30,6 +32,8 @@ function changeRoot(obj, to) {
 			parent.childNodes[i].className = 'menu_items';
 			if (parent.childNodes[i] == obj) {
 				parent.childNodes[i].className = 'menu_items_selected';
+				locData.title['module'] = $(parent.childNodes[i]).text();
+				locData.title['smodule'] = '';
 				var sub = document.getElementById('table_submenu').rows[0];
 				for (var x = 0; x < sub.childNodes.length; x++) {
 					if (sub.childNodes[x].nodeName == 'TD') {
@@ -93,7 +97,7 @@ function toAnchor(id){
 	$('html,body').animate({scrollTop: $("#"+id).offset().top - $("#menuContainer").height()}, 'fast');
 }
 
-var locData = {};
+var locData = {"title":{"main":document.title}};
 var loc = ''; //DEPRECATED
 
 var preloader = {
@@ -251,6 +255,12 @@ var load = function (url, data, id, callback) {
 				if (qs['action']) {
 					changeSub($('#smodule_' + qs['module'] + '_' + qs['action'])[0])
 				}
+				var t = locData.title.main;
+				if (locData.title.module) {
+					t += ' - ' + locData.title.module;
+					if (locData.title.smodule) t += ' - ' + locData.title.smodule;
+				}
+				document.title = t;
 			}
 		}
 		else {
@@ -364,8 +374,8 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item){
 	var t = item.label;
 	if (term) {
 		term = term.replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-	  var re = new RegExp("(" + term + ")", "gi") ;
-	  t = t.replace(re,"<b>$1</b>");
+		var re = new RegExp("(" + term + ")", "gi") ;
+		t = t.replace(re,"<b>$1</b>");
 	}
 	if (currentCategory && !item.category) {
 		item.category = '--';
