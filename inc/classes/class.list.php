@@ -104,7 +104,7 @@ class listTable extends initList {
 	 */
 	public function addSearch($name, $field, $type, $in = "", $out = "") {
 		$this->table_search[$this->main_table_id][] = array(
-			'name' 		=> addslashes($name),
+			'name' 		=> htmlspecialchars($name),
 			'type' 		=> strtolower($type),
 			'in' 		=> $in,
 			'field' 	=> $field,
@@ -247,7 +247,7 @@ class listTable extends initList {
 									} else {
 										$search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
 									}
-								} elseif ($next['type'] == 'checkbox' || $next['type'] == 'checkbox2') {
+								} elseif ($next['type'] == 'checkbox' || $next['type'] == 'checkbox2' || $next['type'] == 'multilist') {
 									if (is_array($search_value)) {
 										foreach ($search_value as $k => $val) {
 											if (!$val) unset($search_value[$k]);
@@ -515,7 +515,7 @@ class listTable extends initList {
 		$countPOST = 'count_' . $this->resource; //pagination record count
 		$pagePOST = '_page_' . $this->resource; //pagination page number
 		
-		//TABLE HEAD
+		//Шаблон для сообщений об ошибках
 		$tpl = new Templater2('core2/html/' . THEME . "/list/error.tpl");
 		$tpl->assign('[ID]', $this->main_table_id . "_error");
 		if ($this->error) {
@@ -523,11 +523,15 @@ class listTable extends initList {
 			$tpl->assign('[MSG]', $this->error);
 		}
 		$this->HTML .= $tpl->parse();
-		$this->HTML .= "<table width=\"100%\" id=\"list{$this->resource}\" class=\"sTable\">";
+
+        $tplRoot = new Templater2('core2/html/' . THEME . "/list/list.tpl");
+        $tplRoot->assign('[ID]', "list{$this->resource}");
+        $serviceHeadHTML = "";
 		$sqlSearchCount = 0;
 		if (isset($this->table_search[$this->main_table_id]) && count($this->table_search[$this->main_table_id])) {
-
-			//SEARCH BLOCK-----------------------------------------------------------------------------------------------
+			//
+            //SEARCH BLOCK-----------------------------------------------------------------------------------------------
+            //
 			if (!empty($this->sessData['search'])) {
 				reset($this->sessData['search']);
 				$next = current($this->sessData['search']);
@@ -580,7 +584,7 @@ class listTable extends initList {
 				$tpl2->assign("{OUT}", $value['out']);
 				$tpl2->assign("{NAME}", "search[$this->main_table_id][$key]");
 
-				if ($value['type'] != 'checkbox' && $value['type'] != 'checkbox2') {
+				if ($value['type'] != 'checkbox' && $value['type'] != 'checkbox2' && $value['type'] != 'multilist') {
 					$tpl2->assign("{ID}", $searchFieldId);
 					$tpl2->assign("{ATTR}", $value['in']);
 					$value['value'] = '';
@@ -643,14 +647,14 @@ class listTable extends initList {
 						$tpl2->assign("{VALUE}", $k);
 						$tpl2->assign("{LABEL}", $v);
 						if (is_array($next) && in_array($row[0], $next)) {
-							$tpl2->assign("{checked}", "checked=\"checked\"");
+							$tpl2->assign("{checked}", " checked=\"checked\"");
 						} else {
 							$tpl2->assign("{checked}", "");
 						}
 						$tpl2->reassignBlock('checkbox');
 					}
 					$sqlSearchCount++;
-					$tpl->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
+					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'radio') {
 					$temp = array();
@@ -703,55 +707,46 @@ class listTable extends initList {
 					$tpl2->fillDropDown('{ID}', $opt, $next);
 					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
+                elseif ($value['type'] == 'multilist') {
+					$temp = array();
+					if (is_array($this->sqlSearch[$sqlSearchCount])) {
+						foreach ($this->sqlSearch[$sqlSearchCount] as $k => $v) {
+							$temp[] = array($k, $v);
+						}
+					} else {
+						$temp = $this->db->fetchAll($this->sqlSearch[$sqlSearchCount]);
+					}
+					$opt = array('' => 'Все');
+					foreach ($temp as $row) {
+						$k = current($row);
+						$v = end($row);
+                        $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
+                        $tpl2->assign("{VALUE}", $k);
+                        $tpl2->assign("{LABEL}", $v);
+
+                        if (is_array($next) && in_array($row[0], $next)) {
+                            $tpl2->assign("{selected}", " selected=\"selected\"");
+                        } else {
+                            $tpl2->assign("{selected}", "");
+                        }
+                        $tpl2->reassignBlock('opt');
+					}
+					$sqlSearchCount++;
+					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+				}
 
 				if (!empty($this->sessData['search'])) {
-					$next = next($this->sessData['search']);
+					$next = next($this->sessData['search']); // берем следующее значение
 				}
 				
 				$tpl->reassignBlock('fields');
 			}
-			$this->HTML .= 	$tpl->parse();
+            $serviceHeadHTML .= 	$tpl->parse();
 		}
 		
-		//SERVICE ROW
-		$tpl = new Templater('core2/html/' . THEME . "/list/serviceHead.tpl");
-		$tpl->assign('[TOTAL_RECORD_COUNT]', ($this->roundRecordCount ? "~" : "") . '[TOTAL_RECORD_COUNT]');
-		$buttons = '';
-		if (!empty($this->table_button[$this->main_table_id])) {
-			reset($this->table_button[$this->main_table_id]);
-			foreach ($this->table_button[$this->main_table_id] as $button_key => $button_value) {
-				if (empty($button_value['html'])) {
-					$buttons .= $this->button($button_value['name'], "", "listx.buttonAction('{$this->resource}', '{$button_value['url']}', '{$button_value['confirm']}', {$button_value['nocheck']}, this)");
-				} else {
-					$buttons .= $button_value['html'];
-				}
-			}
-		}
-		$tpl->assign('[BUTTONS]', $buttons);
-		if ($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner') && ($this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
-			//if ($this->multiEdit) $serviceHeadHTML .= 	$this->button($this->classText['EDIT'], "", "multiEdit('$this->editURL', '$this->main_table_id')");
-			if ($this->addURL) {
-				$tpl->touchBlock('add_button');
-				$tpl->assign('Добавить', $this->classText['ADD']);
-				if (substr($this->addURL, 0, 11) == 'javascript:') {
-					$tpl->assign('[addURL]', substr($this->addURL, 11));
-				} else {
-					$tpl->assign('[addURL]', "load('{$this->addURL}')");
-				}
-			}
-		}
-		if (($this->deleteURL || $this->deleteKey) && ($this->checkAcl($this->resource, 'delete_all') || $this->checkAcl($this->resource, 'delete_owner'))) {
-			$tpl->touchBlock('del_button');
-			$tpl->assign('Удалить', $this->classText['DELETE']);
-			if ($this->deleteURL) {
-				$tpl->assign('[delURL]', $this->deleteURL);
-			} else {
-				$tpl->assign('[delURL]', "listx.del('{$this->resource}', '{$this->classText['DELETE_MSG']}', $this->ajax)");
-			}
-		}
-		$serviceHeadHTML = $tpl->parse();
+
 		
-		// DATA HEADER
+		// DATA HEADER первая строка таблицы
 		$tpl = new Templater("core2/html/" . THEME . "/list/headerHead.tpl");
 		$tpl->assign('{main_table_id}', $this->main_table_id);
 		$tpl->assign('{resource}', $this->resource);
@@ -797,10 +792,10 @@ class listTable extends initList {
 						if ($this->sessData['orderType'] == "asc") {
 							$img = "core2/html/".THEME."/img/asc.gif";
 						}
-						if ($this->sessData['orderType'] == "desc") {
+						elseif ($this->sessData['orderType'] == "desc") {
 							$img = "core2/html/".THEME."/img/desc.gif";
 						}
-						$img = '<img src="' . $img . '" alt=""/>';
+						if ($img) $img = '<img src="' . $img . '" alt=""/>';
 					}
 				}
 				$temp .= str_replace(array('{WIDTH}', '{ORDER_VALUE}', '{CAPTION}', '{ORDER_TYPE}', '{COLSPAN}'), 
@@ -817,13 +812,13 @@ class listTable extends initList {
 			$tpl->touchBlock('checkboxes');
 		}
 		$headerHeadHTML = $tpl->parse();
+
 		//TABLE BODY.
 		$tableBodyHTML = '';
 		$int_count = 0;
 		if (!$this->extOrder) {
 			$recordNumber = ($this->sessData[$pagePOST] - 1) * $this->sessData[$countPOST];
 		}
-		
 		if (count($this->addSum)) {
 			$needsum = array();
 		} else {
@@ -920,9 +915,8 @@ class listTable extends initList {
 				if ($this->filterColumn && isset($this->sessData['column']) && !in_array($sql_key, $this->sessData['column'])) continue;
 
 				if (is_array($needsum)) {
-					$need = 'TCOL_' . substr("0" . $sql_key, -2);
-					if (in_array($need, $this->addSum)) {
-						$needsum[$need] += $sql_value;
+					if (in_array($sql_key, $this->addSum)) {
+						$needsum["_" . $sql_key] += $sql_value;
 					}
 				}
 				
@@ -955,30 +949,30 @@ class listTable extends initList {
 				} elseif ($value['type'] == 'html' || $value['type'] == 'block') {
 					$tableBodyHTML .= htmlspecialchars_decode($sql_value);
 				} else if ($value['type'] == 'date') {
-					$dd = substr($sql_value, 8, 2);
-					$mm = substr($sql_value, 5, 2);
-					$yyyy = substr($sql_value, 0, 4);
-					$yy = substr($sql_value, 2, 2);
+                    $dd   = substr($sql_value, 8, 2);
+                    $mm   = substr($sql_value, 5, 2);
+                    $yyyy = substr($sql_value, 0, 4);
+                    $yy   = substr($sql_value, 2, 2);
 					
 					$tableBodyHTML .= str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
 					
 				} else if ($value['type'] == 'datetime') {
-					$dd = substr($sql_value, 8, 2);
-					$mm = substr($sql_value, 5, 2);
-					$yyyy = substr($sql_value, 0, 4);
-					$yy = substr($sql_value, 2, 2);
-					$time = substr($sql_value, 11);
+                    $dd   = substr($sql_value, 8, 2);
+                    $mm   = substr($sql_value, 5, 2);
+                    $yyyy = substr($sql_value, 0, 4);
+                    $yy   = substr($sql_value, 2, 2);
+                    $time = substr($sql_value, 11);
 					
 					$sql_value = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
 					$tableBodyHTML .= $sql_value . ' ' . $time;
 				} else if ($value['type'] == 'datetime_human') {
 					require_once('humanRelativeDate.class.php');
-					$humanRelativeDate = new HumanRelativeDate();
-					$dd = substr($sql_value, 8, 2);
-					$mm = substr($sql_value, 5, 2);
-					$yyyy = substr($sql_value, 0, 4);
-					$yy = substr($sql_value, 2, 2);
-					$time = substr($sql_value, 11);
+                    $humanRelativeDate = new HumanRelativeDate();
+                    $dd                = substr($sql_value, 8, 2);
+                    $mm                = substr($sql_value, 5, 2);
+                    $yyyy              = substr($sql_value, 0, 4);
+                    $yy                = substr($sql_value, 2, 2);
+                    $time              = substr($sql_value, 11);
 
 					$title = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask)) . ' ' . $time;
 					$tableBodyHTML .= "<span title=\"$title\">{$humanRelativeDate->getTextForSQLDate($sql_value)}</span>";
@@ -1038,30 +1032,61 @@ class listTable extends initList {
 		if (!$this->recordCount || $this->recordCount < 0) {
 			$tableBodyHTML = "<tr><td colspan=\"100\" align=\"center\" style=\"padding:5\">{$this->classText['NORESULT']}</td></tr>";
 		} else {
-			// FIXME SUMM ROW
-			if (isset($this->addSum) && $count = count($this->addSum)) {
-				$is = implode(",", $this->addSum);
+			if (!empty($this->addSum) && $count = count($this->addSum)) {
 				$tableBodyHTML .= "<tr class=\"headerText\">";
-				$j = 1;
-				$gotit = 0;
-				for ($i = 0; $i < $j; $i++) {
-					$need = 'TCOL_' . substr("0" . $i, -2);
-					if (strpos($is, $need) !== false) {
-						$gotit++;
-						$tableBodyHTML .= "<td align=\"right\" nowrap=\"nowrap\">".$this->commafy($needsum[$need])."</td>";
+				for ($i = 0; $i < $columnCount; $i++) {
+					if (!empty($needsum["_" . $i])) {
+						$tableBodyHTML .= "<td align=\"right\" nowrap=\"nowrap\">" . $this->commafy($needsum["_" . $i]) . "</td>";
 					} else {
 						$tableBodyHTML .= "<td></td>";
-					}
-					if ($gotit < $count) {
-						$j++;
 					}
 				}
 				$tableBodyHTML .= "<td colspan=100></td></tr>";
 			}
 		}
-		
-		$this->HTML .= str_replace('[TOTAL_RECORD_COUNT]', $this->recordCount, $serviceHeadHTML) . $headerHeadHTML . $tableBodyHTML;
-		
+        $tplRoot->body->assign('[BODY]', $tableBodyHTML);
+
+        //SERVICE ROW
+        // Панель с кнопками
+        // к-во записей
+        $tpl = new Templater2('core2/html/' . THEME . "/list/serviceHead.tpl");
+        $tpl->assign('[TOTAL_RECORD_COUNT]', ($this->roundRecordCount ? "~" : "") . $this->recordCount);
+        $buttons = '';
+        if (!empty($this->table_button[$this->main_table_id])) {
+            reset($this->table_button[$this->main_table_id]);
+            foreach ($this->table_button[$this->main_table_id] as $button_key => $button_value) {
+                if (empty($button_value['html'])) {
+                    $buttons .= $this->button($button_value['name'], "", "listx.buttonAction('{$this->resource}', '{$button_value['url']}', '{$button_value['confirm']}', {$button_value['nocheck']}, this)");
+                } else {
+                    $buttons .= $button_value['html'];
+                }
+            }
+        }
+        $tpl->assign('[BUTTONS]', $buttons);
+        if ($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner') && ($this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
+            //if ($this->multiEdit) $serviceHeadHTML .= 	$this->button($this->classText['EDIT'], "", "multiEdit('$this->editURL', '$this->main_table_id')");
+            if ($this->addURL) {
+                $tpl->addButton->assign('Добавить', $this->classText['ADD']);
+                if (substr($this->addURL, 0, 11) == 'javascript:') {
+                    $tpl->addButton->assign('[addURL]', substr($this->addURL, 11));
+                } else {
+                    $tpl->addButton->assign('[addURL]', "load('{$this->addURL}')");
+                }
+            }
+        }
+        if (($this->deleteURL || $this->deleteKey) && ($this->checkAcl($this->resource, 'delete_all') || $this->checkAcl($this->resource, 'delete_owner'))) {
+            $tpl->delButton->assign('Удалить', $this->classText['DELETE']);
+            if ($this->deleteURL) {
+                $tpl->delButton->assign('[delURL]', $this->deleteURL);
+            } else {
+                $tpl->delButton->assign('[delURL]', "listx.del('{$this->resource}', '{$this->classText['DELETE_MSG']}', $this->ajax)");
+            }
+        }
+        $serviceHeadHTML .= $tpl->parse();
+
+        $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML);
+
+
 		// FOOTER ROW
 		$tpl = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
 		$count = ceil($this->recordCount / $this->recordsPerPage);
@@ -1102,8 +1127,9 @@ class listTable extends initList {
 			$tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
 			$tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
 		}
-		$this->HTML .= 	$tpl->parse() . '</table>';
+        $tplRoot->footer->assign('[FOOTER]', $tpl->parse());
 
+		$this->HTML .= $tplRoot->parse();
 		return $this->HTML;
 	}
 

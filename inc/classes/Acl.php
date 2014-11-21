@@ -229,6 +229,28 @@ class Acl extends Db {
 	}
 
 	/**
+	 * Доступ роли к ресурсу по всем параметрам, за исключением тех, что указаны в $except
+	 *
+	 * @param       $role
+	 * @param       $resource
+	 * @param array $except
+	 */
+	public function allowAll($role, $resource, Array $except = array())
+	{
+		$types = array(
+				'access',
+				'list_all',
+				'read_all',
+				'edit_all',
+				'delete_all'
+		);
+		foreach ($types as $type) {
+			if ($except && in_array($type, $except)) continue;
+			$this->allow($role, $resource, $type);
+		}
+	}
+
+	/**
 	 * @param $source
 	 * @param $type
 	 * @return bool

@@ -1,4 +1,3 @@
-<thead id="searchHead">
 	<tr class="headerText">
 		<td colspan="100" class="HeaderTextTD">
 			<!-- BEGIN col -->
@@ -45,4 +44,3 @@
 		</td>
 	</tr>
 	<!-- END filterColumnContainer -->
-</thead>

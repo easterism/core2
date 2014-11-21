@@ -95,4 +95,3 @@ class tabs extends initTabs {
 		//ob_end_flush();
 	}
 }
-?>

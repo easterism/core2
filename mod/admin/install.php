@@ -418,34 +418,48 @@
                 }
 			}
 		}
-		
+
+
+
+
+
+
+
 		public function setMigrateSql() {
 			$xmlObj = simplexml_load_file($this->tempDir . "/install/install.xml");
 
 			$versionCurrent = "v" . trim($this->versionCurrent);
-            $file = $xmlObj->migrate->$versionCurrent->sql;
+            $file_name = $xmlObj->migrate->$versionCurrent->sql;
 
-
-			if (empty($file)) {
-                throw new Exception("Обновление с версии {$this->versionCurrent} до {$this->mod['version']} не предусмотрено!");
+            //проверяем задана ли миграция и есть ли файл, енсли есть берем содержимое
+            $sql = '';
+			if (!empty($file_name)) {
+                $file_loc = $this->tempDir . "/install/" . $file_name;
+                if (!empty($file_name) && is_file($file_loc)) {
+                    $sql = file_get_contents($file_loc);
+                }
             }
-
-            $sql = file_get_contents($this->tempDir . "/install/" . $file);
 
 			if (empty($sql)) {
                 return false;
-            }else{
+            } else {
                 $sql = str_replace("#__", "mod_" . $this->mod['module_id'], $sql);//готовим
                 if (!$this->checkSQL($sql)) {
                     throw new Exception("Попытка удаления таблиц не относящихся к модулю!");
                 }
+                $this->db->query($sql);
+                $this->add_notice("Таблицы модуля", "Таблицы добавлены", "Успешно", "mod_info");
             }
-
-			$this->db->query($sql);
-            $this->add_notice("Таблицы модуля", "Таблицы добавлены", "Успешно", "mod_info");
 			return true;
 		}
-		
+
+
+
+
+
+
+
+
 		static function xmlParse($arrObjData, $arrSkipIndices = array()) {
 			$arrData = array();
     
@@ -476,8 +490,11 @@
          */
         public function Upgrate() {
 
+            //проверка устанавливаемой версии
+			$this->checkVer();
+
 			$this->isUpgrate = true;
-			$arrForUpgrate = array();		
+			$arrForUpgrate = array();
 
 			$arrForUpgrate = array('m_name' =>$this->mod['module_name'],
 				'lastuser'      => $this->lastUser,
@@ -739,6 +756,16 @@
             }
             return $html;
         }
+
+
+    public function checkVer()
+    {
+        if ($this->versionCurrent == $this->mod['version']) {
+            throw new Exception("У вас уже установлена эта версия!");
+        } elseif ($this->versionCurrent > $this->mod['version']) {
+            throw new Exception("У вас стоит более актуальная версия!");
+        }
+    }
 }
 
 ?>

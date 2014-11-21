@@ -171,11 +171,20 @@ class Common extends Acl {
 	}
 	
 	/**
-	 * 
 	 * Print link to CSS file
 	 * @param string $href - CSS filename
 	 */
 	protected function printCss($href) {
+        if (strpos($href, '?')) {
+            $explode_href = explode('?', $href, 2);
+            $href .= file_exists(DOC_ROOT . $explode_href[0])
+                ? '&_=' . crc32(md5_file(DOC_ROOT . $explode_href[0]))
+                : '';
+        } else {
+            $href .= file_exists(DOC_ROOT . $href)
+                ? '?_=' . crc32(md5_file(DOC_ROOT . $href))
+                : '';
+        }
 		echo '<link href="' . $href . '" type="text/css" rel="stylesheet" />';
 	} 
 	

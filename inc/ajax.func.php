@@ -42,32 +42,35 @@ class ajaxFunc extends Common {
 		$phone = array();
 		
 		foreach ($control as $field => $val) {
-			$control[$field] = $val ? trim($val) : '';
-			if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
-				$script .= "document.getElementById('" . $class_id . $field . "2').className='reqField';";
-				$this->error[] = "- Пароль не совпадает.<br/>";
-			}
-			if (isset($control[$field . "%tru"]) && $val > $control[$field . "%tru"]) {
-				$script .= "document.getElementById('" . $class_id . $field . "%tru_day').className='reqField';";
-				$script .= "document.getElementById('" . $class_id . $field . "%tru_month').className='reqField';";
-				$script .= "document.getElementById('" . $class_id . $field . "%tru_year').className='reqField';";
-				$this->error[] = "- Дата начала больше даты окончания.<br/>";
-			}
-			if (substr($field, 0, 6) == 'files|' && $val) {
-				$files = explode("|", trim($val, "|"));
-				if (count($files)) {
-					try {
-						$this->db->fetchOne("SELECT 1 FROM `" . trim($data['table']) . "_files`");
-					} catch (Zend_Db_Exception $e) {
-						$this->error[] = $e->getMessage() . "<br/>";
+			if (!is_array($val)) {
+				$control[$field] = trim($val);
+				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
+					$script .= "document.getElementById('" . $class_id . $field . "2').className='reqField';";
+					$this->error[] = "- Пароль не совпадает.<br/>";
+				}
+				else if (isset($control[$field . "%tru"]) && $val > $control[$field . "%tru"]) {
+					$script .= "document.getElementById('" . $class_id . $field . "%tru_day').className='reqField';";
+					$script .= "document.getElementById('" . $class_id . $field . "%tru_month').className='reqField';";
+					$script .= "document.getElementById('" . $class_id . $field . "%tru_year').className='reqField';";
+					$this->error[] = "- Дата начала больше даты окончания.<br/>";
+				}
+				else if (substr($field, 0, 6) == 'files|' && $val) {
+					$files = explode("|", trim($val, "|"));
+					if (count($files)) {
+						try {
+							$this->db->fetchOne("SELECT 1 FROM `" . trim($data['table']) . "_files`");
+						} catch (Zend_Db_Exception $e) {
+							$this->error[] = $e->getMessage() . "<br/>";
+						}
 					}
 				}
 			}
 		}
+
 		foreach ($fields as $field => $val) {
 			if (!isset($control[$field])) continue;
 			$params = explode(",", $val);			
-			if (in_array("req", $params) && (is_null($control[$field]) || trim($control[$field]) === '' || $control[$field] === false)) {
+			if (in_array("req", $params) && (is_null($control[$field]) || $control[$field] === false || $control[$field] === '' || (is_array($control[$field]) && !$control[$field]) )) {
 				$req[] = $field;
 			}
 			if ($control[$field]) {
@@ -337,8 +340,10 @@ class ajaxFunc extends Common {
 					}
 				}
 
+                if ( ! empty($control)) {
 				$where = $this->db->quoteInto($data['keyField'] . " = ?", $data['refid']);
 				$this->db->update($table, $control, $where);
+                }
 				$last_insert_id = $data['refid'];
 				if ($fileFlag) {
 					if ($fileFlagDel) {

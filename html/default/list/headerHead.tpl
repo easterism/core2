@@ -1,10 +1,9 @@
-<thead class="headerHead">
     <tr class="headerText">
         <td width="1%" rowspan="{ROWSPAN}">№</td>
     <!-- BEGIN extrahead -->
-    <!-- BEGIN extracell -->
+        <!-- BEGIN extracell -->
         <td colspan="{COLSPAN}" rowspan="{ROWSPAN2}">{CAPTION}</td>
-    <!-- END extracell -->
+        <!-- END extracell -->
     </tr><tr>
     <!-- END extrahead -->
 
@@ -24,4 +23,3 @@
         <td width="1%"><input class="input" type="checkbox" onclick="listx.checkAll(this, '{resource}')"/></td>
     <!-- END checkboxes -->
     </tr>
-</thead>
