@@ -39,22 +39,32 @@ class Common extends Acl {
      * инстансы подключенных объектов хранятся в массиве $_p
      *
      * @param string $k
-     * @return Common|null|Zend_Db_Adapter_Abstract|CoreController|mixed
+     * @return Common|null|Zend_Db_Adapter_Abstract|Zend_Config_Ini|CoreController|mixed
      * @throws Exception
      */
     public function __get($k) {
 
 		$v = NULL;
-		if ($k == 'moduleConfig') {
-			if (array_key_exists($k, $this->_p)) {
-				$v = $this->_p[$k];
-			} else {
-				$conf_file = "mod/{$this->module}/conf.ini";
+
+		if (array_key_exists($k, $this->_p)) {
+			$v = $this->_p[$k];
+		} else {
+			//исключение для герета базы или кеша, выполняется всегда
+			if ($k == 'db' || $k == 'cache') {
+				return parent::__get($k);
+			}
+			// Получение экземпляра класса для работы с правами пользователей
+			elseif ($k == 'acl') {
+				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
+			}
+			elseif ($k == 'moduleConfig') {
+				$module_src = $this->getModuleLocation($this->module);
+				$conf_file  = "{$module_src}/conf.ini";
 				if (is_file($conf_file)) {
-					$configExt = new Zend_Config_Ini("conf.ini");
 					$configMod = new Zend_Config_Ini($conf_file);
-					$ext	    = $configExt->getExtends();
 					$extMod    = $configMod->getExtends();
+					$configExt = new Zend_Config_Ini(DOC_ROOT . "conf.ini");
+					$ext       = $configExt->getExtends();
 					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
 						$modConfig = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
 					} else {
@@ -66,85 +76,74 @@ class Common extends Acl {
 					Error::Exception("Не найден конфигурационный файл модуля.", 500);
 				}
 			}
-			return $v;
-		}
-		//исключение для герета базы или кеша, выполняется всегда
-		if ($k == 'db' || $k == 'cache') {
-			return parent::__get($k);
-		}
+			// Получение экземпляра контроллера указанного модуля
+			elseif (strpos($k, 'mod') === 0) {
+				$module = strtolower(substr($k, 3));
 
-        // Получение экземпляра класса для работы с правами пользователей
-		if ($k == 'acl') {
-			if (array_key_exists($k, $this->_p)) {
-				$v = $this->_p[$k];
-			} else {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
+				if ($module == 'admin') {
+					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
+					$v         = $this->modAdmin = new CoreController();
+					$v->module = $module;
+
+				} elseif ($location = $this->getModuleSrc($module)) {
+					if (!$this->isModuleActive($module)) {
+						throw new Exception("Модуль \"{$module}\" не активен");
+					}
+
+					$cl              = ucfirst($k) . 'Controller';
+					$controller_path = $location . '/' . $cl . '.php';
+
+					if (!file_exists($controller_path)) {
+						throw new Exception("Модуль \"{$module}\" сломан");
+					}
+
+					require_once($controller_path);
+
+					if (!class_exists($cl)) {
+						throw new Exception("Модуль \"{$module}\" сломан");
+					}
+
+					$v         = $this->{$k} = new $cl();
+					$v->module = $module;
+
+				} else {
+					throw new Exception("Модуль \"{$module}\" не найден");
+				}
 			}
-			return $v;
-		}
 
-        // Получение экземпляра контроллера указанного модуля
-		if (strpos($k, 'mod') === 0) {
-			if (array_key_exists($k, $this->_p)) {
-				$v = $this->_p[$k];
-			} else {
-				$module   = strtolower(substr($k, 3));
+			// Получение экземпляра api класса указанного модуля
+			elseif (strpos($k, 'api') === 0) {
+				$module     = ucfirst(substr($k, 3));
+				$module_api = "Mod{$module}Api";
+				$location   = $this->module == 'admin'
+					? DOC_ROOT . "core2/mod/admin"
+					: $this->getModuleLocation($this->module);
 
-                if ($module == 'admin') {
-                    require_once(DOC_ROOT . 'core2/inc/CoreController.php');
-                    $v = $this->modAdmin = new CoreController();
-                    $v->module = $module;
+				if ( ! file_exists($location . "/{$module_api}.php")) {
+					$v = $this->{$k} = new stdClass();
 
-                } elseif ($location = $this->getModuleSrc($module)) {
-                    if ( ! $this->isModuleActive($module)) {
-                        throw new Exception("Модуль \"{$module}\" не активен");
-                    }
+				} else {
+					require_once $location . "/{$module_api}.php";
 
-                    $cl = ucfirst($k) . 'Controller';
-                    $controller_path = DOC_ROOT . $location . '/' . $cl . '.php';
-
-                    if ( ! file_exists($controller_path)) {
-                        throw new Exception("Модуль \"{$module}\" сломан");
-                    }
-
-                    require_once($controller_path);
-
-                    if ( ! class_exists($cl)) {
-                        throw new Exception("Модуль \"{$module}\" сломан");
-                    }
-
-                    $v = $this->{$k} = new $cl();
-                    $v->module = $module;
-
-                } else {
-                    throw new Exception("Модуль \"{$module}\" не найден");
-                }
+					$v = $this->{$k} = new $module_api();
+				}
 			}
-			return $v;
-		}
 
-        // Получение экземпляра модели текущего модуля
-		if (strpos($k, 'data') === 0) {
-			if (array_key_exists($k, $this->_p)) {
-				$v = $this->_p[$k];
-			} else {
+			// Получение экземпляра модели текущего модуля
+			elseif (strpos($k, 'data') === 0) {
 				$model    = substr($k, 4);
-                $location = $this->module == 'admin'
-                    ? "core2/mod/{$this->module}"
-                    : $this->getModuleLocation($this->module);
+				$location = $this->module == 'admin'
+						? DOC_ROOT . "core2/mod/admin"
+						: $this->getModuleLocation($this->module);
 
-                if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
+				if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
 				$this->db; //FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
-                require_once($location . "/Model/$model.php");
+				require_once($location . "/Model/$model.php");
 				$v = $this->{$k} = new $model();
 			}
-			return $v;
-		}
-
-		if (array_key_exists($k, $this->_p)) {
-			$v = $this->_p[$k];
-		} else {
-			$v = $this->{$k} = $this;
+			else {
+				$v = $this->{$k} = $this;
+			}
 		}
 
 		return $v;
@@ -175,17 +174,7 @@ class Common extends Acl {
 	 * @param string $href - CSS filename
 	 */
 	protected function printCss($href) {
-        if (strpos($href, '?')) {
-            $explode_href = explode('?', $href, 2);
-            $href .= file_exists(DOC_ROOT . $explode_href[0])
-                ? '&_=' . crc32(md5_file(DOC_ROOT . $explode_href[0]))
-                : '';
-        } else {
-            $href .= file_exists(DOC_ROOT . $href)
-                ? '?_=' . crc32(md5_file(DOC_ROOT . $href))
-                : '';
-        }
-		echo '<link href="' . $href . '" type="text/css" rel="stylesheet" />';
+        Tool::printCss($href);
 	} 
 	
 	/**
@@ -194,12 +183,7 @@ class Common extends Acl {
 	 * @param string $src - JS filename
 	 */
 	protected function printJs($src, $chachable = false) {
-		if ($chachable) {
-			//помещаем скрипт в head
-			echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
-		} else {
-			echo '<script type="text/javascript" language="JavaScript" src="' . $src . '"></script>';
-		}
-	} 
+        Tool::printJs($src, $chachable);
+	}
 	
 }

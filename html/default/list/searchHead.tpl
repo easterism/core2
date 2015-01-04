@@ -1,5 +1,5 @@
-	<tr class="headerText">
-		<td colspan="100" class="HeaderTextTD">
+	<tr class="searchPanel">
+		<th colspan="100">
 			<!-- BEGIN col -->
 			<div class="columnFilterIcon" onclick="{CLICK_COL}" title="Колонки"></div>
 			<!-- END col -->
@@ -7,38 +7,36 @@
 			<!-- BEGIN clear -->
 			<div class="clearFilterIcon" onclick="{CLICK_CLEAR}" title="Очистить"></div>
 			<!-- END clear -->
-		</td>
+		</th>
 	</tr>
 	
-	<tr class="searchContainer" style="display:none" id="{filterID}">
+	<tr class="searchContainer hide" id="{filterID}">
 		<td colspan="100">
-			<div>
-                <form onsubmit="{CLICK_START}">
-                <table>
-                    <!-- BEGIN fields -->
-                    <tr>
-                        <td align="right">{FIELD_CAPTION}:</td>
-                        <td>{FIELD_CONTROL}</td>
-                    </tr>
-                    <!-- END fields -->
-                    <tr>
-                        <td></td><td></td>
-                        <td><input type="submit" class="buttonSmall" value="Искать" style="position:absolute;margin-top:-25px"></td>
-                    </tr>
-                </table>
-                </form>
-            </div>
+            <form onsubmit="{CLICK_START}">
+                <!-- BEGIN fields -->
+                <div class="searchRow">
+                    <div>{FIELD_CAPTION}:</div>
+                    <div>
+                        {FIELD_CONTROL}
+                        <!-- BEGIN submit -->
+                        <div style="padding: 5px 0"><input type="submit" class="buttonSmall" value="Искать"></div>
+                        <!-- END submit -->
+                    </div>
+                </div>
+                <!-- END fields -->
+            </form>
 		</td>
 	</tr>
 	<!-- BEGIN filterColumnContainer -->
-	<tr class="searchContainer" style="display:none" id="{filterColumnID}">
+	<tr class="searchContainer hide" id="{filterColumnID}">
 		<td colspan="100">
 			<div>
 				<form onsubmit="{COL_SUBMIT}">
-						<!-- BEGIN filterColumn -->
+					<!-- BEGIN filterColumn -->
 					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label><br>
-						<!-- END filterColumn -->
+					<!-- END filterColumn -->
 					<input type="submit" class="buttonSmall" value="Применить" style="margin:5px"/>
+					<input type="button" class="buttonSmall" value="Очистить" style="margin:5px"/>
 				</form>
 			</div>
 		</td>

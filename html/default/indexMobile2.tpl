@@ -16,7 +16,7 @@
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
 	<script type="text/javascript" language="javascript"
-			src="core2/js/jquery/plugins/jquery.simplemodal-1.4.4.min.js"></script>
+            src="core2/ext/jQuery/plugins/simplemodal-1.4.5/src/jquery.simplemodal.js"></script>
 
 	<script type="text/javascript" language="javascript"
 			src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>

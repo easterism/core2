@@ -227,8 +227,6 @@ PRELOADERS PROGRESS
     z-index:-2;
 }
 
-
-
 #progressbar table {
 	background: #fff;
 }
@@ -252,19 +250,29 @@ table.sTable td{
 	font-size:11px;
 	padding:2px 5px 2px 5px;
 }
-table.sTable td table.paginTable td{
-	border:0;
-}
-table.sTable tr.rowOver {
+table.sTable tbody tr.rowOver {
 	background-color:#eeffff;
 }
+
+table.sTable tbody tr.pointer {
+	cursor: pointer;
+}
+
+table.sTable tbody tr:hover {
+	background-color: #eeffff;
+}
+
 tr.headerText td {
 	background-color:#eeeeee;
 	font-weight:bold;
 	font-size:11px;
+	padding: 5px 5px;
 }
-.headerHead tr.headerText td {
-	padding:5px;
+
+tr.columnSum td {
+	background-color: #eeeeee;
+	font-weight: bold;
+	font-size: 11px;
 }
 td.headerCell {
 	cursor:pointer;
@@ -273,25 +281,43 @@ td.headerCell img {
 	float:right;
 }
 
+tr.searchPanel th {
+	background-color: #eeeeee;
+	font-weight: bold;
+	font-size: 11px;
+}
+
+tr.servicePanel th {
+	border-top: solid 1px silver;
+	background-color: #eeeeee;
+	font-weight: bold;
+	font-size: 11px;
+}
+tr.servicePanel .recordNum {
+	float: left;
+	padding: 5px;
+}
+
+
 /*
-LISR class search container
+LIST class search container
 */
 .searchContainer {
 	background-color:#eeeeee;
 }
-.searchContainer td {
-	border:0 !important;
-}
-.searchContainer td table {
-	border:0 !important;
-}
-.searchContainer .searchFields td {
-	width:0%;
+.searchContainer .searchRow {
+	display: table-row;
 }
 
-.HeaderTextTD  {
-	padding:0;
+.searchContainer .searchRow > div {
+	display: table-cell;
+	padding:1px;
 }
+.searchContainer .searchRow > div:first-child {
+	text-align: right;
+	vertical-align: top;
+}
+
 .showFilterIcon {
 	cursor:pointer;
 	width:16px;
@@ -308,7 +334,6 @@ LISR class search container
 	float: left;
 	background-image: url(list/img/clearview.png);
 }
-
 .columnFilterIcon {
 	cursor: pointer;
 	width: 16px;
@@ -318,7 +343,15 @@ LISR class search container
 	background-image: url(list/img/application_view_columns.png);
 }
 
-
+table.paginTable td {
+	background-color: transparent;
+	border: 0;
+	vertical-align: top;
+	padding: 3px;
+	background-color: #eeeeee;
+	font-weight: bold;
+	font-size: 11px;
+}
 .paginButton {
 	height:16px;
 	width:16px;
@@ -332,7 +365,7 @@ LISR class search container
 }
 .paginButton span{
 	position:absolute;
-	margin:-11px 0 0 -3px;
+	margin:-8px 0 0 -3px;
 	cursor:inherit;
 }
 
@@ -347,10 +380,6 @@ LISR class search container
 }
 .calSearchContent {
 	position:absolute;
-}
-
-.editListFields {
-	cursor: pointer;
 }
 .editHintTable {
 	background-color:#ffffee;
@@ -407,6 +436,7 @@ table.editTable td {
 	vertical-align:top;
 	padding:3px;
 }
+
 .requiredStar {
 	color:red !important;
 	padding:3px;
@@ -783,4 +813,62 @@ table td.homeTD {
 
 .ui-timepicker-rtl dl dd {
 	margin: 0 65px 10px 10px;
+}
+
+/* css for InstallModule class */
+.im-msg-red {
+    background-color: #f2dede;
+    width:96%;
+    border-left:5px solid #a94442;
+    padding-left:15px;
+    padding-top:1px;
+    padding-bottom:1px;
+    padding-right:15px;
+    color:black;
+    margin: 10px;
+}
+.im-msg-red > span{
+    color: #a94442;
+}
+.im-msg-green {
+    background-color: #dff0d8;
+    width:96%;
+    border-left:5px solid #3c763d;
+    padding-left:15px;
+    padding-top:1px;
+    padding-bottom:1px;
+    padding-right:15px;
+    color:black;
+    margin: 10px;
+}
+.im-msg-green > span{
+    color: #3c763d;
+}
+.im-msg-blue {
+    background-color: #d9edf7;
+    width:96%;
+    border-left:5px solid #31708f;
+    padding-left:15px;
+    padding-top:1px;
+    padding-bottom:1px;
+    padding-right:15px;
+    color: black;
+    margin: 10px;
+}
+.im-msg-blue > span{
+    color: #31708f;
+}
+.im-msg-yellow {
+    background-color: #fcf8e3;
+    width:96%;
+    border-left:5px solid #8a6d3b;
+    padding-left:15px;
+    padding-top:1px;
+    padding-bottom:1px;
+    padding-right:15px;
+    color: black;
+    margin: 10px;
+}
+.im-msg-yellow > span{
+    color: #8a6d3b;
 }

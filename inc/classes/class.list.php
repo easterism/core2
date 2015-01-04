@@ -38,6 +38,7 @@ class listTable extends initList {
 	public $roundRecordCount		= false;
 	private $is_seq 				= false;
 	private $sessData 				= array();
+	public $fixHead 				= false;
 
 	public function __construct($name) {
 		parent::__construct();
@@ -425,7 +426,7 @@ class listTable extends initList {
 		}
 		return $this->data;
 	}
-	
+
 	protected function array_key_multi_sort($arr, $l , $type) {
 	    if ($type == 'asc') usort($arr, create_function('$a, $b', "return strnatcasecmp(\$a['$l'], \$b['$l']);"));
 	    if ($type == 'desc') usort($arr, create_function('$a, $b', "return strnatcasecmp(\$b['$l'], \$a['$l']);"));
@@ -539,43 +540,41 @@ class listTable extends initList {
 				$next = null;
 			}
 
-			$tpl = new Templater('core2/html/' . THEME . "/list/searchHead.tpl");
-			if ($this->filterColumn) {
-				$tpl->touchBlock('col');
-				$tpl->touchBlock('filterColumnContainer');
-				$tpl->touchBlock('filterColumn');
-				$tpl->assign('{filterColumnID}', "filterColumn" . $this->resource);
-				$tpl->assign('{CLICK_COL}', "listx.columnFilter('{$this->resource}')");
-				$tpl->assign('{COL_SUBMIT}', "listx.columnFilterStart('{$this->resource}', $this->ajax);return false;");
+			$tpl = new Templater2('core2/html/' . THEME . "/list/searchHead.tpl");
+			if ($this->filterColumn) { // формирование фильтра колонок
+				$tpl->filterColumnContainer->assign('{filterColumnID}', "filterColumn" . $this->resource);
+				$tpl->col->assign('{CLICK_COL}', "listx.columnFilter('{$this->resource}')");
+				$tpl->filterColumnContainer->assign('{COL_SUBMIT}', "listx.columnFilterStart('{$this->resource}',$this->ajax);return false;");
 				foreach ($this->table_column[$this->main_table_id] as $k => $cols) {
-					$tpl->assign('{COL_CAPTION}', $cols['name']);
-					$tpl->assign('{VAL}', $k + 1);
+					$tpl->filterColumnContainer->filterColumn->assign('{COL_CAPTION}', $cols['name']);
+					$tpl->filterColumnContainer->filterColumn->assign('{VAL}', $k + 1);
 					if (!empty($this->sessData['column'])) {
 						if (!in_array($k + 1, $this->sessData['column'])) {
-							$tpl->assign('{checked}', '');
+							$tpl->filterColumnContainer->filterColumn->assign('{checked}', '');
 						} else {
-							$tpl->assign('{checked}', 'checked');
+							$tpl->filterColumnContainer->filterColumn->assign('{checked}', 'checked');
 						}
 					} else {
-						$tpl->assign('{checked}', 'checked');
+						$tpl->filterColumnContainer->filterColumn->assign('{checked}', 'checked');
 					}
-					$tpl->reassignBlock('filterColumn');
+                    if ($k + 1 < count($this->table_column[$this->main_table_id])) {
+                        $tpl->filterColumnContainer->filterColumn->reassign();
+                    }
 				}
-
 			}
 			$tpl->assign('{CLICK_FILTER}', "listx.showFilter('{$this->resource}')");
 			$tpl->assign('{CLICK_START}', "listx.startSearch('{$this->resource}',$this->ajax);return false;");
 			$tpl->assign('{filterID}', "filter" . $this->resource);
 			if (!empty($this->sessData['search']) && count($this->sessData['search'])) {
-				$tpl->touchBlock('clear');
-				$tpl->assign('{CLICK_CLEAR}', "listx.clearFilter('{$this->resource}', $this->ajax)");
+				$tpl->clear->assign('{CLICK_CLEAR}', "listx.clearFilter('{$this->resource}', $this->ajax)");
 			}
-			$tpl->touchBlock('fields');
 
-			foreach ($this->table_search[$this->main_table_id] as $key => $value) {
+            // Формирование формы поиска
+            $searchFields = $this->table_search[$this->main_table_id];
+			foreach ($searchFields as $key => $value) {
 				$searchFieldId = $this->search_table_id . $key;
 
-				$tpl->assign('{FIELD_CAPTION}', $value['name']);
+				$tpl->fields->assign('{FIELD_CAPTION}', $value['name']);
 
 				$temp = explode("_", $value['type']);
 				$value['type'] = $temp[0];
@@ -595,10 +594,10 @@ class listTable extends initList {
 				}
 
 				if ($value['type'] == 'text') {
-					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'date') {
-					$HTML = "<table><tr>";
+					$HTML = "<div>";
 					$dd = '';
 					$mm = '';
 					$yy = '';
@@ -618,15 +617,14 @@ class listTable extends initList {
 						$insert = str_replace("mm", $month, $insert);
 						$insert = str_replace("yyyy", $year, $insert);
 						$insert = str_replace("yy", $year, $insert);
-						$HTML .= "<td class=\"searchDateTd\">". $insert . "</td>
-								<td class=\"searchDateImgTD\"><input id=\"date_" . $prefix . "\" type=\"hidden\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[$d]}\"></td>";
-						if ($d == 0) $HTML .= "<td style='padding:0'>&nbsp;&nbsp;<>&nbsp;&nbsp;</td>";
+						$HTML .= "<span>". $insert . "</span>
+								<span><input id=\"date_" . $prefix . "\" type=\"hidden\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[$d]}\"></span>";
+						if ($d == 0) $HTML .= "<span>&nbsp;&nbsp;<>&nbsp;&nbsp;</span>";
 					}
-					$HTML .= "<td style=\"padding:0\">
-								<script>listx.create_date('{$searchFieldId}0');listx.create_date('{$searchFieldId}1');</script>
-							{$value['out']}</td>".
-						"</tr></table>";
-					$tpl->assign('{FIELD_CONTROL}', $HTML);
+					$HTML .= "<span><script>listx.create_date('{$searchFieldId}0');listx.create_date('{$searchFieldId}1');</script>
+							{$value['out']}</span>".
+						"</div>";
+					$tpl->fields->assign('{FIELD_CONTROL}', $HTML);
 				}
 				elseif ($value['type'] == 'checkbox' || $value['type'] == 'checkbox2') {
 					$temp = array();
@@ -654,7 +652,9 @@ class listTable extends initList {
 						$tpl2->reassignBlock('checkbox');
 					}
 					$sqlSearchCount++;
-					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+                    // input нужен для того, чтобы обрабатывать пустые checkbox
+                    // пустые чекбоксы не постятся вообще
+					$tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
 				}
 				elseif ($value['type'] == 'radio') {
 					$temp = array();
@@ -682,7 +682,7 @@ class listTable extends initList {
 						$tpl2->reassignBlock('radio');
 					}
 					$sqlSearchCount++;
-					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'list') {
 					$temp = array();
@@ -705,7 +705,7 @@ class listTable extends initList {
 					}
 					$sqlSearchCount++;
 					$tpl2->fillDropDown('{ID}', $opt, $next);
-					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
                 elseif ($value['type'] == 'multilist') {
 					$temp = array();
@@ -716,7 +716,6 @@ class listTable extends initList {
 					} else {
 						$temp = $this->db->fetchAll($this->sqlSearch[$sqlSearchCount]);
 					}
-					$opt = array('' => 'Все');
 					foreach ($temp as $row) {
 						$k = current($row);
 						$v = end($row);
@@ -732,14 +731,19 @@ class listTable extends initList {
                         $tpl2->reassignBlock('opt');
 					}
 					$sqlSearchCount++;
-					$tpl->assign('{FIELD_CONTROL}', $tpl2->parse());
+                    // input нужен для того, чтобы обрабатывать пустые checkbox
+                    // пустые чекбоксы не постятся вообще
+					$tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
 				}
 
 				if (!empty($this->sessData['search'])) {
 					$next = next($this->sessData['search']); // берем следующее значение
 				}
-				
-				$tpl->reassignBlock('fields');
+				if ($key + 1 < count($searchFields)) {
+                    $tpl->fields->reassign();
+                } else {
+                    $tpl->fields->touchBlock('submit');
+                }
 			}
             $serviceHeadHTML .= 	$tpl->parse();
 		}
@@ -759,7 +763,7 @@ class listTable extends initList {
 		}
 		$temp = '';
 		$columnsToReplace = array();
-		if ($eh) {
+		if ($eh) { // добавляем дополнительные строки в шапку таблицы
 			$cell = $tpl->getBlock('extracell');
 			$tpl->assign('{ROWSPAN}', $eh + 1);
 			foreach ($this->extraHeaders as $k => $cols) {
@@ -860,191 +864,206 @@ class listTable extends initList {
 			$this->data = $this->array_key_multi_sort($this->data, $order, $orderType);
 		}
 
-		foreach ($this->data as $k => $row) {
-			
-			if ($this->extOrder) {
-				if ($i < $this->sessData[$pagePOST] * $this->sessData[$countPOST] - $this->sessData[$countPOST]) {
-					$i++;
-					continue;
-				}
-				if ($i + 1 > $this->sessData[$pagePOST] * $this->sessData[$countPOST]) break;
-				$recordNumber = $i + 1;
-			} else {
-				$recordNumber++;
-			}
-			
-			$recordClass = ""; //TODO add class
-			
-			$tableBodyHTML .= "<tr onmouseover=\"listx.onm(this)\" onmouseout=\"listx.onm(this)\"";
-			if (!empty($this->metadata[$k])) {
-				if (!empty($this->metadata[$k]['paintColor'])) {
-					$tableBodyHTML .= " bgcolor=\"{$this->metadata[$k]['paintColor']}\"";
-				}
-				if (!empty($this->metadata[$k]['fontColor']) || !empty($this->metadata[$k]['fontWeight'])) {
-					$tableBodyHTML .= " style=\"";
-					if (isset($this->metadata[$k]['fontColor']) && $this->metadata[$k]['fontColor']) $tableBodyHTML .= "color:{$this->metadata[$k]['fontColor']};";
-					if (isset($this->metadata[$k]['fontWeight']) && $this->metadata[$k]['fontWeight']) $tableBodyHTML .= "font-weight:{$this->metadata[$k]['fontWeight']};";
-					$tableBodyHTML .= "\"";
-				}
-			}
-
-			if ($this->editURL && 
-				($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner')
-				|| $this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
-				
-				$tres = $this->replaceTCOL($row, $this->editURL);
-				$tableBodyHTML .= ' style="cursor:pointer"';
-				if (strpos(strtolower($tres), 'javascript:') === 0) {
-					$tableBodyHTML .= ' onclick="' . substr($tres, 11) . '"';
-				} else {
-					$tableBodyHTML .= ' onclick="load(\'' . $tres . '\')"';
-				}
-			}
-			$tableBodyHTML .= " class=\"editListFields\"><td title=\"" . current($row) . "\">$recordNumber</td>";
-			$c = 1;
-			$look = "";
-			
-			$columnCount = count($this->table_column[$this->main_table_id]);
-			
-			reset($row);
-			next($row);
-			for ($sql_key = 1; $sql_key <= $columnCount; $sql_key++) {
-				//$sql_value = $row[$sql_key];
-				$sql_value = current($row);
-				next($row);
-				if ($this->filterColumn && isset($this->sessData['column']) && !in_array($sql_key, $this->sessData['column'])) continue;
-
-				if (is_array($needsum)) {
-					if (in_array($sql_key, $this->addSum)) {
-						$needsum["_" . $sql_key] += $sql_value;
-					}
-				}
-				
-				$value = $this->table_column[$this->main_table_id][$sql_key - 1];
-				$temp = "";
-				if ($value['type'] == 'block') {
-					$temp = " onclick=\"listx.cancel(event)\"";
-				}
-				
-				$tableBodyHTML .= "<td width=\"{$value['width']}\"" . $temp;
-				if ($value['type'] != 'status_inline') {
-					$tableBodyHTML .= " " . $this->replaceTCOL($row, $value['in']); 
-				}
-				$tableBodyHTML .= ">";
-				
-				//RECOGNIZE TYPE 
-				//$sql_value = htmlspecialchars($sql_value); 
-				
-				if ($value['type'] == 'text' || $value['type'] == 'function') {
-					$tableBodyHTML .= $sql_value;
-				} elseif ($value['type'] == 'number') {
-					$tableBodyHTML .= $this->commafy($sql_value);
-				} elseif ($value['type'] == 'file') {
-					global $config;
-					if (!class_exists('FileMaster')) {
-						require_once('FileMaster.php');
-					}						
-					$tableBodyHTML .= FileMaster::getFileInfoForList($sql_value, '', 150, 150);//htmlspecialchars_decode($sql_value);
-					
-				} elseif ($value['type'] == 'html' || $value['type'] == 'block') {
-					$tableBodyHTML .= htmlspecialchars_decode($sql_value);
-				} else if ($value['type'] == 'date') {
-                    $dd   = substr($sql_value, 8, 2);
-                    $mm   = substr($sql_value, 5, 2);
-                    $yyyy = substr($sql_value, 0, 4);
-                    $yy   = substr($sql_value, 2, 2);
-					
-					$tableBodyHTML .= str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
-					
-				} else if ($value['type'] == 'datetime') {
-                    $dd   = substr($sql_value, 8, 2);
-                    $mm   = substr($sql_value, 5, 2);
-                    $yyyy = substr($sql_value, 0, 4);
-                    $yy   = substr($sql_value, 2, 2);
-                    $time = substr($sql_value, 11);
-					
-					$sql_value = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
-					$tableBodyHTML .= $sql_value . ' ' . $time;
-				} else if ($value['type'] == 'datetime_human') {
-					require_once('humanRelativeDate.class.php');
-                    $humanRelativeDate = new HumanRelativeDate();
-                    $dd                = substr($sql_value, 8, 2);
-                    $mm                = substr($sql_value, 5, 2);
-                    $yyyy              = substr($sql_value, 0, 4);
-                    $yy                = substr($sql_value, 2, 2);
-                    $time              = substr($sql_value, 11);
-
-					$title = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask)) . ' ' . $time;
-					$tableBodyHTML .= "<span title=\"$title\">{$humanRelativeDate->getTextForSQLDate($sql_value)}</span>";
-				} else if ($value['type'] == 'look') {
-					$tableBodyHTML .= "<div onclick='listx.cancel2(event, \"look" . $this->main_table_id . $int_count . "\");'>" . stripslashes($sql_value) . "</div>";
-					$look = $this->replaceTCOL($row, $value['processing']);
-				} else if ($value['type'] == 'hint') {
-					$SQL = $this->replaceTCOL($row, $value['processing']);
-					$hint_res = $this->db->fetchAll($SQL);
-					$hint = "<table class=\"editHintTable\">";
-					foreach ($hint_res as $hint_row) {
-						$hint .= "<tr>";
-						foreach ($hint_row as $hint_key => $hint_value) {
-							$hint .= "<td>$hint_value</td>";
-						}
-						$hint .= "</tr>";
-					}
-					$hint .= "</table>";
-					$tableBodyHTML .= "<span class=\"editHintSpan\" onmouseover=\"this.nextSibling.style.display='block'\" onmouseout=\"this.nextSibling.style.display='none'\">$sql_value</span><div class=\"editHintDiv\" style=\"display:none;\">".$hint."</div>";
-				} elseif ($value['type'] == 'status') {
-					if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
-						$tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" />";
-					} else {
-						$tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" />";
-					}
-				} elseif ($value['type'] == 'status_inline') {
-					$evt = "";
-					if ($this->checkAcl($this->resource, 'edit_owner') || $this->checkAcl($this->resource, 'edit_all')) {
-						$evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\"";
-					}
-					if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
-						$tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" $evt />";
-					} else {
-						$tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" $evt />";
-					}
-				}
-				
-				$tableBodyHTML .= "</td>";
-			}
-			if ($this->multiEdit) {
-				$onclick = "onclick=\"listx.cancel(event, '{$this->main_table_id}')\"";
-			} else {
-				$onclick = "onclick=\"listx.cancel(event)\"";
-			}
-			$tempid = $this->resource . $int_count;
-			if ($this->noCheckboxes == 'no') {
-				$tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";	
-			}
-			$tableBodyHTML .= "</tr>";
-			if (isset($look) && $look) {
-				$tableBodyHTML .= "<tr id=\"look{$tempid}\" style=\"display:none\"><td colspan=\"100\">$look</td></tr>";
-			}
-			$int_count++;
-			$i++;
-		}
-
 		if (!$this->recordCount || $this->recordCount < 0) {
+            $this->fixHead = false;
 			$tableBodyHTML = "<tr><td colspan=\"100\" align=\"center\" style=\"padding:5\">{$this->classText['NORESULT']}</td></tr>";
 		} else {
-			if (!empty($this->addSum) && $count = count($this->addSum)) {
-				$tableBodyHTML .= "<tr class=\"headerText\">";
-				for ($i = 0; $i < $columnCount; $i++) {
+            // Формируем основное содержимое таблицы
+            foreach ($this->data as $k => $row) {
+                if ($this->extOrder) {
+                    if ($i < $this->sessData[$pagePOST] * $this->sessData[$countPOST] - $this->sessData[$countPOST]) {
+                        $i++;
+                        continue;
+                    }
+                    if ($i + 1 > $this->sessData[$pagePOST] * $this->sessData[$countPOST]) break;
+                    $recordNumber = $i + 1;
+                } else {
+                    $recordNumber++;
+                }
+
+                $recordClass = array();
+
+                //$tableBodyHTML .= "<tr onmouseover=\"listx.onm(this)\" onmouseout=\"listx.onm(this)\"";
+                $tableBodyHTML .= "<tr";
+                if (!empty($this->metadata[$k])) {
+                    if (!empty($this->metadata[$k]['paintColor'])) {
+                        $tableBodyHTML .= " bgcolor=\"{$this->metadata[$k]['paintColor']}\"";
+                    }
+                    if (!empty($this->metadata[$k]['fontColor']) || !empty($this->metadata[$k]['fontWeight'])) {
+                        $tableBodyHTML .= " style=\"";
+                        if (isset($this->metadata[$k]['fontColor']) && $this->metadata[$k]['fontColor']) $tableBodyHTML .= "color:{$this->metadata[$k]['fontColor']};";
+                        if (isset($this->metadata[$k]['fontWeight']) && $this->metadata[$k]['fontWeight']) $tableBodyHTML .= "font-weight:{$this->metadata[$k]['fontWeight']};";
+                        $tableBodyHTML .= "\"";
+                    }
+                }
+
+                if ($this->editURL &&
+                        ($this->checkAcl($this->resource, 'edit_all')
+                            || $this->checkAcl($this->resource, 'edit_owner')
+                            || $this->checkAcl($this->resource, 'read_all')
+                            || $this->checkAcl($this->resource, 'read_owner')
+                        )
+                ) {
+                    $tres = $this->replaceTCOL($row, $this->editURL);
+                    $recordClass[] = 'pointer';
+                    if (strpos(strtolower($tres), 'javascript:') === 0) {
+                        $tableBodyHTML .= ' onclick="' . substr($tres, 11) . '"';
+                    } else {
+                        $tableBodyHTML .= ' onclick="load(\'' . $tres . '\')"';
+                    }
+                }
+                if ($recordClass) {
+                    $tableBodyHTML .= " class=\"" . implode(" ", $recordClass) . "\"";
+                }
+                $tableBodyHTML .= "><td title=\"" . current($row) . "\">$recordNumber</td>";
+                $look = "";
+
+                $columnCount = count($this->table_column[$this->main_table_id]); // к-во столбцов
+
+                reset($row);
+                next($row);
+                for ($sql_key = 1; $sql_key <= $columnCount; $sql_key++) {
+                    //$sql_value = $row[$sql_key];
+                    $sql_value = current($row);
+                    next($row);
+                    if ($this->filterColumn && isset($this->sessData['column']) && !in_array($sql_key, $this->sessData['column'])) continue;
+
+                    if (is_array($needsum)) {
+                        if (in_array($sql_key, $this->addSum)) {
+                            $needsum["_" . $sql_key] += $sql_value;
+                        }
+                    }
+
+                    $value = $this->table_column[$this->main_table_id][$sql_key - 1];
+                    $temp  = "";
+                    if ($value['type'] == 'block') {
+                        $temp .= " onclick=\"listx.cancel(event)\"";
+                    }
+                    if ($value['width']) {
+                        $temp .= " width=\"{$value['width']}\"";
+                    }
+                    if ($value['type'] != 'status_inline') {
+                        $temp .= " " . $this->replaceTCOL($row, $value['in']);
+                    }
+                    $tableBodyHTML .= "<td{$temp}>";
+
+                    //RECOGNIZE TYPE
+                    //$sql_value = htmlspecialchars($sql_value);
+
+                    if ($value['type'] == 'text' || $value['type'] == 'function') {
+                        $tableBodyHTML .= $sql_value;
+                    } elseif ($value['type'] == 'number') {
+                        $tableBodyHTML .= $this->commafy($sql_value);
+                    } elseif ($value['type'] == 'file') {
+                        if (!class_exists('FileMaster')) {
+                            require_once('FileMaster.php');
+                        }
+                        $tableBodyHTML .= FileMaster::getFileInfoForList($sql_value, '', 150, 150);//htmlspecialchars_decode($sql_value);
+
+                    } elseif ($value['type'] == 'html' || $value['type'] == 'block') {
+                        $tableBodyHTML .= htmlspecialchars_decode($sql_value);
+                    } else if ($value['type'] == 'date') {
+                        $dd   = substr($sql_value, 8, 2);
+                        $mm   = substr($sql_value, 5, 2);
+                        $yyyy = substr($sql_value, 0, 4);
+                        $yy   = substr($sql_value, 2, 2);
+
+                        $tableBodyHTML .= str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
+
+                    } else if ($value['type'] == 'datetime') {
+                        $dd   = substr($sql_value, 8, 2);
+                        $mm   = substr($sql_value, 5, 2);
+                        $yyyy = substr($sql_value, 0, 4);
+                        $yy   = substr($sql_value, 2, 2);
+                        $time = substr($sql_value, 11);
+
+                        $sql_value = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
+                        $tableBodyHTML .= $sql_value . ' ' . $time;
+                    } else if ($value['type'] == 'datetime_human') {
+                        require_once('humanRelativeDate.class.php');
+                        $humanRelativeDate = new HumanRelativeDate();
+                        $dd                = substr($sql_value, 8, 2);
+                        $mm                = substr($sql_value, 5, 2);
+                        $yyyy              = substr($sql_value, 0, 4);
+                        $yy                = substr($sql_value, 2, 2);
+                        $time              = substr($sql_value, 11);
+
+                        $title = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask)) . ' ' . $time;
+                        $tableBodyHTML .= "<span title=\"$title\">{$humanRelativeDate->getTextForSQLDate($sql_value)}</span>";
+                    } else if ($value['type'] == 'look') {
+                        $tableBodyHTML .= "<div onclick='listx.cancel2(event, \"look" . $this->main_table_id . $int_count . "\");'>" . stripslashes($sql_value) . "</div>";
+                        $look = $this->replaceTCOL($row, $value['processing']);
+                    } else if ($value['type'] == 'hint') {
+                        $SQL      = $this->replaceTCOL($row, $value['processing']);
+                        $hint_res = $this->db->fetchAll($SQL);
+                        $hint     = "<table class=\"editHintTable\">";
+                        foreach ($hint_res as $hint_row) {
+                            $hint .= "<tr>";
+                            foreach ($hint_row as $hint_key => $hint_value) {
+                                $hint .= "<td>$hint_value</td>";
+                            }
+                            $hint .= "</tr>";
+                        }
+                        $hint .= "</table>";
+                        $tableBodyHTML .= "<span class=\"editHintSpan\" onmouseover=\"this.nextSibling.style.display='block'\" onmouseout=\"this.nextSibling.style.display='none'\">$sql_value</span><div class=\"editHintDiv\" style=\"display:none;\">" . $hint . "</div>";
+                    } elseif ($value['type'] == 'status') {
+                        if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" />";
+                        } else {
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" />";
+                        }
+                    } elseif ($value['type'] == 'status_inline') {
+                        $evt = "";
+                        if ($this->checkAcl($this->resource, 'edit_owner') || $this->checkAcl($this->resource, 'edit_all')) {
+                            $evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\"";
+                        }
+                        if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" $evt />";
+                        } else {
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" $evt />";
+                        }
+                    }
+
+                    $tableBodyHTML .= "</td>";
+                }
+
+                if ($this->multiEdit) {
+                    $onclick = "onclick=\"listx.cancel(event, '{$this->main_table_id}')\"";
+                } else {
+                    $onclick = "onclick=\"listx.cancel(event)\"";
+                }
+                $tempid = $this->resource . $int_count;
+                if ($this->noCheckboxes == 'no') {
+                    $tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";
+                }
+                $tableBodyHTML .= "</tr>";
+                if (isset($look) && $look) {
+                    $tableBodyHTML .= "<tr id=\"look{$tempid}\" style=\"display:none\"><td colspan=\"100\">$look</td></tr>";
+                }
+                $int_count++;
+                $i++;
+            }
+
+            if (!empty($this->addSum)) { // Добавляем строку с суммами по колонкам
+                $colAffected = false;
+                if ($this->filterColumn && !empty($this->sessData['column'])) {
+                    $colAffected = true;
+                }
+                $tableBodyHTML .= "<tr class=\"columnSum\">";
+				for ($i = 0; $i <= $columnCount; $i++) {
+                    if ($i > 0 && $colAffected && !in_array($i, $this->sessData['column'])) {
+                        continue;
+                    }
 					if (!empty($needsum["_" . $i])) {
 						$tableBodyHTML .= "<td align=\"right\" nowrap=\"nowrap\">" . $this->commafy($needsum["_" . $i]) . "</td>";
 					} else {
 						$tableBodyHTML .= "<td></td>";
 					}
 				}
-				$tableBodyHTML .= "<td colspan=100></td></tr>";
+				$tableBodyHTML .= "</tr>";
 			}
 		}
-        $tplRoot->body->assign('[BODY]', $tableBodyHTML);
+
 
         //SERVICE ROW
         // Панель с кнопками
@@ -1084,8 +1103,8 @@ class listTable extends initList {
         }
         $serviceHeadHTML .= $tpl->parse();
 
-        $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML);
-
+        $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML); // побликуем шапку списка
+        $tplRoot->body->assign('[BODY]', $tableBodyHTML); // побликуем список
 
 		// FOOTER ROW
 		$tpl = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
@@ -1127,7 +1146,7 @@ class listTable extends initList {
 			$tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
 			$tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
 		}
-        $tplRoot->footer->assign('[FOOTER]', $tpl->parse());
+        $tplRoot->footer->assign('[FOOTER]', $tpl->parse()); // побликуем footer
 
 		$this->HTML .= $tplRoot->parse();
 		return $this->HTML;
@@ -1141,18 +1160,26 @@ class listTable extends initList {
 		if ($this->checkAcl($this->resource, 'list_all') || $this->checkAcl($this->resource, 'list_owner')) {
 			$this->makeTable();
 			echo "<script>
-				if (!listx){alert('listx не найден!')}
+				if (!listx){
+				    alert('listx не найден!')
+				}
 				else {
 					listx.loc['{$this->resource}'] = '{$_SERVER['QUERY_STRING']}';
 				}
 			</script>";
 			echo $this->HTML;
-
+            if ($this->fixHead) {
+                echo "<script>
+					$(function(){
+						listx.fixHead('list{$this->resource}');
+					});
+				</script>";
+            }
 			//добавление скрипта для сортировки
 			if ($this->table && $this->is_seq) {
 				echo '<script>
 					$(function(){
-						listx . initSort("' . $this->resource . '", "' . $this->table . '");
+						listx.initSort("' . $this->resource . '", "' . $this->table . '");
 					});
 				</script>';
 			}

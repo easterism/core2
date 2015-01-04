@@ -304,6 +304,12 @@ $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['uninstall']['NULL']    = "YES";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['uninstall']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['uninstall']['EXTRA']   = "";
 
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash'] = array();
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['TYPE']    = "text";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['DEFAULT'] = "";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['EXTRA']   = "";
+
 
 //Table Key array
 $DB_ARRAY['TABLES']['core_modules']['KEY'] = array();
@@ -336,6 +342,12 @@ $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['id']['TYPE']    = "int
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['id']['NULL']    = "NO";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['id']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['id']['EXTRA']   = "auto_increment";
+
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id'] = array();
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['TYPE']    = "varchar(60)";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['NULL']    = "NO";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['DEFAULT'] = "";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['name'] = array();
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['name']['TYPE']    = "varchar(60)";
@@ -378,6 +390,12 @@ $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['readme']['TYPE']    = 
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['readme']['NULL']    = "YES";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['readme']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['readme']['EXTRA']   = "";
+
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['files_hash'] = array();
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['files_hash']['TYPE']    = "text";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['files_hash']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['files_hash']['DEFAULT'] = "";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['files_hash']['EXTRA']   = "";
 
 //core_available_modules Key array
 $DB_ARRAY['TABLES']['core_available_modules']['KEY']['lastuser'] = array();

@@ -1,9 +1,11 @@
 <?
 
+require_once("classes/Common.php");
+require_once("classes/Templater.php");
 require_once("classes/class.list.php");
 require_once("classes/class.edit.php");
 require_once("classes/class.tab.php");
-
+require_once DOC_ROOT . 'core2/inc/classes/installModule.php';
 
 /**
  * Class CoreController
@@ -43,7 +45,27 @@ class CoreController extends Common {
 	 * @return void
 	 */
 	public function action_index() {
-		echo '<p>Модуль Администрирование предназначен для управления ядром системы.</p>';
+        $install    = new InstallModule();
+
+        $tab = new tabs('mod');
+        $tab->beginContainer("События аудита");
+        try {
+            $changedMods = $this->checkModulesChanges($install);
+            if (empty($changedMods)) {
+                echo '<h3>Система работает в штатном режиме.</h3>';
+            } else {
+                echo '<h3 style="color: red;">Обнаружены изменения в файлах модулей: ' . implode(", ", $changedMods) . '</h3>';
+            }
+        } catch (Exception $e) {
+            $install->addNotice("Аудит файлов модулей", $e->getMessage(), "Ошибка", "danger");
+        }
+
+        $html = $install->printNotices();
+        if (!empty($html)) {
+            echo "<hr>";
+        }
+        echo $html;
+        $tab->endContainer();
 	}
 
 
@@ -259,15 +281,10 @@ class CoreController extends Common {
 
 	/**
 	 * @throws Exception
-     * @return void
+     * @return void|string
 	 */
 	public function action_modules() {
-        $this->printCss($this->path . "modules.css");
-		if (!empty($_GET['url'])) {
-            $this->getRepoList();
-            die;
-        }
-		if (!$this->auth->ADMIN) throw new Exception(911);
+        if (!$this->auth->ADMIN) throw new Exception(911);
 
 		$app = "index.php?module={$this->module}&action=modules&loc=core";
 		require_once $this->path . 'modules.php';
@@ -294,11 +311,18 @@ class CoreController extends Common {
 				$id = (int) $_POST['value'];
 			}
 			$status = $_POST['is_active'];
-			$keys_list = $this->db->fetchRow("SELECT * FROM `".$table_name."` LIMIT 1");
+			$keys_list = $this->db->fetchRow("SELECT * FROM `{$table_name}` LIMIT 1");
 			$keys = array_keys($keys_list);
 			$key = $keys[0];
 			$where = $this->db->quoteInto($key . "= ?", $id);
 			$this->db->update($table_name, array($is_active => $status), $where);
+			//очистка кеша активности по всем записям таблицы
+			// используется для core_modules
+			$this->cache->clean(
+					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+					array("is_active_" . $table_name)
+			);
+
 			echo json_encode(array('status' => "ok"));
 		} catch (Exception $e) {
 			echo json_encode(array('status' => $e->getMessage()));
@@ -764,221 +788,76 @@ class CoreController extends Common {
 
 
     /**
-     * запрос списка модулей из репозитория
-     */
-    public function getRepoList() {
-
-        $repo = trim($_GET['url']);
-        if (substr_count($repo, "?apikey=") == 0) {
-            $api_key = $this->getRepoKey();
-            $repo_ar = explode("?reg_apikey=", $repo);
-        } else {
-            $repo_ar = explode("?apikey=", $repo);
-            $api_key = $repo_ar[1];
-        }
-        $repo = $repo_ar[0];
-
-        //готовим ключ для repo
-        $key = base64_encode(serialize(array(
-            "server"    => strtolower(str_replace(array('http://','index.php'), array('',''), $_SERVER['HTTP_REFERER'])),
-            "request"   => "repo_list"
-        )));
-
-        $repo_ar = explode("/", $repo);
-        $url = "http://{$repo_ar[2]}/api/repo?apikey={$api_key}&key={$key}";
-        $curl = $this->doCurlRequest($url);
-        //если чет пошло не так
-        if (!empty($curl['error']) || $curl['http_code'] != 200)
-        {
-            if (!empty($curl['error'])) {
-                $html = "Ошибка CURL:<br><font>{$curl['error']}</font>";
-            } else {
-                $out = json_decode($curl['answer']);
-                $html = "Ошибка подключения:<br><font>{$out->message}</font>";
-            }
-            echo "<div class=\"mod_danger\">{$html}</div>";
-            die;
-        } else {
-
-            $out = json_decode($curl['answer']);
-
-            //достаём данные
-            $repo_list = unserialize(base64_decode($out->data));
-
-            //готовим данные для таблицы
-            $arr = array();
-            foreach ($repo_list as $key=>$val) {
-                $arr[$key]['id']            = $key;
-                $arr[$key]['name']          = $repo_list[$key]['install']['module_name'];
-                $arr[$key]['descr']         = $repo_list[$key]['install']['description'];
-                $arr[$key]['version']       = $repo_list[$key]['install']['version'];
-                $arr[$key]['install_info']  = $repo_list[$key];
-            }
-
-            $list_id = "repo_table_" . $_GET['repo_id'];
-            $list = new listTable($list_id);
-            $list->error = !empty($out->massage) ? $out->massage : "";//информация от репозитория если есть
-            $list->SQL = "SELECT 1";
-            $list->addColumn("Имя модуля", "", "TEXT");
-            $list->addColumn("Описание", "", "TEXT");
-            $list->addColumn("Версия", "150px", "TEXT");
-            $list->addColumn("Действие", "3%", "BLOCK", 'align=center');
-            $list->noCheckboxes = "yes";
-
-
-            $list->getData();
-            $copy_list = $arr;
-            if (!empty($copy_list)) {
-                $our_available_modules = $this->db->fetchAll("
-                    SELECT id,
-                         name,
-                         descr,
-                         version,
-                         install_info
-                    FROM core_available_modules
-                ");
-                $listAllModules = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
-            }
-            $tmp = array();
-            foreach ($copy_list as $key=>$val) {
-                $mVersion = $val['version'];
-                $mId = $val['install_info']['install']['module_id'];
-                $mName = $val['name'];
-                $copy_list[$key]['install_info'] = "<div onclick=\"installModuleFromRepo('$mName', 'v$mVersion', '{$copy_list[$key]['id']}', '$repo')\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
-                foreach ($listAllModules as $allval) {
-                    if ($mId == $allval['module_id']) {
-
-                        if ($mVersion == $allval['version']) {
-                            $copy_list[$key]['install_info'] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
-                        }
-                    }
-                }
-                foreach ($our_available_modules as $allval) {
-                    $allval['install_info'] = unserialize($allval['install_info']);
-                    if ($mId == $allval['install_info']['install']['module_id']) {
-                        if ($mVersion == $allval['version']) {
-                            $copy_list[$key]['install_info'] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже есть\" border=\"0\"/></a>";
-                        }
-                    }
-                }
-                $tmp[$mId][$mVersion] = $copy_list[$key];
-            }
-            //смотрим есть-ли разные версии одного мода
-            //если есть, показываем последнюю, осатльные в спойлер
-            $copy_list = array();
-            foreach ($tmp as $module_id=>$val) {
-                ksort($val);
-                $max_ver = (max(array_keys($val)));
-                $copy_list[$module_id] = $val[$max_ver];
-                unset($val[$max_ver]);
-                if (!empty($val)) {
-                    $copy_list[$module_id]['version'] .= " <a href=\"\" onclick=\"$('.repo_table_{$_GET['repo_id']}_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
-                    $copy_list[$module_id]['version'] .= "<table width=\"100%\" class=\"repo_table_{$_GET['repo_id']}_{$module_id}\" style=\"display: none;\"><tbody>";
-                    foreach ($val as $version=>$val) {
-                        $copy_list[$module_id]['version'] .= "<tr><td style=\"border: 0px; padding: 0px;\">{$version}</td><td style=\"border: 0px; text-align: right; padding: 0px;\">{$val['install_info']}</td></tr>";
-                    }
-                    $copy_list[$module_id]['version'] .= "</tbody></table>";
-                }
-            }
-            //пагинация
-            $per_page = count($copy_list);
-            $list->recordsPerPage = $per_page;
-            $list->setRecordCount($per_page);
-
-            $list->data 		    = $copy_list;
-            $list->showTable();
-        }
-    }
-
-
-    /**
-     * меняем регистрационный ключь на пользовательский чтоб получить доступ к репозиторию
-     * @return mixed
-     * @throws Zend_Db_Adapter_Exception
-     */
-    public function getRepoKey() {
-        $server = trim($_GET['url']);
-        if (substr_count($server, "?reg_apikey=") == 0) {
-            echo
-                "<div class=\"mod_danger\">
-                    Ошибка
-                    <br>
-                    <font>Не задан reg_apikey для репозитория \"{$server}\"</font>
-                </div>";
-            die;
-        } else {
-            $tmp = explode("?reg_apikey=", $server);
-            $key = $tmp[1];
-            $tmp = explode("/", $tmp[0]);
-            $server = $tmp[2];
-        }
-
-        $url =  "http://{$server}/api/webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
-        $curl = $this->doCurlRequest($url);
-
-        //если чет пошло не так
-        if (!empty($curl['error']) || $curl['http_code'] != 200)
-        {
-            if (!empty($curl['error'])) {
-                $html = "Ошибка CURL:<br><font>{$curl['error']}</font>";
-            } else {
-                $out = json_decode($curl['answer']);
-                $html = "Ошибка подключения:<br><font>{$out->message}</font>";
-            }
-            echo "<div class=\"mod_danger\">{$html}</div>";
-            die;
-        }
-        //если всё гуд
-        else
-        {
-            $out = json_decode($curl['answer']);
-            $repos = $this->getCustomSetting("repo");
-            $repos = explode(";", $repos);
-            foreach($repos as $k=>$r){
-                $r = trim($r);
-                $r = explode("?reg_apikey=", $r);
-                //если находим нашь репозиторий
-                if (substr_count($r[0], $server) > 0) {
-                    $repos[$k] = "http://{$server}/api/repo?apikey={$out->key}";
-                } else {
-                    $repos[$k] = implode("?reg_apikey=", $r);
-                }
-
-            }
-            $repos = implode(";", $repos);
-            $this->db->update("core_settings", array("value" => $repos), "code = 'repo'");
-        }
-
-
-        return $out->key;
-    }
-
-
-
-
-    /**
-     * делаем запрос через курл и отдаем ответ
-     * @param $url
+     * Проверяем файлы модулей на изменения
+     *
+     * @param $install
+     *
      * @return array
-     * @throws Exception
      */
-    public function doCurlRequest($url) {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $curl_out = curl_exec($curl);
-        //если возникла ошибка
-        if (curl_errno($curl) > 0) {
-            return array(
-                'error'    => curl_errno($curl) . ": ". curl_error($curl)
-            );
+    public function checkModulesChanges($install) {
+        $server = $this->config->system->host;
+        $admin_email = $this->getSetting('admin_email');
+
+        if (!$admin_email) {
+            $install->addNotice("", "Создайте дополнительный параметр 'admin_email' с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
         }
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-        return array(
-            'answer'    => $curl_out,
-            'http_code' => $http_code
-        );
+        if (!$server) {
+            $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
+        }
+        if (!$this->isModuleInstalled('queue')) {
+            $install->addNotice("", "Установите модуль Очередь", "Отправка уведомлений отключена", "info2");
+        } elseif (!$this->isModuleActive('queue')) {
+            $install->addNotice("", "Включите модуль Очередь", "Отправка уведомлений отключена", "info2");
+        }
+
+        $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
+        $mods = array();
+        foreach ($data as $val) {
+            $dirhash    = $install->extractHashForFiles("mod/{$val['module_id']}");
+            $dbhash     = $install->getFilesHashFromDb($val['module_id']);
+            $compare    = $install->compareFilesHash($dirhash, $dbhash);
+            if (!empty($compare)) {
+//                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
+                $mods[] = $val['module_id'];
+                //отправка уведомления
+                if ($admin_email && $server && $this->isModuleActive('queue')) {
+                    $is_send = $this->db->fetchOne(
+                        "SELECT 1
+                           FROM mod_queue_mails
+                          WHERE subject = 'Обнаружены изменения в структуре модуля'
+                            AND date_send IS NULL
+                            AND DATE_FORMAT(date_add, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
+                            AND body LIKE '%{$val['module_id']}%'"
+                    );
+                    if (!$is_send) {
+                        $n = 0;
+                        $br = $install->branchesCompareFilesHash($compare);
+                        if (!empty($br['added'])) {
+                            $n += count($br['added']);
+                        }
+                        if (!empty($br['changed'])) {
+                            $n += count($br['changed']);
+                        }
+                        if (!empty($br['lost'])) {
+                            $n += count($br['lost']);
+                        }
+                        $answer = $this->modAdmin->createEmail()
+                            ->to($admin_email)
+                            ->from('informer@' . (substr_count($server, ".") > 0 ? $server : $server . '.com'))
+                            ->subject('Обнаружены изменения в структуре модуля')
+                            ->body("Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
+                            ->send();
+                        if (isset($answer['error'])) {
+                            $install->addNotice("", $answer['error'], "Уведомление не отправлено", "danger");
+                        }
+                    }
+                }
+            }
+        }
+
+        return $mods;
     }
+
+
+
 }

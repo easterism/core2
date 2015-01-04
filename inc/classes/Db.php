@@ -2,6 +2,7 @@
 
 require_once("Zend/Db/Table.php");
 require_once("Zend/Registry.php");
+require_once("Zend/Cache.php");
 
 class Db {
 	protected $config;
@@ -106,16 +107,21 @@ class Db {
 	 * @return array
 	 */
 	public function getModuleName($resId) {
-		$data = explode("_", $resId);
-		if (!empty($data[1])) {
-			$res = $this->db->fetchRow("SELECT m.m_name, sm.sm_name 
-										  FROM core_modules AS m
-												INNER JOIN core_submodules AS sm ON sm.m_id = m.m_id
-										WHERE CONCAT(m.module_id, '_', sm.sm_key) = ?", $resId);
-			$res = array($res['m_name'], $res['sm_name']);
+		if (!($this->cache->test($resId))) {
+			$data = explode("_", $resId);
+			if (!empty($data[1])) {
+				$res = $this->db->fetchRow("SELECT m.m_name, sm.sm_name
+											  FROM core_modules AS m
+													INNER JOIN core_submodules AS sm ON sm.m_id = m.m_id
+											WHERE CONCAT(m.module_id, '_', sm.sm_key) = ?", $resId);
+				$res = array($res['m_name'], $res['sm_name']);
+			} else {
+				$res = $this->db->fetchRow("SELECT m.m_name FROM core_modules AS m WHERE m.module_id = ?", $resId);
+				$res = array($res['m_name']);
+			}
+			$this->cache->save($res, $resId);
 		} else {
-			$res = $this->db->fetchRow("SELECT m.m_name FROM core_modules AS m WHERE m.module_id = ?", $resId);
-			$res = array($res['m_name']);
+			$res = $this->cache->load($resId);
 		}
 		return $res;
 	}
@@ -264,7 +270,9 @@ class Db {
 	}
 
 	/**
-	 * @param string $global_id
+	 * Формирует пару ключ=>значение
+	 *
+	 * @param string $global_id - глобальный идентификатор справочника
 	 * @param bool $name_as_id
 	 * @param bool $empty_first
 	 * @return array
@@ -272,7 +280,13 @@ class Db {
 	public function getEnumDropdown($global_id, $name_as_id = false, $empty_first = false) {
 		if (!$name_as_id) $name_as_id = 'id';
 		else $name_as_id = 'name';
-		$data = $this->db->fetchPairs("SELECT $name_as_id, name FROM core_enum WHERE is_active_sw='Y' AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y') ORDER BY seq", $global_id);
+		$data = $this->db->fetchPairs("SELECT `$name_as_id`, `name`
+									FROM core_enum
+									WHERE is_active_sw='Y'
+									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
+									ORDER BY seq",
+				$global_id
+		);
 		if ($empty_first) {
 			$data = array('' => '') + $data;
 		}
@@ -280,6 +294,8 @@ class Db {
 	}
 
 	/**
+	 * Получает значение справочника по первичному ключу
+	 *
 	 * @param int $id
 	 * @return string
 	 */
@@ -323,7 +339,50 @@ class Db {
 	 * @return string
 	 */
 	public function isModuleActive($module_id) {
-		return $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
+		$key = "is_active_" . $module_id;
+		if (!($this->cache->test($key))) {
+			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
+			$this->cache->save($is, $key, array('is_active_core_modules'));
+		} else {
+			$is = $this->cache->load($key);
+		}
+		return $is;
+	}
+
+	/**
+	 * Определяет, является ли субмодуль активным
+	 * Если модуль не активен, то все его субмодели НЕ активны, в независимости от значения в БД
+	 * @param $submodule_id
+	 *
+	 * @return string
+	 */
+	public function isSubModuleActive($submodule_id)
+	{
+		$id = explode("_", $submodule_id);
+		if (isset($id[1]) && $this->isModuleActive($id[0])) {
+			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
+										INNER JOIN core_submodules AS s ON s.m_id=m.m_id
+									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'", $id);
+		} else {
+			$is = 0;
+		}
+		return $is;
+	}
+
+
+	/**
+	 * @param string $module_id
+	 * @return string
+	 */
+	public function isModuleInstalled($module_id) {
+		$key = "is_installed_" . $module_id;
+		if (!($this->cache->test($key))) {
+			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
+			$this->cache->save($is, $key, array('is_active_core_modules'));
+		} else {
+			$is = $this->cache->load($key);
+		}
+		return $is;
 	}
 
     /**
@@ -337,7 +396,8 @@ class Db {
     }
 
 
-    /** возврат версии модуля
+	/**
+	 * возврат версии модуля
      * @param string $module_id
      * @return string
      */
@@ -357,14 +417,19 @@ class Db {
 	 */
 	public function getModuleSrc($module_id)
 	{
-		$loc = $this->db->fetchOne("
-            SELECT CASE WHEN is_system='Y'
-                      THEN CONCAT('core2/mod/', module_id, '/v', version)
-                      ELSE CONCAT('mod/', module_id)
-                   END
-            FROM core_modules
-            WHERE module_id = ?
-        ", $module_id);
+		if (!($this->cache->test($module_id))) {
+			$loc = $this->db->fetchOne("
+				SELECT CASE WHEN is_system='Y'
+						  THEN CONCAT('core2/mod/', module_id, '/v', version)
+						  ELSE CONCAT('mod/', module_id)
+					   END
+				FROM core_modules
+				WHERE module_id = ?
+			", $module_id);
+			$this->cache->save($loc, $module_id);
+		} else {
+			$loc = $this->cache->load($module_id);
+		}
 		return $loc;
 	}
 

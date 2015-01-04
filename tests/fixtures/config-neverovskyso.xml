@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit>
+    <php>
+        <var name="DB_HOST" value="ais-core" />
+        <var name="DB_USER" value="neverovskyso" />
+        <var name="DB_PASSWD" value="neverovskyso" />
+        <var name="DB_NAME" value="masha" />
+
+        <var name="MAIL_SERVER" value="smtpsrv" />
+        <var name="MAIL_PORT" value="25" />
+    </php>
+</phpunit>

@@ -80,13 +80,6 @@ var listx = {
 	},
 	gMonths : new Array("","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"),
 	loc : {},
-	onm : function (obj) {
-		if ($(obj).hasClass('rowOver')) {
-			$(obj).removeClass('rowOver');
-		} else {
-			$(obj).addClass('rowOver');
-		}
-	},
 	create_date:function (cal) {
 		var t = $('#date_' + cal).val().substr(10);
 		var opt = {
@@ -335,13 +328,23 @@ var listx = {
 		return;
 	},
 	showFilter : function(id) {
-		$("#filter" + id).toggle('fast');
-        var f = $("#filter" + id).find("form");
-		f[0].elements[0].focus();
+		var f = $("#filter" + id);
+		this.toggle(f);
+		f.find("form")[0].elements[0].focus();
 		return;
 	},
+	toggle : function(f) {
+		if (f.hasClass('hide')) {
+			f.toggle('fast');
+			f.removeClass('hide');
+		} else {
+			f.toggle('fast');
+			f.addClass('hide');
+		}
+	},
 	columnFilter : function(id) {
-		$("#filterColumn" + id).toggle('fast');
+		var f = $("#filterColumn" + id);
+		this.toggle(f);
 	},
 	columnFilterStart : function(id, isAjax) {
 		var o = $('#filterColumn' + id + ' form').find(':checkbox:checked');
@@ -454,6 +457,9 @@ var listx = {
 			}
 		});
 		$("#list" + id + " tbody").disableSelection();
+	},
+	fixHead: function (id) {
+		$('#' + id).floatThead({scrollingTop: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
 	}
 	
 };

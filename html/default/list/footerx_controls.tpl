@@ -1,7 +1,6 @@
 <tfoot>
-	<tr class="headerText">
+	<tr>
 		<td colspan="100" style="padding:0">
-
 			<table class="paginTable" width="100%" id="[IDD]">
 				<tr>
 					<!-- BEGIN pages -->

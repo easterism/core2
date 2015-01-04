@@ -40,7 +40,7 @@ $tab->beginContainer("Конфигурация");
 		$edit->showTable();
 		
 	} elseif ($tab->activeTab == 2) {
-		if (isset($_REQUEST['edit']) && $_REQUEST['edit'] != '') {
+		if (isset($_GET['edit']) && $_GET['edit'] != '') {
 			$edit = new editTable('custom'); 
 			$edit->SQL  = "SELECT id,
 								 `code`,
@@ -49,13 +49,13 @@ $tab->beginContainer("Конфигурация");
 								 visible
 							FROM core_settings 
 							WHERE is_custom_sw='Y'
-							AND id='{$_REQUEST['edit']}'";
-			if ($_REQUEST['edit']) {
+							AND id='{$_GET['edit']}'";
+			if ($_GET['edit']) {
 				$edit->addControl("Ключ:", "PROTECT");
 			} else {
 				$edit->addControl("Ключ:", "EDIT", "", "", "", true);
 			}
-			$edit->addControl("Значение:", "EDIT");
+			$edit->addControl("Значение:", "EDIT", "size=\"60\"");
 			$edit->addControl("Описание:", "EDIT", "size=\"60\"");
 			$edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_settings WHERE visible = 'Y' AND id=? LIMIT 1", $_GET['edit']));
 			$edit->firstColWidth = '250px';
@@ -63,8 +63,17 @@ $tab->beginContainer("Конфигурация");
 			$edit->save("xajax_saveCustomSettings(xajax.getFormValues(this.id))");
 			$edit->showTable();
 		}
-		$list = new listTable('custom');  
-	
+		$list = new listTable('custom');
+		function trimAction($data)
+		{
+			$r = substr($data['value'], 0, 180);
+			if ($r != $data['value']) {
+				$r .= "   ...";
+			} else {
+				$r = $data['value'];
+			}
+			return $r;
+		}
 		$list->SQL = "SELECT `id`,
 							 `code`,
 							 value,
@@ -74,7 +83,7 @@ $tab->beginContainer("Конфигурация");
 						WHERE is_custom_sw='Y'
 						";
 		$list->addColumn("Ключ", "", "TEXT");
-		$list->addColumn("Значение", "", "TEXT");
+		$list->addColumn("Значение", "", "FUNCTION", "", "trimAction");
 		$list->addColumn("Описание", "", "TEXT");
 		$list->addColumn("", "1%", "STATUS_INLINE", "core_settings.visible");
 		

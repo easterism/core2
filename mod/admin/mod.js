@@ -1,7 +1,7 @@
 var modules = {
-    'repo': function (url, repo_id) {
+    'repo': function (repo_url, repo_id) {
         $.get('index.php?module=admin&action=modules&repo',
-            {'url': url, 'repo_id': repo_id},
+            {'getModsListFromRepo': repo_url},
             function(data, textStatus){
                 if(textStatus == 'success') {
                     $("#repo_" + repo_id).html(data);
@@ -11,6 +11,11 @@ var modules = {
     },
     'spoiler': function (id) {
         $('.' + id).toggle();
+    },
+    'refreshFiles': function (mod, v, mod_id) {
+        if (confirm('Обновить файлы модуля ' + mod + ' ' + v + '?')) {
+            load('index.php' + document.location.hash, {"refreshFilesModule":mod_id, "v": v});
+        } else return false;
     }
 };
 
@@ -82,8 +87,8 @@ var modules = {
 		} else return false;
 	}
 
-	function installModuleFromRepo(mod, v, modInstall, repo) {
+	function installModuleFromRepo(mod, v, m_id, repo) {
 		if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-            load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":modInstall, "repo": repo});
+            load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":m_id, "repo": repo});
 		} else return false;
 	}

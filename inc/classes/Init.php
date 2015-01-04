@@ -3,6 +3,8 @@ header('Content-Type: text/html; charset=utf-8');
 
 	// Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
 define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . "/");
+define("DOC_PATH", substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])) ?: '/');
+
 
 require_once 'Tool.php';
 require_once 'Error.php';
@@ -42,6 +44,7 @@ $config = array(
 		'autoReconnectOnUnserialize' => true
 	)
 );
+	// определяем путь к темповой папке
 if (empty($config['temp'])) {
 	$config['temp'] = getenv('TEMP');
 	if (empty($config['temp'])) {
@@ -59,7 +62,10 @@ try {
 } catch (Zend_Config_Exception $e) {
 	Error::Exception($e->getMessage());
 }
-
+// определяем путь к папке кеша
+	if (strpos($config->cache, '/') === false) {
+		$config->cache = DOC_ROOT . trim($config->cache, "/");
+	}
 //подключаем собственный адаптер
 require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
 
@@ -165,8 +171,8 @@ class Init extends Db {
 				//$this->auth->ID = 0;
 				//$this->auth->NAME = '';
 			}
+			Zend_Registry::set('auth', $this->auth);
 		}
-		Zend_Registry::set('auth', $this->auth);
 	}
 
 	/**
@@ -175,42 +181,10 @@ class Init extends Db {
 	 * @throws Exception
 	 */
 	public function dispatch() {
-		if (!empty($_SERVER['argv'][1]) && $_SERVER['argv'][1] == 'module=cron') { // получение параметров запуска cron
-			parse_str(implode('&', array_slice($_SERVER['argv'], 1)), $_GET);
-		}
-		if (isset($_GET['module']) && $_GET['module'] == 'cron') {
-			$lower = strtolower($_GET['module']);
-            $file_path = $this->getModuleLocation($_GET['module']) . "/Mod" . ucfirst($lower) . "Controller.php";
 
-			if (!file_exists($file_path)) {
-                throw new Exception("Module does not exists");
-            }
 
-			require_once($file_path);
-
-			if (!class_exists("Mod" . ucfirst($lower) . "Controller")) {
-				throw new Exception("Module broken");
-			}
-
-			if (!$this->isModuleActive($lower)) {
-				throw new Exception("Module does not active");
-			}
-            switch ($lower) {
-                case 'cron' :
-					if (empty($_SERVER['REMOTE_ADDR'])) {
-                        $cron_controller = new ModCronController();
-                        $action = empty($_GET['action'])
-                            ? 'action_index'
-                            : 'action_' . strtolower($_GET['action']);
-                        if (is_callable(array($cron_controller, $action))) {
-                            $cron_controller->$action();
-                        } else {
-                            throw new Exception("No action");
-                        }
-                        return null;
-                    }
-                break;
-            }
+		if (PHP_SAPI === 'cli') {
+			return $this->cli();
 		}
 
         // Веб-сервис (SOAP)
@@ -244,12 +218,12 @@ class Init extends Db {
             }
 
             $webservice_controller = new ModWebserviceController();
-            return $webservice_controller->dispatch_soap($module_name, $service_request_action);
+            return $webservice_controller->dispatchSoap($module_name, $service_request_action);
         }
 
         // Веб-сервис (REST)
         $matches = array();
-        if (preg_match('~api/([a-zA-Z0-9_]+)(\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+        if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
@@ -269,9 +243,20 @@ class Init extends Db {
                 return Error::catchJsonException(array('message' => 'Module broken'), 500);
             }
 
+            if ( ! empty($matches[2])) {
+                if (strpos($matches[2], '/')) {
+                    $path   = explode('/', $matches[2]);
+                    $action = implode('', array_map('ucfirst', $path));
+                } else {
+                    $action = $matches[2];
+                }
+            } else {
+                $action = 'Index';
+            }
 
+            
             $webservice_controller = new ModWebserviceController();
-            return $webservice_controller->dispatch_rest(strtolower($matches[1]));
+            return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
         }
 
 
@@ -350,11 +335,11 @@ class Init extends Db {
 
 				if (empty($mods['sm_path'])) {
 					$modController = "Mod" . ucfirst(strtolower($mods['module_id'])) . "Controller";
-                    $file_path = $location . "/" . $modController . ".php";
-					if (!file_exists($file_path)) {
+                    $controller_path = $location . "/" . $modController . ".php";
+					if (!file_exists($controller_path)) {
 						throw new Exception("Module does not exists");
 					}
-					require_once $file_path;
+					require_once $controller_path;
 					if (!class_exists($modController)) {
 						throw new Exception("Module broken");
 					}
@@ -397,12 +382,12 @@ class Init extends Db {
 			$core->action_login();
 		}
 		$tpl = new Templater();
-		if ($this->detectMobileBrowser()) {
+		if (Tool::isMobileBrowser()) {
 			$tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.tpl");
 		} else {
 			$tpl->loadTemplate("core2/html/" . THEME . "/login/index.tpl");
 		}
-		
+
 		$tpl->assign('{system_name}', $this->getSystemName());
 		$tpl2 = new Templater();
 		$tpl2->loadTemplate("core2/html/" . THEME . "/login/login.tpl");
@@ -457,7 +442,7 @@ class Init extends Db {
 		$xajax->processRequest();
 
 		$tpl = new Templater();
-		if ($this->detectMobileBrowser()) {
+		if (Tool::isMobileBrowser()) {
 			$tpl->loadTemplate("core2/html/" . THEME . "/indexMobile2.tpl");
 			$tpl2 = new Templater("core2/html/" . THEME . "/menuMobile.tpl");
 		} else {
@@ -542,12 +527,76 @@ class Init extends Db {
 		throw new Exception(404);
 	}
 
-	protected function detectMobileBrowser() {
-		$useragent = $_SERVER['HTTP_USER_AGENT'];
-		if (preg_match('/android.+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|meego.+mobile|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i',$useragent)||preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i',substr($useragent,0,4)))
-		return true;
+
+
+
+	/**
+	 * Cli
+	 * @return null
+	 * @throws Exception
+	 */
+	private function cli() {
+
+		$options = array();
+
+		if ( ! empty($_SERVER['argv'][1])) {
+			parse_str(implode('&', array_slice($_SERVER['argv'], 1)), $options);
+		}
+
+		if ((empty($options) && $_SERVER['argc'] == 1) || ! isset($_SERVER['argv'][1]) || isset($options['help'])) {
+			return implode(PHP_EOL, array(
+				'Core 2',
+				'Usage: php -f index.php [OPTIONS]',
+				'Optional arguments:',
+				"\tcron\tCron action",
+				"\tjob\tCron job id. Optional.\n",
+				"\thelp\tHelp message\n",
+				"Example of usage:",
+				"php -f index.php cron=run job=123\n",
+			));
+		}
+
+		if (isset($options['cron'])) {
+			$cron_action = $options['cron'];
+			$job_id 	 = isset($options['job']) ? (int)$options['job'] : 0;
+
+			$this->db; // FIXME хак
+
+			if ( ! $this->isModuleActive('cron')) {
+				throw new Exception("Module does not active");
+			}
+
+			$mod_path  	     = $this->getModuleLocation("cron");
+			$controller_path = $mod_path . '/ModCronController.php';
+
+			if ( ! file_exists($controller_path)) {
+				throw new Exception("Module does not exists");
+			}
+
+			require_once $mod_path . '/background/classes/Cron_Background_Job.php';
+			require_once $controller_path;
+
+			if ( ! class_exists("ModCronController")) {
+				throw new Exception("Module broken");
+			}
+
+
+			switch ($cron_action) {
+				case 'run' :
+					if ($job_id === 0) {
+						$cron_controller = new ModCronController();
+						$cron_controller->run();
+					} else {
+						$background_job = new Cron_Background_Job($job_id);
+						$background_job->dispatch();
+					}
+					break;
+				default : throw new Exception("Undefined cron action!"); break;
+			}
+		}
+
+		return null;
 	}
-	
 }
 
 function post($func, $loc, $data) {

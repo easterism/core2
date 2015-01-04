@@ -1,5 +1,11 @@
 <?
 
+require_once 'Zend/Mail.php';
+require_once 'Zend/Mail/Transport/Smtp.php';
+
+require_once 'Db.php';
+
+
 /**
  * Class Email
  */
@@ -181,11 +187,10 @@ class Email {
     public function send($immediately = false) {
 
         try {
-            require_once 'Db.php';
             $db = new Db();
 
             if ($db->isModuleActive('queue')) {
-                require_once($db->getModuleLocation('queue') . '/ModQueueController.php');
+                require_once $db->getModuleLocation('queue') . '/ModQueueController.php';
                 $queue = new modQueueController();
 
                 $this->mail_data['date_send'] = $immediately
@@ -209,20 +214,17 @@ class Email {
                     }
                 }
 
-                if ( ! $in_transaction) {
-                    $zend_db = Zend_Registry::get('db');
-                    $zend_db->beginTransaction();
-                }
+                $zend_db = Zend_Registry::get('db');
+                $zend_db->beginTransaction();
 
                 $mail_id = $queue->save();
 
                 if ( ! $mail_id || $mail_id <= 0) {
-                    if ( ! $in_transaction) $zend_db->rollback();
+                    $zend_db->rollback();
                     throw new Exception('Ошибка добавления сообщения в очередь');
 
-                } elseif ( ! $in_transaction) {
-                    $zend_db->commit();
                 }
+                $zend_db->commit();
 
                 if ($immediately) {
                     $is_send = $this->zend_send(
@@ -308,9 +310,6 @@ class Email {
      * @return bool Успешна или нет отправка
      */
     private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
-
-        require_once 'Zend/Mail.php';
-        require_once 'Zend/Mail/Transport/Smtp.php';
 
         $cnf = Zend_Registry::get('config');
         $configSmtp = array();

@@ -819,7 +819,7 @@ class editTable extends initEdit {
 								<div id="fileupload-' . $un . '">
 							        <div class="fileupload-buttonbar">
 							        	<span class="btn fileinput-button">
-											<button type="button" class="delete buttonSmall">Выбрать файл' . ($xfile == 'xfiles' ? 'ы' : '') . '</button>
+											<button type="button" class="buttonSmall">Выбрать файл' . ($xfile == 'xfiles' ? 'ы' : '') . '</button>
 											<input type="file" name="files[]" ' . ($xfile == 'xfiles' ? 'multiple' : '') . '>
                 						</span>';
 							            if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
@@ -842,10 +842,10 @@ class editTable extends initEdit {
 									</div>
 									<!-- The table listing the files available for upload/download -->
 									<table role="presentation" class="table table-striped">
-										<tbody class="files" data-toggle="modal-gallery" data-target="#modal-gallery"></tbody>
+										<tbody class="files"></tbody>
 									</table>
 								</div>
-								
+
 <!-- The template to display files available for upload -->
 <script id="template-upload" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
@@ -855,9 +855,7 @@ class editTable extends initEdit {
         </td>
         <td>
             <p class="name">{%=file.name%}</p>
-            {% if (file.error) { %}
-                <div><span class="label label-danger">Error</span> {%=file.error%}</div>
-            {% } %}
+            <strong class="error text-danger"></strong>
         </td>
         <td>
             <p class="size">{%=o.formatFileSize(file.size)%}</p>
@@ -904,13 +902,14 @@ class editTable extends initEdit {
             </td>
             <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
         {% } %}
-        <td class="delete" data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
-            <button class="btn buttonSmall">Удалить</button>
+        <td data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
+            <button class="btn delete buttonSmall">Удалить</button>
             <input class="toggle" type="checkbox" name="delete" value="1">
         </td>
     </tr>
 {% } %}
 </script>';
+
 $controlGroups[$cellId]['html'][$key] .= "<script>
 edit.xfiles['$un'] = {};
 $(function () {
@@ -922,6 +921,7 @@ $(function () {
     	var f = data.response().result.files[0];
     	$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
     	$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
+    	$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
 		edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
     	var res = [];
     	for (var k in edit.xfiles['$un']) {
@@ -929,9 +929,9 @@ $(function () {
     	};
     	$('#$fieldId').val(res.join('|'));
     }).bind('fileuploaddestroy', function (e, data) {
-		var d = data.context.children('.delete');
-		var ds = d.attr('data-service');
-		var di = d.attr('data-id');
+		var d = data.context.find('.delete').parent();
+		var ds = d.data('service');
+		var di = d.data('id');
 		if (ds) {
 			delete edit.xfiles['$un'][ds]
 			var res = [];
@@ -942,6 +942,14 @@ $(function () {
 		}
 		if (di) {
 			$('#{$fieldId}_del').val($('#{$fieldId}_del').val() + ',' + di);
+		}
+	}).bind('fileuploaddestroyed', function (e, data) {
+	    var fc = $('#fileupload-{$un}').find('.files');
+		if (fc.children().length == 0) {
+		    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
+		    $('#fileupload-$fieldId div.fileupload-buttonbar button.cancel').addClass('hide');
+		    $('#fileupload-$fieldId div.fileupload-buttonbar button.delete').addClass('hide');
+		    $('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
 		}
 	}).bind('fileuploadchange', function (e, data) {
 		$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
@@ -962,9 +970,8 @@ $(function () {
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
 		}
-		$(this).fileupload('option', 'done').call(this, null, {result: result});
+		$(this).fileupload('option', 'done').call(this, $.Event('done'), {result: result});
 	});
-
 });
 </script>";
 

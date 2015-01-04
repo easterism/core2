@@ -1,8 +1,7 @@
 <?php
 
-
 require_once("core2/inc/ajax.func.php");
-
+require_once('core2/inc/classes/installModule.php');
 
 /**
  * Class ModAjax
@@ -24,30 +23,38 @@ class ModAjax extends ajaxFunc {
      * @param array $data
      * @return xajaxResponse
      */
-    public function saveModule ($data) {
+    public function saveModule($data) {
 
 		$fields = array(
 			'm_name' => 'req',
 			'module_id' => 'req'
 		);
 
-     	preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
-		if (count($arr)) {
-			$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
-			$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
+		$refId = (int)$data['refid'];
+		if (!$refId) {
+			preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
+			if (count($arr)) {
+				$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
+				$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
+			}
+			$curent_status = '';
+			$data['control']['global_id'] = uniqid();
+		} else {
+			$inf = $this->db->fetchRow("SELECT `visible`,`dependencies`, module_id FROM `core_modules` WHERE `m_id`=?", $refId);
+			$curent_status = $inf['visible'];
+			$module_id = $inf['module_id'];
+			unset($data['control']['module_id']);
 		}
 		if (isset($data['addRules'])) {
-			foreach ($data['addRules'] as $rules) {			
-				preg_match("/[^0-9A-Za-zА-Яа-яЁё\s]/u", $rules, $res);	 				
+			foreach ($data['addRules'] as $rules) {
+				preg_match("/[^0-9A-Za-zА-Яа-яЁё\s]/u", $rules, $res);
 				if (count($res)) {
 					$this->error[] = "- Идентификатор дополнительного правила доступа не может содержать специальные символы";
 					break;
-				} 								
-			}									
+				}
+			}
 		}
-		$inf = $this->db->fetchRow("SELECT `visible`,`dependencies` FROM `core_modules` WHERE `m_id`=?", $data['refid']);
-		
-		$curent_status = $inf['visible'];
+
 		$new_status = $data['control']['visible'];
 		$modules = array();
 		$dep = array();
@@ -107,9 +114,6 @@ class ModAjax extends ajaxFunc {
 			return $this->response;
 		}
 		
-		if (empty($data['refid'])) {
-			$data['control']['global_id'] = uniqid();
-		}
 		if (isset($data['control']['dependencies']) && $data['control']['dependencies']) {
 			$res = array();
 			foreach ($data['control']['dependencies'] as $moduleId) {
@@ -143,18 +147,84 @@ class ModAjax extends ajaxFunc {
 		if (!$this->saveData($data)) {
 			return $this->response;
 		}
-		if (!$data['refid']) {
+		if (!$refId) {
 			//TODO add the new module tab
 		} else {
-			$id_module = $this->db->fetchOne("SELECT `module_id` FROM `core_modules` WHERE `m_id`=?", $data['refid']);
-			$this->response->script("$('#module_{$id_module} span span').text('{$data['control']['m_name']}');");
+			$this->cache->remove($module_id);
+			$this->cache->remove("is_active_" . $module_id);
+			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
 		}
 		$this->done($data);
 		return $this->response;
-     }
+    }
 
 
-    /**
+	/**
+	 * Сохранение субмодулей
+	 *
+	 * @param array $data
+	 *
+	 * @return xajaxResponse
+	 */
+	public function saveModuleSub($data)
+	{
+		$fields = array('sm_name' => 'req', 'sm_key' => 'req', 'seq' => 'req');
+		if ($this->ajaxValidate($data, $fields)) {
+			return $this->response;
+		}
+		$refId = (int)$data['refid'];
+		if (!$refId) {
+			preg_match("/[^a-z|0-9]/", $data['control']['sm_key'], $arr);
+			if (count($arr)) {
+				$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
+				$this->response->script("document.getElementById('" . $data['class_id'] . "sm_key').className='reqField';");
+			}
+		} else {
+			$sm = $this->db->fetchRow("SELECT sm_key, module_id FROM core_submodules AS s
+										INNER JOIN core_modules AS m ON m.m_id = s.m_id
+										WHERE sm_id=?", $refId);
+			if (!$sm) {
+				$this->error[] = "- Ошибка определения субмодуля";
+			} else {
+				$this->cache->remove($sm['module_id'] . "_" . $sm['sm_key']);
+				unset($data['control']['sm_key']);
+			}
+		}
+
+		//$this->ajaxValidate($data, $fields);
+		if (count($this->error)) {
+			$this->displayError($data);
+			return $this->response;
+		}
+		if (!empty($data['access'])) {
+			$data['control']['access_default'] = base64_encode(serialize($data['access']));
+		}
+		$data['control']['access_add'] = '';
+		if (!empty($data['addRules'])) {
+			$rules = array();
+			foreach ($data['addRules'] as $id => $value) {
+				if ($value) {
+					if (!empty($data['value_all']) && !empty($data['value_all'][$id])) {
+						$rules[$value] = 'all';
+					} elseif (!empty($data['value_owner']) && !empty($data['value_owner'][$id])) {
+						$rules[$value] = 'owner';
+					} else {
+						$rules[$value] = 'deny';
+					}
+				}
+			}
+			$data['control']['access_add'] = base64_encode(serialize($rules));
+		}
+
+		if (!$this->saveData($data)) {
+			return $this->response;
+		}
+		$this->done($data);
+		return $this->response;
+	}
+
+
+	/**
      * Сохранение справочника
      * @param array $data
      * @return xajaxResponse
@@ -303,51 +373,6 @@ class ModAjax extends ajaxFunc {
 			$this->error[] =  $e->getMessage();
 			$this->displayError($data);
 		}
-		return $this->response;
-    }
-
-
-	/**
-	 * Сохранение субмодулей
-	 * @param array $data
-	 * @return xajaxResponse
-	 */
-	public function saveModuleSub($data) {
-
-     	//echo "<PRE>";print_r($data);echo"</PRE>";die();
-     	preg_match("/[^a-z|0-9]/", $data['control']['sm_key'], $arr);
-		if (count($arr)) {
-			$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
-			$this->response->script("document.getElementById('" . $data['class_id'] . "sm_key').className='reqField';");
-		}
-     	//$this->ajaxValidate($data, $fields);
-		if (count($this->error)) {
-			$this->displayError($data);
-			return $this->response;
-		}
-		if (!empty($data['access'])) {
-			$data['control']['access_default'] = base64_encode(serialize($data['access']));
-		}
-		$data['control']['access_add'] = '';
-		if (!empty($data['addRules'])) {
-			$rules = array();
-			foreach ($data['addRules'] as $id => $value) {
-				if ($value) {
-					if (!empty($data['value_all']) && !empty($data['value_all'][$id])) {
-						$rules[$value] = 'all';
-					} elseif (!empty($data['value_owner']) && !empty($data['value_owner'][$id])) {
-						$rules[$value] = 'owner';
-					} else {
-						$rules[$value] = 'deny';
-					}
-				}
-			}
-			$data['control']['access_add'] = base64_encode(serialize($rules));
-		}
-		if (!$this->saveData($data)) {
-			return $this->response;
-		}
-		$this->done($data);
 		return $this->response;
     }
 
@@ -645,18 +670,52 @@ class ModAjax extends ajaxFunc {
                 $xmlObj = simplexml_load_file($destinationFolder . "/install/install.xml");
                 //echo "<PRE>";print_r($xmlObj);echo "</PRE>";die;
 
-                require_once('core2/mod/admin/install.php');
+                //получаем хэш для файлов модуля
+                $inst = new InstallModule();
+                $files_hash = $inst->extractHashForFiles($destinationFolder);
+                if (empty($files_hash)) {
+                    throw new Exception("Не удалось получить хэшь файлов модуля");
+                }
 
-                $this->db->insert('core_available_modules',
-                    array('name' 	=> $xmlObj->install->module_name,
-                        'data' 		=> $content,
-                        'descr' 	=> $xmlObj->install->description,
-                        'version' 	=> $xmlObj->install->version,
-                        'install_info' => serialize(InstallModule::xmlParse($xmlObj)),
-                        'readme' 	=> !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
-                        'lastuser' 	=> $this->auth->ID
-                    )
+                $is_exist = $this->db->fetchOne(
+                    "SELECT id
+                       FROM core_available_modules
+                      WHERE module_id = ?
+                        AND version = ?",
+                    array($xmlObj->install->module_id, $xmlObj->install->version)
                 );
+                if (!empty($is_exist)) {
+                    $this->db->update(
+                        'core_available_modules',
+                        array(
+                            'name' 	        => $xmlObj->install->module_name,
+                            'module_id' 	=> $xmlObj->install->module_id,
+                            'data' 		    => $content,
+                            'descr' 	    => $xmlObj->install->description,
+                            'version' 	    => $xmlObj->install->version,
+                            'install_info'  => serialize(InstallModule::xmlParse($xmlObj)),
+                            'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
+                            'lastuser' 	    => $this->auth->ID,
+                            'files_hash'    => serialize($files_hash)
+                        ),
+                        "id = '{$is_exist}'"
+                    );
+                } else {
+                    $this->db->insert(
+                        'core_available_modules',
+                        array(
+                            'name' 	        => $xmlObj->install->module_name,
+                            'module_id' 	=> $xmlObj->install->module_id,
+                            'data' 		    => $content,
+                            'descr' 	    => $xmlObj->install->description,
+                            'version' 	    => $xmlObj->install->version,
+                            'install_info'  => serialize(InstallModule::xmlParse($xmlObj)),
+                            'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
+                            'lastuser' 	    => $this->auth->ID,
+                            'files_hash'    => serialize($files_hash)
+                        )
+                    );
+                }
             }
             else {
                 throw new Exception("Неверный тип архива");

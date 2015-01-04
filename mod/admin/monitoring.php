@@ -133,7 +133,7 @@ $tab->beginContainer($title);
 			$list->showTable();
 		}
 	}
-	elseif ($tab->activeTab == 3) {
+	elseif ($tab->activeTab == 3) { // Мониторинг
 		if (!empty($_GET['show'])) {			
 			$edit = new editTable($this->resId . 'xxx3');
 			$res = $this->db->fetchRow("SELECT action, request_method, remote_port, query
@@ -152,7 +152,13 @@ $tab->beginContainer($title);
 			$edit->showTable();
 		} else {			
 			function trimAction($data) {
-				return substr($data['action'], 0, 80) . "   ...";
+				$r = substr($data['action'], 0, 80);
+				if ($r != $data['action']) {
+					$r .= "   ...";
+				} else {
+					$r = $data['action'];
+				}
+				return $r;
 			}
 			
 			$list = new listTable($this->resId . 'xxx3'); 
