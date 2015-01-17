@@ -1,7 +1,7 @@
 <?php
 
 // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-define("DOC_ROOT", realpath(__DIR__ . "/../..") . DIRECTORY_SEPARATOR);
+define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR);
 define("DOC_PATH", substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])) ?: '/');
 
 require_once DOC_ROOT . 'core2/inc/classes/Tool.php';

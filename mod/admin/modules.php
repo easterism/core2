@@ -3,7 +3,7 @@
 //список модулей из репозитория
 if (!empty($_GET['getModsListFromRepo'])) {
     $install = new InstallModule();
-    echo $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+    $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
     exit();
 }
 
@@ -47,13 +47,11 @@ $sid = session_id();
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {	
 			$edit = new editTable('mod'); 
 			$selected_dep = array();
-			$dep_list = "SELECT module_id, m_name FROM core_modules WHERE m_id != '" . $_GET['edit'] . "'";
+			$refid = (int)$_GET['edit'];
+			$dep_list = "SELECT module_id, m_name FROM core_modules WHERE m_id != '$refid'";
 			$field = '';
-			if ($_GET['edit'] > 0) {
-				$SQL  = "SELECT dependencies
-							 FROM core_modules
-							 WHERE m_id = '" . $_GET['edit'] . "'";
-				$res = $this->dataModules->find($_GET['edit'])->current()->dependencies;
+			if ($refid > 0) {
+				$res = $this->dataModules->find($refid)->current()->dependencies;
 				$dep = array();
 				if ($res) {
 					$dep = base64_decode($res);
@@ -91,66 +89,7 @@ $sid = session_id();
 				
 				
 			}
-			if (isset($_GET['module_on'])) {
-				$list_dep = $this->dataModules->find($_GET['edit'])->current()->dependencies;
-				$modules = array();
-				if ($list_dep) {
-					$dep = unserialize(base64_decode($list_dep));
-					$error = "Для активации модуля необходимо включить модули:";										
-					if (is_array($dep)) {						
-						foreach ($dep as $val) {
-							$is_on =  $this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND module_id=? LIMIT 1", $val['module_id']);
-							if (!$is_on) {																								
-								if (!isset($val['m_name'])) {									
-									$modules[] = $this->db->fetchOne("SELECT m_name FROM core_modules WHERE module_id=?", $val['module_id']);
-								} else {
-									$modules[] = $val['m_name'];
-								}
-							}
-							
-						}						  
-					}
-				}
-				if (count($modules) > 0) {
-					$edit->error = "Для активации модуля необходимо включить модули:".implode(",", $modules);
-				} else {
-					$where = $this->db->quoteInto('m_id = ?', $_GET['edit']);
-					$this->db->update("core_modules", array("visible" => "Y"), $where);
-				}																
-			} 
-			
-			if (isset($_GET['module_off'])) {
-				$modules_off = unserialize((base64_decode($_GET['module_off'])));
-				if (is_array($modules_off)) {
-					foreach ($modules_off as $value_off) {
-						$where  = $this->db->quoteInto('module_id = ?', $value_off);
-						$this->db->update("core_modules", array("visible" => "N"), $where);						
-					}					
-				} 	
-				$where2 = $this->db->quoteInto('m_id = ?', $_GET['edit']);
-				$this->db->update("core_modules", array("visible" => "N"), $where2);			
-				
-			}
-			
-			$array_dep = $this->db->fetchAll("SELECT module_id,m_name,dependencies FROM core_modules WHERE visible='Y'");
-			$module = $this->dataModules->find($_GET['edit'])->current();
-			$id_module = $module->module_id;
-			$list_id_modules = array();
-			$list_name_modules = array();
-			foreach ($array_dep as $value) {
-				if ($value['dependencies']) {
-					$dep_arr = unserialize(base64_decode($value['dependencies']));
-					if (count($dep_arr) > 0) {
-						foreach ($dep_arr as $module_val) {
-							if ($module_val['module_id'] == $id_module) {
-								$list_name_modules[] = $value['m_name'];
-								$list_id_modules[] = $value['module_id'];
-							}
-						}						
-					}					
-				}				 
-			}
-			 
+
 			$edit->SQL  = "SELECT  m_id,
 								   m_name,
 								   module_id,
@@ -161,7 +100,7 @@ $sid = session_id();
 								   access_default,
 								   access_add								   
 							  FROM core_modules
-							 WHERE m_id = '" . $_GET['edit'] . "'";							 
+							 WHERE m_id = '$refid'";
 			$edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
 			if ($_GET['edit'] > 0) {
 				$edit->addControl("Идентификатор:", "PROTECTED");
@@ -175,13 +114,13 @@ $sid = session_id();
 			$edit->selectSQL[] = $dep_list; 			
 			$edit->addControl("Зависит от модулей:", "CHECKBOX", "", "", $selected_dep);
 			$seq = '';
-			if ($_GET['edit'] == 0) {
+			if ($refid == 0) {
 				$seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_modules LIMIT 1");
 			}
 			$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq);
 			$access_default 	= array();
 			$custom_access 		= '';			
-			if ($_GET['edit']) {
+			if ($refid) {
 				$access_default = unserialize(base64_decode($module->access_default));
 				$access_add 	= unserialize(base64_decode($module->access_add));
 				if (is_array($access_add) && count($access_add)) {
@@ -224,11 +163,10 @@ $sid = session_id();
 			$edit->addControl("Доступ по умолчанию:", "CUSTOM", $access);
 			
 			//CUSTOM ACCESS
-			$is_visible = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $_GET['edit']);			
 			$rules = '<div id="xxx">' . $custom_access . '</div>';
 			$rules .= '<div><span id="new_attr" class="newRulesModule" onclick="newRule(\'xxx\')">Новое правило</span></div>';
 			$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
-			$edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $_GET['edit']));
+			$edit->addButtonSwitch('visible', 	$this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $refid));
 			/*if ($is_visible) {
 				if (count($list_name_modules) > 0) {
 					$get_param = base64_encode(serialize($list_id_modules));					
@@ -245,9 +183,11 @@ $sid = session_id();
 			$edit->back = $app;
 			$edit->addButton("Вернуться к списку Модулей", "load('$app')");
 			$edit->save("xajax_saveModule(xajax.getFormValues(this.id))");
-			
 			$edit->showTable();
 
+			//----------------------------
+			// Субмодули
+			//---------------------------
 			$tab = new tabs("submods");
 			$tab->beginContainer('Субмодули');
 			if (isset($_GET['editsub']) && $_GET['editsub'] != '') {
@@ -258,11 +198,10 @@ $sid = session_id();
 									   sm_path,
 									   seq,
 									   visible,
-									   m_id,
 									   access_default,
 									   access_add
 								  FROM core_submodules
-								 WHERE m_id = '" . $_GET['edit'] . "'
+								 WHERE m_id = '$refid'
 								   AND sm_id = '" . $_GET['editsub'] . "'";
 				$res = $this->db->fetchRow($edit->SQL);
 				
@@ -276,20 +215,16 @@ $sid = session_id();
 				$edit->addControl("Адрес внешнего ресурса:", "TEXT");
 				$seq = '1';
 				if (empty($_GET['editsub'])) {
-					$seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_submodules WHERE m_id = ? LIMIT 1", $_GET['edit']);
+					$seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_submodules WHERE m_id = ? LIMIT 1", $refid);
 					if (!$seq) $seq = '1';
 				}
 				$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq, true);
 				$edit->selectSQL[] = array('Y' => 'вкл.', 'N' => 'выкл.'); 
 				$edit->addControl("Статус:", "RADIO", "", "", "Y");
-				$edit->addControl("", "HIDDEN", "", "", $_GET['edit']);
-				
+
 				$access_default 	= array();
 				$custom_access 		= '';
 				if ($_GET['editsub']) {
-					$SQL = "SELECT access_default, access_add
-							  FROM core_submodules
-							 WHERE sm_id = ?";
 					$res = $this->dataSubModules->find($_GET['editsub'])->current();
 					$access_default = unserialize(base64_decode($res->access_default));
 					$access_add 	= unserialize(base64_decode($res->access_add));
@@ -332,9 +267,10 @@ $sid = session_id();
 				$rules = '<div id="xxxsub">' . $custom_access . '</div>';
 				$rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="newRule(\'xxxsub\')">Новое правило</span></div>';
 				$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
-				
-				$edit->back = $app . "&edit=" . $_GET['edit'];
-				$edit->addButton("Отменить", "load('{$app}&edit={$_GET['edit']}')");
+
+				if (!$_GET['editsub']) $edit->setSessFormField('m_id', $refid);
+				$edit->back = $app . "&edit=" . $refid;
+				$edit->addButton("Отменить", "load('{$app}&edit={$refid}')");
 				$edit->save("xajax_saveModuleSub(xajax.getFormValues(this.id))");
 				
 				$edit->showTable();
@@ -346,20 +282,20 @@ $sid = session_id();
 								 sm_name,
 								 sm_path,
 								 seq,
-								 sm.visible
-							FROM core_submodules AS sm
-							WHERE m_id = '" . $_GET['edit'] . "'
+								 visible
+							FROM core_submodules
+							WHERE m_id = '$refid'
 						   ORDER BY seq, sm_name";
 			$list->addColumn("Субмодуль", "", "TEXT");
 			$list->addColumn("Путь", "", "TEXT");
 			$list->addColumn("Позиция", "", "TEXT");
-			$list->addColumn("", "1%", "STATUS");
+			$list->addColumn("", "1%", "STATUS_INLINE", "core_submodules.visible");
 			
 			$list->paintCondition	= "'TCOL_05' == 'N'";
 			$list->paintColor		= "ffffee";
 			
-			$list->addURL 			= $app . "&edit={$_GET['edit']}&editsub=0";
-			$list->editURL 			= $app . "&edit={$_GET['edit']}&editsub=TCOL_00";
+			$list->addURL 			= $app . "&edit={$refid}&editsub=0";
+			$list->editURL 			= $app . "&edit={$refid}&editsub=TCOL_00";
 			$list->deleteKey		= "core_submodules.sm_id";
 			
 			$list->showTable();
@@ -493,12 +429,13 @@ $sid = session_id();
        //список доступных одулей
 		$list = new listTable('mod_available');
         $list->SQL = "SELECT 1";
-        $list->addColumn("Имя модуля", "", "TEXT");
-        $list->addColumn("Идентификатор", "", "TEXT");
+        $list->addColumn("Имя модуля", "200px", "TEXT");
+        $list->addColumn("Идентификатор", "200px", "TEXT");
         $list->addColumn("Описание", "", "TEXT");
         $list->addColumn("Версия", "150px", "BLOCK");
+        $list->addColumn("Автор", "150px", "TEXT");
         $list->addColumn("Системный", "50px", "TEXT");
-        $list->addColumn("Действие", "3%", "BLOCK", 'align=center');
+        $list->addColumn("Действие", "66", "BLOCK", 'align=center');
 
         $list->getData();
 
@@ -526,15 +463,16 @@ $sid = session_id();
             $arr[3] = $val['descr'];
             $arr[4] = $val['version'];
             $mData = unserialize(htmlspecialchars_decode($val['install_info']));
-            $arr[5] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
+            $arr[5] = $mData['install']['author'];
+            $arr[6] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
             $mVersion = $arr[4];
             $mId = $mData['install']['module_id'];
             $mName = $arr[1];
-            $arr[6] = "<div onclick=\"installModule('$mName', 'v$mVersion', '{$arr[0]}', {$_GET['_page_mod_available']})\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
+            $arr[7] = "<div onclick=\"installModule('$mName', 'v$mVersion', '{$arr[0]}', {$_GET['_page_mod_available']})\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
             foreach ($listAllModules as $allval) {
                 if ($mId == $allval['module_id']) {
                     if ($mVersion == $allval['version']) {
-                        $arr[6] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
+                        $arr[7] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
                     }
                 }
             }

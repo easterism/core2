@@ -872,3 +872,27 @@ table td.homeTD {
 .im-msg-yellow > span{
     color: #8a6d3b;
 }
+
+.alert {
+	padding: 1px 15px;
+	margin: 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+	color: #000;
+}
+.alert-success {
+	background-color: #dff0d8;
+	border-color: #3c763d;
+}
+.alert-info {
+	background-color: #d9edf7;
+	border-color: #31708f;
+}
+.alert-warning {
+	background-color: #fcf8e3;
+	border-color: #8a6d3b;
+}
+.alert-danger {
+	background-color: #f2dede;
+	border-color: #a94442;
+}

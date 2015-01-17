@@ -197,21 +197,19 @@ class InstallModule extends Db {
         if (is_writeable($dir)) {
             //удаляем старые файлы
             $this->justDeleteFiles($this->installPath);
-            //если модуль системный, то сперва надо создать папку с модулем
-            if (strtolower($this->mInfo['install']['module_system']) == "y") {
-                if (!is_dir("{$dir}/{$this->mInfo['install']['module_id']}")) {
-                    $this->autoDestination("{$dir}{$this->mInfo['install']['module_id']}");
-                    //$this->addNotice("Файлы модуля", "Директория \"{$dir}{$this->mInfo['install']['module_id']}\"", "Создана", "info");
-                } else {
-                    //$this->addNotice("Файлы модуля", "Директория \"{$dir}{$this->mInfo['install']['module_id']}\"", "Существует", "info");
-                }
+            //сперва надо создать папку с модулем
+            if (!is_dir("{$dir}/{$this->mInfo['install']['module_id']}")) {
+                $this->autoDestination("{$dir}{$this->mInfo['install']['module_id']}");
+                //$this->addNotice("Файлы модуля", "Директория \"{$dir}{$this->mInfo['install']['module_id']}\"", "Создана", "info");
+            } else {
+                //$this->addNotice("Файлы модуля", "Директория \"{$dir}{$this->mInfo['install']['module_id']}\"", "Существует", "info");
             }
-            //создаем папку модуля для обычного модуля и папку с версией для системного
+            //создаем папку с версией
             if (!is_dir($this->installPath)) {
                 $this->autoDestination($this->installPath);
-                //$this->addNotice("Файлы модуля", "Директория \"{$this->installPath}\"", "Создана", "info");
+//                $this->addNotice("Файлы модуля", "Директория \"{$this->installPath}\"", "Создана", "info");
             } else {
-                //$this->addNotice("Файлы модуля", "Директория \"{$this->installPath}\"", "Существует", "info");
+//                $this->addNotice("Файлы модуля", "Директория \"{$this->installPath}\"", "Существует", "info");
             }
 
             //копируем файлы в директорию модуля
@@ -290,13 +288,18 @@ class InstallModule extends Db {
             } else {
                 $this->addNotice("Права доступа", "Права по умолчанию", "Отсутствуют", "warning");
             }
-            if (!empty($Inf['install']['access']['additional'])) {
-                foreach ($Inf['install']['access']['additional'] as $value) {
-                    if ($value["all"] == "on" || $value["owner"] == "on"){
-                        $access_add[$value["name"]] = ($value["all"] == "on" ? "all" : "owner");
-                    }
+            if (!empty($Inf['install']['access']['additional']['rule'])) {
+                if (!empty($Inf['install']['access']['additional']['rule']['name'])) {
+                    $val = $Inf['install']['access']['additional']['rule'];
+                    $Inf['install']['access']['additional']['rule'] = array();
+                    $Inf['install']['access']['additional']['rule'][] = $val;
+                }
+                foreach ($Inf['install']['access']['additional']['rule'] as $value) {
+                    $access_add[$value["name"]] = ($value["all"] == "on") ? "all" : ($value["owner"] == "on" ? "owner" : "");
                 }
                 $this->addNotice("Права доступа", "Дополнительные права", "Добавлены", "info");
+            } elseif (!empty($Inf['install']['access']['additional']) && is_array($Inf['install']['access']['additional'])) {
+                throw new Exception("Ошибки в install.xml (access > additional)");
             }
         $access = base64_encode(serialize($access));
         $access_add = base64_encode(serialize($access_add));
@@ -312,10 +315,15 @@ class InstallModule extends Db {
      */
     private function checkNecMods() {
         $Inf = $this->mInfo;
-        if (!empty($Inf['install']['dependent_modules'])) {
+        if (!empty($Inf['install']['dependent_modules']['m'])) {
             $depend = array();
             $is_stop = false;
-            foreach ($Inf['install']['dependent_modules'] as $dep_value) {
+            if (!is_array($Inf['install']['dependent_modules']['m'])) {
+                $val = $Inf['install']['dependent_modules']['m'];
+                $Inf['install']['dependent_modules']['m'] = array();
+                $Inf['install']['dependent_modules']['m'][] = $val;
+            }
+            foreach ($Inf['install']['dependent_modules']['m'] as $dep_value) {
                 $depend[] = array('module_id' => $dep_value);
                 if ($this->checkModuleDepend($dep_value) == false) {
                     $is_stop = true;
@@ -326,6 +334,8 @@ class InstallModule extends Db {
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
+        } elseif (!empty($Inf['install']['dependent_modules']) && is_array($Inf['install']['dependent_modules'])) {
+            throw new Exception("Ошибки в install.xml (dependent_modules)");
         } else {
             $this->addNotice("Зависимость от модулей", "Проверка выполнена", "Не имеет зависимостей", "info");
             return false;
@@ -344,9 +354,14 @@ class InstallModule extends Db {
         echo "";
         $Inf = $this->mInfo;
         $arrSubModules = array();
-        if (!empty($Inf['install']['submodules'])) {
+        if (!empty($Inf['install']['submodules']['sm'])) {
+            if (!empty($Inf['install']['submodules']['sm']['sm_id'])) {
+                $val = $Inf['install']['submodules']['sm'];
+                $Inf['install']['submodules']['sm'] = array();
+                $Inf['install']['submodules']['sm'][] = $val;
+            }
             $seq=1;
-            foreach ($Inf['install']['submodules'] as $valsub) {
+            foreach ($Inf['install']['submodules']['sm'] as $valsub) {
                 $access = array();
                 $access_add = array();
                 if (!empty($valsub['sm_id']) && !empty($valsub['sm_name'])) {
@@ -370,8 +385,8 @@ class InstallModule extends Db {
                                 $access_add[$value["name"]] = ($value["all"] == "on" ? "all" : "owner");
                             }
                         }
-                        $access_add = base64_encode(serialize($access_add));
                     }
+                    $access_add = base64_encode(serialize($access_add));
 
                     $arrSubModules[] = array(
                             'sm_name' 		 	=> $valsub['sm_name'],
@@ -388,6 +403,8 @@ class InstallModule extends Db {
                 }
             }
             return $arrSubModules;
+        } elseif (!empty($Inf['install']['submodules']) && is_array($Inf['install']['submodules'])) {
+            throw new Exception("Ошибки в install.xml (submodules)");
         } else {
             $this->addNotice("Субмодули", "Проверка выполнена", "Модуль не имеет субмодулей", "info");
             return false;
@@ -430,6 +447,7 @@ class InstallModule extends Db {
             $arrForInsert['access_default'] = $access['access_default'];
             $arrForInsert['access_add']     = $access['access_add'];
         }
+
         //регистрация модуля
         $this->db->insert('core_modules', $arrForInsert);
         $lastId = $this->db->lastInsertId();
@@ -444,6 +462,8 @@ class InstallModule extends Db {
             $this->addNotice("Субмодули", "Субмодули добавлены", "Успешно", "info");
         }
         //перезаписываем путь к файлам модуля
+        $this->cache->remove("is_active_" . $this->mInfo['install']['module_id']);
+        $this->cache->remove("is_installed_" . $this->mInfo['install']['module_id']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //выводим сообщения
         if ($this->is_visible == "N") {
@@ -524,7 +544,7 @@ class InstallModule extends Db {
 
         if (is_array($arrObjData)) {
             foreach ($arrObjData as $index => $value) {
-                if ($index != "comment") {
+                if ((string)$index != "comment") {
                     if (is_object($value) || is_array($value)) {
                         $value = self::xmlParse($value, $arrSkipIndices); // recursive call
                     }
@@ -585,6 +605,8 @@ class InstallModule extends Db {
             $this->addNotice("Субмодули", "Субмодули обновлены", "Успешно", "info");
         }
         //перезаписываем путь к файлам модуля
+        $this->cache->remove("is_active_" . $this->mInfo['install']['module_id']);
+        $this->cache->remove("is_installed_" . $this->mInfo['install']['module_id']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //выводим сообщения
         if ($this->is_visible == "N") {
@@ -607,16 +629,19 @@ class InstallModule extends Db {
         $this->deleteFilesInfo = array();
         $this->justDeleteFiles($dir);
         if (!empty($this->deleteFilesInfo['is_not_writeable'])) {
-            asort($this->deleteFilesInfo['is_not_writeable']);
-            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['is_not_writeable']), "Папка закрыта для записи, удалите её самостоятельно", "danger");
+//            asort($this->deleteFilesInfo['is_not_writeable']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['is_not_writeable']), "Папка закрыта для записи, удалите её самостоятельно", "danger");
+            $this->addNotice("Файлы модуля", "Удаление", "Папка закрыта для записи, удалите её самостоятельно", "danger");
         }
         if (!empty($this->deleteFilesInfo['success'])) {
-            asort($this->deleteFilesInfo['success']);
-            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
+//            asort($this->deleteFilesInfo['success']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
+            $this->addNotice("Файлы модуля", "Удаление", "Успешно", "info");
         }
         if (!empty($this->deleteFilesInfo['not_exists'])) {
-            asort($this->deleteFilesInfo['not_exists']);
-            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['not_exists']), "Не существует", "info");
+//            asort($this->deleteFilesInfo['not_exists']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['not_exists']), "Не существует", "info");
+            $this->addNotice("Файлы модуля", "Удаление", "Файлы не найдены", "info");
         }
     }
 
@@ -834,6 +859,10 @@ class InstallModule extends Db {
         } elseif ($this->curVer > $this->mInfo['install']['version']) {
             throw new Exception("У вас стоит более актуальная версия!");
         }
+        $curVer = "v" . trim($this->curVer);
+        if (!isset($this->mInfo['migrate'][$curVer])) {
+            throw new Exception("обновление для {$curVer} не предусмотрено!");
+        }
     }
 
 
@@ -854,12 +883,21 @@ class InstallModule extends Db {
                 $path   = $dir . DIRECTORY_SEPARATOR . $value;
                 $pathTo = $dirTo . DIRECTORY_SEPARATOR . $value;
                 if (is_dir($path)) {
-                    $this->justCopyFiles($path, $pathTo);
-                } else {
-                    if (!is_dir($dirTo)) {
-                        mkdir($dirTo);
+                    if (!is_dir($pathTo)) {
+                        if (is_writable($dirTo)) {
+                            mkdir($pathTo);
+                            $this->justCopyFiles($path, $pathTo);
+                        } else {
+                            $error[] = $dirTo;
+                        }
                     }
-                    $result = copy($path, $pathTo);
+//                    $this->justCopyFiles($path, $pathTo);
+
+                } else {
+                    $result = false;
+                    if (is_writable($dirTo)) {
+                        $result = copy($path, $pathTo);
+                    }
                     if ($result) {
                         $success[]   = $value;
                     } else {
@@ -890,21 +928,23 @@ class InstallModule extends Db {
      * @return  array           Хэш файлов
      */
     public function extractHashForFiles($dir) {
-        $cdir = scandir($dir);
         $info   = array();
-        foreach ($cdir as $key => $value) {
-            if (!in_array($value, array(".", ".."))) {
-                $path   = $dir . DIRECTORY_SEPARATOR . $value;
-                if (is_dir($path)) {
-                    $info[$value] = array(
-                        'type' => 'dir',
-                        'cont' => $this->extractHashForFiles($path)
-                    );
-                } else {
-                    $info[$value] = array(
-                        'type' => 'file',
-                        'cont' => md5_file($path)
-                    );
+        if (is_dir($dir)) {
+            $cdir = scandir($dir);
+            foreach ($cdir as $key => $value) {
+                if (!in_array($value, array(".", ".."))) {
+                    $path   = $dir . DIRECTORY_SEPARATOR . $value;
+                    if (is_dir($path)) {
+                        $info[$value] = array(
+                            'type' => 'dir',
+                            'cont' => $this->extractHashForFiles($path)
+                        );
+                    } else {
+                        $info[$value] = array(
+                            'type' => 'file',
+                            'cont' => md5_file($path)
+                        );
+                    }
                 }
             }
         }
@@ -1030,12 +1070,14 @@ class InstallModule extends Db {
         $this->copyFilesInfo = array();
         $this->justCopyFiles($dir, $dirTo);
         if (!empty($this->copyFilesInfo['error'])) {
-            asort($this->copyFilesInfo['error']);
-            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['error']), "Файлы не скопированы, скопируйте их вручную", "danger");
+//            asort($this->copyFilesInfo['error']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['error']), "Файлы не скопированы, скопируйте их вручную", "danger");
+            $this->addNotice("Файлы модуля", "Копирование", "Файлы не скопированы, скопируйте их вручную", "danger");
         }
         if (!empty($this->copyFilesInfo['success'])) {
-            asort($this->copyFilesInfo['success']);
-            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['success']), "Файлы скопированы успешно", "info");
+//            asort($this->copyFilesInfo['success']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['success']), "Файлы скопированы успешно", "info");
+            $this->addNotice("Файлы модуля", "Копирование", "Файлы скопированы успешно", "info");
         }
     }
 
@@ -1047,7 +1089,7 @@ class InstallModule extends Db {
      *
      * @return  void
      */
-    public function justDeleteFiles ($dir){
+    public function justDeleteFiles ($dir, $is_delete_root = true){
         if (file_exists($dir)) {
             if (is_writeable($dir)) {
                 $d = opendir($dir);
@@ -1063,7 +1105,9 @@ class InstallModule extends Db {
 
                     }
                 }
-                rmdir($dir);
+                if ($is_delete_root) {
+                    rmdir($dir);
+                }
                 $this->deleteFilesInfo['success'][] = $dir;
             }else{
                 $this->deleteFilesInfo['is_not_writeable'][] = $dir;
@@ -1101,7 +1145,7 @@ class InstallModule extends Db {
         $this->mInfo	= $mInfo;
 
         //путь установки модуля
-        $this->installPath 	= (strtolower($mInfo['install']['module_system']) == "y" ? "core2/mod/{$mInfo['install']['module_id']}/v{$mInfo['install']['version']}" : "mod/{$mInfo['install']['module_id']}");
+        $this->installPath 	= ((strtolower($mInfo['install']['module_system']) == "y" ? "core2/" : "") . "mod/{$mInfo['install']['module_id']}/v{$mInfo['install']['version']}");
 
         //ID юзера, ставящего модуль
         $authNamespace 		= Zend_Registry::get('auth');
@@ -1137,7 +1181,7 @@ class InstallModule extends Db {
             $this->mData['files_hash']    = $temp['files_hash'];
             $this->prepareToInstall();
 
-            if ($this->isModuleInstalled($mod_id)) {
+            if ($this->isModuleInstalled($this->mInfo['install']['module_id'])) {
                 $st = "<h3>Обновляем модуль</h3>";
                 $this->Upgrate();
             } else {
@@ -1345,6 +1389,7 @@ class InstallModule extends Db {
      * @return  string              HTML
      */
     public function getHTMLModsListFromRepo($repo_url) {
+        $_GET['repo_id'] = !empty($_GET['repo_id']) ? $_GET['repo_id'] : "";
         try {
             //достаём список модулей
             $repo_list = $this->getModsListFromRepo($repo_url);
@@ -1357,19 +1402,21 @@ class InstallModule extends Db {
                 $arr[$key]['module_id']     = $repo_list[$key]['install']['module_id'];
                 $arr[$key]['descr']         = $repo_list[$key]['install']['description'];
                 $arr[$key]['version']       = $repo_list[$key]['install']['version'];
+                $arr[$key]['author']        = $repo_list[$key]['install']['author'];
                 $arr[$key]['module_system'] = $repo_list[$key]['install']['module_system'] == 'Y' ? "Да" : "Нет";
                 $arr[$key]['install_info']  = $repo_list[$key];
             }
 
-            $list_id = "repo_table_" . $_GET['repo_id'];
+            $list_id = "repo_table_" . uniqid();
             $list = new listTable($list_id);
             $list->SQL = "SELECT 1";
-            $list->addColumn("Имя модуля", "", "TEXT");
-            $list->addColumn("Идентификатор", "", "TEXT");
+            $list->addColumn("Имя модуля", "200px", "TEXT");
+            $list->addColumn("Идентификатор", "200px", "TEXT");
             $list->addColumn("Описание", "", "TEXT");
             $list->addColumn("Версия", "150px", "TEXT");
+            $list->addColumn("Автор", "150px", "TEXT");
             $list->addColumn("Системный", "50px", "TEXT");
-            $list->addColumn("Действие", "3%", "BLOCK", 'align=center');
+            $list->addColumn("Действие", "96", "BLOCK", 'align=center');
             $list->noCheckboxes = "yes";
 
             $list->getData();
@@ -1433,12 +1480,7 @@ class InstallModule extends Db {
             $list->setRecordCount($per_page);
 
             $list->data = $copy_list;
-            ob_start();
             $list->showTable();
-            $th = ob_get_flush();
-            //поскольку буфер в буфере, то чистим еще раз
-            ob_end_clean();
-            return $th;
 
         } catch (Exception $e) {
             $this->addNotice("", $e->getMessage(), "При подключении к репозиторию произошла ошибка", "danger");
@@ -1457,7 +1499,8 @@ class InstallModule extends Db {
     public function mUninstall($m_id) {
         $m_id = (int)$m_id;
         try {
-            $mInfo = $this->db->fetchRow("SELECT is_system, module_id, uninstall FROM `core_modules` WHERE `m_id`=?", $m_id);
+            $mInfo = $this->db->fetchRow("SELECT is_system, module_id, version, uninstall FROM `core_modules` WHERE `m_id`=?", $m_id);
+            $this->mInfo['install']['module_id'] = $mInfo['module_id'];//надо для checkSQL
             //если модуль существует
             if (!empty($mInfo)) {
                 $is_used_by_other_modules = $this->isUsedByOtherMods($mInfo['module_id']);
@@ -1483,7 +1526,7 @@ class InstallModule extends Db {
                     $this->addNotice("Регистрация модуля", "Удаление сведений о модуле", "Выполнено", "info");
 
                     if ($mInfo['is_system'] == 'N') {
-                        $modulePath = (strtolower($mInfo['is_system']) == "y" ? "core2/" : "") .  "mod/" . $mInfo['module_id'];
+                        $modulePath = (strtolower($mInfo['is_system']) == "y" ? "core2/" : "") .  "mod/{$mInfo['module_id']}/v{$mInfo['version']}";
                         $this->deleteFolder($modulePath);
                     } else {
                         $this->addNotice("Файлы модуля", "Файлы не удалены", "Файлы системных модулей удаляются вручную!", "warning");
@@ -1525,7 +1568,7 @@ class InstallModule extends Db {
             if (!empty($mod['data']) && !empty($mod['files_hash'])) {
                 $data       = $mod['data'];
                 $files_hash = $mod['files_hash'];
-                $this->addNotice("Поиск эталона", "Поиск в доступных модулях", "Архив найден", "info");
+                //$this->addNotice("Поиск эталона", "Поиск в доступных модулях", "Архив найден", "info");
             }
 
             //ищем архив в репозитории
@@ -1553,7 +1596,7 @@ class InstallModule extends Db {
                                     $data       = base64_decode($out->data);
                                     $files_hash = base64_decode($out->files_hash);
                                     if (!empty($data) && !empty($files_hash)) {
-                                        $this->addNotice("Поиск эталона", "Репозиторий {$repo_url}", "Найден нужный модуль", "info");
+                                        //$this->addNotice("Поиск эталона", "Репозиторий {$repo_url}", "Найден нужный модуль", "info");
                                         break(2);
                                     }
                                 }
@@ -1565,34 +1608,37 @@ class InstallModule extends Db {
 
             //заменяем файлы
             if (!empty($data) && !empty($files_hash)) {
+                //путь к файлам модуля
                 $is_system  = $this->db->fetchOne("SELECT is_system FROM core_modules WHERE module_id = ?", $mod_id);
-                if ($is_system == "N") {
-                    $path = "mod/{$mod_id}";
-                    $is_writeable = is_writeable("mod");
-                } else {
-                    $path = "core2/mod/{$mod_id}/v{$m_v}";
-                    $is_writeable = is_writeable("core2/mod");
+                $prefix = "";
+                if ($is_system == "Y") {
+                    $prefix = "core2/";
+                }
+                $path = "{$prefix}mod/{$mod_id}/v{$m_v}";
+                //есди папки модуля не существует, то создаем
+                $is_writeable = is_writeable("{$prefix}/mod") || is_writeable($path);
+                if ($is_writeable && (!file_exists("{$prefix}mod/{$mod_id}") || !file_exists($path))) {
+                    if (!file_exists("{$prefix}/mod/{$mod_id}")) {
+                        mkdir("{$prefix}/mod/{$mod_id}");
+                    }
+                    mkdir($path);
                 }
                 if (!$is_writeable || (file_exists($path) && !is_writeable($path))) {
                     $this->addNotice("Обновление файлов", "Перезапись файлов прервана", "Папка закрыта для записи", "danger");
                 } else {
                     //удаляем старые файлы
                     if (file_exists($path)) {
-                        $this->justDeleteFiles($path);
+                        $this->justDeleteFiles($path, false);
                     }
                     //записываем новые файлы
                     $config                 = Zend_Registry::getInstance()->get('config');
                     $tempDir                = $config->temp . "/tmp_" . uniqid();
                     $this->make_zip($data);
                     $this->extractZip($tempDir);
-                    if ($is_system == "N" && !file_exists("core2/mod/{$mod_id}")) {
-                        mkdir("core2/mod/{$mod_id}");
-                    }
-                    mkdir($path);
-                    $this->copyFiles($tempDir, $path);
+                    $this->justCopyFiles($tempDir, $path);
                     //обновляем инфу о хэшах
                     $this->db->update("core_modules", array('files_hash' => $files_hash), $this->db->quoteInto("module_id = ?", $mod_id));
-                    $this->addNotice("Обновление файлов", "Обновление файлов", "Завершено успешно", "info");
+                    $this->addNotice("Обновление файлов", "Обновление завершено", "Успешно", "info");
                 }
             } else {
                 $t = array();
@@ -1610,6 +1656,10 @@ class InstallModule extends Db {
 
         return $this->printNotices(1);
     }
-}
 
-?>
+
+
+    public function isModuleInstalled($module_id) {
+        return $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
+    }
+}

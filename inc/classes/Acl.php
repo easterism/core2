@@ -118,46 +118,48 @@ class Acl extends Db {
 					}
 
 					$access = unserialize($value['access']);
-					foreach ($access as $type => $data) {
-						if (strpos($type, 'default') === false) {
+                    if ( ! empty($access)) {
+                        foreach ($access as $type => $data) {
+                            if (strpos($type, 'default') === false) {
 
-							foreach ($resources2 as $availSubRes) {
-								if (!empty($data[str_replace('_', '-', $availSubRes)])) {
-									$acl->allow($roleName, $availSubRes, $type);
-								} else {
-									$acl->deny($roleName, $availSubRes, $type);
-								}
-							}
-							foreach ($resources as $availRes) {
-								if (!empty($data[$availRes])) {
-									$acl->allow($roleName, $availRes, $type);
-								} else {
-									$acl->deny($roleName, $availRes, $type);
-								}
-							}
-						}
-					}
-					foreach ($access as $type => $data) {
-						if (strpos($type, 'default') !== false) {
+                                foreach ($resources2 as $availSubRes) {
+                                    if (!empty($data[str_replace('_', '-', $availSubRes)])) {
+                                        $acl->allow($roleName, $availSubRes, $type);
+                                    } else {
+                                        $acl->deny($roleName, $availSubRes, $type);
+                                    }
+                                }
+                                foreach ($resources as $availRes) {
+                                    if (!empty($data[$availRes])) {
+                                        $acl->allow($roleName, $availRes, $type);
+                                    } else {
+                                        $acl->deny($roleName, $availRes, $type);
+                                    }
+                                }
+                            }
+                        }
+                        foreach ($access as $type => $data) {
+                            if (strpos($type, 'default') !== false) {
 
-							$type = explode('_', $type);
-							$type = !empty($type[1]) ? $type[0] : 'access';
+                                $type = explode('_', $type);
+                                $type = !empty($type[1]) ? $type[0] : 'access';
 
-							foreach ($data as $res => $on) {
-								$res = str_replace('-', '_', $res);
-								if (!empty($access_default[$res])) {
-									if (isset($access_default[$res][$type]) && $access_default[$res][$type] === 'on') $acl->allow($roleName, $res, $type); // если в настройках модуля установлен access
+                                foreach ($data as $res => $on) {
+                                    $res = str_replace('-', '_', $res);
+                                    if (!empty($access_default[$res])) {
+                                        if (isset($access_default[$res][$type]) && $access_default[$res][$type] === 'on') $acl->allow($roleName, $res, $type); // если в настройках модуля установлен access
 
-									if (isset($access_default[$res][$type . "_all"]) && $access_default[$res][$type . "_all"] === 'on') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля установлен all
-									elseif (isset($access_default[$res][$type . "_owner"]) && $access_default[$res][$type . "_owner"] === 'on') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля установлен owner
+                                        if (isset($access_default[$res][$type . "_all"]) && $access_default[$res][$type . "_all"] === 'on') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля установлен all
+                                        elseif (isset($access_default[$res][$type . "_owner"]) && $access_default[$res][$type . "_owner"] === 'on') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля установлен owner
 
-									if (isset($access_default[$res][$type])) {
-										if ($access_default[$res][$type] === 'all') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля для кастомного правила установлен all
-										elseif ($access_default[$res][$type] === 'owner') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля для кастомного правила установлен owner
-									}
-								}
-							}
-						}
+                                        if (isset($access_default[$res][$type])) {
+                                            if ($access_default[$res][$type] === 'all') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля для кастомного правила установлен all
+                                            elseif ($access_default[$res][$type] === 'owner') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля для кастомного правила установлен owner
+                                        }
+                                    }
+                                }
+                            }
+                        }
 					}
 					$i++;
 				}

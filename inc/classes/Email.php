@@ -179,15 +179,19 @@ class Email {
 
     /**
      * Сохранение в таблицу рассылки нового письма
-     *
-     * @param bool $immediately Немедленная отправка письма
-     *
-     * @return array  Массив с содержимым (ok => true) или (error => текст ошибки)
+     * @param  bool  $immediately Немедленная отправка письма
+     * @return array Массив с содержимым (ok => true) или (error => текст ошибки)
      */
     public function send($immediately = false) {
 
         try {
             $db = new Db();
+
+            if (empty($this->mail_data['from'])) {
+                $config = Zend_Registry::get('config');
+                $server = $config->system->host;
+                $this->mail_data['from'] = 'noreply@' . (substr_count($server, ".") > 0 ? $server : $server . '.com');
+            }
 
             if ($db->isModuleActive('queue')) {
                 require_once $db->getModuleLocation('queue') . '/ModQueueController.php';

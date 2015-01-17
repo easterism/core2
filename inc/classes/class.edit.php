@@ -1,6 +1,7 @@
 <?
 require_once("class.ini.php");
 $counter = 0;
+
 class editTable extends initEdit {
 	protected $controls				= array();
 	public $selectSQL				= array();
@@ -8,7 +9,7 @@ class editTable extends initEdit {
 	public $params					= array();
 	public $modal					= array();
 	public $saveConfirm				= "";
-	public $main_table_id			= "";
+	private $main_table_id			= "";
 	public $SQL						= "";
 	public $HTML					= "";
 	private $beforeSaveArr			= array();
@@ -16,10 +17,10 @@ class editTable extends initEdit {
 	public $table   = '';
 	public $error   = '';
 	protected $resource				= "";
-	protected $action				= "";
 	private $isSaved 				= false;
 	protected $cell					= array();
 	protected $template				= '';
+	private $sess_form_fields		= array();
 
 	public function __construct($name) {
 		parent::__construct();
@@ -174,6 +175,27 @@ class editTable extends initEdit {
 	}
 
 	/**
+	 * Сохраняет в сессии данные служебных полей формы
+	 * @param $data
+	 */
+	private function setSessForm($data)
+	{
+		$sess_form = new Zend_Session_Namespace('Form');
+		$ssi       = $this->main_table_id;
+		$sess_form->$ssi = $data;
+	}
+
+	/**
+	 * сохранение значения в служебных полях формы
+	 * @param $id
+	 * @param $value
+	 */
+	public function setSessFormField($id, $value)
+	{
+		$this->sess_form_fields[$id]        = $value;
+	}
+
+	/**
 	 * @return mixed
 	 */
 	public function makeTable() {
@@ -267,7 +289,10 @@ class editTable extends initEdit {
 			}
 		}
 
-		if (!$this->readOnly) {
+		if (!$this->readOnly) { //форма доступна для редактирования
+
+			$order_fields = array();
+
 			$onsubmit = "edit.onsubmit(this);";
 			if ($this->saveConfirm) {
 				$onsubmit .= "if(!confirm('{$this->saveConfirm}')){return false;};";
@@ -289,13 +314,22 @@ class editTable extends initEdit {
 				}
 			}
 			$onsubmit .= "this.submit();return false;";
-			
+
+
 			$this->HTML .= "<form id=\"{$this->main_table_id}_mainform\" method=\"POST\" action=\"[_ACTION_]\" enctype=\"multipart/form-data\" onsubmit=\"$onsubmit\">";
-			if ($this->action) {
-				$this->HTML .= "<input type=\"hidden\" name=\"action\" value=\"$this->action\"/>";
+			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"$this->main_table_id\"/>";
+			$order_fields['resId']    = $this->resource;
+			$order_fields['back']     = $this->back;
+			$order_fields['refid']    = $refid;
+			$order_fields['table']    = $this->table;
+			$order_fields['keyField'] = $keyfield;
+			foreach ($this->sess_form_fields as $k => $v) {
+				$order_fields[$k] = $v;
 			}
-			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"$this->main_table_id\"/>".
-			"<input type=\"hidden\" name=\"resId\" value=\"$this->resource\"/>".
+			$this->setSessForm($order_fields);
+
+			//TODO DEPRECATED
+			$this->HTML .= "<input type=\"hidden\" name=\"resId\" value=\"$this->resource\"/>".
 			"<input type=\"hidden\" name=\"back\" value=\"$this->back\"/>" .
 			"<input type=\"hidden\" name=\"refid\" value=\"$refid\"/>" .
 			"<input type=\"hidden\" name=\"table\" value=\"{$this->table}\"/>" .
@@ -1152,13 +1186,6 @@ $(function () {
 		return $tres;
 	}
 
-	/**
-	 * @param $action
-	 */
-	public function setAction($action) {
-		$this->action = $action;
-	}
-	
 }
 
 class cell {

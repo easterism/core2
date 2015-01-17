@@ -30,7 +30,7 @@ class ModAjax extends ajaxFunc {
 			'module_id' => 'req'
 		);
 
-		$refId = (int)$data['refid'];
+		$refId = (int) $this->getSessFormField($data['class_id'], 'refid');
 		if (!$refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
 			if (count($arr)) {
@@ -84,9 +84,9 @@ class ModAjax extends ajaxFunc {
 					$this->error[] = "Для активации модуля необходимо активировать модули:" . implode(",", $modules);
 				}
 			}
-			if ($new_status == "N" && $data['control']['refid'] != 0) {
+			if ($new_status == "N" && $refId) {
 				$array_dep = $this->db->fetchAll("SELECT `module_id`,`m_name`,`dependencies` FROM `core_modules` WHERE `visible`='Y'");
-				$id_module = $this->db->fetchOne("SELECT `module_id` FROM `core_modules` WHERE `m_id`=?", $data['refid']);
+				$id_module = $this->db->fetchOne("SELECT `module_id` FROM `core_modules` WHERE `m_id`=?", $refId);
 				$list_id_modules = array();
 				$list_name_modules = array();
 				foreach ($array_dep as $value) {
@@ -172,13 +172,16 @@ class ModAjax extends ajaxFunc {
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
-		$refId = (int)$data['refid'];
+		$refId = (int)$this->getSessFormField($data['class_id'], 'refid');
 		if (!$refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['sm_key'], $arr);
 			if (count($arr)) {
 				$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
 				$this->response->script("document.getElementById('" . $data['class_id'] . "sm_key').className='reqField';");
 			}
+			$m_id = (int)$this->getSessFormField($data['class_id'], 'm_id');
+			if (!$m_id) $this->error[] = "- Не найден идентификатор модуля";
+			$data['control']['m_id'] = $m_id;
 		} else {
 			$sm = $this->db->fetchRow("SELECT sm_key, module_id FROM core_submodules AS s
 										INNER JOIN core_modules AS m ON m.m_id = s.m_id
@@ -189,6 +192,7 @@ class ModAjax extends ajaxFunc {
 				$this->cache->remove($sm['module_id'] . "_" . $sm['sm_key']);
 				unset($data['control']['sm_key']);
 			}
+			unset($data['control']['m_id']);
 		}
 
 		//$this->ajaxValidate($data, $fields);
@@ -255,7 +259,7 @@ class ModAjax extends ajaxFunc {
 		if (!$lastId = $this->saveData($data)) {
 			return $this->response;
 		}
-		$data['back'] .= "&edit=$lastId";
+		$this->setSessFormField($data['class_id'], 'back', $this->getSessFormField($data['class_id'], 'back') . "&edit=$lastId");
 		$this->done($data);
 		return $this->response;
     }
@@ -299,7 +303,8 @@ class ModAjax extends ajaxFunc {
    		$data['control']['custom_field'] = $str;
 		$this->db->beginTransaction();
 		try {
-			if ($data['refid']) {
+			$refid = $this->getSessFormField($data['class_id'], 'refid');
+			if ($refid) {
 				//определяем идентификатор и имя справочника
 				$enum_id = $this->dataEnum->find($data['control']['parent_id'])->current()->global_id;
 				//определям кастомные поля всех справочников
@@ -315,7 +320,7 @@ class ModAjax extends ajaxFunc {
 				}
 				if ($id_to_update) {
 					//получаем старое значение
-					$old_val = $this->dataEnum->find($data['refid'])->current()->name;
+					$old_val = $this->dataEnum->find($refid)->current()->name;
 					//если старое значение не равно новому
 					if ($old_val != $data['control']['name']) {
 						//определяем все значения справочников для науденных связанных справочников
@@ -386,6 +391,7 @@ class ModAjax extends ajaxFunc {
 
 		$fields = array('u_login' 		=> 'req',
 		                'email' 		=> 'email',
+		                'role_id' 		=> 'req',
 		                'visible' 		=> 'req',
 		                'firstname' 	=> 'req',
 		                'is_admin_sw' 	=> 'req',
@@ -407,13 +413,13 @@ class ModAjax extends ajaxFunc {
 	            $send_info_sw = true;
 	        }
 			$dataForSave = array(
-				'visible' 		=> $data['control']['visible'],
-				'email' 		=> $data['control']['email'] ? $data['control']['email'] : NULL,
-				'lastuser' 		=> $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL'),
-				'is_admin_sw' 	=> $data['control']['is_admin_sw'],
-				'is_email_wrong' 	=> $data['control']['is_email_wrong'],
-				'is_pass_changed' 	=> $data['control']['is_pass_changed'],
-				'role_id' 		=> $data['control']['role_id'] ? $data['control']['role_id'] : NULL
+				'visible'         => $data['control']['visible'],
+				'email'           => $data['control']['email'] ? $data['control']['email'] : NULL,
+				'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL'),
+				'is_admin_sw'     => $data['control']['is_admin_sw'],
+				'is_email_wrong'  => $data['control']['is_email_wrong'],
+				'is_pass_changed' => $data['control']['is_pass_changed'],
+				'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : NULL
 			);
 			if (!empty($data['control']['certificate_ta'])) {
 				$dataForSave['certificate'] = $data['control']['certificate_ta'];
@@ -422,11 +428,12 @@ class ModAjax extends ajaxFunc {
 			if (!empty($data['control']['u_pass'])) {
 				$dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
 			}
-			if ($data['refid'] == 0) {
+			$refid = $this->getSessFormField($data['class_id'], 'refid');
+			if ($refid == 0) {
 				$dataForSave['u_login'] = trim($data['control']['u_login']);
 				$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
 				$this->db->insert('core_users', $dataForSave);
-				$last_insert_id = $this->db->lastInsertId(trim($data['table']));
+				$refid = $this->db->lastInsertId('core_users');
 				$who = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
                 $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
@@ -438,13 +445,12 @@ class ModAjax extends ajaxFunc {
                             ФИО: {$lastname} {$firstname} {$middlename}")
                     ->send();
 			} else {
-				$last_insert_id = $data['refid'];
-				$where = $this->db->quoteInto('u_id = ?', $last_insert_id);
+				$where = $this->db->quoteInto('u_id = ?', $refid);
 				$this->db->update('core_users', $dataForSave, $where);
 			}
 
-			if ($last_insert_id) {
-				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $last_insert_id)->limit(1));
+			if ($refid) {
+				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
 				$save = array(
 					'lastname' => $lastname,
 					'firstname' => $firstname,
@@ -453,13 +459,13 @@ class ModAjax extends ajaxFunc {
 				);
 				if (!$row) {
 					$row = $this->dataUsersProfile->createRow();
-					$save['user_id'] = $last_insert_id;
+					$save['user_id'] = $refid;
 				}
 				$row->setFromArray($save);
 				$row->save();
 			}
 			if ($send_info_sw) {
-				$this->sendUserInformation($data['control'], $data['refid']);
+				$this->sendUserInformation($data['control'], $refid);
 			}
 
 			$this->db->commit();
@@ -484,8 +490,8 @@ class ModAjax extends ajaxFunc {
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
-		$authNamespace = Zend_Registry::get('auth');
-		if ($data['refid'] == 0) {
+		$refid = $this->getSessFormField($data['class_id'], 'refid');
+		if ($refid == 0) {
 			$data['control']['date_added'] = new Zend_Db_Expr('NOW()');
 		}
 		if (!isset($data['access'])) $data['access'] = array();
@@ -493,10 +499,10 @@ class ModAjax extends ajaxFunc {
 		if (!$last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
-		if ($data['refid']) {
+		if ($refid) {
 			$this->cache->clean(
 				Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-				array('role' . $data['refid'])
+				array('role' . $refid)
 			);
 		}
 		
@@ -606,7 +612,7 @@ class ModAjax extends ajaxFunc {
 		}
         $body .= "Ваш логин: '{$dataNewUser['u_login']}'<br/>";
         $body .= "Ваш пароль: '{$dataNewUser['u_pass']}'<br/>";
-        $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Настройки\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
+        $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Профиль\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
 
 
         $result = $this->modAdmin->createEmail()
@@ -626,7 +632,7 @@ class ModAjax extends ajaxFunc {
      * @param array $data
      * @return xajaxResponse
      */
-    public function saveAvailModule ($data) {
+    public function saveAvailModule($data) {
 
         try {
             $sid 			= Zend_Session::getId();

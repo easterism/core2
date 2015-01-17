@@ -78,11 +78,6 @@ if ($tab->activeTab == 1) {
         if (!$server) {
             $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
         }
-        if (!$this->isModuleInstalled('queue')) {
-            $install->addNotice("", "Установите модуль Очередь", "Отправка уведомлений отключена", "info2");
-        } elseif (!$this->isModuleActive('queue')) {
-            $install->addNotice("", "Включите модуль Очередь", "Отправка уведомлений отключена", "info2");
-        }
 
         $is_puchkom = 1;
         $data = $this->db->fetchAll("SELECT module_id, m_name FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
@@ -124,19 +119,23 @@ if ($tab->activeTab == 1) {
                 echo "<div><h2>Обнаружены изменения в модуле \"{$val['m_name']}\"</h2>{$val[2]}</div><br><br>";
                 //отправка уведомления
 
-                if ($admin_email && $server && $this->isModuleActive('queue')) {
-                    $is_send = $this->db->fetchOne(
-                        "SELECT 1
+                if ($admin_email && $server) {
+                    if ($this->isModuleActive('queue')) {
+                        $is_send = $this->db->fetchOne(
+                            "SELECT 1
                            FROM mod_queue_mails
                           WHERE subject = 'Обнаружены изменения в структуре модуля'
                             AND date_send IS NULL
                             AND DATE_FORMAT(date_add, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
                             AND body LIKE '%{$val['module_id']}%'"
-                    );
+                        );
+                    } else {
+                        $is_send = false;
+                    }
+
                     if (!$is_send) {
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
-                            ->from('informer@' . (substr_count($server, ".") > 0 ? $server : $server . '.com'))
                             ->subject('Обнаружены изменения в структуре модуля')
                             ->body("Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();

@@ -1,8 +1,14 @@
 <?php
-require_once 'core2/inc/classes/Common.php';
-require_once 'core2/inc/classes/Image.php';
 
+require_once 'classes/Common.php';
+require_once 'classes/Image.php';
+
+
+/**
+ * Class ajaxFunc
+ */
 class ajaxFunc extends Common {
+
     /**
      * A prefix for all ajax functions to aid automatic xajax registration
      */
@@ -11,6 +17,7 @@ class ajaxFunc extends Common {
 	protected $script;
 	protected $userId;
 	private $image;
+	private $orderFields;
 
     /**
      * Do things
@@ -28,18 +35,20 @@ class ajaxFunc extends Common {
      * @param string $fields
      * @return bool
      */
-	public function ajaxValidate($data, $fields) {
+	protected function ajaxValidate($data, $fields) {
 
 		$class_id = $data['class_id'];
-		$control = $data['control'];
-		$script = "for (var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++) {if(document.getElementById('{$class_id}_mainform').elements[i].className=='reqField')document.getElementById('{$class_id}_mainform').elements[i].className='input'};";
-		$req = array();
-		$email = array();
-		$date = array();
-		$float = array();
-		$int = array();
-		$host = array();
-		$phone = array();
+		$order_fields = $this->getSessForm($class_id);
+
+		$control = $data['control']; //данные полей формы
+		$script  = "for (var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++) {if(document.getElementById('{$class_id}_mainform').elements[i].className=='reqField')document.getElementById('{$class_id}_mainform').elements[i].className='input'};";
+		$req     = array();
+		$email   = array();
+		$date    = array();
+		$float   = array();
+		$int     = array();
+		$host    = array();
+		$phone   = array();
 		
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
@@ -58,7 +67,7 @@ class ajaxFunc extends Common {
 					$files = explode("|", trim($val, "|"));
 					if (count($files)) {
 						try {
-							$this->db->fetchOne("SELECT 1 FROM `" . trim($data['table']) . "_files`");
+							$this->db->fetchOne("SELECT 1 FROM `" . trim($order_fields['table']) . "_files`");
 						} catch (Zend_Db_Exception $e) {
 							$this->error[] = $e->getMessage() . "<br/>";
 						}
@@ -89,7 +98,7 @@ class ajaxFunc extends Common {
 				}
 				
 				if (in_array("md5", $params)) {
-					$script .= "document.getElementById('" . $class_id . $field . "').value = '" . $data['control'][$field] . "';";
+					$script .= "document.getElementById('" . $class_id . $field . "').value = '" . $control[$field] . "';";
 				}
 			}
 		}
@@ -187,20 +196,55 @@ class ajaxFunc extends Common {
 	 * @param $data
 	 */
 	protected function displayError($data) {
-    	$this->response->assign($data['class_id'] . "_error", "innerHTML", '<a name="' . $data['class_id'] . '_error"> </a>' . implode("<br/>", $this->error));
-		$this->response->assign($data['class_id'] . "_error", "style.display", 'block');
-		$this->response->script("toAnchor('{$data['class_id']}_error')");
+		$class_id = $data['class_id'];
+    	$this->response->assign($class_id . "_error", "innerHTML", '<a name="' . $class_id . '_error"> </a>' . implode("<br/>", $this->error));
+		$this->response->assign($class_id . "_error", "style.display", 'block');
+		$this->response->script("toAnchor('{$class_id}_error')");
 		$this->response->script("top.preloader.progressbarStop();");
     }
 
-	private function setBaseSize($fn, $sz, $type) {
-		global $config;
-		$crop = substr($sz, 0, 1) == '!' ? true : false;
-		$sz = strtolower(trim($sz, '!'));
-		$wh = explode('x', strtolower($sz));
-		$temp = $config->temp . "/" . $sz . uniqid();
-		$this->image->changeSizeImage($fn, $temp, $type, $wh[0], $wh[1], 100, $crop);
-		return $temp;
+	/**
+	 * Получение служебных данных формы из сессии
+	 * @param $id
+	 *
+	 * @return array
+	 */
+	private function getSessForm($id)
+	{
+		if (!$this->orderFields) {
+			$sess_form = new Zend_Session_Namespace('Form');
+			if (empty($sess_form->$id)) {
+				return array();
+			}
+			$this->orderFields = $sess_form->$id;
+		}
+		return $this->orderFields;
+	}
+
+	/**
+	 * Принудительная установка значения служебного поля формы
+	 *
+	 * @param $form_id - id формы
+	 * @param $id - имя поля
+	 * @param $value
+	 */
+	protected function setSessFormField($form_id, $id, $value)
+	{
+		$this->getSessForm($form_id);
+		$this->orderFields[$id] = $value;
+	}
+
+	/**
+	 * Получает значение служебного поля формы
+	 * @param $form_id
+	 * @param $id
+	 *
+	 * @return mixed
+	 */
+	protected function getSessFormField($form_id, $id)
+	{
+		$this->getSessForm($form_id);
+		return $this->orderFields[$id];
 	}
 
 	/**
@@ -240,14 +284,14 @@ class ajaxFunc extends Common {
 				}
 				$this->db->insert($table . '_files',
 					array(
-						'refid' => $last_insert_id,
+						'refid'    => $last_insert_id,
 						'filename' => $f[0],
 						'filesize' => $size,
-						'hash' => $hash,
-						'type' => $f[2],
-						'content' => $content,
-						'fieldid' => $field,
-						'thumb' => $thumb
+						'hash'     => $hash,
+						'type'     => $f[2],
+						'content'  => $content,
+						'fieldid'  => $field,
+						'thumb'    => $thumb
 					)
 				);
 			}
@@ -264,6 +308,8 @@ class ajaxFunc extends Common {
 		$last_insert_id = 0;
 		if (!$inTrans) $this->db->beginTransaction();
 		try {
+			if (empty($data['class_id'])) throw new Exception("Form error", 500);
+			$order_fields = $this->getSessForm($data['class_id']);
 			if (count($this->error)) {
 				throw new Exception();
 			}
@@ -271,7 +317,7 @@ class ajaxFunc extends Common {
 			$control = array();
 			$fileFlag = array();
 			$fileFlagDel = array();
-			$table = trim($data['table']);
+			$table = trim($order_fields['table']);
 			foreach ($data['control'] as $key => $value) {
 				if (!is_array($value)) $value = trim($value);
 				if (substr($key, -3) == '%re') continue;
@@ -317,12 +363,12 @@ class ajaxFunc extends Common {
                     $control['lastuser'] = (int) $authNamespace->ID;
                     if ($control['lastuser'] == -1) $control['lastuser'] = new Zend_Db_Expr('NULL');
                 }
-				if ($value['Field'] == 'author' && !$data['refid'] && empty($control['author'])) {
+				if ($value['Field'] == 'author' && !$order_fields['refid'] && empty($control['author'])) {
 					$control['author'] = $authNamespace->NAME;
 				}
             }
 			
-			if (!$data['refid']) {
+			if (!$order_fields['refid']) {
 				$this->db->insert($table, $control);
 				$last_insert_id = $this->db->lastInsertId($table);
 				if ($fileFlag) {
@@ -333,18 +379,18 @@ class ajaxFunc extends Common {
 				$this->checkTheSame($table, $data);
 
 				//Проверка доступа
-				if ($this->checkAcl($data['resId'], 'edit_owner') && !$this->checkAcl($data['resId'], 'edit_all')) {
-					$res = $this->db->fetchRow("SELECT * FROM `$table` WHERE `{$data['keyField']}`=? LIMIT 1", $data['refid']);
+				if ($this->checkAcl($order_fields['resId'], 'edit_owner') && !$this->checkAcl($order_fields['resId'], 'edit_all')) {
+					$res = $this->db->fetchRow("SELECT * FROM `$table` WHERE `{$order_fields['keyField']}`=? LIMIT 1", $order_fields['refid']);
 					if (isset($res['author']) && $authNamespace->NAME != $res['author']) {
 						throw new Exception('Вам разрешено редактировать только собственные данные.');
 					}
 				}
 
                 if ( ! empty($control)) {
-				$where = $this->db->quoteInto($data['keyField'] . " = ?", $data['refid']);
+				$where = $this->db->quoteInto($order_fields['keyField'] . " = ?", $order_fields['refid']);
 				$this->db->update($table, $control, $where);
                 }
-				$last_insert_id = $data['refid'];
+				$last_insert_id = $order_fields['refid'];
 				if ($fileFlag) {
 					if ($fileFlagDel) {
 						foreach ($fileFlagDel as $value) {
@@ -361,7 +407,8 @@ class ajaxFunc extends Common {
 				}
 			}
 			if (!$inTrans) $this->db->commit();
-		} catch (Exception $e) {
+		}
+		catch (Exception $e) {
 			if (!$inTrans) {
 				$this->db->rollback();
 			} else {
@@ -377,21 +424,30 @@ class ajaxFunc extends Common {
 		return $last_insert_id;
 	}
 
+	/**
+	 * Проверка одновременного редактирования
+	 * @param $table - название таблицы
+	 * @param $data
+	 *
+	 * @throws Exception
+	 */
 	protected function checkTheSame($table, $data) {
+		$order_fields = $this->getSessForm($data['class_id']);
 		$check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
-			array($table, $data['keyField'], $data['refid'])
+			array($table, $order_fields['keyField'], $order_fields['refid'])
 		);
 		if (!$check) {
 			throw new Exception('Кто-то редактировал эту запись одновременно с вами, но успел сохранить данные раньше вас. Ничего страшного, обновите страницу и проверьте, возможно этот кто-то сделал за вас работу :)');
 		} else {
 			$this->db->query("DELETE FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
-				array($table, $data['keyField'], $data['refid'])
+				array($table, $order_fields['keyField'], $order_fields['refid'])
 			);
 		}
 	}
 
 	/**
-	 *
+	 * выполняется последним
+	 * отображает ошибки, если есть
 	 * @param array $data
 	 */
 	protected function done($data) {
@@ -402,8 +458,9 @@ class ajaxFunc extends Common {
 		if (!empty($data['class_id'])) {
 			$this->response->assign($data['class_id'] . "_error", "style.display", 'none');
 		}
-		if (!empty($data['back'])) {
-			$this->response->script($this->script . "load('{$data['back']}');");
+		$order_fields = $this->getSessForm($data['class_id']);
+		if (!empty($order_fields['back'])) {
+			$this->response->script($this->script . "load('{$order_fields['back']}');");
 		}
 	}
 	

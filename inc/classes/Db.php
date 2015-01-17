@@ -339,7 +339,7 @@ class Db {
 	 * @return string
 	 */
 	public function isModuleActive($module_id) {
-		$key = "is_active_" . $module_id;
+		$key = "is_active_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
 			$this->cache->save($is, $key, array('is_active_core_modules'));
@@ -375,7 +375,7 @@ class Db {
 	 * @return string
 	 */
 	public function isModuleInstalled($module_id) {
-		$key = "is_installed_" . $module_id;
+		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
 			$this->cache->save($is, $key, array('is_active_core_modules'));
@@ -418,14 +418,21 @@ class Db {
 	public function getModuleSrc($module_id)
 	{
 		if (!($this->cache->test($module_id))) {
-			$loc = $this->db->fetchOne("
-				SELECT CASE WHEN is_system='Y'
-						  THEN CONCAT('core2/mod/', module_id, '/v', version)
-						  ELSE CONCAT('mod/', module_id)
-					   END
+			$m = $this->db->fetchRow("
+				SELECT is_system, version
 				FROM core_modules
 				WHERE module_id = ?
 			", $module_id);
+			$prefix = '';
+			if ($m['is_system'] == "Y") {
+				$prefix = 'core2/';
+				$loc = "{$prefix}mod/{$module_id}/v{$m['version']}";
+			} else {
+				$loc = "{$prefix}mod/{$module_id}/v{$m['version']}";
+				if (!is_dir($loc)) {
+					$loc = "{$prefix}mod/{$module_id}";
+				}
+			}
 			$this->cache->save($loc, $module_id);
 		} else {
 			$loc = $this->cache->load($module_id);

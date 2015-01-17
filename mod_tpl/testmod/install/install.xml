@@ -11,7 +11,7 @@
 		<description>Description Test module</description>
 		<readme>Информация по инсталяции</readme>
         <submodules>
-            <sm1>
+            <sm>
                 <sm_id>tires</sm_id>
                 <sm_name>Шины</sm_name>
                 <sm_path></sm_path>
@@ -50,11 +50,52 @@
                         </rule2>
                     </additional>
                 </access>
-            </sm1>
+            </sm>
+            <sm>
+                <sm_id>tires2</sm_id>
+                <sm_name>Шины2</sm_name>
+                <sm_path></sm_path>
+                <seq>12</seq>
+                <visible>Y</visible>
+                <access>
+                    <default>
+                        <access>off</access>
+                        <list>
+                            <all>off</all>
+                            <owner>off</owner>
+                        </list>
+                        <read>
+                            <all>off</all>
+                            <owner>off</owner>
+                        </read>
+                        <edit>
+                            <all>off</all>
+                            <owner>off</owner>
+                        </edit>
+                        <delete>
+                            <all>off</all>
+                            <owner>off</owner>
+                        </delete>
+                    </default>
+                    <additional>
+                        <rule1>
+                            <name>Пример</name>
+                            <all>off</all>
+                            <owner>on</owner>
+                        </rule1>
+                        <rule2>
+                            <name>Пример2</name>
+                            <all>on</all>
+                            <owner>off</owner>
+                        </rule2>
+                    </additional>
+                </access>
+            </sm>
         </submodules>
 		<dependent_modules>
-            <module_id1>cron</module_id1>
-            <module_id2>queue</module_id2>
+            <m>cron</m>
+            <m>queue</m>
+            <m>enum</m>
 		</dependent_modules>
 		<access>
 			<default>
@@ -77,16 +118,16 @@
                 </delete>
 			</default>
 			<additional>
-                <rule1>
+                <rule>
                     <name>Пример</name>
                     <all>off</all>
                     <owner>on</owner>
-                </rule1>
-                <rule2>
+                </rule>
+                <rule>
                     <name>Пример2</name>
                     <all>on</all>
                     <owner>off</owner>
-                </rule2>
+                </rule>
 			</additional>
 		</access>	
 	</install>  

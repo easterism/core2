@@ -804,11 +804,6 @@ class CoreController extends Common {
         if (!$server) {
             $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
         }
-        if (!$this->isModuleInstalled('queue')) {
-            $install->addNotice("", "Установите модуль Очередь", "Отправка уведомлений отключена", "info2");
-        } elseif (!$this->isModuleActive('queue')) {
-            $install->addNotice("", "Включите модуль Очередь", "Отправка уведомлений отключена", "info2");
-        }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
@@ -820,15 +815,19 @@ class CoreController extends Common {
 //                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
                 $mods[] = $val['module_id'];
                 //отправка уведомления
-                if ($admin_email && $server && $this->isModuleActive('queue')) {
-                    $is_send = $this->db->fetchOne(
-                        "SELECT 1
+                if ($admin_email && $server) {
+                	if ($this->isModuleActive('queue')) {
+						$is_send = $this->db->fetchOne(
+							"SELECT 1
                            FROM mod_queue_mails
                           WHERE subject = 'Обнаружены изменения в структуре модуля'
                             AND date_send IS NULL
                             AND DATE_FORMAT(date_add, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
                             AND body LIKE '%{$val['module_id']}%'"
-                    );
+						);
+					} else {
+						$is_send = false;
+					}
                     if (!$is_send) {
                         $n = 0;
                         $br = $install->branchesCompareFilesHash($compare);
@@ -843,7 +842,6 @@ class CoreController extends Common {
                         }
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
-                            ->from('informer@' . (substr_count($server, ".") > 0 ? $server : $server . '.com'))
                             ->subject('Обнаружены изменения в структуре модуля')
                             ->body("Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();

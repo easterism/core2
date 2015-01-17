@@ -1,4 +1,5 @@
 <?
+
 header('Content-Type: text/html; charset=utf-8');
 
 	// Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
@@ -53,8 +54,17 @@ if (empty($config['temp'])) {
 }
 try {
 	$config = new Zend_Config($config, true);
+
+	if (PHP_SAPI === 'cli' && ! empty($_SERVER['argv'][1])) {
+		parse_str(implode('&', array_slice($_SERVER['argv'], 1)), $options);
+		if ( ! empty($options['host'])) {
+			$_SERVER['SERVER_NAME'] = $options['host'];
+		}
+	}
+
 	if (!empty($_SERVER['SERVER_NAME'])) {
 		$config2 = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
+
 	} else {
 		$config2 = new Zend_Config_Ini($conf_file, 'production');
 	}
@@ -68,6 +78,7 @@ try {
 	}
 //подключаем собственный адаптер
 require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+
 
 //конфиг стал только для чтения
 $config->setReadOnly();
@@ -181,8 +192,6 @@ class Init extends Db {
 	 * @throws Exception
 	 */
 	public function dispatch() {
-
-
 		if (PHP_SAPI === 'cli') {
 			return $this->cli();
 		}
@@ -437,7 +446,7 @@ class Init extends Db {
 		$xajax = new xajax();
 		//$xajax->configure("debug", true);
 		$xajax->configure('javascript URI', 'core2/ext/xajax_0.5_minimal/');
-		$xajax->register(XAJAX_FUNCTION, 'post');
+		$xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
 		//$xajax->registerFunction('post');
 		$xajax->processRequest();
 
@@ -550,6 +559,7 @@ class Init extends Db {
 				'Optional arguments:',
 				"\tcron\tCron action",
 				"\tjob\tCron job id. Optional.\n",
+				"\thost\tHost in config file.\n",
 				"\thelp\tHelp message\n",
 				"Example of usage:",
 				"php -f index.php cron=run job=123\n",
@@ -564,6 +574,10 @@ class Init extends Db {
 
 			if ( ! $this->isModuleActive('cron')) {
 				throw new Exception("Module does not active");
+			}
+
+			if ((int)substr($this->getModuleVersion('cron'), 0, 1) < 2) {
+				throw new Exception("Need cron version >= 2");
 			}
 
 			$mod_path  	     = $this->getModuleLocation("cron");

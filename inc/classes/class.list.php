@@ -89,7 +89,11 @@ class listTable extends initList {
 			'nocheck' => $nocheck
 		);
 	}
-	
+
+	/**
+	 * Добавляет кастомную кнопку
+	 * @param string $html - кнопка
+	 */
 	public function addButtonCustom($html = '') {
 		$this->table_button[$this->main_table_id][] = array('html' => $html);
 	}
@@ -138,7 +142,7 @@ class listTable extends initList {
 		} else {
 			$tmp[$countPOST] = (int)$_POST[$countPOST];
 		}
-		
+
 		//SEARCH
 		if (!empty($_POST['search'][$this->main_table_id])) {
 			$tmp['search'] = $_POST['search'][$this->main_table_id];
