@@ -38,16 +38,16 @@
                         </delete>
                     </default>
                     <additional>
-                        <rule1>
+                        <rule>
                             <name>Пример</name>
                             <all>off</all>
                             <owner>on</owner>
-                        </rule1>
-                        <rule2>
+                        </rule>
+                        <rule>
                             <name>Пример2</name>
                             <all>on</all>
                             <owner>off</owner>
-                        </rule2>
+                        </rule>
                     </additional>
                 </access>
             </sm>
@@ -78,16 +78,16 @@
                         </delete>
                     </default>
                     <additional>
-                        <rule1>
+                        <rule>
                             <name>Пример</name>
                             <all>off</all>
                             <owner>on</owner>
-                        </rule1>
-                        <rule2>
+                        </rule>
+                        <rule>
                             <name>Пример2</name>
                             <all>on</all>
                             <owner>off</owner>
-                        </rule2>
+                        </rule>
                     </additional>
                 </access>
             </sm>
@@ -125,6 +125,11 @@
                 </rule>
                 <rule>
                     <name>Пример2</name>
+                    <all>on</all>
+                    <owner>off</owner>
+                </rule>
+                <rule>
+                    <name>Пример3</name>
                     <all>on</all>
                     <owner>off</owner>
                 </rule>

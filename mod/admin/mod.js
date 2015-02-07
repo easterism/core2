@@ -16,8 +16,50 @@ var modules = {
         if (confirm('Обновить файлы модуля ' + mod + ' ' + v + '?')) {
             load('index.php' + document.location.hash, {"refreshFilesModule":mod_id, "v": v});
         } else return false;
-    }
+    },
+    'download': function (mod, v, modId) {
+		if (confirm('Скачать архив модуля ' + mod + ' ' + v + '?')) {
+			loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
+		} else return false;
+	},
+    'requestToRepo': function (mod, v, m_id, repo, request) {
+		if (request == 'install' && confirm('Установить модуль ' + mod + ' ' + v + '?')) {
+			load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":m_id, "repo": repo});
+		} else return false;
+	},
+	newRule: function(container) {
+		var id = new Date().valueOf();
+		var x = document.createElement("input");
+		x.type = "text";
+		x.className = "input";
+		x.name = "addRules[" + id + "]";
+		document.getElementById(container).appendChild(x);
+		x = document.createElement("input");
+		x.type = "checkbox";
+		x.name = "value_all[" + id + "]";
+		x.id = "access_" + id + "_all"
+		x.onclick = function () {
+			checkToAll(this)
+		};
+		x.value = "all";
+		document.getElementById(container).appendChild(x);
+		x = document.createElement("label");
+		x.innerHTML = "Все";
+		document.getElementById(container).appendChild(x);
+		x = document.createElement("input");
+		x.type = "checkbox";
+		x.name = "value_owner[" + id + "]";
+		x.id = "access_" + id + "_owner"
+		x.value = "owner";
+		document.getElementById(container).appendChild(x);
+		x = document.createElement("label");
+		x.innerHTML = "Владелец";
+		document.getElementById(container).appendChild(x);
+		x = document.createElement('br');
+		document.getElementById(container).appendChild(x);
+	}
 };
+
 
 	function checkToAll(obj) {
 		var i = obj.id.split("_");
@@ -31,35 +73,7 @@ var modules = {
 		if (obj.checked==true) {obj2.checked=true;obj2.disabled=true;}
 		else {obj2.checked=false;obj2.disabled=false;}
 	}
-	function newRule(container) {
-		var id = new Date().valueOf();
-		var x = document.createElement("input");
-		x.type = "text";
-		x.className = "input";
-		x.name = "addRules["+id+"]";
-		document.getElementById(container).appendChild(x);
-		x = document.createElement("input");
-		x.type = "checkbox";
-		x.name = "value_all["+id+"]";
-		x.id = "access_" + id + "_all"
-		x.onclick = function() {checkToAll(this)};
-		x.value = "all";
-		document.getElementById(container).appendChild(x);
-		x = document.createElement("label");
-		x.innerHTML = "Все";
-		document.getElementById(container).appendChild(x);
-		x = document.createElement("input");
-		x.type = "checkbox";
-		x.name = "value_owner["+id+"]";
-		x.id = "access_" + id + "_owner"
-		x.value = "owner";
-		document.getElementById(container).appendChild(x);
-		x = document.createElement("label");
-		x.innerHTML = "Владелец";
-		document.getElementById(container).appendChild(x);
-		x = document.createElement('br');
-		document.getElementById(container).appendChild(x);
-	}
+
 	function newField(container) {
 		var id = new Date().valueOf();
 		var x = document.createElement("input");
@@ -87,8 +101,3 @@ var modules = {
 		} else return false;
 	}
 
-	function installModuleFromRepo(mod, v, m_id, repo) {
-		if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-            load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":m_id, "repo": repo});
-		} else return false;
-	}

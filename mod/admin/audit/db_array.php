@@ -229,7 +229,7 @@ $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['m_name']['EXTRA']   = "";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version'] = array();
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version']['TYPE']    = "varchar(10)";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version']['NULL']    = "NO";
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version']['DEFAULT'] = "1.0";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version']['DEFAULT'] = "1.0.0";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['version']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['module_id'] = array();

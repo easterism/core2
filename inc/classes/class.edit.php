@@ -135,10 +135,10 @@ class editTable extends initEdit {
 	public function addButtonSwitch($field_name, $value) {
 		$tpl = new Templater("core2/html/" . THEME . "/edit/button_switch.tpl");
 		if ($value) {
-			$tpl->assign('id="switch_off"', 'id="switch_off" class="hide"');
+			$tpl->assign('data-switch="off"', 'data-switch="off" class="hide"');
 			$valueInput = 'Y';
 		} else {
-			$tpl->assign('id="switch_on"', 'id="switch_on" class="hide"');	
+			$tpl->assign('data-switch="on"', 'data-switch="on" class="hide"');
 			$valueInput = 'N';			
 		}		
 		$id = $this->main_table_id . $field_name;
@@ -151,7 +151,7 @@ class editTable extends initEdit {
 	/**
 	 * @param $func
 	 */
-	function save($func) {
+	public function save($func) {
 		$this->isSaved = true;
 		// for javascript functions
 		if (strpos($func, '(') !== false) {
@@ -328,13 +328,6 @@ class editTable extends initEdit {
 			}
 			$this->setSessForm($order_fields);
 
-			//TODO DEPRECATED
-			$this->HTML .= "<input type=\"hidden\" name=\"resId\" value=\"$this->resource\"/>".
-			"<input type=\"hidden\" name=\"back\" value=\"$this->back\"/>" .
-			"<input type=\"hidden\" name=\"refid\" value=\"$refid\"/>" .
-			"<input type=\"hidden\" name=\"table\" value=\"{$this->table}\"/>" .
-			"<input type=\"hidden\" name=\"keyField\" value=\"$keyfield\"/>";
-
 			if ($refid && $this->table) {
 				$check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
 					array($this->table, $keyfield, $refid)
@@ -389,18 +382,9 @@ class editTable extends initEdit {
 							}
 							$controlGroups[$cellId]['group'][] = $temp;
 						}
+
 						//преобразование атрибутов в строку
-						if (is_array($value['in'])) {
-							$temp = " ";
-							if (count($value['in'])) {
-								foreach ($value['in'] as $attr => $val) {
-									$temp .= $attr . '="' . $val . '" ';
-								}
-								$attrs = $temp;
-							}
-						} else {
-							$attrs = $value['in'];
-						}
+						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
 						if (!isset($arr_fields[$sqlKey])) {
@@ -448,7 +432,7 @@ class editTable extends initEdit {
 						}
 						$controlGroups[$cellId]['html'][$key] .= $value['name'] . "</td><td" . ($field ? " id=\"{$this->resource}_cell_$field\"" : "") . ">";
 
-						if ($value['type'] == 'protect' || $value['type'] == 'protected') {
+						if ($value['type'] == 'protect' || $value['type'] == 'protected') { //только для чтения
 							/*if (strpos($value['type'], '_email') !== false) {
 								$this->HTML .= "<span id='".$fieldId."' ".$attrs."><a href='mailto:".$value['default']."'>".$value['default']."</a></span>";
 							} elseif (strpos($value['type'], '_html') !== false) {
@@ -457,30 +441,30 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}>" . $value['default'] . "</span>";
 							//}
 						}
-						elseif ($value['type'] == 'custom') {
+						elseif ($value['type'] == 'custom') { // произвольный html
 							$controlGroups[$cellId]['html'][$key] .= $attrs;
 						}
-						elseif ($value['type'] == 'text' || $value['type'] == 'edit') {
+						elseif ($value['type'] == 'text' || $value['type'] == 'edit') { // простое поле
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"{$value['default']}\">";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'number') {
+						elseif ($value['type'] == 'number') { // только цифры
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"text\" name=\"control[$field]\" ".$attrs." value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
 							}
 						}
 						elseif ($value['type'] == 'file') {
-							$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"".$fieldId."\" type=\"file\" name=\"control[$field]\" ".$attrs.">";
+							$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"file\" name=\"control[$field]\" {$attrs}>";
 						}
-						elseif ($value['type'] == 'link') {
-							$controlGroups[$cellId]['html'][$key] .= "<span id='".$fieldId."' ".$attrs."><a href='".$value['default']."'>{$value['default']}</a></span>";
+						elseif ($value['type'] == 'link') { // простая ссылка
+							$controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}><a href=\"{$value['default']}\">{$value['default']}</a></span>";
 						}
-						elseif ($value['type'] == 'search') {
+						elseif ($value['type'] == 'search') { //TODO поле с быстрым поиском
 							$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '" type="hidden" name="control[' . $field . ']" value="' . $value['default'] . '"/>';
 						}
 						elseif ($value['type'] == 'date' || $value['type'] == 'datetime') {
@@ -1140,9 +1124,30 @@ $(function () {
 						</tr>
 					</table>";
 		if (!$this->readOnly) {
-			$this->HTML .= 	"</form><script>function PrepareSave() {" . $PrepareSave . "} $onload </script>";
+			$this->HTML .= 	"</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
 		}
 		$this->HTML .= 	"</br>";
+	}
+
+	/**
+	 * преобразование атрибутов в строку
+	 * @param $value
+	 *
+	 * @return string
+	 */
+	private function setAttr($value) {
+		//преобразование атрибутов в строку
+		$attrs = $value;
+		if (is_array($value)) {
+			$temp = " ";
+			if (count($value)) {
+				foreach ($value as $attr => $val) {
+					$temp .= $attr . '="' . $val . '" ';
+				}
+			}
+			$attrs = $temp;
+		}
+		return $attrs;
 	}
 
 	/**

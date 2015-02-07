@@ -49,7 +49,7 @@ class ModAjax extends ajaxFunc {
 			foreach ($data['addRules'] as $rules) {
 				preg_match("/[^0-9A-Za-zА-Яа-яЁё\s]/u", $rules, $res);
 				if (count($res)) {
-					$this->error[] = "- Идентификатор дополнительного правила доступа не может содержать специальные символы";
+					$this->error[] = "- Идентификатор дополнительного правила доступа может состоять только из цифр и букв";
 					break;
 				}
 			}
@@ -128,11 +128,6 @@ class ModAjax extends ajaxFunc {
 			$rules = array();			
 			foreach ($data['addRules'] as $id => $value) {
 				if ($value) {
-					preg_match("/[^\D|\d]/i", $value, $arr);					
-					if (count($arr)) {
-						$this->error[] = "- Правило может состоять только из цифр и букв";
-						$this->response->script("document.getElementById('$id').className='reqField';");
-					}
 					if (!empty($data['value_all']) && !empty($data['value_all'][$id])) {
 						$rules[$value] = 'all';
 					} elseif (!empty($data['value_owner']) && !empty($data['value_owner'][$id])) {

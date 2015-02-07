@@ -1,11 +1,10 @@
 <?
 
-require_once("classes/Common.php");
-require_once("classes/Templater.php");
-require_once("classes/class.list.php");
-require_once("classes/class.edit.php");
-require_once("classes/class.tab.php");
-require_once DOC_ROOT . 'core2/inc/classes/installModule.php';
+require_once 'classes/Common.php';
+require_once 'classes/class.list.php';
+require_once 'classes/class.edit.php';
+require_once 'classes/class.tab.php';
+require_once 'classes/installModule.php';
 
 /**
  * Class CoreController
@@ -20,7 +19,6 @@ class CoreController extends Common {
 		parent::__construct();
 		$this->path = 'core2/mod/';
 		$this->path .= !empty($this->module) ? $this->module . "/" : ''; 
-		$this->tpl = new Templater();
 		if (!empty($this->config->theme)) {
 			$this->theme = $this->config->theme;
 		}
@@ -489,10 +487,10 @@ class CoreController extends Common {
 				}
 			}
 		}
-		$tpl = new Templater();
-		$tpl->loadTemplate("core2/mod/admin/html/feedback.tpl");
-		$tpl->assign('</select>', $selectMods . '</select>');
 		$this->printJs("core2/mod/admin/feedback.js", true);
+		require_once 'classes/Templater2.php';
+		$tpl = new Templater2("core2/mod/admin/html/feedback.tpl");
+		$tpl->assign('</select>', $selectMods . '</select>');
 		return $tpl->parse();
 	}
 
@@ -664,7 +662,10 @@ class CoreController extends Common {
 			header("Location:$app");
 		}
 		if ($_POST['class_id'] == 'main_user') {
-			$data = $_POST;	     	
+			$data = $_POST;
+			$sess_form = new Zend_Session_Namespace('Form');
+			$orderFields = $sess_form->main_user;
+
 			$firstname = $data['control']['firstname'];
 			$lastname = $data['control']['lastname'];
 			$middlename = $data['control']['middlename'];
@@ -695,14 +696,14 @@ class CoreController extends Common {
 				unset($data['control']['certificate_ta']);
 				if (!empty($data['control']['u_pass'])) {
 					$dataForSave['u_pass'] = md5($data['control']['u_pass']);
-				}		
-				if ($data['refid'] == 0) {		
+				}
+				if ($orderFields['refid'] == 0) {
 					$dataForSave['u_login'] = $data['control']['u_login'];
 					$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
 					$this->db->insert('core_users', $dataForSave);						
-					$last_insert_id = $this->db->lastInsertId(trim($data['table']));
+					$last_insert_id = $this->db->lastInsertId('core_users');
 				} else {
-					$last_insert_id = $data['refid'];
+					$last_insert_id = $orderFields['refid'];
 					$where = $this->db->quoteInto('u_id = ?', $last_insert_id);
 					$this->db->update('core_users', $dataForSave, $where);
 				}				

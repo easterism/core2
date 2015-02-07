@@ -10,7 +10,7 @@ if (!empty($_GET['getModsListFromRepo'])) {
 //скачивание архива модуля
 if (!empty($_GET['download_mod'])) {
     $install = new InstallModule();
-    $install->downloadZip($_GET['download_mod']);
+    $install->downloadAvailMod($_GET['download_mod']);
 }
 
 /* скачивание архива шаблона */
@@ -51,7 +51,8 @@ $sid = session_id();
 			$dep_list = "SELECT module_id, m_name FROM core_modules WHERE m_id != '$refid'";
 			$field = '';
 			if ($refid > 0) {
-				$res = $this->dataModules->find($refid)->current()->dependencies;
+				$module = $this->dataModules->find($refid)->current();
+				$res = $module->dependencies;
 				$dep = array();
 				if ($res) {
 					$dep = base64_decode($res);
@@ -102,7 +103,7 @@ $sid = session_id();
 							  FROM core_modules
 							 WHERE m_id = '$refid'";
 			$edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
-			if ($_GET['edit'] > 0) {
+			if ($refid > 0) {
 				$edit->addControl("Идентификатор:", "PROTECTED");
 			} else {
 				$edit->addControl("Идентификатор:", "TEXT", "maxlength=\"20\"", " маленикие латинские буквы или цифры", "", true);
@@ -120,7 +121,8 @@ $sid = session_id();
 			$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq);
 			$access_default 	= array();
 			$custom_access 		= '';			
-			if ($refid) {
+			if ($refid > 0) {
+
 				$access_default = unserialize(base64_decode($module->access_default));
 				$access_add 	= unserialize(base64_decode($module->access_add));
 				if (is_array($access_add) && count($access_add)) {
@@ -164,7 +166,7 @@ $sid = session_id();
 			
 			//CUSTOM ACCESS
 			$rules = '<div id="xxx">' . $custom_access . '</div>';
-			$rules .= '<div><span id="new_attr" class="newRulesModule" onclick="newRule(\'xxx\')">Новое правило</span></div>';
+			$rules .= '<div><span id="new_attr" class="newRulesModule" onclick="modules.newRule(\'xxx\')">Новое правило</span></div>';
 			$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
 			$edit->addButtonSwitch('visible', 	$this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $refid));
 			/*if ($is_visible) {
@@ -197,7 +199,6 @@ $sid = session_id();
 									   sm_key,
 									   sm_path,
 									   seq,
-									   visible,
 									   access_default,
 									   access_add
 								  FROM core_submodules
@@ -219,8 +220,6 @@ $sid = session_id();
 					if (!$seq) $seq = '1';
 				}
 				$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq, true);
-				$edit->selectSQL[] = array('Y' => 'вкл.', 'N' => 'выкл.'); 
-				$edit->addControl("Статус:", "RADIO", "", "", "Y");
 
 				$access_default 	= array();
 				$custom_access 		= '';
@@ -268,6 +267,8 @@ $sid = session_id();
 				$rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="newRule(\'xxxsub\')">Новое правило</span></div>';
 				$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
 
+				$edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_submodules WHERE visible = 'Y' AND sm_id=? LIMIT 1", $_GET['editsub']));
+
 				if (!$_GET['editsub']) $edit->setSessFormField('m_id', $refid);
 				$edit->back = $app . "&edit=" . $refid;
 				$edit->addButton("Отменить", "load('{$app}&edit={$refid}')");
@@ -290,7 +291,7 @@ $sid = session_id();
 			$list->addColumn("Путь", "", "TEXT");
 			$list->addColumn("Позиция", "", "TEXT");
 			$list->addColumn("", "1%", "STATUS_INLINE", "core_submodules.visible");
-			
+
 			$list->paintCondition	= "'TCOL_05' == 'N'";
 			$list->paintColor		= "ffffee";
 			
@@ -378,7 +379,7 @@ $sid = session_id();
 
             $modId = $inf['install']['module_id'];
             $modVers = $inf['install']['version'];
-            $modName = $inf['install']['name'];
+            $modName = $inf['install']['module_name'];
             $is_module = $this->db->fetchRow("SELECT m_id FROM core_modules WHERE module_id=? and version=?",
 					array($modId, $modVers)
 			);
@@ -428,55 +429,106 @@ $sid = session_id();
 
        //список доступных одулей
 		$list = new listTable('mod_available');
-        $list->SQL = "SELECT 1";
+
+		$list->addSearch("Имя модуля",      '`name`',  	'TEXT');
+		$list->addSearch("Идентификатор",	'module_id','TEXT');
+
+		$list->SQL = "SELECT 1";
         $list->addColumn("Имя модуля", "200px", "TEXT");
         $list->addColumn("Идентификатор", "200px", "TEXT");
         $list->addColumn("Описание", "", "TEXT");
+		$list->addColumn("Зависимости", "150px", "BLOCK");
         $list->addColumn("Версия", "150px", "BLOCK");
         $list->addColumn("Автор", "150px", "TEXT");
         $list->addColumn("Системный", "50px", "TEXT");
         $list->addColumn("Действие", "66", "BLOCK", 'align=center');
+		$list->getData();
+		//поиск
+		$where_search = '';
+		$ss = new Zend_Session_Namespace('Search');
+		$ss = $ss->main_mod_available;
+		if (!empty($ss['search'])) {
+			foreach ($ss['search'] as $k=>$s) {
+				$s = trim($s);
+				if (!empty($s)) {
+					if ($k == 0) {
+						$where_search .= " AND `name` LIKE '%" . mb_strtolower($s, 'utf-8') . "%' ";
+					} elseif ($k == 1) {
+						$where_search .= " AND `module_id` LIKE '%" . mb_strtolower($s, 'utf-8') . "%' ";
+					}
+				}
+			}
+		}
 
-        $list->getData();
-
-        $list->data = array();
 
         $copy_list = $this->db->fetchAll(
-            "SELECT id,
-                 `name`,
-                 module_id,
-                 descr,
-                 version,
-                 install_info
-            FROM core_available_modules
-        ORDER BY name"
-        );
+			"SELECT id,
+					`name`,
+					module_id,
+					descr,
+					NULL AS deps,
+					version,
+					NULL AS author,
+					NULL AS ia_sys_sw,
+					install_info
+			   FROM core_available_modules
+			  WHERE 1=1
+			  {$where_search}
+		   ORDER BY `name`"
+		);
+
+		if (!empty($copy_list)) {
+			$allMods = array();
+			$tmp = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
+			foreach ($tmp as $t) {
+				$allMods[$t['module_id']] = $t['version'];
+			}
+		}
 
         $tmp = array();
-        $listAllModules = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
         $_GET['_page_mod_available'] = !empty($_GET['_page_mod_available']) ? (int)$_GET['_page_mod_available'] : 0;
         foreach ($copy_list as $val) {
-            $arr = array();
-            $arr[0] = $val['id'];
-            $arr[1] = $val['name'];
-            $arr[2] = $val['module_id'];
-            $arr[3] = $val['descr'];
-            $arr[4] = $val['version'];
-            $mData = unserialize(htmlspecialchars_decode($val['install_info']));
-            $arr[5] = $mData['install']['author'];
-            $arr[6] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
-            $mVersion = $arr[4];
-            $mId = $mData['install']['module_id'];
-            $mName = $arr[1];
-            $arr[7] = "<div onclick=\"installModule('$mName', 'v$mVersion', '{$arr[0]}', {$_GET['_page_mod_available']})\"><img src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/></div>";
-            foreach ($listAllModules as $allval) {
-                if ($mId == $allval['module_id']) {
-                    if ($mVersion == $allval['version']) {
-                        $arr[7] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
-                    }
-                }
-            }
-            $tmp[$mId][$mVersion] = $arr;
+			$arr[0] = $val['id'];
+			$arr[1] = $val['name'];
+			$arr[2] = $val['module_id'];
+			$arr[3] = $val['descr'];
+			$mData = unserialize(htmlspecialchars_decode($val['install_info']));
+			$arr[4] = '';
+			//зависимости модулей
+			$needToInstall = array();
+			if (!empty($mData['install']['dependent_modules']['m'])) {
+				if (is_array($mData['install']['dependent_modules']['m'])) {
+					$deps = array();
+					foreach ($mData['install']['dependent_modules']['m'] as $dModId) {
+						if (empty($allMods[$dModId])) {
+							$deps[] = "<b style=\"color: red;\">{$dModId}</b>";
+							$needToInstall[] = $dModId;
+						}
+					}
+					$arr[4] = implode(", ", $deps);
+				} else {
+					if (empty($allMods[$mData['install']['dependent_modules']['m']])) {
+						$arr[4] = "<b style=\"color: red;\">{$mData['install']['dependent_modules']['m']}</b>";
+						$needToInstall[] = $mData['install']['dependent_modules']['m'];
+					}
+				}
+			}
+
+			$arr[5] = $val['version'];
+            $arr[6] = $mData['install']['author'];
+            $arr[7] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
+
+			//кнопка установки
+			if (!empty($allMods[$val['module_id']]) && $val['version'] == $allMods[$val['module_id']]) {
+				$arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/>";
+			} elseif (!empty($needToInstall)) {
+				$arr[8] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+			} else {
+				$arr[8] = "<img  onclick=\"installModule('{$val['name']}', 'v{$val['version']}', '{$val['id']}', {$_GET['_page_mod_available']});\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+			}
+			$arr[8] .= "<img onclick=\"modules.download('{$val['name']}', 'v{$val['version']}', '{$val['id']}');\" src=\"core2/html/".THEME."/img/disk.png\" border=\"0\" title=\"скачать архив\"/>";
+
+            $tmp[$val['module_id']][$val['version']] = $arr;
         }
         //смотрим есть-ли разные версии одного мода
         //если есть, показываем последнюю, осатльные в спойлер
@@ -487,17 +539,17 @@ $sid = session_id();
             $copy_list[$module_id] = $val[$max_ver];
             unset($val[$max_ver]);
             if (!empty($val)) {
-                $copy_list[$module_id][4] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
-                $copy_list[$module_id][4] .= "<table width=\"100%\" class=\"mod_available_{$module_id}\" style=\"display: none;\"><tbody>";
+                $copy_list[$module_id][5] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
+                $copy_list[$module_id][5] .= "<table width=\"100%\" class=\"mod_available_{$module_id}\" style=\"display: none;\"><tbody>";
                 foreach ($val as $version=>$val) {
-                    $copy_list[$module_id][4] .= "
+                    $copy_list[$module_id][5] .= "
                         <tr>
                             <td style=\"border: 0px; padding: 0px;\">{$version}</td>
-                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[6]}</td>
+                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[7]}</td>
                         </tr>
                     ";
                 }
-                $copy_list[$module_id][4] .= "</tbody></table>";
+                $copy_list[$module_id][5] .= "</tbody></table>";
             }
         }
         //пагинация

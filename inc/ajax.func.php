@@ -213,7 +213,7 @@ class ajaxFunc extends Common {
 	{
 		if (!$this->orderFields) {
 			$sess_form = new Zend_Session_Namespace('Form');
-			if (empty($sess_form->$id)) {
+			if (!$id || empty($sess_form->$id)) {
 				return array();
 			}
 			$this->orderFields = $sess_form->$id;

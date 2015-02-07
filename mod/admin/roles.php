@@ -38,9 +38,9 @@ $tab->beginContainer("Роли и доступ");
 			
 			$html = '<table>';
 			
-			$this->tpl->loadTemplate("core2/mod/admin/html/role_access.tpl");
+			$tpl = new Templater2("core2/mod/admin/html/role_access.tpl");
 			
-			$access = $this->tpl->parse();
+			$access = $tpl->parse();
 			$tplRAAdd = file_get_contents("core2/mod/admin/html/role_access_add.tpl");
 			foreach ($res as $value) {
 				$accessAddHTML = '';
@@ -49,11 +49,11 @@ $tab->beginContainer("Роли и доступ");
 					if ($accessAddData) {
 						foreach ($accessAddData as $keyAD => $valueAD) {
 							if ($keyAD) {
-								$this->tpl->setTemplate($tplRAAdd);
-								$this->tpl->assign('NAME_ACTION', $keyAD);
-								$this->tpl->assign('TYPE_ID', ($keyAD));
-								$this->tpl->assign('MODULE_ID', $value['module_id']);
-								$accessAddHTML .= $this->tpl->parse();
+								$tpl->setTemplate($tplRAAdd);
+								$tpl->assign('NAME_ACTION', $keyAD);
+								$tpl->assign('TYPE_ID', ($keyAD));
+								$tpl->assign('MODULE_ID', $value['module_id']);
+								$accessAddHTML .= $tpl->parse();
 							}
 						}
 					}

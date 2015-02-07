@@ -220,20 +220,26 @@ var edit = {
 			obj.innerHTML = text;
 			obj.style.display = 'block';
 		}
+	},
+	changeButtonSwitch: function(obj) {
+		var i = $(obj).find('img');
+		if (document.getElementById(obj.id + 'hid').value == 'Y') {
+			document.getElementById(obj.id + 'hid').value = 'N';
+			for (var j = 0; j< i.length; j++) {
+				if ($(i[j]).data('switch') == 'on') i[j].className = 'hide';
+				else i[j].className = 'block';
+			}
+		} else {
+			document.getElementById(obj.id + 'hid').value = 'Y';
+			for (var j = 0; j < i.length; j++) {
+				if ($(i[j]).data('switch') == 'on') i[j].className = 'block';
+				else i[j].className = 'hide';
+			}
+		}
 	}
 	
 }
-function changeButtonSwitch(obj) {
-	if (document.getElementById(obj.id + 'hid').value == 'Y') {
-		document.getElementById(obj.id + 'hid').value = 'N';
-		document.getElementById('switch_on').className = 'hide';
-		document.getElementById('switch_off').className = 'block';
-	} else {
-		document.getElementById(obj.id + 'hid').value = 'Y';
-		document.getElementById('switch_on').className = 'block';
-		document.getElementById('switch_off').className = 'hide';
-	}
-}
+
 
 function mceSetup(id, opt) {
 

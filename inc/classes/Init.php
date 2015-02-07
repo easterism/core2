@@ -324,6 +324,7 @@ class Init extends Db {
 											WHERE m.visible = 'Y'
 											  AND m.module_id = ?",
 						$module);
+					if (!$mods) throw new Exception("Module does not exists", 404);
 				} else {
 					$_GET['action'] = strtolower($_GET['action']);
 					$mods = $this->db->fetchRow("SELECT m.m_id, m_name, sm_path, m.module_id, is_system, sm.m_id AS sm_id
@@ -335,6 +336,7 @@ class Init extends Db {
 											  ORDER BY sm.seq",
 						array($module, $_GET['action'])
 					);
+					if (!$mods) throw new Exception("Submodule does not exists", 404);
 					if ($mods['sm_id'] && !$this->acl->checkAcl($module . '_' . $_GET['action'], 'access')) {
 						throw new Exception(911);
 					}
@@ -346,7 +348,7 @@ class Init extends Db {
 					$modController = "Mod" . ucfirst(strtolower($mods['module_id'])) . "Controller";
                     $controller_path = $location . "/" . $modController . ".php";
 					if (!file_exists($controller_path)) {
-						throw new Exception("Module does not exists");
+						throw new Exception("Module does not exists", 404);
 					}
 					require_once $controller_path;
 					if (!class_exists($modController)) {
@@ -365,18 +367,27 @@ class Init extends Db {
 			}
 		}
 	}
-	
+
+	/**
+	 * Получение названия системы из conf.ini
+	 * @return mixed
+	 */
 	private function getSystemName() {
 		$res = $this->config->system->name;
 		return $res;
 	}
-	
+
+	/**
+	 * Получение логотипа системы из conf.ini
+	 * или установка логотипа по умолчанию
+	 * @return string
+	 */
 	private function getSystemLogo() {
 		$res = $this->config->system->logo;
 		if (!empty($res) && is_file($res)) {
 			return $res;
 		} else {
-			return 'core2/html/'.THEME.'/img/logo.gif';
+			return 'core2/html/' . THEME . '/img/logo.gif';
 		}
 	}
 	
@@ -469,6 +480,12 @@ class Init extends Db {
 		$js = array();
 		foreach ($mods as $data) {
 			if ($this->acl->checkAcl($data['module_id'], 'access')) {
+				if ($data['is_public'] == 'Y') {
+					$url = "index.php?module=" . $data['module_id'];
+					$html .= str_replace(array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_URL]'),
+							array($data['module_id'], $data['m_name'], $url), $modtpl);
+				}
+				if ($data['module_id'] == 'admin') continue;
 				$location = $this->getModuleLocation($data['module_id']); //получение расположения модуля
 				$modController = "Mod" . ucfirst(strtolower($data['module_id'])) . "Controller";
 				$file_path = $location . "/" . $modController . ".php";
@@ -484,11 +501,6 @@ class Init extends Db {
 						}
 					}
 					ob_clean();
-				}
-				if ($data['is_public'] == 'Y') {
-					$url = "index.php?module=" . $data['module_id'];
-					$html .= str_replace(array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_URL]'),
-										 array($data['module_id'], $data['m_name'], $url), $modtpl);
 				}
 			}
 		}

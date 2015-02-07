@@ -85,7 +85,7 @@ class Common extends Acl {
 					$v         = $this->modAdmin = new CoreController();
 					$v->module = $module;
 
-				} elseif ($location = $this->getModuleSrc($module)) {
+				} elseif ($location = $this->getModuleLocation($module)) {
 					if (!$this->isModuleActive($module)) {
 						throw new Exception("Модуль \"{$module}\" не активен");
 					}
@@ -94,13 +94,13 @@ class Common extends Acl {
 					$controller_path = $location . '/' . $cl . '.php';
 
 					if (!file_exists($controller_path)) {
-						throw new Exception("Модуль \"{$module}\" сломан");
+						throw new Exception("Модуль \"{$module}\" сломан. Не найден файл контроллера.");
 					}
 
 					require_once($controller_path);
 
 					if (!class_exists($cl)) {
-						throw new Exception("Модуль \"{$module}\" сломан");
+						throw new Exception("Модуль \"{$module}\" сломан. Не найден класс контроллера.");
 					}
 
 					$v         = $this->{$k} = new $cl();
