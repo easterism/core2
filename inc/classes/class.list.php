@@ -396,7 +396,9 @@ class listTable extends initList {
 					} elseif ($value['type'] == 'html') {
 						//
 					} else {
-						$sql_value = htmlspecialchars($sql_value);
+						if (isset($this->table_column[$this->main_table_id][$x])) {
+							$sql_value = htmlspecialchars($sql_value);
+						}
 					}
 					$this->data[$k][] = $sql_value;
 					$x++;

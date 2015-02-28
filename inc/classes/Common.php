@@ -113,20 +113,24 @@ class Common extends Acl {
 
 			// Получение экземпляра api класса указанного модуля
 			elseif (strpos($k, 'api') === 0) {
-				$module     = ucfirst(substr($k, 3));
-				$module_api = "Mod{$module}Api";
-				$location   = $this->module == 'admin'
-					? DOC_ROOT . "core2/mod/admin"
-					: $this->getModuleLocation($this->module);
-
-				if ( ! file_exists($location . "/{$module_api}.php")) {
-					$v = $this->{$k} = new stdClass();
-
-				} else {
-					require_once $location . "/{$module_api}.php";
-
-					$v = $this->{$k} = new $module_api();
-				}
+                $module     = substr($k, 3);
+                if ($k == 'api') $module = $this->module;
+                if ($this->isModuleActive($module)) {
+                    $location = $module == 'Admin'
+                            ? DOC_ROOT . "core2/mod/admin"
+                            : $this->getModuleLocation($module);
+                    $module = ucfirst($module);
+                    $module_api = "Mod{$module}Api";
+                    if (!file_exists($location . "/{$module_api}.php")) {
+                        return new stdObject();
+                    } else {
+                        require_once "CommonApi.php";
+                        require_once $location . "/{$module_api}.php";
+                        $v = $this->{$k} = new $module_api();
+                    }
+                } else {
+                    return new stdObject();
+                }
 			}
 
 			// Получение экземпляра модели текущего модуля
@@ -187,3 +191,11 @@ class Common extends Acl {
 	}
 	
 }
+
+    class stdObject
+    {
+        public function __call($method, $arguments)
+        {
+            return false;
+        }
+    }

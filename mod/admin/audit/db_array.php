@@ -274,12 +274,6 @@ $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies']['NULL']    = "YES
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies']['EXTRA']   = "";
 
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['global_id'] = array();
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['global_id']['TYPE']    = "varchar(20)";
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['global_id']['NULL']    = "NO";
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['global_id']['DEFAULT'] = "";
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['global_id']['EXTRA']   = "";
-
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['seq'] = array();
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['seq']['TYPE']    = "int(11)";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['seq']['NULL']    = "YES";
@@ -323,10 +317,6 @@ $DB_ARRAY['TABLES']['core_modules']['KEY']['module_id']['TYPE']    = "UNIQ";
 $DB_ARRAY['TABLES']['core_modules']['KEY']['module_id']['COLUMNS'] = array();
 $DB_ARRAY['TABLES']['core_modules']['KEY']['module_id']['COLUMNS']['module_id'] = "0";
 
-$DB_ARRAY['TABLES']['core_modules']['KEY']['global_id'] = array();
-$DB_ARRAY['TABLES']['core_modules']['KEY']['global_id']['TYPE']    = "UNIQ";
-$DB_ARRAY['TABLES']['core_modules']['KEY']['global_id']['COLUMNS'] = array();
-$DB_ARRAY['TABLES']['core_modules']['KEY']['global_id']['COLUMNS']['global_id'] = "0";
 
 //TABLE: core_available_modules
 $DB_ARRAY['TABLES']['core_available_modules'] = array();

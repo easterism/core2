@@ -94,7 +94,7 @@ function jsToHead(src) {
 }
 
 function toAnchor(id){
-	$('html,body').animate({scrollTop: $("#"+id).offset().top - $("#menuContainer").height()}, 'fast');
+	$('html,body').animate({scrollTop: $("#" + id).offset().top - $("#menuContainer").height()}, 'fast');
 }
 
 var locData = {"title":{"main":document.title}};

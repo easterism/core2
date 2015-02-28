@@ -209,23 +209,37 @@ class Acl extends Db {
 
 	}
 
+    /**
+     * Проверка существования и установка ресурса в ACL
+     * @param Zend_Registry $registry
+     * @param               $resource
+     *
+     * @throws Zend_Exception
+     */
+    private function setResource(Zend_Registry $registry, $resource) {
+        $acl         = $registry->get('acl');
+        $addRes      = $registry->get('addRes');
+        $availRes    = $registry->get('availRes');
+        $availSubRes = $registry->get('availSubRes');
+        if (!in_array($resource, $availRes) && !in_array($resource, $addRes) && !in_array($resource, $availSubRes)) {
+            $acl->addResource(new Zend_Acl_Resource($resource));
+            $addRes[] = $resource;
+        }
+        if ($addRes) $registry->set('addRes', $addRes);
+    }
+
+
 	/**
+     * Разрешить использование ресурса $resource для роли $role с привилегиями $type
 	 * @param $role
 	 * @param $resource
 	 * @param $type
 	 */
-	public function allow($role, $resource, $type) {
-		$registry = Zend_Registry::getInstance();
-		$acl = $registry->get('acl');
-		$addRes = $registry->get('addRes');
-		$availRes = $registry->get('availRes');
-		$availSubRes = $registry->get('availSubRes');
-		if (!in_array($resource, $availRes) && !in_array($resource, $addRes) && !in_array($resource, $availSubRes)) {
-			$acl->addResource(new Zend_Acl_Resource($resource));
-			$addRes[] = $resource;
-		}
-		$acl->allow($role, $resource, $type);
-		$registry->set('addRes', $addRes);
+	public function allow($role, $resource, $type = 'access') {
+        $registry    = Zend_Registry::getInstance();
+        $acl         = $registry->get('acl');
+        $this->setResource($registry, $resource);
+        $acl->allow($role, $resource, $type);
 		$registry->set('acl', $acl);
 
 	}
@@ -252,17 +266,35 @@ class Acl extends Db {
 		}
 	}
 
+    /**
+     * Запретить использование ресурса $resource для роли $role с привилегиями $type
+     * @param $role
+     * @param $resource
+     * @param $type
+     *
+     * @throws Zend_Exception
+     */
+    public function deny($role, $resource, $type = 'access')
+    {
+        $registry    = Zend_Registry::getInstance();
+        $acl         = $registry->get('acl');
+        $this->setResource($registry, $resource);
+        $acl->deny($role, $resource, $type);
+        $registry->set('acl', $acl);
+    }
+
 	/**
+     * Проверка доступа к ресурсу $source для текущей роли
 	 * @param $source
 	 * @param $type
 	 * @return bool
 	 */
 	public function checkAcl($source, $type = 'access') {
-		$registry = Zend_Registry::getInstance();
-		$source = explode('xxx', $source); //TODO SHOULD BE FIX
-		$source = $source[0];
-		$acl = $registry->get('acl');
-		$auth 	= Zend_Registry::get('auth');
+        $registry = Zend_Registry::getInstance();
+        $source   = explode('xxx', $source); //TODO SHOULD BE FIX
+        $source   = $source[0];
+        $acl      = $registry->get('acl');
+        $auth     = Zend_Registry::get('auth');
 		if ($auth->NAME == 'root' || $auth->ADMIN) {
 			return true;
 		} elseif (in_array($source, $registry->get('availRes'))) {

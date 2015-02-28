@@ -22,9 +22,9 @@ if (!empty($_GET['download_mod_tpl'])) {
 $this->printJs("core2/mod/admin/mod.js");
 
 $tab = new tabs('mod'); 
-$tab->addTab("Установленные модули",    $app, 170);
-$tab->addTab("Доступные модули",	    $app, 130);
-$tab->addTab("Шаблоны модулей",	        $app, 130);
+$tab->addTab("Установленные модули", $app, 170);
+$tab->addTab("Доступные модули",	 $app, 130);
+$tab->addTab("Шаблоны модулей",	     $app, 130);
 $tab->beginContainer("Модули");
 
 $sid = session_id();
@@ -33,7 +33,14 @@ $sid = session_id();
         /* Обновление файлов модуля */
         if (!empty($_POST['refreshFilesModule'])) {
             $install = new InstallModule();
-            echo $install->mRefreshFiles($_POST['refreshFilesModule'], $_POST['v']);
+            echo $install->mRefreshFiles($_POST['refreshFilesModule']);
+            exit();
+        }
+
+        /* Обновление модуля */
+        if (!empty($_POST['updateModule'])) {
+            $install = new InstallModule();
+            echo $install->checkModUpdates($_POST['updateModule']);
             exit();
         }
 
@@ -324,14 +331,18 @@ $sid = session_id();
 			$list->addColumn("Системный", "", "TEXT");
 			$list->addColumn("Отображаемый", "", "TEXT");
 			$list->addColumn("Позиция", "1%", "TEXT");
-			$list->addColumn("Действие", "1%", "BLOCK", "align=\"center\"");
+			$list->addColumn("Действие", "70px", "BLOCK", "align=\"center\"");
 			$list->addColumn("", "1%", "STATUS_INLINE", "core_modules.visible");
 
+			$install = new InstallModule();
+			$ups = $install->checkInstalledModsUpdates();
 
 			$data = $list->getData();
 			foreach ($data as $key => $val) {
+				$data[$key][3] = !empty($ups[$data[$key][2]]) ? "<b style=\"color: #008000;\">{$data[$key][3]} (Доступно обновление)</b>" : $data[$key][3];
 				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . $val[1] . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/box_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>
+				                  <div style=\"display: inline-block;\" onclick=\"modules.updateModule('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/box_refresh.png\" border=\"0\" title=\"Обновить модуль\" /></div>";
 
 			}
 			$list->data = $data;
@@ -545,7 +556,7 @@ $sid = session_id();
                     $copy_list[$module_id][5] .= "
                         <tr>
                             <td style=\"border: 0px; padding: 0px;\">{$version}</td>
-                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[7]}</td>
+                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[8]}</td>
                         </tr>
                     ";
                 }
@@ -577,9 +588,35 @@ $sid = session_id();
 
         //проверяем заданы ли ссылки на репозитории
         $mod_repos = $this->getSetting('repo');
-        if (empty($mod_repos)){
-            echo "<div class=\"im-msg-yellow\">Устоновка модулей из репозитория недоступна<br><span>Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY)</span></div>";
-        }
+		if (empty($mod_repos)) {
+			$s_id = $this->db->fetchOne("
+                SELECT id
+                FROM core_settings
+                WHERE `code` = 'repo'
+                LIMIT 1
+            ");
+
+			if (!$s_id) {
+				$this->db->insert('core_settings', array(
+					'code'           => 'repo',
+					'type'           => 'text',
+					'system_name'    => 'Репозиторий',
+					'value'    		 => 'http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY',
+					'visible'        => 'Y',
+					'is_custom_sw'   => 'N',
+					'is_personal_sw' => 'N'
+				));
+			}
+
+			echo
+			"<div class=\"im-msg-yellow\">
+				Устоновка модулей из репозитория недоступна<br>
+				<span>
+					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY)
+					<a href=\"javascript:load('index.php?module=admin&action=settings&loc=core&edit=yes')\">Указать</a>
+				</span>
+			</div>";
+		}
         $mod_repos = explode(";", $mod_repos);
 
 

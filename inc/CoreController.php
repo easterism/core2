@@ -514,7 +514,7 @@ class CoreController extends Common {
 		}
 		if (!empty($name)) $name = '<b>' . $name . '</b>';
 		$out = '<div>Здравствуйте, ' . $name . '</div>';
-		$sLife = $this->getSetting("session_lifetime");
+		$sLife = (int)$this->getSetting("session_lifetime");
 		if (!$sLife) {
 			$sLife = ini_get('session.gc_maxlifetime');
 		}
@@ -577,12 +577,8 @@ class CoreController extends Common {
 
 
 		// Проверка наличия входящих непрочитаных сообщений
-		if ($this->isModuleActive('profile')) {
-			$profile = $this->modProfile;
-			if (method_exists($profile, 'getProfileMsg')) {
-				$out .= $this->modProfile->getProfileMsg();
-			}
-		}
+		$out .= $this->apiProfile->getProfileMsg();
+
 		return $out;
 	}
 

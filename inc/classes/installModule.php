@@ -254,7 +254,7 @@ class InstallModule extends Db {
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
             if (!mkdir($destinationFolder)) {
-                throw new Exception("Не могу создать директорию для разархивирования.");
+                throw new Exception("Не могу создать директорию для разархивирования ('{$destinationFolder}').");
             }
         }
     }
@@ -436,7 +436,6 @@ class InstallModule extends Db {
         $this->copyModFiles();
         //инфа о модуле
         $arrForInsert['module_id']  = $this->mInfo['install']['module_id'];
-        $arrForInsert['global_id']  = uniqid();
         $arrForInsert['m_name']     = $this->mInfo['install']['module_name'];
         $arrForInsert['lastuser']   = $this->lastUser;
         $arrForInsert['is_system']  = $this->mInfo['install']['module_system'];
@@ -1181,10 +1180,10 @@ class InstallModule extends Db {
             $this->prepareToInstall();
 
             if ($this->isModuleInstalled($this->mInfo['install']['module_id'])) {
-                $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}'</h3>";
+                $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}' до v{$this->mInfo['install']['version']}</h3>";
                 $this->Upgrate();
             } else {
-                $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}'</h3>";
+                $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}' v{$this->mInfo['install']['version']}</h3>";
                 $this->Install();
             }
 
@@ -1226,10 +1225,10 @@ class InstallModule extends Db {
             $this->prepareToInstall();
 
             if ($this->isModuleInstalled($this->mInfo['install']['module_id'])) {
-                $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}'</h3>";
+                $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}' до v{$this->mInfo['install']['version']}</h3>";
                 $this->Upgrate();
             } else {
-                $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}'</h3>";
+                $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}' v{$this->mInfo['install']['version']}</h3>";
                 $this->Install();
             }
 
@@ -1253,6 +1252,7 @@ class InstallModule extends Db {
     private function doCurlRequest($url) {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 1000);
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $curl_out = curl_exec($curl);
@@ -1596,11 +1596,13 @@ class InstallModule extends Db {
      * Перезапись файлов модуля
      *
      * @param   string  $mod_id Название-идентификатор модуля
-     * @param   string  $m_v    Версия модуля
      *
      * @return  string          HTML процесса перезаписи
      */
-    public function mRefreshFiles($mod_id, $m_v) {
+    public function mRefreshFiles($mod_id) {
+        $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
+        $m_v    = $mod['version'];
+        $st = "<h3>Обновляем файлы модуля '{$mod['m_name']}'</h3>";
         try {
             $data       = '';
             $files_hash = '';
@@ -1679,7 +1681,7 @@ class InstallModule extends Db {
             $this->addNotice("Обновление файлов", $e->getMessage(), "Ошибка", "danger");
         }
 
-        return $this->printNotices(1);
+        return $st. $this->printNotices(1);
     }
 
 
@@ -1723,30 +1725,33 @@ class InstallModule extends Db {
             $i['location_id']   = $m['id'];
             $list[$i['install']['module_id']][$i['install']['version']] = $i;
         }
-        //берем из репозиториев
 
         //проверяем заданы ли ссылки на репозитории
         $mod_repos = $this->getSetting('repo');
         if (!empty($mod_repos)){
             $mod_repos = explode(";", $mod_repos);
             //готовим аякс запросы к репозиториям
-            foreach($mod_repos as $i => $repo_url){
-                $repo_url = trim($repo_url);
-                if (!empty($repo_url) && substr_count($repo_url, "repo?apikey=") != 0) {
-                    //запрашиваем список модулей из репозитория
-                    $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
-                    $out = json_decode($out['answer']);
-                    //достаём список модулей и ищем нужный
-                    $repo_list = unserialize(base64_decode($out->data));
-                    foreach ($repo_list as $m_id=>$i) {
-                        if (empty($list[$i['install']['module_id']][$i['install']['version']])) {
-                            $i['location']      = 'repo';
-                            $i['location_id']   = $m_id;
-                            $i['location_url']  = $repo_url;
-                            $list[$i['install']['module_id']][$i['install']['version']] = $i;
+            try {
+                //готовим аякс запросы к репозиториям
+                foreach($mod_repos as $i => $repo_url){
+                    $repo_url = trim($repo_url);
+                    if (!empty($repo_url) && substr_count($repo_url, "repo?apikey=") != 0) {
+                        //запрашиваем список модулей из репозитория
+                        $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
+                        $out = json_decode($out['answer']);
+                        //достаём список модулей и ищем нужный
+                        $repo_list = unserialize(base64_decode($out->data));
+                        foreach ($repo_list as $m_id=>$i) {
+                            if (empty($list[$i['install']['module_id']][$i['install']['version']])) {
+                                $i['location']      = 'repo';
+                                $i['location_id']   = $m_id;
+                                $i['location_url']  = $repo_url;
+                                $list[$i['install']['module_id']][$i['install']['version']] = $i;
+                            }
                         }
                     }
                 }
+            } catch (Exception $e) {
             }
         }
 
@@ -1754,7 +1759,95 @@ class InstallModule extends Db {
     }
 
 
+    /**
+     * поиск обновления и обновление конкретного модуля
+     *
+     * @param $mod_id
+     *
+     * @return string
+     */
+    public function checkModUpdates($mod_id) {
+        $this->db->beginTransaction();
+        $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
+        $m_name = $mod['m_name'];
+        $m_v    = $mod['version'];
+        $st = "<h3>Обновляем модуль '{$mod['m_name']}'</h3>";
+        try {
+            $data       = '';
+            $files_hash = '';
 
+            //получаем список всех доступных модулей
+            $availMods = $this->getInfoAllAvailMods();
+
+            //ищем нужный модуль
+            if (!empty($availMods[$mod_id])) {
+                foreach ($availMods[$mod_id] as $mod_v => $i) {
+                    if ($mod_v > $m_v && !empty($i['migrate']["v{$m_v}"])) {
+                        if ($i['location'] == 'avail') {
+                            $mod       = $this->db->fetchRow("SELECT `data`, files_hash FROM core_available_modules WHERE id = ?", $i['location_id']);
+                            if (!empty($mod['data']) && !empty($mod['files_hash'])) {
+                                $data       = $mod['data'];
+                                $files_hash = $mod['files_hash'];
+                            }
+                        } elseif ($i['location'] == 'repo') {
+                            //запрашиваем нужный модуль
+                            $out = $this->doCurlRequestToRepo($i['location_url'], $i['location_id']);
+                            $out        = json_decode($out['answer']);
+                            $data       = base64_decode($out->data);
+                            $files_hash = base64_decode($out->files_hash);
+                        }
+                        $ver = $i['install']['version'];
+                        continue;
+                    }
+                }
+            }
+
+            //заменяем файлы
+            if (!empty($data) && !empty($files_hash)) {
+                $st = "<h3>Обновляем модуль '{$m_name}' до v{$ver}</h3>";
+                $this->mData['data']          = $data;
+                $this->mData['files_hash']    = $files_hash;
+                $this->prepareToInstall();
+                $this->Upgrate();
+                return $st . $this->printNotices(1);
+
+            } else {
+                $this->addNotice("Поиск обновлений", "Поиск в доступных модулях и репозиториях", "Обновления не найдены", "warning");
+            }
+
+            $this->db->commit();
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            $this->addNotice("Обновление", "Обновление прервано, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
+            return $st . $this->printNotices(1);
+        }
+
+        return $st . $this->printNotices(1);
+    }
+
+
+    /**
+     * поиск наличия обновления для модулей
+     *
+     * @return array
+     */
+    public function checkInstalledModsUpdates() {
+        $updates = array();
+        $availMods = $this->getInfoAllAvailMods();
+        $allMods = $this->db->fetchAll("SELECT module_id, version FROM core_modules");
+        foreach ($allMods as $t) {
+            if (!empty($availMods[$t['module_id']])) {
+                foreach ($availMods[$t['module_id']] as $mod_v => $i) {
+                    if ($mod_v > $t['version'] && !empty($i['migrate']["v{$t['version']}"])) {
+                        $updates[$t['module_id']] = 1;
+                    }
+                }
+            }
+        }
+
+        return $updates;
+    }
 
 
 }

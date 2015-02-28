@@ -375,6 +375,7 @@ class Db {
 	 * @return string
 	 */
 	public function isModuleInstalled($module_id) {
+        $module_id = trim(strtolower($module_id));
 		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
@@ -417,6 +418,7 @@ class Db {
 	 */
 	public function getModuleSrc($module_id)
 	{
+        $module_id = trim(strtolower($module_id));
 		if (!($this->cache->test($module_id))) {
 			$m = $this->db->fetchRow("
 				SELECT is_system, version

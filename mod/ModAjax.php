@@ -38,7 +38,6 @@ class ModAjax extends ajaxFunc {
 				$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
 			}
 			$curent_status = '';
-			$data['control']['global_id'] = uniqid();
 		} else {
 			$inf = $this->db->fetchRow("SELECT `visible`,`dependencies`, module_id FROM `core_modules` WHERE `m_id`=?", $refId);
 			$curent_status = $inf['visible'];
@@ -121,7 +120,7 @@ class ModAjax extends ajaxFunc {
 			}
 			$data['control']['dependencies'] = base64_encode(serialize($res));
 		}
-		
+		$data['access'] = !empty($data['access']) ? $data['access'] : array();
 		$data['control']['access_default'] = base64_encode(serialize($data['access']));
 		$data['control']['access_add'] = '';
 		if (!empty($data['addRules'])) {
