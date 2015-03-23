@@ -794,7 +794,7 @@ class listTable extends initList {
 		$cellnosort = $tpl->getBlock('cellnosort');
 		foreach ($this->table_column[$this->main_table_id] as $key => $value) {
 			if (in_array($key, $columnsToReplace)) continue;
-			if ($this->filterColumn && $this->sessData['column'] && !in_array($key + 1, $this->sessData['column'])) continue;
+			if ($this->filterColumn && ! empty($this->sessData['column']) && !in_array($key + 1, $this->sessData['column'])) continue;
 			if ($value['sort']) {
 				$img = '';
 				if (!empty($this->sessData['order'])) {
@@ -936,7 +936,9 @@ class listTable extends initList {
 
                     if (is_array($needsum)) {
                         if (in_array($sql_key, $this->addSum)) {
-                            $needsum["_" . $sql_key] += $sql_value;
+                            $needsum["_" . $sql_key] = isset($needsum["_" . $sql_key])
+                                ? $needsum["_" . $sql_key] + $sql_value
+                                : $sql_value;
                         }
                     }
 

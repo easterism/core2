@@ -12,8 +12,6 @@
 
 	<link rel="stylesheet" href="core2/html/default/style2.css" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
-    <link rel="stylesheet" href="core2/html/default/fileupload/jquery.fileupload.css">
-    <link rel="stylesheet" href="core2/html/default/fileupload/jquery.fileupload-ui.css">
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
@@ -21,22 +19,10 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/simplemodal-1.4.5/src/jquery.simplemodal.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead-1.2.9/jquery.floatThead.min.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
-
-	<script type="text/javascript" language="javascript" src="core2/js/tmpl.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/load-image.min.js"></script>
-	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-process.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-image.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-audio.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-video.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-validate.js"></script>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-ui.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
 	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>

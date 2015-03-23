@@ -438,17 +438,18 @@ $sid = session_id();
         }
 
 
-       //список доступных одулей
+       //список доступных модулей
 		$list = new listTable('mod_available');
 
 		$list->addSearch("Имя модуля",      '`name`',  	'TEXT');
 		$list->addSearch("Идентификатор",	'module_id','TEXT');
 
 		$list->SQL = "SELECT 1";
+        $list->extOrder = true;
         $list->addColumn("Имя модуля", "200px", "TEXT");
         $list->addColumn("Идентификатор", "200px", "TEXT");
         $list->addColumn("Описание", "", "TEXT");
-		$list->addColumn("Зависимости", "150px", "BLOCK");
+		$list->addColumn("Зависимости", "200px", "BLOCK");
         $list->addColumn("Версия", "150px", "BLOCK");
         $list->addColumn("Автор", "150px", "TEXT");
         $list->addColumn("Системный", "50px", "TEXT");
@@ -498,6 +499,7 @@ $sid = session_id();
 
         $tmp = array();
         $_GET['_page_mod_available'] = !empty($_GET['_page_mod_available']) ? (int)$_GET['_page_mod_available'] : 0;
+        $install = new InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
 			$arr[1] = $val['name'];
@@ -506,34 +508,44 @@ $sid = session_id();
 			$mData = unserialize(htmlspecialchars_decode($val['install_info']));
 			$arr[4] = '';
 			//зависимости модулей
-			$needToInstall = array();
-			if (!empty($mData['install']['dependent_modules']['m'])) {
-				if (is_array($mData['install']['dependent_modules']['m'])) {
-					$deps = array();
-					foreach ($mData['install']['dependent_modules']['m'] as $dModId) {
-						if (empty($allMods[$dModId])) {
-							$deps[] = "<b style=\"color: red;\">{$dModId}</b>";
-							$needToInstall[] = $dModId;
-						}
-					}
-					$arr[4] = implode(", ", $deps);
-				} else {
-					if (empty($allMods[$mData['install']['dependent_modules']['m']])) {
-						$arr[4] = "<b style=\"color: red;\">{$mData['install']['dependent_modules']['m']}</b>";
-						$needToInstall[] = $mData['install']['dependent_modules']['m'];
-					}
-				}
-			}
+            $Inf = !empty($mData['install']['dependent_modules']) ? $mData['install']['dependent_modules'] : array();
+            $deps = array();
+            if (
+                !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                || !empty($Inf['m']) //старая версия
+            ) {
+                if (
+                    !empty($Inf['m']['module_name'])  //новая версия
+                    || !is_array($Inf['m']) //старая версия
+                ) {
+                    $tmp2 = $Inf['m'];
+                    $Inf['m'] = array();
+                    $Inf['m'][] = $tmp2;
+                }
+                //старая версия
+                foreach ($Inf['m'] as $k => $dep_value) {
+                    if (is_string($dep_value)) {
+                        $Inf['m'][$k] = array('module_id' => $dep_value);
+                    }
+                }
+                //проверяем в соответствии с условиямив се ли нужные модули установлены
+                $deps = $install->getNeedToInstallDependedModList($Inf['m']);
+            } elseif (!empty($Inf)) {
+                $deps[] = "<span style=\"color: red;\">Неверный install.xml</span>";
+            }
+            $arr[4] = implode("<br>", $deps);
 
 			$arr[5] = $val['version'];
             $arr[6] = $mData['install']['author'];
             $arr[7] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
 
 			//кнопка установки
-			if (!empty($allMods[$val['module_id']]) && $val['version'] == $allMods[$val['module_id']]) {
-				$arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/>";
-			} elseif (!empty($needToInstall)) {
-				$arr[8] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+            $arr[8] = "";
+			if (!empty($allMods[$val['module_id']]) && $val['version'] <= $allMods[$val['module_id']]) {
+//				$arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/>";
+			} elseif (!empty($deps)) {
+//				$arr[8] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+				$arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Требуется установка дополнительных модулей\" border=\"0\"/>";
 			} else {
 				$arr[8] = "<img  onclick=\"installModule('{$val['name']}', 'v{$val['version']}', '{$val['id']}', {$_GET['_page_mod_available']});\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
 			}

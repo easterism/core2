@@ -60,7 +60,7 @@ var modules = {
 	},
 	updateModule: function (mod, v, module_id, page) {
 		if (confirm('Обновить модуль ' + mod + ' v' + v + '?')) {
-			var url = 'index.php?module=admin&action=modules&loc=core&tab_mod=1';
+			var url = 'index.php' + document.location.hash.replace('#', '?');
 			if (page >= 1) {
 				url = url + '&_page_mod_available=' + page;
 			}

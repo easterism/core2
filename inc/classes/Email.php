@@ -189,7 +189,9 @@ class Email {
 
             if (empty($this->mail_data['from'])) {
                 $config = Zend_Registry::get('config');
-                $server = $config->system->host;
+                $server = isset($config->system) && isset($config->system->host)
+                    ? $config->system->host
+                    : $_SERVER['SERVER_NAME'];
                 $this->mail_data['from'] = 'noreply@' . (substr_count($server, ".") > 0 ? $server : $server . '.com');
             }
 

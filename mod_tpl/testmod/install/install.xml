@@ -96,17 +96,17 @@
             <m>
                 <module_name>Настройки</module_name>
                 <module_id>settings</module_id>
-                <version>&gt;=1.0.1</version><!-- >=1.0.1 -->
+                <version><![CDATA[>=1.0.1]]></version>
             </m>
             <m>
                 <module_name>Календарь</module_name>
                 <module_id>calendar</module_id>
-                <version>&lt;=1.2.0</version><!-- <=1.2.0 -->
+                <version><![CDATA[>4.3.0]]></version>
             </m>
             <m>
                 <module_name>Справочники</module_name>
                 <module_id>enum</module_id>
-                <version>&lt;=1.2.0</version><!-- <=1.2.0 -->
+                <version><![CDATA[=1.3.0]]></version>
             </m>
 		</dependent_modules>
 		<access>

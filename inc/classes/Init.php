@@ -653,7 +653,7 @@ function post($func, $loc, $data) {
 			throw new Exception("No action", 60);
 		}
 	} else {
-		if (empty($params['action'])) {
+		if (empty($params['action']) || $params['action'] == 'index') {
 			if (!$acl->checkAcl($params['module'], 'access')) {
 				throw new Exception(911);
 			}

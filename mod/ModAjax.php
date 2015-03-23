@@ -667,7 +667,7 @@ class ModAjax extends ajaxFunc {
                 if (is_file($destinationFolder . "/readme.txt")) {
                     $readme = file_get_contents($destinationFolder . "/readme.txt");
                 }
-                $xmlObj = simplexml_load_file($destinationFolder . "/install/install.xml");
+                $xmlObj = simplexml_load_file($destinationFolder . "/install/install.xml", 'SimpleXMLElement', LIBXML_NOCDATA);
                 //echo "<PRE>";print_r($xmlObj);echo "</PRE>";die;
 
                 //получаем хэш для файлов модуля

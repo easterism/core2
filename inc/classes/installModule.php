@@ -159,28 +159,49 @@ class InstallModule extends Db {
     /**
      * Проверяем, не зависят ли другие модули от данного
      *
-     * @param   string  $module_id  Модуль для проверки
+     * @param   array  $mod  Модуль для проверки
      *
      * @return  bool
      */
-    private function checkModuleDepend($module_id) {
-        $res = $this->db->fetchAll("SELECT `m_name`, `visible` FROM `core_modules` WHERE `module_id`=?", $module_id);
-        if($res) {
-            foreach ($res as $val) {
-                if($val['visible'] == 'Y') {
-                    $status = true;
-                } else {
-                    $this->module_is_off[] = $val['m_name'];
-                    $this->is_visible = "N";
-                    $status = false;
-                }
-                $this->addNotice("Зависимость от модулей", "Зависит от '{$val['m_name']}'", $status ? "Модуль включен" : "Следует включить этот модуль", $status ? "info" : "warning");
-            }
-            return true;
-        } else {
-            $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Установите модуль \"{$module_id}\"", "danger");
+    public function checkModuleDepend($mod) {
+        $existingMod = $this->db->fetchRow("SELECT `m_name`, `visible`, version FROM `core_modules` WHERE `module_id`=?", $mod['module_id']);
+        if(empty($existingMod)) {
             return false;
         }
+        if(!empty($existingMod) && empty($mod['version'])) {
+            return true;
+        }
+        $answer = false;
+        $version = trim(str_replace(array(">", "<", "="), "", $mod['version']));
+        $case = trim(str_replace($version, "", $mod['version']));
+        if ($case == ">=") {
+            if ($existingMod['version'] >= $version) {
+                $answer = true;
+            }
+        } elseif ($case == ">") {
+            if ($existingMod['version'] > $version) {
+                $answer = true;
+            }
+        } elseif ($case == "<=") {
+            if ($existingMod['version'] <= $version) {
+                $answer = true;
+            }
+        } elseif ($case == "<") {
+            if ($existingMod['version'] < $version) {
+                $answer = true;
+            }
+        } elseif ($case == "=") {
+            if ($existingMod['version'] == $version) {
+                $answer = true;
+            }
+        }
+        if($answer) {
+            if($existingMod['visible'] != 'Y') {
+                $this->module_is_off[] = !empty($mod['module_name']) ? $mod['module_name'] : $mod['module_id'];
+                $this->is_visible = "N";
+            }
+        }
+        return $answer;
     }
 
 
@@ -298,7 +319,7 @@ class InstallModule extends Db {
                 }
                 $this->addNotice("Права доступа", "Дополнительные права", "Добавлены", "info");
             } elseif (!empty($Inf['install']['access']['additional']) && is_array($Inf['install']['access']['additional'])) {
-                throw new Exception("Ошибки в install.xml (access > additional)");
+                throw new Exception("Ошибки в структуре install.xml (access > additional)");
             }
         $access = base64_encode(serialize($access));
         $access_add = base64_encode(serialize($access_add));
@@ -313,19 +334,22 @@ class InstallModule extends Db {
      * @throws Exception
      */
     private function checkNecMods() {
-        $Inf = $this->mInfo;
-        if (!empty($Inf['install']['dependent_modules']['m'])) {
+        $Inf = $this->mInfo['install']['dependent_modules'];
+        if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
             $depend = array();
             $is_stop = false;
-            if (!is_array($Inf['install']['dependent_modules']['m'])) {
-                $val = $Inf['install']['dependent_modules']['m'];
-                $Inf['install']['dependent_modules']['m'] = array();
-                $Inf['install']['dependent_modules']['m'][] = $val;
+            if (!empty($Inf['m']['module_name'])) {
+                $tmp2 = $Inf['m'];
+                $Inf['m'] = array();
+                $Inf['m'][] = $tmp2;
             }
-            foreach ($Inf['install']['dependent_modules']['m'] as $dep_value) {
-                $depend[] = array('module_id' => $dep_value);
+            foreach ($Inf['m'] as $dep_value) {
+                $depend[] = $dep_value;
                 if ($this->checkModuleDepend($dep_value) == false) {
+                    $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Требуется модуль \"{$dep_value['module_name']}\" версии {$dep_value['version']}", "danger");
                     $is_stop = true;
+                } else {
+                    $this->addNotice("Зависимость от модулей", "Зависит от '{$dep_value['module_name']}'", !in_array($dep_value['module_name'], $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value['module_name'], $this->module_is_off) ? "info" : "warning");
                 }
             }
             if ($is_stop) {
@@ -333,8 +357,36 @@ class InstallModule extends Db {
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
-        } elseif (!empty($Inf['install']['dependent_modules']) && is_array($Inf['install']['dependent_modules'])) {
-            throw new Exception("Ошибки в install.xml (dependent_modules)");
+        }
+        //для старых версий install.xml
+        elseif (!empty($Inf['m'])) {
+            $depend = array();
+            $is_stop = false;
+            if (!is_array($Inf['m'])) {
+                $tmp2 = $Inf['m'];
+                $Inf['m'] = array();
+                $Inf['m'][] = $tmp2;
+            }
+            foreach ($Inf['m'] as $dep_value) {
+                $depend[] = array('module_id' => $dep_value);
+                $is_installed = $this->db->fetchOne("SELECT visible FROM core_modules WHERE module_id = ?", $dep_value);
+                if (empty($is_installed)) {
+                    $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Требуется модуль \"{$dep_value}\"", "danger");
+                    $is_stop = true;
+                } else {
+                    if ($is_installed == 'N') {
+                        $this->module_is_off[] = $dep_value;
+                    }
+                    $this->addNotice("Зависимость от модулей", "Зависит от '{$dep_value}'", !in_array($dep_value, $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value, $this->module_is_off) ? "info" : "warning");
+                }
+            }
+            if ($is_stop) {
+                throw new Exception("Установите все необходимые модули!");
+            }
+            $depend = base64_encode(serialize($depend));
+            return $depend;
+        } elseif (!empty($Inf)) {
+            throw new Exception("Ошибки в структуре install.xml (dependent_modules)");
         } else {
             $this->addNotice("Зависимость от модулей", "Проверка выполнена", "Не имеет зависимостей", "info");
             return false;
@@ -389,7 +441,7 @@ class InstallModule extends Db {
                             $access_add[$value["name"]] = ($value["all"] == "on") ? "all" : ($value["owner"] == "on" ? "owner" : "");
                         }
                     } elseif (!empty($valsub['access']['additional']) && is_array($valsub['access']['additional'])) {
-                        throw new Exception("Ошибки в install.xml (submodules > access > additional)");
+                        throw new Exception("Ошибки в структуре install.xml (submodules > access > additional)");
                     }
                     $access_add = base64_encode(serialize($access_add));
 
@@ -409,7 +461,7 @@ class InstallModule extends Db {
             }
             return $arrSubModules;
         } elseif (!empty($Inf['install']['submodules']) && is_array($Inf['install']['submodules'])) {
-            throw new Exception("Ошибки в install.xml (submodules)");
+            throw new Exception("Ошибки в структуре install.xml (submodules)");
         } else {
             $this->addNotice("Субмодули", "Проверка выполнена", "Модуль не имеет субмодулей", "info");
             return false;
@@ -1137,7 +1189,7 @@ class InstallModule extends Db {
 
         //проверяем есть ли install.xml и забераем оттуда инфу
         $this->checkXml();
-        $xmlObj         = simplexml_load_file($this->tempDir . "/install/install.xml");
+        $xmlObj         = simplexml_load_file($this->tempDir . "/install/install.xml", 'SimpleXMLElement', LIBXML_NOCDATA);
         $mInfo 		    = $this->xmlParse($xmlObj);
         $this->mInfo	= $mInfo;
 
@@ -1399,6 +1451,7 @@ class InstallModule extends Db {
 
             $list = new listTable($list_id);
             $list->ajax = true;
+            $list->extOrder = true;
             $list->addSearch("Имя модуля",      '`name`',  	'TEXT');
             $list->addSearch("Идентификатор",	'module_id','TEXT');
 
@@ -1406,7 +1459,7 @@ class InstallModule extends Db {
             $list->addColumn("Имя модуля", "200px", "TEXT");
             $list->addColumn("Идентификатор", "200px", "TEXT");
             $list->addColumn("Описание", "", "TEXT");
-            $list->addColumn("Зависимости", "150px", "BLOCK");
+            $list->addColumn("Зависимости", "200px", "BLOCK");
             $list->addColumn("Версия", "150px", "TEXT");
             $list->addColumn("Автор", "150px", "TEXT");
             $list->addColumn("Системный", "50px", "TEXT");
@@ -1424,10 +1477,37 @@ class InstallModule extends Db {
                 $search[0] = mb_strtolower($ss['search'][0], 'utf-8');
                 $search[1] = mb_strtolower($ss['search'][1], 'utf-8');
             }
+
+            //формируем список зависимостей доступных модулей
+            $this->prepareSearchDependedMods();
             //готовим данные для таблицы
             $arr = array();
             foreach ($repo_list as $key=>$val) {
                 $ins = $val['install'];
+                //перевариваем зависимости
+                $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
+                $Inf = $ins['dependent_modules'];
+                if (
+                    !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                    || !empty($Inf['m']) //старая версия
+                ) {
+                    if (
+                        !empty($Inf['m']['module_name'])  //новая версия
+                        || !is_array($Inf['m']) //старая версия
+                    ) {
+                        $tmp2 = $Inf['m'];
+                        $Inf['m'] = array();
+                        $Inf['m'][] = $tmp2;
+                    }
+                    //старая версия
+                    foreach ($Inf['m'] as $k => $dep_value) {
+                        if (is_string($dep_value)) {
+                            $Inf['m'][$k] = array('module_id' => $dep_value);
+                        }
+                    }
+                    $ins['dependent_modules'] = $Inf;
+                }
+
                 if (
                     (!empty($search[0]) && !mb_substr_count(mb_strtolower($ins['module_name'], 'utf-8'), $search[0], 'utf-8'))
                     || (!empty($search[1]) && !mb_substr_count(mb_strtolower($ins['module_id'], 'utf-8'), $search[1], 'utf-8'))
@@ -1438,11 +1518,13 @@ class InstallModule extends Db {
                 $arr[$key]['name']          = $ins['module_name'];
                 $arr[$key]['module_id']     = $ins['module_id'];
                 $arr[$key]['descr']         = $ins['description'];
-                $arr[$key]['depends']       = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : '';
+                $arr[$key]['depends']       = $ins['dependent_modules']['m'];
                 $arr[$key]['version']       = $ins['version'];
                 $arr[$key]['author']        = $ins['author'];
                 $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
                 $arr[$key]['install_info']  = $val;
+                //добавляем к списку доступных зовисимостей зависимости из репозитория
+                $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
             }
 
 
@@ -1460,31 +1542,41 @@ class InstallModule extends Db {
                 $mId = $val['install_info']['install']['module_id'];
                 $mName = $val['name'];
 
-                $needToInstall = array();
-                //зависимости модулей
-                if (!empty($val['depends'])) {
-                    if (is_array($val['depends'])) {
-                        $deps = array();
-                        foreach ($val['depends'] as $dModId) {
-                            if (empty($allMods[$dModId])) {
-                                $deps[] = "<b style=\"color: red;\">{$dModId}</b>";
-                                $needToInstall[] = $dModId;
-                            }
-                        }
-                        $copy_list[$key]['depends'] = implode(", ", $deps);
-                    } else {
-                        if (empty($allMods[$val['depends']])) {
-                            $copy_list[$key]['depends'] = "<b style=\"color: red;\">{$val['depends']}</b>";
-                            $needToInstall[] = $val['depends'];
+                //зависимости модуля
+                $Inf = !empty($val['install_info']['install']['dependent_modules']) ? $val['install_info']['install']['dependent_modules'] : array();
+                $deps = array();
+                if (
+                    !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                    || !empty($Inf['m']) //старая версия
+                ) {
+                    if (
+                        !empty($Inf['m']['module_name'])  //новая версия
+                        || !is_array($Inf['m']) //старая версия
+                    ) {
+                        $tmp2 = $Inf['m'];
+                        $Inf['m'] = array();
+                        $Inf['m'][] = $tmp2;
+                    }
+                    //старая версия
+                    foreach ($Inf['m'] as $k => $dep_value) {
+                        if (is_string($dep_value)) {
+                            $Inf['m'][$k] = array('module_id' => $dep_value);
                         }
                     }
+                    //проверяем в соответствии с условиямив се ли нужные модули установлены
+                    $deps = $this->getNeedToInstallDependedModList($Inf['m']);
+                } elseif (!empty($Inf)) {
+                    $deps[] = "<span style=\"color: red;\">Неверный install.xml</span>";
                 }
+                $copy_list[$key]['depends'] = implode("<br>", $deps);
 
                 //кнопка установки
-                if (!empty($allMods[$mId]) && $mVersion == $allMods[$mId]) {
-                    $copy_list[$key]['install_info'] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
-                } elseif (!empty($needToInstall)) {
-                    $copy_list[$key]['install_info'] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+                $copy_list[$key]['install_info'] = "";
+                if (!empty($allMods[$mId]) && $mVersion <= $allMods[$mId]) {
+//                    $copy_list[$key]['install_info'] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/></a>";
+                } elseif (!empty($deps)) {
+//                    $copy_list[$key]['install_info'] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+                    $copy_list[$key]['install_info'] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Требуется установка дополнительных модулей\" border=\"0\"/>";
                 } else {
                     $copy_list[$key]['install_info'] = "<img onclick=\"modules.requestToRepo('$mName', 'v$mVersion', '{$copy_list[$key]['id']}', '{$this->repo_url}', 'install');\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
                 }
@@ -1847,6 +1939,247 @@ class InstallModule extends Db {
         }
 
         return $updates;
+    }
+
+
+    /**
+     * получаем полный список зависимых модулей(включая вложенные) в нужном порядке установки
+     */
+    public function getDependedModList($mods, $level = 0) {
+        //формируем список зависимых модулей
+        $list = array();
+        foreach ($mods as $m) {
+            $deps = $this->searchDependedMods($m);
+            //если этот модуль имеет свои зависимости
+            if (!empty($deps)) {
+                $tmp = $this->getDependedModList($deps, $level + 1);
+                foreach ($tmp as $m_id => $m_info) {
+                    if (empty($list[$m_id])) {
+                        $list[$m_id] = $m_info;
+                    } else {
+                        if ($list[$m_id]['level'] <= $m_info['level']) {
+                            $list[$m_id]['level'] = $m_info['level'];
+                            //условия по версиям складываем в массив
+                            if (!empty($m_info['version'])) {
+                                if (!is_array($m_info['version'])) {
+                                    $tmp2 = $m_info['version'];
+                                    $m_info['version'] = array();
+                                    $m_info['version'][] = $tmp2;
+                                }
+                                foreach ($m_info['version'] as $v) {
+                                    if (empty($list[$m_info['module_id']]['version']) || !in_array($v, $list[$m_info['module_id']]['version'])) {
+                                        $list[$m_info['module_id']]['version'][] = $v;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            //добавляем модуль в зависимости
+            if (empty($list[$m['module_id']])) {
+                $list[$m['module_id']] = array(
+                    'module_id'     => $m['module_id'],
+                    'module_name'   => !empty($m['module_name']) ? $m['module_name'] : (!empty($this->modListNames[$m['module_id']]) ? $this->modListNames[$m['module_id']] : $m['module_id']),
+                    'level'         => $level
+                );
+                //условия по версиям складываем в массив
+                if (!empty($m['version'])) {
+                    if (!is_array($m['version'])) {
+                        $tmp2 = $m['version'];
+                        $m['version'] = array();
+                        $m['version'][] = $tmp2;
+                    }
+                    foreach ($m['version'] as $v) {
+                        if (empty($list[$m['module_id']]['version']) || !in_array($v, $list[$m['module_id']]['version'])) {
+                            $list[$m['module_id']]['version'][] = $v;
+                        }
+                    }
+                }
+            } else {
+                if ($list[$m['module_id']]['level'] <= $level) {
+                    $list[$m['module_id']]['level'] = $level;
+                    //условия по версиям складываем в массив
+                    if (!empty($m['version'])) {
+                        if (!is_array($m['version'])) {
+                            $tmp2 = $m['version'];
+                            $m['version'] = array();
+                            $m['version'][] = $tmp2;
+                        }
+                        foreach ($m['version'] as $v) {
+                            if (empty($list[$m['module_id']]['version']) || !in_array($v, $list[$m['module_id']]['version'])) {
+                                $list[$m['module_id']]['version'][] = $v;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //сортируем и выводим в нужном порядке
+        if ($level == 0) {
+            $tmp = array();
+            foreach ($list as $l) {
+                $tmp[$l['level']][] = $l;
+            }
+            krsort($tmp);
+            $list = array();
+            foreach ($tmp as $lvl) {
+                foreach ($lvl as $l) {
+                    $list[] = $l;
+                }
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * ищем зависимые модули для данного с учетом версионностей
+     */
+    private function searchDependedMods($mod) {
+        //получаем зависимости для всех модулей
+        if (empty($this->dependedModList)) {
+            $this->prepareSearchDependedMods();
+        }
+
+        //с учетом заданной версионности вытаскиваем зависимости для самой актуальной версии
+        $ver = '';
+        if (empty($mod['version'])) {//в старых установщиках может отсутствовать версия, поэтому берем из доступных самую актуальную
+            if (!empty($this->dependedModList[$mod['module_id']])) {
+                $ver = max(array_keys($this->dependedModList[$mod['module_id']]));
+            }
+        } else {
+            if (!is_array($mod['version'])) {
+                $tmp = array();
+                $tmp[] = $mod['version'];
+                $mod['version'] = $tmp;
+            }
+            //все доступные для установки модули
+            $ver = !empty($this->dependedModList[$mod['module_id']]) ? $this->dependedModList[$mod['module_id']] : array();
+            //листаем массив с версиями и условиями
+            foreach ($mod['version'] as $vrsn) {
+                $version = trim(str_replace(array(">", "<", "="), "", $vrsn));
+                $case = trim(str_replace($version, "", $vrsn));
+                foreach ($ver as $v => $m) {
+                    if (
+                        ($case == ">=" && $v < $version)
+                        || ($case == ">" && $v <= $version)
+                        || ($case == "<=" && $v > $version)
+                        || ($case == "<" && $v >= $version)
+                        || ($case == "=" && $v != $version)
+                    ) {
+                        unset($ver[$v]);
+                    }
+                }
+            }
+            if (!empty($ver)) {
+                $ver = max(array_keys($ver));
+            }
+        }
+        if (empty($ver)) {
+            return array();
+        } else {
+            return $this->dependedModList[$mod['module_id']][$ver];
+        }
+    }
+
+    /**
+     * формируем массив с зависимостями модулей для каждой версии модуля из доступных модулей
+     */
+    public function prepareSearchDependedMods() {
+        //получаем зависимости для всех модулей
+        if (empty($this->dependedModList)) {
+            $answer = $this->db->fetchAll(
+                "SELECT  module_id,
+                        install_info
+                  FROM `core_available_modules`"
+            );
+            $list = array();
+            $names = array();
+            foreach ($answer as $val) {
+                $Inf = unserialize($val['install_info']);
+                $names[$Inf['install']['module_id']] = $Inf['install']['module_name'];
+                $version = $Inf['install']['version'];
+                $Inf = $Inf['install']['dependent_modules'];
+                $tmp = array();
+                //достаем зависимости
+                if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
+                    if (!empty($Inf['m']['module_name'])) {
+                        $tmp2 = $Inf['m'];
+                        $Inf['m'] = array();
+                        $Inf['m'][] = $tmp2;
+                    }
+                    $tmp = $Inf['m'];
+                }
+                //для старых версий install.xml
+                elseif (!empty($Inf['m'])) {
+                    if (!is_array($Inf['m'])) {
+                        $tmp2 = $Inf['m'];
+                        $Inf['m'] = array();
+                        $Inf['m'][] = $tmp2;
+                    }
+                    foreach ($Inf['m'] as $dep_value) {
+                        $tmp[] = array('module_id' => $dep_value);
+                    }
+                }
+                $list[$val['module_id']][$version] = $tmp;
+            }
+            $this->modListNames     = $names;
+            $this->dependedModList  = $list;
+        }
+    }
+
+
+    /**
+     * Проверяем какие зависимые модули трубется установить с учетом версионности
+     *
+     * @param array $mods
+     *
+     * @return array массив с HTML модулей требующих установки
+     */
+    public function getNeedToInstallDependedModList(array $mods) {
+        //получаем развернутый список зависимостей включая вложенные, и все в нужном порядке установки
+        $mods = $this->getDependedModList($mods);
+        //ищем модули которые необходимо установить и отдаем HTML список
+        $deps = array();
+        foreach ($mods as $dep_value) {
+            //проверяем что бы все условия версионности выполнялись
+            $flag = false;
+            if (!empty($dep_value['version'])) {
+                foreach ($dep_value['version'] as $version) {
+                    $mod = array(
+                        'module_id' => $dep_value['module_id'],
+                        'version' => $version
+                    );
+                    if ($this->checkModuleDepend($mod) == false) {
+                        $flag = true;
+                        break;
+                    }
+                }
+                $dep_value['version'] = implode(";", $dep_value['version']);
+            } else {
+                if ($this->checkModuleDepend($dep_value) == false) {
+                    $flag = true;
+                }
+            }
+            //если условия версионности не выполняются
+            if ($flag) {
+                //старая версия
+                if (empty($dep_value['version'])) {
+                    $dep_value['version'] = "";
+                }
+                //старая версия
+                if (empty($dep_value['module_name'])) {
+                    $dep_value['module_name'] = $dep_value['module_id'];
+                }
+                $deps[] = "<b style=\"color: red;\">{$dep_value['module_name']} {$dep_value['version']}</b>";
+            }
+        }
+
+        return $deps;
     }
 
 

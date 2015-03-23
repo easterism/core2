@@ -21,6 +21,7 @@ class editTable extends initEdit {
 	protected $cell					= array();
 	protected $template				= '';
 	private $sess_form_fields		= array();
+	private $scripts		        = array();
 
 	public function __construct($name) {
 		parent::__construct();
@@ -590,10 +591,11 @@ class editTable extends initEdit {
 							}
 						}
 						elseif (strpos($value['type'], 'fck') === 0) {
-							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= "<div style=\"border:1px solid silver;width:100%;height:300px;overflow:auto\">" . htmlspecialchars_decode($value['default']) . "</div>";
-							} else {
-								$params = explode("_", $value['type']);
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= "<div style=\"border:1px solid silver;width:100%;height:300px;overflow:auto\">" . htmlspecialchars_decode($value['default']) . "</div>";
+                            } else {
+                                $this->scripts['editor'] = 'fck';
+                                $params = explode("_", $value['type']);
 
 								if (in_array("basic", $params)) {
 									$this->MCEConf['theme'] = 'advanced';
@@ -807,6 +809,7 @@ class editTable extends initEdit {
 									$controlGroups[$cellId]['html'][$key] .= '<i>нет прикрепленных файлов</i>';
 								}
 							} else {
+                                $this->scripts['upload'] = 'xfile';
 								$this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
 								$auto = false;
@@ -999,6 +1002,7 @@ $(function () {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= !empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '';
 							} else {
+                                $this->scripts['modal'] = 'simplemodal';
 								if (is_array($value['in'])) {
 									$options = $value['in']['options'];
 									$temp = " ";
@@ -1055,7 +1059,29 @@ $(function () {
 					}
 				}
 			}
-			
+
+            if ($this->scripts) {
+                if (isset($this->scripts['editor'])) {
+                    Tool::printJs("core2/ext/tinymce/tinymce.min.js", true);
+                }
+                if (isset($this->scripts['upload'])) {
+                    Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload.css");
+                    Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload-ui.css");
+                    Tool::printJs("core2/js/tmpl.min.js", true);
+                    Tool::printJs("core2/js/load-image.min.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-process.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-image.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-audio.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-video.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-validate.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-ui.js", true);
+                }
+                if (isset($this->scripts['modal'])) {
+                    Tool::printJs("core2/ext/jQuery/plugins/simplemodal-1.4.5/src/jquery.simplemodal.js", true);
+                }
+            }
+
 			//echo "<PRE>";print_r($controlGroups);echo"</PRE>";die();
 			$fromReplace = array();
 			$toReplace = array();
@@ -1089,7 +1115,7 @@ $(function () {
 				}
 				$toReplace[] = $html;
 			}
-			//echo "<textarea>";print_r($toReplace);echo"</textarea>";//die();
+
 			$this->HTML .= str_replace($fromReplace, $toReplace, $this->template);
 			if ($groupAction) {
 				// if any GROUPS exists enable switcher
@@ -1102,10 +1128,7 @@ $(function () {
 			}
 		}
 		//buttons area
-		$this->HTML .= "<table width=\"100%\">
-							<tr>
-								<td align=\"right\">
-									<div>";
+		$this->HTML .= "<div style=\"text-align:right\">";
 		if (isset($this->buttons[$this->main_table_id]) && is_array($this->buttons[$this->main_table_id])) {			
 			foreach ($this->buttons[$this->main_table_id] as $value) {
 				if (!empty($value['value'])) {
@@ -1119,10 +1142,7 @@ $(function () {
 		if (!$this->readOnly) {
 			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;");
 		}
-		$this->HTML .= 	"</div>
-							</td>
-						</tr>
-					</table>";
+		$this->HTML .= 	"</div>";
 		if (!$this->readOnly) {
 			$this->HTML .= 	"</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
 		}
