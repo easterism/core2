@@ -339,10 +339,10 @@ $sid = session_id();
 
 			$data = $list->getData();
 			foreach ($data as $key => $val) {
-				$data[$key][3] = !empty($ups[$data[$key][2]]) ? "<b style=\"color: #008000;\">{$data[$key][3]} (Доступно обновление)</b>" : $data[$key][3];
+				$data[$key][3] = !empty($ups[$data[$key][2]]) ? "<b style=\"color: #008000;\">{$data[$key][3]} (Доступно обновление до v{$ups[$data[$key][2]]})</b>" : $data[$key][3];
 				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . $val[1] . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.updateModule('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/box_refresh.png\" border=\"0\" title=\"Обновить модуль\" /></div>";
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>"
+				                  . (!empty($ups[$data[$key][2]]) ? "<div style=\"display: inline-block;\" onclick=\"modules.updateModule('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/box_refresh.png\" border=\"0\" title=\"Обновить модуль\" /></div>" : "");
 
 			}
 			$list->data = $data;
@@ -445,15 +445,15 @@ $sid = session_id();
 		$list->addSearch("Идентификатор",	'module_id','TEXT');
 
 		$list->SQL = "SELECT 1";
-        $list->extOrder = true;
-        $list->addColumn("Имя модуля", "200px", "TEXT");
-        $list->addColumn("Идентификатор", "200px", "TEXT");
-        $list->addColumn("Описание", "", "TEXT");
-		$list->addColumn("Зависимости", "200px", "BLOCK");
-        $list->addColumn("Версия", "150px", "BLOCK");
-        $list->addColumn("Автор", "150px", "TEXT");
-        $list->addColumn("Системный", "50px", "TEXT");
-        $list->addColumn("Действие", "66", "BLOCK", 'align=center');
+//        $list->extOrder = true;
+        $list->addColumn("Имя модуля", "200px", "TEXT", "", "", "");
+        $list->addColumn("Идентификатор", "200px", "TEXT", "", "", "");
+        $list->addColumn("Описание", "", "TEXT", "", "", "");
+		$list->addColumn("Зависимости", "200px", "BLOCK", "", "", "");
+        $list->addColumn("Версия", "150px", "BLOCK", "", "", "");
+        $list->addColumn("Автор", "150px", "TEXT", "", "", "");
+        $list->addColumn("Системный", "50px", "TEXT", "", "", "");
+        $list->addColumn("Действие", "66", "BLOCK", 'align=center', "", "");
 		$list->getData();
 		//поиск
 		$where_search = '';
@@ -576,12 +576,17 @@ $sid = session_id();
             }
         }
         //пагинация
-        $per_page = 25;
+        $ss = new Zend_Session_Namespace('Search');
+        $ss = $ss->main_mod_available;
+        if (!empty($ss['count_mod_available'])) {
+            $per_page = empty($ss['count_mod_available']) ? 1 : (int)$ss['count_mod_available'];
+        }
         $list->recordsPerPage = $per_page;
-        $list->setRecordCount(count($copy_list));
+
         $page = empty($_GET['_page_mod_available']) ? 1 : (int)$_GET['_page_mod_available'];
         $from = ($page - 1) * $per_page;
         $to = $page * $per_page;
+        $list->setRecordCount(count($copy_list));
         $i = 0;
         $tmp = array();
         foreach ($copy_list as $val) {

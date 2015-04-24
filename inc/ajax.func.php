@@ -135,6 +135,19 @@ class ajaxFunc extends Common {
 				}
 			}
 		}
+
+		/*if (count($date)) {
+			require_once("Zend/Validate/Date.php");
+			$validator = new Zend_Validate_Date();
+			foreach ($date as $field) {
+				if ( ! $validator->isValid($control[$field])) {
+				    foreach ($validator->getMessages() as $message) {
+				        $this->error[] = "- $message";
+				    }
+				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				}
+			}
+		}*/
 		
 		if (count($int)) {
 			require_once("Zend/Validate/Int.php");

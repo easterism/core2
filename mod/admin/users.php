@@ -7,51 +7,46 @@ if (isset($_GET['edit']) && $_GET['edit'] == '0') {
 	//$tab->addTab("Пользователи", 		$app, 130);
 	$title = "Создание нового пользователя";
 }
-if (!empty($_GET['edit'])) {
+else if (!empty($_GET['edit'])) {
 	$user = $this->dataUsers->find($_GET['edit'])->current();
 	$title = "Редактирование пользователя \"" . $user->u_login . "\"";
 }
 $tab->beginContainer($title);
-
 	if ($tab->activeTab == 1) {
-		
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {
 			$edit = new editTable('user'); 
-			$u_login = '
-			u_login,';
-			if ($_GET['edit']) {
-				$u_login = '';
-			} else {
-				$edit->addControl("Логин:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
-			}
 			$certificate = '';
 			if ($_GET['edit']) {
-				/*$names = $this->db->fetchRow("SELECT lastname,firstname,middlename FROM core_users_profile WHERE user_id=?", $_GET['edit']);
-				'{$names['lastname']}' AS lastname,
-								   '{$names['lastname']}' AS firstname,
-								   '{$names['lastname']}' AS middlename,*/
 				$certificate = $user->certificate;
-
 			}
 			$htmlCertificate = '<br/><textarea cols="40" rows="7" name="control[certificate_ta]">' . ($certificate) . '</textarea>';
-			
+
+            $fields = array('u_id',
+                    'u_login',
+                    'email',
+                    'role_id',
+                    'lastname',
+                    'firstname',
+                    'middlename',
+                    'u_pass',
+                    'certificate',
+                    'is_email_wrong',
+                    'is_pass_changed',
+                    'is_admin_sw',
+                    'NULL AS send_info_sw');
 			$send_info_sw = '';
-			if ( $_GET['edit']  == 0) {
-				$send_info_sw = ',
-					NULL AS send_info_sw
-				';
-			}
-			$edit->SQL  = "SELECT  u_id, $u_login
-								   email,
-								   role_id,
-								   lastname,
-								   firstname,
-								   middlename,
-								   u_pass,
-								   certificate,
-								   is_email_wrong,
-								   is_pass_changed,
-								   is_admin_sw {$send_info_sw}
+			if ($_GET['edit'] == 0) {
+                $edit->addControl("Логин:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
+                $about_email = "Отправить информацию о пользователе на email";
+            } else {
+                unset($fields[1]);
+                $about_email = "Отправить информацию об изменении на email";
+            }
+            if ($this->auth->LDAP) {
+                unset($fields[7]);
+            }
+
+			$edit->SQL  = "SELECT  " . implode("," . chr(10), $fields) . "
 							  FROM core_users
 							  	   LEFT JOIN core_users_profile AS p ON p.user_id=u_id
 							 WHERE `u_id` = '" . $_GET['edit'] . "'";
@@ -67,18 +62,7 @@ $tab->beginContainer($title);
 			$edit->addControl("Фамилия:", "TEXT", "maxlength=\"20\" size=\"40\"", "", "");
 			$edit->addControl("Имя:", "TEXT", "maxlength=\"20\" size=\"40\"", "", "", true);
 			$edit->addControl("Отчество:", "TEXT", "maxlength=\"20\" size=\"40\"", "", "");
-//			$passHash = "
-//			<script>
-//				$(document).ready(function(){
-//					var ofFunc = $('#main_user_mainform').attr('onSubmit');
-//					var hash = \"if ($('#main_useru_pass').val() != '') \{$('#main_useru_pass').val(hex_md5($('#main_useru_pass').val()));\";										
-//					hash += \"$('#main_useru_pass2').val(hex_md5($('#main_useru_pass2').val()));}\";										
-//					$('#main_user_mainform').attr('onSubmit', hash + ofFunc);
-//				})
-//			</script>
-//			";
-			$passHash = '';
-			$edit->addControl("Пароль:", "PASSWORD", "", $passHash, "", true);			
+			if (!$this->auth->LDAP) $edit->addControl("Пароль:", "PASSWORD", "", "", "", true);
 			$edit->addControl("Сертификат:", "FILE", "cols=\"70\" rows=\"10\"", $htmlCertificate, "");
 			
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
@@ -90,7 +74,7 @@ $tab->beginContainer($title);
 			$edit->addControl("Администратор безопасности (полный доступ):", "RADIO", "", "", "N", true);
 
 			$edit->selectSQL[] = array('Y' => '');
-			$edit->addControl("отправить информацию о пользователе на email", "CHECKBOX", "", "", "0");
+			$edit->addControl($about_email, "CHECKBOX", "", "", "0");
 
 			$edit->addButtonSwitch('visible', $this->dataUsers->exists("visible = 'Y' AND u_id=?", $_GET['edit']));
 			

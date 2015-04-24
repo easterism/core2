@@ -277,6 +277,7 @@ class Init extends Db {
 
 			// SETUP ACL
 			require_once('core2/inc/classes/Acl.php');
+            require_once 'core2/inc/Interfaces/Delete.php';
 			$this->acl = new Acl();
 			$this->acl->setupAcl();
 
@@ -296,9 +297,9 @@ class Init extends Db {
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
 			return $this->getMenu();
-
 		} else {
-			if (empty($_GET['module'])) throw new Exception("Модуль не найден");
+            if ($this->deleteAction()) return;
+            if (empty($_GET['module'])) throw new Exception("Module does not exists", 404);
 			$module = strtolower($_GET['module']);
 			if ($module === 'admin') {
 				require_once 'core2/inc/CoreController.php';
@@ -319,12 +320,8 @@ class Init extends Db {
 						throw new Exception(911);
 					}
 					$_GET['action'] = "index";
-					$mods = $this->db->fetchRow("SELECT m.m_id, m_name, m.module_id, is_system
-											 FROM core_modules AS m
-											WHERE m.visible = 'Y'
-											  AND m.module_id = ?",
-						$module);
-					if (!$mods) throw new Exception("Module does not exists", 404);
+                    $this->isModuleActive($module);
+					if (!$this->isModuleActive($module)) throw new Exception("Module does not exists", 404);
 				} else {
 					$_GET['action'] = strtolower($_GET['action']);
 					$mods = $this->db->fetchRow("SELECT m.m_id, m_name, sm_path, m.module_id, is_system, sm.m_id AS sm_id
@@ -342,24 +339,17 @@ class Init extends Db {
 					}
 				}
 
-                $location = $this->getModuleLocation($mods['module_id']);
-
 				if (empty($mods['sm_path'])) {
-					$modController = "Mod" . ucfirst(strtolower($mods['module_id'])) . "Controller";
-                    $controller_path = $location . "/" . $modController . ".php";
-					if (!file_exists($controller_path)) {
-						throw new Exception("Module does not exists", 404);
-					}
-					require_once $controller_path;
-					if (!class_exists($modController)) {
-						throw new Exception("Module broken");
-					}
+                    $location = $this->getModuleLocation($module); //определяем местоположение модуля
+
+                    $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
+                    $this->requireController($location, $modController);
 					$modController = new $modController();
 					$action = "action_" . $_GET['action'];
 					if (method_exists($modController, $action)) {
 						return $modController->$action();
 					} else {
-						throw new Exception("No action");
+						throw new Exception("No action", 404);
 					}
 				} else {
 					header("Location: " . $mods['sm_path']);
@@ -401,7 +391,7 @@ class Init extends Db {
 			$core = new CoreController();
 			$core->action_login();
 		}
-		$tpl = new Templater();
+		$tpl = new Templater2();
 		if (Tool::isMobileBrowser()) {
 			$tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.tpl");
 		} else {
@@ -409,24 +399,19 @@ class Init extends Db {
 		}
 
 		$tpl->assign('{system_name}', $this->getSystemName());
-		$tpl2 = new Templater();
-		$tpl2->loadTemplate("core2/html/" . THEME . "/login/login.tpl");
+		$tpl2 = new Templater2("core2/html/" . THEME . "/login/login.tpl");
 
 		$errorNamespace = new Zend_Session_Namespace('Error');
 		$blockNamespace = new Zend_Session_Namespace('Block');
-		if (!empty($blockNamespace->blocked)) {
-			$tpl2->touchBlock('error');
-			$tpl2->assign('[ERROR_MSG]', $errorNamespace->ERROR);
+        if (!empty($blockNamespace->blocked)) {
+			$tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
 			$tpl2->assign('[ERROR_LOGIN]', '');
 		} elseif (!empty($errorNamespace->ERROR)) {
-		    
-			$tpl2->touchBlock('error');
-			$tpl2->assign('[ERROR_MSG]', $errorNamespace->ERROR);
+			$tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
 			$tpl2->assign('[ERROR_LOGIN]', $errorNamespace->TMPLOGIN);
 			$errorNamespace->ERROR = '';
 		} else {
-			$tpl2->touchBlock('error');
-			$tpl2->assign('[ERROR_MSG]', '');
+			$tpl2->error->assign('[ERROR_MSG]', '');
 			$tpl2->assign('[ERROR_LOGIN]', '');
 		}
 		$config = Zend_Registry::getInstance()->get('config');
@@ -435,8 +420,7 @@ class Init extends Db {
 		}
 		$logo = $this->getSystemLogo();
 		if (is_file($logo)) {
-			$tpl2->touchBlock('logo');
-			$tpl2->assign('{logo}', $logo);
+			$tpl2->logo->assign('{logo}', $logo);
 		}
 		$u = crypt(uniqid());
 		$tokenNamespace->TOKEN = $u;
@@ -448,10 +432,68 @@ class Init extends Db {
 	}
 
 	/**
+     * Проверка удаления с последующей переадресацией
+     * Если запрос на удаление корректен, всегда должно возвращать true
+     *
+     * @return bool
+     */
+    private function deleteAction() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') return false;
+        parse_str($_SERVER['QUERY_STRING'], $params);
+        if (!empty($params['res']) && !empty($params['id'])) {
+            header('Content-type: application/json; charset="utf-8"');
+            $sess     = new Zend_Session_Namespace('List');
+            $resource = $params['res'];
+            $loc = $sess->$resource->loc;
+            if (!$loc) throw new Exception("Не удалось определить местоположение данных.", 13);
+            parse_str($loc, $temp);
+            if ($temp['module'] !== 'admin') {
+                $module          = $temp['module'];
+                $location        = $this->getModuleLocation($module); //определяем местоположение модуля
+                $modController   = "Mod" . ucfirst(strtolower($module)) . "Controller";
+                $this->requireController($location, $modController);
+                $modController = new $modController();
+                if ($modController instanceof Delete) {
+                    ob_start();
+                    $res = $modController->action_delete($params['res'], $params['id']);
+                    ob_clean();
+                    if ($res) {
+                        echo json_encode($res);
+                        return true;
+                    }
+                }
+            }
+            require_once 'core2/inc/CoreController.php';
+            $core = new CoreController();
+            echo json_encode($core->action_delete($params));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Проверка наличия и целостности файла контроллера
+     * @param $location - путь до файла
+     * @param $modController - название файла контроллера
+     *
+     * @throws Exception
+     */
+    private function requireController($location, $modController) {
+        $controller_path = $location . "/" . $modController . ".php";
+        if (!file_exists($controller_path)) {
+            throw new Exception("Module does not exists", 404);
+        }
+        require_once $controller_path; // подлючаем контроллер
+        if (!class_exists($modController)) {
+            throw new Exception("Module broken", 500);
+        }
+    }
+    
+	/**
 	 * Create the top menu
 	 * @return mixed|string
 	 */
-	protected function getMenu() {
+    private function getMenu() {
 		require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
 		//require_once("core2/ext/xajax/xajax.inc.php");
 		$xajax = new xajax();
@@ -470,6 +512,9 @@ class Init extends Db {
 			$tpl2 = new Templater("core2/html/" . THEME . "/menu.tpl");
 		}
 		$tpl->assign('{system_name}', $this->getSystemName());
+
+        $tpl2->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
+        $tpl2->assign('<!--CURRENT_USER_LOGIN-->', $this->auth->NAME);
 
 		$mods = $this->db->fetchAll("SELECT m_id, m_name, module_id, is_public FROM core_modules WHERE visible='Y' ORDER BY seq");
 		if ($this->auth->ADMIN || $this->auth->NAME == 'root') {
@@ -560,7 +605,7 @@ class Init extends Db {
 
 		$options = array();
 
-		if ( ! empty($_SERVER['argv'][1])) {
+		if ( ! empty($_SERVER['argv'][1])) { //TODO Игорь, проверь использование функции getopt
 			parse_str(implode('&', array_slice($_SERVER['argv'], 1)), $options);
 		}
 
@@ -635,7 +680,7 @@ function post($func, $loc, $data) {
 		$loc = $loc[0];
 	}
 	parse_str($loc, $params);
-	if (empty($params['module'])) throw new Exception("No module", 60);
+	if (empty($params['module'])) throw new Exception("Модуль не найден", 404);
 	$acl = new Acl();
 	if ($params['module'] == 'admin') {
 		require_once('core2/mod/ModAjax.php');

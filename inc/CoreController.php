@@ -5,20 +5,22 @@ require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/installModule.php';
+require_once 'classes/Alert.php';
 
 /**
  * Class CoreController
  */
 class CoreController extends Common {
 
-	const RP = '8c1733d4cd0841199aa02ec9362be324';
+	const RP = 'e3fb5f90f7bcb59fd5b9dbc030335c07';
 	protected $tpl = '';
 	protected $theme = 'default';
 	
 	public function __construct() {
 		parent::__construct();
+		$this->module = 'admin';
 		$this->path = 'core2/mod/';
-		$this->path .= !empty($this->module) ? $this->module . "/" : ''; 
+		$this->path .= !empty($this->module) ? $this->module . "/" : '';
 		if (!empty($this->config->theme)) {
 			$this->theme = $this->config->theme;
 		}
@@ -144,14 +146,11 @@ class CoreController extends Common {
 							$userData = $ldapAuth->getUserData();
 							$login = $userData['login'];
 							if (isset($userData['root']) && $userData['root'] === true) {
-								$res = array();
-								$res['u_pass'] 	= self::RP;
-								$res['u_id'] 	= -1;
-								$res['u_login'] = 'root';
+                                $res = $this->setRoot();
 								break;
 							}
 
-							$u_id  = $db->fetchOne("SELECT `u_id` FROM `core_users` WHERE `u_login` = ?", $login);
+                            $u_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login))->u_id;
 							if (!$u_id) {
 								//create new user
 								$dataForSave = array(					
@@ -199,10 +198,7 @@ class CoreController extends Common {
 								WHERE u.`visible` = 'Y' AND u.u_login=? LIMIT 1", $login);
 				}
 			} else {
-				$res = array();
-				$res['u_pass'] = self::RP;
-				$res['u_id'] = -1;
-				$res['u_login'] = 'root';
+				$res = $this->setRoot();
 			}
 			if ($res) {
 
@@ -266,6 +262,17 @@ class CoreController extends Common {
 		die;
 	}
 
+    /**
+     * установка данны[ дя пользователя root
+     * @return array
+     */
+    private function setRoot() {
+        $res            = array();
+        $res['u_pass']  = self::RP;
+        $res['u_id']    = -1;
+        $res['u_login'] = 'root';
+        return $res;
+    }
 
 	/**
      * @return void
@@ -290,6 +297,7 @@ class CoreController extends Common {
 
 
 	/**
+     * Переключатель признака активности записи
 	 * @throws Exception
      * @return void
 	 */
@@ -326,6 +334,73 @@ class CoreController extends Common {
 			echo json_encode(array('status' => $e->getMessage()));
 		}	
 	}
+
+    public function action_delete(Array $params)
+    {
+        $sess       = new Zend_Session_Namespace('List');
+        $resource   = $params['res'];
+        if (!$resource) throw new Exception("Не удалось определить идентификатор ресурса", 13);
+        if (!$params['id']) throw new Exception("Нет данных для удаления", 13);
+        $ids        = explode(",", $params['id']);
+        $deleteKey  = $sess->$resource->deleteKey;
+        if (!$deleteKey) throw new Exception("Не удалось определить параметры удаления", 13);
+        list($table, $refid) = explode(".", $deleteKey);
+        if (!$table || !$refid) throw new Exception("Не удалось определить параметры удаления", 13);
+
+        if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
+            $authorOnly = false;
+            if ($this->checkAcl($resource, 'delete_owner') && !$this->checkAcl($resource, 'delete_all')) {
+                $authorOnly = true;
+            }
+            $this->db->beginTransaction();
+            try {
+                $is = $this->db->fetchAll("EXPLAIN `$table`");
+
+                $nodelete = false;
+                $noauthor = true;
+
+                foreach ($is as $value) {
+                    if ($value['Field'] == 'is_deleted_sw') {
+                        $nodelete = true;
+                    }
+                    if ($authorOnly && $value['Field'] == 'author') {
+                        $noauthor = false;
+                    }
+                }
+                if ($authorOnly) {
+                    if ($noauthor) {
+                        throw new Exception("Данные не содержат признака автора!");
+                    } else {
+                        $auth = Zend_Registry::get('auth');
+                    }
+                }
+                if ($nodelete) {
+                    foreach ($ids as $key) {
+                        $where = array($this->db->quoteInto("`$refid` = ?", $key));
+                        if ($authorOnly) {
+                            $where[] = $this->db->quoteInto("author = ?", $auth->NAME);
+                        }
+                        $this->db->update($table, array('is_deleted_sw' => 'Y'), $where);
+                    }
+                } else {
+                    foreach ($ids as $key) {
+                        $where = array($this->db->quoteInto("`$refid` = ?", $key));
+                        if ($authorOnly) {
+                            $where[] = $this->db->quoteInto("author = ?", $auth->NAME);
+                        }
+                        $this->db->delete($table, $where);
+                    }
+                }
+                $this->db->commit();
+            } catch (Exception $e) {
+                $this->db->rollback();
+                throw new Exception($e->getMessage(), 13);
+            }
+        } else {
+            throw new Exception(911, 13);
+        }
+        return true;
+    }
 
 
 	/**
@@ -613,8 +688,12 @@ class CoreController extends Common {
 	 */
 	public function action_monitoring() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=monitoring&loc=core";
-		require_once $this->path . 'monitoring.php';
+        try {
+            $app = "index.php?module=admin&action=monitoring&loc=core";
+            require_once $this->path . 'monitoring.php';
+        } catch (Exception $e) {
+            Alert::printDanger($e->getMessage());
+        }
 	}
 
 
@@ -796,7 +875,20 @@ class CoreController extends Common {
         $admin_email = $this->getSetting('admin_email');
 
         if (!$admin_email) {
-            $install->addNotice("", "Создайте дополнительный параметр 'admin_email' с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
+            $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
+            if (empty($id)) {
+                $this->db->insert(
+                    "core_settings",
+                    array(
+                        'system_name'   => 'Email для уведомлений от аудита системы',
+                        'code'          => 'admin_email',
+                        'is_custom_sw'  => 'Y',
+                        'visible'       => 'Y'
+                    )
+                );
+                $id = $this->db->lastInsertId("core_settings");
+            }
+            $install->addNotice("", "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
         }
         if (!$server) {
             $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
@@ -805,7 +897,7 @@ class CoreController extends Common {
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
         foreach ($data as $val) {
-            $dirhash    = $install->extractHashForFiles("mod/{$val['module_id']}");
+            $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));
             $dbhash     = $install->getFilesHashFromDb($val['module_id']);
             $compare    = $install->compareFilesHash($dirhash, $dbhash);
             if (!empty($compare)) {
@@ -840,7 +932,7 @@ class CoreController extends Common {
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
                             ->subject('Обнаружены изменения в структуре модуля')
-                            ->body("Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
+                            ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
                             $install->addNotice("", $answer['error'], "Уведомление не отправлено", "danger");

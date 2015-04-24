@@ -23,7 +23,7 @@ var modules = {
 		} else return false;
 	},
     'requestToRepo': function (mod, v, m_id, repo, request) {
-		if (request == 'install' && confirm('Установить модуль ' + mod + ' v' + v + '?')) {
+		if (request == 'install' && confirm('Установить модуль ' + mod + ' ' + v + '?')) {
 			load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":m_id, "repo": repo});
 		} else return false;
 	},
@@ -58,12 +58,9 @@ var modules = {
 		x = document.createElement('br');
 		document.getElementById(container).appendChild(x);
 	},
-	updateModule: function (mod, v, module_id, page) {
+	updateModule: function (mod, v, module_id) {
 		if (confirm('Обновить модуль ' + mod + ' v' + v + '?')) {
 			var url = 'index.php' + document.location.hash.replace('#', '?');
-			if (page >= 1) {
-				url = url + '&_page_mod_available=' + page;
-			}
 			load(url, {"updateModule": module_id});
 		} else return false;
 	}

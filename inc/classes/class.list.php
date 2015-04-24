@@ -163,14 +163,18 @@ class listTable extends initList {
 				$tmp['orderType'] = "asc";
 			} else {
 				if ($_POST['orderField_' . $this->main_table_id] == $tmp['order']) {
-					if ($tmp['orderType'] == "asc") {
-						$tmp['orderType'] = "desc";
-					} elseif ($tmp['orderType'] == "desc") {
-						$tmp['orderType'] = "";
-						$tmp['order'] = "";
-					} elseif ($tmp['orderType'] == "") {
-						$tmp['orderType'] = "asc";
-					}
+                    if (!empty($_POST['orderType_' . $this->main_table_id])) {
+                        $tmp['orderType'] = $_POST['orderType_' . $this->main_table_id];
+                    } else {
+                        if ($tmp['orderType'] == "asc") {
+                            $tmp['orderType'] = "desc";
+                        } elseif ($tmp['orderType'] == "desc") {
+                            $tmp['orderType'] = "";
+                            $tmp['order']     = "";
+                        } elseif ($tmp['orderType'] == "") {
+                            $tmp['orderType'] = "asc";
+                        }
+                    }
 				} else {
 					$tmp['order'] = $_POST['orderField_' . $this->main_table_id];
 					$tmp['orderType'] = "asc";
@@ -440,71 +444,20 @@ class listTable extends initList {
 	}
 
 
-	/**
-	 * Default Delete function
-	 * @throws Exception
-	 * @return void
-	 */
-	private function deleteAction() {
-		if (($this->checkAcl($this->resource, 'delete_all') || $this->checkAcl($this->resource, 'delete_owner')) && $this->deleteKey && !empty($_POST[$this->resource . "_delete"])) {
-			$temp = explode(".", $this->deleteKey);
-			$ids = $_POST[$this->resource . "_delete"];
-
-			$authorOnly = false;
-			if ($this->checkAcl($this->resource, 'delete_owner') && !$this->checkAcl($this->resource, 'delete_all')) {
-				$authorOnly = true;
-			}
-			$this->db->beginTransaction();
-			try {
-				$is = $this->db->fetchAll("EXPLAIN " . $temp[0]);
-
-				$nodelete = false;
-				$noauthor = true;
-				
-				foreach ($is as $value) {
-					if ($value['Field'] == 'is_deleted_sw') {
-						$nodelete = true;
-					}
-					if ($authorOnly && $value['Field'] == 'author') {
-						$noauthor = false;
-					}
-				}
-				if ($authorOnly) {
-					if ($noauthor) {
-						throw new Exception("Данные не содержат признака автора!");
-					} else {
-						$auth 	= Zend_Registry::get('auth');
-					}
-				}
-				if ($nodelete) {
-					foreach ($ids as $key) {
-						$where = array($this->db->quoteInto($temp[1] . " = ?", $key));
-						if ($authorOnly) {
-							$where[] = $this->db->quoteInto("author = ?", $auth->NAME);
-						}
-						$this->db->update($temp[0], array('is_deleted_sw' => 'Y'), $where);
-					}
-				} else {
-					foreach ($ids as $key) {
-						$where = array($this->db->quoteInto($temp[1] . " = ?", $key));
-						if ($authorOnly) {
-							$where[] = $this->db->quoteInto("author = ?", $auth->NAME);
-						}
-						$this->db->delete($temp[0], $where);
-					}
-				}
-				$this->db->commit();
-			} catch (Exception $e) {
-				$this->db->rollback();
-				$this->error = $e->getMessage();
-			}
-			unset($_POST[$this->main_table_id . "_delete"]);
-		}
-	}
-	
 	public function addHeader($cols) {
 		$this->extraHeaders[] = $cols;
 	}
+
+	/**
+     * Сохранение служебных данных в сессии
+     * @param array $data
+     */
+    private function setSessData($key, $value)
+    {
+        $sess_form       = new Zend_Session_Namespace('List');
+        $ssi             = $this->resource;
+        $sess_form->$ssi->$key = $value;
+    }
 
 	/**
 	 * Create grid HTML
@@ -512,8 +465,6 @@ class listTable extends initList {
 	 */
 	public function makeTable() {
 		
-		// CHECK FOR DELETE
-		$this->deleteAction();
 		if (!count($this->data) && !$this->dataAlreadyGot) {
 			$this->data = $this->getData();
 		}
@@ -1119,7 +1070,7 @@ class listTable extends initList {
 		$count = ceil($this->recordCount / $this->recordsPerPage);
 
 		//PAGINATION
-		$pages = ceil($this->recordCount / $this->sessData[$countPOST]);
+		$pages = ceil($this->recordCount / ($this->sessData[$countPOST] ? $this->sessData[$countPOST] : $this->recordsPerPage));
 		$tpl->assign('{CURR_PAGE}', $this->sessData[$pagePOST] . " " . $this->classText['FROM'] . " " . $pages);
 		$tpl->assign('[IDD]', 'pagin_' . $this->resource);
 		$tpl->assign('[ID]', $this->resource);
@@ -1167,6 +1118,8 @@ class listTable extends initList {
 	public function showTable() {
 		if ($this->checkAcl($this->resource, 'list_all') || $this->checkAcl($this->resource, 'list_owner')) {
 			$this->makeTable();
+            $this->setSessData('loc', $_SERVER['QUERY_STRING']);
+            $this->setSessData('deleteKey', $this->deleteKey);
 			echo "<script>
 				if (!listx){
 				    alert('listx не найден!')

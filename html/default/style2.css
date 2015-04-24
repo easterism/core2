@@ -739,6 +739,7 @@ a.modalCloseImg {
 	width: 100%; 
 	height: 120px;
 	overflow: auto;
+    box-sizing: border-box;
 }
 table td.homeTD {
 	padding:10px;	
@@ -879,6 +880,7 @@ table td.homeTD {
 	border-left-width: 5px;
 	border-left-style: solid;
 	color: #000;
+    min-height: 25px;
 }
 .alert-success {
 	background-color: #dff0d8;

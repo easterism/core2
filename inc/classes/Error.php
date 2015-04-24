@@ -71,10 +71,10 @@ class Error {
 			if ($cnf->debug->firephp) {
 				Tool::fb($str);
 			} else {
-				echo "<PRE>";print_r($str);echo "</PRE>";
+                self::Exception("<PRE>{$str}</PRE>", $code);
 			}
 		} else {
-			die($message);
+            self::Exception($message, $code);
 		}
 	}
 

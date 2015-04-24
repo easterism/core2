@@ -196,8 +196,11 @@ $tab->beginContainer($title);
 	elseif ($tab->activeTab == 4) {
 		
 		$zipFolder = $this->config->system->path_archive;
-		if (!is_dir($zipFolder)) {
-			throw new Exception("Директория не найдена. Ключ: system.path_archive='$zipFolder'");
+		if (empty($zipFolder)) {
+			throw new Exception("Не указана директория для архивов. Ее нужно указать в конфигурационном файле conf.ini с ключом 'system.path_archive'");
+
+		} elseif ( ! is_dir($zipFolder)) {
+			throw new Exception("Директория не найдена. Ключ: system.path_archive = '$zipFolder'");
 		}
 
 		/* Загрузка файла */

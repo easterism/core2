@@ -356,7 +356,7 @@ class Db {
 	 *
 	 * @return string
 	 */
-	public function isSubModuleActive($submodule_id)
+    final public function isSubModuleActive($submodule_id)
 	{
 		$id = explode("_", $submodule_id);
 		if (isset($id[1]) && $this->isModuleActive($id[0])) {
@@ -374,7 +374,7 @@ class Db {
 	 * @param string $module_id
 	 * @return string
 	 */
-	public function isModuleInstalled($module_id) {
+    final public function isModuleInstalled($module_id) {
         $module_id = trim(strtolower($module_id));
 		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
@@ -392,7 +392,7 @@ class Db {
      * @param string $module_id
      * @return mixed
      */
-    public function getModuleLocation($module_id) {
+    final public function getModuleLocation($module_id) {
         return DOC_ROOT . $this->getModuleSrc($module_id);
     }
 
@@ -402,7 +402,7 @@ class Db {
      * @param string $module_id
      * @return string
      */
-    public function getModuleVersion($module_id) {
+    final public function getModuleVersion($module_id) {
 
         return $this->db->fetchOne("
             SELECT version
@@ -413,33 +413,40 @@ class Db {
 
 	/**
 	 * Получение относительного адреса папки модуля
-	 * @param $module_id
+	 * @param  string $module_id
 	 * @return string
 	 */
-	public function getModuleSrc($module_id)
+    final public function getModuleSrc($module_id)
 	{
         $module_id = trim(strtolower($module_id));
+        if (!$module_id) throw new Exception("Не определен идентификатор модуля.");
 		if (!($this->cache->test($module_id))) {
 			$m = $this->db->fetchRow("
 				SELECT is_system, version
 				FROM core_modules
 				WHERE module_id = ?
 			", $module_id);
-			$prefix = '';
-			if ($m['is_system'] == "Y") {
-				$prefix = 'core2/';
-				$loc = "{$prefix}mod/{$module_id}/v{$m['version']}";
-			} else {
-				$loc = "{$prefix}mod/{$module_id}/v{$m['version']}";
-				if (!is_dir($loc)) {
-					$loc = "{$prefix}mod/{$module_id}";
-				}
-			}
+            if ($m) {
+                if ($m['is_system'] == "Y") {
+                    $loc = "core2/mod/{$module_id}/v{$m['version']}";
+                } else {
+                    $loc = "mod/{$module_id}/v{$m['version']}";
+                    if (!is_dir(DOC_ROOT . $loc)) {
+                        $loc = "mod/{$module_id}";
+                    }
+                }
+            } else {
+                throw new Exception("Module does not exists", 404);
+            }
 			$this->cache->save($loc, $module_id);
 		} else {
 			$loc = $this->cache->load($module_id);
 		}
 		return $loc;
 	}
+
+    final public function getModule($module_id) {
+
+    }
 
 }

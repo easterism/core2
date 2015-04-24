@@ -171,30 +171,9 @@ class InstallModule extends Db {
         if(!empty($existingMod) && empty($mod['version'])) {
             return true;
         }
-        $answer = false;
         $version = trim(str_replace(array(">", "<", "="), "", $mod['version']));
         $case = trim(str_replace($version, "", $mod['version']));
-        if ($case == ">=") {
-            if ($existingMod['version'] >= $version) {
-                $answer = true;
-            }
-        } elseif ($case == ">") {
-            if ($existingMod['version'] > $version) {
-                $answer = true;
-            }
-        } elseif ($case == "<=") {
-            if ($existingMod['version'] <= $version) {
-                $answer = true;
-            }
-        } elseif ($case == "<") {
-            if ($existingMod['version'] < $version) {
-                $answer = true;
-            }
-        } elseif ($case == "=") {
-            if ($existingMod['version'] == $version) {
-                $answer = true;
-            }
-        }
+        $answer = version_compare($existingMod['version'], $version, $case);
         if($answer) {
             if($existingMod['visible'] != 'Y') {
                 $this->module_is_off[] = !empty($mod['module_name']) ? $mod['module_name'] : $mod['module_id'];
@@ -221,9 +200,9 @@ class InstallModule extends Db {
         $pathToMod = "{$prefix}mod/{$this->mInfo['install']['module_id']}";
         $pathToVer = $this->installPath;
         //удаляем старые файлы
-        if (file_exists($pathToVer)) {
-            $this->justDeleteFiles($pathToVer, false);
-        }
+//        if (file_exists($pathToVer)) {
+//            $this->justDeleteFiles($pathToVer, false);
+//        }
         //есди папки модуля не существует, то создаем
         $is_writeable = is_writeable("{$prefix}mod") || is_writeable("{$pathToMod}");
         if ($is_writeable && (!file_exists("{$pathToMod}") || !file_exists($pathToVer))) {
@@ -503,7 +482,6 @@ class InstallModule extends Db {
             $arrForInsert['access_default'] = $access['access_default'];
             $arrForInsert['access_add']     = $access['access_add'];
         }
-
         //регистрация модуля
         $this->db->insert('core_modules', $arrForInsert);
         $lastId = $this->db->lastInsertId();
@@ -523,6 +501,10 @@ class InstallModule extends Db {
             array('is_active_core_modules')
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
+        //подключаем *.php если задан
+        if (!empty($this->mInfo['install']['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['install']['php'])) {
+            require_once($this->tempDir . "/install/" . $this->mInfo['install']['php']);
+        }
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "' а потом этот модуль") : " включите модуль";
@@ -662,14 +644,16 @@ class InstallModule extends Db {
             }
             $this->addNotice("Субмодули", "Субмодули обновлены", "Успешно", "info");
         }
-
         //перезаписываем путь к файлам модуля
         $this->cache->clean(
             Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
             array('is_active_core_modules')
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
-
+        //подключаем *.php если задан
+        if (!empty($this->mInfo['migrate']["v" . trim($this->curVer)]['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php'])) {
+            require_once($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php']);
+        }
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "', а потом этот модуль") : " включите модуль";
@@ -689,21 +673,19 @@ class InstallModule extends Db {
      */
     public function deleteFolder ($dir){
         $this->deleteFilesInfo = array();
-        $this->justDeleteFiles($dir);
+        $this->checkAndDeleteFiles($dir);
         if (!empty($this->deleteFilesInfo['is_not_writeable'])) {
 //            asort($this->deleteFilesInfo['is_not_writeable']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['is_not_writeable']), "Папка закрыта для записи, удалите её самостоятельно", "danger");
             $this->addNotice("Файлы модуля", "Удаление", "Папка закрыта для записи, удалите её самостоятельно", "danger");
-        }
-        if (!empty($this->deleteFilesInfo['success'])) {
-//            asort($this->deleteFilesInfo['success']);
-//            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
-            $this->addNotice("Файлы модуля", "Удаление", "Успешно", "info");
-        }
-        if (!empty($this->deleteFilesInfo['not_exists'])) {
+        } elseif (!empty($this->deleteFilesInfo['not_exists'])) {
 //            asort($this->deleteFilesInfo['not_exists']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['not_exists']), "Не существует", "info");
             $this->addNotice("Файлы модуля", "Удаление", "Файлы не найдены", "info");
+        } elseif (!empty($this->deleteFilesInfo['success'])) {
+//            asort($this->deleteFilesInfo['success']);
+//            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
+            $this->addNotice("Файлы модуля", "Удаление", "Успешно", "info");
         }
     }
 
@@ -903,11 +885,13 @@ class InstallModule extends Db {
      */
     public function checkVer()
     {
+        //проверка актуальности версии
         if ($this->curVer == $this->mInfo['install']['version']) {
             throw new Exception("У вас уже установлена эта версия!");
         } elseif ($this->curVer > $this->mInfo['install']['version']) {
             throw new Exception("У вас стоит более актуальная версия!");
         }
+        //проверка предусмотрено ли обновление
         $curVer = "v" . trim($this->curVer);
         if (!isset($this->mInfo['migrate'][$curVer])) {
             throw new Exception("обновление для {$curVer} не предусмотрено!");
@@ -924,46 +908,41 @@ class InstallModule extends Db {
      * @return  void
      */
     private function justCopyFiles($dir, $dirTo) {
+        $compare = array();
+        if (file_exists($dirTo)) {
+            $dirhash    = $this->extractHashForFiles($dirTo);
+            $etalonHash = unserialize($this->mData['files_hash']);
+            $dirToArr = explode("/", $dirTo);
+            if (!empty($dirToArr[3])) {
+                for ($i = 3; $i < count($dirToArr); $i++) {
+                    $etalonHash = $etalonHash[$dirToArr[$i]]['cont'];
+                }
+            }
+            $compare    = $this->compareFilesHash($dirhash, $etalonHash);
+        }
         $cdir = scandir($dir);
-        $error   = array();
-        $success = array();
         foreach ($cdir as $key => $value) {
             if (!in_array($value, array(".", "..", "install"))) {
                 $path   = $dir . DIRECTORY_SEPARATOR . $value;
                 $pathTo = $dirTo . DIRECTORY_SEPARATOR . $value;
                 if (is_dir($path)) {
                     if (!is_dir($pathTo)) {
-                        if (is_writable($dirTo)) {
-                            mkdir($pathTo);
-                            $this->justCopyFiles($path, $pathTo);
-                        } else {
-                            $error[] = $dirTo;
-                        }
+                        mkdir($pathTo);
                     }
-//                    $this->justCopyFiles($path, $pathTo);
-
+                    $this->justCopyFiles($path, $pathTo);
                 } else {
-                    $result = false;
-                    if (is_writable($dirTo)) {
-                        $result = copy($path, $pathTo);
-                    }
-                    if ($result) {
-                        $success[]   = $value;
-                    } else {
-                        $error[] = $value;
+                    if (!empty($compare[$value]) && ($compare[$value]['event'] == 'changed' || $compare[$value]['event'] == 'lost')) {
+                        copy($path, $pathTo);
+                        $this->copyFilesInfo['success'][] = $pathTo;
                     }
                 }
             }
         }
-        if (!empty($error)) {
-            $this->is_visible = "N";
-            foreach ($error as $e) {
-                $this->copyFilesInfo['error'][] = "{$dirTo}/{$e}";
-            }
-        }
-        if (!empty($success)) {
-            foreach ($success as $s) {
-                $this->copyFilesInfo['success'][] = "{$dirTo}/{$s}";
+        //удаляем лишние файлы
+        foreach ($compare as $fname => $f) {
+            if ($f['event'] == 'added' ) {
+                $pathTo = $dirTo . DIRECTORY_SEPARATOR . $fname;
+                $this->justDeleteFiles($pathTo);
             }
         }
     }
@@ -1117,13 +1096,13 @@ class InstallModule extends Db {
      */
     public function copyFiles($dir, $dirTo) {
         $this->copyFilesInfo = array();
-        $this->justCopyFiles($dir, $dirTo);
+        $this->checkAndCopyFiles($dir, $dirTo);
         if (!empty($this->copyFilesInfo['error'])) {
 //            asort($this->copyFilesInfo['error']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['error']), "Файлы не скопированы, скопируйте их вручную", "danger");
             $this->addNotice("Файлы модуля", "Копирование", "Файлы не скопированы, скопируйте их вручную", "danger");
         }
-        if (!empty($this->copyFilesInfo['success'])) {
+        elseif (!empty($this->copyFilesInfo['success'])) {
 //            asort($this->copyFilesInfo['success']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['success']), "Файлы скопированы успешно", "info");
             $this->addNotice("Файлы модуля", "Копирование", "Файлы скопированы успешно", "info");
@@ -1132,37 +1111,37 @@ class InstallModule extends Db {
 
 
     /**
-     * Удаляем файлы из директории
+     * Удаляем файлы или директорию с файлами
      *
-     * @param   string  $dir    Директория с файлами
+     * @param   string  $loc    Директория или файл
      *
      * @return  void
      */
-    public function justDeleteFiles ($dir, $is_delete_root = true){
-        if (file_exists($dir)) {
-            if (is_writeable($dir)) {
-                $d = opendir($dir);
-                while ($f=readdir($d)){
+    public function justDeleteFiles ($loc, $is_delete_root = true){
+        if (file_exists($loc)) {
+            if (is_writeable($loc)) {
+                if (is_dir($loc)) { //если папка
+                    $d = opendir($loc);
+                    while ($f=readdir($d)){
 
-                    if($f != "." && $f != ".."){
-                        if (is_dir($dir . "/" . $f)) {
-                            $this->justDeleteFiles($dir."/".$f);
-                        } else {
-                            unlink($dir . "/" . $f);
-                            $this->deleteFilesInfo['success'][] = $dir . "/" . $f;
+                        if($f != "." && $f != ".."){
+                            if (is_dir($loc . "/" . $f)) {
+                                $this->justDeleteFiles($loc."/".$f);
+                            } else {
+                                unlink($loc . "/" . $f);
+                                $this->deleteFilesInfo['success'][] = $loc . "/" . $f;
+                            }
+
                         }
-
                     }
+                    if ($is_delete_root) {
+                        rmdir($loc);
+                    }
+                } else { //если файл
+                    unlink($loc);
                 }
-                if ($is_delete_root) {
-                    rmdir($dir);
-                }
-                $this->deleteFilesInfo['success'][] = $dir;
-            }else{
-                $this->deleteFilesInfo['is_not_writeable'][] = $dir;
+                $this->deleteFilesInfo['success'][] = $loc;
             }
-        } else {
-            $this->deleteFilesInfo['not_exists'][] = $dir;
         }
     }
 
@@ -1694,7 +1673,7 @@ class InstallModule extends Db {
     public function mRefreshFiles($mod_id) {
         $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
         $m_v    = $mod['version'];
-        $st = "<h3>Обновляем файлы модуля '{$mod['m_name']}'</h3>";
+        $st = "<h3>Обновляем файлы модуля '{$mod['m_name']}' v{$mod['version']}</h3>";
         try {
             $data       = '';
             $files_hash = '';
@@ -1734,9 +1713,9 @@ class InstallModule extends Db {
                 $pathToVer = "{$pathToMod}/v{$m_v}";
 
                 //удаляем старые файлы
-                if (file_exists($pathToVer)) {
-                    $this->justDeleteFiles($pathToVer, false);
-                }
+//                if (file_exists($pathToVer)) {
+//                    $this->justDeleteFiles($pathToVer, false);
+//                }
 
                 //есди папки модуля не существует, то создаем
                 $is_writeable = is_writeable("{$prefix}mod") || is_writeable($pathToMod);
@@ -1754,10 +1733,15 @@ class InstallModule extends Db {
                     $tempDir                = $config->temp . "/tmp_" . uniqid();
                     $this->make_zip($data);
                     $this->extractZip($tempDir);
-                    $this->justCopyFiles($tempDir, $pathToVer);
-                    //обновляем инфу о хэшах
-                    $this->db->update("core_modules", array('files_hash' => $files_hash), $this->db->quoteInto("module_id = ?", $mod_id));
-                    $this->addNotice("Обновление файлов", "Обновление завершено", "Успешно", "info");
+                    $this->mData['files_hash'] = $files_hash;
+                    $this->checkAndCopyFiles($tempDir, $pathToVer);
+                    if (!empty($this->copyFilesInfo['error'])) {
+                        $this->addNotice("Обновление файлов", "Ошибка", "Убедитесь, что есть доступ на запись для всех файлов", "danger");
+                    } else {
+                        //обновляем инфу о хэшах
+                        $this->db->update("core_modules", array('files_hash' => $files_hash), $this->db->quoteInto("module_id = ?", $mod_id));
+                        $this->addNotice("Обновление файлов", "Обновление завершено", "Успешно", "info");
+                    }
                 }
             } else {
                 $t = array();
@@ -1776,11 +1760,6 @@ class InstallModule extends Db {
         return $st. $this->printNotices(1);
     }
 
-
-
-    public function isModuleInstalled($module_id) {
-        return $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
-    }
 
 
     /**
@@ -1872,27 +1851,31 @@ class InstallModule extends Db {
             $availMods = $this->getInfoAllAvailMods();
 
             //ищем нужный модуль
+            $update = array();
             if (!empty($availMods[$mod_id])) {
                 foreach ($availMods[$mod_id] as $mod_v => $i) {
-                    if ($mod_v > $m_v && !empty($i['migrate']["v{$m_v}"])) {
-                        if ($i['location'] == 'avail') {
-                            $mod       = $this->db->fetchRow("SELECT `data`, files_hash FROM core_available_modules WHERE id = ?", $i['location_id']);
-                            if (!empty($mod['data']) && !empty($mod['files_hash'])) {
-                                $data       = $mod['data'];
-                                $files_hash = $mod['files_hash'];
-                            }
-                        } elseif ($i['location'] == 'repo') {
-                            //запрашиваем нужный модуль
-                            $out = $this->doCurlRequestToRepo($i['location_url'], $i['location_id']);
-                            $out        = json_decode($out['answer']);
-                            $data       = base64_decode($out->data);
-                            $files_hash = base64_decode($out->files_hash);
-                        }
-                        $ver = $i['install']['version'];
-                        continue;
+                    if ($mod_v > $m_v && isset($i['migrate']["v{$m_v}"]) && (empty($update) || $mod_v > $update['install']['version'])) {
+                        $update = $i;
                     }
                 }
             }
+            if (!empty($update)) {
+                if ($update['location'] == 'avail') {
+                    $mod       = $this->db->fetchRow("SELECT `data`, files_hash FROM core_available_modules WHERE id = ?", $update['location_id']);
+                    if (!empty($mod['data']) && !empty($mod['files_hash'])) {
+                        $data       = $mod['data'];
+                        $files_hash = $mod['files_hash'];
+                    }
+                } elseif ($update['location'] == 'repo') {
+                    //запрашиваем нужный модуль
+                    $out = $this->doCurlRequestToRepo($update['location_url'], $update['location_id']);
+                    $out        = json_decode($out['answer']);
+                    $data       = base64_decode($out->data);
+                    $files_hash = base64_decode($out->files_hash);
+                }
+                $ver = $update['install']['version'];
+            }
+
 
             //заменяем файлы
             if (!empty($data) && !empty($files_hash)) {
@@ -1901,8 +1884,6 @@ class InstallModule extends Db {
                 $this->mData['files_hash']    = $files_hash;
                 $this->prepareToInstall();
                 $this->Upgrate();
-                return $st . $this->printNotices(1);
-
             } else {
                 $this->addNotice("Поиск обновлений", "Поиск в доступных модулях и репозиториях", "Обновления не найдены", "warning");
             }
@@ -1912,7 +1893,6 @@ class InstallModule extends Db {
         } catch (Exception $e) {
             $this->db->rollback();
             $this->addNotice("Обновление", "Обновление прервано, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
-            return $st . $this->printNotices(1);
         }
 
         return $st . $this->printNotices(1);
@@ -1931,8 +1911,8 @@ class InstallModule extends Db {
         foreach ($allMods as $t) {
             if (!empty($availMods[$t['module_id']])) {
                 foreach ($availMods[$t['module_id']] as $mod_v => $i) {
-                    if ($mod_v > $t['version'] && !empty($i['migrate']["v{$t['version']}"])) {
-                        $updates[$t['module_id']] = 1;
+                    if ($mod_v > $t['version'] && isset($i['migrate']["v{$t['version']}"]) && (empty($updates[$t['module_id']]) || $mod_v > $updates[$t['module_id']])) {
+                        $updates[$t['module_id']] = $mod_v;
                     }
                 }
             }
@@ -2103,7 +2083,7 @@ class InstallModule extends Db {
                 $Inf = unserialize($val['install_info']);
                 $names[$Inf['install']['module_id']] = $Inf['install']['module_name'];
                 $version = $Inf['install']['version'];
-                $Inf = $Inf['install']['dependent_modules'];
+                $Inf = !empty($Inf['install']['dependent_modules']) ? $Inf['install']['dependent_modules'] : array();
                 $tmp = array();
                 //достаем зависимости
                 if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
@@ -2181,6 +2161,133 @@ class InstallModule extends Db {
 
         return $deps;
     }
+
+
+    /**
+     * выполнение проверок перед копированием файлов модуля
+     *
+     * @param   string  $dir    Директория откуда копируем
+     * @param   string  $dirTo  Директория куда копируем
+     *
+     * @return  void
+     */
+    private function checksBeforeCopyFiles($dir, $dirTo) {
+        //сварниваем эталонные кэши файлов с имеющимися
+        $compare = array();
+        if (file_exists($dirTo)) {
+            $dirhash    = $this->extractHashForFiles($dirTo);
+            $etalonHash = unserialize($this->mData['files_hash']);
+            $dirToArr = explode("/", $dirTo);
+            if (!empty($dirToArr[3])) {
+                for ($i = 3; $i < count($dirToArr); $i++) {
+                    $etalonHash = $etalonHash[$dirToArr[$i]]['cont'];
+                }
+            }
+            $compare    = $this->compareFilesHash($dirhash, $etalonHash);
+        }
+        //првоеряем возможность записи и замены имеющихся файлов
+        $cdir = scandir($dir);
+        foreach ($cdir as $key => $value) {
+            if (!in_array($value, array(".", "..", "install"))) {
+                $path   = $dir . DIRECTORY_SEPARATOR . $value;
+                $pathTo = $dirTo . DIRECTORY_SEPARATOR . $value;
+                if (is_dir($path)) {//папка
+                    if (is_writable($dirTo)) {
+                        if (is_dir($pathTo)) {
+                            $this->checksBeforeCopyFiles($path, $pathTo);
+                        }
+                    } else {
+                        $this->copyFilesInfo['error'][] = $pathTo;
+                    }
+                } else {//файл
+                    if (is_writable($dirTo)) {
+                        //если файл изменен или отсутствует, то его надо перезаписать
+                        if (!empty($compare[$value]) && ($compare[$value]['event'] == 'changed' || $compare[$value]['event'] == 'lost')) {
+                            if (file_exists($pathTo) && !is_writable($pathTo)) {
+                                $this->copyFilesInfo['error'][] = $pathTo;
+                            }
+                        }
+                    } else {
+                        $this->copyFilesInfo['error'][] = $pathTo;
+                    }
+                }
+            }
+        }
+        //сможем ли удалить лишние файлы
+        foreach ($compare as $fname => $f) {
+            if ($f['event'] == 'added') {
+                $pathTo = $dirTo . DIRECTORY_SEPARATOR . $fname;
+                $this->checksBeforeDeleteFiles($pathTo);
+            }
+        }
+    }
+
+
+    /**
+     * Копируем файлы, исли в проверке небыло ошибок
+     *
+     * @param   string  $dir    Директория откуда копируем
+     * @param   string  $dirTo  Директория куда копируем
+     *
+     * @return  void
+     */
+    private function checkAndCopyFiles($dir, $dirTo) {
+        //сперва прогоняем проверки, потом выполняем копирование
+        $this->checksBeforeCopyFiles($dir, $dirTo);
+
+        if (empty($this->copyFilesInfo) && empty($this->deleteFilesInfo)) {
+            //копируем файлы
+            $this->justCopyFiles($dir, $dirTo);
+        }
+    }
+
+
+    /**
+     * Проверка перед удалением файла или директории
+     *
+     * @param   string  $loc    Директория или файл
+     * @param   bool  $is_delete_root
+     *
+     * @return  void
+     */
+    public function checksBeforeDeleteFiles ($loc, $is_delete_root = true){
+        if (file_exists($loc)) {
+            if (is_writeable($loc)) {
+                if (is_dir($loc)) { //если папка
+                    $d = opendir($loc);
+                    while ($f=readdir($d)){
+                        if($f != "." && $f != ".."){
+                            if (is_dir($loc . "/" . $f)) {
+                                $this->checksBeforeDeleteFiles($loc."/".$f);
+                            }
+                        }
+                    }
+                }
+            } else {
+                $this->deleteFilesInfo['is_not_writeable'][] = $loc;
+            }
+        } else {
+            $this->deleteFilesInfo['not_exists'][] = $loc;
+        }
+    }
+
+
+    /**
+     * Проверяем, и если все ок, то удаляем файлы
+     *
+     * @param      $loc  Директория или файл
+     * @param bool $is_delete_root
+     */
+    private function checkAndDeleteFiles($loc, $is_delete_root = true){
+        //сперва прогоняем проверки, потом выполняем копирование
+        $this->checksBeforeDeleteFiles($loc, $is_delete_root);
+
+        if (empty($this->deleteFilesInfo)) {
+            //копируем файлы
+            $this->justDeleteFiles($loc, $is_delete_root);
+        }
+    }
+
 
 
 }

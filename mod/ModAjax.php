@@ -582,12 +582,7 @@ class ModAjax extends ajaxFunc {
      */
     private function sendUserInformation($dataNewUser, $isUpdate = 0) {
 
-		$dataUser = $this->db->fetchRow("
-		    SELECT lastname, firstname, middlename
-			FROM core_users AS cu
-			    LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
-			WHERE cu.u_id = '" . $this->auth->ID . "'"
-		);
+		$dataUser = $this->dataUsersProfile->getFIO($this->auth->ID);
 
 		if ($dataUser) {
             $from = array($dataUser['email'],  $dataUser['lastname'] . ' ' . $dataUser['firstname']);
@@ -604,8 +599,8 @@ class ModAjax extends ajaxFunc {
         	Для входа введите в строке адреса: http://{$_SERVER["SERVER_NAME"]}<br/>
         	Или перейдите по ссылке <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a><br/>";
 		}
-        $body .= "Ваш логин: '{$dataNewUser['u_login']}'<br/>";
-        $body .= "Ваш пароль: '{$dataNewUser['u_pass']}'<br/>";
+        $body .= "Ваш логин: <b>{$dataNewUser['u_login']}</b><br/>";
+        $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b><br/>";
         $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Профиль\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
 
 

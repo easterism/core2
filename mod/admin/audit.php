@@ -83,7 +83,7 @@ if ($tab->activeTab == 1) {
         $data = $this->db->fetchAll("SELECT module_id, m_name FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
 
         foreach ($data as $val) {
-            $dirhash    = $install->extractHashForFiles("mod/{$val['module_id']}");
+            $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));
             $dbhash     = $install->getFilesHashFromDb($val['module_id']);
             $compare    = $install->compareFilesHash($dirhash, $dbhash);
             if (!empty($compare)) {
@@ -137,7 +137,7 @@ if ($tab->activeTab == 1) {
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
                             ->subject('Обнаружены изменения в структуре модуля')
-                            ->body("Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
+                            ->body("<b>{$server}:</b> Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
                             $install->addNotice("", $answer['error'], "Уведомление не отправлено", "danger");

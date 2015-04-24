@@ -91,13 +91,13 @@ class Common extends Acl {
 					}
 
 					$cl              = ucfirst($k) . 'Controller';
-					$controller_path = $location . '/' . $cl . '.php';
+					$controller_file = $location . '/' . $cl . '.php';
 
-					if (!file_exists($controller_path)) {
+					if (!file_exists($controller_file)) {
 						throw new Exception("Модуль \"{$module}\" сломан. Не найден файл контроллера.");
 					}
 
-					require_once($controller_path);
+					require_once($controller_file);
 
 					if (!class_exists($cl)) {
 						throw new Exception("Модуль \"{$module}\" сломан. Не найден класс контроллера.");
@@ -110,6 +110,22 @@ class Common extends Acl {
 					throw new Exception("Модуль \"{$module}\" не найден");
 				}
 			}
+
+			// Получение экземпляра плагина для указанного модуля
+			elseif (strpos($k, 'plugin') === 0) {
+                $plugin = ucfirst(substr($k, 6));
+                $module = $this->module;
+                $location = $this->getModuleLocation($this->module);
+                $plugin_file = "{$location}/Plugins/{$plugin}.php";
+                if (!file_exists($plugin_file)) {
+                    throw new Exception("Плагин \"{$plugin}\" не найден.");
+                }
+                require_once("CommonPlugin.php");
+                require_once($plugin_file);
+                $temp = "\\" . $module . "\\Plugins\\" . $plugin;
+                $v = $this->{$k} = new $temp();
+                $v->setModule($this->module);
+            }
 
 			// Получение экземпляра api класса указанного модуля
 			elseif (strpos($k, 'api') === 0) {
