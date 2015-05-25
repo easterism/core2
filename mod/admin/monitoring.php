@@ -68,7 +68,7 @@ $tab->beginContainer($title);
 			$list->showTable();
 		}
 	}
-	elseif ($tab->activeTab == 2) {
+	elseif ($tab->activeTab == 2) { // История посещений
 		if (!empty($_GET['show'])) {
 			$show = (int)$_GET['show'];
 			$res = $this->db->fetchRow("SELECT u_login, up.lastname, up.firstname, up.middlename
@@ -133,7 +133,7 @@ $tab->beginContainer($title);
 			$list->showTable();
 		}
 	}
-	elseif ($tab->activeTab == 3) { // Мониторинг
+	elseif ($tab->activeTab == 3) { // Системный журнал
 		if (!empty($_GET['show'])) {			
 			$edit = new editTable($this->resId . 'xxx3');
 			$res = $this->db->fetchRow("SELECT action, request_method, remote_port, query
@@ -148,7 +148,7 @@ $tab->beginContainer($title);
 			$edit->addControl("Порт:", "CUSTOM", $res['remote_port']);
 			$edit->addControl("Данные запроса:", "CUSTOM", $req);
 			$edit->addButton("Закрыть", "load('$app&tab_{$this->resId}=3')");
-			$edit->noSave = 'yes';
+			$edit->readOnly = true;
 			$edit->showTable();
 		} else {			
 			function trimAction($data) {

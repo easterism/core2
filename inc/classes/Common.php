@@ -15,11 +15,14 @@ class Common extends Acl {
     );
 	
 	public function __construct() {
+        $child = get_class($this);
+        $child = strpos($child, "Controller") ? substr($child, 3, -10) : '';
 		parent::__construct();
-		$this->module = !empty($_GET['module']) ? $_GET['module'] : '';
-		$this->path = 'mod/' . $this->module . '/';
-		$this->auth = Zend_Registry::get('auth');
-		$this->resId = $this->module;
+        if ($child) $this->module = strtolower($child);
+		else $this->module = !empty($_GET['module']) ? $_GET['module'] : '';
+        $this->path      = 'mod/' . $this->module . '/';
+        $this->auth      = Zend_Registry::get('auth');
+        $this->resId     = $this->module;
 		$this->actionURL = "?module=" . $this->module;
 		if (!empty($_GET['action']) && $_GET['action'] != 'index') {
 			$this->resId .= '_' . $_GET['action'];
@@ -50,7 +53,7 @@ class Common extends Acl {
 			$v = $this->_p[$k];
 		} else {
 			//исключение для герета базы или кеша, выполняется всегда
-			if ($k == 'db' || $k == 'cache') {
+			if ($k == 'db' || $k == 'cache' || $k == 'translate') {
 				return parent::__get($k);
 			}
 			// Получение экземпляра класса для работы с правами пользователей

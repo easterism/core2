@@ -615,7 +615,7 @@ class editTable extends initEdit {
 								}
 
 								//$this->MCEConf['document_base_url'] = "/" . trim(VPATH, "/") . "/";
-								$mce_params = Zend_Json::encode($this->MCEConf);
+								$mce_params = json_encode($this->MCEConf);
 
 								$id = "template_content" . $this->main_table_id . $key;
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
@@ -658,7 +658,7 @@ class editTable extends initEdit {
 									if (is_array($row[1])) {
 										$row[1] = $row[1]['value'];
 									}
-									$controlGroups[$cellId]['html'][$key] .= " onclick=\"radioClick(this)\" {$attrs} />{$row[1]}</label>&nbsp;&nbsp;";
+									$controlGroups[$cellId]['html'][$key] .= " onclick=\"edit.radioClick(this)\" {$attrs} />{$row[1]}</label>&nbsp;&nbsp;";
 								}
 							}
 							$select++;

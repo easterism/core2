@@ -52,12 +52,12 @@ class CoreController extends Common {
         try {
             $changedMods = $this->checkModulesChanges($install);
             if (empty($changedMods)) {
-                echo '<h3>Система работает в штатном режиме.</h3>';
+                echo '<h3>' . $this->translate->tr("Система работает в штатном режиме.") . '</h3>';
             } else {
                 echo '<h3 style="color: red;">Обнаружены изменения в файлах модулей: ' . implode(", ", $changedMods) . '</h3>';
             }
         } catch (Exception $e) {
-            $install->addNotice("Аудит файлов модулей", $e->getMessage(), "Ошибка", "danger");
+            $install->addNotice($this->translate->tr("Аудит файлов модулей"), $e->getMessage(), $this->translate->tr("Ошибка"), "danger");
         }
 
         $html = $install->printNotices();
@@ -115,13 +115,13 @@ class CoreController extends Common {
 		$errorNamespace = new Zend_Session_Namespace('Error');
 		$blockNamespace = new Zend_Session_Namespace('Block');
 		if (!empty($_POST['js_disabled'])) {
-			$errorNamespace->ERROR = "Javascript выключен или ваш браузер его не поддерживает!";
+			$errorNamespace->ERROR = $this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!");
 			Header("Location: index.php");
 			die;
 		}
 		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
-			$errorNamespace->ERROR = "Ваш доступ временно заблокирован!";
+			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		} else {
 			try {
 				$db = Zend_Db::factory($this->config->database);
@@ -174,15 +174,15 @@ class CoreController extends Common {
 						break;
 						
 						case LdapAuth::ST_LDAP_INVALID_PASSWORD :
-							$this->setError($errorNamespace, $blockNamespace, "Неверный пароль или пользователь отключён");
+							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Неверный пароль или пользователь отключён"));
 						break;
 						
 						case LdapAuth::ST_ERROR :
-							$this->setError($errorNamespace, $blockNamespace, "Ошибка LDAP: " . $ldapAuth->getMessage());
+							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Ошибка LDAP: ") . $ldapAuth->getMessage());
 						break;
 						
 						default:
-							$this->setError($errorNamespace, $blockNamespace, "Неизвестная ошибка авторизации по LDAP");
+							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Неизвестная ошибка авторизации по LDAP"));
 						break;
 					}
 
@@ -215,7 +215,7 @@ class CoreController extends Common {
 				}
 
 				if ($res['u_pass'] !== $md5_pass) {
-					$errorNamespace->ERROR = "Неверный пароль";
+					$errorNamespace->ERROR = $this->translate->tr("Неверный пароль");
 					$errorNamespace->TMPLOGIN = $res['u_login'];
 					
 					//$errorNamespace->setExpirationHops(1, 'ERROR');
@@ -228,7 +228,7 @@ class CoreController extends Common {
 						$authNamespace->setExpirationSeconds($sLife, "accept_answer");
 					}
 					if (session_id() == 'deleted') {
-						$errorNamespace->ERROR = "Ошибка сохранения сессии. Проверьте настройки системного времени.";
+						$errorNamespace->ERROR = $this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени.");
 						$errorNamespace->TMPLOGIN = $res['u_login'];
 					}
 					$authNamespace->ID 		= (int) $res['u_id'];
@@ -249,7 +249,7 @@ class CoreController extends Common {
 					$sign = '#';
 				}
 			} else {
-				$errorNamespace->ERROR = "Нет такого пользователя";
+				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");
 				//$errorNamespace->setExpirationHops(1, 'ERROR');
 			}			
 			$this->processError($errorNamespace, $blockNamespace);
@@ -304,7 +304,7 @@ class CoreController extends Common {
 	public function action_switch(){
 		try {
 			if (!isset($_POST['data'])) {
-				throw new Exception('Произошла ошибка! Не удалось получить данные');
+				throw new Exception($this->translate->tr('Произошла ошибка! Не удалось получить данные'));
 			}
 
 			$res = explode('.', $_POST['data']);
@@ -339,13 +339,13 @@ class CoreController extends Common {
     {
         $sess       = new Zend_Session_Namespace('List');
         $resource   = $params['res'];
-        if (!$resource) throw new Exception("Не удалось определить идентификатор ресурса", 13);
-        if (!$params['id']) throw new Exception("Нет данных для удаления", 13);
+        if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
+        if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
         $ids        = explode(",", $params['id']);
         $deleteKey  = $sess->$resource->deleteKey;
-        if (!$deleteKey) throw new Exception("Не удалось определить параметры удаления", 13);
+        if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
         list($table, $refid) = explode(".", $deleteKey);
-        if (!$table || !$refid) throw new Exception("Не удалось определить параметры удаления", 13);
+        if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
@@ -369,7 +369,7 @@ class CoreController extends Common {
                 }
                 if ($authorOnly) {
                     if ($noauthor) {
-                        throw new Exception("Данные не содержат признака автора!");
+                        throw new Exception($this->translate->tr("Данные не содержат признака автора!"));
                     } else {
                         $auth = Zend_Registry::get('auth');
                     }
@@ -476,10 +476,10 @@ class CoreController extends Common {
 
 			try {
 				if (empty($supportFormModule)) {
-					throw new Exception('Выберите модуль.');
+					throw new Exception($this->translate->tr('Выберите модуль.'));
 				}
 				if (empty($supportFormMessage)) {
-					throw new Exception('Введите текст сообщения.');
+					throw new Exception($this->translate->tr('Введите текст сообщения.'));
 				}
 
 				$dataUser = $this->db->fetchRow("
@@ -509,7 +509,7 @@ class CoreController extends Common {
                         ->send();
 
                     if (isset($result['error'])) {
-                        throw new Exception('Не удалось отправить сообщение');
+                        throw new Exception($this->translate->tr('Не удалось отправить сообщение'));
                     } else {
                         echo json_encode(array());
                     }
@@ -847,7 +847,7 @@ class CoreController extends Common {
             ->send();
 
   	    if (!$result) {
-  	    	throw new Exception('Не удалось отправить сообщение пользователю');
+  	    	throw new Exception($this->translate->tr('Не удалось отправить сообщение пользователю'));
   	    }
 	}
 
@@ -891,7 +891,7 @@ class CoreController extends Common {
             $install->addNotice("", "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
         }
         if (!$server) {
-            $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
+            $install->addNotice("", "Не задан 'host' в conf.ini", $this->translate->tr("Отправка уведомлений отключена"), "info2");
         }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");

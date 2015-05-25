@@ -604,36 +604,48 @@ $sid = session_id();
 
 
         //проверяем заданы ли ссылки на репозитории
+        $s_id = $this->db->fetchOne("
+            SELECT id
+            FROM core_settings
+            WHERE `code` = 'repo'
+            LIMIT 1
+        ");
+        if (empty($s_id)) {
+            $this->db->insert('core_settings', array(
+                'code'           => 'repo',
+                'type'           => 'text',
+                'system_name'    => 'Адреса репозиториев для загрузки модулей',
+                'value'    		 => '',
+                'visible'        => 'Y',
+                'is_custom_sw'   => 'Y',
+                'is_personal_sw' => 'N'
+            ));
+            $s_id = $this->db->lastInsertId("core_settings");
+        }
         $mod_repos = $this->getSetting('repo');
 		if (empty($mod_repos)) {
-			$s_id = $this->db->fetchOne("
-                SELECT id
-                FROM core_settings
-                WHERE `code` = 'repo'
-                LIMIT 1
-            ");
-
-			if (!$s_id) {
-				$this->db->insert('core_settings', array(
-					'code'           => 'repo',
-					'type'           => 'text',
-					'system_name'    => 'Репозиторий',
-					'value'    		 => 'http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY',
-					'visible'        => 'Y',
-					'is_custom_sw'   => 'N',
-					'is_personal_sw' => 'N'
-				));
-			}
 
 			echo
 			"<div class=\"im-msg-yellow\">
 				Устоновка модулей из репозитория недоступна<br>
 				<span>
-					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY)
-					<a href=\"javascript:load('index.php?module=admin&action=settings&loc=core&edit=yes')\">Указать</a>
+					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
+					<br>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
-		}
+
+		} else {
+            echo
+            "<div class=\"im-msg-blue\">
+				Репозитории<br>
+				<span>
+					Для работы с репозиториями используется параметр \"repo\", в котором находяться адреса репозиториев (с регистрацией в репозитории http://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации http://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
+					<br>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+				</span>
+			</div>";
+        }
         $mod_repos = explode(";", $mod_repos);
 
 

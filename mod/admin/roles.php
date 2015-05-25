@@ -65,7 +65,7 @@ $tab->beginContainer("Роли и доступ");
 			}
 			$html .= '</table>';
 			if ($_GET['edit']) {
-				$acl = Zend_Json::encode(unserialize($this->dataRoles->find($_GET['edit'])->current()->access));
+				$acl = json_encode(unserialize($this->dataRoles->find($_GET['edit'])->current()->access));
 				 				
 				$html .= '<script>ro.setDefault(' . $acl . ')</script>';
 			} else {

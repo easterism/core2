@@ -112,10 +112,26 @@ class InstallModule extends Db {
 
 
     /**
+     * свое подключение к ДБ для отображения ошибок
+     *
+     */
+    public $db;
+
+
+    /**
      *
      */
     function __construct() {
         parent::__construct();
+
+        //делаем свое подключение к БД и включаем отображение исключений
+        $db = Zend_Db::factory($this->config->database);
+        Zend_Db_Table::setDefaultAdapter($db);
+        $db->getConnection();
+        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+        $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $this->db = $db;
     }
 
 
@@ -525,9 +541,13 @@ class InstallModule extends Db {
         $file = $this->mInfo['install']['sql'];//достаём имя файла со структурой
         $sql = file_get_contents($this->tempDir . "/install/" . $file);//достаём из файла структуру
         if (!empty($sql)) {
-            $sql = str_replace("#__", "mod_" . $this->mInfo['install']['module_id'], $sql);//готовим
+            $sql = $this->SQLPrepareToExecute($sql);//готовим
             if ($this->checkSQL($sql)) {
-                $this->db->query($sql);//ставим
+                //разбиваем запросы на отдельные
+                $sql = $this->SQLToQueriesArray($sql);
+                foreach ($sql as $qu) {
+                    $this->db->query($qu);//выполняем
+                }
                 $this->addNotice("Таблицы модуля", "Таблицы добавлены", "Успешно", "info");
             } else {
                 throw new Exception("Попытка удаления таблиц не относящихся к модулю!");
@@ -555,11 +575,15 @@ class InstallModule extends Db {
         if (empty($sql)) {
             return false;
         } else {
-            $sql = str_replace("#__", "mod_" . $this->mInfo['install']['module_id'], $sql);//готовим
+            $sql = $this->SQLPrepareToExecute($sql);//готовим
             if (!$this->checkSQL($sql)) {
                 throw new Exception("Попытка удаления таблиц не относящихся к модулю!");
             }
-            $this->db->query($sql);
+            //разбиваем запросы на отдельные
+            $sql = $this->SQLToQueriesArray($sql);
+            foreach ($sql as $qu) {
+                $this->db->query($qu);//выполняем
+            }
             $this->addNotice("Таблицы модуля", "Таблицы добавлены", "Успешно", "info");
         }
         return true;
@@ -819,7 +843,7 @@ class InstallModule extends Db {
     public function getUninstallSQL() {
         $sql = file_get_contents($this->tempDir . "/install/" . $this->mInfo['uninstall']['sql']);
         if (!empty($sql)) {
-            $sql = str_replace("#__", "mod_" . $this->mInfo['install']['module_id'], $sql);
+            $sql = $this->SQLPrepareToExecute($sql);
             if ($this->checkSQL($sql)) {
                 return $sql;
             } else {
@@ -1613,9 +1637,13 @@ class InstallModule extends Db {
                 if ($is_used_by_other_modules === false) {
                     //Удаляем таблицы модуля
                     if (!empty($mInfo['uninstall'])) {
-                        $sql = str_replace('#__', 'mod_' . $mInfo['module_id'], $mInfo['uninstall']);
+                        $sql = $this->SQLPrepareToExecute($mInfo['uninstall']);
                         if ($this->checkSQL($sql)) {
-                            $this->db->query($sql);
+                            //разбиваем запросы на отдельные
+                            $sql = $this->SQLToQueriesArray($sql);
+                            foreach ($sql as $qu) {
+                                $this->db->query($qu);//выполняем
+                            }
                             $this->addNotice("Таблицы модуля", "Удаление таблиц", "Выполнено", "info");
                         } else {
                             $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю!", "warning");
@@ -2289,5 +2317,92 @@ class InstallModule extends Db {
     }
 
 
+    /**
+     * подготавливаем к выполнению SQL
+     *
+     * @param $sql
+     *
+     * @return mixed
+     */
+    private function SQLPrepareToExecute($sql){
+        $sql = str_replace("#__", "mod_" . $this->mInfo['install']['module_id'], $sql);
+        $sql = str_replace("%MODULE_ID%", $this->mInfo['install']['module_id'], $sql);
+        return $sql;
+    }
 
+
+    /**
+     * разбиваем SQL на запросы и отдаем в массиве
+     *
+     * @param $sql
+     *
+     * @return mixed
+     */
+    private function SQLToQueriesArray($sql){
+        $sql = explode(';', $sql);
+        $queries = array();
+        foreach ($sql as $qu) {
+            $tmp = str_replace(array(" ", "\r\n", "\n"), '', $qu);
+            if(!empty($tmp)) {
+                $queries[] = $qu;
+            }
+        }
+        return $queries;
+    }
+
+
+    /**
+     * проверяем SQL на синтаксические ошибки
+     *
+     * @param $sql
+     *
+     * @throws Exception
+     */
+    public function SQLСheckingSyntax($sql) {
+        //заменяем "служебные слова"
+        $sql = $this->SQLPrepareToExecute($sql);
+        //разбираем на запросы
+        $sql = $this->SQLToQueriesArray($sql);
+        //проверяем каждый запрос отдельно
+        $errors = array();
+        foreach ($sql as $qu) {
+            try {
+                $this->db->prepare($qu);
+            }
+            catch (Exception $e) {
+                $errors[] = $e->getMessage();
+            }
+        }
+        if (!empty($errors)) {
+            throw new Exception(implode("<br>", $errors));
+        }
+    }
+
+
+    /**
+     * задаем свой $mInfo
+     *
+     * @param $mInfo
+     */
+    public function setMInfo($mInfo) {
+        $this->mInfo = $mInfo;
+    }
+
+
+
+    public function getFilesList($dir) {
+        $cdir = scandir($dir);
+        $files = array();
+        foreach ($cdir as $key => $value) {
+            if (!in_array($value, array(".", ".."))) {
+                $path   = $dir . DIRECTORY_SEPARATOR . $value;
+                if (is_dir($path)) {
+                    $files = array_merge($files, $this->getFilesList($path));
+                } else {
+                    $files[] = $path;
+                }
+            }
+        }
+        return $files;
+    }
 }

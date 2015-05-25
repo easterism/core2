@@ -12,6 +12,7 @@ class Db {
 	);
 	protected $backendOptions = array();
 	protected $backend = 'File';
+    private $_s = array();
 
 	public function __construct($config = null) {
 		if (is_null($config)) {
@@ -52,6 +53,16 @@ class Db {
 			} else {
 				$v = $reg->get($k);
 			}
+			return $v;
+		}
+		// Получение перевода
+		if ($k == 'translate') {
+            if (array_key_exists($k, $this->_s)) {
+                $v = $this->_s[$k];
+            } else {
+                $v = Zend_Registry::get('translate');
+                $this->_s[$k] = $v;
+            }
 			return $v;
 		}
 	}
@@ -435,6 +446,8 @@ class Db {
                         $loc = "mod/{$module_id}";
                     }
                 }
+            } elseif ($module_id == 'admin') {
+                $loc = "core2/mod/admin";
             } else {
                 throw new Exception("Module does not exists", 404);
             }

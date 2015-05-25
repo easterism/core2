@@ -73,7 +73,20 @@ if ($tab->activeTab == 1) {
         $admin_email = $this->getSetting('admin_email');
 
         if (!$admin_email) {
-            $install->addNotice("", "Создайте дополнительный параметр 'admin_email' с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
+            $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
+            if (empty($id)) {
+                $this->db->insert(
+                    "core_settings",
+                    array(
+                        'system_name'   => 'Email для уведомлений от аудита системы',
+                        'code'          => 'admin_email',
+                        'is_custom_sw'  => 'Y',
+                        'visible'       => 'Y'
+                    )
+                );
+                $id = $this->db->lastInsertId("core_settings");
+            }
+            $install->addNotice("", "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
         }
         if (!$server) {
             $install->addNotice("", "Не задан 'host' в conf.ini", "Отправка уведомлений отключена", "info2");
@@ -87,7 +100,6 @@ if ($tab->activeTab == 1) {
             $dbhash     = $install->getFilesHashFromDb($val['module_id']);
             $compare    = $install->compareFilesHash($dirhash, $dbhash);
             if (!empty($compare)) {
-//                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
                 $is_puchkom = 0;
                 $val[2] = array();
 
@@ -95,7 +107,7 @@ if ($tab->activeTab == 1) {
                 foreach ($br as $type=>$branch) {
                     foreach ($branch as $n=>$f) {
                         if ($type != 'lost') {
-                            $file = "mod/{$val['module_id']}/" . $f;
+                            $file = $this->getModuleLocation($val['module_id']) . "/" . $f;
                             $date = date("d.m.Y H:i:s", filemtime($file));
                             $br[$type][$n] = "{$file} (изменён {$date})";
                         }

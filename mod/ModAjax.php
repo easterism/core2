@@ -424,6 +424,7 @@ class ModAjax extends ajaxFunc {
 			}
 			$refid = $this->getSessFormField($data['class_id'], 'refid');
 			if ($refid == 0) {
+                $update = false;
 				$dataForSave['u_login'] = trim($data['control']['u_login']);
 				$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
 				$this->db->insert('core_users', $dataForSave);
@@ -439,6 +440,7 @@ class ModAjax extends ajaxFunc {
                             ФИО: {$lastname} {$firstname} {$middlename}")
                     ->send();
 			} else {
+                $update = true;
 				$where = $this->db->quoteInto('u_id = ?', $refid);
 				$this->db->update('core_users', $dataForSave, $where);
 			}
@@ -459,7 +461,7 @@ class ModAjax extends ajaxFunc {
 				$row->save();
 			}
 			if ($send_info_sw) {
-				$this->sendUserInformation($data['control'], $refid);
+				$this->sendUserInformation($data['control'], $update);
 			}
 
 			$this->db->commit();
@@ -591,16 +593,17 @@ class ModAjax extends ajaxFunc {
 		}
 
         $body  = "";
-        $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>.<br/>";
+        $crlf = "<br>";
+        $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>." . $crlf;
 		if ($isUpdate) {
-			$body .= "Ваш профиль на портале {$_SERVER["SERVER_NAME"]} был обновлен.<br/>";
+			$body .= "Ваш профиль на портале <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a> был обновлен." . $crlf;
 		} else {
-        	$body .= "Вы зарегистрированы на портале {$_SERVER["SERVER_NAME"]}<br/>
-        	Для входа введите в строке адреса: http://{$_SERVER["SERVER_NAME"]}<br/>
-        	Или перейдите по ссылке <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a><br/>";
+        	$body .= "Вы зарегистрированы на портале {$_SERVER["SERVER_NAME"]}{$crlf}
+        	Для входа введите в строке адреса: http://{$_SERVER["SERVER_NAME"]}{$crlf}
+        	Или перейдите по ссылке <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
 		}
-        $body .= "Ваш логин: <b>{$dataNewUser['u_login']}</b><br/>";
-        $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b><br/>";
+        $body .= "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
+        $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
         $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Профиль\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
 
 
@@ -663,10 +666,84 @@ class ModAjax extends ajaxFunc {
                     $readme = file_get_contents($destinationFolder . "/readme.txt");
                 }
                 $xmlObj = simplexml_load_file($destinationFolder . "/install/install.xml", 'SimpleXMLElement', LIBXML_NOCDATA);
-                //echo "<PRE>";print_r($xmlObj);echo "</PRE>";die;
+
+
+                //проверяем все SQL и PHP файлы на ошибки
+                $inst = new InstallModule();
+                $mInfo = array();
+                $mInfo['install']['module_id'] = $xmlObj->install->module_id;
+                $inst->setMInfo($mInfo);
+                $errors = array();
+                $filesList = $inst->getFilesList($destinationFolder);
+                foreach ($filesList as $path) {
+                    $fName = substr($path, strripos($path, '/') + 1);
+                    //проверка файлов php
+                    if (substr_count($fName, ".php"))
+                    {
+                        $path_php = $this->getPHPPath();
+                        $tmp = exec("{$path_php} -l {$path}");
+                        if (substr_count($tmp, 'Errors parsing')) {
+                            $errors['php'][] = " - Ошибки в '{$fName}': Errors parsing";
+                        }
+                    }
+                    //проверка файлов sql
+                    elseif (substr_count($fName, ".sql"))
+                    {
+                        $sql = file_get_contents($path);
+                        try {
+                            $inst->SQLСheckingSyntax($sql);
+                        }
+                        catch (Exception $e) {
+                            $errors['sql'][] = " - Ошибки в '{$fName}':<br>" . $e->getMessage();
+                        }
+                    }
+                }
+                //проверка наличия подключаемых файлов
+                if (!empty($xmlObj->install->sql)) {
+                    $path = $destinationFolder . "/install/" . $xmlObj->install->sql;
+                    if (!file_exists($path)) {
+                        $errors['sql'][] = ' - Не найден указанный файл в install.xml: ' . $xmlObj->install->sql;
+                    }
+                }
+                if (!empty($xmlObj->uninstall->sql)) {
+                    $path = $destinationFolder . "/install/" . $xmlObj->uninstall->sql;
+                    if (!file_exists($path)) {
+                        $errors['sql'][] = ' - Не найден указанный файл в install.xml: ' . $xmlObj->uninstall->sql;
+                    }
+                }
+                if (!empty($xmlObj->migrate)) {
+                    $migrate = $inst->xmlParse($xmlObj->migrate);
+                    foreach ($migrate as $m) {
+                        //проверка подключаемых файлов php
+                        if (!empty($m['php'])) {
+                            $path = $destinationFolder . "/install/" . $m['php'];
+                            if (!file_exists($path)) {
+                                $errors['php'][] = ' - Не найден указанный файл в install.xml: ' . $m['php'];
+                            }
+                        }
+                        //проверка подключаемых файлов sql
+                        if (!empty($m['sql'])) {
+                            $path = $destinationFolder . "/install/" . $m['sql'];
+                            if (!file_exists($path)) {
+                                $errors['sql'][] = ' - Не найден указанный файл в install.xml: ' . $m['sql'];
+                            }
+                        }
+                    }
+                }
+                //проверка подключаемых файлов php
+                if (!empty($xmlObj->install->php)) {
+                    $path = $destinationFolder . "/install/" . $xmlObj->install->php;
+                    if (!file_exists($path)) {
+                        $errors['php'][] = ' - Не найден указанный файл в install.xml: ' . $xmlObj->install->php;
+                    }
+                }
+                //ошибки проверки sql и php
+                if (!empty($errors)) {
+                    $text = (!empty($errors['php']) ? implode('<br>', $errors['php']) : "") . (!empty($errors['sql']) ? ("<br>" . implode('<br>', $errors['sql'])) : "");
+                    throw new Exception($text);
+                }
 
                 //получаем хэш для файлов модуля
-                $inst = new InstallModule();
                 $files_hash = $inst->extractHashForFiles($destinationFolder);
                 if (empty($files_hash)) {
                     throw new Exception("Не удалось получить хэшь файлов модуля");
@@ -727,5 +804,21 @@ class ModAjax extends ajaxFunc {
     }
 
 
+
+    /**
+     * путь к PHP
+     */
+    private function getPHPPath() {
+
+        $php_path = $this->moduleConfig->php_path;
+
+        if (empty($php_path)) {
+            $system_php_path = exec('which php');
+            if ( ! empty($system_php_path)) {
+                $php_path = $system_php_path;
+            }
+        }
+        return $php_path;
+    }
 
 }

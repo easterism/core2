@@ -87,7 +87,7 @@ var listx = {
 			currentText: 'Сегодня',
 			dateFormat: 'yy-mm-dd',
 			defaultDate: t,
-			buttonImage: 'core2/html/default/img/calendar.png',
+			buttonImage: 'core2/html/' + coreTheme + '/img/calendar.png',
 			buttonImageOnly: true,
 			showOn: "button",
 			onSelect: function (dateText, inst) {
@@ -257,29 +257,42 @@ var listx = {
 		if (val) {
 			if (val.length) {
 				if (confirm(text)) {
-					var post = {};
-					post[id + '_delete'] = val;
+					preloader.show();
+					$("#main_" + id + "_error").hide();
 					var container = '';
 					if (isAjax) var container = document.getElementById("list" + id).parentNode;
 					if (listx.loc[id]) {
-						load(listx.loc[id],
-							post, container,
-							function (data, textStatus) {
-								if (textStatus == 'success' && data.status == "ok") {
-
+						$.ajax({
+							method: "DELETE",
+							dataType: "json",
+							url: "index.php?res=" + id + "&id=" + val,
+							success: function (data) {
+								if (data == true) {
+									load(listx.loc[id], '', container);
 								} else {
-									if (data.status) {
-										$("#main_" + id + "_error").html(data.status);
+									if (!data || data.error) {
+										var msg = data.error ? data.error : "Не удалось выполнить удаление";
+										$("#main_" + id + "_error").html(msg);
 										$("#main_" + id + "_error").show();
+									} else {
+										if (data.alert) {
+											alert(data.alert);
+										}
+										if (data.loc) {
+											load(data.loc, '', container);
+										}
 									}
 								}
-								$("#preloader").hide();
 							}
-						);
+						}).fail(function () {
+							alert("Не удалось выполнить удаление");
+						}).always(function () {
+							preloader.hide();
+						});
 					}
 				}
 			} else {
-				alert('Нужно выбрать хотябы отдну запись')
+				alert('Нужно выбрать хотябы одну запись');
 			}
 		}
 	},

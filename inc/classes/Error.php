@@ -1,6 +1,6 @@
 <?
-header('Content-Type: text/html; charset=utf-8');
-require_once 'Tool.php';
+    require_once 'Tool.php';
+    require_once("Zend/Registry.php");
 
 class Error {
 
@@ -18,7 +18,6 @@ class Error {
 		} else {
 			if ($code == 13) {//ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
-
 			} else {
 				echo $msg;
 			}

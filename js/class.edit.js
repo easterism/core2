@@ -6,11 +6,6 @@ function lastFocus(f){
 
 //var isIE = window.navigator.userAgent.indexOf("MSIE")>-1;
 
-function radioClick(o) {
-	o.blur();
-	o.focus();
-}
-
 var edit = {
 	ev: {},
 	xfiles: {},
@@ -35,6 +30,10 @@ var edit = {
 				document.getElementById('date_' + id).value += ' ' + h + ':' + m;
 			}
 		}
+	},
+	radioClick : function(o) {
+		o.blur();
+		o.focus();
 	},
 	dateKeyup : function (id, obj) {
 		if (obj.id == id + '_day' && Number(obj.value) > 31) {
@@ -77,7 +76,7 @@ var edit = {
 			currentText: 'Сегодня',
 			dateFormat: 'yy-mm-dd',
 			defaultDate: t,
-			buttonImage: 'core2/html/default/img/calendar.png',
+			buttonImage: 'core2/html/' + coreTheme + '/img/calendar.png',
 			buttonImageOnly: true,
 			showOn: "button",
 			onSelect: function (dateText, inst) {
@@ -128,7 +127,7 @@ var edit = {
                 defaultDate: $('#date_' + cal).val().substr(0, 10),
                 hour: h,
                 minute: m,
-                buttonImage: 'core2/html/default/img/calendar.png',
+                buttonImage: 'core2/html/' + coreTheme + '/img/calendar.png',
                 buttonImageOnly: true,
                 showOn: "button",
                 onSelect: function (dateText, inst) {

@@ -448,16 +448,21 @@ class listTable extends initList {
 		$this->extraHeaders[] = $cols;
 	}
 
-	/**
+
+    /**
      * Сохранение служебных данных в сессии
-     * @param array $data
+     * @param string $key
+     * @param string $value
      */
-    private function setSessData($key, $value)
-    {
-        $sess_form       = new Zend_Session_Namespace('List');
-        $ssi             = $this->resource;
-        $sess_form->$ssi->$key = $value;
+    private function setSessData($key, $value) {
+        $sess_form = new Zend_Session_Namespace('List');
+        $ssi       = $this->resource;
+        //$sess_form->$ssi;
+        //if ($sess_form->$ssi !== null) {
+            $sess_form->$ssi->$key = $value;
+        //}
     }
+
 
 	/**
 	 * Create grid HTML
@@ -551,6 +556,9 @@ class listTable extends initList {
 				}
 
 				if ($value['type'] == 'text') {
+					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
+				}
+				elseif ($value['type'] == 'number') {
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'date') {
