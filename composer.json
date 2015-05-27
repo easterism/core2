@@ -12,6 +12,7 @@
       "role": "Developer"
     }
   ],
+  "minimum-stability": "dev",
   "require": {
     "php": ">=5.2.11",
     "mpdf/mpdf": "5.7.4",
