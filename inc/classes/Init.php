@@ -295,7 +295,7 @@ class Init extends Db {
 				if (method_exists($core, $action)) {
 					return $core->$action();
 				} else {
-					throw new Exception("No action");
+					throw new Exception($this->translate->tr("Субмодуль не существует"));
 				}
 
 			} else {
@@ -325,6 +325,9 @@ class Init extends Db {
 
 				if (empty($mods['sm_path'])) {
                     $location = $this->getModuleLocation($module); //определяем местоположение модуля
+                    if ($this->translate->isSetup()) {
+                        $this->translate->setupExtra($location);
+                    }
 
                     $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                     $this->requireController($location, $modController);
@@ -333,7 +336,7 @@ class Init extends Db {
 					if (method_exists($modController, $action)) {
 						return $modController->$action();
 					} else {
-						throw new Exception("No action", 404);
+						throw new Exception($this->translate->tr("Метод не существует"), 404);
 					}
 				} else {
 					header("Location: " . $mods['sm_path']);
@@ -398,7 +401,7 @@ class Init extends Db {
 			$tpl2->error->assign('[ERROR_MSG]', '');
 			$tpl2->assign('[ERROR_LOGIN]', '');
 		}
-		$config = Zend_Registry::getInstance()->get('config');
+		$config = Zend_Registry::get('config');
 		if (empty($config->ldap->active) || !$config->ldap->active) {
 			$tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
 		}
@@ -487,13 +490,13 @@ class Init extends Db {
 		//$xajax->registerFunction('post');
 		$xajax->processRequest();
 
-		$tpl = new Templater();
+		$tpl = new Templater2();
 		if (Tool::isMobileBrowser()) {
 			$tpl->loadTemplate("core2/html/" . THEME . "/indexMobile2.tpl");
-			$tpl2 = new Templater("core2/html/" . THEME . "/menuMobile.tpl");
+			$tpl2 = new Templater2("core2/html/" . THEME . "/menuMobile.tpl");
 		} else {
 			$tpl->loadTemplate("core2/html/" . THEME . "/index2.tpl");
-			$tpl2 = new Templater("core2/html/" . THEME . "/menu.tpl");
+			$tpl2 = new Templater2("core2/html/" . THEME . "/menu.tpl");
 		}
 		$tpl->assign('{system_name}', $this->getSystemName());
 
@@ -541,12 +544,12 @@ class Init extends Db {
 								ORDER BY sm.seq
 							  ");
 		if ($this->auth->ADMIN || $this->auth->NAME === 'root') {
-			$mods[] = array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 			'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'modules', 'loc' => 'core');
+			$mods[] = array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'modules', 'loc' => 'core');
 			$mods[] = array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 	'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'settings', 'loc' => 'core');
-			$mods[] = array('sm_id' => -3, 'sm_name' => $this->translate->tr('Справочники'),		'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'enum', 'loc' => 'core');
+			$mods[] = array('sm_id' => -3, 'sm_name' => $this->translate->tr('Справочники'),	'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'enum', 'loc' => 'core');
 			$mods[] = array('sm_id' => -4, 'sm_name' => $this->translate->tr('Пользователи'), 	'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'users', 'loc' => 'core');
 			$mods[] = array('sm_id' => -5, 'sm_name' => $this->translate->tr('Роли'), 			'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'roles', 'loc' => 'core');
-			$mods[] = array('sm_id' => -6, 'sm_name' => $this->translate->tr('Мониторинг'), 		'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'monitoring', 'loc' => 'core');
+			$mods[] = array('sm_id' => -6, 'sm_name' => $this->translate->tr('Мониторинг'), 	'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'monitoring', 'loc' => 'core');
 			$mods[] = array('sm_id' => -7, 'sm_name' => $this->translate->tr('Аудит'), 			'm_id' => '-1', 'module_id' => 'admin', 'sm_key' => 'audit', 'loc' => 'core');
 		} 
 		$modtpl = $tpl2->getBlock('submodules');

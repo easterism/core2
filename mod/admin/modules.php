@@ -22,9 +22,9 @@ if (!empty($_GET['download_mod_tpl'])) {
 $this->printJs("core2/mod/admin/mod.js");
 
 $tab = new tabs('mod'); 
-$tab->addTab("Установленные модули", $app, 170);
-$tab->addTab("Доступные модули",	 $app, 130);
-$tab->addTab("Шаблоны модулей",	     $app, 130);
+$tab->addTab($this->translate->tr("Установленные модули"), $app, 170);
+$tab->addTab($this->translate->tr("Доступные модули"),	 $app, 130);
+$tab->addTab($this->translate->tr("Шаблоны модулей"),	     $app, 130);
 $tab->beginContainer("Модули");
 
 $sid = session_id();
@@ -111,21 +111,21 @@ $sid = session_id();
 							 WHERE m_id = '$refid'";
 			$edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
 			if ($refid > 0) {
-				$edit->addControl("Идентификатор:", "PROTECTED");
+				$edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
 			} else {
-				$edit->addControl("Идентификатор:", "TEXT", "maxlength=\"20\"", " маленикие латинские буквы или цифры", "", true);
+				$edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", " маленикие латинские буквы или цифры", "", true);
 			}
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
-			$edit->addControl("Системный:", "RADIO", "", "", "N");
+			$edit->addControl($this->translate->tr("Системный:"), "RADIO", "", "", "N");
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
-			$edit->addControl("Отображаемый:", "RADIO", "", "", "N");
+			$edit->addControl($this->translate->tr("Отображаемый:"), "RADIO", "", "", "N");
 			$edit->selectSQL[] = $dep_list; 			
-			$edit->addControl("Зависит от модулей:", "CHECKBOX", "", "", $selected_dep);
+			$edit->addControl($this->translate->tr("Зависит от модулей:"), "CHECKBOX", "", "", $selected_dep);
 			$seq = '';
 			if ($refid == 0) {
 				$seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_modules LIMIT 1");
 			}
-			$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq);
+			$edit->addControl($this->translate->tr("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq);
 			$access_default 	= array();
 			$custom_access 		= '';			
 			if ($refid > 0) {
@@ -169,12 +169,12 @@ $sid = session_id();
 				'{delete_all_disabled}' => (!empty($access_default['delete_all']) ? $disabled : ''),
 			));			
 			$access = $tpl->parse();
-			$edit->addControl("Доступ по умолчанию:", "CUSTOM", $access);
+			$edit->addControl($this->translate->tr("Доступ по умолчанию:"), "CUSTOM", $access);
 			
 			//CUSTOM ACCESS
 			$rules = '<div id="xxx">' . $custom_access . '</div>';
 			$rules .= '<div><span id="new_attr" class="newRulesModule" onclick="modules.newRule(\'xxx\')">Новое правило</span></div>';
-			$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
+			$edit->addControl($this->translate->tr("Дополнительные правила доступа:"), "CUSTOM", $rules);
 			$edit->addButtonSwitch('visible', 	$this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $refid));
 			/*if ($is_visible) {
 				if (count($list_name_modules) > 0) {
@@ -190,7 +190,7 @@ $sid = session_id();
 			
 			
 			$edit->back = $app;
-			$edit->addButton("Вернуться к списку Модулей", "load('$app')");
+			$edit->addButton($this->translate->tr("Вернуться к списку Модулей"), "load('$app')");
 			$edit->save("xajax_saveModule(xajax.getFormValues(this.id))");
 			$edit->showTable();
 
@@ -198,7 +198,7 @@ $sid = session_id();
 			// Субмодули
 			//---------------------------
 			$tab = new tabs("submods");
-			$tab->beginContainer('Субмодули');
+			$tab->beginContainer($this->translate->tr('Субмодули'));
 			if (isset($_GET['editsub']) && $_GET['editsub'] != '') {
 				$edit = new editTable('submod'); 
 				$edit->SQL  = "SELECT  sm_id,
@@ -213,20 +213,20 @@ $sid = session_id();
 								   AND sm_id = '" . $_GET['editsub'] . "'";
 				$res = $this->db->fetchRow($edit->SQL);
 				
-				$edit->addControl("Субмодуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
+				$edit->addControl($this->translate->tr("Субмодуль:"), "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
 				
 				if ($_GET['editsub'] > 0) {
-					$edit->addControl("Идентификатор:", "PROTECTED");
+					$edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
 				} else {
-					$edit->addControl("Идентификатор:", "TEXT", "maxlength=\"20\"", " маленикие латинские буквы или цифры", "", true);
+					$edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", $this->translate->tr(" маленикие латинские буквы или цифры"), "", true);
 				}
-				$edit->addControl("Адрес внешнего ресурса:", "TEXT");
+				$edit->addControl($this->translate->tr("Адрес внешнего ресурса:"), "TEXT");
 				$seq = '1';
 				if (empty($_GET['editsub'])) {
 					$seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_submodules WHERE m_id = ? LIMIT 1", $refid);
 					if (!$seq) $seq = '1';
 				}
-				$edit->addControl("Позиция в меню:", "NUMBER", "size=\"2\"", "", $seq, true);
+				$edit->addControl($this->translate->tr("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq, true);
 
 				$access_default 	= array();
 				$custom_access 		= '';
@@ -268,17 +268,17 @@ $sid = session_id();
 				));		
 					
 				$access = $tpl->parse();
-				$edit->addControl("Доступ по умолчанию:", "CUSTOM", $access);
+				$edit->addControl($this->translate->tr("Доступ по умолчанию:"), "CUSTOM", $access);
 				
 				$rules = '<div id="xxxsub">' . $custom_access . '</div>';
 				$rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="newRule(\'xxxsub\')">Новое правило</span></div>';
-				$edit->addControl("Дополнительные правила доступа:", "CUSTOM", $rules);
+				$edit->addControl($this->translate->tr("Дополнительные правила доступа:"), "CUSTOM", $rules);
 
 				$edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_submodules WHERE visible = 'Y' AND sm_id=? LIMIT 1", $_GET['editsub']));
 
 				if (!$_GET['editsub']) $edit->setSessFormField('m_id', $refid);
 				$edit->back = $app . "&edit=" . $refid;
-				$edit->addButton("Отменить", "load('{$app}&edit={$refid}')");
+				$edit->addButton($this->translate->tr("Отменить"), "load('{$app}&edit={$refid}')");
 				$edit->save("xajax_saveModuleSub(xajax.getFormValues(this.id))");
 				
 				$edit->showTable();
@@ -294,9 +294,9 @@ $sid = session_id();
 							FROM core_submodules
 							WHERE m_id = '$refid'
 						   ORDER BY seq, sm_name";
-			$list->addColumn("Субмодуль", "", "TEXT");
-			$list->addColumn("Путь", "", "TEXT");
-			$list->addColumn("Позиция", "", "TEXT");
+			$list->addColumn($this->translate->tr("Субмодуль"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Путь"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Позиция"), "", "TEXT");
 			$list->addColumn("", "1%", "STATUS_INLINE", "core_submodules.visible");
 
 			$list->paintCondition	= "'TCOL_05' == 'N'";
@@ -325,13 +325,13 @@ $sid = session_id();
 							FROM core_modules
 							WHERE m_id > 0
 						   ORDER BY seq";
-			$list->addColumn("Модуль", "", "TEXT");
-			$list->addColumn("Идентификатор", "", "TEXT");
-			$list->addColumn("Версия", "", "TEXT");
-			$list->addColumn("Системный", "", "TEXT");
-			$list->addColumn("Отображаемый", "", "TEXT");
-			$list->addColumn("Позиция", "1%", "TEXT");
-			$list->addColumn("Действие", "70px", "BLOCK", "align=\"center\"");
+			$list->addColumn($this->translate->tr("Модуль"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Идентификатор"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Версия"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Системный"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Отображаемый"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Позиция"), "1%", "TEXT");
+			$list->addColumn($this->translate->tr("Действие"), "70px", "BLOCK", "align=\"center\"");
 			$list->addColumn("", "1%", "STATUS_INLINE", "core_modules.visible");
 
 			$install = new InstallModule();
@@ -370,7 +370,7 @@ $sid = session_id();
 						    FROM core_available_modules
 						   WHERE id = 0";
 			$edit->addControl("Файл архива(.zip)", "XFILE", "", "", "");
-			$edit->classText['SAVE'] = "Загрузить";
+			$edit->classText['SAVE'] = $this->translate->tr("Загрузить");
 			$edit->back              = $app . "&tab_mod=" . $tab->activeTab;
 			$edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
 			$edit->showTable();
@@ -396,7 +396,7 @@ $sid = session_id();
 			);
 
             if (empty($content)) {
-                $content = $title . "<br>Информация по установке отсутствует";
+                $content = $title . "<br>" . $this->translate->tr("Информация по установке отсутствует");
             } else {
                 $content = $title . $content;
             }
@@ -412,7 +412,7 @@ $sid = session_id();
                 $edit->readOnly = true;
             }
 
-            $edit->addButton("Вернуться к скиску модулей", "load('$app&tab_mod=2')");
+            $edit->addButton($this->translate->tr("Вернуться к списку Модулей"), "load('$app&tab_mod=2')");
 
             $edit->addButtonCustom('<input class="button" type="button" value="Скачать файлы модуля" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
 
@@ -441,19 +441,19 @@ $sid = session_id();
        //список доступных модулей
 		$list = new listTable('mod_available');
 
-		$list->addSearch("Имя модуля",      '`name`',  	'TEXT');
-		$list->addSearch("Идентификатор",	'module_id','TEXT');
+		$list->addSearch($this->translate->tr("Имя модуля"),      '`name`',  	'TEXT');
+		$list->addSearch($this->translate->tr("Идентификатор"),	'module_id','TEXT');
 
 		$list->SQL = "SELECT 1";
 //        $list->extOrder = true;
-        $list->addColumn("Имя модуля", "200px", "TEXT", "", "", "");
-        $list->addColumn("Идентификатор", "200px", "TEXT", "", "", "");
-        $list->addColumn("Описание", "", "TEXT", "", "", "");
-		$list->addColumn("Зависимости", "200px", "BLOCK", "", "", "");
-        $list->addColumn("Версия", "150px", "BLOCK", "", "", "");
-        $list->addColumn("Автор", "150px", "TEXT", "", "", "");
-        $list->addColumn("Системный", "50px", "TEXT", "", "", "");
-        $list->addColumn("Действие", "66", "BLOCK", 'align=center', "", "");
+        $list->addColumn($this->translate->tr("Имя модуля"), "200px", "TEXT", "", "", "");
+        $list->addColumn($this->translate->tr("Идентификатор"), "200px", "TEXT", "", "", "");
+        $list->addColumn($this->translate->tr("Описание"), "", "TEXT", "", "", "");
+		$list->addColumn($this->translate->tr("Зависимости"), "200px", "BLOCK", "", "", "");
+        $list->addColumn($this->translate->tr("Версия"), "150px", "BLOCK", "", "", "");
+        $list->addColumn($this->translate->tr("Автор"), "150px", "TEXT", "", "", "");
+        $list->addColumn($this->translate->tr("Системный"), "50px", "TEXT", "", "", "");
+        $list->addColumn($this->translate->tr("Действие"), "66", "BLOCK", 'align=center', "", "");
 		$list->getData();
 		//поиск
 		$where_search = '';

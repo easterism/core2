@@ -13,10 +13,18 @@ class Templater2 {
 	private $loopHTML = array();
 	private $embrace = array('', '');
 	private $_p = array();
+    private $plugins = array();
 
 	function __construct($tpl = '') { 
 		if ($tpl) $this->loadTemplate($tpl);
+        //добавляем плагин по умолчанию
+        $this->addPlugin("tr", Zend_Registry::get('translate'));
 	}
+
+    public function addPlugin($title, $obj)
+    {
+        $this->plugins[strtolower($title)] = $obj;
+    }
 
 	public function __isset($k)
 	{
@@ -174,6 +182,23 @@ class Templater2 {
 			$html = implode('', $this->loopHTML) . $html;
 		}
 		$this->loopHTML = array();
+
+        //apply plugins
+        foreach ($this->plugins as $plugin => $process) {
+            preg_match_all("/_{$plugin}\(([^\)]+)\)/sm", $html, $temp);
+            //$reflector = new ReflectionClass($process);
+            //$parameters = $reflector->getMethod($plugin)->getParameters();
+            foreach ($temp[1] as $k => $value) {
+                $tmp         = explode(',', $value);
+                array_walk($tmp, function (&$val) {
+                    $val = trim($val, '"');
+                    return $val;
+                });
+                $temp[1][$k] = call_user_func_array(array($process, $plugin), $tmp);
+            }
+            $html = str_replace($temp[0], $temp[1], $html);
+        }
+
 		return $html;
 	}
 

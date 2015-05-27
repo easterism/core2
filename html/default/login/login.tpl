@@ -8,16 +8,16 @@
 	<input name="action" type="hidden" />
 	<table>
 		<tr>
-			<td align="right">Логин:</td>
+			<td align="right">_tr("Логин:")</td>
 			<td align="left"><input id="login" name="login" type="text" value="[ERROR_LOGIN]"/></td>
 		</tr>
 		<tr>
-			<td align="right">Пароль:</td>
+			<td align="right">_tr("Пароль:")</td>
 			<td align="left"><input name="password" type="password" id="gfhjkm" autocomplete="off"/></td>
 		</tr>
 		<tr>
 			<td></td>
-			<td align="left"><button class="button" type="submit" id="enter">Войти</button></td>
+			<td align="left"><button class="button" type="submit" id="enter">_tr("Войти")</button></td>
 		</tr>
 	</table>
 	</form>

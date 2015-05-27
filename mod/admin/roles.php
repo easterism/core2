@@ -2,7 +2,7 @@
 
 $tab = new tabs('roles'); 
 //$tab->addTab("Доступ по умолчанию",			$app, 130);
-$tab->beginContainer("Роли и доступ");
+$tab->beginContainer($this->translate->tr("Роли и доступ"));
 	if ($tab->activeTab == 1) {
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {
 			$this->printJs("core2/mod/admin/role.js");
@@ -14,9 +14,9 @@ $tab->beginContainer("Роли и доступ");
 								   access
 							  FROM core_roles
 							 WHERE id = '" . $_GET['edit'] . "'";
-			$edit->addControl("Название:", "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
-			$edit->addControl("Краткое описание:", "TEXTAREA", "class=\"fieldRolesShortDescr\"", "", "");
-			$edit->addControl("Позиция в иерархии:", "TEXT", "maxlength=\"3\" size=\"2\"", "", "", true);
+			$edit->addControl($this->translate->tr("Название:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
+			$edit->addControl($this->translate->tr("Краткое описание:"), "TEXTAREA", "class=\"fieldRolesShortDescr\"", "", "");
+			$edit->addControl($this->translate->tr("Позиция в иерархии:"), "TEXT", "maxlength=\"3\" size=\"2\"", "", "", true);
 			$SQL = "SELECT * 
 					  FROM (
 						(SELECT m_id, m_name, module_id, m.seq, m.access_add
@@ -71,7 +71,7 @@ $tab->beginContainer("Роли и доступ");
 			} else {
 				$html .= '<script>ro.setDefaultNew()</script>';
 			}
-			$edit->addControl("Доступ к модулям:", "CUSTOM", $html);
+			$edit->addControl($this->translate->tr("Доступ к модулям:"), "CUSTOM", $html);
 						
 			$edit->back = $app;
 			$edit->save("xajax_saveRole(xajax.getFormValues(this.id))");
@@ -89,9 +89,9 @@ $tab->beginContainer("Роли и доступ");
 							 is_active_sw
 						FROM `core_roles` 
 						ORDER BY position";
-		$list->addColumn("Роль", "", "TEXT");
-		$list->addColumn("Описание", "", "TEXT");
-		$list->addColumn("Иерархия", "1%", "TEXT");
+		$list->addColumn($this->translate->tr("Роль"), "", "TEXT");
+		$list->addColumn($this->translate->tr("Описание"), "", "TEXT");
+		$list->addColumn($this->translate->tr("Иерархия"), "1%", "TEXT");
 		$list->addColumn("", "1%", "STATUS");
 		
 		$list->paintCondition	= "'TCOL_05' == 'N'";

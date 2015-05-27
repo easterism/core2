@@ -48,13 +48,13 @@ class CoreController extends Common {
         $install    = new InstallModule();
 
         $tab = new tabs('mod');
-        $tab->beginContainer("События аудита");
+        $tab->beginContainer($this->translate->tr("События аудита"));
         try {
             $changedMods = $this->checkModulesChanges($install);
             if (empty($changedMods)) {
                 echo '<h3>' . $this->translate->tr("Система работает в штатном режиме.") . '</h3>';
             } else {
-                echo '<h3 style="color: red;">Обнаружены изменения в файлах модулей: ' . implode(", ", $changedMods) . '</h3>';
+                echo '<h3 style="color: red;">' . $this->translate->tr("Обнаружены изменения в файлах модулей:") . ' ' . implode(", ", $changedMods) . '</h3>';
             }
         } catch (Exception $e) {
             $install->addNotice($this->translate->tr("Аудит файлов модулей"), $e->getMessage(), $this->translate->tr("Ошибка"), "danger");
@@ -588,7 +588,7 @@ class CoreController extends Common {
 			$name = $this->auth->NAME;
 		}
 		if (!empty($name)) $name = '<b>' . $name . '</b>';
-		$out = '<div>Здравствуйте, ' . $name . '</div>';
+		$out = '<div>' . sprintf($this->translate->tr("Здравствуйте, %s"), $name) . '</div>';
 		$sLife = (int)$this->getSetting("session_lifetime");
 		if (!$sLife) {
 			$sLife = ini_get('session.gc_maxlifetime');
@@ -611,7 +611,7 @@ class CoreController extends Common {
 										 LIMIT 1", $this->auth->ID);
 		}
 		if ($res) {
-			$out .= '<div>Последний раз Вы заходили <b>' . $res['login_time2'] . '</b> с IP адреса <b>' . $res['ip'] . '</b></div>';
+			$out .= '<div>' . sprintf($this->translate->tr("Последний раз Вы заходили %1\$s с IP адреса %2\$s"), '<b>' . $res['login_time2'] . '</b>', '<b>' . $res['ip'] . '</b>') . '</div>';
 		}
 		//Проверка активных сессий данного пользователя
 		if ($this->config->database->adapter == 'Pdo_Mysql') {
@@ -787,11 +787,12 @@ class CoreController extends Common {
 					$refid = $this->db->fetchOne("SELECT id FROM core_users_profile WHERE user_id=? LIMIT 1", $last_insert_id); 
 					if (!$refid) {
 						$this->db->insert('core_users_profile', array(
-							'user_id' => $last_insert_id, 
-							'lastname' => $lastname, 
-							'firstname' => $firstname, 
-							'middlename' => $middlename, 
-							'lastuser' => $authNamespace->ID));
+                                'user_id'    => $last_insert_id,
+                                'lastname'   => $lastname,
+                                'firstname'  => $firstname,
+                                'middlename' => $middlename,
+                                'lastuser'   => $authNamespace->ID)
+                        );
 					} else {						
 						$where = $this->db->quoteInto('user_id = ?', $last_insert_id);
 						$this->db->update('core_users_profile', 
@@ -831,8 +832,7 @@ class CoreController extends Common {
 			$this->auth->ID
 		);
 
-        $body  = "";
-        $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']} {$dataNewUser['middlename']}</b>.<br/>";
+        $body = "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']} {$dataNewUser['middlename']}</b>.<br/>";
         $body .= "Вы зарегистрированы на портале <a href=\"http://{$_SERVER["SERVER_NAME"]}\">{$_SERVER["SERVER_NAME"]}</a>.<br/>";
         $body .= "Ваш логин: '{$dataNewUser['u_login']}'.<br/>";
         $body .= "Ваш пароль: '{$dataNewUser['u_pass']}'.<br/>";
@@ -841,7 +841,7 @@ class CoreController extends Common {
         $result = $this->createEmail()
             ->from($dataUser['email'])
             ->to($dataUser['lastname'] . ' ' . $dataUser['firstname'])
-            ->subject('Информация о регистрации на портале ' . $_SERVER["SERVER_NAME"])
+            ->subject(sprintf($this->translate->tr("Информация о регистрации на портале \$s"), $_SERVER["SERVER_NAME"]))
             ->body($body)
             ->importance('HIGH')
             ->send();
@@ -891,7 +891,7 @@ class CoreController extends Common {
             $install->addNotice("", "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
         }
         if (!$server) {
-            $install->addNotice("", "Не задан 'host' в conf.ini", $this->translate->tr("Отправка уведомлений отключена"), "info2");
+            $install->addNotice("", $this->translate->tr("Не задан параметр 'host' в conf.ini"), $this->translate->tr("Отправка уведомлений отключена"), "info2");
         }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
@@ -935,7 +935,7 @@ class CoreController extends Common {
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
-                            $install->addNotice("", $answer['error'], "Уведомление не отправлено", "danger");
+                            $install->addNotice("", $answer['error'], $this->translate->tr("Уведомление не отправлено"), "danger");
                         }
                     }
                 }

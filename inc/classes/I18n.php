@@ -12,7 +12,8 @@
 class I18n
 {
 
-    protected $translate;
+    private $translate;
+    private $locale;
 
 
     /**
@@ -33,6 +34,7 @@ class I18n
                 } else {
                     Error::Exception("Адаптер перевода не поддерживается");
                 }
+                $this->locale = $lng;
                 $this->setup(array(
                         'adapter' => $config->translate->adapter,
                         'content' => DOC_ROOT . $content,
@@ -57,6 +59,15 @@ class I18n
         $this->translate = new Zend_Translate($config);
 	}
 
+    /**
+     * Проверяет, создан ли объект для переводов
+     * @return mixed
+     */
+    public function isSetup()
+    {
+        return $this->translate;
+    }
+
 
 	/**
      * Определяет язык пользователя
@@ -67,7 +78,65 @@ class I18n
 	public function setLocale($lng)
 	{
 		$this->translate->setLocale($lng);
+        $this->locale = $lng;
 	}
+
+    public function getLocale()
+    {
+        return $this->locale;
+    }
+
+    /**
+     * Добавление переводов для модулей
+     * @param $location
+     */
+    public function setupExtra($location) {
+        $ini = $location . "/conf.ini";
+        if ($this->translate && is_dir($location . "/translations") && file_exists($ini)) {
+            $temp = parse_ini_file($ini, true);
+            $goit = false;
+            foreach ($temp as $k => $v) {
+                $k = explode(":", $k);
+                if ($_SERVER['SERVER_NAME'] == trim($k[0])) {
+                    $goit = true;
+                    break;
+                }
+            }
+            if ($goit) {
+                $config = new Zend_Config_Ini($location . "/conf.ini", $_SERVER['SERVER_NAME']);
+            } else {
+                $config = new Zend_Config_Ini($location . "/conf.ini", 'production');
+            }
+            if (isset($config->translate) && $config->translate->on) {
+
+                $lng = $this->getLocale();
+                if ($config->translate->adapter == 'gettext') {
+                    $content = $location . "/translations/$lng.mo";
+                } else {
+                    Error::Exception("Адаптер перевода модуля не поддерживается");
+                }
+                try {
+                    $translate_second = new Zend_Translate(
+                            array(
+                                    'adapter' => $config->translate->adapter,
+                                    'content' => $content,
+                                    'locale'  => $lng
+                            )
+                    );
+                    $this->translate->addTranslation(
+                            array(
+                                    'content' => $translate_second,
+                                    'locale'  => $lng
+                            )
+                    );
+                    unset($translate_second);
+                } catch (Zend_Translate_Exception $e) {
+                    Error::Exception($e->getMessage());
+                }
+                Zend_Registry::set('translate', $this);
+            }
+        }
+    }
 
 
 	/**

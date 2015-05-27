@@ -23,11 +23,11 @@ $tab->beginContainer($title);
 							  FROM core_enum
 							 WHERE id = '" . $_GET['edit'] . "' 
 							 AND parent_id IS NULL";
-			$edit->addControl("Название справочника:", "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
+			$edit->addControl($this->translate->tr("Название справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
 			if ($_GET['edit'] > 0) {
-				$edit->addControl("Идентификатор:", "PROTECTED");
+				$edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
 			} else {			 
-				$edit->addControl("Идентификатор справочника:", "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
+				$edit->addControl($this->translate->tr("Идентификатор справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
 			}
 			$list_custom = "";
 			$tpl = new Templater("core2/mod/admin/html/custom_enum_field.tpl");
@@ -60,12 +60,12 @@ $tab->beginContainer($title);
 			}
 			
 			$custom = '<div id="xxx">' . $list_custom . '</div>
-			<div><span id="new_attr" class="newFieldEnum" onclick="en.newEnumField()">Новое поле</span></div>';
-			$edit->addControl("Дополнительные поля:", "CUSTOM", $custom);
+			<div><span id="new_attr" class="newFieldEnum" onclick="en.newEnumField()">' . $this->translate->tr("Новое поле") . '</span></div>';
+			$edit->addControl($this->translate->tr("Дополнительные поля:"), "CUSTOM", $custom);
 			$edit->addButtonSwitch('is_active_sw', $this->dataEnum->exists("is_active_sw = 'Y' AND id=?", $_GET['edit']));
 			
 			$edit->back = $app;
-			$edit->addButton("Вернуться к списку справочников", "load('$app')");
+			$edit->addButton($this->translate->tr("Вернуться к списку справочников"), "load('$app')");
 			$edit->save("xajax_saveEnum(xajax.getFormValues(this.id))");
 			
 			$edit->showTable();
@@ -81,7 +81,7 @@ $tab->beginContainer($title);
 																			$custom_field) . '</div>';
 
 			if ($_GET['edit']) {
-				$tab->beginContainer("Перечень значений справочника \"" . $name . "\"");
+				$tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"\$s\""), $name));
 
 				$fields_sql = "";
 				$fields = $custom_fields;
@@ -103,7 +103,7 @@ $tab->beginContainer($title);
 						}
 					}
 
-					$edit->addControl("Значение:", "TEXT", "maxlength=\"128\" size=\"60\"", "", "");
+					$edit->addControl($this->translate->tr("Значение:"), "TEXT", "maxlength=\"128\" size=\"60\"", "", "");
 					if (is_array($fields) && count($fields)) {
 						$fields_sql = "\n";
 						foreach ($fields as $key => $val) {
@@ -145,13 +145,13 @@ $tab->beginContainer($title);
 									  WHERE id = '{$_GET['add']}'";
 
 					$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
-					$edit->addControl("По умолчанию:", "RADIO", "", "", "N");
+					$edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N");
 					$edit->selectSQL[] = array('Y' => 'вкл.', 'N' => 'выкл.');
-					$edit->addControl("Статус:", "RADIO", "", "", "Y");
+					$edit->addControl($this->translate->tr("Статус:"), "RADIO", "", "", "Y");
 					$edit->addControl("", "HIDDEN", "", "", $_GET['edit'], true);
 
 					$edit->back = $app . "&edit=" . $_GET['edit'];
-					$edit->addButton("Отменить", "load('{$app}&edit={$_GET['edit']}')");
+					$edit->addButton($this->translate->tr("Отменить"), "load('{$app}&edit={$_GET['edit']}')");
 					$edit->save("xajax_saveEnumValue(xajax.getFormValues(this.id))");
 					
 					$edit->showTable();
@@ -159,9 +159,9 @@ $tab->beginContainer($title);
 				//ENUM dtl list
 				$list = new listTable('enumxxx3');
 				$list->table = "core_enum";
-				$list->addSearch('Значение', 'name', 'TEXT');
-				$list->addColumn("Значение", "", "TEXT");
-				$list->addColumn("По умолчанию", "2%", "TEXT");
+				$list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
+				$list->addColumn($this->translate->tr("Значение"), "", "TEXT");
+				$list->addColumn($this->translate->tr("По умолчанию"), "2%", "TEXT");
 
 				$fields_sql = '';
 				if (is_array($fields) && count($fields)) {
@@ -184,7 +184,7 @@ $tab->beginContainer($title);
 							   WHERE parent_id='{$_GET['edit']}' ADD_SEARCH
 							   ORDER BY seq, name";
 
-				$list->addColumn("Очередность", "1%", "TEXT");
+				$list->addColumn($this->translate->tr("Очередность"), "1%", "TEXT");
 				$list->addColumn("", "1%", "STATUS_INLINE", 'core_enum.is_active_sw');
 
 				$list->paintCondition	= "'TCOL_03' == 'N'";
@@ -215,8 +215,8 @@ $tab->beginContainer($title);
 		} else {
 			
 			$list = new listTable('enum');
-			$list->addSearch('Идентификатор', 'global_id', 'TEXT');
-			$list->addSearch('Название справочника', 'name', 'TEXT');
+			$list->addSearch($this->translate->tr('Идентификатор'), 'global_id', 'TEXT');
+			$list->addSearch($this->translate->tr('Название справочника'), 'name', 'TEXT');
 
 			$list->SQL = "SELECT id,
 								 global_id,
@@ -227,10 +227,10 @@ $tab->beginContainer($title);
 							FROM core_enum AS e
 							WHERE parent_id IS NULL ADD_SEARCH
 						   ORDER BY `name`";
-			$list->addColumn("Идентификатор", "", "TEXT");
-			$list->addColumn("Название справочника", "70%", "TEXT");
-			$list->addColumn("Дополпительные поля", "", "TEXT");
-			$list->addColumn("Значений", "20%", "NUMBER");
+			$list->addColumn($this->translate->tr("Идентификатор"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Название справочника"), "70%", "TEXT");
+			$list->addColumn($this->translate->tr("Дополпительные поля"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Значений"), "20%", "NUMBER");
 			$list->addColumn("", "1%", "STATUS_INLINE", 'core_enum.is_active_sw');
 			
 			$list->paintCondition	= "'TCOL_04' == 'N'";

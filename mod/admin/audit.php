@@ -1,8 +1,8 @@
 <?
 $tab = new tabs('audit');
 
-$tab->addTab("База данных", 		    $app, 100);
-$tab->addTab("Контроль целостности",	$app, 150);
+$tab->addTab($this->translate->tr("База данных"), 		    $app, 100);
+$tab->addTab($this->translate->tr("Контроль целостности"),	$app, 150);
 
 $tab->beginContainer("Аудит");
 

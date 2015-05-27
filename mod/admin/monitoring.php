@@ -2,11 +2,11 @@
 
 $tab = new tabs($this->resId); 
 
-$title = "Мониторинг";
-$tab->addTab("Активные пользователи", 		$app, 150);
-$tab->addTab("История посещений", 			$app, 150);
-$tab->addTab("Системный журнал", 			$app, 150);
-$tab->addTab("Архив журнала", 			$app, 150);
+$title = $this->translate->tr("Мониторинг");
+$tab->addTab($this->translate->tr("Активные пользователи"), 		$app, 150);
+$tab->addTab($this->translate->tr("История посещений"), 			$app, 150);
+$tab->addTab($this->translate->tr("Системный журнал"), 			$app, 150);
+$tab->addTab($this->translate->tr("Архив журнала"), 			$app, 150);
 //Tool::fb($_SERVER);
 $tab->beginContainer($title);
 
@@ -35,9 +35,9 @@ $tab->beginContainer($title);
 			$this->printJs("core2/mod/admin/monitor.js");
 			
 			$list = new listTable($this->resId); 
-			$list->addSearch("Пользователь", "u_login", "TEXT");
-			$list->addSearch("Время входа", "login_time", "DATE");
-			$list->addSearch("Время последней активности", "last_activity", "DATE");
+			$list->addSearch($this->translate->tr("Пользователь"), "u_login", "TEXT");
+			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
+			$list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
 			$list->addSearch("IP", "ip", "TEXT");
 			//$list->addSearch("Отображать под", "r.boss", "text");
 			$list->SQL = "SELECT id,
@@ -52,10 +52,10 @@ $tab->beginContainer($title);
 							WHERE logout_time IS NULL
 							  AND (NOW() - last_activity > $sLife)=0 ADD_SEARCH
 						   ORDER BY login_time DESC";
-			$list->addColumn("Сессия", "", "TEXT");
-			$list->addColumn("Пользователь", "", "TEXT");
-			$list->addColumn("Время входа", "", "DATETIME");
-			$list->addColumn("Время последней активности", "", "DATETIME");
+			$list->addColumn($this->translate->tr("Сессия"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Пользователь"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Время входа"), "", "DATETIME");
+			$list->addColumn($this->translate->tr("Время последней активности"), "", "DATETIME");
 			$list->addColumn("IP", "1%", "TEXT");
 			$list->addColumn("", "1%", "BLOCK");
 
@@ -89,7 +89,7 @@ $tab->beginContainer($title);
 										ORDER BY login_time DESC LIMIT 1", $show);
 			echo '<div>Последний раз заходил <b>' . $res['login_time'] . '</b> с IP адреса <b>' . $res['ip'] . '</b></div>';
 			$list = new listTable($this->resId . 'xxx2'); 
-			$list->addSearch("Время входа", "login_time", "DATE");
+			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
 			$list->addSearch("IP", "ip", "TEXT");
 			$list->sqlSearch[] = array('Y' => 'Да', 'N' =>'Нет');
 			$list->addSearch("Криптосредства", "crypto_sw", "LIST");
@@ -143,11 +143,11 @@ $tab->beginContainer($title);
 			$req = ob_get_clean();
 			$req = '<div>' . $req . '</div>';
 			$edit->SQL = array(array('dummy' => 1));
-			$edit->addControl("Адрес:", "CUSTOM", $res['query']);
-			$edit->addControl("Метод:", "CUSTOM", $res['request_method']);
-			$edit->addControl("Порт:", "CUSTOM", $res['remote_port']);
-			$edit->addControl("Данные запроса:", "CUSTOM", $req);
-			$edit->addButton("Закрыть", "load('$app&tab_{$this->resId}=3')");
+			$edit->addControl($this->translate->tr("Адрес:"), "CUSTOM", $res['query']);
+			$edit->addControl($this->translate->tr("Метод:"), "CUSTOM", $res['request_method']);
+			$edit->addControl($this->translate->tr("Порт:"), "CUSTOM", $res['remote_port']);
+			$edit->addControl($this->translate->tr("Данные запроса:"), "CUSTOM", $req);
+			$edit->addButton($this->translate->tr("Закрыть"), "load('$app&tab_{$this->resId}=3')");
 			$edit->readOnly = true;
 			$edit->showTable();
 		} else {			
@@ -163,12 +163,12 @@ $tab->beginContainer($title);
 			
 			$list = new listTable($this->resId . 'xxx3'); 
 			$list->roundRecordCount = true;
-			$list->addSearch("Пользователь", "u.u_login", "TEXT");
+			$list->addSearch($this->translate->tr("Пользователь"), "u.u_login", "TEXT");
 			$list->addSearch("IP", "ip", "TEXT");
-			$list->addSearch("Метод", "request_method", "TEXT");
-			$list->addSearch("Порт", "remote_port", "TEXT");
-			$list->addSearch("Адрес", "query", "TEXT");
-			$list->addSearch("Время запроса", "l.lastupdate", "DATE");
+			$list->addSearch($this->translate->tr("Метод"), "request_method", "TEXT");
+			$list->addSearch($this->translate->tr("Порт"), "remote_port", "TEXT");
+			$list->addSearch($this->translate->tr("Адрес"), "query", "TEXT");
+			$list->addSearch($this->translate->tr("Время запроса"), "l.lastupdate", "DATE");
 			
 			$list->SQL = "SELECT l.id,
 								 ip,
@@ -182,11 +182,11 @@ $tab->beginContainer($title);
 							WHERE 1=1 ADD_SEARCH
 						   ORDER BY l.lastupdate DESC";
 			$list->addColumn("IP", "", "TEXT");
-			$list->addColumn("Пользователь", "", "TEXT");
-			$list->addColumn("Метод", "", "TEXT");
-			$list->addColumn("Адрес", "", "TEXT");
-			$list->addColumn("Данные запроса", "", "FUNCTION", "", "trimAction");
-			$list->addColumn("Время запроса", "", "DATETIME");
+			$list->addColumn($this->translate->tr("Пользователь"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Метод"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Адрес"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Данные запроса"), "", "FUNCTION", "", "trimAction");
+			$list->addColumn($this->translate->tr("Время запроса"), "", "DATETIME");
 						
 			$list->editURL 			= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
 			$list->noCheckboxes = 'yes';
