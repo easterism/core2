@@ -12,11 +12,9 @@
       "role": "Developer"
     }
   ],
-  "minimum-stability": "dev",
   "require": {
     "php": ">=5.2.11",
     "mpdf/mpdf": "5.7.4",
-    "xajax/xajax": "dev-master",
     "components/jquery": "2.1.4",
     "tinymce/tinymce": "4.1.10",
     "blueimp/jquery-file-upload": "9.9.3",
