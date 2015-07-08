@@ -235,8 +235,56 @@ var edit = {
 				else i[j].className = 'hide';
 			}
 		}
-	}
-	
+	},
+	modalClear: function(id) {
+		document.getElementById(id).value = '';
+		document.getElementById(id + '_text').value = '';
+	},
+	maskMe: function(id) {
+		$('#' + id).maskMoney({
+			allowZero: true,
+			thousands: ' ',
+			defaultZero: false,
+			allowNegative: true,
+			precision: 0
+		});
+		$('#' + id).maskMoney('mask');
+	},
+    modal2: {
+        key: '',
+
+        load: function(theme_src, key, url) {
+            this.key = key;
+
+            var $body_container = $('#' + this.key + '-modal>.modal-dialog>.modal-content>.modal-body');
+            $body_container.html(
+                '<div style="text-align:center">' +
+                    '<img src="' + theme_src + '/img/load.gif" alt="loading">' +
+                    ' Загрузка' +
+                '</div>'
+            );
+
+            $body_container.load(url);
+
+
+            $('#' + this.key + '-modal').modal('show');
+        },
+
+        clear: function(key) {
+            $('#' + key).val('');
+            $('#' + key + '-title').val('');
+        },
+
+        hide: function() {
+            $('#' + this.key + '-modal').modal('hide');
+        },
+
+        choose: function(value, title) {
+            $('#' + this.key).val(value);
+            $('#' + this.key + '-title').val(title);
+            this.hide();
+        }
+    }
 }
 
 
@@ -253,8 +301,7 @@ function mceSetup(id, opt) {
         verify_html : false,
         convert_urls : false,
         relative_urls : false,
-
-		plugins: [
+        plugins: [
 			"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
 			"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
 			"save table contextmenu directionality emoticons template paste textcolor"

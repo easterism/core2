@@ -93,8 +93,13 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
-function toAnchor(id){
-	$('html,body').animate({scrollTop: $("#" + id).offset().top - $("#menuContainer").height()}, 'fast');
+function toAnchor(id ){
+	var ofy = $("#"+id);
+	if (ofy[0]) {
+		$('html,body').animate({
+			scrollTop : ofy.offset().top - $("#menu-container").height()
+		}, 'fast');
+	}
 }
 
 var locData = {"title":{"main":document.title}};

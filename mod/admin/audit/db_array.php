@@ -614,6 +614,12 @@ $DB_ARRAY['TABLES']['core_settings']['COLUMNS']['is_personal_sw']['NULL']    = "
 $DB_ARRAY['TABLES']['core_settings']['COLUMNS']['is_personal_sw']['DEFAULT'] = "N";
 $DB_ARRAY['TABLES']['core_settings']['COLUMNS']['is_personal_sw']['EXTRA']   = "";
 
+$DB_ARRAY['TABLES']['core_settings']['COLUMNS']['seq'] = array();
+$DB_ARRAY['TABLES']['core_settings']['COLUMNS']['seq']['TYPE']    = "int(11)";
+$DB_ARRAY['TABLES']['core_settings']['COLUMNS']['seq']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_settings']['COLUMNS']['seq']['DEFAULT'] = "";
+$DB_ARRAY['TABLES']['core_settings']['COLUMNS']['seq']['EXTRA']   = "";
+
 //Table Key array
 $DB_ARRAY['TABLES']['core_settings']['KEY'] = array();
 $DB_ARRAY['TABLES']['core_settings']['KEY']['code'] = array();

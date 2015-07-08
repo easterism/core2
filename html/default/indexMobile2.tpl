@@ -7,7 +7,7 @@
 	<link href="core2/html/default/style2.css" type="text/css" rel="stylesheet"/>
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
-	<link href="core2/html/default/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>

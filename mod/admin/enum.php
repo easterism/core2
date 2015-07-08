@@ -81,7 +81,7 @@ $tab->beginContainer($title);
 																			$custom_field) . '</div>';
 
 			if ($_GET['edit']) {
-				$tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"\$s\""), $name));
+				$tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"%s\""), $name));
 
 				$fields_sql = "";
 				$fields = $custom_fields;

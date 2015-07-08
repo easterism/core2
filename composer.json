@@ -1,20 +1,5 @@
 {
-  "name": "easterism/core2",
-  "type": "framework",
-  "description": "Fullstack framework for business application",
-  "keywords": ["framework"],
-  "homepage": "https://github.com/easterism/core2",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "misterEaster",
-      "email": "easter.by@gmail.com",
-      "role": "Developer"
-    }
-  ],
-  "minimum-stability": "dev",
   "require": {
-    "php": ">=5.2.11",
     "mpdf/mpdf": "5.7.4",
     "xajax/xajax": "dev-master",
     "components/jquery": "2.1.4",

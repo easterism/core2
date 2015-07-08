@@ -1,8 +1,8 @@
 <?php
 
 // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR);
-define("DOC_PATH", substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])) ?: '/');
+define("DOC_ROOT", realpath(__DIR__ . '/../..') . DIRECTORY_SEPARATOR);
+define("DOC_PATH", substr(realpath(__DIR__ . '/../..'), strlen($_SERVER['DOCUMENT_ROOT'])) ?: '/');
 
 require_once DOC_ROOT . 'core2/inc/classes/Tool.php';
 require_once DOC_ROOT . 'core2/inc/classes/Error.php';
@@ -17,14 +17,17 @@ require_once("Zend/Config/Ini.php");
 
 $config = array(
     'system'       => array(
-        'name' => 'CORE',
+        'name'     => 'CORE',
         'timezone' => 'Europe/Minsk'
     ),
     'include_path' => DOC_ROOT,
     'cache'        => DOC_ROOT . 'core2/tests/cache',
     'temp'         => getenv('TMP'),
     'debug'        => array('on' => false),
-    'database'     => array(
+    'log'          => array(
+        'path' => __DIR__ . '/cache/xxx.log'
+    ),
+    'database'    => array(
         'adapter' => 'Pdo_Mysql',
         'params'  => array(
             'charset'          => 'utf8',

@@ -45,7 +45,6 @@ class Templater3 {
      */
     public function __get($block) {
 
-        if ($this->reassign) $this->startReassign();
         $this->touchBlock($block);
 
         if ( ! array_key_exists($block, $this->_p)) {
@@ -105,6 +104,7 @@ class Templater3 {
      * @param string $block
      */
     public function touchBlock($block) {
+        if ($this->reassign) $this->startReassign();
         $this->blocks[$block]['TOUCHED'] = true;
     }
 
@@ -204,7 +204,7 @@ class Templater3 {
                 $html .= '</optgroup>';
 
             } else {
-                $sel = $selected !== null && ((is_array($selected) && in_array((string)$value, $selected)) || (string)$value === (string)$selected)
+                $sel = $selected !== null && ((is_array($selected) && in_array((string)$value, $selected)) || (is_scalar($selected) && (string)$value === (string)$selected))
                     ? 'selected="selected" '
                     : '';
                 $html .= "<option {$sel}value=\"{$value}\">{$option}</option>";
@@ -223,8 +223,9 @@ class Templater3 {
      * Clear vars & blocks
      */
     protected function clear() {
-        $this->blocks = array();
-        $this->vars   = array();
+        $this->blocks   = array();
+        $this->vars     = array();
+        $this->reassign = false;
         foreach ($this->_p as $obj) {
             if ($obj instanceof Templater3) {
                 $obj->clear();
@@ -239,6 +240,5 @@ class Templater3 {
     protected function startReassign() {
         $this->loop = $this->render();
         $this->clear();
-        $this->reassign = false;
     }
 }

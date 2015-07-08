@@ -116,8 +116,12 @@ var listx = {
 		var p = '_page_' + id + '=' + o.value;
 		if (isAjax)	{
 			container = document.getElementById("list" + id).parentNode;
-			if (container.id) {
-				location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
+			if (listx.loc[id].indexOf('&__') < 0) {
+				if (container.id) {
+					location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
+				}
+			} else {
+				load(listx.loc[id] + '&' + p, '', container);
 			}
 		}
 		else load(listx.loc[id] + '&' + p, '', container);
@@ -128,11 +132,17 @@ var listx = {
 		var p = '_page_' + id + '=' + o.val();
 		if (isAjax)	{
 			container = document.getElementById("list" + id).parentNode;
-			if (container.id) {
-				location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
+			if (listx.loc[id].indexOf('&__') < 0) {
+				if (container.id) {
+					location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
+				}
+			} else {
+				load(listx.loc[id] + '&' + p, '', container);
 			}
 		}
-		else load(listx.loc[id] + '&' + p, '', container);
+		else {
+			load(listx.loc[id] + '&' + p, '', container);
+		}
 	},
 	countSw: function(obj, id, isAjax) {
 		var container = '';

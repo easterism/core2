@@ -308,6 +308,9 @@ LIST class search container
 .searchContainer .searchRow {
 	display: table-row;
 }
+.searchContainer .searchRow .dateFields {
+	white-space: nowrap;
+}
 
 .searchContainer .searchRow > div {
 	display: table-cell;
@@ -877,6 +880,7 @@ table td.homeTD {
 .alert {
 	padding: 1px 15px;
 	margin: 10px;
+	min-height: 25px;
 	border-left-width: 5px;
 	border-left-style: solid;
 	color: #000;

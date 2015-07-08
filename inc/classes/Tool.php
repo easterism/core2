@@ -171,7 +171,7 @@ class Tool {
 
 
     /**
-     * Добавляет пробел через каждые 3 символа в указанном числе
+     * Добавляет разделитель через каждые 3 символа в указанном числе
      *
      * @param string $_
      * @param string $del
@@ -307,7 +307,7 @@ class Tool {
 		$enc = 'ascii';
 		foreach ($list as $item) {
 			$sample1 = @iconv($item, 'cp1251', $string);
-			$gl = @preg_match_all($reg1, $sample1, $arr);
+            $gl = @preg_match_all($reg1, $sample1, $arr);
 			$sl = @preg_match_all($reg2, $sample1, $arr);
 			if (!$gl || !$sl) continue;
 			$k = abs(3 - ($sl / $gl));
@@ -487,6 +487,20 @@ class Tool {
         // $out[] = $kop . ' ' . self::morph($kop, $unit[0][0], $unit[0][1], $unit[0][2]); // kop
         return trim(preg_replace('/ {2,}/', ' ', join(' ', $out)));
     }
+
+
+	/**
+	 * Склоняем словоформу
+	 * @ author runcore
+	 */
+	private static function morph($n, $f1, $f2, $f5) {
+		$n = abs(intval($n)) % 100;
+		if ($n > 10 && $n < 20) return $f5;
+		$n = $n % 10;
+		if ($n > 1 && $n < 5) return $f2;
+		if ($n == 1) return $f1;
+		return $f5;
+	}
 
 
     /**

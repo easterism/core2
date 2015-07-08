@@ -41,10 +41,13 @@ class CoreController extends Common {
 	}
 
 
-	/**
-	 * @return void
-	 */
+    /**
+     * @throws Exception
+     * @return void
+     */
 	public function action_index() {
+        if (!$this->auth->ADMIN) throw new Exception(911);
+
         $install    = new InstallModule();
 
         $tab = new tabs('mod');
@@ -342,7 +345,8 @@ class CoreController extends Common {
         if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
         if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
         $ids        = explode(",", $params['id']);
-        $deleteKey  = $sess->$resource->deleteKey;
+		$sessData = $sess->$resource;
+        $deleteKey  = $sessData['deleteKey'];
         if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
         list($table, $refid) = explode(".", $deleteKey);
         if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
@@ -526,6 +530,7 @@ class CoreController extends Common {
 
 
 	/**
+	 * Форма обратной связи
 	 * @return mixed|string
 	 */
 	public function feedbackForm() {
@@ -611,7 +616,7 @@ class CoreController extends Common {
 										 LIMIT 1", $this->auth->ID);
 		}
 		if ($res) {
-			$out .= '<div>' . sprintf($this->translate->tr("Последний раз Вы заходили %1\$s с IP адреса %2\$s"), '<b>' . $res['login_time2'] . '</b>', '<b>' . $res['ip'] . '</b>') . '</div>';
+			$out .= '<div>' . sprintf($this->translate->tr("Последний раз Вы заходили %s с IP адреса %s"), '<b>' . $res['login_time2'] . '</b>', '<b>' . $res['ip'] . '</b>') . '</div>';
 		}
 		//Проверка активных сессий данного пользователя
 		if ($this->config->database->adapter == 'Pdo_Mysql') {
@@ -841,7 +846,7 @@ class CoreController extends Common {
         $result = $this->createEmail()
             ->from($dataUser['email'])
             ->to($dataUser['lastname'] . ' ' . $dataUser['firstname'])
-            ->subject(sprintf($this->translate->tr("Информация о регистрации на портале \$s"), $_SERVER["SERVER_NAME"]))
+            ->subject(sprintf($this->translate->tr("Информация о регистрации на портале %s"), $_SERVER["SERVER_NAME"]))
             ->body($body)
             ->importance('HIGH')
             ->send();
@@ -931,7 +936,7 @@ class CoreController extends Common {
                         }
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
-                            ->subject('Обнаружены изменения в структуре модуля')
+                            ->subject('{$server}: обнаружены изменения в структуре модуля')
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {

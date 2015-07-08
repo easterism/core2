@@ -21,14 +21,18 @@ class initList extends Acl {
 										'ADD'=>'Добавить',
 										'DELETE'=>'Удалить',
 										'NUM'=>'№',
-										'FROM'=>'из',
 										'TOTAL'=>'Всего',
 										'NORESULT'=>'Нет записей',
 										'PAGIN_ALL'=>'все',
+										'ON_OFF'=>'вкл/выкл',
 										'DELETE_MSG'=>'Вы действительно хотите удалить эту запись?'
 										);
 	public function __construct() {
 		parent::__construct();
+        $mask_date = $this->getMaskDate();
+        if ($mask_date) {
+            $this->date_mask = $mask_date;
+        }
 	}
 }
 
@@ -80,10 +84,15 @@ class initEdit extends Acl {
 	public $firstColWidth			= "";
 	public $classText				= array('SAVE' => 'Сохранить',
 											'MODAL_BUTTON' => 'Выбрать',
+											'MODAL_BUTTON_CLEAR' => 'Очистить',
 											'noReadAccess' => 'Нет доступа для чтения этой записи'
 										);
 	public function __construct() {
 		parent::__construct();
+        $mask_date = $this->getMaskDate();
+        if ($mask_date) {
+            $this->date_mask = $mask_date;
+        }
 	}
 }
 

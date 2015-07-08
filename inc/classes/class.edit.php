@@ -212,6 +212,7 @@ class editTable extends initEdit {
 			}
 			$arr_fields = array_keys($current);
 		} else {
+            if (is_string($this->SQL)) $this->SQL = trim($this->SQL);
 			$arr = $this->db->fetchAll($this->SQL);
 		}
 		if ($arr && is_array($arr) && is_array($arr[0])) {
@@ -456,7 +457,16 @@ class editTable extends initEdit {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"".$value['default']."\" onkeypress='return checkInt(event);'>";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\">";
+							}
+						}
+						elseif ($value['type'] == 'money') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= Tool::commafy($value['default']);
+							} else {
+                                if (empty($value['default'])) $value['default'] = 0;
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+                                $controlGroups[$cellId]['html'][$key] .= "<script>edit.maskMe('{$fieldId}');</script>";
 							}
 						}
 						elseif ($value['type'] == 'file') {
@@ -492,7 +502,7 @@ class editTable extends initEdit {
 								$insert = str_replace(array("dd", "mm", "yyyy"), array($day, $month, $year), strtolower($this->date_mask));
 								$insert = str_replace("yy", $year, $insert);
 
-								$tpl = new Templater2('core2/html/' . THEME . '/edit/datetime.tpl');
+								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.tpl');
 								$tpl->assign('[dt]', $insert);
 								$tpl->assign('[prefix]', $prefix);
 								$tpl->assign('name=""', 'name="control[' . $field . ']"');
@@ -519,7 +529,89 @@ class editTable extends initEdit {
 
 							}
 						}
-						elseif ($value['type'] == 'daterange') {
+						elseif ($value['type'] == 'date2') {
+                            if ($this->readOnly) {
+                                $day	= substr($value['default'], 8, 2);
+                                $month 	= substr($value['default'], 5, 2);
+                                $year 	= substr($value['default'], 0, 4);
+                                $insert = str_replace("dd", $day, strtolower($this->date_mask));
+                                $insert = str_replace("mm", $month, $insert);
+                                $insert = str_replace("yyyy", $year, $insert);
+                                $insert = str_replace("yy", $year, $insert);
+                                $controlGroups[$cellId]['html'][$key] .= $insert;
+                            } else {
+                                $this->scripts['date2'] = true;
+                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/date2.html');
+                                $tpl = str_replace('[THEME_DIR]',  'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[NAME]',       'control[' . $field . ']', $tpl);
+                                $tpl = str_replace('[DATE]',       $value['default'],         $tpl);
+                                $tpl = str_replace('[KEY]',        uniqid(),                  $tpl);
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'datetime2') {
+                            if ($this->readOnly) {
+                                $day	= substr($value['default'], 8, 2);
+                                $month 	= substr($value['default'], 5, 2);
+                                $year 	= substr($value['default'], 0, 4);
+                                $insert = str_replace("dd", $day, strtolower($this->date_mask));
+                                $insert = str_replace("mm", $month, $insert);
+                                $insert = str_replace("yyyy", $year, $insert);
+                                $insert = str_replace("yy", $year, $insert);
+                                $h  = substr($value['default'], 11, 2);
+                                $mi = substr($value['default'], 14, 2);
+                                $insert .= " $h:$mi";
+                                $controlGroups[$cellId]['html'][$key] .= $insert;
+                            } else {
+                                $this->scripts['datetime2'] = true;
+                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime2.html');
+                                $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
+                                $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
+                                $tpl = str_replace('[KEY]',       uniqid(),                  $tpl);
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'modal2') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= ! empty($value['default'])
+                                    ? $value['default']
+                                    : '';
+                            } else {
+                                $this->scripts['modal2'] = true;
+
+                                $options = array();
+                                $options['size']  = isset($value['in']['size'])  ? $value['in']['size']  : '';
+                                $options['title'] = isset($value['in']['title']) ? $value['in']['title'] : '';
+                                $options['text']  = isset($value['in']['text'])  ? htmlspecialchars($value['in']['text']) : '';
+                                $options['value'] = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
+                                $options['url']   = isset($value['in']['url'])   ? $value['in']['url']   : '';
+
+                                switch ($options['size']) {
+                                    case 'small': $size = 'modal-sm'; break;
+                                    case 'large': $size = 'modal-lg'; break;
+                                    case 'normal': default: $size = '';    break;
+                                }
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal2.html');
+                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
+                                $tpl->assign('[TITLE]',     $options['title']);
+                                $tpl->assign('[TEXT]',      $options['text']);
+                                $tpl->assign('[VALUE]',     $options['value']);
+                                $tpl->assign('[URL]',       $options['url']);
+                                $tpl->assign('[NAME]',      'control[' . $field . ']');
+                                $tpl->assign('[SIZE]',      $size);
+                                $tpl->assign('[KEY]',       uniqid());
+
+                                if ( ! $value['req']) {
+                                    $tpl->touchBlock('clear');
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                        }
+                        elseif ($value['type'] == 'daterange') {
 							$dates = explode(" - ", $value['default']);
 							//echo "<pre>"; print_r($value['default']); die;
 							if ($this->readOnly) {
@@ -597,22 +689,16 @@ class editTable extends initEdit {
                                 $this->scripts['editor'] = 'fck';
                                 $params = explode("_", $value['type']);
 
-								if (in_array("basic", $params)) {
-									$this->MCEConf['theme'] = 'advanced';
-									$this->MCEConf['theme_advanced_buttons1'] = "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,styleselect,formatselect,|,table,removeformat,code";
-									$this->MCEConf['theme_advanced_buttons2'] = "";
-									$this->MCEConf['theme_advanced_buttons3'] = "";
-									$this->MCEConf['theme_advanced_buttons4'] = "";
-
-								} elseif (in_array("basic2", $params)) {
-									$this->MCEConf['theme'] = 'advanced';
-									$this->MCEConf['theme_advanced_buttons1'] = "undo,redo,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,|,table,link,unlink,anchor,image,cleanup,removeformat,code";
-									$this->MCEConf['theme_advanced_buttons2'] = "";
-									$this->MCEConf['theme_advanced_buttons3'] = "";
-									$this->MCEConf['theme_advanced_buttons4'] = "";
-								} elseif (in_array("simple", $params)) {
-									$this->MCEConf['theme'] = 'simple';
-								}
+                                if (in_array("basic", $params)) {
+                                    $this->MCEConf['menubar'] = "file edit insert view format table tools";
+                                    $this->MCEConf['toolbar'] = "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor";
+                                } elseif (in_array("basic2", $params)) {
+                                    $this->MCEConf['menubar'] = "file edit insert view format table tools";
+                                    $this->MCEConf['toolbar'] = "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor";
+                                } elseif (in_array("simple", $params)) {
+                                    $this->MCEConf['menubar'] = "table";
+                                    $this->MCEConf['toolbar'] = "alignleft aligncenter alignright alignjustify | link image";
+                                }
 
 								//$this->MCEConf['document_base_url'] = "/" . trim(VPATH, "/") . "/";
 								$mce_params = json_encode($this->MCEConf);
@@ -684,7 +770,7 @@ class editTable extends initEdit {
 								}
 							} else {
 								foreach ($temp as $row) {
-									$controlGroups[$cellId]['html'][$key] .= "<label><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
+									$controlGroups[$cellId]['html'][$key] .= "<label class=\"edit-checkbox\"><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
 									if (in_array($row[0], $temp1)) {
 										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
 									}
@@ -718,7 +804,7 @@ class editTable extends initEdit {
 								}
 							} else {
 								foreach ($temp as $row) {
-									$controlGroups[$cellId]['html'][$key] .= "<div><label><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
+									$controlGroups[$cellId]['html'][$key] .= "<div><label class=\"edit-checkbox2\"><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
 									if (in_array($row[0], $temp1)) {
 										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
 									}
@@ -1043,8 +1129,11 @@ $(function () {
 									$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '_text" class="input"  type="text" ' . $attrs . ' value="' . (!empty($this->modal[$modal]['value']) ? $this->modal[$modal]['value'] : '') . '"/>';
 								}
 								$controlGroups[$cellId]['html'][$key] .= '</td><td><input type="button" class="buttonSmall" value="' . $this->classText['MODAL_BUTTON'] . '"
-									onclick="' . (!empty($this->modal[$modal]['script']) ? trim($this->modal[$modal]['script'], ';') . ';' : '') . '$(\'#modal_' . $field . '\').modal(' . $options . ');"/>' .
-									'<input id="' . $fieldId . '" name="control[' . $field . ']" type="hidden" value="' . (!empty($this->modal[$modal]['key']) ? $this->modal[$modal]['key'] : $value['default']) . '"/>'.
+									onclick="' . (!empty($this->modal[$modal]['script']) ? trim($this->modal[$modal]['script'], ';') . ';' : '') . '$(\'#modal_' . $field . '\').modal(' . $options . ');"/>';
+                                if (!$value['req']) {
+                                    $controlGroups[$cellId]['html'][$key] .= "<input type=\"button\" class=\"buttonSmall\" value=\"{$this->classText['MODAL_BUTTON_CLEAR']}\" onclick=\"edit.modalClear('{$fieldId}')\"/>";
+                                }
+                                $controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '" name="control[' . $field . ']" type="hidden" value="' . (!empty($this->modal[$modal]['key']) ? $this->modal[$modal]['key'] : $value['default']) . '"/>'.
 									'<script>var xxxx=""</script>' .
 									'</td></tr></table>' .
 									'<div id="modal_' . $field . '" style="display:none;" class="modal_window">' . $modalHTML . '</div>';
@@ -1061,6 +1150,16 @@ $(function () {
 			}
 
             if ($this->scripts) {
+                if (isset($this->scripts['date2'])) {
+                    Tool::printJs("core2/js/control_datepicker.js", true);
+                }
+                if (isset($this->scripts['datetime2'])) {
+                    Tool::printJs("core2/js/control_datetimepicker.js", true);
+                }
+                if (isset($this->scripts['modal2'])) {
+                    Tool::printJs("core2/js/bootstrap.modal.min.js", true);
+                    Tool::printCss("core2/html/" . THEME . "/css/bootstrap.modal.min.css");
+                }
                 if (isset($this->scripts['editor'])) {
                     Tool::printJs("core2/ext/tinymce/tinymce.min.js", true);
                 }
@@ -1128,8 +1227,10 @@ $(function () {
 			}
 		}
 		//buttons area
-		$this->HTML .= "<div style=\"text-align:right\">";
-		if (isset($this->buttons[$this->main_table_id]) && is_array($this->buttons[$this->main_table_id])) {			
+		$this->HTML .= "<div class=\"buttons-container\">";
+		$this->HTML .= "<div class=\"buttons-offset\"" . ($this->firstColWidth ? " style=\"width:{$this->firstColWidth};\"" : "") . "></div>";
+		$this->HTML .= "<div class=\"buttons-area\" style=\"text-align:right\">";
+		if (isset($this->buttons[$this->main_table_id]) && is_array($this->buttons[$this->main_table_id])) {
 			foreach ($this->buttons[$this->main_table_id] as $value) {
 				if (!empty($value['value'])) {
 					$this->HTML .= $this->button($value['value'], 'button', $value['action']);
@@ -1142,7 +1243,7 @@ $(function () {
 		if (!$this->readOnly) {
 			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;");
 		}
-		$this->HTML .= 	"</div>";
+		$this->HTML .= 	"</div></div>";
 		if (!$this->readOnly) {
 			$this->HTML .= 	"</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
 		}
@@ -1177,6 +1278,7 @@ $(function () {
 		if ($this->acl->read_all || $this->acl->read_owner) {
 				
 			$this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
+			$this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
 			$this->makeTable();
 			$this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
 			echo $this->HTML;

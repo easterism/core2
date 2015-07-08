@@ -1,0 +1,23 @@
+<div class="ctrl-dp" id="ctrl-dp-[KEY]">
+    <div class="ctrl-dp-controls">
+        <input type="hidden" class="ctrl-dp-value" name="[NAME]" value="[DATE]"/>
+
+        <input class="ctrl-dp-day first input" min="1" max="31" autocomplete="off" placeholder="дд" type="number"/>
+        <input class="ctrl-dp-month middle input" min="1" max="12" autocomplete="off" placeholder="мм" type="number"/>
+        <input class="ctrl-dp-year middle input" max="9999" autocomplete="off" placeholder="гггг" type="number"/>
+
+        <span class="ctrl-dp-clear middle">
+            <img src="[THEME_DIR]/img/clear.png" alt="Очистить" title="Очистить">
+        </span>
+        <span class="ctrl-dp-trigger last">
+            <img src="[THEME_DIR]/img/calendar.png" alt="..." title="...">
+        </span>
+    </div>
+    <div class="clearfix"></div>
+    <div class="ctrl-dp-container" style="display: none"></div>
+</div>
+<script>
+    (function(){
+        control_datepicker.create($('#ctrl-dp-[KEY]'));
+    })()
+</script>

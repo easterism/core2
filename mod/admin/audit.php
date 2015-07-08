@@ -148,7 +148,7 @@ if ($tab->activeTab == 1) {
                     if (!$is_send) {
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
-                            ->subject('Обнаружены изменения в структуре модуля')
+                            ->subject('{$server}: обнаружены изменения в структуре модуля!')
                             ->body("<b>{$server}:</b> Обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {

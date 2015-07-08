@@ -24,7 +24,7 @@ var modules = {
 	},
     'requestToRepo': function (mod, v, m_id, repo, request) {
 		if (request == 'install' && confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-			load('index.php?module=admin&action=modules&loc=core&tab_mod=2', {"install_from_repo":m_id, "repo": repo});
+			load('index.php' + document.location.hash, {"install_from_repo":m_id, "repo": repo});
 		} else return false;
 	},
 	newRule: function(container) {
@@ -63,6 +63,26 @@ var modules = {
 			var url = 'index.php' + document.location.hash.replace('#', '?');
 			load(url, {"updateModule": module_id});
 		} else return false;
+	},
+	checkModsUpdates: function (mods, theme) {
+		console.debug(mods);
+		$.post('index.php?module=admin&action=modules',
+			{'checkModsUpdates': mods},
+			function(data, textStatus){
+				if(textStatus == 'success') {
+					console.debug(data);
+					data.forEach(function(item, i, arr) {
+						console.debug(item);
+						var obj = $('td[title=' + item.m_id + ']');
+						var obj_ver = obj.next().next().next();
+						obj_ver.html(obj_ver.html() + ' <b style="color: #008000;">(Доступно обновление до v' + item.version + ')</b>');
+						var obj_do = obj.next().next().next().next().next().next().next();
+						obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
+					});
+				}
+			},
+			'json'
+		);
 	}
 };
 

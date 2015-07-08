@@ -18,7 +18,13 @@ class Common extends Acl {
         $child = get_class($this);
         $child = strpos($child, "Controller") ? substr($child, 3, -10) : '';
 		parent::__construct();
-        if ($child) $this->module = strtolower($child);
+        $reg = Zend_Registry::getInstance();
+        if ($child) {
+            $this->module = strtolower($child);
+            if (!$reg->isRegistered('invoker')) {
+                $reg->set('invoker', $this->module);
+            }
+        }
 		else $this->module = !empty($_GET['module']) ? $_GET['module'] : '';
         $this->path      = 'mod/' . $this->module . '/';
         $this->auth      = Zend_Registry::get('auth');
@@ -29,12 +35,16 @@ class Common extends Acl {
 			$this->actionURL .= "&action=" . $_GET['action'];
 		}
 		
-		$this->config = Zend_Registry::get('config');
+		$this->config = $reg->get('config');
 	}
 
 	public function __isset($k) {
 		return isset($this->_p[$k]);
 	}
+
+    public function getInvoker() {
+        return Zend_Registry::get('invoker');
+    }
 
 
     /**
@@ -61,8 +71,8 @@ class Common extends Acl {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
 			}
 			elseif ($k == 'moduleConfig') {
-				$module_src = $this->getModuleLocation($this->module);
-				$conf_file  = "{$module_src}/conf.ini";
+				$module_loc = $this->getModuleLocation($this->module);
+				$conf_file  = "{$module_loc}/conf.ini";
 				if (is_file($conf_file)) {
 					$configMod = new Zend_Config_Ini($conf_file);
 					$extMod    = $configMod->getExtends();

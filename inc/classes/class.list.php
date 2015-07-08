@@ -16,6 +16,7 @@ class listTable extends initList {
 	public $data					= array();
 	public $metadata					= array();
 	public $noCheckboxes			= "no";
+	public $noFooter			    = false;
 	public $filterColumn			= false;
 	public $main_table_id			= "";
 	protected $resource				= "";
@@ -455,12 +456,11 @@ class listTable extends initList {
      * @param string $value
      */
     private function setSessData($key, $value) {
-        $sess_form = new Zend_Session_Namespace('List');
-        $ssi       = $this->resource;
-        //$sess_form->$ssi;
-        //if ($sess_form->$ssi !== null) {
-            $sess_form->$ssi->$key = $value;
-        //}
+        $sess_form       = new Zend_Session_Namespace('List');
+        $ssi             = $this->resource;
+        $tmp             = $sess_form->$ssi;
+        $tmp[$key]       = $value;
+        $sess_form->$ssi = $tmp;
     }
 
 
@@ -582,8 +582,9 @@ class listTable extends initList {
 						$insert = str_replace("mm", $month, $insert);
 						$insert = str_replace("yyyy", $year, $insert);
 						$insert = str_replace("yy", $year, $insert);
-						$HTML .= "<span>". $insert . "</span>
-								<span><input id=\"date_" . $prefix . "\" type=\"hidden\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[$d]}\"></span>";
+						$HTML .= "<span class=\"dateFields\">". $insert . "
+								<span><input id=\"date_" . $prefix . "\" type=\"hidden\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[$d]}\"></span>
+								</span>";
 						if ($d == 0) $HTML .= "<span>&nbsp;&nbsp;<>&nbsp;&nbsp;</span>";
 					}
 					$HTML .= "<span><script>listx.create_date('{$searchFieldId}0');listx.create_date('{$searchFieldId}1');</script>
@@ -848,17 +849,17 @@ class listTable extends initList {
 
                 $recordClass = array();
 
-                //$tableBodyHTML .= "<tr onmouseover=\"listx.onm(this)\" onmouseout=\"listx.onm(this)\"";
-                $tableBodyHTML .= "<tr";
-                if (!empty($this->metadata[$k])) {
-                    if (!empty($this->metadata[$k]['paintColor'])) {
-                        $tableBodyHTML .= " bgcolor=\"{$this->metadata[$k]['paintColor']}\"";
-                    }
-                    if (!empty($this->metadata[$k]['fontColor']) || !empty($this->metadata[$k]['fontWeight'])) {
-                        $tableBodyHTML .= " style=\"";
-                        if (isset($this->metadata[$k]['fontColor']) && $this->metadata[$k]['fontColor']) $tableBodyHTML .= "color:{$this->metadata[$k]['fontColor']};";
-                        if (isset($this->metadata[$k]['fontWeight']) && $this->metadata[$k]['fontWeight']) $tableBodyHTML .= "font-weight:{$this->metadata[$k]['fontWeight']};";
-                        $tableBodyHTML .= "\"";
+                $tableBodyHTML .= '<tr';
+                if ( ! empty($this->metadata[$k])) {
+                    if ( ! empty($this->metadata[$k]['paintColor']) ||
+                         ! empty($this->metadata[$k]['fontColor']) ||
+                         ! empty($this->metadata[$k]['fontWeight'])
+                    ) {
+                        $tableBodyHTML .= ' style="';
+                        if ( ! empty($this->metadata[$k]['paintColor'])) $tableBodyHTML .= "background-color:{$this->metadata[$k]['paintColor']};";
+                        if ( ! empty($this->metadata[$k]['fontColor'])) $tableBodyHTML .= "color:{$this->metadata[$k]['fontColor']};";
+                        if ( ! empty($this->metadata[$k]['fontWeight'])) $tableBodyHTML .= "font-weight:{$this->metadata[$k]['fontWeight']};";
+                        $tableBodyHTML .= '"';
                     }
                 }
 
@@ -982,12 +983,12 @@ class listTable extends initList {
                     } elseif ($value['type'] == 'status_inline') {
                         $evt = "";
                         if ($this->checkAcl($this->resource, 'edit_owner') || $this->checkAcl($this->resource, 'edit_all')) {
-                            $evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\"";
+                            $evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\" title=\"{$this->classText['ON_OFF']}\"";
                         }
                         if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
-                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" $evt />";
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" $evt/>";
                         } else {
-                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" $evt />";
+                            $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" $evt/>";
                         }
                     }
 
@@ -1000,7 +1001,7 @@ class listTable extends initList {
                     $onclick = "onclick=\"listx.cancel(event)\"";
                 }
                 $tempid = $this->resource . $int_count;
-                if ($this->noCheckboxes == 'no') {
+                if ($this->noCheckboxes === 'no') {
                     $tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";
                 }
                 $tableBodyHTML .= "</tr>";
@@ -1073,49 +1074,56 @@ class listTable extends initList {
         $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML); // побликуем шапку списка
         $tplRoot->body->assign('[BODY]', $tableBodyHTML); // побликуем список
 
-		// FOOTER ROW
-		$tpl = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
-		$count = ceil($this->recordCount / $this->recordsPerPage);
+        if (!$this->noFooter) {
+            // FOOTER ROW
+            $tpl   = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
+            $count = ceil($this->recordCount / $this->recordsPerPage);
 
-		//PAGINATION
-		$pages = ceil($this->recordCount / ($this->sessData[$countPOST] ? $this->sessData[$countPOST] : $this->recordsPerPage));
-		$tpl->assign('{CURR_PAGE}', $this->sessData[$pagePOST] . " " . $this->classText['FROM'] . " " . $pages);
-		$tpl->assign('[IDD]', 'pagin_' . $this->resource);
-		$tpl->assign('[ID]', $this->resource);
-		if ($count > 1) {
-			$tpl->touchBlock('pages');
-			$tpl->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
+            //PAGINATION
+            $pages = ceil($this->recordCount / ($this->sessData[$countPOST] ? $this->sessData[$countPOST] : $this->recordsPerPage));
+            if ($pages) {
+                $tpl->assign('{CURR_PAGE}', sprintf($this->translate->tr("%s из %s"), $this->sessData[$pagePOST], $pages));
+            } else {
+                $tpl->assign('{CURR_PAGE}', '');
+            }
+            $tpl->assign('[IDD]', 'pagin_' . $this->resource);
+            $tpl->assign('[ID]', $this->resource);
+            if ($count > 1) {
+                $tpl->touchBlock('pages');
+                $tpl->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
 
-			if ($this->sessData[$pagePOST] > 1) {
-				$tpl->touchBlock('pages2');
-				$tpl->assign('{BACK}', $this->sessData[$pagePOST] - 1);
-			}
-			if ($this->sessData[$pagePOST] < $count) {
-				$tpl->touchBlock('pages3');
-				$tpl->assign('{FORW}', $this->sessData[$pagePOST] + 1);
-			}
-			$tpl->assign('{GO_TO}', "listx.pageSw(this, '$this->resource', $this->ajax)");
-			$tpl->touchBlock('recordsPerPage');
-			$tpl->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
-			$opts = array();
-			$notoall = false;
-			for ($k = 0; $k < $count - 1; $k++) {
-				$val = $this->recordsPerPage * ($k + 1);
-				if ($val > 1000) {
-					$notoall = true;
-					break;
-				}
-				$opts[$val] = $val;
-			}
-			if (!$notoall) {
-				$opts[1000] = $this->classText['PAGIN_ALL'];
-			}
-			$tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
-			$tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
-		}
-        $tplRoot->footer->assign('[FOOTER]', $tpl->parse()); // побликуем footer
+                if ($this->sessData[$pagePOST] > 1) {
+                    $tpl->touchBlock('pages2');
+                    $tpl->assign('{BACK}', $this->sessData[$pagePOST] - 1);
+                }
+                if ($this->sessData[$pagePOST] < $count) {
+                    $tpl->touchBlock('pages3');
+                    $tpl->assign('{FORW}', $this->sessData[$pagePOST] + 1);
+                }
+                $tpl->assign('{GO_TO}', "listx.pageSw(this, '$this->resource', $this->ajax)");
+                $tpl->touchBlock('recordsPerPage');
+                $tpl->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
+                $opts    = array();
+                $notoall = false;
+                for ($k = 0; $k < $count - 1; $k++) {
+                    $val = $this->recordsPerPage * ($k + 1);
+                    if ($val > 1000) {
+                        $notoall = true;
+                        break;
+                    }
+                    $opts[$val] = $val;
+                }
+                if (!$notoall) {
+                    $opts[1000] = $this->classText['PAGIN_ALL'];
+                }
+                $tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
+                $tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
+            }
+            $tplRoot->footer->assign('[FOOTER]', $tpl->parse()); // побликуем footer
+        }
 
 		$this->HTML .= $tplRoot->parse();
+
 		return $this->HTML;
 	}
 

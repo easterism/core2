@@ -1,6 +1,24 @@
 <?
 
 //список модулей из репозитория
+if (!empty($_POST['checkModsUpdates'])) {
+	$mods = array();
+	try {
+		$install = new InstallModule();
+		$ups = $install->checkInstalledModsUpdates();
+		foreach ($_POST['checkModsUpdates'] as $module_id => $m_id) {
+			if (!empty($ups[$module_id])) {
+				$ups[$module_id]['m_id'] = $m_id;
+				$mods[] = $ups[$module_id];
+			}
+		}
+	} catch (Exception $e) {
+	}
+
+	echo json_encode($mods);
+    exit();
+}
+//список модулей из репозитория
 if (!empty($_GET['getModsListFromRepo'])) {
     $install = new InstallModule();
     $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
@@ -271,7 +289,7 @@ $sid = session_id();
 				$edit->addControl($this->translate->tr("Доступ по умолчанию:"), "CUSTOM", $access);
 				
 				$rules = '<div id="xxxsub">' . $custom_access . '</div>';
-				$rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="newRule(\'xxxsub\')">Новое правило</span></div>';
+				$rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="modules.newRule(\'xxxsub\')">Новое правило</span></div>';
 				$edit->addControl($this->translate->tr("Дополнительные правила доступа:"), "CUSTOM", $rules);
 
 				$edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_submodules WHERE visible = 'Y' AND sm_id=? LIMIT 1", $_GET['editsub']));
@@ -312,7 +330,7 @@ $sid = session_id();
 		else {
 
 			$list = new listTable('mod');
-		
+
 			$list->SQL = "SELECT m_id,
 								 m_name,
 								 module_id,
@@ -334,16 +352,12 @@ $sid = session_id();
 			$list->addColumn($this->translate->tr("Действие"), "70px", "BLOCK", "align=\"center\"");
 			$list->addColumn("", "1%", "STATUS_INLINE", "core_modules.visible");
 
-			$install = new InstallModule();
-			$ups = $install->checkInstalledModsUpdates();
-
 			$data = $list->getData();
+			$mods = array();
 			foreach ($data as $key => $val) {
-				$data[$key][3] = !empty($ups[$data[$key][2]]) ? "<b style=\"color: #008000;\">{$data[$key][3]} (Доступно обновление до v{$ups[$data[$key][2]]})</b>" : $data[$key][3];
+				$mods[$val[2]] = $val[0];
 				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . $val[1] . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>"
-				                  . (!empty($ups[$data[$key][2]]) ? "<div style=\"display: inline-block;\" onclick=\"modules.updateModule('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/box_refresh.png\" border=\"0\" title=\"Обновить модуль\" /></div>" : "");
-
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
 			}
 			$list->data = $data;
 			$list->paintCondition	= "'TCOL_07' == 'N'";
@@ -354,6 +368,17 @@ $sid = session_id();
 			$list->noCheckboxes = "yes";
 			
 			$list->showTable();
+			$mods = json_encode($mods);
+			$theme = THEME;
+			$script = <<<HTML
+				<script type=\"text\/javascript\" language=\"javascript\">
+					$(document).ready(function(){
+						modules.checkModsUpdates({$mods}, '{$theme}');;
+					});
+				</script>
+HTML;
+
+			echo $script;
 		}
 		
 	}
@@ -603,7 +628,7 @@ $sid = session_id();
         $list->showTable();
 
 
-        //проверяем заданы ли ссылки на репозитории
+        //параметр со списком репозиториев
         $s_id = $this->db->fetchOne("
             SELECT id
             FROM core_settings
@@ -622,6 +647,7 @@ $sid = session_id();
             ));
             $s_id = $this->db->lastInsertId("core_settings");
         }
+        //достаем список репозиторием
         $mod_repos = $this->getSetting('repo');
 		if (empty($mod_repos)) {
 

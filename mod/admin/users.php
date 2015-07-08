@@ -9,7 +9,7 @@ if (isset($_GET['edit']) && $_GET['edit'] == '0') {
 }
 else if (!empty($_GET['edit'])) {
 	$user = $this->dataUsers->find($_GET['edit'])->current();
-	$title = sprintf($this->translate->tr("Редактирование пользователя \"\$s\""), $user->u_login);
+	$title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
 }
 $tab->beginContainer($title);
 	if ($tab->activeTab == 1) {

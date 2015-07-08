@@ -10,8 +10,8 @@ interface Delete {
 
     /**
      *
-     * @param $res
-     * @param $id
+     * @param string $res
+     * @param string $id
      *
      * @return bool|array
      * В случае возврата массива, удаление считается успешным, но автоматическое перенаправление не происходит

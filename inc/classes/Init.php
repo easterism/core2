@@ -40,7 +40,7 @@ $config = array(
 );
 	// определяем путь к темповой папке
     if (empty($config['temp'])) {
-        $config['temp'] = getenv('TEMP');
+        $config['temp'] = sys_get_temp_dir();
         if (empty($config['temp'])) {
             $config['temp'] = "/tmp";
         }
@@ -51,9 +51,14 @@ $config = array(
         $config = new Zend_Config($config, true);
 
         if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
-            $options = getopt('s:', array('section:'));
+            $options = getopt('m:a:p:s:', array(
+                'module:',
+                'action:',
+                'param:',
+                'section:'
+            ));
             if (( ! empty($options['section']) && is_string($options['section'])) || ( ! empty($options['s']) && is_string($options['s']))) {
-                $_SERVER['SERVER_NAME'] = $options['section'] ? $options['section'] : $options['s'];
+                $_SERVER['SERVER_NAME'] = ! empty($options['section']) ? $options['section'] : $options['s'];
             }
         }
 
@@ -68,9 +73,9 @@ $config = array(
     }
 
     // определяем путь к папке кеша
-        if (strpos($config->cache, '/') === false) {
-            $config->cache = DOC_ROOT . trim($config->cache, "/");
-        }
+    if (strpos($config->cache, '/') === false) {
+        $config->cache = DOC_ROOT . trim($config->cache, "/");
+    }
     //подключаем собственный адаптер базы данных
     require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
 
@@ -98,6 +103,7 @@ if (isset($config->auth) && $config->auth->on) {
 require_once("Zend/Db.php");
 require_once("Zend/Session.php");
 require_once("Zend/Cache.php");
+require_once("Zend/Json.php"); //DEPRECATED
 
 //устанавливаем шкурку
 if (!empty($config->theme)) {
@@ -106,8 +112,8 @@ if (!empty($config->theme)) {
 	define('THEME', 'default');
 }
 //MPDF PATH
-define("_MPDF_TEMP_PATH", DOC_ROOT . trim($config->cache, "/") . '/');
-define("_MPDF_TTFONTDATAPATH", DOC_ROOT . trim($config->cache, "/") . '/');
+define("_MPDF_TEMP_PATH", rtrim($config->cache, "/") . '/');
+define("_MPDF_TTFONTDATAPATH", rtrim($config->cache, "/") . '/');
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -431,7 +437,8 @@ class Init extends Db {
             header('Content-type: application/json; charset="utf-8"');
             $sess       = new Zend_Session_Namespace('List');
             $resource   = $params['res'];
-            $loc        = $sess->$resource !== null ? $sess->$resource->loc : "";
+            $sessData   = $sess->$resource;
+			$loc = isset($sessData['loc']) ? $sessData['loc'] : '';
             if (!$loc) throw new Exception($this->translate->tr("Не удалось определить местоположение данных."), 13);
             parse_str($loc, $temp);
             if ($temp['module'] !== 'admin') {
@@ -602,12 +609,13 @@ class Init extends Db {
                 'Optional arguments:',
                 "\t-m\t--module\tModule name",
                 "\t-a\t--action\tCli method name",
-                "\t-h\t--help\t\tHelp info",
-                "\t-s\t--section\tSection name in config file.",
-                "Examples of usage:",
+                "\t-p\t--param\t\tParameter in method",
+                "\t-s\t--section\tSection name in config file",
+				"\t-h\t--help\t\tHelp info",
+				"Examples of usage:",
                 "php index.php --module cron --action run",
                 "php index.php --module cron --action run --section site.com",
-                "php index.php --module cron --action job --param 123\n",
+                "php index.php --module cron --action runJob --param 123\n",
             ));
         }
 
@@ -672,22 +680,41 @@ class Init extends Db {
 	}
 }
 
+
+/**
+ * Какой-то пост
+ *
+ * @param string $func
+ * @param string $loc
+ * @param array  $data
+ *
+ * @return xajaxResponse
+ * @throws Exception
+ * @throws Zend_Exception
+ */
 function post($func, $loc, $data) {
-    $res = new xajaxResponse();
-	$loc = explode('?', $loc);
+
+    $translate = Zend_Registry::get('translate');
+    $res       = new xajaxResponse();
+	$loc       = explode('?', $loc);
+
 	if (isset($loc[1])) {
 		unset($loc[0]);
 		$loc = implode('?', $loc);
 	} else {
 		$loc = $loc[0];
 	}
+
 	parse_str($loc, $params);
-	if (empty($params['module'])) throw new Exception($this->translate->tr("Модуль не найден"), 404);
-	$acl = new Acl();
-	if ($params['module'] == 'admin') {
-		require_once('core2/mod/ModAjax.php');
-		$auth 	= Zend_Registry::get('auth');
-		if (!$auth->ADMIN) throw new Exception(911);
+	if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
+
+    $acl = new Acl();
+
+    if ($params['module'] == 'admin') {
+		require_once DOC_ROOT . 'core2/mod/ModAjax.php';
+		$auth = Zend_Registry::get('auth');
+		if ( ! $auth->ADMIN) throw new Exception(911);
+
 		$xajax = new ModAjax($res);
 		if (method_exists($xajax, $func)) {
 			$xajax->setupAcl();
@@ -697,24 +724,27 @@ function post($func, $loc, $data) {
 				Error::catchXajax($e, $res);
 			}
 		} else {
-			throw new Exception($this->translate->tr("Метод не найден"), 60);
+			throw new Exception($translate->tr("Метод не найден"), 60);
 		}
+
 	} else {
 		if (empty($params['action']) || $params['action'] == 'index') {
-			if (!$acl->checkAcl($params['module'], 'access')) {
+			if ( ! $acl->checkAcl($params['module'], 'access')) {
 				throw new Exception(911);
 			}
 			$params['action'] = 'index';
 		} else {
-			if (!$acl->checkAcl($params['module'] . '_' . $params['action'], 'access')) {
+			if ( ! $acl->checkAcl($params['module'] . '_' . $params['action'], 'access')) {
 				throw new Exception(911);
 			}
 		}
-        $db = new Db;
-		$location = $db->getModuleLocation($params['module']);
+
+        $db        = new Db;
+		$location  = $db->getModuleLocation($params['module']);
         $file_path = $location . "/ModAjax.php";
+
 		if (file_exists($file_path)) {
-			require_once($file_path);
+			require_once $file_path;
 			$xajax = new ModAjax($res);
 			$func = 'ax' . ucfirst($func);
 			if (method_exists($xajax, $func)) {
@@ -725,9 +755,10 @@ function post($func, $loc, $data) {
 					Error::catchXajax($e, $res);
 				}
 			} else {
-				throw new Exception($this->translate->tr("Метод не найден"), 60);
+				throw new Exception($translate->tr("Метод не найден"), 60);
 			}
 		}
 	}
+
     return $res;
 }

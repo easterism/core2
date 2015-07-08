@@ -329,7 +329,7 @@ class InstallModule extends Db {
      * @throws Exception
      */
     private function checkNecMods() {
-        $Inf = $this->mInfo['install']['dependent_modules'];
+        $Inf = empty($this->mInfo['install']['dependent_modules']) ? array() : $this->mInfo['install']['dependent_modules'];
         if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
             $depend = array();
             $is_stop = false;
@@ -937,8 +937,13 @@ class InstallModule extends Db {
             $dirhash    = $this->extractHashForFiles($dirTo);
             $etalonHash = unserialize($this->mData['files_hash']);
             $dirToArr = explode("/", $dirTo);
-            if (!empty($dirToArr[3])) {
-                for ($i = 3; $i < count($dirToArr); $i++) {
+            if (strtolower($this->mInfo['install']['module_system']) == 'n') {
+                $w = 3;
+            } else {
+                $w = 4;
+            }
+            if (!empty($dirToArr[$w])) {
+                for ($i = $w; $i < count($dirToArr); $i++) {
                     $etalonHash = $etalonHash[$dirToArr[$i]]['cont'];
                 }
             }
@@ -1458,7 +1463,7 @@ class InstallModule extends Db {
             $list->addSearch("Имя модуля",      '`name`',  	'TEXT');
             $list->addSearch("Идентификатор",	'module_id','TEXT');
 
-            $list->SQL = "SELECT NULL AS id, NULL AS name, NULL AS module_id";
+            $list->SQL = "SELECT 1";
             $list->addColumn("Имя модуля", "200px", "TEXT");
             $list->addColumn("Идентификатор", "200px", "TEXT");
             $list->addColumn("Описание", "", "TEXT");
@@ -1603,10 +1608,32 @@ class InstallModule extends Db {
                     $copy_list[$module_id]['version'] .= "</tbody></table>";
                 }
             }
+//            //пагинация
+//            $per_page = count($copy_list);
+//            $list->recordsPerPage = $per_page;
+//            $list->setRecordCount($per_page);
+
             //пагинация
-            $per_page = count($copy_list);
+            $ss = new Zend_Session_Namespace('Search');
+            $ssi = 'main_' . $list_id;
+            $ss = $ss->$ssi;
+            if (!empty($ss["count_{$list_id}"])) {
+                $per_page = empty($ss["count_{$list_id}"]) ? 1 : (int)$ss["count_{$list_id}"];
+            }
             $list->recordsPerPage = $per_page;
-            $list->setRecordCount($per_page);
+
+            $page = empty($_GET["_page_{$list_id}"]) ? 1 : (int)$_GET["_page_{$list_id}"];
+            $from = ($page - 1) * $per_page;
+            $to = $page * $per_page;
+            $list->setRecordCount(count($copy_list));
+            $i = 0;
+            $tmp = array();
+            foreach ($copy_list as $val) {
+                $i++;
+                if ($i > $from && $i <= $to) {
+                    $tmp[] = $val;
+                }
+            }
 
             $list->data = $copy_list;
             $list->showTable();
@@ -1642,11 +1669,16 @@ class InstallModule extends Db {
                             //разбиваем запросы на отдельные
                             $sql = $this->SQLToQueriesArray($sql);
                             foreach ($sql as $qu) {
-                                $this->db->query($qu);//выполняем
+                                //даже если ошибки в скрипте, удаление продолжается
+                                try {
+                                    $this->db->query($qu);//выполняем
+                                } catch (Exception $e) {
+                                    $this->addNotice("Таблицы модуля", "Ошибка при удалении таблиц (удаление продолжается)", $e->getMessage(), "warning");
+                                }
                             }
-                            $this->addNotice("Таблицы модуля", "Удаление таблиц", "Выполнено", "info");
+                            $this->addNotice("Таблицы модуля", "Удаление таблиц", "Выполнение SQL завершено", "info");
                         } else {
-                            $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю!", "warning");
+                            $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю, удалите их самостоятельно!", "warning");
                         }
                     } else {
                         $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Инструкции по удалению не найдены, удалите их самостоятельно!", "warning");
@@ -1666,10 +1698,11 @@ class InstallModule extends Db {
                     $this->cache->remove($this->mInfo['install']['module_id']);
 
                     //удаляем файлы
-                    if ($mInfo['is_system'] == 'N') {
-                        $modulePath = (strtolower($mInfo['is_system']) == "y" ? "core2/" : "") .  "mod/{$mInfo['module_id']}/v{$mInfo['version']}";
+                    $modulePath = (strtolower($mInfo['is_system']) == "y" ? "core2/" : "") .  "mod/{$mInfo['module_id']}/v{$mInfo['version']}";
+                    if (strtolower($mInfo['is_system']) == 'n') {
                         $this->deleteFolder($modulePath);
                     } else {
+//                        $this->deleteFolder($modulePath);
                         $this->addNotice("Файлы модуля", "Файлы не удалены", "Файлы системных модулей удаляются вручную!", "warning");
                     }
 
@@ -1939,8 +1972,12 @@ class InstallModule extends Db {
         foreach ($allMods as $t) {
             if (!empty($availMods[$t['module_id']])) {
                 foreach ($availMods[$t['module_id']] as $mod_v => $i) {
-                    if ($mod_v > $t['version'] && isset($i['migrate']["v{$t['version']}"]) && (empty($updates[$t['module_id']]) || $mod_v > $updates[$t['module_id']])) {
-                        $updates[$t['module_id']] = $mod_v;
+                    if ($mod_v > $t['version'] && isset($i['migrate']["v{$t['version']}"]) && (empty($updates[$t['module_id']]) || $mod_v > $updates[$t['module_id']]['version'])) {
+                        $updates[$t['module_id']] = array(
+                            'module_id' => $t['module_id'],
+                            'version'   => $mod_v,
+                            'm_name'    => $i['install']['module_name']
+                        );
                     }
                 }
             }
@@ -2206,8 +2243,13 @@ class InstallModule extends Db {
             $dirhash    = $this->extractHashForFiles($dirTo);
             $etalonHash = unserialize($this->mData['files_hash']);
             $dirToArr = explode("/", $dirTo);
-            if (!empty($dirToArr[3])) {
-                for ($i = 3; $i < count($dirToArr); $i++) {
+            if (strtolower($this->mInfo['install']['module_system']) == 'n') {
+                $w = 3;
+            } else {
+                $w = 4;
+            }
+            if (!empty($dirToArr[$w])) {
+                for ($i = $w; $i < count($dirToArr); $i++) {
                     $etalonHash = $etalonHash[$dirToArr[$i]]['cont'];
                 }
             }

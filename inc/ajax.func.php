@@ -40,15 +40,16 @@ class ajaxFunc extends Common {
 		$class_id = $data['class_id'];
 		$order_fields = $this->getSessForm($class_id);
 
-		$control = $data['control']; //данные полей формы
-		$script  = "for (var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++) {if(document.getElementById('{$class_id}_mainform').elements[i].className=='reqField')document.getElementById('{$class_id}_mainform').elements[i].className='input'};";
-		$req     = array();
-		$email   = array();
-		$date    = array();
-		$float   = array();
-		$int     = array();
-		$host    = array();
-		$phone   = array();
+		$control  = $data['control']; //данные полей формы
+		$script   = "for (var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++) {if(document.getElementById('{$class_id}_mainform').elements[i].className=='reqField')document.getElementById('{$class_id}_mainform').elements[i].className='input'};";
+		$req      = array();
+		$email    = array();
+		$date     = array();
+        $datetime = array();
+		$float    = array();
+		$int      = array();
+		$host     = array();
+		$phone    = array();
 		
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
@@ -87,6 +88,8 @@ class ajaxFunc extends Common {
 					$email[] = $field;
 				} elseif (in_array("date", $params)) {
 					$date[] = $field;
+				} elseif (in_array("datetime", $params)) {
+                    $datetime[] = $field;
 				} elseif (in_array("float", $params)) {
 					$float[] = $field;
 				} elseif (in_array("int", $params)) {
@@ -136,7 +139,7 @@ class ajaxFunc extends Common {
 			}
 		}
 
-		if (count($date)) {
+		/*if (count($date)) {
 			require_once("Zend/Validate/Date.php");
 			$validator = new Zend_Validate_Date();
 			foreach ($date as $field) {
@@ -148,6 +151,21 @@ class ajaxFunc extends Common {
 				}
 			}
 		}
+
+		if (count($datetime)) {
+			foreach ($datetime as $field) {
+				if ( !  ! preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(|:{1}\d{2}))$/', $control[$field])) {
+                    $this->error[] = "- Неверный формат даты";
+				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				} else {
+                    list($year, $month, $day) = sscanf($control[$field], '%d-%d-%d');
+                    if ( ! checkdate($month, $day, $year)) {
+                        $this->error[] = "- Некорректная дата";
+                        $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+                    }
+                }
+			}
+		}*/
 		
 		if (count($int)) {
 			require_once("Zend/Validate/Int.php");

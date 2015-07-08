@@ -18,7 +18,7 @@ class tabs extends initTabs {
 			$name = time();
 		}
 		$this->tabs_id 	= "tab_" . $name;
-		$this->activeTab = !empty($_REQUEST[$this->tabs_id]) ? $_REQUEST[$this->tabs_id] : 1;
+		$this->activeTab = !empty($_GET[$this->tabs_id]) ? $_GET[$this->tabs_id] : 1;
 	}
 	
 	public function addTab($caption, $location, $width = "", $status = 'enabled') {

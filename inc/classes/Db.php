@@ -228,6 +228,20 @@ class Db {
 		}
 	}
 
+
+    /**
+     * Получение маски дня
+     * @return string
+     */
+	public function getMaskDate() {
+		return $this->db->fetchOne("
+            SELECT `value`
+            FROM core_settings
+            WHERE code = 'mask_date'
+        ");
+	}
+
+
 	/**
 	 * @param string $code
 	 * @return string
@@ -235,6 +249,7 @@ class Db {
 	public function getSetting($code) {
 		return $this->db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND code=? LIMIT 1", $code);
 	}
+
 
 	/**
 	 * @param string $code

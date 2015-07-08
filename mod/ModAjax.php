@@ -519,7 +519,8 @@ class ModAjax extends ajaxFunc {
 			foreach ($data['control'] as $field => $value) {
 				$where = $this->db->quoteInto("code = ?", $field);		
 				$this->db->update('core_settings',
-					array('value' => $value,
+					array(
+						'value'    => $value,
 						'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
 					),
 					$where
@@ -542,12 +543,21 @@ class ModAjax extends ajaxFunc {
      */
     public function saveCustomSettings($data) {
 
-		$fields = array('code' 		=> 'req');
+		$fields = array('code' => 'req');
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
-		$data['control']['is_custom_sw'] = 'Y';
-		if (!$last_insert_id = $this->saveData($data)) {
+
+        $refid = $this->getSessFormField($data['class_id'], 'refid');
+        if ( ! $refid) {
+            $seq = $this->db->fetchOne("
+                SELECT MAX(seq)
+                FROM core_settings
+            ");
+            $data['control']['seq'] = $seq + 5;
+        }
+        $data['control']['is_custom_sw'] = 'Y';
+		if ( ! $last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
 		$this->done($data);
@@ -691,7 +701,8 @@ class ModAjax extends ajaxFunc {
                     {
                         $sql = file_get_contents($path);
                         try {
-                            $inst->SQLСheckingSyntax($sql);
+                            //TODO FIXME Валентин включить проверку скриптов перед загрузкой модуля(почему не целый скрипт?? по частям глючит)
+//                            $inst->SQLСheckingSyntax($sql);
                         }
                         catch (Exception $e) {
                             $errors['sql'][] = " - Ошибки в '{$fName}':<br>" . $e->getMessage();

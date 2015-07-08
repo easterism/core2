@@ -191,7 +191,7 @@ class Templater2 {
             foreach ($temp[1] as $k => $value) {
                 $tmp         = explode(',', $value);
                 array_walk($tmp, function (&$val) {
-                    $val = trim($val, '"');
+                    $val = trim($val, "\"'");
                     return $val;
                 });
                 $temp[1][$k] = call_user_func_array(array($process, $plugin), $tmp);

@@ -33,6 +33,11 @@ class Error {
 		return $isXajax;
 	}
 
+	/**
+	 * Основной обработчик исключений
+	 *
+	 * @param Exception $exception
+	 */
 	public static function catchException(Exception $exception) {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
@@ -77,6 +82,11 @@ class Error {
 		}
 	}
 
+	/**
+     * Обработчик исключений адаптера базы данных
+     *
+	 * @param $exception
+	 */
 	public static function catchDbException($exception) {
 		$code = $exception->getCode();
 		if ($code == 1044) {
