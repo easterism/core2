@@ -1,9 +1,33 @@
 {
+<<<<<<< HEAD
   "require": {
     "mpdf/mpdf": "5.7.4",
     "xajax/xajax": "dev-master",
     "components/jquery": "2.1.4",
     "tinymce/tinymce": "4.1.10",
+=======
+  "name": "easterism/core2",
+  "type": "framework",
+  "description": "Fullstack framework for business application",
+  "keywords": ["framework"],
+  "homepage": "https://github.com/easterism/core2",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "misterEaster",
+      "email": "easter.by@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": ">=5.2.11",
+    "mpdf/mpdf": "5.7.4",
+    "components/jquery": "2.1.4",
+    "tinymce/tinymce": "4.1.10",
+    "xajax/xajax": "dev-master",
+>>>>>>> 1fcda2606ddb0abdccaec5773653af886383ec31
     "blueimp/jquery-file-upload": "9.9.3",
     "zf1/zend-cache": "1.12.*",
     "zf1/zend-acl": "1.12.*",
@@ -13,4 +37,8 @@
     "zf1/zend-config": "1.12.*",
     "zf1/zend-translate": "1.12.*"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 1fcda2606ddb0abdccaec5773653af886383ec31
