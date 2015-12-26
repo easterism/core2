@@ -16,13 +16,15 @@ $tab->beginContainer($title);
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {			
 			$edit = new editTable('enum'); 
 			//$edit->firstColWidth = 200;
-			$edit->SQL  = "SELECT id,
-								 name,
-								 global_id,
-								 custom_field								 								 
-							  FROM core_enum
-							 WHERE id = '" . $_GET['edit'] . "' 
-							 AND parent_id IS NULL";
+			$edit->SQL = $this->db->quoteInto("
+				SELECT id,
+					 name,
+					 global_id,
+					 custom_field
+				FROM core_enum
+				WHERE id = ?
+				  AND parent_id IS NULL
+			", $_GET['edit']);
 			$edit->addControl($this->translate->tr("Название справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
 			if ($_GET['edit'] > 0) {
 				$edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
@@ -136,13 +138,15 @@ $tab->beginContainer($title);
 						$edit->addParams("custom_fields", base64_encode(serialize($fields)));
 					}
 				
-					$edit->SQL  = "SELECT  id,
-										   name, $fields_sql										   									   
-										   is_default_sw,										   										   										   
-										   is_active_sw,
-										   parent_id										   
-									  FROM core_enum
-									  WHERE id = '{$_GET['add']}'";
+					$edit->SQL = $this->db->quoteInto("
+						SELECT id,
+							   name, $fields_sql
+							   is_default_sw,
+							   is_active_sw,
+							   parent_id
+						FROM core_enum
+						WHERE id = ?
+					", $_GET['add']);
 
 					$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
 					$edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N");
@@ -160,8 +164,9 @@ $tab->beginContainer($title);
 				$list = new listTable('enumxxx3');
 				$list->table = "core_enum";
 				$list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
-				$list->addColumn($this->translate->tr("Значение"), "", "TEXT");
-				$list->addColumn($this->translate->tr("По умолчанию"), "2%", "TEXT");
+
+				$list->addColumn($this->translate->tr("Значение"),     "",    "TEXT");
+				$list->addColumn($this->translate->tr("По умолчанию"), "120", "TEXT");
 
 				$fields_sql = '';
 				if (is_array($fields) && count($fields)) {
@@ -174,18 +179,20 @@ $tab->beginContainer($title);
 
 				}
 			
-				$list->SQL = "SELECT id,
-									 name,
-									 CASE is_default_sw WHEN 'Y' THEN 'Да' ELSE 'Нет' END AS is_default_sw, $fields_sql
-									 seq,
-									 is_active_sw,
-								 	 custom_field
-								FROM core_enum
-							   WHERE parent_id='{$_GET['edit']}' ADD_SEARCH
-							   ORDER BY seq, name";
+				$list->SQL = $this->db->quoteInto("
+					SELECT id,
+						   name,
+						   CASE is_default_sw WHEN 'Y' THEN 'Да' ELSE 'Нет' END AS is_default_sw, $fields_sql
+						   seq,
+						   is_active_sw,
+						   custom_field
+					FROM core_enum
+				    WHERE parent_id = ? ADD_SEARCH
+				    ORDER BY seq, name
+				", $_GET['edit']);
 
-				$list->addColumn($this->translate->tr("Очередность"), "1%", "TEXT");
-				$list->addColumn("", "1%", "STATUS_INLINE", 'core_enum.is_active_sw');
+				$list->addColumn($this->translate->tr("Очередность"), "105", "TEXT");
+				$list->addColumn("", 								  "1%",  "STATUS_INLINE", 'core_enum.is_active_sw');
 
 				$list->paintCondition	= "'TCOL_03' == 'N'";
 				$list->paintColor		= "ffffee";
@@ -215,23 +222,25 @@ $tab->beginContainer($title);
 		} else {
 			
 			$list = new listTable('enum');
-			$list->addSearch($this->translate->tr('Идентификатор'), 'global_id', 'TEXT');
-			$list->addSearch($this->translate->tr('Название справочника'), 'name', 'TEXT');
+			$list->addSearch($this->translate->tr('Идентификатор'),        'global_id', 'TEXT');
+			$list->addSearch($this->translate->tr('Название справочника'), 'name',      'TEXT');
 
-			$list->SQL = "SELECT id,
-								 global_id,
-								 name,
-								 CASE WHEN custom_field IS NOT NULL THEN 'Да' END AS custom,
-								 (SELECT COUNT(1) FROM core_enum WHERE parent_id = e.id) AS co,
-								 is_active_sw
-							FROM core_enum AS e
-							WHERE parent_id IS NULL ADD_SEARCH
-						   ORDER BY `name`";
-			$list->addColumn($this->translate->tr("Идентификатор"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Название справочника"), "70%", "TEXT");
-			$list->addColumn($this->translate->tr("Дополпительные поля"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Значений"), "20%", "NUMBER");
-			$list->addColumn("", "1%", "STATUS_INLINE", 'core_enum.is_active_sw');
+			$list->SQL = "
+				SELECT id,
+					   global_id,
+					   name,
+					   CASE WHEN custom_field IS NOT NULL THEN 'Да' END AS custom,
+					   (SELECT COUNT(1) FROM core_enum WHERE parent_id = e.id) AS co,
+					   is_active_sw
+				FROM core_enum AS e
+				WHERE parent_id IS NULL ADD_SEARCH
+				ORDER BY `name`
+			";
+			$list->addColumn($this->translate->tr("Идентификатор"), 	   "120", "TEXT");
+			$list->addColumn($this->translate->tr("Название справочника"), "",    "TEXT");
+			$list->addColumn($this->translate->tr("Дополпительные поля"),  "165", "TEXT");
+			$list->addColumn($this->translate->tr("Значений"), 			   "90",  "NUMBER");
+			$list->addColumn("", 										   "1%",  "STATUS_INLINE", 'core_enum.is_active_sw');
 			
 			$list->paintCondition	= "'TCOL_04' == 'N'";
 			$list->paintColor		= "fafafa";

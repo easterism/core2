@@ -12,11 +12,11 @@
 
             <td align="center" width="100%">
                 <!-- BEGIN pages2 -->
-                <button onclick="{GO_TO}" title="{BACK}" class="paginButton"><span>«</span></button>
+                <button onclick="{GO_TO}" type="button" title="{BACK}" class="paginButton"><span>«</span></button>
                 <!-- END pages2 -->
                 {CURR_PAGE}
                 <!-- BEGIN pages3 -->
-                <button onclick="{GO_TO}" title="{FORW}" class="paginButton"><span>»</span></button>
+                <button onclick="{GO_TO}" type="button" title="{FORW}" class="paginButton"><span>»</span></button>
                 <!-- END pages3 -->
             </td>
 

@@ -46,10 +46,12 @@ $tab->beginContainer($title);
                 unset($fields[7]);
             }
 
-			$edit->SQL  = "SELECT  " . implode("," . chr(10), $fields) . "
-							  FROM core_users
-							  	   LEFT JOIN core_users_profile AS p ON p.user_id=u_id
-							 WHERE `u_id` = '" . $_GET['edit'] . "'";
+			$edit->SQL = $this->db->quoteInto("
+				SELECT " . implode("," . chr(10), $fields) . "
+                FROM core_users
+                   LEFT JOIN core_users_profile AS p ON p.user_id = u_id
+                WHERE `u_id` = ?
+            ", $_GET['edit']);
 			
 			$edit->addControl("Email:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "");
 			$edit->selectSQL[] = "SELECT id, name FROM 
@@ -57,7 +59,7 @@ $tab->beginContainer($title);
 										UNION ALL 
 									SELECT id, name, position FROM core_roles WHERE is_active_sw='Y') AS a
 								 ORDER BY position ASC";
-			$edit->addControl($this->translate->tr("Роль:"), "LIST", "", "", "");
+			$edit->addControl($this->translate->tr("Роль:"), "LIST", "", "", "", true);
 			
 			$edit->addControl($this->translate->tr("Фамилия:"), "TEXT", "maxlength=\"20\" size=\"40\"", "", "");
 			$edit->addControl($this->translate->tr("Имя:"), "TEXT", "maxlength=\"20\" size=\"40\"", "", "", true);
@@ -109,15 +111,15 @@ $tab->beginContainer($title);
 								 LEFT JOIN core_roles AS r ON r.id = u.role_id
 							WHERE u_id > 0 ADD_SEARCH
 						   ORDER BY u.date_added DESC";
-			$list->addColumn($this->translate->tr("Логин"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Имя"), "", "TEXT");
-			$list->addColumn("Email", "2%", "TEXT");
-			$list->addColumn($this->translate->tr("Роль"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Дата регистрации"), "", "DATE");
-			$list->addColumn($this->translate->tr("Нужно сменить пароль"), "1%", "TEXT");
-			$list->addColumn($this->translate->tr("Неверный email"), "1%", "TEXT");
-			$list->addColumn($this->translate->tr("Админ"), "1%", "TEXT");
-			$list->addColumn("", "1%", "STATUS_INLINE", "core_users.visible");
+			$list->addColumn($this->translate->tr("Логин"), 			   "100", "TEXT");
+			$list->addColumn($this->translate->tr("Имя"),   			   "", "TEXT");
+			$list->addColumn("Email", 									   "155", "TEXT");
+			$list->addColumn($this->translate->tr("Роль"), 				   "130", "TEXT");
+			$list->addColumn($this->translate->tr("Дата регистрации"),     "135", "DATE");
+			$list->addColumn($this->translate->tr("Нужно сменить пароль"), "165", "TEXT");
+			$list->addColumn($this->translate->tr("Неверный email"), 	   "125", "TEXT");
+			$list->addColumn($this->translate->tr("Админ"), 			   "1%", "TEXT");
+			$list->addColumn("", 										   "1%", "STATUS_INLINE", "core_users.visible");
 
 			$list->paintCondition	= "'TCOL_08' == 'N'";
 			$list->paintColor		= "fafafa";

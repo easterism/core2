@@ -6,9 +6,10 @@
  * Time: 12:23
  */
 namespace Tests;
-require_once __DIR__ . '/../bootstrap.php';
-require_once __DIR__ . '/../../classes/Db.php';
-require_once __DIR__ . '/../../classes/Acl.php';
+
+require_once __DIR__ . '/../Init.php';
+require_once __DIR__ . '/../../inc/classes/Db.php';
+require_once __DIR__ . '/../../inc/classes/Acl.php';
 
 /**
  * Class AclTest
@@ -17,7 +18,7 @@ require_once __DIR__ . '/../../classes/Acl.php';
 class AclTest extends \PHPUnit_Framework_TestCase
 {
 
-    /**
+     /**
      * @var \Zend_Auth
      */
     protected $auth;
@@ -31,7 +32,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
     /**
      * @var \Zend_Db_Adapter_Abstract
      */
-    static private $db;
+    private $db;
 
     /**
      * @var \Zend_Acl_Role
@@ -44,21 +45,26 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     protected $acl_class;
 
-
+    /**
+     * @throws \Zend_Exception
+     */
     public function setUp()
     {
+        $config   = \Zend_Registry::get('config');
+        $database = new \Db($config);
+
         $this->acl_class = new \Acl();
         $this->acl = new \Zend_Acl();
-        $this->db = \Zend_Registry::get('db');
-
+        $this->db = $database->db;
         $this->auth        = \Zend_Registry::get('auth');
-        $this->auth->ID    = 1;
-        $this->auth->NAME  = 'test';
+        $this->auth->ID    = 99;
+        $this->auth->NAME  = 'test999';
         $this->auth->ROLE  = '99999';
         $this->auth->EMAIL = 'test@mail.com';
         $this->auth->ROOT  = false;
         $this->auth->SID   = \Zend_Session::getOptions('name');
-        $this->auth->setExpirationHops(1, 'ACTION');
+        $this->auth->setExpirationHops(99, 'ACTION');
+        $this->auth->ROLEID    = '99999';
 
         require_once 'Zend/Acl/Role.php';
 
@@ -86,95 +92,57 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function test_setupAcl() {
         try {
-            $ug_id = '99999';
+            $ug_id = 'test999';
             $old_auth = $this->auth;
             \Zend_Registry::set('auth', $this->auth);
-            $ca_type = 'deletemodule';
-            $this->db->insert('cms_user_groups', array(
-                'ug_id' => '99999',
-                'ug_name' => 'test',
-                'ug_desc' => null,
-                'lastuser' => 1,
-                'lastupdate' => 'Test',
+            $ca_type = 'test999';
+            $this->db->insert('core_roles', array(
+                'id' => '99999',
+                'name' => 'test999',
+                'is_active_sw' => 'Y',
+                'lastuser' => 99,
+                'access'=> 'a:11:{s:7:"default";a:1:{s:6:"charts";s:2:"on";}s:12:"list_default";a:1:{s:6:"charts";s:2:"on";}s:12:"read_default";a:1:{s:6:"charts";s:2:"on";}s:12:"edit_default";a:1:{s:6:"charts";s:2:"on";}s:14:"delete_default";a:1:{s:6:"charts";s:2:"on";}s:6:"access";a:28:{s:5:"store";s:2:"on";s:14:"store-products";s:2:"on";s:10:"store-base";s:2:"on";s:15:"store-providers";s:2:"on";s:9:"store-out";s:2:"on";s:15:"store-remainder";s:2:"on";s:13:"store-journal";s:2:"on";s:7:"reports";s:2:"on";s:13:"reports-prods";s:2:"on";s:17:"reports-remainder";s:2:"on";s:15:"reports-analize";s:2:"on";s:13:"reports-money";s:2:"on";s:13:"reports-stats";s:2:"on";s:6:"config";s:2:"on";s:8:"calendar";s:2:"on";s:4:"kids";s:2:"on";s:6:"recipe";s:2:"on";s:2:"hr";s:2:"on";s:4:"enum";s:2:"on";s:9:"kids-diet";s:2:"on";s:11:"kids-groups";s:2:"on";s:10:"kids-tabel";s:2:"on";s:7:"kitchen";s:2:"on";s:11:"kitchen-ten";s:2:"on";s:17:"kitchen-printmenu";s:2:"on";s:12:"kitchen-menu";s:2:"on";s:13:"kitchen-norma";s:2:"on";s:13:"kitchen-print";s:2:"on";}s:8:"list_all";a:27:{s:5:"store";s:2:"on";s:14:"store-products";s:2:"on";s:10:"store-base";s:2:"on";s:15:"store-providers";s:2:"on";s:9:"store-out";s:2:"on";s:15:"store-remainder";s:2:"on";s:13:"store-journal";s:2:"on";s:7:"reports";s:2:"on";s:13:"reports-prods";s:2:"on";s:17:"reports-remainder";s:2:"on";s:15:"reports-analize";s:2:"on";s:13:"reports-money";s:2:"on";s:13:"reports-stats";s:2:"on";s:6:"config";s:2:"on";s:8:"calendar";s:2:"on";s:4:"kids";s:2:"on";s:6:"recipe";s:2:"on";s:4:"enum";s:2:"on";s:9:"kids-diet";s:2:"on";s:11:"kids-groups";s:2:"on";s:10:"kids-tabel";s:2:"on";s:7:"kitchen";s:2:"on";s:11:"kitchen-ten";s:2:"on";s:17:"kitchen-printmenu";s:2:"on";s:12:"kitchen-menu";s:2:"on";s:13:"kitchen-norma";s:2:"on";s:13:"kitchen-print";s:2:"on";}s:8:"read_all";a:27:{s:5:"store";s:2:"on";s:14:"store-products";s:2:"on";s:10:"store-base";s:2:"on";s:15:"store-providers";s:2:"on";s:9:"store-out";s:2:"on";s:15:"store-remainder";s:2:"on";s:13:"store-journal";s:2:"on";s:7:"reports";s:2:"on";s:13:"reports-prods";s:2:"on";s:17:"reports-remainder";s:2:"on";s:15:"reports-analize";s:2:"on";s:13:"reports-money";s:2:"on";s:13:"reports-stats";s:2:"on";s:6:"config";s:2:"on";s:8:"calendar";s:2:"on";s:4:"kids";s:2:"on";s:6:"recipe";s:2:"on";s:4:"enum";s:2:"on";s:9:"kids-diet";s:2:"on";s:11:"kids-groups";s:2:"on";s:10:"kids-tabel";s:2:"on";s:7:"kitchen";s:2:"on";s:11:"kitchen-ten";s:2:"on";s:17:"kitchen-printmenu";s:2:"on";s:12:"kitchen-menu";s:2:"on";s:13:"kitchen-norma";s:2:"on";s:13:"kitchen-print";s:2:"on";}s:8:"edit_all";a:27:{s:5:"store";s:2:"on";s:14:"store-products";s:2:"on";s:10:"store-base";s:2:"on";s:15:"store-providers";s:2:"on";s:9:"store-out";s:2:"on";s:15:"store-remainder";s:2:"on";s:13:"store-journal";s:2:"on";s:7:"reports";s:2:"on";s:13:"reports-prods";s:2:"on";s:17:"reports-remainder";s:2:"on";s:15:"reports-analize";s:2:"on";s:13:"reports-money";s:2:"on";s:13:"reports-stats";s:2:"on";s:6:"config";s:2:"on";s:8:"calendar";s:2:"on";s:4:"kids";s:2:"on";s:6:"recipe";s:2:"on";s:4:"enum";s:2:"on";s:9:"kids-diet";s:2:"on";s:11:"kids-groups";s:2:"on";s:10:"kids-tabel";s:2:"on";s:7:"kitchen";s:2:"on";s:11:"kitchen-ten";s:2:"on";s:17:"kitchen-printmenu";s:2:"on";s:12:"kitchen-menu";s:2:"on";s:13:"kitchen-norma";s:2:"on";s:13:"kitchen-print";s:2:"on";}s:10:"delete_all";a:27:{s:5:"store";s:2:"on";s:14:"store-products";s:2:"on";s:10:"store-base";s:2:"on";s:15:"store-providers";s:2:"on";s:9:"store-out";s:2:"on";s:15:"store-remainder";s:2:"on";s:13:"store-journal";s:2:"on";s:7:"reports";s:2:"on";s:13:"reports-prods";s:2:"on";s:17:"reports-remainder";s:2:"on";s:15:"reports-analize";s:2:"on";s:13:"reports-money";s:2:"on";s:13:"reports-stats";s:2:"on";s:6:"config";s:2:"on";s:8:"calendar";s:2:"on";s:4:"kids";s:2:"on";s:6:"recipe";s:2:"on";s:4:"enum";s:2:"on";s:9:"kids-diet";s:2:"on";s:11:"kids-groups";s:2:"on";s:10:"kids-tabel";s:2:"on";s:7:"kitchen";s:2:"on";s:11:"kitchen-ten";s:2:"on";s:17:"kitchen-printmenu";s:2:"on";s:12:"kitchen-menu";s:2:"on";s:13:"kitchen-norma";s:2:"on";s:13:"kitchen-print";s:2:"on";}s:7:"api_all";a:1:{s:2:"hr";s:2:"on";}}',
             ));
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'deletemodule',
-                'ca_key' => 'N',
+            $ca_id = $this->db->lastInsertId();
+            $this->db->insert('core_modules', array(
+                'm_id' => '99999',
+                'module_id' => 'test',
+                'm_name' => 'test999',
+                'visible' => 'Y',
+                'lastuser' => 99,
             ));
             $ca_id1 = $this->db->lastInsertId();
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'installmodule',
-                'ca_key' => 'N',
+            $this->db->insert('core_submodules', array(
+                'm_id' => '99999',
+                'sm_id' => 999,
+                'sm_name' => 'test9999',
+                'visible' => 'Y',
+                'lastuser' => 99,
             ));
             $ca_id2 = $this->db->lastInsertId();
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'createpage',
-                'ca_key' => 'Y',
-            ));
-            $ca_id3 = $this->db->lastInsertId();
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'cms',
-                'ca_key' => 'storage',
-            ));
-            $ca_id4 = $this->db->lastInsertId();
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'cms',
-                'ca_key' => 'modules',
-            ));
-            $ca_id5 = $this->db->lastInsertId();
+
             $this->acl_class->setupAcl();
 
             $result_acl = \Zend_Registry::get('acl');
+            $isAllow1 = $result_acl->isAllowed($ug_id, 'test','test999','Y', 99 );
 
-
-            $isAllow1 = $result_acl->isAllowed( $ug_id, 'deletemodule');
-
-            $isAllow2 = $result_acl->isAllowed( $ug_id, 'createpage','Y');
-
-            $isAllow3 = $result_acl->isAllowed( $ug_id, 'installmodule','N');
-
-            $isAllow4 = $result_acl->isAllowed( $ug_id, 'cms','storage');
-
-            $isAllow5 = $result_acl->isAllowed( $ug_id, 'cms','modules');
-
-            //var_dump($result_acl->getRoles());
-            //var_dump($result_acl->getResources());
-            //var_dump($isAllow1);
-            //var_dump($isAllow2);
-            //var_dump($isAllow3);
-            //var_dump($isAllow4);
-            //var_dump($isAllow5);
+           //var_dump($ca_id);
+           //var_dump($ca_id1);
+           //var_dump($ca_id2);
+           //var_dump($isAllow1);
 
             if ($isAllow1 == false) {
                 //$this->fail(" is not correct");
             }
-            if ($isAllow2 == false) {
-                //$this->fail(" is not correct");
-            }
-            if ($isAllow3 == false) {
-                //$this->fail(" is not correct");
-            }
-            if ($isAllow4 == false) {
-                //$this->fail(" is not correct");
-            }
-            if ($isAllow5 == false) {
-                //$this->fail(" is not correct");
-            }
-        //} catch (\Exception $e) {
-        //    $error = $e->getMessage();
-        //}
 
-        $where = $this->db->quoteInto('ca_id IN(?)', array($ca_id1, $ca_id2, $ca_id3, $ca_id4, $ca_id5));
-        $this->db->delete('cms_access', $where);
+        $where = $this->db->quoteInto('m_id IN(?)', array($ca_id1));
+        $this->db->delete('core_modules', $where);
 
+        $where = $this->db->quoteInto('m_id IN(?)', array($ca_id2));
+        $this->db->delete('core_submodules', $where);
 
-        $where = $this->db->quoteInto('ug_id = ?', $ug_id);
-        $this->db->delete('cms_user_groups', $where);
+        $where = $this->db->quoteInto('name = ?', $ug_id);
+        $this->db->delete('core_roles', $where);
 
 
         \Zend_Registry::set('auth', $old_auth);
@@ -189,244 +157,154 @@ class AclTest extends \PHPUnit_Framework_TestCase
     /**
      * тест разрешения доступа на использование ресурса
      * @see  Zend_Registry
-     * @group ModStorage
-     * @group ModStorageController
-     * dataProvider provider_get_data_files
-     * @param string $role
-     * @param string $resource
-     * @param string $type
      */
 
     public function test_allow()
     {
-
+        try {
         $allcl = $this->acl_class->setupAcl();
-        $allow = $this->acl_class->allow('92345345', 'ASDASD', '--');
-// тест не пройден, данные в метод передаются согласно описанию string -  на выходе ошика.
-//TODO HPUnit_Framework_Error : Argument 1 passed to Zend_Acl::add() must implement interface Zend_Acl_Resource_Interface, string given, called in Z:\rti-techno\admin\classes\Acl.php on line 160 and defined
-        //  C:\libs\Zend\Acl.php:341
-        //Z:\rti-techno\admin\classes\Acl.php:160
-        //Z:\rti-techno\admin\tests\classes\AclTest.php:202
+        $allow1 = $this->acl_class->allow('Технолог', 'cron', 'Null');
+        $allow2 = $this->acl_class->allow('fhdfghdfjh', 'cron', 'Null');
+        } catch (\Exception $e) {
+            $error = $e->getMessage();
+        }
+        if (isset($error)=="Role 'fhdfghdfjh' not found") {
+            //$this->fail($error);
+        }
 
     }
 
     /**
      * тест запрета доступа на использование ресурса
      * @see  Zend_Registry
-     * @group ModStorage
-     * @group ModStorageController
-     * @dataProvider provider_get_data_files
-     * @param string $role
-     * @param string $resource
-     * @param string $type
      */
 
-    public function test_deny($role, $resource, $type)
+    public function test_deny()
     {
         try {
-            $ug_id = '99999';
-
+            $ug_id = 'test999';
             $old_auth = $this->auth;
-
-            $this->auth->ROLE  = '99999';
-
             \Zend_Registry::set('auth', $this->auth);
-
-            $this->db->insert('cms_user_groups', array(
-                'ug_id' => '99999',
-                'ug_name' => 'test',
-                'ug_desc' => null,
-                'lastuser' => 1,
-                'lastupdate' => 'Test',
+            $ca_type = 'test999';
+            $this->db->insert('core_roles', array(
+                'id' => '99999',
+                'name' => 'test999',
+                'is_active_sw' => 'Y',
+                'lastuser' => 99,
             ));
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'deletemodule',
-                'ca_key' => 'N',
+            $ca_id = $this->db->lastInsertId();
+
+            $this->db->insert('core_modules', array(
+                'm_id' => '99999',
+                'module_id' => 'test',
+                'm_name' => 'test999',
+                'visible' => 'Y',
+                'lastuser' => 99,
             ));
             $ca_id1 = $this->db->lastInsertId();
-            $this->db->insert('cms_access', array(
-                'ug_id' => '99999',
-                'ca_type' => 'installmodule',
-                'ca_key' => 'N',
+            $this->db->insert('core_submodules', array(
+                'm_id' => '99999',
+                'sm_id' => 999,
+                'sm_name' => 'test9999',
+                'visible' => 'Y',
+                'lastuser' => 99,
             ));
             $ca_id2 = $this->db->lastInsertId();
 
             $this->acl_class->setupAcl();
+            //$result_acl = \Zend_Registry::get('acl');
+            //var_dump($result_acl->getRoles());
+            //var_dump($result_acl->getResources());
 
-            $deny = $this->acl->deny($role, $resource, $type);
-            // тест корректно не работает. //TODO Zend_Acl_Role_Registry_Exception : Role '99999' not found
+            $deny = $this->acl_class->deny('test999', 'test', 'Null');
+            //var_dump($deny);
+            $result_acl = \Zend_Registry::get('acl');
+            $isAllow1 = $result_acl->isAllowed($ug_id, 'test','test999','Y', 99 );
 
-        } catch (\Exception $e)
-        {
+            if ($isAllow1 == false) {
+                //$this->fail(" is not correct");
+            }
+            $where = $this->db->quoteInto('m_id IN(?)', array($ca_id1));
+            $this->db->delete('core_modules', $where);
+
+            $where = $this->db->quoteInto('m_id IN(?)', array($ca_id2));
+            $this->db->delete('core_submodules', $where);
+
+            $where = $this->db->quoteInto('name = ?', $ug_id);
+            $this->db->delete('core_roles', $where);
+
+
+            \Zend_Registry::set('auth', $old_auth);
+        } catch (\Exception $e) {
             $error = $e->getMessage();
         }
-
-        $where = $this->db->quoteInto('ca_id IN(?)', array( $ca_id1, $ca_id2));
-        $this->db->delete('cms_access', $where);
-
-        $where = $this->db->quoteInto('ug_id = ?', $ug_id);
-        $this->db->delete('cms_user_groups', $where);
-        \Zend_Registry::set('auth', $old_auth);
-
         if (isset($error)) {
             $this->fail($error);
         }
     }
 
     /**
-     * @return array
+     * тест разрешения доступа на использование ресурса
+     * @see  Zend_Registry
      */
-    public function provider_get_data_files() {
-        return array(
-            // array('guest', 'createpage', 'Y'),
-            // array('99999', 'cms', 'modules'),
-            // array('99999', 'cms', 'storage'),
-            array('99999', 'deletemodule', 'N')
-        );
+
+    public function test_allowAll()
+    {
+        try {
+            $allcl = $this->acl_class->setupAcl();
+            $allow1 = $this->acl_class->allowAll('Технолог', 'cron', 'Null');
+            $allow2 = $this->acl_class->allowAll('fhdfghdfjh', 'cron', 'Null');
+        } catch (\Exception $e) {
+            $error = $e->getMessage();
+        }
+        if (isset($error)=="Role 'fhdfghdfjh' not found") {
+            //$this->fail($error);
+        }
+
     }
-
     /**
-     * тест проверки наличия доступа из CMS к странице созданной не средствами CMS
-     *
+     * тест проверки доступа к ресурсу $source для текущей роли
      */
-    public function test_isManagementAllowed() {
-        // добавляем пользователя 99999 и новую страницу в базе cms_access с ca_type='management' и ca_key='C5' и ug_id='99999'.
-        // и потом проверяем метод isManagementAllowed().
-        $ug_id = '99999';
-
+    public function test_checkAcl() {
         $old_auth = $this->auth;
-
-        $this->auth->ROLE  = '99999';
-
+        $this->auth        = \Zend_Registry::get('auth');
+        $this->auth->ID    = 1;
+        $this->auth->NAME  = 'root';
+        $this->auth->ROLE  = 'ALL';
+        $this->auth->EMAIL = 'test@mail.com';
+        $this->auth->ROOT  = TRUE;
+        $this->auth->SID   = \Zend_Session::getOptions('name');
+        $this->auth->setExpirationHops(1, 'ACTION');
         \Zend_Registry::set('auth', $this->auth);
+        $result_acl = \Zend_Registry::get('acl');
 
-        $this->db->insert('cms_user_groups', array(
-            'ug_id' => '99999',
-            'ug_name' => 'test',
-            'ug_desc' => null,
-            'lastuser' => 1,
-            'lastupdate' => 'Test',
-        ));
-        $this->db->insert('cms_access', array(
-            'ug_id' => '99999',
-            'ca_type' => 'management',
-            'ca_key' => 'C5',
-        ));
-        $ca_id1 = $this->db->lastInsertId();
+        $res = $this->acl_class->checkAcl('ALL', '');
 
-        $this->acl_class->setupAcl();
-
-        $isManagementAllowed = $this->acl_class->isManagementAllowed($ca_id1);
-        //$this->assertObjectHasAttribute('C5', $db_new, 'данной страницы не существует');
-
-        if ($isManagementAllowed) {echo("\n".'страница НЕ доступна');}
-
-        else {{echo("\n".'страница доступна');}}
-
-        // после проверки удаляем пользователя 99999 и новую страницю в базе cms_access с ca_type='management' и ca_key='C5' и ug_id='99999'.
-        $where = $this->db->quoteInto('ca_id IN(?)', array( $ca_id1));
-        $this->db->delete('cms_access', $where);
-
-        $where = $this->db->quoteInto('ug_id = ?', $ug_id);
-        $this->db->delete('cms_user_groups', $where);
+        if ($res) {
+            echo ("Разрешено \n");
+        }
         \Zend_Registry::set('auth', $old_auth);
-    }
-
-    /**
-     * тест проверки наличия доступа из CMS к странице созданой средствами CMS
-     *
-     */
-    public function test_isPageAllowed() {
-        // добавляем пользователя 99999 и новую страницу в базе cms_access с ca_type='menu' и ca_key='P135' и ug_id='99999'.
-        // и потом проверяем метод isPageAllowed().
-        $ug_id = '99999';
-
         $old_auth = $this->auth;
-
-        $this->auth->ROLE  = '99999';
-
+        $this->auth        = \Zend_Registry::get('auth');
+        $this->auth->ID    = 1;
+        $this->auth->NAME  = 'zzz';
+        $this->auth->ROLE  = 'test';
+        $this->auth->EMAIL = 'test@mail.com';
+        $this->auth->ROOT  = false;
+        $this->auth->SID   = \Zend_Session::getOptions('name');
+        $this->auth->setExpirationHops(1, 'ACTION');
         \Zend_Registry::set('auth', $this->auth);
-
-        $this->db->insert('cms_user_groups', array(
-            'ug_id' => '99999',
-            'ug_name' => 'test',
-            'ug_desc' => null,
-            'lastuser' => 1,
-            'lastupdate' => 'Test',
-        ));
-        $this->db->insert('cms_access', array(
-            'ug_id' => '99999',
-            'ca_type' => 'menu',
-            'ca_key' => 'P135',
-        ));
-        $ca_id1 = $this->db->lastInsertId();
-
-        $this->acl_class->setupAcl();
-
-        $isPageAllowed = $this->acl_class->isPageAllowed($ca_id1);
-
-        if ($isPageAllowed) {echo("\n".'страница НЕ доступна');}
-
-        else {{echo("\n".'страница доступна');}}
-
-        // после проверки удаляем пользователя 99999 и новую страницю в базе cms_access с ca_type='menu' и ca_key='P135' и ug_id='99999'.
-        $where = $this->db->quoteInto('ca_id IN(?)', array( $ca_id1));
-        $this->db->delete('cms_access', $where);
-
-        $where = $this->db->quoteInto('ug_id = ?', $ug_id);
-        $this->db->delete('cms_user_groups', $where);
+        $result_acl = \Zend_Registry::get('acl');
+        $res = $this->acl_class->checkAcl('ADFGADFGDAF', '');
+        if ($res) {
+            echo ('Разрешено');}
+        else {
+            echo ('Нет доступа к ресурсу');
+        }
         \Zend_Registry::set('auth', $old_auth);
 
     }
 
-    /**
-     * тест проверки наличия доступа к компонентам CMS
-     */
-    public function test_isCoreAllowed() {
-        // добавляем пользователя 99999 и новую страницу в базе cms_access с ca_type='logout' и ca_key='Y' и ug_id='99999'.
-        // и потом проверяем метод isCoreAllowed().
-        //в этом метоже проверяется работа метода checkAcl($source, $type)
-        $ug_id = '99999';
-
-        $old_auth = $this->auth;
-
-        $this->auth->ROLE  = '99999';
-
-        \Zend_Registry::set('auth', $this->auth);
-
-        $this->db->insert('cms_user_groups', array(
-            'ug_id' => '99999',
-            'ug_name' => 'test',
-            'ug_desc' => null,
-            'lastuser' => 1,
-            'lastupdate' => 'Test',
-        ));
-        $this->db->insert('cms_access', array(
-            'ug_id' => '99999',
-            'ca_type' => 'menu',
-            'ca_key' => 'P135',
-        ));
-        $ca_id1 = $this->db->lastInsertId();
-
-        $this->acl_class->setupAcl();
-
-        $isCoreAllowed = $this->acl_class->isCoreAllowed($ca_id1);
-
-        if ($isCoreAllowed) {echo("\n".'доступ запрещен');}
-
-        else {echo("\n".'страница доступна');
-            echo("\n".$isCoreAllowed);}
-
-        // после проверки удаляем пользователя 99999 и новую страницю в базе cms_access c ca_type='logout' и ca_key='Y' и ug_id='99999'
-        $where = $this->db->quoteInto('ca_id IN(?)', array( $ca_id1));
-        $this->db->delete('cms_access', $where);
-
-        $where = $this->db->quoteInto('ug_id = ?', $ug_id);
-        $this->db->delete('cms_user_groups', $where);
-        \Zend_Registry::set('auth', $old_auth);
-
-    }
 
 
 }

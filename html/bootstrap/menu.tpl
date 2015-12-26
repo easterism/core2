@@ -17,15 +17,17 @@
 			</td>
 			<td id="user-section">
                 <div class="dropdown">
-                    <span class="dropdown-toggle" id="user-menu" data-toggle="dropdown">
-                        <i class="fa fa-user"></i>
+                    <div class="dropdown-toggle" id="user-menu" data-toggle="dropdown">
+                        <div class="avatar-container">
+                            <img src="[GRAVATAR_URL]?&s=25&d=mm" alt="" class=""/>
+                        </div>
                         <!--CURRENT_USER_LOGIN-->
                         <span class="caret"></span>
-                    </span>
+                    </div>
                     <ul class="dropdown-menu dropdown-menu-right">
                         <li class="dropdown-profile profile">
                             <a href="index.php#module=profile">
-                                <i class="fa fa-cogs"></i>
+                                <i class="fa fa-user"></i>
                                 Профиль
                             </a>
                         </li>
@@ -36,6 +38,13 @@
                             </a>
                         </li>
                         <li class="dropdown-profile divider"></li>
+                        <li class="dropdown-settings">
+                            <a href="index.php#module=settings">
+                                <i class="fa fa-cogs"></i>
+                                Настройки
+                            </a>
+                        </li>
+                        <li class="dropdown-settings divider"></li>
                         <li>
                             <a href="javascript:logout()">
                                 <i class="fa fa-power-off"></i>

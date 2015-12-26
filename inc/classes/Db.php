@@ -65,6 +65,26 @@ class Db {
             }
 			return $v;
 		}
+        // Получение экземпляра модели текущего модуля
+        elseif (strpos($k, 'data') === 0) {
+            if (array_key_exists($k, $this->_s)) {
+                $v = $this->_s[$k];
+            } else {
+				$this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
+                $module   = explode("|", $k);
+                $model    = substr($module[0], 4);
+                $module   = !empty($module[1]) ? $module[1] : 'admin';
+                $location = $module == 'admin'
+                        ? DOC_ROOT . "core2/mod/admin"
+                        : $this->getModuleLocation($this->module);
+
+                if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
+                require_once($location . "/Model/$model.php");
+                $v            = new $model();
+                $this->_s[$k] = $v;
+            }
+            return $v;
+        }
 	}
 
 	/**
@@ -118,21 +138,28 @@ class Db {
 	 * @return array
 	 */
 	public function getModuleName($resId) {
-		if (!($this->cache->test($resId))) {
+		if ( ! ($this->cache->test($resId . '_name'))) {
 			$data = explode("_", $resId);
-			if (!empty($data[1])) {
-				$res = $this->db->fetchRow("SELECT m.m_name, sm.sm_name
-											  FROM core_modules AS m
-													INNER JOIN core_submodules AS sm ON sm.m_id = m.m_id
-											WHERE CONCAT(m.module_id, '_', sm.sm_key) = ?", $resId);
+			if ( ! empty($data[1])) {
+				$res = $this->db->fetchRow("
+                    SELECT m.m_name,
+                           sm.sm_name
+                    FROM core_modules AS m
+                        INNER JOIN core_submodules AS sm ON sm.m_id = m.m_id
+                    WHERE CONCAT(m.module_id, '_', sm.sm_key) = ?
+                ", $resId);
 				$res = array($res['m_name'], $res['sm_name']);
 			} else {
-				$res = $this->db->fetchRow("SELECT m.m_name FROM core_modules AS m WHERE m.module_id = ?", $resId);
+				$res = $this->db->fetchRow("
+                    SELECT m.m_name
+                    FROM core_modules AS m
+                    WHERE m.module_id = ?
+                ", $resId);
 				$res = array($res['m_name']);
 			}
-			$this->cache->save($res, $resId);
+			$this->cache->save($res, $resId . '_name');
 		} else {
-			$res = $this->cache->load($resId);
+			$res = $this->cache->load($resId . '_name');
 		}
 		return $res;
 	}
@@ -179,7 +206,8 @@ class Db {
 	 * логирование активности простых пользователей
 	 * @param Zend_Session_Namespace $auth
 	 */
-	public function logActivity(Zend_Session_Namespace $auth, $exclude = array()) {
+	public function logActivity($exclude = array()) {
+		$auth = Zend_Registry::get('auth');
 		if ($auth->ID && $auth->ID > 0) {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
@@ -204,28 +232,21 @@ class Db {
 				if (!$this->config->log->system->file) {
 					throw new Exception('Не задан файл журнала');
 				}
-				$f = fopen($this->config->log->system->file, 'a');
-				if (!is_file($this->config->log->system->file)) {
-					throw new Exception('Не найден файл журнала');
-				}
-				//TODO rotation
-				if (!$f) throw new Exception('Нет доступа на запись в файл журнала');
-				$dt = date('Y-m-d H:i:s');
-				$fields = array($dt) + array_values($data);
-				fputcsv($f, $fields);
-				fclose($f);
-				$where = $this->db->quoteInto("sid=?", $data['sid']);
-				$this->db->update('core_session', array('last_activity' => $dt), $where);
+
+                $log = new \Core2\Log('access');
+                $log->access($auth->NAME);
+
 			} else {
 				$this->db->insert('core_log', $data);
-				$where = array($this->db->quoteInto("sid=?", $data['sid']),
-					$this->db->quoteInto("ip=?", $data['ip']),
-					$this->db->quoteInto("user_id=?", $data['user_id']),
-					'logout_time IS NULL'
-				);
-				$this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
-			}
-		}
+            }
+            // обновление записи о последней активности
+            $where = array($this->db->quoteInto("sid=?", $data['sid']),
+                    $this->db->quoteInto("ip=?", $data['ip']),
+                    $this->db->quoteInto("user_id=?", $data['user_id']),
+                    'logout_time IS NULL'
+            );
+            $this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
+        }
 	}
 
 

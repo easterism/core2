@@ -142,7 +142,7 @@ class Tool {
     public static function log($text) {
 
     	$cnf = Zend_Registry::get('config');
-    	if ($cnf->log->on) {
+    	if ($cnf->log->on && $cnf->log->path) {
 			$f = fopen($cnf->log->path, 'a');
 			if (is_array($text) || is_object($text)) {
 				ob_start();
@@ -489,20 +489,6 @@ class Tool {
     }
 
 
-	/**
-	 * Склоняем словоформу
-	 * @ author runcore
-	 */
-	private static function morph($n, $f1, $f2, $f5) {
-		$n = abs(intval($n)) % 100;
-		if ($n > 10 && $n < 20) return $f5;
-		$n = $n % 10;
-		if ($n > 1 && $n < 5) return $f2;
-		if ($n == 1) return $f1;
-		return $f5;
-	}
-
-
     /**
      * Делаем запрос через CURL и отдаем ответ
      *
@@ -510,15 +496,17 @@ class Tool {
      *
      * @return  array       ответ запроса + http-код ответа
      */
-    public static function doCurlRequest($url, $data, $headers = false)
+    public static function doCurlRequest($url, $data = '', $headers = false)
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 1000);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 7000);
         curl_setopt($curl, CURLOPT_HEADER, $headers);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+		if ($data) {
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+		}
 
         $curl_out = curl_exec($curl);
         //если возникла ошибка
@@ -533,5 +521,88 @@ class Tool {
             'answer'    => $curl_out,
             'http_code' => $http_code
         );
+    }
+
+
+    /**
+     * Форматирование размера из байт в человеко-понятный вид
+     * @param  int    $bytes
+     * @return string
+     */
+    public static function formatSizeHuman($bytes) {
+
+        if ($bytes >= 1073741824) {
+            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            $bytes = number_format($bytes / 1024, 2) . ' KB';
+        } elseif ($bytes > 1) {
+            $bytes = $bytes . ' bytes';
+        } elseif ($bytes == 1) {
+            $bytes = $bytes . ' byte';
+        } else {
+            $bytes = '0 bytes';
+        }
+
+        return $bytes;
+    }
+
+
+    /**
+     * Получение максимально возможного размера файла,
+     * который можно загрузить на сервер. Размер в байтах.
+     * @return int
+     */
+    public static function getUploadMaxFileSize() {
+        $ini = self::convertIniSizeToBytes(trim(ini_get('post_max_size')));
+        $max = self::convertIniSizeToBytes(trim(ini_get('upload_max_filesize')));
+        $min = max($ini, $max);
+        if ($ini > 0) {
+            $min = min($min, $ini);
+        }
+
+        if ($max > 0) {
+            $min = min($min, $max);
+        }
+
+        return $min >= 0 ? $min : 0;
+    }
+
+
+
+    /**
+     * Конвертирует размер из ini формата в байты
+     * @param  string $size
+     * @return int
+     */
+    private static function convertIniSizeToBytes($size) {
+        if ( ! is_numeric($size)) {
+            $type = strtoupper(substr($size, -1));
+            $size = (int)substr($size, 0, -1);
+
+            switch ($type) {
+                case 'K' : $size *= 1024; break;
+                case 'M' : $size *= 1024 * 1024; break;
+                case 'G' : $size *= 1024 * 1024 * 1024; break;
+                default : break;
+            }
+        }
+
+        return (int)$size;
+    }
+
+
+    /**
+     * Склоняем словоформу
+     * @ author runcore
+     */
+    private static function morph($n, $f1, $f2, $f5) {
+        $n = abs(intval($n)) % 100;
+        if ($n > 10 && $n < 20) return $f5;
+        $n = $n % 10;
+        if ($n > 1 && $n < 5) return $f2;
+        if ($n == 1) return $f1;
+        return $f5;
     }
 }

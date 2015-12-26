@@ -3,23 +3,23 @@ require_once("class.ini.php");
 $counter = 0;
 
 class editTable extends initEdit {
-	protected $controls				= array();
 	public $selectSQL				= array();
 	public $buttons					= array();
 	public $params					= array();
 	public $modal					= array();
 	public $saveConfirm				= "";
-	private $main_table_id			= "";
 	public $SQL						= "";
 	public $HTML					= "";
-	private $beforeSaveArr			= array();
 	public $readOnly				= false;
 	public $table   = '';
 	public $error   = '';
+	protected $controls				= array();
 	protected $resource				= "";
-	private $isSaved 				= false;
 	protected $cell					= array();
 	protected $template				= '';
+	private $main_table_id			= "";
+	private $beforeSaveArr			= array();
+	private $isSaved 				= false;
 	private $sess_form_fields		= array();
 	private $scripts		        = array();
 
@@ -35,7 +35,12 @@ class editTable extends initEdit {
 			$this->acl->$acl_type = $this->checkAcl($this->resource, $acl_type);
 		}
 	}
-	
+
+
+    /**
+     * @param string $data
+     * @return cell|Zend_Db_Adapter_Abstract
+     */
 	public function __get($data) {
 		if ($data == 'db') {
 			return parent::__get('db');
@@ -45,9 +50,10 @@ class editTable extends initEdit {
        	return $this->$data;
 	}
 
+
 	/**
 	 * set HTML layout for the form
-	 * @param String $html
+	 * @param string $html
 	 */
 	public function setTemplate($html) {
 		$this->template = $html;
@@ -105,14 +111,6 @@ class editTable extends initEdit {
 	}
 
 	/**
-	 * @param $va
-	 * @param string $value
-	 */
-	function addParams($va, $value = '') {
-		$this->params[$this->main_table_id][] = array('va' => $va, 'value' => $value);
-	}
-
-	/**
 	 * @param $value
 	 * @param string $action
 	 */
@@ -121,14 +119,7 @@ class editTable extends initEdit {
 	}
 
 	/**
-	 * @param string $html
-	 */
-	public function addButtonCustom($html = '') {
-		$this->buttons[$this->main_table_id][] = array('html' => $html);
-	}
-	
-	/**
-	 * 
+	 *
 	 * Create button for switch fields, based on values Y/N
 	 * @param string $field_name - name of field
 	 * @param string $value - switch ON or OFF
@@ -140,8 +131,8 @@ class editTable extends initEdit {
 			$valueInput = 'Y';
 		} else {
 			$tpl->assign('data-switch="on"', 'data-switch="on" class="hide"');
-			$valueInput = 'N';			
-		}		
+			$valueInput = 'N';
+		}
 		$id = $this->main_table_id . $field_name;
 		$tpl->assign('{ID}', $id);
 		$html  = '<input type="hidden" id="' . $id . 'hid" name="control[' . $field_name . ']" value="' . $valueInput . '"/>';
@@ -150,42 +141,12 @@ class editTable extends initEdit {
 	}
 
 	/**
-	 * @param $func
+	 * @param string $html
 	 */
-	public function save($func) {
-		$this->isSaved = true;
-		// for javascript functions
-		if (strpos($func, '(') !== false) {
-			$this->beforeSaveArr[] = $func;
-		} else {
-			$this->addParams('file', $func);	
-		}
+	public function addButtonCustom($html = '') {
+		$this->buttons[$this->main_table_id][] = array('html' => $html);
 	}
-
-	/**
-	 * @param $value
-	 * @param string $type
-	 * @param string $onclick
-	 * @return string
-	 */
-	private function button($value, $type = "Submit", $onclick = "") {
-		$id = uniqid();
-		$out = '<input type="' . $type . '" class="button" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
-		
-		return $out;
-	}
-
-	/**
-	 * Сохраняет в сессии данные служебных полей формы
-	 * @param $data
-	 */
-	private function setSessForm($data)
-	{
-		$sess_form = new Zend_Session_Namespace('Form');
-		$ssi       = $this->main_table_id;
-		$sess_form->$ssi = $data;
-	}
-
+	
 	/**
 	 * сохранение значения в служебных полях формы
 	 * @param $id
@@ -199,10 +160,27 @@ class editTable extends initEdit {
 	/**
 	 * @return mixed
 	 */
+	public function showTable() {
+		if ($this->acl->read_all || $this->acl->read_owner) {
+
+			$this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
+			$this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
+			$this->makeTable();
+			$this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
+			echo $this->HTML;
+		} else {
+			$this->noAccess();
+		}
+		return;
+	}
+
+	/**
+	 * @return mixed
+	 */
 	public function makeTable() {
 		if (!$this->isSaved) {
 			$this->save('save.php');
-		}	
+		}
 		$authNamespace = Zend_Registry::get('auth');
 		if (is_array($this->SQL)) {
 			$arr = $this->SQL;
@@ -221,7 +199,7 @@ class editTable extends initEdit {
 				$arr[0][$k] = $data;
 				$k++;
 			}
-			
+
 			reset($arr[0]);
 			$refid = current($arr[0]);
 		} else {
@@ -351,7 +329,7 @@ class editTable extends initEdit {
 					);
 				}
 			}
-			
+
 			if (isset($this->params[$this->main_table_id]) && count($this->params[$this->main_table_id])) {
 				foreach ($this->params[$this->main_table_id] as $key => $value) {
 					$this->HTML .= "<input type=\"hidden\" name=\"{$value["va"]}\" id=\"{$this->main_table_id}_add_" . str_replace(array('[', ']'), '_', $value["va"]) . "\" value=\"{$value["value"]}\"/>";
@@ -360,9 +338,9 @@ class editTable extends initEdit {
 		}
 		$PrepareSave 	= "";
 		$onload 		= "";
-		
+
 		$controlGroups	= array();
-		
+
 		if (!empty($this->cell)) {
 			foreach ($this->cell as $cellId => $cellFields) {
 				$groups 		= false;
@@ -425,9 +403,16 @@ class editTable extends initEdit {
 							$value['type'] = str_replace("_hidden", "", $value['type']);
 							$hide = ' hide';
 						}
-						
+
+						// загружать ли файл автоматически
+                        $auto = false;
+						if (strpos($value['type'], "_auto") !== false) {
+                            $auto = true;
+							$value['type'] = str_replace("_auto", "", $value['type']);
+						}
+
 						$value['type'] = str_replace("_default", "", $value['type']); //FIXME WTF
-						
+
 						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};\"" : "") . ">";
 						if ($value['req']) {
 							$controlGroups[$cellId]['html'][$key] .= "<span class=\"requiredStar\">*</span>";
@@ -575,7 +560,7 @@ class editTable extends initEdit {
 						elseif ($value['type'] == 'modal2') {
                             if ($this->readOnly) {
                                 $controlGroups[$cellId]['html'][$key] .= ! empty($value['default'])
-                                    ? $value['default']
+                                    ? isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : ''
                                     : '';
                             } else {
                                 $this->scripts['modal2'] = true;
@@ -898,35 +883,38 @@ class editTable extends initEdit {
                                 $this->scripts['upload'] = 'xfile';
 								$this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
-								$auto = false;
 								$ft = '';
 								$options = array('dataType' => 'json');
-								if (in_array("auto", $params)) {
+								if ($auto) {
 									$options['autoUpload'] = true;
 								}
 								if (in_array("xfiles", $params)) {
 									$xfile = "xfiles";
 								} elseif (in_array("xfile", $params)) {
 									$xfile = "xfile";
-									$options['maxNumberOfFiles'] = 1;
 								}
+                                $options['maxFileSize'] = Tool::getUploadMaxFileSize();
 								if (is_array($value['in'])) {
 									if (!empty($value['in']['id_hash'])) {
 										$options['id_hash'] = true;
+									}
+									if ( ! empty($value['in']['maxFileSize'])) {
+										$options['maxFileSize'] = $value['in']['maxFileSize'];
 									}
 									if (!empty($value['in']['acceptFileTypes'])) {
 										$ft = str_replace(",", "|", $value['in']['acceptFileTypes']);
 										$options['acceptFileTypes'] = "_FT_";
 									}
 								}
+                                $max_filesize_human = Tool::formatSizeHuman($options['maxFileSize']);
 
 								$un = $fieldId;
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
 								<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
 								<div id="fileupload-' . $un . '">
 							        <div class="fileupload-buttonbar">
-							        	<span class="btn fileinput-button">
-											<button type="button" class="buttonSmall">Выбрать файл' . ($xfile == 'xfiles' ? 'ы' : '') . '</button>
+							        	<span class="fileinput-button buttonSmall">
+											<span>Выбрать файл' . ($xfile == 'xfiles' ? 'ы' : '') . '</span>
 											<input type="file" name="files[]" ' . ($xfile == 'xfiles' ? 'multiple' : '') . '>
                 						</span>';
 							            if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
@@ -948,7 +936,7 @@ class editTable extends initEdit {
 										</div>
 									</div>
 									<!-- The table listing the files available for upload/download -->
-									<table role="presentation" class="table table-striped">
+									<table role="presentation" class="table">
 										<tbody class="files"></tbody>
 									</table>
 								</div>
@@ -956,7 +944,7 @@ class editTable extends initEdit {
 <!-- The template to display files available for upload -->
 <script id="template-upload" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-upload fade">
+    <tr class="template-upload">
         <td>
             <span class="preview"></span>
         </td>
@@ -990,7 +978,7 @@ class editTable extends initEdit {
 <!-- The template to display files available for download -->
 <script id="template-download" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-download fade">
+    <tr class="template-download">
         {% if (file.error) { %}
             <td></td>
             <td class="name"><span>{%=file.name%}</span></td>
@@ -1061,6 +1049,63 @@ $(function () {
 	}).bind('fileuploadchange', function (e, data) {
 		$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
 	});
+
+";
+
+if ( ! empty($options['maxFileSize'])) {
+    $controlGroups[$cellId]['html'][$key] .= "
+        $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
+            var maxFileSize = {$options['maxFileSize']};
+            var fileSize    = data.originalFiles[0].size || data.originalFiles[0].fileSize;
+            var fileName    = data.originalFiles[0].name || data.originalFiles[0].fileName;
+            if (fileSize && fileSize > maxFileSize) {
+			    if ($(this).find('.files > tr').length <= 0) {
+				    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
+				}
+				alert('Файл \"' + fileName + '\" превышает предельный размер ({$max_filesize_human})');
+				return false;
+			}
+        });
+    ";
+}
+
+if ( ! empty($ft)) {
+    $controlGroups[$cellId]['html'][$key] .= "
+        $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
+            var acceptFileTypes = /\.($ft)$/i;
+			var fileName        = data.originalFiles[0].name || data.originalFiles[0].fileName;
+			if ( ! acceptFileTypes.test(fileName)) {
+			    if ($(this).find('.files > tr').length <= 0) {
+				    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
+				}
+				alert('Файл \"' + fileName + '\" является некорректным.');
+				return false;
+			}
+        });
+    ";
+}
+
+if ($xfile === 'xfile') {
+    $controlGroups[$cellId]['html'][$key] .= "
+        $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
+            var files = $(this).find('.files > tr');
+            if (files.length >= 1) {
+                $(this).trigger('fileuploaddestroy', {context: $(files[0])});
+                $(this).find('.files').empty();
+            }
+        });
+    ";
+}
+
+if (isset($options['autoUpload']) && $options['autoUpload']) {
+    $controlGroups[$cellId]['html'][$key] .= "
+        $('#fileupload-{$un}').bind('fileuploadpaste', function (e, data) {
+            data.submit();
+        });
+    ";
+}
+
+$controlGroups[$cellId]['html'][$key] .= "
 
     // Load existing files:
 	//$('#fileupload-{$un}').addClass('fileupload-processing');
@@ -1140,7 +1185,7 @@ $(function () {
 							}
 							$modal++;
 						}
-						
+
 						if (!empty($value['out'])) {
 							$controlGroups[$cellId]['html'][$key] .= $value['out'];
 						}
@@ -1193,7 +1238,7 @@ $(function () {
 					$html .= '<div class="accordion">';
 					$ingroup = false;
 					foreach ($value['html'] as $key => $control) {
-						
+
 						foreach ($value['group'] as $group) {
 							if ($group['key'] == $key) {
 								if ($ingroup) {
@@ -1239,7 +1284,7 @@ $(function () {
 				}
 			}
 		}
-		
+
 		if (!$this->readOnly) {
 			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;");
 		}
@@ -1248,6 +1293,45 @@ $(function () {
 			$this->HTML .= 	"</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
 		}
 		$this->HTML .= 	"</br>";
+	}
+
+	/**
+	 * @param $func
+	 */
+	public function save($func) {
+		$this->isSaved = true;
+		// for javascript functions
+		if (strpos($func, '(') !== false) {
+			$this->beforeSaveArr[] = $func;
+		} else {
+			$this->addParams('file', $func);
+		}
+	}
+
+	/**
+	 * @param $va
+	 * @param string $value
+	 */
+	function addParams($va, $value = '') {
+		$this->params[$this->main_table_id][] = array('va' => $va, 'value' => $value);
+	}
+
+	/**
+	 *
+	 */
+	private function noAccess() {
+		echo $this->classText['noReadAccess'];
+	}
+
+	/**
+	 * Сохраняет в сессии данные служебных полей формы
+	 * @param $data
+	 */
+	private function setSessForm($data)
+	{
+		$sess_form = new Zend_Session_Namespace('Form');
+		$ssi       = $this->main_table_id;
+		$sess_form->$ssi = $data;
 	}
 
 	/**
@@ -1272,30 +1356,6 @@ $(function () {
 	}
 
 	/**
-	 * @return mixed
-	 */
-	public function showTable() {
-		if ($this->acl->read_all || $this->acl->read_owner) {
-				
-			$this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
-			$this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
-			$this->makeTable();
-			$this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
-			echo $this->HTML;
-		} else {
-			$this->noAccess();
-		}
-		return;
-	}
-
-	/**
-	 *
-	 */
-	private function noAccess() {
-		echo $this->classText['noReadAccess'];
-	}
-
-	/**
 	 * @param $row
 	 * @param $tcol
 	 * @return string
@@ -1311,6 +1371,19 @@ $(function () {
 			}
 		}
 		return $tres;
+	}
+
+	/**
+	 * @param $value
+	 * @param string $type
+	 * @param string $onclick
+	 * @return string
+	 */
+	private function button($value, $type = "Submit", $onclick = "") {
+		$id = uniqid();
+		$out = '<input type="' . $type . '" class="button" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
+
+		return $out;
 	}
 
 }

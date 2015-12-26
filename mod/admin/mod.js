@@ -65,14 +65,11 @@ var modules = {
 		} else return false;
 	},
 	checkModsUpdates: function (mods, theme) {
-		console.debug(mods);
 		$.post('index.php?module=admin&action=modules',
 			{'checkModsUpdates': mods},
 			function(data, textStatus){
 				if(textStatus == 'success') {
-					console.debug(data);
 					data.forEach(function(item, i, arr) {
-						console.debug(item);
 						var obj = $('td[title=' + item.m_id + ']');
 						var obj_ver = obj.next().next().next();
 						obj_ver.html(obj_ver.html() + ' <b style="color: #008000;">(Доступно обновление до v' + item.version + ')</b>');

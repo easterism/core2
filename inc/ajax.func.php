@@ -154,7 +154,7 @@ class ajaxFunc extends Common {
 
 		if (count($datetime)) {
 			foreach ($datetime as $field) {
-				if ( !  ! preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(|:{1}\d{2}))$/', $control[$field])) {
+				if ( ! preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(|:{1}\d{2}))$/', $control[$field])) {
                     $this->error[] = "- Неверный формат даты";
 				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
 				} else {
@@ -328,13 +328,14 @@ class ajaxFunc extends Common {
 			}
 		}
     }
-    
-    /**
-     * Save data
-     *
-     * @param array $data
-     * @return mixed
-     */
+
+	/**
+	 * Save data
+	 * @param array     $data
+	 * @param bool|true $inTrans
+	 * @return int|string
+	 * @throws Exception
+	 */
 	protected function saveData($data, $inTrans = true) {
 		$last_insert_id = 0;
 		if (!$inTrans) $this->db->beginTransaction();
@@ -398,7 +399,7 @@ class ajaxFunc extends Common {
 					$control['author'] = $authNamespace->NAME;
 				}
             }
-			
+
 			if (!$order_fields['refid']) {
 				$this->db->insert($table, $control);
 				$last_insert_id = $this->db->lastInsertId($table);

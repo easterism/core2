@@ -93,11 +93,16 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
-function toAnchor(id ){
-	var ofy = $("#"+id);
+function toAnchor(id) {
+	if (!id) return;
+	if (typeof id != 'string') return;
+	if (id.indexOf('#') < 0) {
+		id = "#" + id;
+	}
+	var ofy = $(id);
 	if (ofy[0]) {
 		$('html,body').animate({
-			scrollTop : ofy.offset().top - $("#menu-container").height()
+			scrollTop : ofy.offset().top - $("#menuContainer").height()
 		}, 'fast');
 	}
 }
@@ -135,9 +140,7 @@ var preloader = {
 				}
 				preloader.extraLoad = {};
 			}
-			$('html').animate({
-				scrollTop: 0
-			});
+			toAnchor(locData.id);
 		};
 		preloader.hide();
 		//resize();
@@ -215,7 +218,7 @@ var load = function (url, data, id, callback) {
 
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
-	if (h != url && url.indexOf('&__') < 0) {
+	if (!data && h != url && url.indexOf('&__') < 0) {
 		document.location.hash = url;
 	} else {
 		if (url) {

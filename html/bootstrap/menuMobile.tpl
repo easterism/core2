@@ -1,42 +1,79 @@
-<div id="menuContainer">
-	<table width="100%" background="core2/html/default/img/menu_background.gif">
-		<tr>
-			<td class="font homeButton">
-				<img src="core2/html/default/img/home.gif" alt="На главную" title="Уйти на главную страницу" onclick="goHome()"/>
+<div id="menu-container">
+	<table width="100%">
+		<tr id="menu-row-1">
+			<td id="heme-button">
+				<a href="index.php#module=admin&action=welcome"
+				   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');"><!--SYSTEM_NAME--></a>
 			</td>
-			<td align="center" width="100%" height="37">
-				<table style="margin-bottom:-2px;">
-					<tr valign="bottom">
-						<td height="37" id="moduleContainer">
-							<!-- BEGIN modules -->
-			                <div id="module_[MODULE_ID]" class="menu_items" onclick="changeRoot(this, '[MODULE_URL]')"><span class="menu_block"><span>[MODULE_NAME]</span></span><span class="iefix">&nbsp;</span></div>
-			                <!-- END modules -->
-		                </td>
-		            </tr>
-		        </table>
+			<td align="left" width="100%">
+				<ul id="menu-modules">
+					<!-- BEGIN modules -->
+					<li id="module-[MODULE_ID]" class="menu-module">
+						<a href="index.php#module=[MODULE_ID]"
+						   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID]');">[MODULE_NAME]</a>
+					</li>
+					<!-- END modules -->
+				</ul>
 			</td>
-			<td class="font closeButton">
-				<img src="core2/html/default/img/exit.gif" alt="Выход" title="Надоело! Хочу домой!!!" onclick="logout()"/>
+			<td id="user-section">
+				<div class="dropdown">
+					<div class="dropdown-toggle" id="user-menu" data-toggle="dropdown">
+						<div class="avatar-container">
+							<img src="[GRAVATAR_URL]?&s=25&d=mm" alt="" class=""/>
+						</div>
+						<!--CURRENT_USER_LOGIN-->
+						<span class="caret"></span>
+					</div>
+					<ul class="dropdown-menu dropdown-menu-right">
+						<li class="dropdown-profile profile">
+							<a href="index.php#module=profile">
+								<i class="fa fa-user"></i>
+								Профиль
+							</a>
+						</li>
+						<li class="dropdown-profile messages">
+							<a href="index.php#module=profile&action=messages">
+								<i class="fa fa-envelope-o"></i>
+								Сообщения
+							</a>
+						</li>
+						<li class="dropdown-profile divider"></li>
+						<li class="dropdown-settings">
+							<a href="index.php#module=settings">
+								<i class="fa fa-cogs"></i>
+								Настройки
+							</a>
+						</li>
+						<li class="dropdown-settings divider"></li>
+						<li>
+							<a href="javascript:logout()">
+								<i class="fa fa-power-off"></i>
+								Выход
+							</a>
+						</li>
+					</ul>
+				</div>
 			</td>
 		</tr>
-		<tr valign="middle">
-			<td colspan="20" class="menu_items2" align="center">
-				<table id="table_submenu" height="100%">
-					<tr valign="middle">
-						<!-- BEGIN submodules -->
-			            <td id="smodule_[MODULE_ID]_[SUBMODULE_ID]" class="submenu_items" style="display:none" onclick="changeSub(this, '[SUBMODULE_URL]')">[SUBMODULE_NAME]</td>
-			            <!-- END submodules -->
-		            </tr>
-		        </table>
-		    </td>
+		<tr valign="middle" id="menu-row-2">
+			<td></td>
+			<td colspan="20" align="left">
+				<ul id="menu-submodules">
+					<!-- BEGIN submodules -->
+					<li id="submodule-[MODULE_ID]-[SUBMODULE_ID]" class="menu-submodule" style="display:none" >
+						<a href="index.php#module=[MODULE_ID]&action=[SUBMODULE_ID]"
+						   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID]&action=[SUBMODULE_ID]');">[SUBMODULE_NAME]</a>
+					</li>
+					<!-- END submodules -->
+				</ul>
+			</td>
 		</tr>
 	</table>
 </div>
 <div id="preloader">
-    <div></div>
+	<div></div>
 </div>
 <div id="mainContainer">
-    <div id="progressbar"><table><tr><td><span id="container"></span></td></tr></table></div>
-    <div id="main_body"></div>
+	<div id="main_body"></div>
 </div>
 

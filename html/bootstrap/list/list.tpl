@@ -1,5 +1,5 @@
-<div class="sTable-wrapper" id="table-[ID]-wrapper">
-    <table width="100%" id="[ID]" class="sTable">
+<div class="sTable-wrapper" id="[ID]">
+    <table width="100%" class="sTable">
         <!--BEGIN header-->
         <thead class="headerHead">
             [HEADER]

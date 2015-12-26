@@ -902,3 +902,8 @@ table td.homeTD {
 	background-color: #f2dede;
 	border-color: #a94442;
 }
+.fileinput-button {
+	box-sizing: border-box;
+	padding: 1px 6px;
+	float: left;
+}

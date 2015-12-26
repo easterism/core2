@@ -23,8 +23,8 @@ class initList extends Acl {
 										'NUM'=>'№',
 										'TOTAL'=>'Всего',
 										'NORESULT'=>'Нет записей',
-										'PAGIN_ALL'=>'все',
-										'ON_OFF'=>'вкл/выкл',
+										'PAGIN_ALL' => 'все',
+										'SWITCH' => 'вкл/выкл',
 										'DELETE_MSG'=>'Вы действительно хотите удалить эту запись?'
 										);
 	public function __construct() {

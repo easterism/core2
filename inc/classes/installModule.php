@@ -1304,34 +1304,6 @@ class InstallModule extends Db {
 
 
     /**
-     * Делаем запрос через CURL и отдаем ответ
-     *
-     * @param   string $url URL
-     * @return  array       ответ запроса + http-код ответа
-     */
-    private function doCurlRequest($url) {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 1000);
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $curl_out = curl_exec($curl);
-        //если возникла ошибка
-        if (curl_errno($curl) > 0) {
-            return array(
-                'error'    => curl_errno($curl) . ": ". curl_error($curl)
-            );
-        }
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-        return array(
-            'answer'    => $curl_out,
-            'http_code' => $http_code
-        );
-    }
-
-
-    /**
      * Делаем запрос к репозиторию и отдаем ответ
      *
      * @param   string      $repo_url   Подготовленный URL для запроса к репозиторию
@@ -1349,7 +1321,7 @@ class InstallModule extends Db {
 
         $repo_url = trim($repo_url);
         $url = "{$repo_url}&key={$key}";
-        $curl = $this->doCurlRequest($url);
+        $curl = Tool::doCurlRequest($url);
 
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200) {
@@ -1410,7 +1382,7 @@ class InstallModule extends Db {
         }
         $url =  "{$server}webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
         //получаем apikey
-        $curl = $this->doCurlRequest($url);
+        $curl = Tool::doCurlRequest($url);
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200)
         {

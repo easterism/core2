@@ -85,7 +85,7 @@ class ToolsTest extends \PHPUnit_Framework_TestCase
             if ($code == 1) \Error::Exception("Неверный пользователь.");
             if ($code == 2) \Error::Exception("Неверный пароль.");
         }
-        }
+    }
 
     /** проверка функции logToFile($text) - записываем в тестовый лог сообщение (идет создание файла)
      *  потом удаляем файл

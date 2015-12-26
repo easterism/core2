@@ -568,7 +568,7 @@ class Image {
             if (!$param['font'])  $param['font'] = $this->font;
             
             imagettftext($img, $param['size'], $param['angle'], $param['x'], $param['y'], $text_color, $param['font'], $text);
-            imagejpeg($img, '', $quality); 
+            imagejpeg($img, null, $quality);
             imagedestroy($img);
 	    }
 	}

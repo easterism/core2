@@ -12,7 +12,7 @@
         <tr valign="top">
             <td class="feedback-label">
                 <br/>
-                Собщение:
+                Сообщение:
             </td>
         <td width="240" class="feedback-control">
             <br/>

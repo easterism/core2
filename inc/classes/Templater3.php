@@ -150,7 +150,7 @@ class Templater3 {
                 $block_end   = "<!-- END {$block} -->";
 
                 $begin_pos = strpos($html, $block_begin);
-                $end_pos   = strrpos($html, $block_end);
+                $end_pos   = strpos($html, $block_end, $begin_pos);
 
                 if ($begin_pos !== false && $end_pos !== false && $end_pos >= $begin_pos) {
                     $after_html  = substr($html, 0, $begin_pos);

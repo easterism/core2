@@ -1,11 +1,44 @@
 <?
+require_once('core2/inc/classes/Templater3.php');
+$session = new Zend_Session_Namespace('monitoring');
+if (isset($_GET['lines'])) {
+	$lines = (int)$_GET['lines'];
+} elseif (isset($session->lines)) {
+	$lines = $session->lines;
+} else {
+	$lines = 200;
+}
+if (isset($_GET['search'])) {
+	$search = $_GET['search'];
+} elseif (isset($session->search)) {
+	$search = $session->search;
+} else {
+	$search = "";
+}
+$session->lines = $lines;
+$session->search = $search;
+if (isset($_GET['download'])) {
+	if ($this->config->log->system->writer == 'file') {
+		$data = $this->getLogsData('file', $lines, $search);
+		$body = $data['body'];
+	} else {
+		$data = $this->getLogsData('db', $lines, $search);
+		$body = $data['body'];
+	}
+	header("Content-Type: application/octet-stream");
+	header("Accept-Ranges: bytes");
+	//header("Content-Length: 1000");
+	header("Content-Disposition: attachment; filename=\"monitoring " . date("Y-m-d H:i:s") . ".txt.gz");
+	echo gzencode($body);
+	exit;
+}
 
 $tab = new tabs($this->resId); 
 
 $title = $this->translate->tr("Мониторинг");
 $tab->addTab($this->translate->tr("Активные пользователи"), 		$app, 150);
 $tab->addTab($this->translate->tr("История посещений"), 			$app, 150);
-$tab->addTab($this->translate->tr("Системный журнал"), 			$app, 150);
+$tab->addTab($this->translate->tr("Журнал запросов"), 			$app, 150);
 $tab->addTab($this->translate->tr("Архив журнала"), 			$app, 150);
 //Tool::fb($_SERVER);
 $tab->beginContainer($title);
@@ -133,65 +166,28 @@ $tab->beginContainer($title);
 			$list->showTable();
 		}
 	}
-	elseif ($tab->activeTab == 3) { // Системный журнал
-		if (!empty($_GET['show'])) {			
-			$edit = new editTable($this->resId . 'xxx3');
-			$res = $this->db->fetchRow("SELECT action, request_method, remote_port, query
-										FROM core_log WHERE id=?", $_GET['show']);
-			ob_start();
-			echo "<PRE>";print_r(unserialize($res['action']));echo "</PRE>";
-			$req = ob_get_clean();
-			$req = '<div>' . $req . '</div>';
-			$edit->SQL = array(array('dummy' => 1));
-			$edit->addControl($this->translate->tr("Адрес:"), "CUSTOM", $res['query']);
-			$edit->addControl($this->translate->tr("Метод:"), "CUSTOM", $res['request_method']);
-			$edit->addControl($this->translate->tr("Порт:"), "CUSTOM", $res['remote_port']);
-			$edit->addControl($this->translate->tr("Данные запроса:"), "CUSTOM", $req);
-			$edit->addButton($this->translate->tr("Закрыть"), "load('$app&tab_{$this->resId}=3')");
-			$edit->readOnly = true;
-			$edit->showTable();
-		} else {			
-			function trimAction($data) {
-				$r = substr($data['action'], 0, 80);
-				if ($r != $data['action']) {
-					$r .= "   ...";
-				} else {
-					$r = $data['action'];
-				}
-				return $r;
+	elseif ($tab->activeTab == 3) { // журнал запросов
+		$this->printJs("core2/mod/admin/book.js");
+
+		if ($this->config->log->system->writer == 'file') {
+			if ($this->config->log->system->file) {
+				$data = $this->getLogsData('file', $lines, $search);
+				$count_lines = $data['count_lines'];
+				$body = $data['body'];
+			} else {
+				echo "В конфиге не задан файл хранения логов";
 			}
-			
-			$list = new listTable($this->resId . 'xxx3'); 
-			$list->roundRecordCount = true;
-			$list->addSearch($this->translate->tr("Пользователь"), "u.u_login", "TEXT");
-			$list->addSearch("IP", "ip", "TEXT");
-			$list->addSearch($this->translate->tr("Метод"), "request_method", "TEXT");
-			$list->addSearch($this->translate->tr("Порт"), "remote_port", "TEXT");
-			$list->addSearch($this->translate->tr("Адрес"), "query", "TEXT");
-			$list->addSearch($this->translate->tr("Время запроса"), "l.lastupdate", "DATE");
-			
-			$list->SQL = "SELECT l.id,
-								 ip,
-								 u.u_login,
-								 request_method,
-								 query,
-								 action,
-								 l.lastupdate
-							FROM core_log AS l
-								 LEFT JOIN core_users AS u ON u.u_id = l.user_id
-							WHERE 1=1 ADD_SEARCH
-						   ORDER BY l.lastupdate DESC";
-			$list->addColumn("IP", "", "TEXT");
-			$list->addColumn($this->translate->tr("Пользователь"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Метод"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Адрес"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Данные запроса"), "", "FUNCTION", "", "trimAction");
-			$list->addColumn($this->translate->tr("Время запроса"), "", "DATETIME");
-						
-			$list->editURL 			= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
-			$list->noCheckboxes = 'yes';
-			$list->showTable();
+		} else {
+			$data = $this->getLogsData('db', $lines, $search);
+			$count_lines = $data['count_lines'];
+			$body = $data['body'];
 		}
+		$tpl = new Templater3("core2/mod/admin/html/monitoring.tpl");
+		$tpl->assign('[LINES_VALUE]', $lines);
+		$tpl->assign('[SEARCH_VALUE]', htmlspecialchars($search));
+		$tpl->assign('[BODY]', $body);
+		$tpl->assign('[INFO]', "Строк: <b>" . Tool::commafy($count_lines) . "</b>&nbsp;&nbsp;&nbsp;");
+		echo $tpl->render();
 	}
 	elseif ($tab->activeTab == 4) {
 		
@@ -338,4 +334,3 @@ $tab->beginContainer($title);
 		
 	}
 $tab->endContainer();
-

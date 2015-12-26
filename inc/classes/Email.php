@@ -196,55 +196,90 @@ class Email {
             }
 
             if ($db->isModuleActive('queue')) {
-                require_once $db->getModuleLocation('queue') . '/ModQueueController.php';
-                $queue = new modQueueController();
+                $version = $db->getModuleVersion('queue');
 
-                $this->mail_data['date_send'] = $immediately
-                    ? new Zend_Db_Expr('NOW()')
-                    : new Zend_Db_Expr('NULL');
+                if (version_compare($version, '1.2.0', '<')) {
+                    // DEPRECATED
+                    $location = $db->getModuleLocation('queue');
+                    require_once $location . '/ModQueueController.php';
 
-                $queue->createEmail(
-                    $this->mail_data['from'],
-                    $this->mail_data['to'],
-                    $this->mail_data['subject'],
-                    $this->mail_data['body'],
-                    $this->mail_data['cc'],
-                    $this->mail_data['bcc'],
-                    $this->mail_data['importance'],
-                    $this->mail_data['date_send']
-                );
+                    $queue = new modQueueController();
 
-                if ( ! empty($this->mail_data['files'])) {
-                    foreach ($this->mail_data['files'] as $file) {
-                        $queue->attacheFile($file['content'], $file['name'], $file['mimetype'], $file['size']);
-                    }
-                }
+                    $this->mail_data['date_send'] = $immediately
+                        ? new Zend_Db_Expr('NOW()')
+                        : null;
 
-                $zend_db = Zend_Registry::get('db');
-                $zend_db->beginTransaction();
-
-                $mail_id = $queue->save();
-
-                if ( ! $mail_id || $mail_id <= 0) {
-                    $zend_db->rollback();
-                    throw new Exception('Ошибка добавления сообщения в очередь');
-
-                }
-                $zend_db->commit();
-
-                if ($immediately) {
-                    $is_send = $this->zend_send(
+                    $queue->createEmail(
                         $this->mail_data['from'],
                         $this->mail_data['to'],
                         $this->mail_data['subject'],
                         $this->mail_data['body'],
                         $this->mail_data['cc'],
                         $this->mail_data['bcc'],
-                        $this->mail_data['files']
+                        $this->mail_data['importance'],
+                        $this->mail_data['date_send']
                     );
 
-                    if ( ! $is_send) {
-                        throw new Exception('Не удалось отправить сообщение');
+                    if ( ! empty($this->mail_data['files'])) {
+                        foreach ($this->mail_data['files'] as $file) {
+                            $queue->attacheFile($file['content'], $file['name'], $file['mimetype'], $file['size']);
+                        }
+                    }
+
+
+                    $zend_db = Zend_Registry::get('db');
+                    $zend_db->beginTransaction();
+                    $mail_id = $queue->save();
+
+                    if ( ! $mail_id || $mail_id <= 0) {
+                        $zend_db->rollback();
+                        throw new Exception('Ошибка добавления сообщения в очередь');
+
+                    }
+                    $zend_db->commit();
+
+                    if ($immediately) {
+                        $is_send = $this->zend_send(
+                            $this->mail_data['from'],
+                            $this->mail_data['to'],
+                            $this->mail_data['subject'],
+                            $this->mail_data['body'],
+                            $this->mail_data['cc'],
+                            $this->mail_data['bcc'],
+                            $this->mail_data['files']
+                        );
+
+                        if ( ! $is_send) {
+                            throw new Exception('Не удалось отправить сообщение');
+                        }
+                    }
+
+                } else {
+                    $location = $db->getModuleLocation('queue');
+                    require_once $location . '/ModQueueController.php';
+
+                    $queue = new modQueueController();
+
+                    $this->mail_data['date_send'] = $immediately
+                        ? new Zend_Db_Expr('NOW()')
+                        : null;
+
+                    $queue->createMail($this->mail_data);
+
+                    if ($immediately) {
+                        $is_send = $this->zend_send(
+                            $this->mail_data['from'],
+                            $this->mail_data['to'],
+                            $this->mail_data['subject'],
+                            $this->mail_data['body'],
+                            $this->mail_data['cc'],
+                            $this->mail_data['bcc'],
+                            $this->mail_data['files']
+                        );
+
+                        if ( ! $is_send) {
+                            throw new Exception('Не удалось отправить сообщение');
+                        }
                     }
                 }
 

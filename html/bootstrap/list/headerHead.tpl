@@ -9,7 +9,7 @@
 
     <!-- BEGIN cell -->
         <td width="{WIDTH}" onclick="listx.doOrder('{resource}', '{ORDER_VALUE}', isAjax)" style="cursor:pointer;">
-            <div>{CAPTION}<div style="float:right;">{ORDER_TYPE}</div></div>
+            <div>{CAPTION}<span style="margin-left:8px">{ORDER_TYPE}</span></div>
         </td>
     <!-- END cell -->
 

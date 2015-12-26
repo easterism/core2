@@ -112,11 +112,19 @@ a {color: #337AB7}
 #user-section .dropdown-toggle .fa-caret {margin-left: 5px}
 #user-section .dropdown-menu > li > a {color: #463265}
 #user-section .dropdown-menu i {margin-right: 5px}
+#user-section.active .dropdown-menu > li.active > a,
+#user-section.active {
+    background-color: #f9f9f9;
+    color: #463265;
+}
+.dropdown-settings,
 .dropdown-profile,
+#module-settings,
 #module-profile,
 #submodule-profile-messages {
     display: none;
 }
+.dropdown-settings.show,
 .dropdown-profile.show {display: list-item}
 #msgCount {
     background-color: #FF4C80;
@@ -127,4 +135,19 @@ a {color: #337AB7}
     height: 19px;
     text-align: center;
     margin-right: 1px;
+}
+.avatar-container {
+    width: 25px;
+    display: inline-block;
+    height: 25px;
+    margin-right: 8px;
+    margin-bottom: -8px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+    border-radius: 20px;
+    position: relative;
+}
+.avatar-container img {
+    margin-top: -1px;
+    margin-left: -1px;
 }

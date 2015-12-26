@@ -3,7 +3,7 @@
 
 /**
  * Контекстные сообщения
- * Class Message
+ * Class Alert
  */
 class Alert {
 

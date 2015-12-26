@@ -254,9 +254,10 @@ var edit = {
         key: '',
 
         load: function(theme_src, key, url) {
-            this.key = key;
+            this.key            = key;
+            var modal_container = $('#' + this.key + '-modal').appendTo('#main_body');
+            var $body_container = $('.modal-dialog>.modal-content>.modal-body', modal_container);
 
-            var $body_container = $('#' + this.key + '-modal>.modal-dialog>.modal-content>.modal-body');
             $body_container.html(
                 '<div style="text-align:center">' +
                     '<img src="' + theme_src + '/img/load.gif" alt="loading">' +

@@ -6,6 +6,11 @@ define("DOC_PATH", substr(realpath(__DIR__ . '/../..'), strlen($_SERVER['DOCUMEN
 
 require_once DOC_ROOT . 'core2/inc/classes/Tool.php';
 require_once DOC_ROOT . 'core2/inc/classes/Error.php';
+require_once DOC_ROOT . 'core2/inc/classes/Db.php';
+require_once DOC_ROOT . 'core2/inc/classes/Acl.php';
+require_once DOC_ROOT . 'core2/inc/classes/Templater2.php';
+
+
 
 if ( ! Tool::file_exists_ip("/Zend/Config.php")) {
     Error::Exception("Требуется ZF компонент \"Config\"");
@@ -13,7 +18,14 @@ if ( ! Tool::file_exists_ip("/Zend/Config.php")) {
 
 require_once("Zend/Config.php");
 require_once("Zend/Config/Ini.php");
-
+require_once("Zend/Registry.php");
+require_once("Zend/Cache.php");
+require_once("Zend/Db.php");
+require_once("Zend/Session.php");
+require_once("Zend/Debug.php");
+require_once("Zend/Log.php");
+require_once("Zend/Json.php");
+require_once("Zend/Translate.php");
 
 $config = array(
     'system'       => array(
@@ -46,7 +58,8 @@ $config = array(
         'autoQuoteIdentifiers'       => true,
         'allowSerialization'         => true,
         'autoReconnectOnUnserialize' => true
-    )
+    ),
+    'php_dir' => (isset($GLOBALS['PHP_DIR']) ? $GLOBALS['PHP_DIR'] : '')
 );
 
 

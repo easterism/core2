@@ -383,7 +383,8 @@ class ModAjax extends ajaxFunc {
 	 */
 	public function saveUser($data) {
 
-		$fields = array('u_login' 		=> 'req',
+		$fields = array(
+            'u_login'         => 'req',
 		                'email' 		=> 'email',
 		                'role_id' 		=> 'req',
 		                'visible' 		=> 'req',
@@ -427,9 +428,15 @@ class ModAjax extends ajaxFunc {
                 $update = false;
 				$dataForSave['u_login'] = trim($data['control']['u_login']);
 				$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
+
+				$this->checkUniqueLogin(0, $dataForSave['u_login']);
+				if ($data['control']['email']) {
+                    $this->checkUniqueEmail(0, $dataForSave['email']);
+                }
+
 				$this->db->insert('core_users', $dataForSave);
 				$refid = $this->db->lastInsertId('core_users');
-				$who = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
+				$who   = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
                 $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
                     ->to("easter.by@gmail.com")
@@ -440,13 +447,19 @@ class ModAjax extends ajaxFunc {
                             ФИО: {$lastname} {$firstname} {$middlename}")
                     ->send();
 			} else {
+                $this->checkUniqueLogin($refid, $dataForSave['u_login']);
+                if ($dataForSave['email']) {
+                    $this->checkUniqueEmail($refid, $dataForSave['email']);
+                }
+
                 $update = true;
 				$where = $this->db->quoteInto('u_id = ?', $refid);
 				$this->db->update('core_users', $dataForSave, $where);
 			}
 
 			if ($refid) {
-				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
+				$row = $this->dataUsersProfile
+                    ->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
 				$save = array(
 					'lastname' => $lastname,
 					'firstname' => $firstname,
@@ -685,27 +698,20 @@ class ModAjax extends ajaxFunc {
                 $inst->setMInfo($mInfo);
                 $errors = array();
                 $filesList = $inst->getFilesList($destinationFolder);
+				//для проверки ошибок в файлах пхп
+				$php_path = '';
+				if (empty($this->config->php) || empty($this->config->php->path)) {
+					$php_path = $this->config->php->path;
+				}
                 foreach ($filesList as $path) {
                     $fName = substr($path, strripos($path, '/') + 1);
                     //проверка файлов php
-                    if (substr_count($fName, ".php"))
+                    if (substr_count($fName, ".php") && !empty($php_path))
                     {
-                        $path_php = $this->getPHPPath();
-                        $tmp = exec("{$path_php} -l {$path}");
+                        $tmp = exec("{$php_path} -l {$path}");
+
                         if (substr_count($tmp, 'Errors parsing')) {
                             $errors['php'][] = " - Ошибки в '{$fName}': Errors parsing";
-                        }
-                    }
-                    //проверка файлов sql
-                    elseif (substr_count($fName, ".sql"))
-                    {
-                        $sql = file_get_contents($path);
-                        try {
-                            //TODO FIXME Валентин включить проверку скриптов перед загрузкой модуля(почему не целый скрипт?? по частям глючит)
-//                            $inst->SQLСheckingSyntax($sql);
-                        }
-                        catch (Exception $e) {
-                            $errors['sql'][] = " - Ошибки в '{$fName}':<br>" . $e->getMessage();
                         }
                     }
                 }
@@ -832,4 +838,53 @@ class ModAjax extends ajaxFunc {
         return $php_path;
     }
 
+
+	/**
+	 * Проверка повторения логина
+	 * @param int    $user_id
+	 * @param string $login
+	 *
+	 * @throws Exception
+	 */
+	private function checkUniqueLogin($user_id, $login) {
+
+		$isset_login = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users
+            WHERE u_id != ?
+              AND u_login = ?
+        ", array(
+			$user_id,
+			$login
+		));
+
+		if ($isset_login) {
+			throw new Exception("Такой логин уже существует.");
+		}
+	}
+
+
+	/**
+	 * Проверка повторения email
+	 * @param int    $user_id
+	 * @param string $email
+	 *
+	 * @throws Exception
+	 */
+	private function checkUniqueEmail($user_id, $email) {
+
+		$isset_email = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users
+            WHERE u_id != ?
+              AND email = ?
+        ", array(
+			$user_id,
+			$email
+		));
+
+		if ($isset_email) {
+			throw new Exception("Такой email уже существует.");
+		}
+	}
 }

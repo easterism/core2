@@ -85,7 +85,7 @@ class tabs extends initTabs {
 		} else {
 			$HTML .= "<tr valign=\"top\"><td class=\"tabInactiveTD\"></td></tr>";
 		}
-		$HTML .=	"<tr><td width=\"100%\" class=\"containerTD\">";
+		$HTML .=	"<tr><td class=\"containerTD\">";
 		//ob_start();
 		echo $HTML;
 	}

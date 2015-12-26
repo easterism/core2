@@ -19,5 +19,22 @@ class Users extends Zend_Db_Table_Abstract {
 		return $this->fetchRow($sel->limit(1));
 	}
 
+	public function getUserById($id) {
+        $res   = $this->_db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
+								 FROM `core_users` AS u
+								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
+								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
+								WHERE u.`visible`='Y' AND u.u_login=? LIMIT 1", $id);
+        return $res;
+    }
+
+	public function getUserByLogin($login) {
+        $res   = $this->_db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
+								 FROM `core_users` AS u
+								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
+								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
+								WHERE u.`visible`='Y' AND u.u_login=? LIMIT 1", $login);
+        return $res;
+	}
 
 }

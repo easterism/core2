@@ -107,7 +107,7 @@ class UploadHandler extends Db
 
     		$file = new stdClass();
     		$file->name 		= $value['filename'];
-            $file->size 		= $value['filesize'];
+            $file->size 		= (int)$value['filesize'];
 			if (preg_match(Image::FORMAT_PICTURE, $type2)) {
 				$file->thumbnail_url = $this->options['thumb_url'] . $value['id'] . '&t=' . $tbl;
 			} else {

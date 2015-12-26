@@ -25,7 +25,9 @@ class Common extends Acl {
                 $reg->set('invoker', $this->module);
             }
         }
-		else $this->module = !empty($_GET['module']) ? $_GET['module'] : '';
+		else {
+			$this->module = !empty($_GET['module']) ? $_GET['module'] : '';
+		}
         $this->path      = 'mod/' . $this->module . '/';
         $this->auth      = Zend_Registry::get('auth');
         $this->resId     = $this->module;
@@ -66,6 +68,11 @@ class Common extends Acl {
 			if ($k == 'db' || $k == 'cache' || $k == 'translate') {
 				return parent::__get($k);
 			}
+            //геттер для модели
+            if (strpos($k, 'data') === 0) {
+                return parent::__get($k . "|" . $this->module);
+            }
+
 			// Получение экземпляра класса для работы с правами пользователей
 			elseif ($k == 'acl') {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
@@ -160,19 +167,6 @@ class Common extends Acl {
                 } else {
                     return new stdObject();
                 }
-			}
-
-			// Получение экземпляра модели текущего модуля
-			elseif (strpos($k, 'data') === 0) {
-				$model    = substr($k, 4);
-				$location = $this->module == 'admin'
-						? DOC_ROOT . "core2/mod/admin"
-						: $this->getModuleLocation($this->module);
-
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
-				$this->db; //FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
-				require_once($location . "/Model/$model.php");
-				$v = $this->{$k} = new $model();
 			}
 			else {
 				$v = $this->{$k} = $this;

@@ -114,9 +114,17 @@ function goHome() {
 }
 
 function logout() {
-	if (confirm('Вы уверены, что хотите выйти?')) {
-		window.location='index.php?module=admin&action=exit';
-	}
+    if (alertify) {
+        alertify.confirm('Вы уверены, что хотите выйти?', function (e) {
+            if (e) {
+                window.location='index.php?module=admin&action=exit';
+            }
+        });
+    } else {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            window.location='index.php?module=admin&action=exit';
+        }
+    }
 }
 
 function jsToHead(src) {
@@ -139,12 +147,21 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
-function toAnchor(id ){
-	if ($("#"+id)[0]) {
-        $('html,body').animate({
-            scrollTop : $("#" + id).offset().top - $("#menu-container").height()
-        }, 'fast');
-    }
+/**
+ * @param {string} id
+ */
+function toAnchor(id){
+    setTimeout(function(){
+        if (id.indexOf('#') < 0) {
+            id = "#" + id;
+        }
+        var ofy = $(id);
+        if (ofy[0]) {
+            $('html,body').animate({
+                scrollTop : ofy.offset().top - $("#menu-container").height()
+            }, 'fast');
+        }
+    }, 0);
 }
 
 var locData = {};
@@ -232,13 +249,25 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 	if (jqxhr.status == '0') {
 		//alert("Соединение прервано.");
 	} else if (jqxhr.statusText == 'error') {
-		alert("Отсутствует соединение с Интернет.");
+        if (alertify) {
+            alertify.alert("Отсутствует соединение с Интернет.");
+        } else {
+            alert("Отсутствует соединение с Интернет.");
+        }
 	}
 	else if (jqxhr.status == 500) {
-		alert("Ой! Что-то сломалось, подождите пока мы починим.");
+        if (alertify) {
+            alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
+        } else {
+            alert("Ой! Что-то сломалось, подождите пока мы починим.");
+        }
 	} else {
 		if (exception != 'abort') {
-			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
+            if (alertify) {
+                alertify.alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
+            } else {
+                alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
+            }
 		}
 	}
 });
@@ -260,7 +289,11 @@ var load = function (url, data, id, callback) {
 
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
+
 	if (h != url && url.indexOf('&__') < 0) {
+        if (typeof callback === 'function') {
+            locData.callback = callback;
+        }
 		document.location.hash = url;
 	} else {
 		if (url) {
@@ -312,8 +345,14 @@ var load = function (url, data, id, callback) {
 		}
 		if (url == '?module=admin&action=welcome') {
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
-			$('#menu-submodules .menu-submodule').hide();
+			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
+
+        if ($('#module-profile.menu-module-selected, #module-settings.menu-module-selected')[0]) {
+            $('#user-section').addClass('active');
+        } else {
+            $('#user-section').removeClass('active');
+        }
 
 		if (!callback) {
 			if (ax) {
@@ -323,14 +362,65 @@ var load = function (url, data, id, callback) {
 			}
 			callback = preloader.callback;
 		}
-		locData['id'] = id;
+
+        var match_module   = typeof locData['loc'] === 'string' ? locData['loc'].match(/module=([a-zA-Z0-9_]+)/) : '';
+        var current_module = match_module !== null && typeof match_module === 'object' && typeof match_module[1] === 'string'
+            ? match_module[1] : 'admin';
+
+        var match_action   = typeof locData['loc'] === 'string' ? locData['loc'].match(/action=([a-zA-Z0-9_]+)/) : '';
+        var current_action = match_action !== null && typeof match_action === 'object' && typeof match_action[1] === 'string'
+            ? match_action[1] : 'index';
+
+            match_module   = document.location.hash.match(/module=([a-zA-Z0-9_]+)/);
+        var load_module    = match_module !== null && typeof match_module === 'object' && typeof match_module[1] === 'string'
+            ? match_module[1] : 'admin';
+
+            match_action = document.location.hash.match(/action=([a-zA-Z0-9_]+)/);
+        var load_action  = match_action !== null && typeof match_action === 'object' && typeof match_action[1] === 'string'
+            ? match_action[1] : 'index';
+
+		locData['id']   = id;
 		locData['data'] = data;
-        locData['loc'] = 'index.php' + url;
+        locData['loc']  = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
-        if (locData.data) {
-			$(locData.id).load('index.php' + url, locData.data, callback);
+
+        var $container = $(locData.id);
+		if (locData.data) {
+			$container.load('index.php' + url, locData.data, function() {
+                if (current_module != load_module || current_action != load_action ||
+                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
+                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
+                ) {
+                    $container.hide();
+                    $container.fadeIn('fast');
+                } else {
+					$container.hide();
+					$container.fadeIn(50);
+				}
+                if (typeof locData.callback === 'function') {
+                    locData.callback();
+                    locData.callback = null;
+                }
+                callback();
+			});
 		} else {
-			$(locData.id).load('index.php' + url, callback);
+			$container.load('index.php' + url, function() {
+                if (current_module != load_module || current_action != load_action ||
+                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
+                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
+                ) {
+                    $container.hide();
+                    $container.fadeIn('fast');
+                } else {
+					$container.hide();
+					$container.fadeIn(50);
+				}
+                if (typeof locData.callback === 'function') {
+                    locData.callback();
+                    locData.callback = null;
+                }
+                callback();
+			});
 		}
 	}
 };
@@ -371,14 +461,30 @@ $(document).ready(function() {
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
 		if (a.request.status == '0') {
-			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+            if (alertify) {
+                alertify.alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+            } else {
+                alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+            }
 		}
 		else if (a.request.status == 500) {
-			alert("Ой! Что-то сломалось, подождите пока мы починим.");
+            if (alertify) {
+                alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
+            } else {
+                alert("Ой! Что-то сломалось, подождите пока мы починим.");
+            }
 		}else if (a.request.status == 203) {
-			alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+            if (alertify) {
+                alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+            } else {
+                alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+            }
 		} else {
-			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
+            if (alertify) {
+                alertify.alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
+            } else {
+                alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
+            }
 		}
 	}
 	xajax.callback.global.onResponseDelay = function () {
@@ -411,6 +517,7 @@ $(document).ready(function() {
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
+    alertify.set({ labels : { ok: "Oк", cancel: "Отмена" } });
 });
 
 var currentCategory = "";

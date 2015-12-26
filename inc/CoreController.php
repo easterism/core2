@@ -57,7 +57,7 @@ class CoreController extends Common {
             if (empty($changedMods)) {
                 echo '<h3>' . $this->translate->tr("Система работает в штатном режиме.") . '</h3>';
             } else {
-                echo '<h3 style="color: red;">' . $this->translate->tr("Обнаружены изменения в файлах модулей:") . ' ' . implode(", ", $changedMods) . '</h3>';
+                echo '<h3 style="color:red;">' . $this->translate->tr("Обнаружены изменения в файлах модулей:") . ' ' . implode(", ", $changedMods) . '</h3>';
             }
         } catch (Exception $e) {
             $install->addNotice($this->translate->tr("Аудит файлов модулей"), $e->getMessage(), $this->translate->tr("Ошибка"), "danger");
@@ -111,6 +111,8 @@ class CoreController extends Common {
 
 
     /**
+	 * Авторизация пользователя через форму
+	 *
      * @return void
      */
     public function action_login () {
@@ -194,7 +196,7 @@ class CoreController extends Common {
 				}
 
 				if (empty($res)) {
-					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
+					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
 								 FROM `core_users` AS u
 								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
 								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
@@ -236,6 +238,7 @@ class CoreController extends Common {
 					}
 					$authNamespace->ID 		= (int) $res['u_id'];
 					$authNamespace->NAME 	= $res['u_login'];
+					$authNamespace->EMAIL 	= $res['email'];
 					if ($res['u_login'] == 'root') {
 						$authNamespace->ADMIN = true;
 					} else {
@@ -266,7 +269,7 @@ class CoreController extends Common {
 	}
 
     /**
-     * установка данны[ дя пользователя root
+     * установка данных дя пользователя root
      * @return array
      */
     private function setRoot() {
@@ -338,6 +341,15 @@ class CoreController extends Common {
 		}	
 	}
 
+	/**
+	 * Занимается удалением записей в таблицах базы данных
+	 * если в талице есть поле is_deleted_sw, то запись не удаляется, а поле is_deleted_sw принимает значение 'Y'
+	 *
+	 * @param array $params
+	 *
+	 * @return bool
+	 * @throws Exception
+	 */
     public function action_delete(Array $params)
     {
         $sess       = new Zend_Session_Namespace('List');
@@ -576,6 +588,7 @@ class CoreController extends Common {
 
 
 	/**
+	 * информация о профиле пользователя
 	 * @return string
 	 */
 	public function userProfile() {
@@ -936,7 +949,7 @@ class CoreController extends Common {
                         }
                         $answer = $this->modAdmin->createEmail()
                             ->to($admin_email)
-                            ->subject('{$server}: обнаружены изменения в структуре модуля')
+                            ->subject("{$server}: обнаружены изменения в структуре модуля")
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
@@ -950,6 +963,86 @@ class CoreController extends Common {
         return $mods;
     }
 
+	/**
+	 * Получаем логи
+	 *
+	 * @param $type
+	 *
+	 * @return array
+	 */
+	private function getLogsData($type, $lines, $search) {
+		if ($type == 'file') {
+			$handle = fopen($this->config->log->system->file, "r");
+			$count_lines = 0;
+			while (!feof($handle)) {
+				fgets($handle, 4096);
+				$count_lines += 1;
+			}
 
+			$start = $count_lines - $lines;
+
+			if ($search) {
+				$search = preg_quote($search, '/');
+			}
+			rewind($handle); //перемещаем указатель в начало файла
+			$body = '';
+			$i = 1;
+			while (!feof($handle)) {
+				$tmp = fgets($handle, 4096);
+				if ($i >= $start) {
+					if ($search) {
+						if (preg_match("/$search/", $tmp)) {
+							$body .= $tmp;
+						}
+					} else {
+						$body .= $tmp;
+					}
+				}
+				$i++;
+			}
+			fclose($handle);
+			return array('body' => $body, 'count_lines' => $count_lines);
+		} else {
+			$where = '';
+			if ($search) {
+				$where = $this->db->quoteInto('WHERE u.u_login LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.sid LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.action LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.lastupdate LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.query LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.request_method LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.remote_port LIKE ?', "%$search%") .
+						$this->db->quoteInto(' OR l.ip LIKE ?', "%$search%");
+			}
+			$count_lines = $this->db->fetchOne("SELECT count(*) FROM core_log");
+			$count_lines_where = $this->db->fetchOne("SELECT count(*)
+														FROM core_log AS l
+														LEFT JOIN core_users AS u ON u.u_id=l.user_id
+														$where");
+			$start = $count_lines_where - $lines;
+			if ($start < 0) {
+				$start = 0;
+			}
+			$data = $this->db->fetchAll("SELECT u.u_login,
+										l.sid,
+										l.action,
+										l.lastupdate,
+										l.query,
+										l.request_method,
+										l.remote_port,
+										l.ip
+										FROM core_log AS l
+										LEFT JOIN core_users AS u ON u.u_id=l.user_id
+										$where
+										LIMIT $start, $lines");
+			$data2 = '';
+			foreach ($data as $tmp) {
+				$data2 .= "user: {$tmp['u_login']}, sid: {$tmp['sid']}, action: {$tmp['action']}, lastupdate: {$tmp['lastupdate']}, query: {$tmp['query']}, query: {$tmp['request_method']}, remote_port: {$tmp['remote_port']}, ip: {$tmp['ip']}\n";
+			}
+			return array('body' => $data2, 'count_lines' => $count_lines);
+		}
+
+
+	}
 
 }

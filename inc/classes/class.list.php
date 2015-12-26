@@ -458,7 +458,7 @@ class listTable extends initList {
     private function setSessData($key, $value) {
         $sess_form       = new Zend_Session_Namespace('List');
         $ssi             = $this->resource;
-        $tmp             = $sess_form->$ssi;
+        $tmp             = $sess_form->$ssi ? : array();
         $tmp[$key]       = $value;
         $sess_form->$ssi = $tmp;
     }
@@ -593,14 +593,7 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', $HTML);
 				}
 				elseif ($value['type'] == 'checkbox' || $value['type'] == 'checkbox2') {
-					$temp = array();
-					if (is_array($this->sqlSearch[$sqlSearchCount])) {
-						foreach ($this->sqlSearch[$sqlSearchCount] as $k => $v) {
-							$temp[] = array($k, $v);
-						}
-					} else {
-						$temp = $this->db->fetchAll($this->sqlSearch[$sqlSearchCount]);
-					}
+					$temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
 					$tpl2->touchBlock('checkbox');
 					foreach ($temp as $j => $row) {
 						$k = current($row);
@@ -623,14 +616,7 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
 				}
 				elseif ($value['type'] == 'radio') {
-					$temp = array();
-					if (is_array($this->sqlSearch[$sqlSearchCount])) {
-						foreach ($this->sqlSearch[$sqlSearchCount] as $k => $v) {
-							$temp[] = array($k, $v);
-						}
-					} else {
-						$temp = $this->db->query($this->sqlSearch[$sqlSearchCount]);
-					}
+					$temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
 					$tpl2->touchBlock('radio');
 					foreach ($temp as $row) {
 						$k = current($row);
@@ -651,14 +637,7 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'list') {
-					$temp = array();
-					if (is_array($this->sqlSearch[$sqlSearchCount])) {
-						foreach ($this->sqlSearch[$sqlSearchCount] as $k => $v) {
-							$temp[] = array($k, $v);
-						}
-					} else {
-						$temp = $this->db->fetchAll($this->sqlSearch[$sqlSearchCount]);
-					}
+					$temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
 					$opt = array('' => 'Все');
 					foreach ($temp as $row) {
 						$k = current($row);
@@ -674,14 +653,7 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
                 elseif ($value['type'] == 'multilist') {
-					$temp = array();
-					if (is_array($this->sqlSearch[$sqlSearchCount])) {
-						foreach ($this->sqlSearch[$sqlSearchCount] as $k => $v) {
-							$temp[] = array($k, $v);
-						}
-					} else {
-						$temp = $this->db->fetchAll($this->sqlSearch[$sqlSearchCount]);
-					}
+					$temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
 					foreach ($temp as $row) {
 						$k = current($row);
 						$v = end($row);
@@ -983,7 +955,7 @@ class listTable extends initList {
                     } elseif ($value['type'] == 'status_inline') {
                         $evt = "";
                         if ($this->checkAcl($this->resource, 'edit_owner') || $this->checkAcl($this->resource, 'edit_all')) {
-                            $evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\" title=\"{$this->classText['ON_OFF']}\"";
+							$evt = "onclick=\"listx.switch_active(this, event)\" t_name=\"{$value['in']}\" val=\"{$row[0]}\" title=\"{$this->classText['SWITCH']}\"";
                         }
                         if ($sql_value == 1 || $sql_value == 'Y' || $sql_value == '[ON]') {
                             $tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/on.png\" alt=\"on\" $evt/>";
@@ -1002,7 +974,7 @@ class listTable extends initList {
                 }
                 $tempid = $this->resource . $int_count;
                 if ($this->noCheckboxes === 'no') {
-                    $tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";
+                    $tableBodyHTML .= "<td width=\"1%\" $onclick><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\"></td>";
                 }
                 $tableBodyHTML .= "</tr>";
                 if (isset($look) && $look) {
@@ -1128,6 +1100,28 @@ class listTable extends initList {
 	}
 
 	/**
+	 * Приводит разные виды массивов данных к одному
+	 * @param mixed $sqlSearch
+	 *
+	 * @return array
+	 */
+	private function searchArrayArrange($sqlSearch) {
+		$temp = array();
+		if (!is_array($sqlSearch)) {
+			$sqlSearch = $this->db->fetchAll($sqlSearch);
+		}
+
+		if (is_array(current($sqlSearch))) {
+			$temp = $sqlSearch;
+		} else {
+			foreach ($sqlSearch as $k => $v) {
+				$temp[] = array($k, $v);
+			}
+		}
+		return $temp;
+	}
+
+	/**
 	 * Print grid HTML
 	 * @return void
 	 */
@@ -1200,6 +1194,7 @@ class listTable extends initList {
 				$tres2 .= substr($tvalue, 2);
 			}
 		}
+		if ($tres2) $tres = $tres2;
 		$temp  = explode("TCOL64URL_", $tres);
 		$tres2 = "";
 		foreach ($temp as $tkey => $tvalue) {
@@ -1212,8 +1207,8 @@ class listTable extends initList {
 				$tres2 .= substr($tvalue, 2);
 			}
 		}
-		if (!$tres2) $tres2 = $tres;
-		return $tres2;
+		if ($tres2) $tres = $tres2;
+		return $tres;
 	}
 	
 	function addParams($va, $value) {

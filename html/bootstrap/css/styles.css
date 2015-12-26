@@ -3,7 +3,7 @@ html {
     background-color: #fff;
 }
 body {
-	font-family: "Tahoma";
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size: 14px;
 	height: 100%;
 	width: 100%;
@@ -44,21 +44,19 @@ pre span {
 	display: none;
     padding: 15px;
     margin-bottom: 20px;
-    border: 1px solid transparent;
+    border: 1px solid #ebccd1;
     border-radius: 4px;
     color: #a94442;
     background-color: #f2dede;
-    border-color: #ebccd1;
 }
 .block {display:block}
 .completed {
     padding: 15px;
     margin-bottom: 20px;
-    border: 1px solid transparent;
+    border: 1px solid #d6e9c6;
     border-radius: 4px;
     color: #3c763d;
     background-color: #dff0d8;
-    border-color: #d6e9c6;
 }
 .input,
 .reqField,
@@ -483,7 +481,7 @@ EDIT class table
 */
 table.editTable {
 	border:0;
-	font-family:Tahoma;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size:14px;
     margin-bottom: 10px;
 }
@@ -545,7 +543,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .fieldRolesShortDescr {width: 300px}
 .buttonSave {
 	position:absolute;
-	margin-left:-4000;
+	margin-left:-4000px;
 }
 .editResizeDiv {
 	z-index:100000;
@@ -1105,6 +1103,7 @@ label.control-label {font-weight: 700}
 .clearfix {clear:both}
 .bg-white {background-color: #fff}
 .form-control.modal-control-title {width: 235px}
+.modal-control .modal-control-button {height: 34px}
 .ctrl-dtp-controls > *,
 .ctrl-dp-controls > * {
     float: left
@@ -1203,3 +1202,43 @@ label.control-label {font-weight: 700}
 }
 .ctrl-dtp input[type=number],
 .ctrl-dp input[type=number] {-moz-appearance:textfield}
+div[id^=fileupload-main_] .table {
+    margin: 0;
+    margin-top: 5px;
+}
+.fileupload-buttonbar button.delete,
+.fileupload-buttonbar input.toggle,
+.files input.toggle,
+.fileupload-progress {
+    display: none;
+}
+div[id^=fileupload-main_] tbody.files > tr:first-child > td {
+    border-top: 0;
+}
+.template-download .btn.delete {
+    font-weight: 400;
+    color: #337ab7;
+    border-radius: 0;
+    border: 0;
+}
+.template-upload .name,
+.template-download .name {
+    word-break: break-all;
+}
+.template-upload .size,
+.template-download .size {
+    white-space: nowrap;
+}
+.template-download .name a,
+.template-download .size span {
+    line-height: 34px;
+}
+.template-download .btn.delete:focus,
+.template-download .delete:hover {
+    color: #23527c;
+    text-decoration: underline;
+    background-color: transparent;
+}
+.fileinput-button {
+    line-height: 24px;
+}

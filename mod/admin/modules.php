@@ -1,6 +1,6 @@
 <?
 
-//список модулей из репозитория
+//проверка наличия обновлений для модулей
 if (!empty($_POST['checkModsUpdates'])) {
 	$mods = array();
 	try {
@@ -45,28 +45,29 @@ $tab->addTab($this->translate->tr("Доступные модули"),	 $app, 130
 $tab->addTab($this->translate->tr("Шаблоны модулей"),	     $app, 130);
 $tab->beginContainer("Модули");
 
-$sid = session_id();
+//$sid = session_id();
 	if ($tab->activeTab == 1) {
+		if (!empty($_POST)) {
+			/* Обновление файлов модуля */
+			if (!empty($_POST['refreshFilesModule'])) {
+				$install = new InstallModule();
+				echo $install->mRefreshFiles($_POST['refreshFilesModule']);
+				exit();
+			}
 
-        /* Обновление файлов модуля */
-        if (!empty($_POST['refreshFilesModule'])) {
-            $install = new InstallModule();
-            echo $install->mRefreshFiles($_POST['refreshFilesModule']);
-            exit();
-        }
+			/* Обновление модуля */
+			if (!empty($_POST['updateModule'])) {
+				$install = new InstallModule();
+				echo $install->checkModUpdates($_POST['updateModule']);
+				exit();
+			}
 
-        /* Обновление модуля */
-        if (!empty($_POST['updateModule'])) {
-            $install = new InstallModule();
-            echo $install->checkModUpdates($_POST['updateModule']);
-            exit();
-        }
-
-        //Деинсталяция модуля
-		if (isset($_POST['uninstall'])) {
-            $install = new InstallModule();
-            echo $install->mUninstall($_POST['uninstall']);
-            exit();
+			//Деинсталяция модуля
+			if (isset($_POST['uninstall'])) {
+				$install = new InstallModule();
+				echo $install->mUninstall($_POST['uninstall']);
+				exit();
+			}
 		}
 
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {	
@@ -368,12 +369,15 @@ $sid = session_id();
 			$list->noCheckboxes = "yes";
 			
 			$list->showTable();
+
+			//проверка после загрузки страницы наличия обновлений
 			$mods = json_encode($mods);
 			$theme = THEME;
 			$script = <<<HTML
 				<script type=\"text\/javascript\" language=\"javascript\">
 					$(document).ready(function(){
-						modules.checkModsUpdates({$mods}, '{$theme}');;
+						//ассинхронно выполняем поиск обновлений
+						window.setTimeout(modules.checkModsUpdates({$mods}, '{$theme}'), 1);
 					});
 				</script>
 HTML;
@@ -389,6 +393,10 @@ HTML;
 
 		/* Добавление нового модуля */
 		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
+
+			if (empty($this->config->php) || empty($this->config->php->path)) {
+				$edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
+			}
 
 			$edit->SQL = "SELECT id,
 							     name
@@ -686,7 +694,8 @@ HTML;
                 echo "<div id=\"repo_{$i}\"> Подключаемся...</div>";
                 echo "<script type=\"text\/javascript\" language=\"javascript\">";
                 echo    "$(document).ready(function () {";
-                echo        "modules.repo('{$repo}', {$i});";
+				//ассинхронно получаем списки из репозитория
+                echo        "window.setTimeout(modules.repo('{$repo}', {$i}), 1);";
                 echo    "});";
                 echo "</script>";
                 echo "<br><br><br>";

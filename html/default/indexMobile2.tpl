@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN"
-"http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+		"http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
 <html>
 <head>
 	<title>{system_name}</title>
