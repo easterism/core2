@@ -409,13 +409,41 @@ class Db {
 		if (isset($id[1]) && $this->isModuleActive($id[0])) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
 										INNER JOIN core_submodules AS s ON s.m_id=m.m_id
-									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'", $id);
+									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'",
+					$id);
 		} else {
 			$is = 0;
 		}
 		return $is;
 	}
 
+	/**
+	 * Получаем информацию о субмодуле
+	 * @param $submodule_id
+	 *
+	 * @return bool|false|mixed
+	 */
+	public function getSubModule($submodule_id) {
+		$key = "is_active_" . $this->config->database->params->dbname . "_" . $submodule_id;
+		$id = explode("_", $submodule_id);
+		if (empty($id[1])) {
+			return false;
+		}
+		if (!($this->cache->test($key))) {
+			$mods = $this->db->fetchRow("SELECT m.m_id, m_name, sm_path, m.module_id, is_system, sm.m_id AS sm_id
+											 FROM core_modules AS m
+												  LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
+											WHERE m.visible = 'Y'
+											  AND m.module_id = ?
+											  AND sm_key = ?
+											  ORDER BY sm.seq",
+					$id);
+			$this->cache->save($mods, $key, array('is_active_core_modules'));
+		} else {
+			$mods = $this->cache->load($key);
+		}
+		return $mods;
+	}
 
 	/**
 	 * @param string $module_id

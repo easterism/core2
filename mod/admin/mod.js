@@ -65,7 +65,7 @@ var modules = {
 		} else return false;
 	},
 	checkModsUpdates: function (mods, theme) {
-		$.post('index.php?module=admin&action=modules',
+		$.get('index.php?module=admin&action=modules',
 			{'checkModsUpdates': mods},
 			function(data, textStatus){
 				if(textStatus == 'success') {

@@ -517,7 +517,13 @@ $(document).ready(function() {
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
-    alertify.set({ labels : { ok: "Oк", cancel: "Отмена" } });
+    alertify.set({ labels : { ok: "Ок", cancel: "Отмена" } });
+
+    try {
+        alert = alertify.alert;
+    } catch (e) {
+        console.error(e.message)
+    }
 });
 
 var currentCategory = "";

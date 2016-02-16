@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="core2/html/bootstrap/css/menu.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/styles.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/alertify/alertify.core.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/alertify/alertify.bootstrap3.css" type="text/css"/>
 
     <script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
@@ -23,6 +27,7 @@
     <script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead-1.2.9/jquery.floatThead.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/alertify.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/bootstrap.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>

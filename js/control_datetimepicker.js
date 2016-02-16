@@ -1,5 +1,4 @@
 
-
 var control_datetimepicker = {
 
     /**
@@ -52,16 +51,7 @@ var control_datetimepicker = {
      */
     rebuildCalendar : function(wrapper) {
         var input_value = $('.ctrl-dtp-value', wrapper).val();
-        var dateFormat  = 'yy-mm-dd';
-        $('.ctrl-dtp-container', wrapper).datepicker( "option", "beforeShowDay", function(date) {
-            var date1 = $.datepicker.parseDate(dateFormat, input_value);
-            var classes = date1 && date.getTime() == date1.getTime()
-                ? ' ctrl-dtp-highlight '
-                : '';
-            var classes2 = control_datetimepicker.callbackDayClass(date);
-            classes += classes2 ? ' ' + classes2 + ' ' : '';
-            return [true, classes];
-        });
+        $('.ctrl-dtp-container', wrapper).datepicker('setDate', input_value);
     },
 
 
@@ -76,6 +66,18 @@ var control_datetimepicker = {
         var year   = $('.ctrl-dtp-year', wrapper).val();
         var hour   = $('.ctrl-dtp-hour', wrapper).val();
         var minute = $('.ctrl-dtp-minute', wrapper).val();
+
+        day     = Number(day) > 0 ? day : '';
+        month   = Number(month) > 0 ? month : '';
+        month   = Number(month) > 0 ? month : '';
+        hour    = Number(hour) > 0 ? hour : '';
+        minute  = Number(minute) > 0 ? minute : '';
+
+        day    = day.length > 2 ? day.substr(-2, 2) : day;
+        month  = month.length > 2 ? month.substr(-2, 2) : month;
+        year   = year.length > 4 ? year.substr(-4, 4) : year;
+        hour   = hour.length > 2 ? hour.substr(-2, 2) : hour;
+        minute = minute.length > 2 ? minute.substr(-2, 2) : minute;
 
         day    = day    ? '00'.substring(0, 2 - day.length) + day       : '';
         month  = month  ? '00'.substring(0, 2 - month.length) + month   : '';
@@ -164,24 +166,37 @@ var control_datetimepicker = {
             if (month > 0) {
                 last_day = 32 - new Date(year, month - 1, 32).getDate();
             }
-
-            if (Number(input.value) > last_day) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+            if (input.value == '00') {
+                input.value = '01';
+            } else if (Number(input.value) > last_day) {
                 input.value = last_day;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 1) {
-                input.value = 1;
+            } else if (Number(input.value) < 0) {
+                input.value = 0;
             }
         } else if (control_datetimepicker.hasClass(input, 'ctrl-dtp-month')) {
-            if (Number(input.value) > 12) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+            if (input.value == '00') {
+                input.value = '01';
+            } else if (Number(input.value) > 12) {
                 input.value = 12;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 1) {
-                input.value = 1;
+            } else if (Number(input.value) < 0) {
+                input.value = 0;
             }
 
         } else if (control_datetimepicker.hasClass(input, 'ctrl-dtp-hour')) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+
             if (Number(input.value) > 23) {
                 input.value = 23;
             } else if (input.value == '') {
@@ -189,7 +204,12 @@ var control_datetimepicker = {
             } else if (Number(input.value) < 0) {
                 input.value = 0;
             }
+
         } else if (control_datetimepicker.hasClass(input, 'ctrl-dtp-minute')) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+
             if (Number(input.value) > 59) {
                 input.value = 59;
             } else if (input.value == '') {
@@ -197,8 +217,13 @@ var control_datetimepicker = {
             } else if (Number(input.value) < 0) {
                 input.value = 0;
             }
-        } else if (control_datetimepicker.hasClass(input, 'ctrl-dtp-year') && Number(input.value) > 9999) {
-            input.value = 9999;
+
+        } else if (control_datetimepicker.hasClass(input, 'ctrl-dtp-year')) {
+            if (Number(input.value) > 9999) {
+                input.value = 9999;
+            } else if (input.value.length > 4) {
+                input.value = input.value.substr(-4, 4);
+            }
         }
         input.focus();
         this.dateBlur(wrapper);

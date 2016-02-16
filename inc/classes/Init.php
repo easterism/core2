@@ -76,6 +76,13 @@
         Error::Exception($e->getMessage());
     }
 
+    // отладка приложения
+    if ($config->debug->on) {
+        ini_set('display_errors', 1);
+    } else {
+        ini_set('display_errors', 0);
+    }
+
     // определяем путь к папке кеша
     if (strpos($config->cache, '/') === false) {
         $config->cache = DOC_ROOT . trim($config->cache, "/");
@@ -142,101 +149,102 @@
         protected $tpl;
         protected $acl;
 
-	public function __construct() {
-		parent::__construct();
+		public function __construct() {
+			parent::__construct();
 
-		if (empty($_SERVER['HTTPS'])) {
-			$tz = $this->config->system->https;
-			if (!empty($tz)) {
-				header('Location: https://' . $_SERVER['SERVER_NAME']);
-			}
-		}
-
-		$tz = $this->config->system->timezone;
-		if (!empty($tz)) {
-			date_default_timezone_set($tz);
-		}
-	}
-
-    /**
-     * @throws Zend_Session_Exception
-     */
-	public function checkAuth() {
-        // проверяем, есть ли в запросе токен
-        $auth = $this->checkToken();
-        if ($auth) {
-            $this->auth = $auth;
-            Zend_Registry::set('auth', $this->auth);
-            return;
-        }
-
-		$this->auth 	= new Zend_Session_Namespace('Auth', true);
-		if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
-			Zend_Session::regenerateId();
-			$this->auth->initialized = true;
-		}
-		Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
-
-		if (!empty($this->auth->ID) && $this->auth->ID > 0) {
-			//is user active right now
-			if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
-				$sLife = $this->getSetting('session_lifetime');
-				if ($sLife) {
-					$this->auth->setExpirationSeconds($sLife, "accept_answer");
+			if (empty($_SERVER['HTTPS'])) {
+				$tz = $this->config->system->https;
+				if (!empty($tz)) {
+					header('Location: https://' . $_SERVER['SERVER_NAME']);
 				}
-				$this->auth->lock();
-			} else {
-				$this->closeSession('Y');
-				Zend_Session::destroy();
-				//$this->auth->ID = 0;
-				//$this->auth->NAME = '';
 			}
-			Zend_Registry::set('auth', $this->auth);
+
+			$tz = $this->config->system->timezone;
+			if (!empty($tz)) {
+				date_default_timezone_set($tz);
+			}
 		}
-	}
 
-    /**
-     * Проверка наличия токена в запросе
-     *
-     * @return StdClass|void
-     */
-    private function checkToken() {
-        if (!function_exists('apache_request_headers')) return; // потому что недоступна в CLI < 5.5.7
-        // обработка запросов от клиентов с Web Token
-        $headers = apache_request_headers();
-        //echo "<pre>";print_r($headers);echo "</pre>";die;
-        //$headers['Authorization'] = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIiwianRpIjoiNTYyZTk3MDE4ZjA3ZiJ9.eyJpc3MiOiJhZG1pbi5tYXNoYTI0LmJ5IiwiYXVkIjoiNTI0YjU4YTE1MmJmMWNjMiIsImp0aSI6IjU2MmU5NzAxOGYwN2YiLCJpYXQiOjE0NDU4OTM4ODksIm5iZiI6MTQ0NTg5Mzk0OSwiZXhwIjoxNDQ1OTgwMjg5fQ.';
-        $token = '';
-		if (!empty($headers['Authorization'])) {
-            if (strpos('Bearer', $headers['Authorization']) !== 0) return;
-            $token = $headers['Authorization'];
-		}
-        if (!empty($headers['core2m'])) {
-            $token = $headers['core2m'];
+        /**
+         * Общая проверка аутентификации
+         * @throws Zend_Session_Exception
+         */
+        public function checkAuth() {
+            // проверяем, есть ли в запросе токен
+            $auth = $this->checkToken();
+            if ($auth) {
+                $this->auth = $auth;
+                Zend_Registry::set('auth', $this->auth);
+                return;
+            }
+
+            $this->auth 	= new Zend_Session_Namespace('Auth', true);
+            if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
+                Zend_Session::regenerateId();
+                $this->auth->initialized = true;
+            }
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+
+            if (!empty($this->auth->ID) && $this->auth->ID > 0) {
+                //is user active right now
+                if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
+                    $sLife = $this->getSetting('session_lifetime');
+                    if ($sLife) {
+                        $this->auth->setExpirationSeconds($sLife, "accept_answer");
+                    }
+                    $this->auth->lock();
+                } else {
+                    $this->closeSession('Y');
+                    Zend_Session::destroy();
+                    //$this->auth->ID = 0;
+                    //$this->auth->NAME = '';
+                }
+                Zend_Registry::set('auth', $this->auth);
+            }
         }
-		if ($token) {
-            Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
 
-            if ( ! $this->isModuleActive('webservice')) {
-                Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
+        /**
+         * Проверка наличия токена в запросе
+         *
+         * @return StdClass|void
+         */
+        private function checkToken() {
+            if (!function_exists('apache_request_headers')) return; // потому что недоступна в CLI < 5.5.7
+            // обработка запросов от клиентов с Web Token
+            $headers = apache_request_headers();
+            //echo "<pre>";print_r($headers);echo "</pre>";die;
+            //$headers['Authorization'] = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIiwianRpIjoiNTYyZTk3MDE4ZjA3ZiJ9.eyJpc3MiOiJhZG1pbi5tYXNoYTI0LmJ5IiwiYXVkIjoiNTI0YjU4YTE1MmJmMWNjMiIsImp0aSI6IjU2MmU5NzAxOGYwN2YiLCJpYXQiOjE0NDU4OTM4ODksIm5iZiI6MTQ0NTg5Mzk0OSwiZXhwIjoxNDQ1OTgwMjg5fQ.';
+            $token = '';
+            if (!empty($headers['Authorization'])) {
+                if (strpos('Bearer', $headers['Authorization']) !== 0) return;
+                $token = $headers['Authorization'];
             }
-
-            $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
-
-            if ( ! file_exists($webservice_controller_path)) {
-                Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+            if (!empty($headers['core2m'])) {
+                $token = $headers['core2m'];
             }
+            if ($token) {
+                Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
 
-            require_once($webservice_controller_path);
+                if ( ! $this->isModuleActive('webservice')) {
+                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
+                }
 
-            if ( ! class_exists('ModWebserviceController')) {
-                Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
+                $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
+
+                if ( ! file_exists($webservice_controller_path)) {
+                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+                }
+
+                require_once($webservice_controller_path);
+
+                if ( ! class_exists('ModWebserviceController')) {
+                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
+                }
+
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchWebToken($token);
             }
-
-            $webservice_controller = new ModWebserviceController();
-            return $webservice_controller->dispatchWebToken($token);
         }
-    }
 
 	/**
 	 * The main dispatcher
@@ -256,20 +264,20 @@
 
             // Инициализация модуля вебсервиса
             if ( ! $this->isModuleActive('webservice')) {
-                throw new Exception($this->translate->tr("Модуль webservice не активен"));
+                throw new Exception($this->translate->tr("Модуль Webservice не активен"));
             }
 
             $webservice_location        = $this->getModuleLocation('webservice');
             $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                throw new Exception($this->translate->tr("Модуль webservice не существует"));
+                throw new Exception($this->translate->tr("Модуль Webservice не существует"));
             }
 
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                throw new Exception($this->translate->tr("Модуль webservice сломан"));
+                throw new Exception($this->translate->tr("Модуль Webservice сломан"));
             }
 
             if (isset($matches[2]) && $matches[2]) {
@@ -380,17 +388,10 @@
 					if (!$this->isModuleActive($module)) throw new Exception($this->translate->tr("Модуль не существует"), 404);
 				} else {
 					$_GET['action'] = strtolower($_GET['action']);
-					$mods = $this->db->fetchRow("SELECT m.m_id, m_name, sm_path, m.module_id, is_system, sm.m_id AS sm_id
-											 FROM core_modules AS m
-												  LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-											WHERE m.visible = 'Y'
-											  AND m.module_id = ?
-											  AND sm_key = ?
-											  ORDER BY sm.seq",
-						array($module, $_GET['action'])
-					);
+                    $submodule_id = $module . '_' . $_GET['action'];
+					$mods = $this->getSubModule($submodule_id);
 					if (!$mods) throw new Exception($this->translate->tr("Субмодуль не существует"), 404);
-					if ($mods['sm_id'] && !$this->acl->checkAcl($module . '_' . $_GET['action'], 'access')) {
+					if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
 						throw new Exception(911);
 					}
 				}
@@ -445,14 +446,15 @@
 	}
 	
 	/**
-	 * Create login page
+	 * Форма входа в систему
 	 */
 	protected function getLogin() {
-		$tokenNamespace = new Zend_Session_Namespace('Token');
-		if (isset($_POST['action']) && $tokenNamespace->TOKEN) {
+
+		if (isset($_POST['action'])) {
 			require_once 'core2/inc/CoreController.php';
 			$core = new CoreController();
-			$core->action_login();
+			$core->action_login($_POST);
+            return;
 		}
 		$tpl = new Templater2();
 		if (Tool::isMobileBrowser()) {
@@ -485,7 +487,8 @@
 		if (is_file($logo)) {
 			$tpl2->logo->assign('{logo}', $logo);
 		}
-		$u = crypt(uniqid());
+		$u = crypt(uniqid(), microtime());
+        $tokenNamespace = new Zend_Session_Namespace('Token');
 		$tokenNamespace->TOKEN = $u;
 		$tokenNamespace->setExpirationHops(1);
 		$tokenNamespace->lock();
@@ -535,29 +538,29 @@
         return false;
     }
 
-    /**
-     * Проверка наличия и целостности файла контроллера
-     * @param $location - путь до файла
-     * @param $modController - название файла контроллера
-     *
-     * @throws Exception
-     */
-    private function requireController($location, $modController) {
-        $controller_path = $location . "/" . $modController . ".php";
-        if (!file_exists($controller_path)) {
-            throw new Exception($this->translate->tr("Модуль не существует"), 404);
+        /**
+         * Проверка наличия и целостности файла контроллера
+         * @param $location - путь до файла
+         * @param $modController - название файла контроллера
+         *
+         * @throws Exception
+         */
+        private function requireController($location, $modController) {
+            $controller_path = $location . "/" . $modController . ".php";
+            if (!file_exists($controller_path)) {
+                throw new Exception($this->translate->tr("Модуль не существует"), 404);
+            }
+            require_once $controller_path; // подлючаем контроллер
+            if (!class_exists($modController)) {
+                throw new Exception($this->translate->tr("Модуль сломан"), 500);
+            }
         }
-        require_once $controller_path; // подлючаем контроллер
-        if (!class_exists($modController)) {
-            throw new Exception($this->translate->tr("Модуль сломан"), 500);
-        }
-    }
-    
-	/**
-	 * Create the top menu
-	 * @return mixed|string
-	 */
-    private function getMenu() {
+
+        /**
+         * Create the top menu
+         * @return mixed|string
+         */
+        private function getMenu() {
             require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
             $xajax = new xajax();
             //$xajax->configure("debug", true);
@@ -576,9 +579,13 @@
                 }
                 foreach ($mods as $data) {
                     if (!empty($data['sm_id'])) {
-                        $modsList[$data['m_id']]['submodules'] = array('sm_id' => $data['sm_id'], 'sm_key' => $data['sm_key'], 'sm_name' => $data['sm_name']);
+                        $modsList[$data['m_id']]['submodules'][] = array('sm_id' => $data['sm_id'], 'sm_key' => $data['sm_key'], 'sm_name' => $data['sm_name']);
                     }
                 }
+                $modsList = array('system_name' => $this->getSystemName(),
+                                  'login' => $this->auth->NAME,
+                                  'avatar' => "http://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                                  'modules' => $modsList);
                 return json_encode($modsList);
             } else if (Tool::isMobileBrowser()) {
                 $tpl->loadTemplate("core2/html/" . THEME . "/indexMobile2.tpl");
@@ -599,9 +606,27 @@
             $js     = array();
             foreach ($mods as $data) {
                 if (!empty($data['sm_key'])) continue;
-                $url = "index.php?module=" . $data['module_id'];
-                $html .= str_replace(array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_URL]'),
-                        array($data['module_id'], $data['m_name'], $url), $modtpl);
+
+                if ($data['isset_home_page'] == 'N') {
+                    $first_action = 'index';
+                    foreach ($mods as $mod) {
+                        if ( ! empty($mod['sm_id']) && $data['m_id'] == $mod['m_id']) {
+                            $first_action = $mod['sm_key'];
+                            break;
+                        }
+                    }
+                    $url           = "index.php?module={$data['module_id']}&action={$first_action}";
+                    $module_action = "&action={$first_action}";
+                } else {
+                    $url           = "index.php?module=" . $data['module_id'];
+                    $module_action = '';
+                }
+
+                $html .= str_replace(
+                    array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_ACTION]', '[MODULE_URL]'),
+                    array($data['module_id'], $data['m_name'], $module_action, $url),
+                    $modtpl
+                );
                 if ($data['module_id'] == 'admin') continue;
                 $location = $this->getModuleLocation($data['module_id']); //получение расположения модуля
                 $modController = "Mod" . ucfirst(strtolower($data['module_id'])) . "Controller";
@@ -639,7 +664,7 @@
                 }
             }
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\" language=\"javascript\">var coreTheme='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
-            $html = str_replace("<!--modules-->", $html, $tpl->parse());
+            $html = str_replace("<!--modules-->",    $html,  $tpl->parse());
             $html = str_replace("<!--submodules-->", $html2, $html);
             return $html;
         }
@@ -649,9 +674,9 @@
          * @return array
          */
         private function getModuleList() {
-            $res = $this->dataModules->getModuleList();
-            $mods = array();
-            $tmp = array();
+			$res  = $this->dataModules->getModuleList();
+			$mods = array();
+			$tmp  = array();
             foreach ($res as $data) {
 				if ($this->acl->checkAcl($data['module_id'], 'access')) {
                     if ($data['sm_key']) {
@@ -659,9 +684,10 @@
                             $tmp[$data['m_id']][] = $data;
                         } else {
                             $tmp[$data['m_id']][] = array(
-                                'm_id'      => $data['m_id'],
-                                'm_name'    => $data['m_name'],
-                                'module_id' => $data['module_id'],
+                                'm_id'            => $data['m_id'],
+                                'm_name'          => $data['m_name'],
+                                'module_id'       => $data['module_id'],
+                                'isset_home_page' => empty($data['isset_home_page']) ? 'Y' : $data['isset_home_page'],
                             );
                         }
                     } else {
@@ -672,22 +698,27 @@
             unset($res);
             foreach ($tmp as $m_id => $data) {
                 $module = current($data);
-                $mods[] = array('m_id' => $m_id, 'm_name' => $module['m_name'], 'module_id' => $module['module_id']);
+                $mods[] = array(
+                    'm_id'            => $m_id,
+                    'm_name'          => $module['m_name'],
+                    'module_id'       => $module['module_id'],
+                    'isset_home_page' => empty($module['isset_home_page']) ? 'Y' : $module['isset_home_page']
+                );
                 foreach ($data as $submodule) {
                     if (!$submodule['sm_id']) continue;
                     $mods[] = $submodule;
                 }
             }
             if ($this->auth->ADMIN || $this->auth->NAME == 'root') {
-                $tmp = array('m_id' => -1, 'm_name' => $this->translate->tr('Админ'), 'module_id' => 'admin');
+                $tmp = array('m_id' => -1, 'm_name' => $this->translate->tr('Админ'), 'module_id' => 'admin', 'isset_home_page' => 'Y');
                 $mods[] = $tmp;
-                $mods[] = array_merge($tmp, array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'sm_key' => 'modules', 'loc' => 'core'));
-                $mods[] = array_merge($tmp, array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 	'sm_key' => 'settings', 'loc' => 'core'));
-                $mods[] = array_merge($tmp, array('sm_id' => -3, 'sm_name' => $this->translate->tr('Справочники'),	'sm_key' => 'enum', 'loc' => 'core'));
-                $mods[] = array_merge($tmp, array('sm_id' => -4, 'sm_name' => $this->translate->tr('Пользователи'), 	'sm_key' => 'users', 'loc' => 'core'));
-                $mods[] = array_merge($tmp, array('sm_id' => -5, 'sm_name' => $this->translate->tr('Роли'), 			'sm_key' => 'roles', 'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'sm_key' => 'modules',    'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 'sm_key' => 'settings',   'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -3, 'sm_name' => $this->translate->tr('Справочники'),	'sm_key' => 'enum',       'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -4, 'sm_name' => $this->translate->tr('Пользователи'), 'sm_key' => 'users',      'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -5, 'sm_name' => $this->translate->tr('Роли'), 		'sm_key' => 'roles',      'loc' => 'core'));
                 $mods[] = array_merge($tmp, array('sm_id' => -6, 'sm_name' => $this->translate->tr('Мониторинг'), 	'sm_key' => 'monitoring', 'loc' => 'core'));
-                $mods[] = array_merge($tmp, array('sm_id' => -7, 'sm_name' => $this->translate->tr('Аудит'), 			'sm_key' => 'audit', 'loc' => 'core'));
+                $mods[] = array_merge($tmp, array('sm_id' => -7, 'sm_name' => $this->translate->tr('Аудит'), 		'sm_key' => 'audit',      'loc' => 'core'));
             }
             return $mods;
         }

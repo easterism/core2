@@ -34,7 +34,7 @@ class ModAjax extends ajaxFunc {
 		if (!$refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
 			if (count($arr)) {
-				$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
+				$this->error[] = "- " . $this->translate->tr('Идентификатор может состоять только из цифр или маленьких латинских букв');
 				$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
 			}
 			$curent_status = '';
@@ -48,7 +48,7 @@ class ModAjax extends ajaxFunc {
 			foreach ($data['addRules'] as $rules) {
 				preg_match("/[^0-9A-Za-zА-Яа-яЁё\s]/u", $rules, $res);
 				if (count($res)) {
-					$this->error[] = "- Идентификатор дополнительного правила доступа может состоять только из цифр и букв";
+					$this->error[] = "- " . $this->translate->tr("Идентификатор дополнительного правила доступа может состоять только из цифр и букв");
 					break;
 				}
 			}
@@ -80,7 +80,7 @@ class ModAjax extends ajaxFunc {
 					}						  
 				}
 				if (count($modules) > 0) {
-					$this->error[] = "Для активации модуля необходимо активировать модули:" . implode(",", $modules);
+					$this->error[] = $this->translate->tr("Для активации модуля необходимо активировать модули:") . implode(",", $modules);
 				}
 			}
 			if ($new_status == "N" && $refId) {
@@ -102,7 +102,7 @@ class ModAjax extends ajaxFunc {
 					}				 
 				}
 				if (count($list_id_modules) > 0) {
-					$this->error[] = "Для деактивации модуля необходимо деактивировать модули:".implode(",", $list_name_modules);
+					$this->error[] = $this->translate->tr("Для деактивации модуля необходимо деактивировать модули:") . implode(",", $list_name_modules);
 				}								
 			}
 		}	
@@ -145,7 +145,10 @@ class ModAjax extends ajaxFunc {
 			//TODO add the new module tab
 		} else {
 			$this->cache->remove($module_id);
-			$this->cache->remove("is_active_" . $module_id);
+			$this->cache->clean(
+					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+					array('is_active_core_modules')
+			);
 			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
 		}
 		$this->done($data);
@@ -170,20 +173,24 @@ class ModAjax extends ajaxFunc {
 		if (!$refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['sm_key'], $arr);
 			if (count($arr)) {
-				$this->error[] = "- Идентификатор может состоять только из цифр или маленьких латинских букв";
+				$this->error[] = "- " . $this->translate->tr("Идентификатор может состоять только из цифр или маленьких латинских букв");
 				$this->response->script("document.getElementById('" . $data['class_id'] . "sm_key').className='reqField';");
 			}
 			$m_id = (int)$this->getSessFormField($data['class_id'], 'm_id');
-			if (!$m_id) $this->error[] = "- Не найден идентификатор модуля";
+			if (!$m_id) $this->error[] = "- " . $this->translate->tr("Не найден идентификатор модуля");
 			$data['control']['m_id'] = $m_id;
 		} else {
 			$sm = $this->db->fetchRow("SELECT sm_key, module_id FROM core_submodules AS s
 										INNER JOIN core_modules AS m ON m.m_id = s.m_id
 										WHERE sm_id=?", $refId);
 			if (!$sm) {
-				$this->error[] = "- Ошибка определения субмодуля";
+				$this->error[] = "- " . $this->translate->tr("Ошибка определения субмодуля");
 			} else {
 				$this->cache->remove($sm['module_id'] . "_" . $sm['sm_key']);
+				$this->cache->clean(
+						Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+						array('is_active_core_modules')
+				);
 				unset($data['control']['sm_key']);
 			}
 			unset($data['control']['m_id']);
@@ -384,15 +391,18 @@ class ModAjax extends ajaxFunc {
 	public function saveUser($data) {
 
 		$fields = array(
-            'u_login'         => 'req',
-		                'email' 		=> 'email',
-		                'role_id' 		=> 'req',
-		                'visible' 		=> 'req',
-		                'firstname' 	=> 'req',
-		                'is_admin_sw' 	=> 'req',
-		                'is_email_wrong' 	=> 'req',
-		                'is_pass_changed' 	=> 'req'
+				'u_login'         => 'req',
+				'email'           => 'email',
+				'role_id'         => 'req',
+				'visible'         => 'req',
+				'firstname'       => 'req',
+				'is_admin_sw'     => 'req',
+				'is_email_wrong'  => 'req',
+				'is_pass_changed' => 'req'
 		);
+        if (empty($this->config->ldap->active)) {
+            $fields['u_pass'] = 'req';
+        }
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
@@ -436,6 +446,7 @@ class ModAjax extends ajaxFunc {
 
 				$this->db->insert('core_users', $dataForSave);
 				$refid = $this->db->lastInsertId('core_users');
+
 				$who   = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
                 $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
@@ -679,7 +690,7 @@ class ModAjax extends ajaxFunc {
                     }
                     $zip->close();
                 } else {
-                    throw new Exception("Ошибка архива");
+                    throw new Exception($this->translate->tr("Ошибка архива"));
                 }
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
@@ -763,7 +774,7 @@ class ModAjax extends ajaxFunc {
                 //получаем хэш для файлов модуля
                 $files_hash = $inst->extractHashForFiles($destinationFolder);
                 if (empty($files_hash)) {
-                    throw new Exception("Не удалось получить хэшь файлов модуля");
+                    throw new Exception($this->translate->tr("Не удалось получить хэшь файлов модуля"));
                 }
 
                 $is_exist = $this->db->fetchOne(
@@ -807,7 +818,7 @@ class ModAjax extends ajaxFunc {
                 }
             }
             else {
-                throw new Exception("Неверный тип архива");
+                throw new Exception($this->translate->tr("Неверный тип архива"));
             }
 
             $this->done($data);
@@ -859,7 +870,7 @@ class ModAjax extends ajaxFunc {
 		));
 
 		if ($isset_login) {
-			throw new Exception("Такой логин уже существует.");
+			throw new Exception($this->translate->tr("Пользователь с таким логином уже существует."));
 		}
 	}
 
@@ -884,7 +895,7 @@ class ModAjax extends ajaxFunc {
 		));
 
 		if ($isset_email) {
-			throw new Exception("Такой email уже существует.");
+			throw new Exception($this->translate->tr("Пользователь с таким email уже существует."));
 		}
 	}
 }

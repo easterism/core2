@@ -21,7 +21,7 @@ class UsersProfile extends Zend_Db_Table_Abstract {
     public function getFIO($id) {
 
         $dataUser = $this->_db->fetchRow("
-		    SELECT lastname, firstname, middlename
+		    SELECT lastname, firstname, middlename, email
 			FROM core_users AS cu
 			    LEFT JOIN `{$this->_name}` AS cup ON cu.u_id = cup.user_id
 			WHERE cu.u_id = ?", $id

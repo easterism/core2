@@ -56,13 +56,13 @@ class ajaxFunc extends Common {
 				$control[$field] = trim($val);
 				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
 					$script .= "document.getElementById('" . $class_id . $field . "2').className='reqField';";
-					$this->error[] = "- Пароль не совпадает.<br/>";
+					$this->error[] = "- {$this->translate->tr('Пароль не совпадает.')}<br/>";
 				}
 				else if (isset($control[$field . "%tru"]) && $val > $control[$field . "%tru"]) {
 					$script .= "document.getElementById('" . $class_id . $field . "%tru_day').className='reqField';";
 					$script .= "document.getElementById('" . $class_id . $field . "%tru_month').className='reqField';";
 					$script .= "document.getElementById('" . $class_id . $field . "%tru_year').className='reqField';";
-					$this->error[] = "- Дата начала больше даты окончания.<br/>";
+					$this->error[] = "- {$this->translate->tr('Дата начала больше даты окончания.')}<br/>";
 				}
 				else if (substr($field, 0, 6) == 'files|' && $val) {
 					$files = explode("|", trim($val, "|"));
@@ -109,7 +109,7 @@ class ajaxFunc extends Common {
 			foreach ($req as $val) {
 				$script .= "document.getElementById('" . $class_id . $val . "').className='reqField';";
 			}
-			$this->error[] = "- Пожалуйста, заполните обязательные поля.<br/>";
+			$this->error[] = "- {$this->translate->tr('Пожалуйста, заполните обязательные поля.')}<br/>";
 		}
 		
 		if (count($email)) {
@@ -299,11 +299,11 @@ class ajaxFunc extends Common {
 				$f = explode("###", $f);
 				$fn = $upload_dir . '/' . $f[0];
 				if (!file_exists($fn)) {
-					throw new Exception("Файл {$f[0]} не найден");
+					throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
 				}
 				$size = filesize($fn);
 				if ($size !== (int)$f[1]) {
-					throw new Exception("Что-то пошло не так. Размер файла {$f[0]} не совпадает");
+					throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
 				}
 				$content = file_get_contents($fn);
 				$hash = md5_file($fn);
@@ -346,10 +346,13 @@ class ajaxFunc extends Common {
 				throw new Exception();
 			}
 			$authNamespace = Zend_Registry::get('auth');
-			$control = array();
-			$fileFlag = array();
-			$fileFlagDel = array();
-			$table = trim($order_fields['table']);
+			$control       = array();
+			$fileFlag      = array();
+			$fileFlagDel   = array();
+			$table         = trim($order_fields['table']);
+			if (!$table) throw new Exception("Ошибка обработки таблицы", 500);
+			$explain = $this->db->fetchAll("EXPLAIN `$table`");
+			if (!$explain || !is_array($explain)) throw new Exception("Ошибка обработки таблицы", 500);
 			foreach ($data['control'] as $key => $value) {
 				if (!is_array($value)) $value = trim($value);
 				if (substr($key, -3) == '%re') continue;
@@ -375,9 +378,8 @@ class ajaxFunc extends Common {
 				}*/
 				$control[$key] = $data['control'][$key];
 				if (isset($data['control'][$key . '%tru'])) {
-					$res = $this->db->fetchAll("EXPLAIN `$table`");
 					$is_tru = false;
-					foreach ($res as $va) {
+					foreach ($explain as $va) {
 						if ($va['Field'] == $key . '_tru') {
 							$control[$key . '_tru'] = $data['control'][$key . '%tru'] ? $data['control'][$key . '%tru'] : new Zend_Db_Expr('NULL');
 							$is_tru = true;
@@ -389,8 +391,7 @@ class ajaxFunc extends Common {
 					}
 				}
 			}
-            $is = $this->db->fetchAll("EXPLAIN " . $table);
-            foreach ($is as $value) {
+            foreach ($explain as $value) {
                 if ($value['Field'] == 'lastuser') {
                     $control['lastuser'] = (int) $authNamespace->ID;
                     if ($control['lastuser'] == -1) $control['lastuser'] = new Zend_Db_Expr('NULL');
@@ -414,7 +415,7 @@ class ajaxFunc extends Common {
 				if ($this->checkAcl($order_fields['resId'], 'edit_owner') && !$this->checkAcl($order_fields['resId'], 'edit_all')) {
 					$res = $this->db->fetchRow("SELECT * FROM `$table` WHERE `{$order_fields['keyField']}`=? LIMIT 1", $order_fields['refid']);
 					if (isset($res['author']) && $authNamespace->NAME != $res['author']) {
-						throw new Exception('Вам разрешено редактировать только собственные данные.');
+						throw new Exception($this->translate->tr('Вам разрешено редактировать только собственные данные.'));
 					}
 				}
 
@@ -469,7 +470,7 @@ class ajaxFunc extends Common {
 			array($table, $order_fields['keyField'], $order_fields['refid'])
 		);
 		if (!$check) {
-			throw new Exception('Кто-то редактировал эту запись одновременно с вами, но успел сохранить данные раньше вас. Ничего страшного, обновите страницу и проверьте, возможно этот кто-то сделал за вас работу :)');
+			throw new Exception($this->translate->tr('Кто-то редактировал эту запись одновременно с вами, но успел сохранить данные раньше вас. Ничего страшного, обновите страницу и проверьте, возможно этот кто-то сделал за вас работу :)'));
 		} else {
 			$this->db->query("DELETE FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
 				array($table, $order_fields['keyField'], $order_fields['refid'])

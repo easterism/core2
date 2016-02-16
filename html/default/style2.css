@@ -172,7 +172,7 @@ TOP MENU
 PRELOADERS PROGRESS
 */
 
-#preloader, #progressbar {
+#preloader {
 	position:fixed;
 	display:none;
 	margin:-7px;
@@ -182,20 +182,6 @@ PRELOADERS PROGRESS
 	z-index:2000;
 	background-image: url("img/blank.gif");
 	text-align:center;
-}
-#preloader div, #progressbar table {
-	position:absolute;
-	background-image: url("img/preloader.gif");
-	background-repeat:no-repeat;
-	background-position:center;
-	background-color:white;
-	border: 1px solid silver;
-	margin-left:-150px;
-	margin-top:-70px;
-	left:50%;
-	top:50%;
-	width:300px;
-	height:100px;
 }
 
 #preloader div {
@@ -207,7 +193,6 @@ PRELOADERS PROGRESS
     -webkit-box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
        -moz-box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
             box-shadow: 0 15px 10px -10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
-	background-image: url("img/preloader.gif");
 	background-repeat:no-repeat;
 	background-position:center;
 	border: 1px solid silver;
@@ -220,19 +205,14 @@ PRELOADERS PROGRESS
 	height:100px;
     padding:1em;
 }
+#preloader div.image {
+	background-image: url("img/preloader.gif");
+}
 #preloader div:before,
 #preloader div:after {
     content:"";
     position:absolute;
     z-index:-2;
-}
-
-#progressbar table {
-	background: #fff;
-}
-#progressbar td {
-	vertical-align: middle;
-	text-align: center;
 }
 
 

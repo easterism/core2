@@ -2,15 +2,15 @@
 	<table width="100%">
 		<tr id="menu-row-1">
 			<td id="heme-button">
-				<a href="index.php#module=admin&action=welcome"
+				<a href="index.php#module=admin&action=welcome" title="<!--SYSTEM_NAME-->"
                    onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');"><!--SYSTEM_NAME--></a>
 			</td>
 			<td align="left" width="100%">
                 <ul id="menu-modules">
                     <!-- BEGIN modules -->
                     <li id="module-[MODULE_ID]" class="menu-module">
-                        <a href="index.php#module=[MODULE_ID]"
-                           onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID]');">[MODULE_NAME]</a>
+                        <a href="index.php#module=[MODULE_ID][MODULE_ACTION]"
+                           onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID][MODULE_ACTION]');">[MODULE_NAME]</a>
                     </li>
                     <!-- END modules -->
                 </ul>

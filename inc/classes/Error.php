@@ -102,21 +102,6 @@ class Error {
 
 	}
 
-	public static function catchLoginException($exception)
-	{
-		$message = $exception->getMessage();
-		$code = $exception->getCode();
-		if ($code == 1044) {
-			return 'Нет доступа к базе данных.';
-		} elseif ($code == 2002) {
-			return 'Не верный адрес базы данных.';
-		} elseif ($code == 1049) {
-			return 'Нет соединения с базой данных.';
-		} else {
-			return $message;
-		}
-	}
-
 	public static function catchZendException($exception) {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();

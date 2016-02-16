@@ -275,7 +275,7 @@ class listTable extends initList {
 								} else {
 									if (strpos($next['field'], "ADD_SEARCH") === false) {
 										$search .= " AND " . $next['field']." LIKE ?";
-										$questions[] = $search_value . "%";
+										$questions[] = "%" . $search_value . "%";
 									} else {
 										$search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
 									}

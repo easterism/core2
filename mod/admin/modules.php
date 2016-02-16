@@ -1,12 +1,12 @@
 <?
 
 //проверка наличия обновлений для модулей
-if (!empty($_POST['checkModsUpdates'])) {
+if (!empty($_GET['checkModsUpdates'])) {
 	$mods = array();
 	try {
 		$install = new InstallModule();
 		$ups = $install->checkInstalledModsUpdates();
-		foreach ($_POST['checkModsUpdates'] as $module_id => $m_id) {
+		foreach ($_GET['checkModsUpdates'] as $module_id => $m_id) {
 			if (!empty($ups[$module_id])) {
 				$ups[$module_id]['m_id'] = $m_id;
 				$mods[] = $ups[$module_id];
@@ -122,6 +122,7 @@ $tab->beginContainer("Модули");
 								   module_id,
 								   is_system,
 								   is_public,
+								   isset_home_page,
 								   $field dependencies,
 								   seq,
 								   access_default,
@@ -138,7 +139,9 @@ $tab->beginContainer("Модули");
 			$edit->addControl($this->translate->tr("Системный:"), "RADIO", "", "", "N");
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
 			$edit->addControl($this->translate->tr("Отображаемый:"), "RADIO", "", "", "N");
-			$edit->selectSQL[] = $dep_list; 			
+			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
+			$edit->addControl($this->translate->tr("Есть главная страница:"), "RADIO", "", "", "Y");
+			$edit->selectSQL[] = $dep_list;
 			$edit->addControl($this->translate->tr("Зависит от модулей:"), "CHECKBOX", "", "", $selected_dep);
 			$seq = '';
 			if ($refid == 0) {
@@ -569,8 +572,8 @@ HTML;
             $arr[4] = implode("<br>", $deps);
 
 			$arr[5] = $val['version'];
-            $arr[6] = $mData['install']['author'];
-            $arr[7] = $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
+            $arr[6] = isset($mData['install']['author']) ? $mData['install']['author'] : '';
+            $arr[7] = isset($mData['install']['module_system']) && $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
 
 			//кнопка установки
             $arr[8] = "";

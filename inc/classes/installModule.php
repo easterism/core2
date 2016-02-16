@@ -1825,9 +1825,11 @@ class InstallModule extends Db {
         $mods       = $this->db->fetchAll("SELECT id, install_info FROM core_available_modules");
         foreach ($mods as $m) {
             $i = unserialize($m['install_info']);
-            $i['location']      = 'avail';
-            $i['location_id']   = $m['id'];
-            $list[$i['install']['module_id']][$i['install']['version']] = $i;
+            if (isset($i['install']) && isset($i['install']['module_id']) && isset($i['install']['version'])) {
+                $i['location'] = 'avail';
+                $i['location_id'] = $m['id'];
+                $list[$i['install']['module_id']][$i['install']['version']] = $i;
+            }
         }
 
         //проверяем заданы ли ссылки на репозитории
@@ -2118,31 +2120,37 @@ class InstallModule extends Db {
             $names = array();
             foreach ($answer as $val) {
                 $Inf = unserialize($val['install_info']);
-                $names[$Inf['install']['module_id']] = $Inf['install']['module_name'];
-                $version = $Inf['install']['version'];
-                $Inf = !empty($Inf['install']['dependent_modules']) ? $Inf['install']['dependent_modules'] : array();
-                $tmp = array();
-                //достаем зависимости
-                if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
-                    if (!empty($Inf['m']['module_name'])) {
-                        $tmp2 = $Inf['m'];
-                        $Inf['m'] = array();
-                        $Inf['m'][] = $tmp2;
+                if (isset($Inf['install']) &&
+                    isset($Inf['install']['module_id']) &&
+                    isset($Inf['install']['module_name']) &&
+                    isset($Inf['install']['version'])
+                ) {
+                    $names[$Inf['install']['module_id']] = $Inf['install']['module_name'];
+                    $version = $Inf['install']['version'];
+                    $Inf = !empty($Inf['install']['dependent_modules']) ? $Inf['install']['dependent_modules'] : array();
+                    $tmp = array();
+                    //достаем зависимости
+                    if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
+                        if (!empty($Inf['m']['module_name'])) {
+                            $tmp2 = $Inf['m'];
+                            $Inf['m'] = array();
+                            $Inf['m'][] = $tmp2;
+                        }
+                        $tmp = $Inf['m'];
                     }
-                    $tmp = $Inf['m'];
+                    //для старых версий install.xml
+                    elseif (!empty($Inf['m'])) {
+                        if (!is_array($Inf['m'])) {
+                            $tmp2 = $Inf['m'];
+                            $Inf['m'] = array();
+                            $Inf['m'][] = $tmp2;
+                        }
+                        foreach ($Inf['m'] as $dep_value) {
+                            $tmp[] = array('module_id' => $dep_value);
+                        }
+                    }
+                    $list[$val['module_id']][$version] = $tmp;
                 }
-                //для старых версий install.xml
-                elseif (!empty($Inf['m'])) {
-                    if (!is_array($Inf['m'])) {
-                        $tmp2 = $Inf['m'];
-                        $Inf['m'] = array();
-                        $Inf['m'][] = $tmp2;
-                    }
-                    foreach ($Inf['m'] as $dep_value) {
-                        $tmp[] = array('module_id' => $dep_value);
-                    }
-                }
-                $list[$val['module_id']][$version] = $tmp;
             }
             $this->modListNames     = $names;
             $this->dependedModList  = $list;

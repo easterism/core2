@@ -8,13 +8,19 @@ a {color: #337AB7}
     -webkit-box-shadow: 0 1px 4px #DFDFDF;
 }
 #heme-button > a {
-    padding-left:7px;
-    padding-right:10px;
+    padding-left: 7px;
+    padding-right: 10px;
     white-space: nowrap;
     color: #563d7c;
     font-size: 18px;
     font-weight: 500;
+    line-height: 60px;
     text-decoration: none;
+    height: 60px;
+    display: block;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 #user-section {padding: 0 10px}
 #menu-row-1 {
@@ -55,7 +61,7 @@ a {color: #337AB7}
 }
 #menu-modules .menu-module:hover a,
 #menu-modules .menu-module-selected a {
-    background-color: #f9f9f9;
+    background-color: #F0F0F0;
     color: #463265;
 }
 #menu-submodules {
@@ -114,7 +120,7 @@ a {color: #337AB7}
 #user-section .dropdown-menu i {margin-right: 5px}
 #user-section.active .dropdown-menu > li.active > a,
 #user-section.active {
-    background-color: #f9f9f9;
+    background-color: #F0F0F0;
     color: #463265;
 }
 .dropdown-settings,

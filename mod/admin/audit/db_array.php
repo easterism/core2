@@ -268,6 +268,12 @@ $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['is_public']['NULL']    = "NO";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['is_public']['DEFAULT'] = "N";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['is_public']['EXTRA']   = "";
 
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['isset_home_page'] = array();
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['isset_home_page']['TYPE']    = "enum('Y','N')";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['isset_home_page']['NULL']    = "NO";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['isset_home_page']['DEFAULT'] = "Y";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['isset_home_page']['EXTRA']   = "";
+
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies'] = array();
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies']['TYPE']    = "text";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['dependencies']['NULL']    = "YES";

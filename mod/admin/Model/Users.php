@@ -28,6 +28,12 @@ class Users extends Zend_Db_Table_Abstract {
         return $res;
     }
 
+	/**
+	 * Получаем информацию о пользователе по его логину
+	 * @param $login
+	 *
+	 * @return mixed
+	 */
 	public function getUserByLogin($login) {
         $res   = $this->_db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
 								 FROM `core_users` AS u

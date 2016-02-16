@@ -1,13 +1,20 @@
 <?
-require_once('core2/inc/classes/Templater3.php');
+
+require_once DOC_ROOT . 'core2/inc/classes/Alert.php';
+require_once DOC_ROOT . 'core2/inc/classes/Templater3.php';
+
 $session = new Zend_Session_Namespace('monitoring');
+
+
 if (isset($_GET['lines'])) {
 	$lines = (int)$_GET['lines'];
 } elseif (isset($session->lines)) {
 	$lines = $session->lines;
 } else {
-	$lines = 200;
+	$lines = 50;
 }
+
+
 if (isset($_GET['search'])) {
 	$search = $_GET['search'];
 } elseif (isset($session->search)) {
@@ -15,44 +22,53 @@ if (isset($_GET['search'])) {
 } else {
 	$search = "";
 }
-$session->lines = $lines;
+
+
+$session->lines  = $lines;
 $session->search = $search;
+
 if (isset($_GET['download'])) {
 	if ($this->config->log->system->writer == 'file') {
-		$data = $this->getLogsData('file', $lines, $search);
-		$body = $data['body'];
+		if ($this->config->log->system->file && file_exists($this->config->log->system->file)) {
+			$data = $this->getLogsData('file', $search);
+			$body = $data['body'];
+		} else {
+            return Alert::getDanger($this->translate->tr("Не задан путь к файлу журнала"));
+		}
 	} else {
-		$data = $this->getLogsData('db', $lines, $search);
+		$data = $this->getLogsData('db', $search);
 		$body = $data['body'];
 	}
+    $zip_body = gzencode($body);
+
 	header("Content-Type: application/octet-stream");
 	header("Accept-Ranges: bytes");
-	//header("Content-Length: 1000");
-	header("Content-Disposition: attachment; filename=\"monitoring " . date("Y-m-d H:i:s") . ".txt.gz");
-	echo gzencode($body);
-	exit;
+	header("Content-Length: " . strlen($zip_body));
+	header("Content-Disposition: attachment; filename=\"access-log-" . date("Y-m-d-H:i:s") . ".txt.gz");
+	exit($zip_body);
 }
 
 $tab = new tabs($this->resId); 
 
-$title = $this->translate->tr("Мониторинг");
-$tab->addTab($this->translate->tr("Активные пользователи"), 		$app, 150);
-$tab->addTab($this->translate->tr("История посещений"), 			$app, 150);
-$tab->addTab($this->translate->tr("Журнал запросов"), 			$app, 150);
-$tab->addTab($this->translate->tr("Архив журнала"), 			$app, 150);
-//Tool::fb($_SERVER);
-$tab->beginContainer($title);
+$tab->addTab($this->translate->tr("Активные пользователи"), $app, 150);
+$tab->addTab($this->translate->tr("История посещений"),     $app, 150);
+$tab->addTab($this->translate->tr("Журнал запросов"),       $app, 150);
+$tab->addTab($this->translate->tr("Архив журнала"),         $app, 150);
+
+$tab->beginContainer($this->translate->tr("Мониторинг"));
 
 	if ($tab->activeTab == 1) {
-		if (isset($_GET['edit']) && $_GET['edit'] != '') {
+		if ( ! empty($_GET['edit'])) {
 			
 			
 		} else {
-			if (!empty($_GET['kick'])) {
-				$sid = $this->db->fetchOne("SELECT sid
-										  FROM core_session
-										 WHERE id = ?
-										 ", $_GET['kick']);
+			if ( ! empty($_GET['kick'])) {
+				$sid = $this->db->fetchOne("
+                    SELECT sid
+                    FROM core_session
+                    WHERE id = ?
+                ", $_GET['kick']);
+
 				if ($sid) {
 					if ($this->config->session && $this->config->session->save_path) {
 						unlink($this->config->session->save_path . '/sess_' . $sid);
@@ -62,17 +78,18 @@ $tab->beginContainer($title);
 				}
 			}
 			$sLife = $this->getSetting("session_lifetime");
-			if (!$sLife) {
+			if ( ! $sLife) {
 				$sLife = ini_get('session.gc_maxlifetime');
 			}
 			$this->printJs("core2/mod/admin/monitor.js");
 			
 			$list = new listTable($this->resId); 
-			$list->addSearch($this->translate->tr("Пользователь"), "u_login", "TEXT");
-			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
+			$list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
+			$list->addSearch($this->translate->tr("Время входа"),                "login_time",    "DATE");
 			$list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
-			$list->addSearch("IP", "ip", "TEXT");
-			//$list->addSearch("Отображать под", "r.boss", "text");
+			$list->addSearch("IP",                                               "ip",            "TEXT");
+
+
 			$list->SQL = "SELECT id,
 								sid,
 								u_login, 
@@ -85,16 +102,17 @@ $tab->beginContainer($title);
 							WHERE logout_time IS NULL
 							  AND (NOW() - last_activity > $sLife)=0 ADD_SEARCH
 						   ORDER BY login_time DESC";
-			$list->addColumn($this->translate->tr("Сессия"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Пользователь"), "", "TEXT");
-			$list->addColumn($this->translate->tr("Время входа"), "", "DATETIME");
-			$list->addColumn($this->translate->tr("Время последней активности"), "", "DATETIME");
-			$list->addColumn("IP", "1%", "TEXT");
-			$list->addColumn("", "1%", "BLOCK");
+
+			$list->addColumn($this->translate->tr("Сессия"),                     "",   "TEXT");
+			$list->addColumn($this->translate->tr("Пользователь"),               "",   "TEXT");
+			$list->addColumn($this->translate->tr("Время входа"),                "",   "DATETIME");
+			$list->addColumn($this->translate->tr("Время последней активности"), "",   "DATETIME");
+			$list->addColumn("IP",                                               "1%", "TEXT");
+			$list->addColumn("",                                                 "1%", "BLOCK");
 
 			$list->getData();
 			foreach ($list->data as $k => $val) {
-				$list->data[$k][6] = '<img src="core2/html/' . THEME . '/img/link_break.png" title="выкинуть из системы" onclick="kick(' . $val[0] . ')">';
+				$list->data[$k][6] = '<img src="core2/html/' . THEME . '/img/link_break.png" title="' . $this->translate->tr('выкинуть из системы') . '" onclick="kick(' . $val[0] . ')">';
 			}
 
 			$list->noCheckboxes = 'yes';
@@ -102,9 +120,9 @@ $tab->beginContainer($title);
 		}
 	}
 	elseif ($tab->activeTab == 2) { // История посещений
-		if (!empty($_GET['show'])) {
+		if ( ! empty($_GET['show'])) {
 			$show = (int)$_GET['show'];
-			$res = $this->db->fetchRow("SELECT u_login, up.lastname, up.firstname, up.middlename
+			$res  = $this->db->fetchRow("SELECT u_login, up.lastname, up.firstname, up.middlename
 										  FROM core_users AS u
 											   JOIN core_users_profile AS up ON up.user_id = u.u_id
 										WHERE u_id = ? LIMIT 1", $show);
@@ -115,7 +133,7 @@ $tab->beginContainer($title);
 				$name = $res['u_login'];
 			}
 			if (!empty($name)) $name = '<b>' . $name . '</b>';
-			echo '<div>Пользователь ' . $name . '</div>';
+			echo "<div>{$this->translate->tr('Пользователь')} {$name}</div>";
 			$res = $this->db->fetchRow("SELECT DATE_FORMAT(login_time, '%d-%m-%Y %H:%i:%s') AS login_time, ip
 										FROM core_session 
 										WHERE user_id = ? 
@@ -135,8 +153,8 @@ $tab->beginContainer($title);
 							WHERE user_id='{$show}'
 							ADD_SEARCH
 							ORDER BY login_time DESC";
-			$list->addColumn("Время входа", "", "DATETIME");
-			$list->addColumn("Время выхода", "", "TEXT");
+			$list->addColumn($this->translate->tr("Время входа"), "", "DATETIME");
+			$list->addColumn($this->translate->tr("Время выхода"), "", "TEXT");
 			$list->addColumn("IP", "1%", "TEXT");
 
 			//$list->editURL 			= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
@@ -144,10 +162,10 @@ $tab->beginContainer($title);
 			$list->showTable();
 		} else {
 			$list = new listTable($this->resId . 'xxx2'); 
-			$list->addSearch("Пользователь", "u_login", "TEXT");
-			$list->addSearch("Время последней активности", "last_activity", "DATE");
-			$list->addSearch("IP", "ip", "TEXT");
-			//$list->addSearch("Отображать под", "r.boss", "text");
+			$list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
+			$list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
+			$list->addSearch("IP",                         "ip",            "TEXT");
+
 			$list->SQL = "SELECT DISTINCT user_id,
 								 u.u_login,
 								 last_activity, 
@@ -157,9 +175,10 @@ $tab->beginContainer($title);
 							WHERE NOT EXISTS (SELECT 1 FROM core_session WHERE user_id=s.user_id AND last_activity > s.last_activity)
 							ADD_SEARCH
 							ORDER BY last_activity DESC";
-			$list->addColumn("Пользователь", "", "TEXT");
-			$list->addColumn("Время последней активности", "", "DATETIME");
-			$list->addColumn("IP", "1%", "TEXT");
+
+			$list->addColumn($this->translate->tr("Пользователь"),               "", "TEXT");
+			$list->addColumn($this->translate->tr("Время последней активности"), "", "DATETIME");
+			$list->addColumn("IP",                         "1%", "TEXT");
 
 			$list->editURL 		= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
 			$list->noCheckboxes = 'yes';
@@ -167,26 +186,33 @@ $tab->beginContainer($title);
 		}
 	}
 	elseif ($tab->activeTab == 3) { // журнал запросов
-		$this->printJs("core2/mod/admin/book.js");
+		$this->printCss("core2/mod/admin/css/monitoring.css");
+		$this->printJs("core2/mod/admin/monitoring.js");
 
 		if ($this->config->log->system->writer == 'file') {
-			if ($this->config->log->system->file) {
-				$data = $this->getLogsData('file', $lines, $search);
-				$count_lines = $data['count_lines'];
-				$body = $data['body'];
-			} else {
-				echo "В конфиге не задан файл хранения логов";
+			if (!$this->config->log->system->file) {
+                echo Alert::getDanger($this->translate->tr('Не задан путь к файлу журнала'));
+            } elseif (!file_exists($this->config->log->system->file)) {
+                echo Alert::getDanger($this->translate->tr('Отсутствует файл журнала'));
+            } else {
+				$data = $this->getLogsData('file', $search, $lines);
 			}
+
+            $count_lines = ! empty($data) ? $data['count_lines'] : '60';
+            $body        = ! empty($data) ? $data['body']        : '';
+
 		} else {
-			$data = $this->getLogsData('db', $lines, $search);
+			$data        = $this->getLogsData('db', $search, $lines);
 			$count_lines = $data['count_lines'];
-			$body = $data['body'];
+			$body        = $data['body'];
 		}
+
 		$tpl = new Templater3("core2/mod/admin/html/monitoring.tpl");
-		$tpl->assign('[LINES_VALUE]', $lines);
-		$tpl->assign('[SEARCH_VALUE]', htmlspecialchars($search));
-		$tpl->assign('[BODY]', $body);
-		$tpl->assign('[INFO]', "Строк: <b>" . Tool::commafy($count_lines) . "</b>&nbsp;&nbsp;&nbsp;");
+        $tpl->assign('[COUNT_LINES]',  Tool::commafy($count_lines));
+        $tpl->assign('[VIEW_LINES]',   $lines);
+        $tpl->assign('[SEARCH]',       htmlspecialchars($search));
+        $tpl->assign('[BODY]',         htmlspecialchars($body));
+
 		echo $tpl->render();
 	}
 	elseif ($tab->activeTab == 4) {

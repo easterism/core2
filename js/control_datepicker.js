@@ -1,5 +1,4 @@
 
-
 var control_datepicker = {
 
     /**
@@ -28,7 +27,7 @@ var control_datepicker = {
             onSelect: function(dateText, inst) {
                 $input.val(dateText);
                 control_datepicker.createDate($input, wrapper);
-                control_datepicker.callbackChange(dateText);
+                control_datepicker.callbackChange(dateText, '', wrapper);
                 $('.ctrl-dp-container', wrapper).hide('fast');
             }
         });
@@ -41,16 +40,7 @@ var control_datepicker = {
      */
     rebuildCalendar : function(wrapper) {
         var input_value = $('.ctrl-dp-value', wrapper).val();
-        var dateFormat  = 'yy-mm-dd';
-        $('.ctrl-dp-container', wrapper).datepicker( "option", "beforeShowDay", function(date) {
-            var date1 = $.datepicker.parseDate(dateFormat, input_value);
-            var classes = date1 && date.getTime() == date1.getTime()
-                ? ' ctrl-dp-highlight '
-                : '';
-            var classes2 = control_datepicker.callbackDayClass(date);
-            classes += classes2 ? ' ' + classes2 + ' ' : '';
-            return [true, classes];
-        });
+        $('.ctrl-dp-container', wrapper).datepicker('setDate', input_value);
     },
 
 
@@ -64,6 +54,14 @@ var control_datepicker = {
         var month = $('.ctrl-dp-month', wrapper).val();
         var year  = $('.ctrl-dp-year', wrapper).val();
 
+        day   = Number(day) > 0 ? day : '';
+        month = Number(month) > 0 ? month : '';
+        month  = Number(month) > 0 ? month : '';
+
+        day   = day.length > 2 ? day.substr(-2, 2) : day;
+        month = month.length > 2 ? month.substr(-2, 2) : month;
+        year  = year.length > 4 ? year.substr(-4, 4) : year;
+
         day   = day   ? '00'.substring(0, 2 - day.length) + day     : '';
         month = month ? '00'.substring(0, 2 - month.length) + month : '';
         year  = year  ? '0000'.substring(0, 4 - year.length) + year : '';
@@ -74,7 +72,7 @@ var control_datepicker = {
         }
 
         $('.ctrl-dp-value', wrapper).val(date);
-        control_datepicker.callbackChange(date);
+        control_datepicker.callbackChange(date, '', wrapper);
         this.rebuildCalendar(wrapper);
     },
 
@@ -139,24 +137,39 @@ var control_datepicker = {
             if (month > 0) {
                 last_day = 32 - new Date(year, month - 1, 32).getDate();
             }
-
-            if (Number(input.value) > last_day) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+            if (input.value == '00') {
+                input.value = '01';
+            } else if (Number(input.value) > last_day) {
                 input.value = last_day;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 1) {
-                input.value = 1;
+            } else if (Number(input.value) < 0) {
+                input.value = 0;
             }
+
         } else if (control_datepicker.hasClass(input, 'ctrl-dp-month')) {
-            if (Number(input.value) > 12) {
+            if (input.value.length > 2) {
+                input.value = input.value.substr(-2, 2);
+            }
+            if (input.value == '00') {
+                input.value = '01';
+            } else if (Number(input.value) > 12) {
                 input.value = 12;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 1) {
-                input.value = 1;
+            } else if (Number(input.value) < 0) {
+                input.value = 0;
             }
-        } else if (control_datepicker.hasClass(input, 'ctrl-dp-year') && Number(input.value) > 9999) {
-            input.value = 9999;
+
+        } else if (control_datepicker.hasClass(input, 'ctrl-dp-year')) {
+            if (Number(input.value) > 9999) {
+                input.value = 9999;
+            } else if (input.value.length > 4) {
+                input.value = input.value.substr(-4, 4);
+            }
         }
         input.focus();
         this.dateBlur(wrapper);
@@ -190,7 +203,7 @@ var control_datepicker = {
             $('.ctrl-dp-month', wrapper).val('');
             $('.ctrl-dp-year', wrapper).val('');
 
-            control_datepicker.callbackChange('');
+            control_datepicker.callbackChange('', '', wrapper);
             $('.ctrl-dp-container', wrapper).datepicker('refresh');
         });
 
@@ -210,9 +223,9 @@ var control_datepicker = {
     /**
      * Выполнение функции после изменения даты
      */
-    callbackChange : function(date) {
+    callbackChange : function(date, date2, wrapper) {
         if (typeof this.callback_change == 'function') {
-            this.callback_change(date);
+            this.callback_change(date, date2, wrapper);
         }
     },
 

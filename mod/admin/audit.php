@@ -55,8 +55,10 @@ if ($tab->activeTab == 1) {
             }
             echo "<input class=\"auditButton\" type=\"button\" value=\"Исправить все\" onclick=\"load('?module=admin&action=audit&loc=core&db_update=1')\"/>";
             echo "<h3>Предупреждения:</h3>";
-            foreach ($a_result['WARNING'] as $val) {
-                echo "<span class=auditWarningText>".$val."</span></br>";
+            if ( ! empty($a_result['WARNING'])) {
+                foreach ($a_result['WARNING'] as $val) {
+                    echo "<span class=auditWarningText>".$val."</span></br>";
+                }
             }
             die;
         }

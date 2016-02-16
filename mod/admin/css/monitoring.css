@@ -1,0 +1,20 @@
+.monitoring-toolbar .monitoring-total {
+    line-height: 39px;
+    margin-right: 10px;
+}
+.pull-left {float: left}
+.pull-right {float: right}
+.clearfix {clear: both}
+.monitoring-body {
+    display: block;
+    margin-top: 10px;
+    overflow: auto;
+    padding: 9.5px;
+    border: 1px solid #ccc;
+    word-break: normal;
+    word-wrap: normal;
+}
+#download-log {
+    vertical-align: middle;
+    display: inline-block;
+}

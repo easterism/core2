@@ -115,9 +115,11 @@ var preloader = {
 	oldHash : {},
 	show : function() {
 		$("#preloader").css('margin-top', ($("#menuContainer").height()));
+		$("#preloader div").addClass('image');
 		$("#preloader").show();
 	},
 	hide : function() {
+		$("#preloader div").html("");
 		$("#preloader").hide();
 	},
 	callback : function (response, status, xhr) {
@@ -179,6 +181,11 @@ var preloader = {
 				pairs.push(pu);
 			}
 		return '{' + pairs.join(',') + '}';
+	},
+	setText: function(text) {
+		this.show();
+		$("#preloader div").removeClass('image');
+		$("#preloader div").html("<span style=\"margin-top:30px;display:block;\">" + text + "</span>");
 	},
 	normUrl: function () {
 

@@ -82,7 +82,8 @@ class CoreController extends Common {
 
 		$errorNamespace->ERROR = $error;
 		$this->processError($errorNamespace, $blockNamespace);
-		Header("Location: index.php");
+        header("HTTP/1.1 400 Bad Request");
+        header("Location: index.php");
 		die;
 	}
 
@@ -115,41 +116,50 @@ class CoreController extends Common {
 	 *
      * @return void
      */
-    public function action_login () {
+    public function action_login ($post) {
 
 		$errorNamespace = new Zend_Session_Namespace('Error');
 		$blockNamespace = new Zend_Session_Namespace('Block');
-		if (!empty($_POST['js_disabled'])) {
+		$tokenNamespace = new Zend_Session_Namespace('Token');
+		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!");
-			Header("Location: index.php");
-			die;
+            header("HTTP/1.1 400 Bad Request");
+            header("Location: index.php");
+			return;
 		}
 		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		} else {
+			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
+				$errorNamespace->ERROR = $this->translate->tr("Ошибка авторизации!");
+                header("HTTP/1.1 400 Bad Request");
+                header("Location: index.php");
+				return;
+			}
 			try {
 				$db = Zend_Db::factory($this->config->database);
 				$db->getConnection();
 				//Zend_Db_Table::setDefaultAdapter($db);
 			} catch (Exception $e) {
-				$errorNamespace->ERROR = Error::catchLoginException($e);
-				Header("Location: index.php");
-				die;
+				$errorNamespace->ERROR = $this->catchLoginException($e);
+                header("HTTP/1.1 503 Service Unavailable");
+                header("Location: index.php");
+				return;
 			}
 			$authLDAP = false;
-			if ($_POST['login'] !== 'root') {
+			if ($post['login'] !== 'root') {
 				//ldap
 				if (!empty($this->config->ldap->active) && $this->config->ldap->active) {
 					require_once 'core2/inc/classes/LdapAuth.php';
-					$ldapAuth = new LdapAuth();
-					$ldapAuth->auth($_POST['login'], $_POST['password']);
-					$ldapStatus = $ldapAuth->getStatus();
+                    $ldapAuth = new LdapAuth();
+                    $ldapAuth->auth($post['login'], $post['password']);
+                    $ldapStatus = $ldapAuth->getStatus();
 					switch ($ldapStatus) {
 						case LdapAuth::ST_LDAP_AUTH_SUCCESS :
-							$authLDAP = true;
-							$userData = $ldapAuth->getUserData();
-							$login = $userData['login'];
+                            $authLDAP = true;
+                            $userData = $ldapAuth->getUserData();
+                            $login    = $userData['login'];
 							if (isset($userData['root']) && $userData['root'] === true) {
                                 $res = $this->setRoot();
 								break;
@@ -174,8 +184,8 @@ class CoreController extends Common {
 //							$this->setError($errorNamespace, $blockNamespace, "Пользователь не найден");
 							//удаляем пользователя если его нету в AD и с префиксом LDAP_%
 							//$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
-							$login = $_POST['login'];
-							$_POST['password'] = md5($_POST['password']);
+							$login = $post['login'];
+							$post['password'] = md5($post['password']);
 						break;
 						
 						case LdapAuth::ST_LDAP_INVALID_PASSWORD :
@@ -264,9 +274,24 @@ class CoreController extends Common {
 		if (!empty($_SERVER['QUERY_STRING'])) {
 			$url .= $sign . $_SERVER['QUERY_STRING'];
 		}
-		Header("Location: $url");
-		die;
+        header("Location: $url");
+		return;
 	}
+
+    private function catchLoginException($exception)
+    {
+        $message = $exception->getMessage();
+        $code = $exception->getCode();
+        if ($code == 1044) {
+            return $this->translate->tr('Нет доступа к базе данных.');
+        } elseif ($code == 2002) {
+            return $this->translate->tr('Не верный адрес базы данных.');
+        } elseif ($code == 1049) {
+            return $this->translate->tr('Нет соединения с базой данных.');
+        } else {
+            return $message;
+        }
+    }
 
     /**
      * установка данных дя пользователя root
@@ -286,7 +311,7 @@ class CoreController extends Common {
 	public function action_exit() {
 		$this->closeSession();
 		Zend_Session::destroy();
-		Header("Location: index.php");
+        header("Location: index.php");
 	}
 
 
@@ -843,7 +868,7 @@ class CoreController extends Common {
 	 */
 	private function sendUserInformation($dataNewUser) {
 
-		$dataUser = $this->db->fetchRow("SELECT lastname, firstname, middlename
+		$dataUser = $this->db->fetchRow("SELECT lastname, firstname, middlename, email
 			   							 FROM core_users AS cu
 			   							 LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
 			   							 WHERE cu.u_id = ?",
@@ -963,14 +988,16 @@ class CoreController extends Common {
         return $mods;
     }
 
+
 	/**
 	 * Получаем логи
-	 *
-	 * @param $type
-	 *
+	 * @param string $type
+	 * @param string $search
+	 * @param int    $limit_lines
 	 * @return array
 	 */
-	private function getLogsData($type, $lines, $search) {
+	private function getLogsData($type, $search, $limit_lines = null) {
+
 		if ($type == 'file') {
 			$handle = fopen($this->config->log->system->file, "r");
 			$count_lines = 0;
@@ -979,7 +1006,10 @@ class CoreController extends Common {
 				$count_lines += 1;
 			}
 
-			$start = $count_lines - $lines;
+			$start = 0;
+			if ($limit_lines) {
+				$start = $count_lines - $limit_lines;
+			}
 
 			if ($search) {
 				$search = preg_quote($search, '/');
@@ -1002,6 +1032,7 @@ class CoreController extends Common {
 			}
 			fclose($handle);
 			return array('body' => $body, 'count_lines' => $count_lines);
+
 		} else {
 			$where = '';
 			if ($search) {
@@ -1014,35 +1045,46 @@ class CoreController extends Common {
 						$this->db->quoteInto(' OR l.remote_port LIKE ?', "%$search%") .
 						$this->db->quoteInto(' OR l.ip LIKE ?', "%$search%");
 			}
-			$count_lines = $this->db->fetchOne("SELECT count(*) FROM core_log");
-			$count_lines_where = $this->db->fetchOne("SELECT count(*)
-														FROM core_log AS l
-														LEFT JOIN core_users AS u ON u.u_id=l.user_id
-														$where");
-			$start = $count_lines_where - $lines;
-			if ($start < 0) {
-				$start = 0;
-			}
-			$data = $this->db->fetchAll("SELECT u.u_login,
-										l.sid,
-										l.action,
-										l.lastupdate,
-										l.query,
-										l.request_method,
-										l.remote_port,
-										l.ip
-										FROM core_log AS l
-										LEFT JOIN core_users AS u ON u.u_id=l.user_id
-										$where
-										LIMIT $start, $lines");
-			$data2 = '';
+            $sql = "
+                SELECT u.u_login,
+                       l.sid,
+                       l.action,
+                       l.lastupdate,
+                       l.query,
+                       l.request_method,
+                       l.remote_port,
+                       l.ip
+                FROM core_log AS l
+                    LEFT JOIN core_users AS u ON u.u_id = l.user_id
+                    $where
+            ";
+
+            if ($limit_lines) {
+                $count_where = $this->db->fetchOne("
+                    SELECT count(*)
+                    FROM core_log AS l
+                        LEFT JOIN core_users AS u ON u.u_id = l.user_id
+                        $where
+                ");
+
+                $start = $count_where - $limit_lines;
+                if ($start < 0) {
+                    $start = 0;
+                }
+                $sql .= " LIMIT $start, $limit_lines ";
+            }
+
+
+			$data        = $this->db->fetchAll($sql);
+            $count_lines = $this->db->fetchOne("SELECT count(*) FROM core_log");
+
+
+            $data2 = '';
 			foreach ($data as $tmp) {
 				$data2 .= "user: {$tmp['u_login']}, sid: {$tmp['sid']}, action: {$tmp['action']}, lastupdate: {$tmp['lastupdate']}, query: {$tmp['query']}, query: {$tmp['request_method']}, remote_port: {$tmp['remote_port']}, ip: {$tmp['ip']}\n";
 			}
+
 			return array('body' => $data2, 'count_lines' => $count_lines);
 		}
-
-
 	}
-
 }

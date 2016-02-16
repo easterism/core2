@@ -621,7 +621,7 @@ class DBMaster {
 	private function parseStr($val, $inType) {
 		$arr = explode($inType, $val);
 
-		$str = $arr[1];
+		$str = isset($arr[1]) ? $arr[1] : '';
 		$arr = explode('ON UPDATE', $str);
 		$str = $arr[0];
 		

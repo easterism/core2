@@ -6,7 +6,7 @@ $title = "Справочники";
 if (isset($_GET['edit']) && $_GET['edit'] == '0') {
 	$title = "Создание нового справочника";
 }
-if ($_GET['edit']) {
+if ( ! empty($_GET['edit'])) {
 	$name = $this->dataEnum->find($_GET['edit'])->current()->name;
 	$title = "Редактирование справочника";
 }
