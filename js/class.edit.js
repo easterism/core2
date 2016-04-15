@@ -288,11 +288,13 @@ var edit = {
     }
 }
 
-
+/**
+ * @param id
+ * @param opt
+ */
 function mceSetup(id, opt) {
 
     var options = {
-        //script_url : 'core2/ext/tinymce/jscripts/tiny_mce/tiny_mce.js',
 		selector : '#' + id,
         language : 'ru',
         theme : 'modern',
@@ -307,11 +309,12 @@ function mceSetup(id, opt) {
 			"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
 			"save table contextmenu directionality emoticons template paste textcolor"
 		],
-		toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | l      ink image | print preview media fullpage | forecolor backcolor emoticons",
+		toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
 		theme_advanced_resizing : true
        };
     for (k in opt) {
-        //options[k] = opt[k];
+        options[k] = opt[k];
     }
+    tinymce.remove();
 	tinymce.init(options);
 }

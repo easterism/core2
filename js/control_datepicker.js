@@ -58,9 +58,9 @@ var control_datepicker = {
         month = Number(month) > 0 ? month : '';
         month  = Number(month) > 0 ? month : '';
 
-        day   = day.length > 2 ? day.substr(-2, 2) : day;
-        month = month.length > 2 ? month.substr(-2, 2) : month;
-        year  = year.length > 4 ? year.substr(-4, 4) : year;
+        day   = day.length > 2 ? day.substr(0, 2) : day;
+        month = month.length > 2 ? month.substr(0, 2) : month;
+        year  = year.length > 4 ? year.substr(0, 4) : year;
 
         day   = day   ? '00'.substring(0, 2 - day.length) + day     : '';
         month = month ? '00'.substring(0, 2 - month.length) + month : '';
@@ -101,7 +101,7 @@ var control_datepicker = {
         var keyCode;
         if (e.keyCode) keyCode = e.keyCode;
         else if(e.which) keyCode = e.which;
-        var av = new Array(8, 9, 35, 36, 37, 38, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57);
+        var av = new Array(8, 9, 35, 36, 37, 38, 39, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57);
         for (var i = 0; i < av.length; i++) {
             if (av[i] == keyCode) {
                 return;
@@ -138,37 +138,31 @@ var control_datepicker = {
                 last_day = 32 - new Date(year, month - 1, 32).getDate();
             }
             if (input.value.length > 2) {
-                input.value = input.value.substr(-2, 2);
+                input.value = input.value.substr(0, 2);
             }
-            if (input.value == '00') {
+            if (input.value == '00' || Number(input.value) < 0) {
                 input.value = '01';
             } else if (Number(input.value) > last_day) {
                 input.value = last_day;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 0) {
-                input.value = 0;
             }
 
         } else if (control_datepicker.hasClass(input, 'ctrl-dp-month')) {
             if (input.value.length > 2) {
-                input.value = input.value.substr(-2, 2);
+                input.value = input.value.substr(0, 2);
             }
-            if (input.value == '00') {
+            if (input.value == '00' || Number(input.value) < 0) {
                 input.value = '01';
             } else if (Number(input.value) > 12) {
                 input.value = 12;
             } else if (input.value == '') {
                 input.value = '';
-            } else if (Number(input.value) < 0) {
-                input.value = 0;
             }
 
         } else if (control_datepicker.hasClass(input, 'ctrl-dp-year')) {
-            if (Number(input.value) > 9999) {
-                input.value = 9999;
-            } else if (input.value.length > 4) {
-                input.value = input.value.substr(-4, 4);
+            if (input.value.length > 4) {
+                input.value = input.value.substr(0, 4);
             }
         }
         input.focus();
@@ -211,12 +205,62 @@ var control_datepicker = {
         /**
          * Валидация
          */
-        $('.ctrl-dp-day, .ctrl-dp-month, .ctrl-dp-year', wrapper).keyup(function() {
+        $('.ctrl-dp-day, .ctrl-dp-month, .ctrl-dp-year', wrapper).keyup(function(event) {
             control_datepicker.eventKeyUp(this, wrapper);
+
+            var keyCode;
+            if (event.keyCode) keyCode = event.keyCode;
+            else if (event.which) keyCode = event.which;
+            var av = new Array(48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105);
+            for (var i = 0; i < av.length; i++) {
+                if (av[i] == keyCode) {
+                    if ($(event.currentTarget).hasClass("ctrl-dp-day") ||
+                        $(event.currentTarget).hasClass("ctrl-dp-month")
+                    ) {
+                        if ($(this, wrapper).val().length >= 2) {
+                            event.preventDefault();
+                            control_datepicker.nextFocus(this, wrapper);
+                        }
+
+                    } else {
+                        if ($(this, wrapper).val().length >= 4) {
+                            event.preventDefault();
+                            control_datepicker.nextFocus(this, wrapper);
+                        }
+                    }
+                    break;
+                }
+            }
         });
         $('.ctrl-dp-day, .ctrl-dp-month, .ctrl-dp-year', wrapper).keypress(function(event) {
             control_datepicker.eventKeyPress(event);
         });
+    },
+
+
+    /**
+     * Фокусировка на следующем контроле
+     * @param {object} currentTarget
+     * @param {object} wrapper
+     */
+    nextFocus: function(currentTarget, wrapper) {
+
+        var now = new Date().getTime() / 1000;
+
+        if ( ! this.lastNextChange || this.lastNextChange + 0.3 < now) {
+            this.lastNextChange = now;
+            var isFind = false;
+            $('input[class*="ctrl-dp-"]:visible, select[class*="ctrl-dp-"]:visible', wrapper).each(function () {
+                if (isFind === false) {
+                    if (currentTarget == this) {
+                        isFind = true;
+                    }
+                } else {
+                    $(this).focus();
+                    return false;
+                }
+            });
+        }
     },
 
 
