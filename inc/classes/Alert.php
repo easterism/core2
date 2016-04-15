@@ -9,15 +9,27 @@ class Alert {
 
     /**
      * Возвращает сообщение об успешном выполнении
-     * @param string $str
+     * @param string $status
+     * @param string $message
      * @return string
      */
-    public static function getSuccess($str) {
-        return "<div class=\"alert alert-success\">{$str}</div>";
+    public static function get($status, $message) {
+        return "<div class=\"alert alert-{$status}\">{$message}</div>";
     }
 
 
     /**
+     * Возвращает сообщение об успешном выполнении
+     * @param string $message
+     * @return string
+     */
+    public static function getSuccess($message) {
+        return self::get('success', $message);
+    }
+
+
+    /**
+     * DEPRECATED
      * Распечатывает сообщение об успешном выполнении
      * @param string $str
      * @return string
@@ -29,16 +41,17 @@ class Alert {
 
     /**
      * Возвращает сообщение с информацией
-     * @param string $str
+     * @param string $message
      * @return string
      */
-    public static function getInfo($str) {
-        return "<div class=\"alert alert-info\">{$str}</div>";
+    public static function getInfo($message) {
+        return self::get('info', $message);
     }
 
 
 
     /**
+     * DEPRECATED
      * Распечатывает сообщение с информацией
      * @param string $str
      * @return string
@@ -50,15 +63,16 @@ class Alert {
 
     /**
      * Возвращает сообщение с предупреждением
-     * @param string $str
+     * @param string $message
      * @return string
      */
-    public static function getWarning($str) {
-        return "<div class=\"alert alert-warning\">{$str}</div>";
+    public static function getWarning($message) {
+        return self::get('warning', $message);
     }
 
 
     /**
+     * DEPRECATED
      * Распечатывает сообщение с предупреждением
      * @param string $str
      * @return string
@@ -70,15 +84,16 @@ class Alert {
 
     /**
      * Возвращает сообщение об ошибке или опасности
-     * @param string $str
+     * @param string $message
      * @return string
      */
-    public static function getDanger($str) {
-        return "<div class=\"alert alert-danger\">{$str}</div>";
+    public static function getDanger($message) {
+        return self::get('danger', $message);
     }
 
 
     /**
+     * DEPRECATED
      * Распечатывает сообщение об ошибке или опасности
      * @param string $str
      * @return string

@@ -468,9 +468,8 @@ class Db {
      * @return mixed
      */
     final public function getModuleLocation($module_id) {
-        return DOC_ROOT . $this->getModuleSrc($module_id);
+        return DOC_ROOT . $this->getModuleLoc($module_id);
     }
-
 
 	/**
 	 * возврат версии модуля
@@ -487,34 +486,48 @@ class Db {
     }
 
 	/**
-	 * Получение относительного адреса папки модуля
+	 * Получение абсолютного адреса папки модуля
 	 * @param  string $module_id
 	 * @return string
 	 */
     final public function getModuleSrc($module_id)
 	{
-        $module_id = trim(strtolower($module_id));
-        if (!$module_id) throw new Exception("Не определен идентификатор модуля.");
+        $loc = $this->getModuleLoc($module_id);
+		return DOC_PATH . $loc;
+	}
+
+	/**
+	 * Получение относительного адреса папки модуля
+	 *
+	 * @param $module_id
+	 *
+	 * @return false|mixed|string
+	 * @throws Exception
+	 */
+	final public function getModuleLoc($module_id)
+	{
+		$module_id = trim(strtolower($module_id));
+		if (!$module_id) throw new Exception("Не определен идентификатор модуля.");
 		if (!($this->cache->test($module_id))) {
 			$m = $this->db->fetchRow("
 				SELECT is_system, version
 				FROM core_modules
 				WHERE module_id = ?
 			", $module_id);
-            if ($m) {
-                if ($m['is_system'] == "Y") {
-                    $loc = "core2/mod/{$module_id}/v{$m['version']}";
-                } else {
-                    $loc = "mod/{$module_id}/v{$m['version']}";
-                    if (!is_dir(DOC_ROOT . $loc)) {
-                        $loc = "mod/{$module_id}";
-                    }
-                }
-            } elseif ($module_id == 'admin') {
-                $loc = "core2/mod/admin";
-            } else {
-                throw new Exception("Module does not exists", 404);
-            }
+			if ($m) {
+				if ($m['is_system'] == "Y") {
+					$loc = "core2/mod/{$module_id}/v{$m['version']}";
+				} else {
+					$loc = "mod/{$module_id}/v{$m['version']}";
+					if (!is_dir(DOC_ROOT . $loc)) {
+						$loc = "mod/{$module_id}";
+					}
+				}
+			} elseif ($module_id == 'admin') {
+				$loc = "core2/mod/admin";
+			} else {
+				throw new Exception("Module does not exists", 404);
+			}
 			$this->cache->save($loc, $module_id);
 		} else {
 			$loc = $this->cache->load($module_id);

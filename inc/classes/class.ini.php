@@ -78,7 +78,7 @@ class initEdit extends Acl {
 											),
 										);
 	public $MCEConf		= array(
-		'theme' => "advanced"
+		'theme' => "modern"
 	);
 	public $back					= "";
 	public $firstColWidth			= "";

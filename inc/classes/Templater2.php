@@ -260,13 +260,13 @@ class Templater2 {
 			foreach ($var as $key => $val) {
 				$this->assign($key, $val, $avoidEmbrace);
 			}
-		}
-		if ($avoidEmbrace) {
-			$this->vars[$var] = $value;
 		} else {
-			$this->vars[$this->embrace[0] . $var . $this->embrace[1]] = $value;
+			if ($avoidEmbrace) {
+				$this->vars[$var] = $value;
+			} else {
+				$this->vars[$this->embrace[0] . $var . $this->embrace[1]] = $value;
+			}
 		}
-
 	}
 
 	private function clear() {

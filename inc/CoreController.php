@@ -500,8 +500,6 @@ class CoreController extends Common {
 	 */
 	public function action_welcome () {
 
-		$app = "index.php?module=core&action=welcome&loc=core";
-
 		if (!empty($_POST['sendSupportForm'])) {
 			if (isset($_POST['supportFormModule'])) {
 				$supportFormModule = trim(strip_tags(stripslashes($_POST['supportFormModule'])));
@@ -551,14 +549,14 @@ class CoreController extends Common {
 
                     if (isset($result['error'])) {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение'));
-                    } else {
-                        echo json_encode(array());
                     }
 				}
 			} catch (Exception $e) {
 				echo json_encode(array('error' => array($e->getMessage())));
 			}
-			die;
+            header('Content-type: application/json; charset="utf-8"');
+			echo '{}';
+			return;
 		}
 		if (file_exists('mod/home/welcome.php')) {
 			require_once 'mod/home/welcome.php';
@@ -761,10 +759,27 @@ class CoreController extends Common {
 
 
 	/**
-	 *
+	 * обработка запросов на содержимое файлов
 	 */
-	public function action_handler() {
-		require_once $this->path . 'file_handler.php';
+	public function fileHandler($resource, $context, $table, $id) {
+		require_once 'classes/File.php';
+		$f = new \Store\File();
+        $f->setResource($resource);
+		if ($context == 'fileid') {
+			$f->handleFile($table, $id);
+		}
+		elseif ($context == 'thumbid') {
+			$f->handleThumb($table, $id);
+		}
+		elseif ($context == 'tfile') {
+			$f->handleFileTemp($id);
+		}
+		elseif (substr($context, 0, 6) == 'field_') {
+			$f->handleFileList($table, $id, substr($context, 6));
+			return true;
+		}
+		$f->dispatch();
+        return true;
 	}
 
 
@@ -905,7 +920,6 @@ class CoreController extends Common {
         return new Email();
     }
 
-
     /**
      * Проверяем файлы модулей на изменения
      *
@@ -1006,32 +1020,33 @@ class CoreController extends Common {
 				$count_lines += 1;
 			}
 
-			$start = 0;
-			if ($limit_lines) {
-				$start = $count_lines - $limit_lines;
-			}
-
 			if ($search) {
 				$search = preg_quote($search, '/');
 			}
 			rewind($handle); //перемещаем указатель в начало файла
-			$body = '';
-			$i = 1;
+			$body = array();
 			while (!feof($handle)) {
 				$tmp = fgets($handle, 4096);
-				if ($i >= $start) {
-					if ($search) {
-						if (preg_match("/$search/", $tmp)) {
-							$body .= $tmp;
+				if ($search) {
+					if (preg_match("/$search/", $tmp)) {
+						if (!$limit_lines || $limit_lines > count($body)) {
+							$body[] = $tmp;
+						} else {
+							array_shift($body);
+							$body[] = $tmp;
 						}
+					}
+				} else {
+					if (!$limit_lines || $limit_lines >= count($body)) {
+						$body[] = $tmp;
 					} else {
-						$body .= $tmp;
+						array_shift($body);
+						$body[] = $tmp;
 					}
 				}
-				$i++;
 			}
 			fclose($handle);
-			return array('body' => $body, 'count_lines' => $count_lines);
+			return array('body' => implode('', $body), 'count_lines' => $count_lines);
 
 		} else {
 			$where = '';

@@ -19,6 +19,7 @@ class Common extends Acl {
         $child = strpos($child, "Controller") ? substr($child, 3, -10) : '';
 		parent::__construct();
         $reg = Zend_Registry::getInstance();
+		$context = $reg->get('context');
         if ($child) {
             $this->module = strtolower($child);
             if (!$reg->isRegistered('invoker')) {
@@ -26,17 +27,16 @@ class Common extends Acl {
             }
         }
 		else {
-			$this->module = !empty($_GET['module']) ? $_GET['module'] : '';
+			$this->module = !empty($context[0]) ? $context[0] : '';
 		}
         $this->path      = 'mod/' . $this->module . '/';
-        $this->auth      = Zend_Registry::get('auth');
+        $this->auth      = $reg->get('auth');
         $this->resId     = $this->module;
 		$this->actionURL = "?module=" . $this->module;
-		if (!empty($_GET['action']) && $_GET['action'] != 'index') {
-			$this->resId .= '_' . $_GET['action'];
-			$this->actionURL .= "&action=" . $_GET['action'];
+		if (!empty($context[1]) && $context[1] !== 'index') {
+			$this->resId .= '_' . $context[1];
+			$this->actionURL .= "&action=" . $context[1];
 		}
-		
 		$this->config = $reg->get('config');
 	}
 

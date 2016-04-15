@@ -162,12 +162,11 @@ class editTable extends initEdit {
 	 */
 	public function showTable() {
 		if ($this->acl->read_all || $this->acl->read_owner) {
-
 			$this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
 			$this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
-			$this->makeTable();
-			$this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
-			echo $this->HTML;
+            $this->makeTable();
+            $this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
+            echo $this->HTML;
 		} else {
 			$this->noAccess();
 		}
@@ -186,7 +185,7 @@ class editTable extends initEdit {
 			$arr = $this->SQL;
 			$current = current($arr);
 			if (!is_array($current)) {
-				$current = array($current);
+				$current = $this->SQL;
 			}
 			$arr_fields = array_keys($current);
 		} else {
@@ -257,8 +256,8 @@ class editTable extends initEdit {
 		}
 		elseif ($refid) {
 			if ($this->table) {
-				$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
 				if ($access_edit == 'owner' || $access_read == 'owner') {
+					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
 					if (!isset($res['author'])) {
 						$this->noAccess();
 						return;
@@ -679,17 +678,29 @@ class editTable extends initEdit {
                                     $this->MCEConf['toolbar'] = "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor";
                                 } elseif (in_array("basic2", $params)) {
                                     $this->MCEConf['menubar'] = "file edit insert view format table tools";
-                                    $this->MCEConf['toolbar'] = "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor";
+                                    $this->MCEConf['toolbar'] = "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image";
                                 } elseif (in_array("simple", $params)) {
                                     $this->MCEConf['menubar'] = "table";
                                     $this->MCEConf['toolbar'] = "alignleft aligncenter alignright alignjustify | link image";
                                 }
 
+								if (is_array($value['in'])) {
+                                    $fck_attrs = isset($value['in']['attrs']) && is_string($value['in']['attrs'])
+                                        ? $value['in']['attrs']
+                                        : '';
+                                    if ( ! empty($value['in']['options']) && is_array($value['in']['options'])) {
+                                        $this->MCEConf = array_merge($this->MCEConf, $value['in']['options']);
+                                    }
+                                } else {
+                                    $fck_attrs = $value['in'];
+                                }
+
+
 								//$this->MCEConf['document_base_url'] = "/" . trim(VPATH, "/") . "/";
 								$mce_params = json_encode($this->MCEConf);
 
 								$id = "template_content" . $this->main_table_id . $key;
-								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
+								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$fck_attrs.">{$value['default']}</textarea>";
 								$onload .= "mceSetup('" . $id . "', $mce_params);";
 								$PrepareSave .= "document.getElementById('" . $id . "').value = tinyMCE.get('" . $id . "').getContent();";
 							}
@@ -741,7 +752,7 @@ class editTable extends initEdit {
 									$temp[] = array($k, $v);
 								}
 							} else {
-								$data = $this->db->fetchAll($this->replaceTCOL($arr[0], $this->selectSQL[$select]));
+								$data = $this->db->fetchAll($this->replaceTCOL(isset($arr[0]) ? $arr[0] : '', $this->selectSQL[$select]));
 								foreach ($data as $values) {
 									$temp[] = array(current($values), end($values));
 								}
@@ -870,18 +881,19 @@ class editTable extends initEdit {
 							$select++;
 						}
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
+							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=?", $refid);
 								if ($files) {
 									foreach ($files as $value) {
-										$controlGroups[$cellId]['html'][$key] .= "<div><a href='index.php?module=admin&loc=core&action=handler&fileid={$value['id']}&t={$this->table}'>{$value['filename']}</a></div>";
+										$controlGroups[$cellId]['html'][$key] .= "<div><a href='index.php?module=admin&action=handler&fileid={$value['id']}&filehandler={$this->table}'>{$value['filename']}</a></div>";
 									}
 								} else {
 									$controlGroups[$cellId]['html'][$key] .= '<i>нет прикрепленных файлов</i>';
 								}
 							} else {
                                 $this->scripts['upload'] = 'xfile';
-								$this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
+                                $this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
 								$ft = '';
 								$options = array('dataType' => 'json');
@@ -910,147 +922,147 @@ class editTable extends initEdit {
 
 								$un = $fieldId;
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
-								<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
-								<div id="fileupload-' . $un . '">
-							        <div class="fileupload-buttonbar">
-							        	<span class="fileinput-button buttonSmall">
-											<span>Выбрать файл' . ($xfile == 'xfiles' ? 'ы' : '') . '</span>
-											<input type="file" name="files[]" ' . ($xfile == 'xfiles' ? 'multiple' : '') . '>
-                						</span>';
-							            if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
-							                $controlGroups[$cellId]['html'][$key] .= '<button type="submit" class="start buttonSmall hide">Загрузить все</button>';
-							            }
-							            $controlGroups[$cellId]['html'][$key] .= '<button type="reset" class="cancel buttonSmall" style="display:none">Отменить</button>
-							            	<button type="button" class="delete buttonSmall hide">Удалить</button>';
-							            if ($xfile == 'xfiles') {
-											$controlGroups[$cellId]['html'][$key] .= '<input type="checkbox" class="toggle hide">';
-										}
-										$controlGroups[$cellId]['html'][$key] .= '
-										<div class="fileupload-progress fade">
-											<!-- The global progress bar -->
-											<div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-												<div class="bar" style="width:0%;"></div>
+									<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
+									<div id="fileupload-' . $un . '">
+										<div class="fileupload-buttonbar">
+											<span class="fileinput-button buttonSmall">
+												<span>Выбрать файл' . ($xfile == "xfiles" ? "ы" : "") . '</span>
+												<input type="file" name="files[]" ' . ($xfile == "xfiles" ? "multiple" : "") . '>
+											</span>';
+											if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
+												$controlGroups[$cellId]['html'][$key] .= '<button type="submit" class="start buttonSmall hide">Загрузить все</button>';
+											}
+											$controlGroups[$cellId]['html'][$key] .= '<button type="reset" class="cancel buttonSmall" style="display:none">Отменить</button>
+												<button type="button" class="delete buttonSmall hide">Удалить</button>';
+											if ($xfile == 'xfiles') {
+												$controlGroups[$cellId]['html'][$key] .= '<input type="checkbox" class="toggle hide">';
+											}
+											$controlGroups[$cellId]['html'][$key] .= '
+											<div class="fileupload-progress fade">
+												<!-- The global progress bar -->
+												<div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+													<div class="bar" style="width:0%;"></div>
+												</div>
+												<!-- The extended global progress information -->
+												<div class="progress-extended">&nbsp;</div>
 											</div>
-											<!-- The extended global progress information -->
-											<div class="progress-extended">&nbsp;</div>
 										</div>
+										<!-- The table listing the files available for upload/download -->
+										<table role="presentation" class="table">
+											<tbody class="files"></tbody>
+										</table>
 									</div>
-									<!-- The table listing the files available for upload/download -->
-									<table role="presentation" class="table">
-										<tbody class="files"></tbody>
-									</table>
-								</div>
 
-<!-- The template to display files available for upload -->
-<script id="template-upload" type="text/x-tmpl">
-{% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-upload">
-        <td>
-            <span class="preview"></span>
-        </td>
-        <td>
-            <p class="name">{%=file.name%}</p>
-            <strong class="error text-danger"></strong>
-        </td>
-        <td>
-            <p class="size">{%=o.formatFileSize(file.size)%}</p>
-            {% if (!o.files.error) { %}
-                <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar progress-bar-success" style="width:0%;"></div></div>
-            {% } %}
-        </td>
-        <td>
-            {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                <button class="btn btn-primary start buttonSmall">
-                    <i class="glyphicon glyphicon-upload"></i>
-                    <span>Старт</span>
-                </button>
-            {% } %}
-            {% if (!i) { %}
-                <button class="btn btn-warning cancel buttonSmall">
-                    <i class="glyphicon glyphicon-ban-circle"></i>
-                    <span>Отмена</span>
-                </button>
-            {% } %}
-        </td>
-    </tr>
-{% } %}
-</script>
-<!-- The template to display files available for download -->
-<script id="template-download" type="text/x-tmpl">
-{% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-download">
-        {% if (file.error) { %}
-            <td></td>
-            <td class="name"><span>{%=file.name%}</span></td>
-            <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-            <td class="error" colspan="2"><span class="label label-important">Error</span> {%=file.error%}</td>
-        {% } else { %}
-            <td>
-				<span class="preview">
-					{% if (file.thumbnail_url) { %}
-						<a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
-					{% } %}
-				</span>
-			</td>
-            <td class="name">
-                <a href="{%=file.' . (!empty($options['id_hash']) ? 'id_hash' : 'url') . '%}" {% if (file.thumbnail_url) { %}target="_blank" {% } %} title="{%=file.name%}" rel="{%=file.thumbnail_url&&\'gallery\'%}" download="{%=file.name%}">{%=file.name%}</a>
-            </td>
-            <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-        {% } %}
-        <td data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
-            <button class="btn delete buttonSmall">Удалить</button>
-            <input class="toggle" type="checkbox" name="delete" value="1">
-        </td>
-    </tr>
-{% } %}
-</script>';
+                                    <!-- The template to display files available for upload -->
+                                    <script id="template-upload" type="text/x-tmpl">
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
+                                        <tr class="template-upload">
+                                            <td>
+                                                <span class="preview"></span>
+                                            </td>
+                                            <td>
+                                                <p class="name">{%=file.name%}</p>
+                                                <strong class="error text-danger"></strong>
+                                            </td>
+                                            <td>
+                                                <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                                                {% if (!o.files.error) { %}
+                                                    <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar progress-bar-success" style="width:0%;"></div></div>
+                                                {% } %}
+                                            </td>
+                                            <td>
+                                                {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                                                    <button class="btn btn-primary start buttonSmall">
+                                                        <i class="glyphicon glyphicon-upload"></i>
+                                                        <span>Старт</span>
+                                                    </button>
+                                                {% } %}
+                                                {% if (!i) { %}
+                                                    <button class="btn btn-warning cancel buttonSmall">
+                                                        <i class="glyphicon glyphicon-ban-circle"></i>
+                                                        <span>Отмена</span>
+                                                    </button>
+                                                {% } %}
+                                            </td>
+                                        </tr>
+                                    {% } %}
+                                    </script>
+                                    <!-- The template to display files available for download -->
+                                    <script id="template-download" type="text/x-tmpl">
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
+                                        <tr class="template-download">
+                                            {% if (file.error) { %}
+                                                <td></td>
+                                                <td class="name"><span>{%=file.name%}</span></td>
+                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
+                                                <td class="error" colspan="2"><span class="label label-important">Error</span> {%=file.error%}</td>
+                                            {% } else { %}
+                                                <td>
+                                                    <span class="preview">
+                                                        {% if (file.thumbnail_url) { %}
+                                                            <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
+                                                        {% } %}
+                                                    </span>
+                                                </td>
+                                                <td class="name">
+                                                    <a href="{%=file.' . (!empty($options['id_hash']) ? 'id_hash' : 'url') . '%}" {% if (file.thumbnail_url) { %}target="_blank" {% } %} title="{%=file.name%}" rel="{%=file.thumbnail_url&&\'gallery\'%}" download="{%=file.name%}">{%=file.name%}</a>
+                                                </td>
+                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
+                                            {% } %}
+                                            <td data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
+                                                <button class="btn delete buttonSmall">Удалить</button>
+                                                <input class="toggle" type="checkbox" name="delete" value="1">
+                                            </td>
+                                        </tr>
+                                    {% } %}
+                                    </script>';
 
 $controlGroups[$cellId]['html'][$key] .= "<script>
-edit.xfiles['$un'] = {};
-$(function () {
-    'use strict';
-
-    // Initialize the jQuery File Upload widget:
-    $('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", json_encode($options)) . ");
-    $('#fileupload-{$un}').bind('fileuploaddone', function (e, data) {
-    	var f = data.response().result.files[0];
-    	$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
-    	$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
-    	$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
-		edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
-    	var res = [];
-    	for (var k in edit.xfiles['$un']) {
-    		res.push(k);
-    	};
-    	$('#$fieldId').val(res.join('|'));
-    }).bind('fileuploaddestroy', function (e, data) {
-		var d = data.context.find('.delete').parent();
-		var ds = d.data('service');
-		var di = d.data('id');
-		if (ds) {
-			delete edit.xfiles['$un'][ds]
+	edit.xfiles['$un'] = {};
+	$(function () {
+		'use strict';
+	
+		// Initialize the jQuery File Upload widget:
+		$('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", json_encode($options)) . ");
+		$('#fileupload-{$un}').bind('fileuploaddone', function (e, data) {
+			var f = data.response().result.files[0];
+			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
+			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
+			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
+			edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
 			var res = [];
 			for (var k in edit.xfiles['$un']) {
 				res.push(k);
 			};
-			$('#{$fieldId}').val(res.join('|'));
-		}
-		if (di) {
-			$('#{$fieldId}_del').val($('#{$fieldId}_del').val() + ',' + di);
-		}
-	}).bind('fileuploaddestroyed', function (e, data) {
-	    var fc = $('#fileupload-{$un}').find('.files');
-		if (fc.children().length == 0) {
-		    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
-		    $('#fileupload-$fieldId div.fileupload-buttonbar button.cancel').addClass('hide');
-		    $('#fileupload-$fieldId div.fileupload-buttonbar button.delete').addClass('hide');
-		    $('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
-		}
-	}).bind('fileuploadchange', function (e, data) {
-		$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
-	});
-
-";
+			$('#$fieldId').val(res.join('|'));
+		}).bind('fileuploaddestroy', function (e, data) {
+			var d = data.context.find('.delete').parent();
+			var ds = d.data('service');
+			var di = d.data('id');
+			if (ds) {
+				delete edit.xfiles['$un'][ds]
+				var res = [];
+				for (var k in edit.xfiles['$un']) {
+					res.push(k);
+				};
+				$('#{$fieldId}').val(res.join('|'));
+			}
+			if (di) {
+				$('#{$fieldId}_del').val($('#{$fieldId}_del').val() + ',' + di);
+			}
+		}).bind('fileuploaddestroyed', function (e, data) {
+			var fc = $('#fileupload-{$un}').find('.files');
+			if (fc.children().length == 0) {
+				$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
+				$('#fileupload-$fieldId div.fileupload-buttonbar button.cancel').addClass('hide');
+				$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').addClass('hide');
+				$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
+			}
+		}).bind('fileuploadchange', function (e, data) {
+			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
+		});
+	
+	";
 
 if ( ! empty($options['maxFileSize'])) {
     $controlGroups[$cellId]['html'][$key] .= "
@@ -1074,7 +1086,7 @@ if ( ! empty($ft)) {
         $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
             var acceptFileTypes = /\.($ft)$/i;
 			var fileName        = data.originalFiles[0].name || data.originalFiles[0].fileName;
-			if ( ! acceptFileTypes.test(fileName)) {
+			if (!acceptFileTypes.test(fileName)) {
 			    if ($(this).find('.files > tr').length <= 0) {
 				    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
 				}
@@ -1106,13 +1118,12 @@ if (isset($options['autoUpload']) && $options['autoUpload']) {
 }
 
 $controlGroups[$cellId]['html'][$key] .= "
-
     // Load existing files:
 	//$('#fileupload-{$un}').addClass('fileupload-processing');
 	$.ajax({
 		// Uncomment the following to send cross-domain cookies:
 		//xhrFields: {withCredentials: true},
-		url: $('#{$this->main_table_id}_mainform').prop('action') + '&refid=$refid&tbl={$this->table}&f=$field',
+		url: 'index.php?module=$module&action=$action&filehandler={$this->table}&listid=$refid&f=$field',
 		dataType: 'json',
 		context: $('#fileupload-{$un}')[0]
 	}).always(function () {
@@ -1347,7 +1358,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 			$temp = " ";
 			if (count($value)) {
 				foreach ($value as $attr => $val) {
-					$temp .= $attr . '="' . $val . '" ';
+                    if (is_string($val)) {
+                        $temp .= $attr . '="' . $val . '" ';
+                    }
 				}
 			}
 			$attrs = $temp;

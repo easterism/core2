@@ -39,15 +39,9 @@ class Error {
 	 * @param Exception $exception
 	 */
 	public static function catchException(Exception $exception) {
+		$cnf = self::getConfig();
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
-
-		// Zend_Registry MUST present
-		try {
-			$cnf = Zend_Registry::get('config');
-		} catch (Zend_Exception $e) {
-			self::Exception($e->getMessage(), $code);
-		}
 
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
 			$trace = $exception->getTraceAsString();
@@ -63,9 +57,10 @@ class Error {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
 		} elseif ($message == '404') {
+            header("HTTP/1.1 404 Page not found");
 			self::Exception('Нет такой страницы', $code);
 		} elseif ($message == 'expired') {
-			header('HTTP/1.1 203 Non-Authoritative Information');
+			header("HTTP/1.1 401 Unauthorized");
 			die();
 		}
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
@@ -78,6 +73,7 @@ class Error {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
 		} else {
+			if (substr($message, 0, 8) == 'SQLSTATE') $message = 'Ошибка базы данных'; //TODO вести журнал
             self::Exception($message, $code);
 		}
 	}
@@ -96,10 +92,29 @@ class Error {
 		} elseif ($code == 1049) {
 			$message = 'Нет соединения с базой данных.';
 		} else {
-			$message = $exception->getMessage();
+			$cnf = self::getConfig();
+			if ($cnf->debug->on) {
+				$message = $exception->getMessage(); //TODO вести журнал
+			} else {
+				$message = "Ошибка базы данных";
+			}
 		}
 		self::Exception($message, $code);
 
+	}
+
+	/**
+	 * Получаем экземпляр конфига
+	 * @return mixed
+	 */
+	private static function getConfig() {
+		// Zend_Registry MUST present
+		try {
+			$cnf = Zend_Registry::get('config');
+		} catch (Zend_Exception $e) {
+			self::Exception($e->getMessage(), 500);
+		}
+		return $cnf;
 	}
 
 	public static function catchZendException($exception) {

@@ -590,5 +590,17 @@ class Image {
 		return file_get_contents(current($data['tmp_name']));
 		
 	}
+
+	/**
+	 * Проверяет, относится ли указанный mimetype к картинкам
+	 * @param $type - mimetype
+	 *
+	 * @return bool
+	 */
+	public function isImage($type) {
+		if (!preg_match(self::MIME, $type)) {
+			return false;
+		}
+		return true;
+	}
 }
-?>
