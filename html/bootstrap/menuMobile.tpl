@@ -70,8 +70,9 @@
 		</tr>
 	</table>
 </div>
-<div id="preloader">
-	<div></div>
+<div id="preloader" style="display:none">
+	<div class="lock-screen"></div>
+	<div class="block"></div>
 </div>
 <div id="mainContainer">
 	<div id="main_body"></div>

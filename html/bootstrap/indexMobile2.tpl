@@ -35,7 +35,7 @@
     <![endif]-->
 
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.list.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/js/class.edit.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.edit.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/js.js"></script>
     <script type="text/javascript">

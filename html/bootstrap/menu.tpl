@@ -21,7 +21,7 @@
                         <div class="avatar-container">
                             <img src="[GRAVATAR_URL]?&s=25&d=mm" alt="" class=""/>
                         </div>
-                        <!--CURRENT_USER_LOGIN-->
+                        <!--CURRENT_USER_FN--> <!--CURRENT_USER_LN-->
                         <span class="caret"></span>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-right">
@@ -70,8 +70,9 @@
 		</tr>
 	</table>
 </div>
-<div id="preloader">
-    <div></div>
+<div id="preloader" style="display:none">
+    <div class="lock-screen"></div>
+    <div class="block"></div>
 </div>
 <div id="mainContainer">
     <div id="main_body"></div>

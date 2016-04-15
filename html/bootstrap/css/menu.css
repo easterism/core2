@@ -73,6 +73,7 @@ a {color: #337AB7}
 #menu-submodules .menu-submodule-selected {
     list-style: none;
     float: left;
+    height: 20px;
 }
 #menu-submodules .menu-submodule a,
 #menu-submodules .menu-submodule-selected a {
@@ -82,7 +83,7 @@ a {color: #337AB7}
     display: inline-block;
     cursor:pointer;
     color: #000;
-    height: 20px;
+    height: 19px;
     text-decoration: none;
 }
 #menu-submodules .menu-submodule:hover a {background-color: #E4E3E3}

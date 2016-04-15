@@ -454,7 +454,6 @@ $(function(){
 $(window).resize(resize);
 
 $(document).ready(function() {
-
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
 	}
