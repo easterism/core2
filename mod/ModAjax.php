@@ -403,15 +403,15 @@ class ModAjax extends ajaxFunc {
         if (empty($this->config->ldap->active)) {
             $fields['u_pass'] = 'req';
         }
+		$data['control']['firstname']  = trim(strip_tags($data['control']['firstname']));
+		$data['control']['lastname']   = trim(strip_tags($data['control']['lastname']));
+		$data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
+
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
 		$this->db->beginTransaction();
 		try {
-			$firstname = trim($data['control']['firstname']);
-			$lastname = trim($data['control']['lastname']);
-			$middlename = trim($data['control']['middlename']);
-
 			$authNamespace = Zend_Registry::get('auth');
 			$send_info_sw = false;
 		    if ($data['control']['email'] && !empty($data['control']['send_info_sw'][0]) && $data['control']['send_info_sw'][0] == 'Y') {
@@ -436,7 +436,7 @@ class ModAjax extends ajaxFunc {
 			$refid = $this->getSessFormField($data['class_id'], 'refid');
 			if ($refid == 0) {
                 $update = false;
-				$dataForSave['u_login'] = trim($data['control']['u_login']);
+				$dataForSave['u_login'] = trim(strip_tags($data['control']['u_login']));
 				$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
 
 				$this->checkUniqueLogin(0, $dataForSave['u_login']);
@@ -455,11 +455,10 @@ class ModAjax extends ajaxFunc {
                     ->body("На портале {$_SERVER["SERVER_NAME"]} зарегистрирован новый $who<br>
                             Дата: " . date('Y-m-d') . "<br>
                             Login: {$dataForSave['u_login']}<br>
-                            ФИО: {$lastname} {$firstname} {$middlename}")
+                            ФИО: {$data['control']['lastname']} {$data['control']['firstname']} {$data['control']['middlename']}")
                     ->send();
 			} else {
-                $this->checkUniqueLogin($refid, $dataForSave['u_login']);
-                if ($dataForSave['email']) {
+				if ($dataForSave['email']) {
                     $this->checkUniqueEmail($refid, $dataForSave['email']);
                 }
 
@@ -469,12 +468,11 @@ class ModAjax extends ajaxFunc {
 			}
 
 			if ($refid) {
-				$row = $this->dataUsersProfile
-                    ->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
+				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
 				$save = array(
-					'lastname' => $lastname,
-					'firstname' => $firstname,
-					'middlename' => $middlename,
+					'lastname' => $data['control']['lastname'],
+					'firstname' => $data['control']['firstname'],
+					'middlename' => $data['control']['middlename'],
 					'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
 				);
 				if (!$row) {

@@ -24,10 +24,10 @@ class UploadHandler extends Db
             'script_url' 		=> $_SERVER['PHP_SELF'],
             'upload_dir' 		=> $upload_dir,
             'upload_dir_thumb' 	=> $upload_dir . "thumbnail",
-            'upload_url' 		=> 'index.php?module=admin&loc=core&action=handler&tfile=',
-            'thumb_url' 		=> 'index.php?module=admin&loc=core&action=handler&thumbid=',
-            'upload_id' 		=> 'index.php?module=admin&loc=core&action=handler&fileid=',
-            'thumb_id' 			=> 'index.php?module=admin&loc=core&action=handler&thumb=1&fileid=',
+            'upload_url' 		=> 'index.php?module=admin&action=handler&tfile=',
+            'thumb_url' 		=> 'index.php?module=admin&action=handler&thumbid=',
+            'upload_id' 		=> 'index.php?module=admin&action=handler&fileid=',
+            'thumb_id' 			=> 'index.php?module=admin&action=handler&thumb=1&fileid=',
             'param_name' 		=> 'files',
             // The php.ini settings upload_max_filesize and post_max_size
             // take precedence over the following max_file_size setting:
@@ -50,7 +50,7 @@ class UploadHandler extends Db
                 */
                 'thumbnail' => array(
                     'upload_dir' => $upload_dir . "thumbnail/",
-                    'upload_url' => 'index.php?module=admin&loc=core&action=handler&tfile=',
+                    'upload_url' => 'index.php?module=admin&action=handler&tfile=',
                     'max_width' => 80,
                     'max_height' => 80
                 )
@@ -239,10 +239,10 @@ class UploadHandler extends Db
             }
             $file_size = filesize($file_path);
             if ($file_size === $file->size) {
-                $file->url = $this->options['upload_url'] . rawurlencode($file->name);
+                $file->url = "index.php?module=admin&filehandler=temp&tfile=" . rawurlencode($file->name);
                 foreach($this->options['image_versions'] as $version => $options) {
                     if ($this->create_scaled_image($file->name, $options)) {
-                        $file->{$version.'_url'} = $options['upload_url']
+                        $file->{$version.'_url'} = "index.php?module=admin&filehandler=temp&tfile="
                             .rawurlencode($file->name);
                     }
                 }
@@ -251,7 +251,7 @@ class UploadHandler extends Db
                 $file->error = 'abort';
             }
             $file->size = $file_size;
-            $file->delete_url = 'index.php?module=admin&loc=core&action=upload&file=' . rawurlencode($file->name);
+            $file->delete_url = 'index.php?module=admin&action=upload&file=' . rawurlencode($file->name);
             $file->delete_type = 'DELETE';
             $file->delete_service = $file->name . '###' . $file->size . '###' . $file->type;
         } else {
