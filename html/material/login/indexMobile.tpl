@@ -19,8 +19,8 @@
     <![endif]-->
     <link rel="icon" type="image/png" href="favicon.png"/>
 
-    <link href="core2/html/bootstrap/css/login.css" type="text/css" rel="stylesheet" />
-    <link href="core2/html/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="core2/html/material/css/bootstrap.min.css" rel="stylesheet">
+    <link href="core2/html/material/css/login.css" type="text/css" rel="stylesheet" />
 
     <script type="text/javascript" src="core2/js/md5.js"></script>
 
@@ -37,6 +37,6 @@
     <!--index -->
 </div>
 
-<script src="core2/html/bootstrap/js/ie10-fix.js"></script>
+<script src="core2/html/material/js/ie10-fix.js"></script>
 </body>
 </html>

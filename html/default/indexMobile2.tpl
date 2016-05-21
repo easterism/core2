@@ -8,6 +8,8 @@
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
+	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
+
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
@@ -15,12 +17,11 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
-	<script type="text/javascript" language="javascript"
-            src="core2/ext/jQuery/plugins/simplemodal-1.4.5/src/jquery.simplemodal.js"></script>
 
 	<script type="text/javascript" language="javascript"
 			src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js"></script>

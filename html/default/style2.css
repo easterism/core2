@@ -115,6 +115,10 @@ TOP MENU
     width:100%;
     z-index: 1000;
 }
+#menuContainer .menu_back {
+	background-image: url("img/menu_background.gif");
+    width:100%;
+}
 .menu_items, .menu_items_selected {
 	cursor:pointer;
 	background-image: url("img/menu_button_background.gif");

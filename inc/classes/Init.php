@@ -84,9 +84,10 @@
     }
 
     // определяем путь к папке кеша
-    if (strpos($config->cache, '/') === false) {
+    if (strpos($config->cache, '/') !== 0) {
         $config->cache = DOC_ROOT . trim($config->cache, "/");
     }
+
     //подключаем собственный адаптер базы данных
     require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
 
@@ -926,6 +927,7 @@
             foreach ($mods as $data) {
                 $modsList[$data['m_id']] = array('module_id'  => $data['module_id'],
                                                  'm_name'     => $data['m_name'],
+                                                 'm_id'     => $data['m_id'],
                                                  'submodules' => array());
             }
             foreach ($mods as $data) {
@@ -933,6 +935,14 @@
                     $modsList[$data['m_id']]['submodules'][] = array('sm_id'   => $data['sm_id'],
                                                                      'sm_key'  => $data['sm_key'],
                                                                      'sm_name' => $data['sm_name']);
+                }
+            }
+            //проверяем наличие контроллера для core2m в модулях
+            foreach ($modsList as $k => $data) {
+                $location = $this->getModuleLocation($data['module_id']);
+                $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
+                if (!file_exists($location . "/$modController.php")) {
+                    unset($modsList[$k]);
                 }
             }
             $modsList = array('system_name' => $this->getSystemName(),

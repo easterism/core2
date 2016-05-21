@@ -254,63 +254,6 @@ class Image {
 	}
 	
 	/**
-	 * add watermark
-	 *
-	 * @param string $filename	path to image file
-	 * @param string $newimage	path to new image file
-	 * @param string $text		test on image file
-	 * @param string $logo		path to put-image file
-	 * @param array  $param		array parameters [size text, angle, position X, position Y]
-	 * @return mixed
-	 */
-	public function addImageWatermark($filename, $newimage, $text = '', $logo = '', $param = '') {
-		if (Image::checkGD()) {
-		$size = Image::checkTypeImage($filename);
-		if (empty($param)) {
-			$param = array(
-	              "size"  => 10,
-	              "angle" => 0,
-	              "x"     => 0,
-	              "y"     => 10
-	              );
-		} else {
-			if ($param['size'] < 8) {
-				$param['size'] = 8;
-			}
-			if ($param['x'] >= $size['width']) {
-				$param['x'] = 0;
-			}
-			if ($param['y'] >= $size['height']) {
-				$param['y'] = 0;
-			}
-		}
-		if (empty($newimage)) {
-			$newimage = $filename;
-		}
-			if (is_file($filename) && Image::checkTypeImage($filename)) {
-		     	eval('$img = (imagecreatefrom' . $size['type'] . '($filename));');
-		     	if (!empty($text)) {
-		     		// Text color on image
-		     		$color = imagecolorallocate($img, 180, 180, 180);
-		     		imagettftext($img, $param['size'], $param['angle'], $param['x'], $param['y'], $color, 'Monotype.ttf', $text);
-		     	} elseif (!empty($logo)) {
-		     		if (is_file($filename) && Image::checkTypeImage($logo)) {
-		     			$param_logo = Image::checkTypeImage($logo);
-		     			eval('$imglogo = (imagecreatefrom' . $param_logo['type'] . '($logo));');
-		     			imagecopyresampled($img, $imglogo, $param['x'], $param['y'], 0, 0, $param_logo['width'], $param_logo['height'], $param_logo['width'], $param_logo['height']);
-		     		}
-		     	}
-		     	if (Image::checkDir($newimage)) {
-		     		imagejpeg($img, $newimage, 90);
-					imagedestroy($img);	
-		     	}
-		    }
-		} else {
-			trigger_error(__CLASS__ . "::" . __FUNCTION__ . " - Not attach GD.");
-		}
-	}
-	
-	/**
 	 * Just dislay image
 	 *
 	 * @param string $image_file path to image file

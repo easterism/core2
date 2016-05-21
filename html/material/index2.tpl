@@ -66,6 +66,9 @@
 			if ($('#module-settings')[0]) {
                 $('.dropdown-settings').addClass('show');
             }
+			if ($('#module-balance')[0]) {
+                $('.dropdown-balance').addClass('show');
+            }
         });
     </script>
     <!--[if IE]>

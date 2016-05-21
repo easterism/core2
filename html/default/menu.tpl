@@ -1,5 +1,5 @@
 <div id="menuContainer">
-    <table width="100%" background="core2/html/default/img/menu_background.gif">
+    <table class="menu_back">
         <tr>
             <td class="font homeButton">
                 <img src="core2/html/default/img/home.gif" alt="На главную" title="_tr('Уйти на главную страницу')" onclick="goHome()"/>

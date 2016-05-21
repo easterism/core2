@@ -14,22 +14,21 @@ var feedback = {
 			this.feedbackError(err);
 		}
 		if (!err.length) {
-			$.post("?module=admin&action=welcome",
-				{sendSupportForm: 1, supportFormModule: m.val(), supportFormMessage: me.val()},
-				function(data, status) {
-					if (status != 'success') {
-						var data = {error : [status]}
-					}
-					if (data && data.error) {
-						feedback.feedbackError(data.error);
-					} else {
-						$('#feedbackError')[0].className = 'completed';
-						$('#feedbackError').html('<div>Сообщение успешно отправлено</div>');
-						$('#feedbackError').show('fast');
-					}
-				},
-				'json'
-			);
+			$.ajax({
+				url: "?module=admin&action=welcome",
+				data: {sendSupportForm: 1, supportFormModule: m.val(), supportFormMessage: me.val()},
+				dataType: "json",
+				method: "POST"
+			})
+			.done(function(data, status) {
+				$('#feedbackError')[0].className = 'completed';
+				$('#feedbackError').html('<div>Сообщение успешно отправлено</div>');
+				$('#feedbackError').show('fast');
+			})
+			.fail(function(){
+				err.push('Ошибка отправки сообщения :(');
+				feedback.feedbackError(err);
+			});
 		}
 	},
 	feedbackError : function(err) {

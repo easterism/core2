@@ -513,6 +513,8 @@ class CoreController extends Common {
 			}
 			$supportFormMessagePost = $supportFormMessage;
 
+			header('Content-type: application/json; charset="utf-8"');
+
 			try {
 				if (empty($supportFormModule)) {
 					throw new Exception($this->translate->tr('Выберите модуль.'));
@@ -551,11 +553,10 @@ class CoreController extends Common {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение'));
                     }
 				}
+				echo '{}';
 			} catch (Exception $e) {
-				echo json_encode(array('error' => array($e->getMessage())));
+				Error::catchJsonException(array('error' => array($e->getMessage())), 503);
 			}
-            header('Content-type: application/json; charset="utf-8"');
-			echo '{}';
 			return;
 		}
 		if (file_exists('mod/home/welcome.php')) {

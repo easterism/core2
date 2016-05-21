@@ -116,8 +116,9 @@ function jsToHead(src) {
 					h = temp[0];
 				}
 			}
-			if (s[i].src == src) return;
-			if (s[i].src == h + src) return;
+			if (s[i].src == src || s[i].src == h + src.replace(/^\//, '')) {
+                return;
+            }
 		}
 	}
 	s = document.createElement("script");
@@ -136,7 +137,7 @@ function toAnchor(id){
         var ofy = $(id);
         if (ofy[0]) {
             $('html,body').animate({
-                scrollTop : ofy.offset().top - $("#menu-container").height()
+                scrollTop : ofy.offset().top - $("#navbar-top").height() - 115
             }, 'fast');
         }
     }, 0);
@@ -233,6 +234,13 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
             alert("Отсутствует соединение с Интернет.");
         }
 	}
+    else if (jqxhr.status == 403) {
+        if (alertify) {
+            alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+        } else {
+            alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+        }
+    }
 	else if (jqxhr.status == 500) {
         if (alertify) {
             alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
@@ -326,7 +334,10 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected, #module-settings.menu-module-selected')[0]) {
+        if ($('#module-profile.menu-module-selected, ' +
+			  '#module-settings.menu-module-selected, ' +
+              '#module-balance.menu-module-selected')[0]
+        ) {
             $('#user-section').addClass('active');
         } else {
             $('#user-section').removeClass('active');
@@ -365,7 +376,9 @@ var load = function (url, data, id, callback) {
 		var mod_title    = $('#module-' + load_module + ' > a').text();
 		var action_title = $('#submodule-' + load_module + '-' + load_action + ' > a').text();
 
-
+        if (load_module == 'admin' && load_action == 'welcome') {
+            mod_title = '';
+        }
 
         var css_mod_title = action_title == ''
             ? {'fontSize': '18px', 'paddingTop': '15px','lineHeight': '20px'}
@@ -474,7 +487,7 @@ $(document).ready(function() {
             }
         }
     });
-    $("#menu-modules > .menu-module").mouseleave(function(e) {
+    $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseleave(function(e) {
         if (e.toElement) {
             var module = $(this).attr('id').substr(7);
 
@@ -552,7 +565,6 @@ $(document).ready(function() {
 	xajax.callback.global.onComplete = function () {
 		preloader.hide();
 	}
-	var h = top.document.location.hash;
 	resize();
 
     $.datepicker.setDefaults($.datepicker.regional[ "ru_RU" ]);

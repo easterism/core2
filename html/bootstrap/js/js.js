@@ -138,8 +138,9 @@ function jsToHead(src) {
 					h = temp[0];
 				}
 			}
-			if (s[i].src == src) return;
-			if (s[i].src == h + src) return;
+			if (s[i].src == src || s[i].src == h + src.replace(/^\//, '')) {
+				return;
+			}
 		}
 	}
 	s = document.createElement("script");
@@ -253,6 +254,13 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
             alertify.alert("Отсутствует соединение с Интернет.");
         } else {
             alert("Отсутствует соединение с Интернет.");
+        }
+	}
+	else if (jqxhr.status == 403) {
+        if (alertify) {
+            alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
+        } else {
+            alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
         }
 	}
 	else if (jqxhr.status == 500) {

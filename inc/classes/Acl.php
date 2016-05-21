@@ -291,10 +291,12 @@ class Acl extends Db {
 	 */
 	public function checkAcl($source, $type = 'access') {
         $registry = Zend_Registry::getInstance();
-        $source   = explode('xxx', $source); //TODO SHOULD BE FIX
-        $source   = $source[0];
+		$xxx = strrpos($source, 'xxx');
+		if ($xxx > 0) {
+			$source   = substr($source, 0, $xxx); //TODO SHOULD BE FIX
+		}
         $acl      = $registry->get('acl');
-        $auth     = Zend_Registry::get('auth');
+        $auth     = $registry->get('auth');
 		if ($auth->NAME == 'root' || $auth->ADMIN) {
 			return true;
 		} elseif (in_array($source, $registry->get('availRes'))) {

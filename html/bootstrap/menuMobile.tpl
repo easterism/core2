@@ -19,7 +19,7 @@
 				<div class="dropdown">
 					<div class="dropdown-toggle" id="user-menu" data-toggle="dropdown">
 						<div class="avatar-container">
-							<img src="[GRAVATAR_URL]?&s=25&d=mm" alt="" class=""/>
+							<img src="[GRAVATAR_URL]?&s=28&d=mm" alt="" class=""/>
 						</div>
 						<!--CURRENT_USER_LOGIN-->
 						<span class="caret"></span>

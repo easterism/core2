@@ -2365,7 +2365,7 @@ class InstallModule extends Db {
         $queries = array();
         foreach ($sql as $qu) {
             $tmp = str_replace(array(" ", "\r\n", "\n"), '', $qu);
-            if(!empty($tmp)) {
+            if (!empty($tmp)) {
                 $queries[] = $qu;
             }
         }

@@ -1,6 +1,6 @@
 html {
 	height: 100%;
-    background-color: #fff;
+    background-color: #e6e6e6;
 }
 body {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -44,19 +44,19 @@ pre span {
 	display: none;
     padding: 15px;
     margin-bottom: 20px;
-    border: 1px solid #ebccd1;
+    border: 1px solid #FFB4B4;
     border-radius: 4px;
     color: #a94442;
-    background-color: #f2dede;
+    background-color: #FFCECE;
 }
 .block {display:block}
 .completed {
     padding: 15px;
     margin-bottom: 20px;
-    border: 1px solid #d6e9c6;
+    border: 1px solid #C5E1A5;
     border-radius: 4px;
     color: #3c763d;
-    background-color: #dff0d8;
+    background-color: #D7F9AC;
 }
 .input,
 .reqField,
@@ -834,6 +834,34 @@ button:hover,
     background-color: #c9302c;
     border-color: #ac2925;
 }
+.alert-info {
+    color: #31708f;
+    background-color: #BFEBFF;
+    border-color: #BBDEFB;
+}
+.alert-warning {
+    color: #8a6d3b;
+    background-color: #FFECB3;
+    border-color: #FFE0B2;
+}
+.alert-danger {
+    color: #a94442;
+    background-color: #FFCECE;
+    border-color: #FFB4B4;
+}
+.alert-success {
+    color: #3c763d;
+    background-color: #D7F9AC;
+    border-color: #C5E1A5;
+}
+.alert h1,
+.alert h2,
+.alert h3,
+.alert h4,
+.alert h5,
+.alert h6 {
+    margin-top: 0;
+}
 .input-group {display: inline-block}
 .input-group > * {float: left}
 .input-group > .first {
@@ -977,30 +1005,6 @@ a.modalCloseImg {
     padding-right: 10px;
 }
 table td.homeTD {padding: 10px}
-#main_body .dashboard {padding: 10px 0}
-#main_body .dashboard .col-1 {
-    width: 75%;
-    float: left;
-}
-#main_body .dashboard .col-2 {
-    width: 24.5%;
-    float: right;
-    padding-left: 15px;
-}
-@media(max-width:1399px) {
-    #main_body .dashboard .col-1,
-    #main_body .dashboard .col-2 {
-        width: 100%;
-        float: none;
-    }
-    #main_body .dashboard .col-2 {padding-left: 0}
-    #main_body .dashboard .col-2-1,
-    #main_body .dashboard .col-2-2 {
-        float: left;
-        width: 49%;
-    }
-    #main_body .dashboard .col-2-2 {float: right}
-}
 
 .shortDescrNews {
 	margin-left:70px;

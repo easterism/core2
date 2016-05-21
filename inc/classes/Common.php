@@ -1,7 +1,12 @@
 <?
 require_once 'Acl.php';
 
+
+/**
+ * Class Common
+ */
 class Common extends Acl {
+
 	protected $module;
 	protected $path;
 	protected $auth;
@@ -13,7 +18,11 @@ class Common extends Acl {
         'module',
         'action'
     );
-	
+
+
+    /**
+     * Common constructor.
+     */
 	public function __construct() {
         $child = get_class($this);
         $child = strpos($child, "Controller") ? substr($child, 3, -10) : '';
@@ -40,10 +49,20 @@ class Common extends Acl {
 		$this->config = $reg->get('config');
 	}
 
+
+    /**
+     * @param string $k
+     * @return bool
+     */
 	public function __isset($k) {
 		return isset($this->_p[$k]);
 	}
 
+
+    /**
+     * @return mixed
+     * @throws Zend_Exception
+     */
     public function getInvoker() {
         return Zend_Registry::get('invoker');
     }
@@ -176,6 +195,12 @@ class Common extends Acl {
 		return $v;
 	}
 
+
+    /**
+     * @param string $k
+     * @param mixed  $v
+     * @return $this
+     */
 	public function __set($k, $v) {
 		$this->_p[$k] = $v;
 		return $this;
@@ -195,7 +220,8 @@ class Common extends Acl {
 			}
 		}
 	}
-	
+
+
 	/**
 	 * Print link to CSS file
 	 * @param string $href - CSS filename
@@ -203,22 +229,31 @@ class Common extends Acl {
 	protected function printCss($href) {
         Tool::printCss($href);
 	} 
-	
+
+
 	/**
 	 * 
 	 * Print link to JS file
 	 * @param string $src - JS filename
+	 * @param bool   $chachable
 	 */
 	protected function printJs($src, $chachable = false) {
         Tool::printJs($src, $chachable);
 	}
-	
 }
 
-    class stdObject
-    {
-        public function __call($method, $arguments)
-        {
-            return false;
-        }
+
+/**
+ * Class stdObject
+ */
+class stdObject {
+
+    /**
+     * @param string $method
+     * @param array  $arguments
+     * @return bool
+     */
+    public function __call($method, $arguments) {
+        return false;
     }
+}
