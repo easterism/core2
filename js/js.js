@@ -205,6 +205,9 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 	}
 	else if (jqxhr.status == 500) {
 		alert("Ой! Что-то сломалось, подождите пока мы починим.");
+	}
+	else if (jqxhr.status == 503) {
+		alert("Сервис не доступен.");
 	} else {
 		if (exception != 'abort') {
 			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);

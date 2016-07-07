@@ -13,6 +13,7 @@ class Db {
 	protected $backendOptions = array();
 	protected $backend = 'File';
     private $_s = array();
+    private $_settings = array();
 
 	public function __construct($config = null) {
 		if (is_null($config)) {
@@ -249,26 +250,13 @@ class Db {
         }
 	}
 
-
-    /**
-     * Получение маски дня
-     * @return string
-     */
-	public function getMaskDate() {
-		return $this->db->fetchOne("
-            SELECT `value`
-            FROM core_settings
-            WHERE code = 'mask_date'
-        ");
-	}
-
-
 	/**
 	 * @param string $code
 	 * @return string
 	 */
 	public function getSetting($code) {
-		return $this->db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND code=? LIMIT 1", $code);
+        $this->getAllSettings();
+		return isset($this->_settings[$code]) ? $this->_settings[$code]['value'] : false;
 	}
 
 
@@ -277,7 +265,11 @@ class Db {
 	 * @return string
 	 */
 	public function getCustomSetting($code) {
-		return $this->db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND is_custom_sw='Y' AND code=? LIMIT 1", $code);
+        $this->getAllSettings();
+        if (isset($this->_settings[$code]) && $this->_settings[$code]['is_custom_sw'] == 'Y') {
+            return $this->_settings[$code]['value'];
+        }
+        return false;
 	}
 
 	/**
@@ -285,7 +277,11 @@ class Db {
 	 * @return string
 	 */
 	public function getPersonalSetting($code) {
-		return $this->db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND is_personal_sw='Y' AND code=? LIMIT 1", $code);
+        $this->getAllSettings();
+        if (isset($this->_settings[$code]) && $this->_settings[$code]['is_personal_sw'] == 'Y') {
+            return $this->_settings[$code]['value'];
+        }
+		return false;
 	}
 
 	/**
@@ -376,7 +372,7 @@ class Db {
 	 * @param int $id
 	 * @return bool|string
 	 */
-	public function isUserActive($id) {
+    final public function isUserActive($id) {
 		if ($id === -1) return true;
 		return $this->db->fetchOne("SELECT 1 FROM core_users WHERE u_id=? AND visible='Y'", $id);
 	}
@@ -385,7 +381,7 @@ class Db {
 	 * @param string $module_id
 	 * @return string
 	 */
-	public function isModuleActive($module_id) {
+    final public function isModuleActive($module_id) {
 		$key = "is_active_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
@@ -539,4 +535,29 @@ class Db {
 
     }
 
+	final private function getAllSettings() {
+		$key = "all_settings_" . $this->config->database->params->dbname;
+		if (!($this->cache->test($key))) {
+			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
+            $is = array();
+            foreach ($res as $item) {
+                $is[$item['code']] = array(
+                        'value' => $item['value'],
+                        'is_custom_sw' => $item['is_custom_sw'],
+                        'is_personal_sw' => $item['is_personal_sw']
+                );
+            }
+			$this->cache->save($is, $key);
+		} else {
+			$is = $this->cache->load($key);
+		}
+        $this->_settings = $is;
+	}
+
+
+    final public function log($name) {
+
+        $log = new \Core2\Log($name);
+        return $log;
+    }
 }

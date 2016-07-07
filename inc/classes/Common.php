@@ -78,22 +78,22 @@ class Common extends Acl {
      */
     public function __get($k) {
 
+		//исключение для герета базы или кеша, выполняется всегда
+		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
+			return parent::__get($k);
+		}
+		//геттер для модели
+		if (strpos($k, 'data') === 0) {
+			return parent::__get($k . "|" . $this->module);
+		}
+
 		$v = NULL;
 
 		if (array_key_exists($k, $this->_p)) {
 			$v = $this->_p[$k];
 		} else {
-			//исключение для герета базы или кеша, выполняется всегда
-			if ($k == 'db' || $k == 'cache' || $k == 'translate') {
-				return parent::__get($k);
-			}
-            //геттер для модели
-            if (strpos($k, 'data') === 0) {
-                return parent::__get($k . "|" . $this->module);
-            }
-
 			// Получение экземпляра класса для работы с правами пользователей
-			elseif ($k == 'acl') {
+			if ($k == 'acl') {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
 			}
 			elseif ($k == 'moduleConfig') {
@@ -240,6 +240,7 @@ class Common extends Acl {
 	protected function printJs($src, $chachable = false) {
         Tool::printJs($src, $chachable);
 	}
+
 }
 
 

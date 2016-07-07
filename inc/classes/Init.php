@@ -75,7 +75,7 @@
     } catch (Zend_Config_Exception $e) {
         Error::Exception($e->getMessage());
     }
-
+    
     // отладка приложения
     if ($config->debug->on) {
         ini_set('display_errors', 1);
@@ -134,6 +134,13 @@
 
 	//сохраняем конфиг
 	Zend_Registry::set('config', $config);
+
+    //обрабатываем конфиг ядра
+    $core_conf_file = __DIR__ . "/../../conf.ini";
+    if (file_exists($core_conf_file)) {
+        $core_config = new Zend_Config_Ini($core_conf_file, 'production');
+        Zend_Registry::set('core_config', $core_config);
+    }
 
 	require_once 'Db.php';
 	require_once 'Common.php';
@@ -573,6 +580,7 @@
             if ($this->auth->MOBILE) { //если core2m
                 return $this->getMenuMobile();
             }
+
             require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
             $xajax = new xajax();
             //$xajax->configure("debug", true);
@@ -823,6 +831,7 @@
          * Основной роутер
          */
         private function routeParse() {
+
             $temp  = explode("/", dirname($_SERVER['SCRIPT_NAME']));
             $temp2 = explode("/", $_SERVER['REQUEST_URI']);
 

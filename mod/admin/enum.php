@@ -88,10 +88,11 @@ $tab->beginContainer($title);
 				$fields_sql = "";
 				$fields = $custom_fields;
 
-				if (isset($_GET['add']) && $_GET['add'] != '') {					
+				if (isset($_GET['add']) && $_GET['add'] != '') {
+					$add = (int)$_GET['add'];
 					$edit = new editTable('enumxxxur');
 
-					$res2 = $this->dataEnum->find($_GET['add'])->current()->custom_field;
+					if ($add) $res2 = $this->dataEnum->find($add)->current()->custom_field;
 					$arr_fields = array();
 
 					/* Формирование массива кастомных полей из строки */
@@ -109,7 +110,8 @@ $tab->beginContainer($title);
 					if (is_array($fields) && count($fields)) {
 						$fields_sql = "\n";
 						foreach ($fields as $key => $val) {
-							$fields_sql .= "'{$arr_fields[$val['label']]}' AS id_$key,\n";
+							$label = $arr_fields ? $arr_fields[$val['label']] : '';
+							$fields_sql .= "'{$label}' AS id_$key,\n";
 
 							if ($val['type'] == 1) $type = 'TEXT';
 							elseif ($val['type'] == 2) {

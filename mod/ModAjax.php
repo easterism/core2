@@ -549,6 +549,7 @@ class ModAjax extends ajaxFunc {
 				);
 			}
 			$this->db->commit();
+			$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
 			$this->done($data);
 		} catch (Exception $e) {			
 			$this->db->rollback();
@@ -582,6 +583,7 @@ class ModAjax extends ajaxFunc {
 		if ( ! $last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
+		$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
 		$this->done($data);
 		return $this->response;
     }
@@ -602,6 +604,7 @@ class ModAjax extends ajaxFunc {
 		if (!$last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
+		$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
 		$this->done($data);
 		return $this->response;
     }

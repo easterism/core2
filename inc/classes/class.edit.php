@@ -34,6 +34,10 @@ class editTable extends initEdit {
 		foreach ($this->types as $acl_type) {
 			$this->acl->$acl_type = $this->checkAcl($this->resource, $acl_type);
 		}
+        $mask_date = $this->getSetting('mask_date');
+        if ($mask_date) {
+            $this->date_mask = $mask_date;
+        }
 	}
 
 
@@ -45,6 +49,9 @@ class editTable extends initEdit {
 		if ($data == 'db') {
 			return parent::__get('db');
 		}
+        if ($data == 'cache') {
+            return parent::__get('cache');
+        }
 		$this->$data = new cell($this->main_table_id);
 		$this->cell[$data] = $this->$data;
        	return $this->$data;

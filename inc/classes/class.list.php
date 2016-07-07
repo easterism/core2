@@ -47,6 +47,11 @@ class listTable extends initList {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->search_table_id 	= "search_" . $name;
+
+		$mask_date = $this->getSetting('mask_date');
+		if ($mask_date) {
+			$this->date_mask = $mask_date;
+		}
 	}
 	
 	public function button($value, $img = "", $onclick = "", $style = "", $type = 'button') {
