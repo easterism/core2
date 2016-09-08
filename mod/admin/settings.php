@@ -9,20 +9,27 @@ $tab->addTab($this->translate->tr("Персональные параметры")
 $tab->beginContainer($this->translate->tr("Конфигурация"));
 	if ($tab->activeTab == 1) {
 		
-		$edit = new editTable('set'); 
-		
-		$res = $this->db->query("SELECT * FROM core_settings WHERE visible='Y' AND is_custom_sw='N'");
-		$sql = array();
-		$caps = array();
-		while ($row = $res->fetch()) {
-    		$sql[$row['code']] = $row['value'];
-    		$caps[$row['code']] = $row['system_name'];
+		$edit = new editTable('set');
+
+		$types     = array('text', 'date', 'textarea', 'date2', 'datetime', 'datetime2', 'money', 'number');
+		$edit->SQL = array(array('id' => 1));
+		$settings  = $this->db->fetchAll("
+			SELECT *
+			FROM core_settings
+			WHERE visible = 'Y'
+			  AND is_custom_sw = 'N'
+		");
+		foreach ($settings as $setting) {
+			$edit->SQL[0][$setting['code']] = $setting['value'];
+
+			$type = $setting['type'] && in_array(strtolower($setting['type']), $types)
+				? $setting['type']
+				: 'text';
+			$edit->addControl($setting['system_name'] . ":", $type, 'size="30"');
 		}
-		$edit->SQL  = array(array_merge(array('id' => 1), $sql));
-		foreach ($sql as $caption => $value) {
-			$edit->addControl($caps[$caption] . ":", "TEXT", 'size="30"');
-		}
-		if (!empty($_REQUEST['edit']) && $_REQUEST['edit'] == 'yes') {
+
+
+		if ( ! empty($_GET['edit']) && $_GET['edit'] == 'yes') {
 			$edit->addButton($this->translate->tr("Отменить"), "load('$app')");
 			$edit->back = $app;
 			$edit->save("xajax_saveSettings(xajax.getFormValues(this.id))");

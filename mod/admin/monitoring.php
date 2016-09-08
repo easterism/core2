@@ -189,7 +189,11 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		$this->printCss("core2/mod/admin/css/monitoring.css");
 		$this->printJs("core2/mod/admin/monitoring.js");
 
-		if ($this->config->log->system->writer == 'file') {
+		if (isset($this->config->log) &&
+			isset($this->config->log->system) &&
+			isset($this->config->log->system->writer) &&
+			$this->config->log->system->writer == 'file'
+		) {
 			if (!$this->config->log->system->file) {
                 echo Alert::getDanger($this->translate->tr('Не задан путь к файлу журнала'));
             } elseif (!file_exists($this->config->log->system->file)) {

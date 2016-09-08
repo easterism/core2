@@ -13,6 +13,7 @@ if (!empty($_GET['checkModsUpdates'])) {
 			}
 		}
 	} catch (Exception $e) {
+        $mods[] = $e->getMessage();
 	}
 
 	echo json_encode($mods);
@@ -71,17 +72,25 @@ $tab->beginContainer("Модули");
 		}
 
 		if (isset($_GET['edit']) && $_GET['edit'] != '') {	
-			$edit = new editTable('mod'); 
+			$edit         = new editTable('mod');
 			$selected_dep = array();
-			$refid = (int)$_GET['edit'];
-			$dep_list = "SELECT module_id, m_name FROM core_modules WHERE m_id != '$refid'";
-			$field = '';
+			$refid        = (int)$_GET['edit'];
+            $field        = '';
+			$mod_list     = $this->db->fetchAll("
+                SELECT module_id,
+                       m_name
+                FROM core_modules
+                WHERE m_id != ?
+            ", $refid);
+
+
 			if ($refid > 0) {
-				$module = $this->dataModules->find($refid)->current();
-				$res = $module->dependencies;
-				$dep = array();
-				if ($res) {
-					$dep = base64_decode($res);
+				$module           = $this->dataModules->find($refid)->current();
+				$mod_dependencies = $module->dependencies;
+				$dep              = array();
+
+				if ($mod_dependencies) {
+					$dep = base64_decode($mod_dependencies);
 					$dep = @unserialize($dep);
 					
 					if (is_array($dep)) {
@@ -93,19 +102,18 @@ $tab->beginContainer("Модули");
 						$dep = array();
 					}
 				}
-				
-				$res = $this->db->fetchAll($dep_list);
+
 				$availableModules = array();
-				foreach ($res as $variable) {
+				foreach ($mod_list as $variable) {
 					$availableModules[] = $variable['module_id'];
 				}
 				
 				$dep_list = array();
-				$dep = array_merge($dep, $res);
+				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
 					$edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
 					if (!in_array($variable['module_id'], $availableModules)) {
-						$variable['m_name'] .= " <font color=\"red\">(deleted)</font>";
+						$variable['m_name'] .= " <i style=\"color:#F44336\">(deleted)</i>";
 					}
 					$dep_list[$variable['module_id']] = $variable['m_name'];
 				}
@@ -113,9 +121,13 @@ $tab->beginContainer("Модули");
 				
 				$selected_dep = implode(",", $selected_dep);
 				$field = "'$selected_dep' AS ";
-				
-				
-			}
+
+			} else {
+                foreach ($mod_list as $variable) {
+                    $edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
+                    $dep_list[$variable['module_id']] = $variable['m_name'];
+                }
+            }
 
 			$edit->SQL  = "SELECT  m_id,
 								   m_name,
@@ -405,7 +417,7 @@ HTML;
 							     name
 						    FROM core_available_modules
 						   WHERE id = 0";
-			$edit->addControl("Файл архива(.zip)", "XFILE", "", "", "");
+			$edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
 			$edit->classText['SAVE'] = $this->translate->tr("Загрузить");
 			$edit->back              = $app . "&tab_mod=" . $tab->activeTab;
 			$edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");

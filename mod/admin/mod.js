@@ -13,19 +13,43 @@ var modules = {
         $('.' + id).toggle();
     },
     'refreshFiles': function (mod, v, mod_id) {
-        if (confirm('Обновить файлы модуля ' + mod + ' v' + v + '?')) {
-            load('index.php' + document.location.hash, {"refreshFilesModule": mod_id});
-        } else return false;
+		if (alertify) {
+			alertify.confirm('Обновить файлы модуля <b>' + mod + '</b> ' + v + '?', function(e){
+				if (e) {
+					load('index.php' + document.location.hash, {"refreshFilesModule": mod_id});
+				} else return false;
+			});
+		} else {
+			if (confirm('Обновить файлы модуля ' + mod + ' ' + v + '?')) {
+				load('index.php' + document.location.hash, {"refreshFilesModule": mod_id});
+			} else return false;
+		}
     },
     'download': function (mod, v, modId) {
-		if (confirm('Скачать архив модуля ' + mod + ' ' + v + '?')) {
-			loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
-		} else return false;
+        if (alertify) {
+            alertify.confirm('Скачать архив модуля <b>' + mod + '</b> ' + v + '?', function(e) {
+                if (e) {
+                    loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
+                } else return false;
+            });
+        } else {
+            if (confirm('Скачать архив модуля ' + mod + ' ' + v + '?')) {
+                loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
+            } else return false;
+        }
 	},
     'requestToRepo': function (mod, v, m_id, repo, request) {
-		if (request == 'install' && confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-			load('index.php' + document.location.hash, {"install_from_repo":m_id, "repo": repo});
-		} else return false;
+        if (alertify) {
+            alertify.confirm('Установить модуль <b>' + mod + '</b> ' + v + '?', function(e) {
+                if (e) {
+                    load('index.php' + document.location.hash, {"install_from_repo":m_id, "repo": repo});
+                } else return false;
+            });
+        } else {
+            if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
+                load('index.php' + document.location.hash, {"install_from_repo":m_id, "repo": repo});
+            } else return false;
+        }
 	},
 	newRule: function(container) {
 		var id = new Date().valueOf();
@@ -59,10 +83,19 @@ var modules = {
 		document.getElementById(container).appendChild(x);
 	},
 	updateModule: function (mod, v, module_id) {
-		if (confirm('Обновить модуль ' + mod + ' v' + v + '?')) {
-			var url = 'index.php' + document.location.hash.replace('#', '?');
-			load(url, {"updateModule": module_id});
-		} else return false;
+        if (alertify) {
+            alertify.confirm('Обновить модуль <b>' + mod + '</b> до версии <b>' + v + '</b>?', function(e) {
+                if (e) {
+                    var url = 'index.php' + document.location.hash.replace('#', '?');
+                    load(url, {"updateModule": module_id});
+                } else return false;
+            });
+        } else {
+            if (confirm('Обновить модуль ' + mod + ' до версии ' + v + '?')) {
+                var url = 'index.php' + document.location.hash.replace('#', '?');
+                load(url, {"updateModule": module_id});
+            } else return false;
+        }
 	},
 	checkModsUpdates: function (mods, theme) {
 		$.get('index.php?module=admin&action=modules',
@@ -108,19 +141,55 @@ var modules = {
 		document.getElementById(container).appendChild(x);
 	}
 
+    /**
+     * Разинсталирование модуля
+     * @param mod
+     * @param v
+     * @param modUninstall
+     * @returns {boolean}
+     */
 	function uninstallModule(mod, v, modUninstall) {
-		if (confirm('Разинсталировать модуль ' + mod + ' v' + v + '?')) {
-			load('index.php' + document.location.hash, {"uninstall":modUninstall});
-		} else return false;
+        if (alertify) {
+            alertify.confirm('Разинсталировать модуль <b>' + mod + '<b> версии <b>' + v + '</b>?', function(e) {
+                if (e) {
+                    load('index.php' + document.location.hash, {"uninstall":modUninstall});
+                } else return false;
+            });
+        } else {
+            if (confirm('Разинсталировать модуль ' + mod + ' версии ' + v + '?')) {
+                load('index.php' + document.location.hash, {"uninstall":modUninstall});
+            } else return false;
+        }
 	}
 
+
+    /**
+     * Установка модуля
+     * @param mod
+     * @param v
+     * @param modInstall
+     * @param page
+     * @returns {boolean}
+     */
 	function installModule(mod, v, modInstall, page) {
-		if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
-            var url = 'index.php?module=admin&action=modules&loc=core&tab_mod=2';
-            if (page >= 1) {
-                url = url + '&_page_mod_available=' + page;
-            }
-			load(url, {"install":modInstall});
-		} else return false;
+        if (alertify) {
+            alertify.confirm('Установить модуль <b>' + mod + '</b> ' + v + '?', function(e) {
+                if (e) {
+                    var url = 'index.php?module=admin&action=modules&loc=core&tab_mod=2';
+                    if (page >= 1) {
+                        url = url + '&_page_mod_available=' + page;
+                    }
+                    load(url, {"install":modInstall});
+                } else return false;
+            });
+        } else {
+            if (confirm('Установить модуль ' + mod + ' ' + v + '?')) {
+                var url = 'index.php?module=admin&action=modules&loc=core&tab_mod=2';
+                if (page >= 1) {
+                    url = url + '&_page_mod_available=' + page;
+                }
+                load(url, {"install":modInstall});
+            } else return false;
+        }
 	}
 
