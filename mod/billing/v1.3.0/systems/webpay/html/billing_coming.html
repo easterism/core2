@@ -1,0 +1,70 @@
+
+<form id="webpay-billing-form" action="[ACTION]" method="post" class="form-horizontal"
+      onsubmit="return billing_webpay.createComing(this, '[OPERATION_NAME]');">
+    <input type="hidden" name="wsb_invoice_item_name[]" value="Пополнение баланса"/>
+    <input type="hidden" name="wsb_invoice_item_quantity[]" value="1"/>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Сумма для пополнения</label>
+        <div class="col-sm-10">
+            <input type="text" value="" class="input" id="webpay-coming-price"
+                   name="wsb_invoice_item_price[]" required data-max-coming-price="[MAX_COMING_PRICE]"> [CURRENCY]
+        </div>
+    </div>
+
+
+    <!-- BEGIN form_field -->
+    <input type="hidden" name="[NAME]" value="[VALUE]"/>
+    <!-- END form_field -->
+
+    <input type="hidden" name="wsb_email" value="[EMAIL]"/>
+    <input type="hidden" name="wsb_order_num" value=""/>
+    <input type="hidden" name="wsb_total" value=""/>
+    <input type="hidden" name="wsb_seed" value=""/>
+    <input type="hidden" name="wsb_signature" value=""/>
+
+
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="button" class="btn btn-default"
+                    onclick="load('index.php?module=billing&tab_billing=1')">Назад</button>
+            <button type="submit" class="btn btn-primary">Далее</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    $('#webpay-coming-price').maskMoney({
+        allowZero: false,
+        thousands: ' ',
+        defaultZero: false,
+        allowNegative: false,
+        precision: 2
+    })
+        .maskMoney('mask')
+        .bind('keydown.maskMoney', function(e) {
+            e = e || window.event;
+            var k = e.which || e.charCode || e.keyCode;
+            if (k == undefined) return false; //needed to handle an IE "special" event
+            if (k >= 48 && k <= 57 || k >= 96 && k <= 105 ) { // any key except the numbers 0-9
+                if (parseFloat(this.dataset.maxComingPrice) > 0) {
+                    var number = k >= 48 && k <= 57 ? k - 48 : k - 96;
+                    var price  = this.value
+                            ? parseFloat(this.value.replace(/\s/g, '')) * 10 + '' + number
+                            : parseFloat('0.0' + number);
+
+                    if (price > parseFloat(this.dataset.maxComingPrice)) {
+                        this.value = this.dataset.maxComingPrice;
+                        $(this).maskMoney('mask');
+
+                        if (e.preventDefault) { //standard browsers
+                            e.preventDefault();
+                        } else { // old internet explorer
+                            e.returnValue = false
+                        }
+                    }
+                }
+            }
+        });
+</script>

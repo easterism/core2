@@ -1,0 +1,58 @@
+
+<div id="billing-form-expense" class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Производимая операция</label>
+        <div class="col-sm-10">
+            <p class="form-control-static">
+                [OPERATION_TITLE]
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Способ оплаты</label>
+        <div class="col-sm-10">
+            <!-- BEGIN pay_methods -->
+            <select id="pay-method" onchange="billing.changePayMethod(this)">
+                <!-- BEGIN pay_method -->
+                <option data-price-balance="[PRICE_BALANCE]" value="[NAME]"
+                        data-price-method="[PRICE_METHOD]">[TITLE]</option>
+                <!-- END pay_method -->
+            </select>
+            <!-- END pay_methods -->
+
+            <!-- BEGIN one_method -->
+            <p class="form-control-static">[TITLE]</p>
+            <!-- END one_method -->
+        </div>
+    </div>
+
+
+    <div id="systems-container">
+        <!-- BEGIN systems -->
+        <div id="system-[NAME]" style="[STYLE_DISPLAY]">
+            [FORM_CONTENT]
+        </div>
+        <!-- END systems -->
+    </div>
+
+
+    <!-- BEGIN balance_only -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Стоимость</label>
+        <div class="col-sm-10">
+            <p class="form-control-static">
+                [TOTAL_COMMAFY] [CURRENCY]
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary" onclick="billing.createExpense('[OPERATION_NAME]')">Оплатить</button>
+            <button type="button" class="btn btn-default"
+                    onclick="load('index.php?module=billing&tab_billing=1')">Назад</button>
+        </div>
+    </div>
+    <!-- END balance_only -->
+</div>

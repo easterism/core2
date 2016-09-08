@@ -1,0 +1,39 @@
+
+<div id="billing-form-coming" class="form-horizontal">
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Производимая операция</label>
+        <div class="col-sm-10">
+            <p class="form-control-static">
+                Пополнение баланса
+            </p>
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Способ оплаты</label>
+        <div class="col-sm-10">
+            <!-- BEGIN pay_methods -->
+            <select id="pay-method" onchange="billing.changePayMethod(this)">
+                <!-- BEGIN pay_method -->
+                <option value="[NAME]">[TITLE]</option>
+                <!-- END pay_method -->
+            </select>
+            <!-- END pay_methods -->
+
+            <!-- BEGIN one_method -->
+            <p class="form-control-static">[TITLE]</p>
+            <!-- END one_method -->
+        </div>
+    </div>
+
+
+    <div id="systems-container">
+        <!-- BEGIN systems -->
+        <div id="system-[NAME]" style="[STYLE_DISPLAY]">
+            [FORM_CONTENT]
+        </div>
+        <!-- END systems -->
+    </div>
+</div>

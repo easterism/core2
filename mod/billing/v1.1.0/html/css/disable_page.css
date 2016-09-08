@@ -1,0 +1,99 @@
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+}
+body > header {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 52px;
+}
+body > #main-content {
+    min-height: 100%;
+    padding-top: 45px;
+}
+body > #main-content > .buffer-content {
+    height: 50px;
+    width: 100%;
+}
+body > footer {
+    margin-top: -50px;
+}
+#total-price-container ul {
+    padding: 0;
+}
+#total-price-container ul li {
+    list-style: none;
+}
+.billing-operations-label {
+    width: 135px;
+    text-align: left!important;
+}
+#total-price-container ul {
+    list-style: none;
+    padding: 0;
+}
+@media (min-width: 768px) {
+    .billing-operations-offset {
+        margin-left: 0;
+    }
+}
+@media (min-width: 992px) {
+    .billing-operations-offset {
+        margin-left: 135px;
+    }
+}
+
+
+#preloader {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    z-index: 100000;
+}
+#preloader > .lock-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    -webkit-box-shadow: inset 0 0 10px #D8D8D8;
+    -moz-box-shadow: inset 0 0 10px #D8D8D8;
+    -o-box-shadow: inset 0 0 10px #D8D8D8;
+    box-shadow: inset 0 0 10px #D8D8D8;
+    opacity: .2;
+    cursor: wait;
+}
+#preloader > .block {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 162px;
+    width: 162px;
+    display: inline-block;
+    text-align: left;
+    padding: 20px;
+    margin-left: -80px;
+    margin-top: -100px;
+    border: 1px solid #C7C7C7;
+    -webkit-box-shadow: 0 0 40px #848484;
+    -moz-box-shadow: 0 0 40px #848484;
+    -ms-box-shadow: 0 0 40px #848484;
+    -o-box-shadow: 0 0 40px #848484;
+    -webkit-border-radius: 90px;
+    -moz-border-radius: 90px;
+    -ms-border-radius: 90px;
+    -o-border-radius: 90px;
+    border-radius: 90px;
+    -webkit-box-shadow: 0 0 40px #848484;
+    -moz-box-shadow: 0 0 40px #848484;
+    -o-box-shadow: 0 0 40px #848484;
+    box-shadow: 0 0 40px #848484;
+    cursor: wait;
+    background-image: url("../img/preloader.gif");
+    background-repeat:no-repeat;
+    background-position:center;
+    background-color:white;
+}

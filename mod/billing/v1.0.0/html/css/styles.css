@@ -1,0 +1,26 @@
+#total-price-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#total-price-container b {
+    font-size: 1.15em;
+}
+#total-price-container #total-price {
+    border-top: 1px solid #E0E0E0;
+    padding-top: 10px;
+}
+#billing-form-coming #pay-method,
+#billing-form-expense #pay-method {
+    width: 204px;
+}
+#billing-form-expense,
+#operations-form {
+    padding: 0 10px;
+}
+/*#billing-form-expense .control-label {*/
+    /*width: 260px;*/
+/*}*/
+/*#billing-form-expense .col-sm-offset-3 {*/
+    /*margin-left: 260px;*/
+/*}*/

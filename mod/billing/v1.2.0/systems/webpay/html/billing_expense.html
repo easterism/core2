@@ -1,0 +1,45 @@
+
+<form id="webpay-billing-form" action="[ACTION]" method="post" class="form-horizontal"
+      onsubmit="return billing_webpay.coming(this, '[OPERATION_NAME]');">
+    <input type="hidden" name="wsb_invoice_item_price[]" value="[OPERATION_PRICE]" id="webpay-coming-price"/>
+    <input type="hidden" name="wsb_invoice_item_name[]" value="[OPERATION_TITLE]"/>
+    <input type="hidden" name="wsb_invoice_item_quantity[]" value="1"/>
+
+    <!-- BEGIN form_field -->
+    <input type="hidden" name="[NAME]" value="[VALUE]"/>
+    <!-- END form_field -->
+
+    <input type="hidden" name="wsb_email" value="[EMAIL]"/>
+    <input type="hidden" name="wsb_total" value=""/>
+    <input type="hidden" name="wsb_seed" value=""/>
+    <input type="hidden" name="wsb_order_num" value=""/>
+    <input type="hidden" name="wsb_signature" value=""/>
+
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Стоимость</label>
+        <div class="col-sm-10">
+            <div class="form-control-static" id="total-price-container" data-currency="[CURRENCY]">
+                <!-- BEGIN combo_price -->
+                <ul>
+                    <li>Мой баланс: <b>[BALANCE_PRICE]</b> [CURRENCY]</li>
+                    <li>[PLUGIN_TITLE]: <b>[PLUGIN_PRICE]</b> [CURRENCY]</li>
+                </ul>
+                <p id="total-price">Итого: <b>[TOTAL_COMMAFY]</b> [CURRENCY]</p>
+                <!-- END combo_price -->
+
+                <!-- BEGIN one_price -->
+                [TOTAL_COMMAFY] [CURRENCY]
+                <!-- END one_price -->
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="button" class="btn btn-default"
+                    onclick="window.history.back()">Назад</button>
+            <button type="submit" class="btn btn-primary">Далее</button>
+        </div>
+    </div>
+</form>

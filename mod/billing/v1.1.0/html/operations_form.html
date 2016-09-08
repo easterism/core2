@@ -1,0 +1,27 @@
+<form id="operations-form" class="form-horizontal"
+      onsubmit="load('index.php?module=billing&tab_billing=1&operation=' + this.operation.value);return false;">
+
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label text-left billing-operations-label">Вид операции</label>
+        <div class="col-sm-10">
+            <!-- BEGIN operation -->
+            <div class="radio">
+                <label>
+                    <input type="radio" value="[NAME]" name="operation" onclick="$('#btn-submit').removeAttr('disabled')">
+                    [TITLE]
+                    <!-- BEGIN price -->
+                    <small>([PRICE] [CURRENCY])</small>
+                    <!-- END price -->
+                </label>
+            </div>
+            <!-- END operation -->
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10 billing-operations-offset">
+            <button type="submit" class="btn btn-primary button" disabled="disabled" id="btn-submit">Далее</button>
+        </div>
+    </div>
+</form>
