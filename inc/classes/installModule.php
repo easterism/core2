@@ -4,7 +4,7 @@ require_once(DOC_ROOT . "core2/inc/classes/class.list.php");
 /**
  * Class InstallModule
  */
-class InstallModule extends Db {
+class InstallModule {
 
     /**
      * путь для установки модуля
@@ -78,15 +78,6 @@ class InstallModule extends Db {
      */
     private $module_is_off;
 
-
-    /**
-     * содержимое conf.ini
-     *
-     * @var object
-     */
-    protected $config;
-
-
     /**
      * массив с сообщениями
      *
@@ -111,24 +102,14 @@ class InstallModule extends Db {
     private $deleteFilesInfo = array();
 
 
-    /**
-     * свое подключение к ДБ для отображения ошибок
-     *
-     */
-    public $db;
+    private $config_core;
 
 
     /**
      *
      */
-    function __construct() {
-        parent::__construct();
+    function __construct(Zend_Db_Adapter_Pdo_Mysql $db) {
 
-        //делаем свое подключение к БД и включаем отображение исключений
-        $db = Zend_Db::factory($this->config->database);
-        Zend_Db_Table::setDefaultAdapter($db);
-        $db->getConnection();
-        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
         $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         $this->db = $db;
@@ -887,7 +868,7 @@ class InstallModule extends Db {
      */
     public function printNotices($tab = false){
         $html = "";
-        foreach ($this->noticeMsg as $group=>$msges) {
+        foreach ($this->noticeMsg as $group => $msges) {
             if (!empty($group)) $html .= "<h3>{$group}</h3>";
             foreach ($msges as $msg) {
                 $html .= $msg;
@@ -895,7 +876,7 @@ class InstallModule extends Db {
         }
         $this->noticeMsg = array();
         if ($tab) {
-            $html .= "<br><input type=\"button\" class=\"button\" value=\"Вернуться к списку модулей\" onclick=\"load('index.php?module=admin&action=modules&loc=core&tab_mod={$tab}');\">";
+            $html .= "<br><input type=\"button\" class=\"button\" value=\"Вернуться к списку модулей\" onclick=\"load('index.php?module=admin&action=modules&tab_mod={$tab}');\">";
         }
         return $html;
     }
@@ -1184,7 +1165,6 @@ class InstallModule extends Db {
     private function prepareToInstall() {
 
         //распаковываем архив
-        $this->config 	= Zend_Registry::getInstance()->get('config');
         $this->tempDir  = $this->config->temp . "/tmp_" . uniqid();
         $this->make_zip($this->mData['data']);
         $this->extractZip($this->tempDir);
@@ -1328,8 +1308,14 @@ class InstallModule extends Db {
             if (!empty($curl['error'])) {
                 throw new Exception("CURL - {$curl['error']}");
             } else {
-                $out = json_decode($curl['answer']);
-                throw new Exception("Ответ репозитория - {$out->message}");
+                if (isset($curl['answer'])) {
+                    $out = json_decode($curl['answer']);
+                    $message = isset($out->message) ? $out->message : '';
+                } else {
+                    $message = '';
+                }
+
+                throw new Exception("Ответ репозитория - {$message}");
             }
         }
 
@@ -1346,7 +1332,7 @@ class InstallModule extends Db {
      * @throws  Exception
      */
     public function getModsListFromRepo($repo_url) {
-        //проверяем есть ли ключь к репозиторию, если нет то получаем
+        //проверяем есть ли ключ к репозиторию, если нет то получаем
         $repo_url = trim($repo_url);
         if (substr_count($repo_url, "repo?apikey=") == 0) {
             $api_key = $this->getRepoKey($repo_url);
@@ -1363,7 +1349,7 @@ class InstallModule extends Db {
 
 
     /**
-     * Меняем у вебсервиса регистрационный ключь на пользовательский чтобы получить доступ к репозиторию
+     * Меняем у вебсервиса регистрационный ключ на пользовательский чтобы получить доступ к репозиторию
      *
      * @param   string      $repo_url   Подготовленный URL для запроса к репозиторию
      *

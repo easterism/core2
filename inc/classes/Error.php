@@ -19,6 +19,7 @@ class Error {
 			if ($code == 13) {//ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
 			} else {
+                self::setHttpHeader($code);
 				echo $msg;
 			}
 		}
@@ -57,10 +58,9 @@ class Error {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
 		} elseif ($message == '404') {
-            header("HTTP/1.1 404 Page not found");
-			self::Exception('Нет такой страницы', $code);
+			self::Exception('Нет такой страницы', 404);
 		} elseif ($message == 'expired') {
-			header("HTTP/1.1 403 Forbidden");
+            self::setHttpHeader(403);
 			die();
 		}
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
@@ -70,11 +70,11 @@ class Error {
 			if ($cnf->debug->firephp) {
 				Tool::fb($str);
 			} else {
-                self::Exception("<PRE>{$str}</PRE>", $code);
+                self::Exception("<PRE>{$str}</PRE>", 500);
 			}
 		} else {
 			if (substr($message, 0, 8) == 'SQLSTATE') $message = 'Ошибка базы данных'; //TODO вести журнал
-            self::Exception($message, $code);
+            self::Exception($message, 500);
 		}
 	}
 
@@ -99,7 +99,7 @@ class Error {
 				$message = "Ошибка базы данных";
 			}
 		}
-		self::Exception($message, $code);
+		self::Exception($message, 500);
 
 	}
 
@@ -129,19 +129,7 @@ class Error {
      * @return string|void
      */
 	public static function catchJsonException($out, $code = 0) {
-		if ($code == 400) {
-			header("HTTP/1.1 400 Bad Request");
-
-		} elseif ($code == 403) {
-			header("HTTP/1.1 403 Forbidden");
-
-		} elseif ($code == 500) {
-			header("HTTP/1.1 500 Internal Server Error");
-
-		} elseif ($code == 503) {
-			header("HTTP/1.1 503 Service Unavailable");
-
-		}
+		self::setHttpHeader($code);
 		header('Content-type: application/json; charset="utf-8"');
 		return self::Exception(json_encode($out), $code);
 	}
@@ -150,5 +138,25 @@ class Error {
 		$res->alert($e->getMessage());
 		return $res;
 	}
+
+    /**
+     * Устанавливает заголовок ответа для ошибок
+     * @param $http_code
+     */
+    public static function setHttpHeader($http_code) {
+        if ($http_code == 400) {
+            header("HTTP/1.1 400 Bad Request");
+
+        } elseif ($http_code == 403) {
+            header("HTTP/1.1 403 Forbidden");
+
+        } elseif ($http_code == 500) {
+            header("HTTP/1.1 500 Internal Server Error");
+
+        } elseif ($http_code == 503) {
+            header("HTTP/1.1 503 Service Unavailable");
+
+        }
+    }
 	
 }

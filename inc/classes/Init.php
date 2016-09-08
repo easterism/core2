@@ -75,7 +75,7 @@
     } catch (Zend_Config_Exception $e) {
         Error::Exception($e->getMessage());
     }
-    
+
     // отладка приложения
     if ($config->debug->on) {
         ini_set('display_errors', 1);
@@ -161,8 +161,7 @@
 			parent::__construct();
 
 			if (empty($_SERVER['HTTPS'])) {
-				$tz = $this->config->system->https;
-				if (!empty($tz)) {
+				if (isset($this->config->system) && ! empty($this->config->system->https)) {
 					header('Location: https://' . $_SERVER['SERVER_NAME']);
 				}
 			}
@@ -250,6 +249,7 @@
             }
         }
 
+
         /**
          * The main dispatcher
          *
@@ -333,6 +333,34 @@
 
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
+            }
+
+            // Billing
+            if ($this->isModuleActive('billing') &&
+                (empty($_GET['module']) ||
+                $_GET['module'] != 'billing' ||
+                empty($_POST['system_name']) ||
+                empty($_POST['type_operation']))
+            ) {
+                $this->setContext('billing');
+
+                $billing_location  = $this->getModuleLocation('billing');
+                $billing_page_path = $billing_location . '/classes/Billing_Disable.php';
+
+                if ( ! file_exists($billing_page_path)) {
+                    throw new Exception("File '{$billing_page_path}' does not exists");
+                }
+
+                require_once($billing_page_path);
+
+                if ( ! class_exists('Billing_Disable')) {
+                    throw new Exception("Class Billing_Disable does not exists");
+                }
+
+                $billing_disable = new Billing_Disable();
+                if ($billing_disable->isDisable()) {
+                    return $billing_disable->getDisablePage();
+                }
             }
 
             // Парсим маршрут
@@ -580,7 +608,6 @@
             if ($this->auth->MOBILE) { //если core2m
                 return $this->getMenuMobile();
             }
-
             require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
             $xajax = new xajax();
             //$xajax->configure("debug", true);
@@ -599,12 +626,15 @@
                 $tpl2 = new Templater2("core2/html/" . THEME . "/menu.tpl");
             }
             $tpl->assign('{system_name}', $this->getSystemName());
+            if (file_exists(DOC_ROOT . "favicon.png")) {
+                $tpl->touchBlock('favicon');
+            }
 
             $tpl2->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
             $tpl2->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
             $tpl2->assign('<!--CURRENT_USER_FN-->',    htmlspecialchars($this->auth->FN));
             $tpl2->assign('<!--CURRENT_USER_LN-->',    htmlspecialchars($this->auth->LN));
-            $tpl2->assign('[GRAVATAR_URL]',            "http://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
+            $tpl2->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
 
 
             $modtpl = $tpl2->getBlock('modules');
@@ -613,6 +643,26 @@
             foreach ($mods as $data) {
                 if (!empty($data['sm_key'])) continue;
                 $module_id = $data['module_id'];
+                if ($module_id != 'admin') {
+                    $location      = $this->getModuleLocation($module_id); //получение расположения модуля
+                    $modController = "Mod" . ucfirst($module_id) . "Controller";
+                    $file_path     = $location . "/" . $modController . ".php";
+                    if (file_exists($file_path)) {
+                        ob_start();
+                        require_once $file_path;
+                        if (class_exists($modController)) { // подключаем класс модуля
+                            $this->setContext($module_id);
+                            $modController = new $modController();
+                            if (method_exists($modController, 'topJs')) {
+                                if ($modEvent = $modController->topJs()) {
+                                    $js += $modEvent;
+                                }
+                            }
+                        }
+                        ob_clean();
+                    }
+                }
+                if ($data['visible'] !== 'Y') continue;
 
                 if ($data['isset_home_page'] == 'N') {
                     $first_action = 'index';
@@ -634,29 +684,13 @@
                     array($module_id, $data['m_name'], $module_action, $url),
                     $modtpl
                 );
-                if ($module_id == 'admin') continue;
-                $location      = $this->getModuleLocation($module_id); //получение расположения модуля
-                $modController = "Mod" . ucfirst($module_id) . "Controller";
-                $file_path     = $location . "/" . $modController . ".php";
-                if (file_exists($file_path)) {
-                    ob_start();
-                    require_once $file_path;
-                    if (class_exists($modController)) { // подключаем класс модуля
-                        $this->setContext($module_id);
-                        $modController = new $modController();
-                        if (method_exists($modController, 'topJs')) {
-                            if ($modEvent = $modController->topJs()) {
-                                $js += $modEvent;
-                            }
-                        }
-                    }
-                    ob_clean();
-                }
+
             }
 
             $modtpl = $tpl2->getBlock('submodules');
             $html2 = "";
             foreach ($mods as $data) {
+                if ($data['visible'] !== 'Y') continue;
                 if (!empty($data['sm_key'])) {
                     $url = "index.php?module=" . $data['module_id'] . "&action=" . $data['sm_key'];
                     $html2 .= str_replace(array('[MODULE_ID]', '[SUBMODULE_ID]', '[SUBMODULE_NAME]', '[SUBMODULE_URL]'),
@@ -710,6 +744,7 @@
                     'm_id'            => $m_id,
                     'm_name'          => $module['m_name'],
                     'module_id'       => $module['module_id'],
+                    'visible'       => $module['visible'],
                     'isset_home_page' => empty($module['isset_home_page']) ? 'Y' : $module['isset_home_page']
                 );
                 foreach ($data as $submodule) {
@@ -718,7 +753,7 @@
                 }
             }
             if ($this->auth->ADMIN || $this->auth->NAME == 'root') {
-                $tmp = array('m_id' => -1, 'm_name' => $this->translate->tr('Админ'), 'module_id' => 'admin', 'isset_home_page' => 'Y');
+                $tmp = array('m_id' => -1, 'm_name' => $this->translate->tr('Админ'), 'module_id' => 'admin', 'isset_home_page' => 'Y', 'visible' => 'Y');
                 $mods[] = $tmp;
                 $mods[] = array_merge($tmp, array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'sm_key' => 'modules',    'loc' => 'core'));
                 $mods[] = array_merge($tmp, array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 'sm_key' => 'settings',   'loc' => 'core'));
@@ -831,7 +866,6 @@
          * Основной роутер
          */
         private function routeParse() {
-
             $temp  = explode("/", dirname($_SERVER['SCRIPT_NAME']));
             $temp2 = explode("/", $_SERVER['REQUEST_URI']);
 
@@ -956,7 +990,7 @@
             }
             $modsList = array('system_name' => $this->getSystemName(),
                               'login'       => $this->auth->NAME,
-                              'avatar'      => "http://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                              'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
                               'modules'     => $modsList);
             return json_encode($modsList);
         }

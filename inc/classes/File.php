@@ -202,7 +202,7 @@
                 $file->id_hash 		= $value['id'] . $value['hash'] . '.' . ($type2 == 'jpeg' ? 'jpg' : $type2);
                 $res[$key] 			= $file;
             }
-            header('Content-type: application/json');
+
             echo json_encode(array('files' => $res));
         }
     }

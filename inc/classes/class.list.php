@@ -47,11 +47,6 @@ class listTable extends initList {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->search_table_id 	= "search_" . $name;
-
-		$mask_date = $this->getSetting('mask_date');
-		if ($mask_date) {
-			$this->date_mask = $mask_date;
-		}
 	}
 	
 	public function button($value, $img = "", $onclick = "", $style = "", $type = 'button') {
@@ -240,6 +235,18 @@ class listTable extends initList {
 					} else {
 						if ($next['type']) {
 							if ($next['type'] == 'date') {
+                                try {
+                                    if ($search_value[0]) {
+                                        $dt = new DateTime($search_value[0]);
+                                        $search_value[0] = $dt->format("Y-m-d");
+                                    }
+                                    if ($search_value[1]) {
+                                        $dt = new DateTime($search_value[1]);
+                                        $search_value[1] = $dt->format("Y-m-d");
+                                    }
+                                } catch (Exception $e) {
+                                    $this->error = $e->getMessage();
+                                }
 								if ($search_value[0] && !$search_value[1]) {
 									$search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') >= ?";
 									$questions[] = $search_value[0];
@@ -567,32 +574,13 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'date') {
-					$HTML = "<div>";
-					$dd = '';
-					$mm = '';
-					$yy = '';
-
-					for ($d = 0; $d <= 1; $d++) {
-						//$next[$d] = str_replace("--", "", $next[$d]);
-						if ($next) {
-							$dd = substr($next[$d], 8, 2);
-							$mm = substr($next[$d], 5, 2);
-							$yy = substr($next[$d], 0, 4);
-						}
-						$prefix = $searchFieldId . $d;
-						$day	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_day" value="' . $dd . '" />';
-						$month 	= '<input class="input" type="text" size="1" maxlength="2" autocomplete="OFF" id="' . $prefix . '_month" value="' . $mm . '" />';
-						$year 	= '<input class="input" type="text" size="3" maxlength="4" autocomplete="OFF" id="' . $prefix . '_year" value="' . $yy . '" />';
-						$insert = str_replace("dd", $day, strtolower($this->date_mask));
-						$insert = str_replace("mm", $month, $insert);
-						$insert = str_replace("yyyy", $year, $insert);
-						$insert = str_replace("yy", $year, $insert);
-						$HTML .= "<span class=\"dateFields\">". $insert . "
-								<span><input id=\"date_" . $prefix . "\" type=\"hidden\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[$d]}\"></span>
-								</span>";
-						if ($d == 0) $HTML .= "<span>&nbsp;&nbsp;<>&nbsp;&nbsp;</span>";
-					}
-					$HTML .= "<span><script>listx.create_date('{$searchFieldId}0');listx.create_date('{$searchFieldId}1');</script>
+					$HTML = "<div>
+					        <span class=\"dateFields\">
+                                <input size=\"10\" id=\"date_{$searchFieldId}0\" class=\"input\" type=\"text\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[0]}\">
+                                <>
+                                <input size=\"10\" id=\"date_{$searchFieldId}1\" class=\"input\" type=\"text\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[1]}\">
+                            </span>
+                            <span><script>listx.create_date('{$searchFieldId}','" . str_replace("yyyy", "yy", strtolower($this->date_mask)) . "');</script>
 							{$value['out']}</span>".
 						"</div>";
 					$tpl->fields->assign('{FIELD_CONTROL}', $HTML);
@@ -726,9 +714,9 @@ class listTable extends initList {
 		} else {
 			$tpl->assign('{ROWSPAN}', 1);
 		}
-		$temp = '';
-		$cell = $tpl->getBlock('cell');
-		$cellnosort = $tpl->getBlock('cellnosort');
+        $temp       = '';
+        $cell       = $tpl->getBlock('cell');
+        $cellnosort = $tpl->getBlock('cellnosort');
 		foreach ($this->table_column[$this->main_table_id] as $key => $value) {
 			if (in_array($key, $columnsToReplace)) continue;
 			if ($this->filterColumn && ! empty($this->sessData['column']) && !in_array($key + 1, $this->sessData['column'])) continue;
