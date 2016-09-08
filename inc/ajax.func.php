@@ -280,51 +280,98 @@ class ajaxFunc extends Common {
 
 	/**
 	 * Сохранение файлов их XFILES
-	 * 
-	 * @throws Exception
-	 * @param $table - таблица для сохранения
-	 * @param $last_insert_id
-	 * @param $data
+	 *
+	 * @param string $table - таблица для сохранения
+	 * @param int    $last_insert_id
+	 * @param array  $file_controls
 	 * @return void
+     * @throws Exception
 	 */
-    private function saveFile($table, $last_insert_id, $data) {
-		//echo "<PRE>";print_r($data);echo "</PRE>";die;
-    	$sid 			= Zend_Session::getId();
-    	$upload_dir 	= $this->config->temp . '/' . $sid;
-		$thumb_dir 		= $upload_dir . '/thumbnail';
-    	foreach ($data as $field => $value) {
-			$temp = explode("|", $value);
-			foreach ($temp as $f) {
-				if (!$f) continue;
-				$f = explode("###", $f);
-				$fn = $upload_dir . '/' . $f[0];
-				if (!file_exists($fn)) {
-					throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
-				}
-				$size = filesize($fn);
-				if ($size !== (int)$f[1]) {
-					throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
-				}
-				$content = file_get_contents($fn);
-				$hash = md5_file($fn);
+    private function saveFile($table, $last_insert_id, $file_controls) {
 
-				$fn = $thumb_dir . '/' . $f[0];
-				$thumb = new Zend_Db_Expr('NULL');
-				if (file_exists($fn)) {
-					$thumb = file_get_contents($fn);
+    	$sid        = Zend_Session::getId();
+    	$upload_dir = $this->config->temp . '/' . $sid;
+		$thumb_dir  = $upload_dir . '/thumbnail';
+
+    	foreach ($file_controls as $field => $file_control) {
+
+			$files = explode("|", $file_control['data']);
+
+			foreach ($files as $file) {
+				if ( ! $file) {
+                    continue;
+                }
+
+				$file      = explode("###", $file);
+				$file_path = $upload_dir . '/' . $file[0];
+
+				if ( ! file_exists($file_path)) {
+					throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $file[0]));
 				}
-				$this->db->insert($table . '_files',
-					array(
-						'refid'    => $last_insert_id,
-						'filename' => $f[0],
-						'filesize' => $size,
-						'hash'     => $hash,
-						'type'     => $f[2],
-						'content'  => $content,
-						'fieldid'  => $field,
-						'thumb'    => $thumb
-					)
-				);
+
+				$size = filesize($file_path);
+				if ($size !== (int)$file[1]) {
+					throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+				}
+				$content = file_get_contents($file_path);
+				$hash    = md5_file($file_path);
+
+				$file_path_thumb = $thumb_dir . '/' . $file[0];
+				$thumb_content   = new Zend_Db_Expr('NULL');
+
+				if (file_exists($file_path_thumb)) {
+					$thumb_content = file_get_contents($file_path_thumb);
+				}
+
+
+				if (( ! empty($file_control['max_width']) || ! empty($file_control['max_height'])) &&
+                    strpos($file[2], 'image/') === 0
+                ) {
+                    $image_info = getimagesize($file_path);
+
+                    if ( ! empty($image_info)) {
+                        $type       = explode("/", $file[2]);
+                        $max_width  = null;
+                        $max_height = null;
+
+                        if ( ! empty($file_control['max_width']) &&
+                            is_numeric($file_control['max_width']) &&
+                            $file_control['max_width'] > 0
+                        ) {
+                            $max_width = $file_control['max_width'];
+                        }
+
+                        if ( ! empty($file_control['max_height']) &&
+                            is_numeric($file_control['max_height']) &&
+                            $file_control['max_height'] > 0
+                        ) {
+                            $max_height = $file_control['max_height'];
+                        }
+
+
+                        if ($max_width && $image_info[0] > $max_width ||
+                            $max_height && $image_info[1] > $max_height
+                        ) {
+                            $image   = \WideImage\WideImage::loadFromString($content);
+                            $content = $image->resize($max_width, $max_height)
+                                ->asString($type[1]);
+
+                            $hash = md5($content);
+                            $size = strlen($content);
+                        }
+                    }
+                }
+
+				$this->db->insert($table . '_files', array(
+                    'refid'    => $last_insert_id,
+                    'filename' => $file[0],
+                    'filesize' => $size,
+                    'hash'     => $hash,
+                    'type'     => $file[2],
+                    'content'  => $content,
+                    'fieldid'  => $field,
+                    'thumb'    => $thumb_content
+                ));
 			}
 		}
     }
@@ -361,8 +408,18 @@ class ajaxFunc extends Common {
 					$fileFlagDel[substr($key, 9)] = $value;
 					continue;
 				}
-				if (substr($key, 0, 6) == 'files|') {
-					$fileFlag[substr($key, 6)] = $value;
+				if (strpos($key, 'files|') === 0) {
+                    $field_id = substr($key, 6);
+					$fileFlag[$field_id] = array(
+                        'data' => $value
+                    );
+
+                    if (isset($order_fields[$field_id.'|maxWidth'])) {
+                        $fileFlag[$field_id]['max_width'] = $order_fields[$field_id.'|maxWidth'];
+                    }
+                    if (isset($order_fields[$field_id.'|maxHeight'])) {
+                        $fileFlag[$field_id]['max_height'] = $order_fields[$field_id.'|maxHeight'];
+                    }
 					continue;
 				}
 
@@ -517,5 +574,5 @@ class ajaxFunc extends Common {
 		$this->done($data);
 		return $this->response;
 	}
-	
+
 }

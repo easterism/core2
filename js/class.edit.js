@@ -240,14 +240,16 @@ var edit = {
 		document.getElementById(id).value = '';
 		document.getElementById(id + '_text').value = '';
 	},
-	maskMe: function(id) {
-		$('#' + id).maskMoney({
+	maskMe: function(id, options) {
+		options = $.extend({
 			allowZero: true,
 			thousands: ' ',
 			defaultZero: false,
 			allowNegative: true,
 			precision: 0
-		});
+		}, options);
+
+		$('#' + id).maskMoney(options);
 		$('#' + id).maskMoney('mask');
 	},
     modal2: {

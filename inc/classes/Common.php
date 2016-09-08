@@ -240,7 +240,6 @@ class Common extends Acl {
 	protected function printJs($src, $chachable = false) {
         Tool::printJs($src, $chachable);
 	}
-
 }
 
 

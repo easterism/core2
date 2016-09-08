@@ -76,6 +76,8 @@ function logout() {
 function jsToHead(src) {
 	var s = $('head').children();
 	var h = '';
+	var fromRoot = false;
+	if (src.substr(0, 1) == '/') var fromRoot = true;
 	for (var i = 0; i < s.length; i++) {
 		if (s[i].src) {
 			if (!h) {
@@ -83,6 +85,12 @@ function jsToHead(src) {
 				if (temp[1]) {
 					h = temp[0];
 				}
+			}
+			if (h && fromRoot) {
+				var temp = h.split('://');
+				var pos = temp[1].indexOf('/');
+				h = temp[0] + '://' + temp[1].substr(0, pos) + '/';
+				fromRoot = false;
 			}
 			if (s[i].src == src || s[i].src == h + src.replace(/^\//, '')) {
 				return;
@@ -110,6 +118,7 @@ function toAnchor(id) {
 
 var locData = {"title":{"main":document.title}};
 var loc = ''; //DEPRECATED
+var xhrs = {};
 
 var preloader = {
 	extraLoad : {},
@@ -229,7 +238,6 @@ var load = function (url, data, id, callback) {
 	if (url.indexOf("index.php") == 0) {
 		url = url.substr(10);
 	}
-
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 	if (!data && h != url && url.indexOf('&__') < 0) {
@@ -305,10 +313,26 @@ var load = function (url, data, id, callback) {
 		locData['data'] = data;
         locData['loc'] = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
-        if (locData.data) {
+		$("#pdfiframe").remove();
+		if (xhrs[locData.id]) xhrs[locData.id].abort();
+		if (locData.data) {
+			//$(locData.id).load('index.php' + url, callback);
 			$(locData.id).load('index.php' + url, locData.data, callback);
+			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 		} else {
-			$(locData.id).load('index.php' + url, callback);
+			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
+				.done(function (n) {
+					$(locData.id).html(n);
+					preloader.hide();
+				}).fail(function (a,b,t)
+				{
+					if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+					else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
+					else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
+					else if (a.status == 403) document.location.reload();
+					else alert("Произошла ошибка: " + a.statusText);
+					preloader.hide();
+				});
 		}
 	}
 };
@@ -316,7 +340,8 @@ var load = function (url, data, id, callback) {
 var loadPDF = function (url) {
 	preloader.show();
     $("#main_body").height($("body").height() - ($("#menuContainer").height() + 15));
-	$("#main_body").html('<iframe frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
+	$("#main_body").html('<iframe id="pdfiframe" frameborder="0" width="100%" height="100%"></iframe>');
+	$("iframe").attr('src', url);
 	$("iframe").load( function() {
 		preloader.hide();
 	});
@@ -412,37 +437,3 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item){
      .append( "<a>" + t + "</a>" )
      .appendTo( ul );
 };
-
-/*
-
-(function ($){
-  var check=false, isRelative=true;
-
-  $.elementFromPoint = function(x,y)
-  {
-    if(!document.elementFromPoint) return null;
-
-    if(!check)
-    {
-      var sl;
-      if((sl = $(document).scrollTop()) >0)
-      {
-       isRelative = (document.elementFromPoint(0, sl + $(window).height() -1) == null);
-      }
-      else if((sl = $(document).scrollLeft()) >0)
-      {
-       isRelative = (document.elementFromPoint(sl + $(window).width() -1, 0) == null);
-      }
-      check = (sl>0);
-    }
-
-    if(!isRelative)
-    {
-      x += $(document).scrollLeft();
-      y += $(document).scrollTop();
-    }
-
-    return document.elementFromPoint(x,y);
-  }
-
-})(jQuery);*/

@@ -162,7 +162,7 @@ class Email {
 
     /**
      * Вставка\получение важности письма
-     * @param string $importance
+     * @param string $importance  HIGH, NORMAL, LOW
      * @return $this|string
      */
     public function importance($importance = null) {
@@ -192,8 +192,35 @@ class Email {
                 $server = isset($config->system) && isset($config->system->host)
                     ? $config->system->host
                     : $_SERVER['SERVER_NAME'];
-                $this->mail_data['from'] = 'noreply@' . (substr_count($server, ".") > 0 ? $server : $server . '.com');
+                $server_name = isset($config->system) && isset($config->system->name)
+                    ? $config->system->name
+                    : $server;
+
+                $this->mail_data['from'] = array(
+                    'noreply@' . (substr_count($server, ".") > 0 ? $server : $server . '.com'),
+                    $server_name
+                );
+
+            } elseif (is_string($this->mail_data['from'])) {
+                $from = explode('<', $this->mail_data['from']);
+                if ( ! empty($from[1])) {
+                    $this->mail_data['from'] = array(
+                        trim($from[1], '<> '),
+                        trim($from[0])
+                    );
+                }
             }
+
+            if (is_string($this->mail_data['to'])) {
+                $to = explode('<', $this->mail_data['to']);
+                if ( ! empty($to[1])) {
+                    $this->mail_data['to'] = array(
+                        trim($to[1], '<> '),
+                        trim($to[0])
+                    );
+                }
+            }
+
 
             if ($db->isModuleActive('queue')) {
                 $version = $db->getModuleVersion('queue');

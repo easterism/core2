@@ -80,30 +80,34 @@ var listx = {
 	},
 	gMonths : new Array("","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"),
 	loc : {},
-	create_date:function (cal) {
-		var t = $('#date_' + cal).val().substr(10);
-		var opt = {
-			firstDay: 1,
-			currentText: 'Сегодня',
-			dateFormat: 'yy-mm-dd',
-			defaultDate: t,
-			buttonImage: 'core2/html/' + coreTheme + '/img/calendar.png',
-			buttonImageOnly: true,
-			showOn: "button",
-			onSelect: function (dateText, inst) {
-				$('#date_' + cal).val(dateText + t);
-				$('#' + cal + '_day').val(dateText.substr(8, 2));
-				$('#' + cal + '_month').val(dateText.substr(5, 2));
-				$('#' + cal + '_year').val(dateText.substr(0, 4));
-				$('#cal' + cal).datepicker('destroy');
-			},
-			beforeShow: function (event, ui) {
-				setTimeout(function () {
-					ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-100px'});
-				}, 5);
-			}
+	create_date : function (cal, dateFormat) {
+			var from = $("#date_" + cal + "0")
+					.datepicker({
+						dateFormat: dateFormat,
+						changeMonth: true,
+						numberOfMonths: 1
+					})
+					.on( "change", function() {
+						to.datepicker( "option", "minDate", listx.getDate( this, dateFormat ) );
+					}),
+				to = $("#date_" + cal  + "1").datepicker({
+						dateFormat: dateFormat,
+						defaultDate: "+1w",
+						changeMonth: true,
+						numberOfMonths: 2
+					})
+					.on( "change", function() {
+						from.datepicker( "option", "maxDate", listx.getDate( this, dateFormat ) );
+					});
+	},
+	getDate : function ( element, dateFormat ) {
+		var date;
+		try {
+			date = $.datepicker.parseDate( dateFormat, element.value );
+		} catch( error ) {
+			date = null;
 		}
-		$('#date_' + cal).datepicker(opt);
+		return date;
 	},
 	modalClose: function(id, caption) {
 		parent.xxxx = {id:id, name:caption};

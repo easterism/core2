@@ -29,7 +29,10 @@ class initList extends Acl {
 										);
 	public function __construct() {
 		parent::__construct();
-        
+        $mask_date = $this->getSetting('mask_date');
+        if ($mask_date) {
+            $this->date_mask = $mask_date;
+        }
 	}
 }
 
@@ -86,7 +89,10 @@ class initEdit extends Acl {
 										);
 	public function __construct() {
 		parent::__construct();
-        
+        $mask_date = $this->getSetting('mask_date');
+        if ($mask_date) {
+            $this->date_mask = $mask_date;
+        }
 	}
 }
 

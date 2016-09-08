@@ -1,49 +1,82 @@
 <?
-require_once("class.ini.php");
+require_once "class.ini.php";
+require_once "Templater.php";
+
+
+/**
+ * Class tabs
+ */
 class tabs extends initTabs {
-	public $activeTab	= 1;
-	protected $tabs_id	= '';
-	protected $tabs		= array();
-	protected $help 	= array();
-	
-	protected $class_tabActiveDIV			= "tabActive";
-	protected $class_tabInactiveDIV			= "tabInactive";
-	
-	protected $class_tabActiveTD			= "tabActiveTD";
-	protected $class_tabInactiveTD			= "tabInactiveTD";
-	protected $class_tabsTABLE				= "";
-	
+
+	public $activeTab = 1;
+
+	protected $tabs_id	            = '';
+	protected $tabs		            = array();
+	protected $help 	            = array();
+	protected $class_tabActiveDIV   = "tabActive";
+	protected $class_tabInactiveDIV = "tabInactive";
+	protected $class_tabActiveTD    = "tabActiveTD";
+	protected $class_tabInactiveTD  = "tabInactiveTD";
+	protected $class_tabsTABLE	    = "";
+
+
+	/**
+	 * tabs constructor.
+	 * @param string $name
+	 */
 	public function tabs($name = '') {
 		if (empty($name)) {
 			$name = time();
 		}
-		$this->tabs_id 	= "tab_" . $name;
-		$this->activeTab = !empty($_GET[$this->tabs_id]) ? $_GET[$this->tabs_id] : 1;
-	}
-	
-	public function addTab($caption, $location, $width = "", $status = 'enabled') {
-		$this->tabs[$this->tabs_id][] = array('caption' => $caption, 'location' => $location, 'width' => $width, 'status' => $status);
+		$this->tabs_id   = "tab_" . $name;
+		$this->activeTab = ! empty($_GET[$this->tabs_id]) ? $_GET[$this->tabs_id] : 1;
 	}
 
+
+	/**
+	 * @param string   $caption
+	 * @param string   $location
+	 * @param int|null $width
+	 * @param string   $status
+	 */
+	public function addTab($caption, $location, $width = null, $status = 'enabled') {
+		$this->tabs[$this->tabs_id][] = array(
+            'caption'  => $caption,
+            'location' => $location,
+            'width'    => $width,
+            'status'   => $status
+        );
+	}
+
+
+	/**
+	 * @return string
+	 */
 	public function getId() {
 		return $this->tabs_id;
 	}
-	
+
+
 	/**
 	 * Add a help note to the container
-	 * @param string $txt
+	 * @param string $str
+	 * @param int    $tab
 	 */
-	public function addHelp($txt, $tab = 1) {
-		$this->help[$tab] = $txt;
+	public function addHelp($str, $tab = 1) {
+		$this->help[$tab] = $str;
 	}
-	
+
+
+	/**
+	 * @param string $caption
+	 */
 	public function beginContainer($caption) {
 		$HTML = "<table class=\"containerTable\">
 			<tr>
 				<td class=\"containerHeaderTD\">";
-		$tpl = new Templater("core2/html/" . THEME . "/tab/caption.tpl");
+        $tpl = new Templater("core2/html/" . THEME . "/tab/caption.tpl");
 		$tpl->assign('[caption]', $caption);
-		if (!empty($this->help[$this->tabs_id])) {
+		if ( ! empty($this->help[$this->tabs_id])) {
 			$tpl->touchBlock('help');
 			$tpl->assign('[TAB_ID]', $this->tabs_id);
 			$tpl->assign('[HELP]', $this->help[$this->tabs_id]);
@@ -57,7 +90,7 @@ class tabs extends initTabs {
 								"<tr>".
 									"<td class=\"tabsLeftSideTD\">&nbsp;</td>";
 			$tabid = 1;
-			foreach ($this->tabs[$this->tabs_id] as $value) {
+            foreach ($this->tabs[$this->tabs_id] as $value) {
 				if ($tabid == $this->activeTab) {
 					$style = $this->class_tabActiveDIV;
 					$styletd = $this->class_tabActiveTD;
@@ -86,12 +119,14 @@ class tabs extends initTabs {
 			$HTML .= "<tr valign=\"top\"><td class=\"tabInactiveTD\"></td></tr>";
 		}
 		$HTML .=	"<tr><td class=\"containerTD\">";
-		//ob_start();
 		echo $HTML;
 	}
-	
+
+
+	/**
+	 *
+	 */
 	function endContainer() {
 		echo "</td></tr></table>";
-		//ob_end_flush();
 	}
 }

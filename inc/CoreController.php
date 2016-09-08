@@ -6,6 +6,7 @@ require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/installModule.php';
 require_once 'classes/Alert.php';
+require_once 'classes/Notice.php';
 
 /**
  * Class CoreController
@@ -47,27 +48,25 @@ class CoreController extends Common {
      */
 	public function action_index() {
         if (!$this->auth->ADMIN) throw new Exception(911);
+        $notice = new \Core2\Notice();
 
-        $install    = new InstallModule();
+
 
         $tab = new tabs('mod');
         $tab->beginContainer($this->translate->tr("События аудита"));
         try {
-            $changedMods = $this->checkModulesChanges($install);
+            $changedMods = $this->checkModulesChanges($notice);
             if (empty($changedMods)) {
-                echo '<h3>' . $this->translate->tr("Система работает в штатном режиме.") . '</h3>';
+                $notice->info($this->translate->tr("Система работает в штатном режиме."));
             } else {
-                echo '<h3 style="color:red;">' . $this->translate->tr("Обнаружены изменения в файлах модулей:") . ' ' . implode(", ", $changedMods) . '</h3>';
+                $notice->danger($this->translate->tr("Обнаружены изменения в файлах модулей:"), implode(", ", $changedMods), true);
             }
         } catch (Exception $e) {
-            $install->addNotice($this->translate->tr("Аудит файлов модулей"), $e->getMessage(), $this->translate->tr("Ошибка"), "danger");
+            $notice->danger($this->translate->tr("Ошибка"), $e->getMessage());
         }
 
-        $html = $install->printNotices();
-        if (!empty($html)) {
-            echo "<hr>";
-        }
-        echo $html;
+        $notice->draw();
+        $notice->draw();
         $tab->endContainer();
 	}
 
@@ -130,7 +129,8 @@ class CoreController extends Common {
 		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
-		} else {
+		}
+		else {
 			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
 				$errorNamespace->ERROR = $this->translate->tr("Ошибка авторизации!");
                 header("HTTP/1.1 400 Bad Request");
@@ -776,6 +776,7 @@ class CoreController extends Common {
 			$f->handleFileTemp($id);
 		}
 		elseif (substr($context, 0, 6) == 'field_') {
+            header('Content-type: application/json');
 			$f->handleFileList($table, $id, substr($context, 6));
 			return true;
 		}
@@ -924,11 +925,11 @@ class CoreController extends Common {
     /**
      * Проверяем файлы модулей на изменения
      *
-     * @param $install
+     * @param $notice
      *
      * @return array
      */
-    public function checkModulesChanges($install) {
+    private function checkModulesChanges(Core2\Notice $notice) {
         $server = $this->config->system->host;
         $admin_email = $this->getSetting('admin_email');
 
@@ -946,14 +947,25 @@ class CoreController extends Common {
                 );
                 $id = $this->db->lastInsertId("core_settings");
             }
-            $install->addNotice("", "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", "Отправка уведомлений отключена", "info2");
+            $notice->info($this->translate->tr("Отправка уведомлений отключена"), "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений");
         }
         if (!$server) {
-            $install->addNotice("", $this->translate->tr("Не задан параметр 'host' в conf.ini"), $this->translate->tr("Отправка уведомлений отключена"), "info2");
+            $notice->info($this->translate->tr("Отправка уведомлений отключена"), $this->translate->tr("Не задан параметр 'host' в conf.ini"));
         }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
+
+        //делаем свое подключение к БД и включаем отображение исключений
+        if (!$this->moduleConfig->database || $this->moduleConfig->database->admin->username) {
+            $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
+        } else {
+            $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
+        }
+        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+
+        $install    = new InstallModule($db);
+
         foreach ($data as $val) {
             $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));
             $dbhash     = $install->getFilesHashFromDb($val['module_id']);
@@ -993,7 +1005,7 @@ class CoreController extends Common {
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
-                            $install->addNotice("", $answer['error'], $this->translate->tr("Уведомление не отправлено"), "danger");
+                            $notice->danger($this->translate->tr("Уведомление не отправлено"), $answer['error']);
                         }
                     }
                 }

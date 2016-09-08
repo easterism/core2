@@ -20,9 +20,14 @@ class editTable extends initEdit {
 	private $main_table_id			= "";
 	private $beforeSaveArr			= array();
 	private $isSaved 				= false;
-	private $sess_form_fields		= array();
 	private $scripts		        = array();
+	private $sess_form		        = '';
 
+
+    /**
+     * editTable constructor.
+     * @param string $name
+     */
 	public function __construct($name) {
 		parent::__construct();
 		$this->resource 		= $name;
@@ -34,10 +39,10 @@ class editTable extends initEdit {
 		foreach ($this->types as $acl_type) {
 			$this->acl->$acl_type = $this->checkAcl($this->resource, $acl_type);
 		}
-        $mask_date = $this->getSetting('mask_date');
-        if ($mask_date) {
-            $this->date_mask = $mask_date;
-        }
+
+
+		$this->sess_form = new Zend_Session_Namespace('Form');
+		$this->sess_form->{$this->main_table_id} = array();
 	}
 
 
@@ -46,11 +51,8 @@ class editTable extends initEdit {
      * @return cell|Zend_Db_Adapter_Abstract
      */
 	public function __get($data) {
-		if ($data == 'db') {
-			return parent::__get('db');
-		}
-        if ($data == 'cache') {
-            return parent::__get('cache');
+        if ($data === 'db' || $data === 'cache') {
+            return parent::__get($data);
         }
 		$this->$data = new cell($this->main_table_id);
 		$this->cell[$data] = $this->$data;
@@ -161,7 +163,9 @@ class editTable extends initEdit {
 	 */
 	public function setSessFormField($id, $value)
 	{
-		$this->sess_form_fields[$id]        = $value;
+        $ssi = $this->sess_form->{$this->main_table_id};
+        $ssi[$id] = $value;
+        $this->sess_form->{$this->main_table_id} = $ssi;
 	}
 
 	/**
@@ -309,9 +313,7 @@ class editTable extends initEdit {
 			$order_fields['refid']    = $refid;
 			$order_fields['table']    = $this->table;
 			$order_fields['keyField'] = $keyfield;
-			foreach ($this->sess_form_fields as $k => $v) {
-				$order_fields[$k] = $v;
-			}
+
 			$this->setSessForm($order_fields);
 
 			if ($refid && $this->table) {
@@ -322,13 +324,12 @@ class editTable extends initEdit {
 				$auth = Zend_Registry::get('auth');
 				if (!$check) {
 					$this->db->insert('core_controls', array(
-							'tbl' 		=> $this->table,
-							'keyfield' 	=> $keyfield,
-							'val' 		=> $refid,
-							'lastuser' 	=> $auth->ID,
-							'lastupdate' => $lastupdate
-						)
-					);
+                        'tbl' 		=> $this->table,
+                        'keyfield' 	=> $keyfield,
+                        'val' 		=> $refid,
+                        'lastuser' 	=> $auth->ID,
+                        'lastupdate' => $lastupdate
+                    ));
 				} else {
 					$this->db->query("UPDATE core_controls SET lastupdate=?, lastuser=? WHERE tbl=? AND keyfield=? AND val=?",
 						array($lastupdate, $auth->ID, $this->table, $keyfield, $refid)
@@ -456,8 +457,12 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= Tool::commafy($value['default']);
 							} else {
                                 if (empty($value['default'])) $value['default'] = 0;
+								$options = ! empty($value['in']) && ! empty($value['in']['options']) && is_array($value['in']['options'])
+                                    ? $value['in']['options']
+                                    : array();
+                                $options_encoded = json_encode($options);
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
-                                $controlGroups[$cellId]['html'][$key] .= "<script>edit.maskMe('{$fieldId}');</script>";
+                                $controlGroups[$cellId]['html'][$key] .= "<script>edit.maskMe('{$fieldId}', {$options_encoded});</script>";
 							}
 						}
 						elseif ($value['type'] == 'file') {
@@ -655,15 +660,20 @@ class editTable extends initEdit {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= "*****";
 							} else {
-								$disabled = '';
-								$change = '';
 								if ($value['default']) {
-									$disabled = ' disabled="disabled" ';
-									$change = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="изменить"/>';
+									$disabled     = ' disabled="disabled" ';
+									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="изменить"/>';
+                                    $change_class = '';
+								} else {
+									$disabled     = '';
+									$change       = '';
+									$change_class = 'no-change';
 								}
-								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
-								$controlGroups[$cellId]['html'][$key] .= " повторите <input $disabled class=\"input\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />".
-								$change;
+								$controlGroups[$cellId]['html'][$key] .= "<div class=\"password-control {$change_class}\">";
+								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-1\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
+								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">повторите</span> ";
+								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}";
+								$controlGroups[$cellId]['html'][$key] .= "</div>";
 							}
 						}
 						elseif ($value['type'] == 'textarea') {
@@ -748,6 +758,46 @@ class editTable extends initEdit {
 										$row[1] = $row[1]['value'];
 									}
 									$controlGroups[$cellId]['html'][$key] .= " onclick=\"edit.radioClick(this)\" {$attrs} />{$row[1]}</label>&nbsp;&nbsp;";
+								}
+							}
+							$select++;
+						}
+						elseif ($value['type'] == 'radio2') {
+							$temp = array();
+							if (is_array($this->selectSQL[$select])) {
+								foreach ($this->selectSQL[$select] as $k => $v) {
+									$temp[] = array($k, $v);
+								}
+							} else {
+								if (isset($arr[0])) {
+									$sql = $this->replaceTCOL($arr[0], $this->selectSQL[$select]);
+								} else {
+									$sql = $this->selectSQL[$select];
+								}
+								$data = $this->db->fetchAll($sql);
+								foreach ($data as $values) {
+									$temp[] = array(current($values), end($values));
+								}
+							}
+							//READONLY FORK
+							if ($this->readOnly) {
+								foreach ($temp as $row) {
+									if ($row[0] == $value['default']) {
+										$controlGroups[$cellId]['html'][$key] .= $row[1];
+										break;
+									}
+								}
+							} else {
+								foreach ($temp as $row) {
+									$id = $this->main_table_id . rand();
+									$controlGroups[$cellId]['html'][$key] .= "<div><label><input id=\"$id\" type=\"radio\" value='" . $row[0] . "' name=\"control[$field]\"";
+									if ($row[0] == $value['default']) {
+										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
+									}
+									if (is_array($row[1])) {
+										$row[1] = $row[1]['value'];
+									}
+									$controlGroups[$cellId]['html'][$key] .= " onclick=\"edit.radioClick(this)\" {$attrs} />{$row[1]}</label></div>";
 								}
 							}
 							$select++;
@@ -914,13 +964,19 @@ class editTable extends initEdit {
 								}
                                 $options['maxFileSize'] = Tool::getUploadMaxFileSize();
 								if (is_array($value['in'])) {
-									if (!empty($value['in']['id_hash'])) {
+									if ( ! empty($value['in']['id_hash'])) {
 										$options['id_hash'] = true;
+									}
+                                    if ( ! empty($value['in']['maxWidth']) && is_numeric($value['in']['maxWidth'])) {
+                                        $this->setSessFormField($field . '|maxWidth', $value['in']['maxWidth']);
+                                    }
+									if ( ! empty($value['in']['maxHeight']) && is_numeric($value['in']['maxHeight'])) {
+										$this->setSessFormField($field . '|maxHeight', $value['in']['maxHeight']);
 									}
 									if ( ! empty($value['in']['maxFileSize'])) {
 										$options['maxFileSize'] = $value['in']['maxFileSize'];
 									}
-									if (!empty($value['in']['acceptFileTypes'])) {
+									if ( ! empty($value['in']['acceptFileTypes'])) {
 										$ft = str_replace(",", "|", $value['in']['acceptFileTypes']);
 										$options['acceptFileTypes'] = "_FT_";
 									}
@@ -1040,18 +1096,18 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 			var res = [];
 			for (var k in edit.xfiles['$un']) {
 				res.push(k);
-			};
+			}
 			$('#$fieldId').val(res.join('|'));
 		}).bind('fileuploaddestroy', function (e, data) {
 			var d = data.context.find('.delete').parent();
 			var ds = d.data('service');
 			var di = d.data('id');
 			if (ds) {
-				delete edit.xfiles['$un'][ds]
+				delete edit.xfiles['$un'][ds];
 				var res = [];
 				for (var k in edit.xfiles['$un']) {
 					res.push(k);
-				};
+				}
 				$('#{$fieldId}').val(res.join('|'));
 			}
 			if (di) {
@@ -1347,9 +1403,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 	 */
 	private function setSessForm($data)
 	{
-		$sess_form = new Zend_Session_Namespace('Form');
-		$ssi       = $this->main_table_id;
-		$sess_form->$ssi = $data;
+        foreach ($data as $key => $item) {
+            $this->setSessFormField($key, $item);
+        }
 	}
 
 	/**
