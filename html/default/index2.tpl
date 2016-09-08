@@ -37,7 +37,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="author" content="easter.by@gmail.com" />
     <!--[if IE]>
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
     <![endif]-->
     <link rel="icon" type="image/png" href="favicon.png">
 	<!--[if lte IE 7]>

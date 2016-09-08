@@ -97,17 +97,18 @@ a {color: #337AB7}
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: left;
+    direction: ltr;
 }
 #navbar-top {
     margin-bottom: 0;
     /*margin-top: -50px;*/
     /*position: relative;*/
     /*top: 50px;*/
-    /*-webkit-box-shadow: 0 1px 0px #ddd;*/
-    /*-moz-box-shadow: 0 1px 0px #ddd;*/
-    /*-ms-box-shadow: 0 1px 0px #ddd;*/
-    /*-o-box-shadow: 0 1px 0px #ddd;*/
-    box-shadow: 0 1px 2px rgba(0,0,0,.3);
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.3);
+       -moz-box-shadow: 0 1px 2px rgba(0,0,0,.3);
+        -ms-box-shadow: 0 1px 2px rgba(0,0,0,.3);
+         -o-box-shadow: 0 1px 2px rgba(0,0,0,.3);
+            box-shadow: 0 1px 2px rgba(0,0,0,.3);
 
     position: fixed;
     left: 240px;
@@ -145,6 +146,7 @@ a {color: #337AB7}
 }
 #menu-modules {
     padding: 0;
+    padding-bottom: 40px;
     margin: 0;
     overflow-x: auto;
 }
@@ -250,10 +252,10 @@ a {color: #337AB7}
 }
 .dropdown-settings,
 .dropdown-profile,
-.dropdown-balance,
+.dropdown-billing,
 #module-settings,
 #module-profile,
-#module-balance,
+#module-billing,
 #submodule-profile-messages {
     display: none;
 }
@@ -276,7 +278,7 @@ a {color: #337AB7}
     height: 28px;
     margin-right: 8px;
     margin-bottom: -8px;
-    border: 1px solid #ddd;
+    border: 1px solid transparent;
     overflow: hidden;
     border-radius: 20px;
     position: relative;

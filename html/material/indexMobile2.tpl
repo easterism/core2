@@ -27,9 +27,10 @@
 	<script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead-1.2.9/jquery.floatThead.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/cleave.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/alertify.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>
     <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
@@ -60,8 +61,8 @@
 			if ($('#module-settings')[0]) {
                 $('.dropdown-settings').addClass('show');
             }
-            if ($('#module-balance')[0]) {
-                $('.dropdown-balance').addClass('show');
+            if ($('#module-billing')[0]) {
+                $('.dropdown-billing').addClass('show');
             }
         });
     </script>

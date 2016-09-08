@@ -240,15 +240,26 @@ var edit = {
 		document.getElementById(id).value = '';
 		document.getElementById(id + '_text').value = '';
 	},
-	maskMe: function(id) {
-		$('#' + id).maskMoney({
-			allowZero: true,
-			thousands: ' ',
-			defaultZero: false,
-			allowNegative: true,
-			precision: 0
-		});
-		$('#' + id).maskMoney('mask');
+	maskMe: function(id, options) {
+		//options = $.extend({
+		//	allowZero: true,
+		//	thousands: ' ',
+		//	defaultZero: false,
+		//	allowNegative: true,
+		//	precision: 2
+		//}, options);
+        //
+		//$('#' + id).maskMoney(options);
+		//$('#' + id).maskMoney('mask');
+
+		var options = $.extend({
+			numeral: true,
+			numeralDecimalMark: '.',
+			delimiter: ' ',
+			numeralDecimalScale: 2
+		}, options);
+
+		new Cleave('#' + id, options);
 	},
     modal2: {
         key: '',

@@ -242,7 +242,7 @@ table.sTable tbody tr.pointer {
 	cursor: pointer;
 }
 
-table.sTable tbody tr:hover {
+table.sTable > tbody > tr:hover {
 	background-color: #eeffff;
 }
 
@@ -496,6 +496,7 @@ TAB class table
 	font-size: 13px;
 	background-color: #f5f5f5 !important;
 	background: transparent url(img/list_header_repeat.png) repeat-x;
+	background-size: contain;
 	overflow: hidden;
 }
 .containerHeaderDiv {
@@ -524,7 +525,7 @@ TAB class table
 }
 .tabActive {
 	padding: 3px 7px 3px 7px;
-	height:16px;
+	height:24px;
 	font-weight: bold;
 	cursor:pointer;
 	white-space:nowrap;
@@ -535,10 +536,13 @@ TAB class table
 	border-left:1px solid #CCCCCC;
 	-moz-border-radius-bottomleft:4px;
 	-moz-border-radius-bottomright:4px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
 }
 .tabInactive {
 	padding: 3px 7px 3px 7px;
-	height:15px;
+	height:23px;
 	font-weight: normal;
 	cursor:pointer;
 	white-space:nowrap;
@@ -549,6 +553,9 @@ TAB class table
 	border-left:1px solid #CCCCCC;
 	-moz-border-radius-bottomleft:4px;
 	-moz-border-radius-bottomright:4px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 .hide {display:none}
 .show {display:block}
@@ -803,7 +810,7 @@ table td.homeTD {
 	margin: 0 65px 10px 10px;
 }
 
-/* css for InstallModule class */
+/* css for Notice class */
 .im-msg-red {
     background-color: #f2dede;
     width:96%;
@@ -891,3 +898,217 @@ table td.homeTD {
 	padding: 1px 6px;
 	float: left;
 }
+
+.core-panel {
+    border-collapse: collapse;
+    background-color: #f5fff5 !important;
+    border: 1px solid #CCCCCC;
+    width: 100%;
+    font-size: 12px;
+}
+.core-panel.core-panel-default {border-color: #cbcbcb}
+
+.core-panel > .core-panel-heading {
+    padding: 5px;
+    font-weight: bold;
+    height: 18px;
+    font-size: 13px;
+    background-color: #f5f5f5 !important;
+    background: transparent url(img/list_header_repeat.png) repeat-x;
+    overflow: hidden;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+.core-panel > .core-panel-body {
+	padding: 5px;
+}
+
+.core-panel > .core-panel-body .tab-content > .tab-pane,
+.core-panel > .core-panel-body .pill-content > .pill-pane {display: none}
+
+.core-panel > .core-panel-body .tab-content > .active,
+.core-panel > .core-panel-body .pill-content > .active {display: block}
+
+.core-panel > .core-panel-body > .core-panel-tabs {
+    padding-left: 13px;
+    margin-bottom: 15px;
+    margin-top: -4px;
+    list-style: none;
+}
+.core-panel > .core-panel-body > .core-panel-tabs:after,
+.core-panel > .core-panel-body > .core-panel-tabs:before {
+	display: table;
+	content: " ";
+	clear: both;
+}
+.core-panel > .core-panel-body > .core-panel-tabs > li {
+	position: relative;
+	display: block;
+	float: left;
+	margin-top: -1px;
+	margin-bottom: -1px;
+}
+
+.core-panel > .core-panel-body > .core-panel-tabs > li > a {
+    display: inline-block;
+    padding: 3px 7px 3px 7px;
+    font-weight: normal;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    background: transparent url(img/list_header_repeat.png) repeat-x;
+    border-right: 1px solid #CCCCCC;
+    border-bottom: 1px solid #CCCCCC;
+    border-left: 1px solid #CCCCCC;
+    -moz-border-radius-bottomleft: 4px;
+    -moz-border-radius-bottomright: 4px;
+    height: 15px;
+    color: #1d1d1d;
+    text-decoration: none;
+}
+.core-panel > .core-panel-body > .core-panel-tabs > .active > a,
+.core-panel > .core-panel-body > .core-panel-tabs > .active > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs > .active > a:focus {border-color: transparent #ddd #ddd #ddd}
+
+.core-panel > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs > li.active > a:focus {
+    padding: 3px 7px 3px 7px;
+    height: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    background: none;
+    background-color: #FFFFFF;
+    border-right: 1px solid #CCCCCC;
+    border-bottom: 2px solid #d80043;
+    border-left: 1px solid #CCCCCC;
+}
+.core-panel > .core-panel-body > .core-panel-tabs li.disabled > a {
+	color: #a0a0a0 !important;
+	text-decoration: none;
+	cursor: not-allowed;
+	background-color: transparent;
+}
+
+.ctrl-dpr-controls > *,
+.ctrl-dtp-controls > *,
+.ctrl-dp-controls > * {
+    float: left
+}
+.ctrl-dpr-from-day,
+.ctrl-dpr-from-month,
+.ctrl-dpr-to-day,
+.ctrl-dpr-to-month,
+.ctrl-dtp-day,
+.ctrl-dtp-month,
+.ctrl-dtp-minute,
+.ctrl-dtp-hour,
+.ctrl-dp-day,
+.ctrl-dp-month {
+    height: 16px;
+    width: 24px;
+    padding: 0 4px;
+    margin-right: -1px;
+}
+.ctrl-dpr-from-year,
+.ctrl-dpr-to-year,
+.ctrl-dtp-year,
+.ctrl-dp-year {
+    height: 16px;
+    width: 42px;
+    padding: 0 4px;
+}
+.ctrl-dtp-year {
+    margin-right: -1px;
+}
+.ctrl-dtp-day:focus,
+.ctrl-dtp-month:focus,
+.ctrl-dtp-minute:focus,
+.ctrl-dtp-hour:focus,
+.ctrl-dtp-year:focus,
+.ctrl-dp-day:focus,
+.ctrl-dp-month:focus,
+.ctrl-dp-year:focus {
+    position: relative;
+}
+.add-on,
+.ctrl-add-on,
+.ctrl-dpr-clear,
+.ctrl-dpr-trigger,
+.ctrl-dtp-clear,
+.ctrl-dtp-trigger,
+.ctrl-dp-clear,
+.ctrl-dp-trigger {
+    margin-right: -1px;
+    margin-left: -1px;
+    min-width: 30px;
+    box-sizing: border-box;
+    text-align: center;
+}
+.ctrl-add-on {
+    min-width: 16px;
+    padding: 3px;
+}
+.ctrl-dpr-clear:hover,
+.ctrl-dpr-trigger:hover,
+.ctrl-dtp-clear:hover,
+.ctrl-dtp-trigger:hover,
+.ctrl-dp-clear:hover,
+.ctrl-dp-trigger:hover {
+    cursor: pointer;
+}
+.ctrl-dpr-clear:active,
+.ctrl-dpr-trigger:active,
+.ctrl-dtp-clear:active,
+.ctrl-dtp-trigger:active,
+.ctrl-dp-clear:active,
+.ctrl-dp-trigger:active {
+    background-image: none;
+    outline: 0;
+}
+.ctrl-dpr-container,
+.ctrl-dtp-container,
+.ctrl-dp-container {
+    position: absolute;
+    display: none;
+    z-index: 10;
+}
+.ui-datepicker td.ui-datepicker-week-end .ui-state-default,
+.ui-datepicker td.dp-weekend .ui-state-default,
+.ui-datepicker td.dtp-weekend .ui-state-default,
+.ui-datepicker td.dpr-weekend .ui-state-default,
+.ui-datepicker td.dtpr-weekend .ui-state-default {
+    background: #FFE7C5;
+}
+.ui-datepicker td.ctrl-dp-highlight .ui-state-default,
+.ui-datepicker td.ctrl-dtp-highlight .ui-state-default,
+.ui-datepicker td.ctrl-dpr-highlight .ui-state-default,
+.ui-datepicker td.ctrl-dtpr-highlight .ui-state-default {
+    background: #E7A619;
+    color: #FFF;
+}
+.first {
+	border-bottom-right-radius: 0;
+	border-top-right-radius: 0;
+}
+.middle {border-radius: 0}
+.last {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+.ctrl-dpr input[type=number]::-webkit-outer-spin-button,
+.ctrl-dpr input[type=number]::-webkit-inner-spin-button,
+.ctrl-dtp input[type=number]::-webkit-outer-spin-button,
+.ctrl-dtp input[type=number]::-webkit-inner-spin-button,
+.ctrl-dp input[type=number]::-webkit-outer-spin-button,
+.ctrl-dp input[type=number]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.ctrl-dpr input[type=number],
+.ctrl-dtp input[type=number],
+.ctrl-dp input[type=number] {-moz-appearance:textfield}
+.clearfix {clear: both}

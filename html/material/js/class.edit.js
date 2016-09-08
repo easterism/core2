@@ -91,7 +91,7 @@ var edit = {
 					ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-100px'});
 				}, 5);
 			}
-		}
+		};
 		if (this.ev[cal]) {
 			opt['beforeShowDay'] = function (day) {
 				var s = "";
@@ -144,7 +144,7 @@ var edit = {
                         ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-180px'});
                     }, 5);
                 }
-            }
+            };
             if (this.ev[cal]) {
                 opt['beforeShowDay'] = function (day) {
                     var s = "";
@@ -218,6 +218,9 @@ var edit = {
 		if (obj) {
 			obj.innerHTML = text;
 			obj.style.display = 'block';
+			//for(var i = 0; i < 2; i++) {
+			//	$(obj).fadeTo(100, 0.4).fadeTo(100, 1);
+			//}
 		}
 	},
 	changeButtonSwitch: function(obj) {
@@ -240,16 +243,27 @@ var edit = {
 		document.getElementById(id).value = '';
 		document.getElementById(id + '_text').value = '';
 	},
-	maskMe: function(id) {
-		$('#' + id).maskMoney({
-			allowZero: true,
-			thousands: ' ',
-			defaultZero: false,
-			allowNegative: true,
-			precision: 0
-		});
-		$('#' + id).maskMoney('mask');
-	},
+	maskMe: function(id, options) {
+        //options = $.extend({
+        //    allowZero: true,
+        //    thousands: ' ',
+        //    defaultZero: false,
+        //    allowNegative: true,
+        //    precision: 2
+        //}, options);
+
+        //$('#' + id).maskMoney(options);
+        //$('#' + id).maskMoney('mask');
+
+        var options = $.extend({
+            numeral: true,
+            numeralDecimalMark: '.',
+            delimiter: ' ',
+            numeralDecimalScale: 2
+        }, options);
+
+		new Cleave('#' + id, options);
+    },
     modal2: {
         key: '',
 
@@ -286,7 +300,7 @@ var edit = {
             this.hide();
         }
     }
-}
+};
 
 /**
  * @param id

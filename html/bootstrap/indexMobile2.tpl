@@ -27,6 +27,7 @@
     <script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead-1.2.9/jquery.floatThead.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/cleave.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/alertify.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/bootstrap.min.js"></script>
 

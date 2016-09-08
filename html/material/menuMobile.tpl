@@ -43,10 +43,9 @@
 							<div class="avatar-container">
 								<img src="[GRAVATAR_URL]?&s=28&d=mm" alt=""/>
 							</div>
-							<!--CURRENT_USER_FN--> <!--CURRENT_USER_LN-->
 							<i class="fa fa-caret-down"></i>
 						</div>
-						<ul class="dropdown-menu dropdown-user">
+						<ul class="dropdown-menu dropdown-menu-right dropdown-user">
 							<li class="dropdown-profile profile">
 								<a href="index.php#module=profile">
 									<i class="fa fa-user"></i>
@@ -60,13 +59,13 @@
 								</a>
 							</li>
 							<li class="dropdown-profile divider"></li>
-							<li class="dropdown-balance">
-								<a href="index.php#module=balance">
+							<li class="dropdown-billing">
+								<a href="index.php#module=billing">
 									<i class="fa fa-credit-card"></i>
 									Ваш баланс
 								</a>
 							</li>
-							<li class="dropdown-balance divider"></li>
+							<li class="dropdown-billing divider"></li>
 							<li class="dropdown-settings">
 								<a href="index.php#module=settings">
 									<i class="fa fa-cogs"></i>

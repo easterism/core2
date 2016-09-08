@@ -3,7 +3,7 @@
 			<!-- BEGIN col -->
 			<div class="columnFilterIcon" onclick="{CLICK_COL}" title="Колонки"></div>
 			<!-- END col -->
-			<div class="showFilterIcon" onclick="{CLICK_FILTER}" title="Поиск"></div>
+			<div class="showFilterIcon" onclick="{CLICK_FILTER}" title="Поиск">Поиск</div>
 			<!-- BEGIN clear -->
 			<div class="clearFilterIcon" onclick="{CLICK_CLEAR}" title="Очистить"></div>
 			<!-- END clear -->

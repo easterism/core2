@@ -11,15 +11,14 @@
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.0.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
 
-	<script type="text/javascript" language="javascript"
-			src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
 

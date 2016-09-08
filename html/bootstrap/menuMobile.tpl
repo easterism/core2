@@ -21,7 +21,6 @@
 						<div class="avatar-container">
 							<img src="[GRAVATAR_URL]?&s=28&d=mm" alt="" class=""/>
 						</div>
-						<!--CURRENT_USER_LOGIN-->
 						<span class="caret"></span>
 					</div>
 					<ul class="dropdown-menu dropdown-menu-right">
