@@ -1,10 +1,11 @@
 <?
-require_once(DOC_ROOT . "core2/inc/classes/class.list.php");
+    require_once(DOC_ROOT . "core2/inc/classes/Common.php");
+    require_once(DOC_ROOT . "core2/inc/classes/class.list.php");
 
 /**
  * Class InstallModule
  */
-class InstallModule {
+class InstallModule extends Common{
 
     /**
      * путь для установки модуля
@@ -102,17 +103,36 @@ class InstallModule {
     private $deleteFilesInfo = array();
 
 
-    private $config_core;
-
-
     /**
      *
      */
-    function __construct(Zend_Db_Adapter_Pdo_Mysql $db) {
+    function __construct() {
+        parent::__construct();
+        $this->module = 'admin';
+    }
+
+    public function __get($k)
+    {
+        if ($k == 'db') {
+            $db = $this->setDb();
+            return $db;
+        } else {
+            return parent::__get($k);
+        }
+    }
+
+    private function setDb() {
+        //делаем свое подключение к БД и включаем отображение исключений
+        if (!$this->moduleConfig->database || $this->moduleConfig->database->admin->username) {
+            $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
+        } else {
+            $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
+        }
+        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-        $this->db = $db;
+        return $db;
     }
 
 

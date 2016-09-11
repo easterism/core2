@@ -1,4 +1,5 @@
 <?
+    require_once "core2/mod/admin/InstallModule.php";
 
 //проверка наличия обновлений для модулей
 if (!empty($_GET['checkModsUpdates'])) {

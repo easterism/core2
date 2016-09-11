@@ -1,7 +1,7 @@
 <?php
 
 require_once("core2/inc/ajax.func.php");
-require_once('core2/inc/classes/installModule.php');
+
 
 /**
  * Class ModAjax
@@ -650,7 +650,7 @@ class ModAjax extends ajaxFunc {
             ->send();
 
         if ( ! $result) {
-            throw new Exception('Не удалось отправить сообщение пользователю');
+            throw new Exception($this->translate->tr('Не удалось отправить сообщение пользователю'));
         }
 	}
 
@@ -695,7 +695,7 @@ class ModAjax extends ajaxFunc {
                 }
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
-                    throw new Exception("install.xml не найден.");
+                    throw new Exception($this->translate->tr("install.xml не найден."));
                 }
                 if (is_file($destinationFolder . "/readme.txt")) {
                     $readme = file_get_contents($destinationFolder . "/readme.txt");
@@ -704,11 +704,13 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                $inst = new InstallModule();
-                $mInfo = array();
+                require_once('core2/mod/admin/installModule.php');
+
+                $inst                          = new InstallModule();
+                $mInfo                         = array('install' => array());
                 $mInfo['install']['module_id'] = $xmlObj->install->module_id;
                 $inst->setMInfo($mInfo);
-                $errors = array();
+                $errors    = array();
                 $filesList = $inst->getFilesList($destinationFolder);
 				//для проверки ошибок в файлах пхп
 				$php_path = '';
@@ -794,7 +796,7 @@ class ModAjax extends ajaxFunc {
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
                             'version' 	    => $xmlObj->install->version,
-                            'install_info'  => serialize(InstallModule::xmlParse($xmlObj)),
+                            'install_info'  => serialize($inst->xmlParse($xmlObj)),
                             'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
                             'lastuser' 	    => $this->auth->ID,
                             'files_hash'    => serialize($files_hash)
@@ -810,7 +812,7 @@ class ModAjax extends ajaxFunc {
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
                             'version' 	    => $xmlObj->install->version,
-                            'install_info'  => serialize(InstallModule::xmlParse($xmlObj)),
+                            'install_info'  => serialize($inst->xmlParse($xmlObj)),
                             'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
                             'lastuser' 	    => $this->auth->ID,
                             'files_hash'    => serialize($files_hash)
