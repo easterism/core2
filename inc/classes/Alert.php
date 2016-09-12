@@ -143,7 +143,7 @@ class Alert {
      * @param string $explanation
      * @param bool   $force
      *
-     * @return $this
+     * @return $this|void
      */
     public function success($head, $explanation = '', $force = false) {
         if ($force) {
@@ -161,7 +161,7 @@ class Alert {
      * @param string $explanation
      * @param bool   $force
      *
-     * @return $this
+     * @return $this|void
      */
     public function warning($head, $explanation = '', $force = false) {
         if ($force) {

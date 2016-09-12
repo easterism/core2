@@ -79,7 +79,7 @@ class Common extends Acl {
     public function __get($k) {
 
 		//исключение для герета базы или кеша, выполняется всегда
-		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
+		if ($k == 'db' || $k == 'cache' || $k == 'translate' || $k == 'log') {
 			return parent::__get($k);
 		}
 		//геттер для модели
@@ -91,7 +91,8 @@ class Common extends Acl {
 
 		if (array_key_exists($k, $this->_p)) {
 			$v = $this->_p[$k];
-		} else {
+		}
+		else {
 			// Получение экземпляра класса для работы с правами пользователей
 			if ($k == 'acl') {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');

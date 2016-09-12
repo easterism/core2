@@ -56,7 +56,7 @@ class Db {
 			}
 			return $v;
 		}
-		// Получение перевода
+		// Получение экземпляра переводчика
 		if ($k == 'translate') {
             if (array_key_exists($k, $this->_s)) {
                 $v = $this->_s[$k];
@@ -66,6 +66,16 @@ class Db {
             }
 			return $v;
 		}
+        // Получение экземпляра логера
+        elseif ($k == 'log') {
+            if (array_key_exists($k, $this->_s)) {
+                $v = $this->_s[$k];
+            } else {
+                $v = new \Core2\Log();
+                $this->_s[$k] = $v;
+            }
+            return $v;
+        }
         // Получение экземпляра модели текущего модуля
         elseif (strpos($k, 'data') === 0) {
             if (array_key_exists($k, $this->_s)) {
@@ -107,15 +117,17 @@ class Db {
 		return $db;
 	}
 
-	/**
-	 * @param string $dbname
-	 * @param string $username
-	 * @param string $password
-	 * @param string $host
-	 * @param string $charset
-	 * @param string $adapter
-	 * @return Zend_Db_Adapter_Abstract
-	 */
+    /**
+     * Установка соединения с произвольной базой MySQL
+     * @param        $dbname
+     * @param        $username
+     * @param        $password
+     * @param string $host
+     * @param string $charset
+     * @param string $adapter
+     *
+     * @return void|Zend_Db_Adapter_Abstract
+     */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
 		$temp = array('host'     	=> $host,
 					  'username' 	=> $username,
@@ -126,12 +138,13 @@ class Db {
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
 			$db->getConnection();
-		} catch (Zend_Db_Adapter_Exception $e) {
-			Error::catchDbException($e);
-		} catch (Zend_Exception $e) {
-			Error::catchZendException($e);
-		}
-	    return $db;
+            return $db;
+        } catch (Zend_Db_Adapter_Exception $e) {
+            Error::catchDbException($e);
+        } catch (Zend_Exception $e) {
+            Error::catchZendException($e);
+        }
+        return;
 	}
 
 	/**
@@ -231,7 +244,7 @@ class Db {
                 isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
             ) {
 				if (!$this->config->log->system->file) {
-					throw new Exception($this->traslate->tr('Не задан файл журнала'));
+					throw new Exception($this->traslate->tr('Не задан файл журнала запросов'));
 				}
 
                 $log = new \Core2\Log('access');
@@ -535,6 +548,9 @@ class Db {
 
     }
 
+    /**
+     * Получение всех настроек системы
+     */
 	final private function getAllSettings() {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->test($key))) {
