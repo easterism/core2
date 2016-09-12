@@ -5,7 +5,7 @@
 /**
  * Class InstallModule
  */
-class InstallModule extends Common{
+class InstallModule extends Common {
 
     /**
      * путь для установки модуля
@@ -61,6 +61,8 @@ class InstallModule extends Common{
      * @var array
      */
     private $mInfo = array();
+
+    private $dependedModList = array();
 
 
     /**
@@ -121,17 +123,25 @@ class InstallModule extends Common{
         }
     }
 
+    /**
+     * Собственное подключение к базе данных
+     * @return void|Zend_Db_Adapter_Abstract
+     */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
-        if (!$this->moduleConfig->database || $this->moduleConfig->database->admin->username) {
+        if ($this->moduleConfig->database && $this->moduleConfig->database->admin->username) {
             $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
+            //echo "<pre>";print_r($db);echo "</pre>";//die;
+            //$db = $this->establishConnection($this->config->database);
+            //echo "<hr><pre>";print_r($db);echo "</pre>";die;
         }
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
         return $db;
     }
 
@@ -145,7 +155,7 @@ class InstallModule extends Common{
      */
     private function checkXml() {
         if (!is_file($this->tempDir . "/install/install.xml")) {
-            throw new Exception("install.xml не найден. Установка прервана.");
+            throw new Exception($this->translate->tr("install.xml не найден. Установка прервана."));
         }
     }
 
@@ -255,7 +265,7 @@ class InstallModule extends Common{
             }
             $zip->close();
         } else {
-            throw new Exception("Ошибка архива");
+            throw new Exception($this->translate->tr("Ошибка архива"));
         }
     }
 
@@ -300,9 +310,9 @@ class InstallModule extends Common{
                         }
                     }
                 }
-                $this->addNotice("Права доступа", "Права по умолчанию", "Добавлены", "info");
+                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Добавлены", "info");
             } else {
-                $this->addNotice("Права доступа", "Права по умолчанию", "Отсутствуют", "warning");
+                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Отсутствуют", "warning");
             }
             if (!empty($Inf['install']['access']['additional']['rule'])) {
                 if (!empty($Inf['install']['access']['additional']['rule']['name'])) {
@@ -1279,7 +1289,7 @@ class InstallModule extends Common{
             if (!empty($data) && empty($out->massage)){//если есть данные и пустые сообщения устанавливаем модуль
                 $this->mData['data']        = $data;
                 $this->mData['files_hash']  = $files_hash;
-            }else{//если есть сообщение значит что-то не так
+            } else{//если есть сообщение значит что-то не так
                 throw new Exception($out->massage);
             }
             $this->prepareToInstall();
@@ -1293,13 +1303,12 @@ class InstallModule extends Common{
             }
 
             $this->db->commit();
-            return $st . $this->printNotices(2);
 
         } catch (Exception $e) {
             $this->db->rollback();
             $this->addNotice("Установщик", "Установка прервана, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
-            return $st . $this->printNotices(2);
         }
+        return $st . $this->printNotices(2);
     }
 
 
@@ -1510,6 +1519,7 @@ class InstallModule extends Common{
                 $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
                 $arr[$key]['install_info']  = $val;
                 //добавляем к списку доступных зовисимостей зависимости из репозитория
+                if (!isset($this->dependedModList[$ins['module_id']])) $this->dependedModList[$ins['module_id']] = array();
                 $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
             }
 

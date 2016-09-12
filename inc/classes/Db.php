@@ -105,7 +105,7 @@ class Db {
 	protected function establishConnection($database) {
 		try {
 			$db = Zend_Db::factory($database);
-			Zend_Db_Table::setDefaultAdapter($db);
+			//Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
 			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
@@ -129,12 +129,13 @@ class Db {
      * @return void|Zend_Db_Adapter_Abstract
      */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
-		$temp = array('host'     	=> $host,
-					  'username' 	=> $username,
-					  'password' 	=> $password,
-					  'dbname'   	=> $dbname,
-					  'charset'		=> $charset
-					  );
+        $temp = array('host'             => $host,
+                      'username'         => $username,
+                      'password'         => $password,
+                      'dbname'           => $dbname,
+                      'charset'          => $charset,
+                      'adapterNamespace' => 'Core_Db_Adapter'
+        );
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
 			$db->getConnection();
@@ -518,24 +519,22 @@ class Db {
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new Exception($this->traslate->tr("Не определен идентификатор модуля."));
 		if (!($this->cache->test($module_id))) {
-			$m = $this->db->fetchRow("
-				SELECT is_system, version
-				FROM core_modules
-				WHERE module_id = ?
-			", $module_id);
-			if ($m) {
-				if ($m['is_system'] == "Y") {
-					$loc = "core2/mod/{$module_id}/v{$m['version']}";
-				} else {
-					$loc = "mod/{$module_id}/v{$m['version']}";
-					if (!is_dir(DOC_ROOT . $loc)) {
-						$loc = "mod/{$module_id}";
-					}
-				}
-			} elseif ($module_id == 'admin') {
+			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
 			} else {
-				throw new Exception($this->traslate->tr("Модуль не существует"), 404);
+                $m = $this->db->fetchRow("SELECT is_system, version FROM core_modules WHERE module_id = ?", $module_id);
+                if ($m) {
+                    if ($m['is_system'] == "Y") {
+                        $loc = "core2/mod/{$module_id}/v{$m['version']}";
+                    } else {
+                        $loc = "mod/{$module_id}/v{$m['version']}";
+                        if (!is_dir(DOC_ROOT . $loc)) {
+                            $loc = "mod/{$module_id}";
+                        }
+                    }
+                } else {
+                    throw new Exception($this->traslate->tr("Модуль не существует"), 404);
+                }
 			}
 			$this->cache->save($loc, $module_id);
 		} else {

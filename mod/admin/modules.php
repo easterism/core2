@@ -410,7 +410,7 @@ HTML;
 		/* Добавление нового модуля */
 		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
 
-			if (empty($this->config->php) || empty($this->config->php->path)) {
+			if (empty($this->config->php) && empty($this->config->php->path)) {
 				$edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
 			}
 
@@ -653,12 +653,7 @@ HTML;
 
 
         //параметр со списком репозиториев
-        $s_id = $this->db->fetchOne("
-            SELECT id
-            FROM core_settings
-            WHERE `code` = 'repo'
-            LIMIT 1
-        ");
+        $s_id = $this->db->fetchOne("SELECT id FROM core_settings WHERE `code` = 'repo' LIMIT 1");
         if (empty($s_id)) {
             $this->db->insert('core_settings', array(
                 'code'           => 'repo',
@@ -669,7 +664,6 @@ HTML;
                 'is_custom_sw'   => 'Y',
                 'is_personal_sw' => 'N'
             ));
-            $s_id = $this->db->lastInsertId("core_settings");
         }
         //достаем список репозиторием
         $mod_repos = $this->getSetting('repo');
@@ -681,7 +675,7 @@ HTML;
 				<span>
 					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit=yes')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
 
@@ -692,7 +686,7 @@ HTML;
 				<span>
 					Для работы с репозиториями используется параметр \"repo\", в котором находяться адреса репозиториев (с регистрацией в репозитории http://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации http://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit=yes')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
         }

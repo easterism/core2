@@ -15,6 +15,7 @@
         private $log;
         private $config;
         private $writer;
+        private $writer_custom;
 
         public function __construct($name = 'core2', $logfile = '') {
             if ($name != 'access') {
