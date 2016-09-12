@@ -5,6 +5,11 @@
  * @author Easter
  */
 
+
+
+/**
+ * Class Image
+ */
 class Image {
 	
 	/**
