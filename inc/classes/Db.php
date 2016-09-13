@@ -105,7 +105,7 @@ class Db {
 	protected function establishConnection($database) {
 		try {
 			$db = Zend_Db::factory($database);
-			//Zend_Db_Table::setDefaultAdapter($db);
+			Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
 			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");

@@ -692,9 +692,9 @@ class InstallModule extends Common {
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "', а потом этот модуль") : " включите модуль";
-            $this->addNotice("Обновление", "Обновление завершено", "Для работы{$msg}", "warning");
+            $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление завершено"), "Для работы{$msg}", "warning");
         } else {
-            $this->addNotice("Обновление", "Обновление завершено", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление завершено"), "Успешно", "info");
         }
     }
 
@@ -836,7 +836,7 @@ class InstallModule extends Common {
 
                 $this->returnZipToDownload(file_get_contents($zip_file), 'templateMod');
             } else {
-                throw new Exception("Ошибка создания архива");
+                throw new Exception($this->translate->tr("Ошибка создания архива"));
             }
         }
         catch (Exception $e) {
@@ -858,7 +858,7 @@ class InstallModule extends Common {
             if ($this->checkSQL($sql)) {
                 return $sql;
             } else {
-                $this->addNotice("Таблицы модуля", "В SQL для удаления модуля обнаружена попытка удаления таблиц не относящихся к модулю", "SQL проигнорирован", "warning");
+                $this->addNotice($this->translate->tr("Таблицы модуля"), "В SQL для удаления модуля обнаружена попытка удаления таблиц не относящихся к модулю", "SQL проигнорирован", "warning");
                 return null;
             }
         }
@@ -906,7 +906,7 @@ class InstallModule extends Common {
         }
         $this->noticeMsg = array();
         if ($tab) {
-            $html .= "<br><input type=\"button\" class=\"button\" value=\"Вернуться к списку модулей\" onclick=\"load('index.php?module=admin&action=modules&tab_mod={$tab}');\">";
+            $html .= "<br><input type=\"button\" class=\"button\" value=\"" . $this->translate->tr('Вернуться к списку модулей') . "\" onclick=\"load('index.php?module=admin&action=modules&tab_mod={$tab}');\">";
         }
         return $html;
     }
@@ -922,9 +922,9 @@ class InstallModule extends Common {
     {
         //проверка актуальности версии
         if ($this->curVer == $this->mInfo['install']['version']) {
-            throw new Exception("У вас уже установлена эта версия!");
+            throw new Exception($this->translate->tr("У вас уже установлена эта версия!"));
         } elseif ($this->curVer > $this->mInfo['install']['version']) {
-            throw new Exception("У вас стоит более актуальная версия!");
+            throw new Exception($this->translate->tr("У вас стоит более актуальная версия!"));
         }
         //проверка предусмотрено ли обновление
         $curVer = "v" . trim($this->curVer);
@@ -1140,12 +1140,12 @@ class InstallModule extends Common {
         if (!empty($this->copyFilesInfo['error'])) {
 //            asort($this->copyFilesInfo['error']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['error']), "Файлы не скопированы, скопируйте их вручную", "danger");
-            $this->addNotice("Файлы модуля", "Копирование", "Файлы не скопированы, скопируйте их вручную", "danger");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Копирование"), $this->translate->tr("Файлы не скопированы, скопируйте их вручную"), "danger");
         }
         elseif (!empty($this->copyFilesInfo['success'])) {
 //            asort($this->copyFilesInfo['success']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->copyFilesInfo['success']), "Файлы скопированы успешно", "info");
-            $this->addNotice("Файлы модуля", "Копирование", "Файлы скопированы успешно", "info");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Копирование"), $this->translate->tr("Файлы скопированы успешно"), "info");
         }
     }
 
@@ -1202,7 +1202,7 @@ class InstallModule extends Common {
         //проверяем не изменились ли файлы
         $compare = $this->compareFilesHash($this->extractHashForFiles($this->tempDir), unserialize($this->mData['files_hash']), false);
         if (!empty($compare)) {
-            throw new Exception("Хэши файлов модуля не совпадают с эталоном! Установка прервана.");
+            throw new Exception($this->translate->tr("Хэши файлов модуля не совпадают с эталоном! Установка прервана."));
         }
 
         //проверяем есть ли install.xml и забераем оттуда инфу
@@ -1243,7 +1243,7 @@ class InstallModule extends Common {
                 $mod_id
             );
             if (empty($temp)) {
-                throw new Exception('Модуль не найден в доступных модулях');
+                throw new Exception($this->translate->tr('Модуль не найден в доступных модулях'));
             }
             $this->mData['data']          = $temp['data'];
             $this->mData['files_hash']    = $temp['files_hash'];
@@ -1262,7 +1262,7 @@ class InstallModule extends Common {
 
         } catch (Exception $e) {
             $this->db->rollback();
-            $this->addNotice("Установщик", "Установка прервана, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
+            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$e->getMessage()}", "danger");
             return $st . $this->printNotices(2);
         }
     }
