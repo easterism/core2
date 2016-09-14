@@ -2385,8 +2385,8 @@ class InstallModule extends Common {
         $sql = explode(';', $sql);
         $queries = array();
         foreach ($sql as $qu) {
-            $tmp = str_replace(array(" ", "\r\n", "\n"), '', $qu);
-            if (!empty($tmp)) {
+            $qu = trim($qu);
+            if ($qu) {
                 $queries[] = $qu;
             }
         }
