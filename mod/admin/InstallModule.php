@@ -133,15 +133,12 @@ class InstallModule extends Common {
             $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
-            //echo "<pre>";print_r($db);echo "</pre>";//die;
-            //$db = $this->establishConnection($this->config->database);
-            //echo "<hr><pre>";print_r($db);echo "</pre>";die;
         }
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-        $db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
+        //$db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
         return $db;
     }
 
@@ -581,21 +578,23 @@ class InstallModule extends Common {
             $file_loc = $this->tempDir . "/install/" . $file_name;
             if (!empty($file_name) && is_file($file_loc)) {
                 $sql = file_get_contents($file_loc);
+            } else {
+                throw new Exception($this->translate->tr("Не найден файл $file_name для обновления модуля!"));
             }
         }
-        if (empty($sql)) {
+        if (!$sql) {
             return false;
         } else {
             $sql = $this->SQLPrepareToExecute($sql);//готовим
             if (!$this->checkSQL($sql)) {
-                throw new Exception("Попытка удаления таблиц не относящихся к модулю!");
+                throw new Exception($this->translate->tr("Попытка удаления таблиц не относящихся к модулю!"));
             }
             //разбиваем запросы на отдельные
             $sql = $this->SQLToQueriesArray($sql);
             foreach ($sql as $qu) {
                 $this->db->query($qu);//выполняем
             }
-            $this->addNotice("Таблицы модуля", "Таблицы добавлены", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы добавлены"), "Успешно", "info");
         }
         return true;
     }
@@ -671,7 +670,7 @@ class InstallModule extends Common {
         $where = $this->db->quoteInto('module_id = ?', $this->mInfo['install']['module_id']);
         $this->db->update('core_modules', $arrForUpgrate, $where);
         //обновляем субмодули модуля
-        $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`='".$this->mInfo['install']['module_id']."'");
+        $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
         $this->db->query("DELETE FROM `core_submodules` WHERE m_id = {$m_id}");
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
@@ -1306,7 +1305,10 @@ class InstallModule extends Common {
 
         } catch (Exception $e) {
             $this->db->rollback();
-            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$e->getMessage()}", "danger");
+            $msg = $e->getMessage();
+            if ($this->config->debug->on) $msg .= $e->getTraceAsString();
+            //TODO вести лог
+            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$msg}", "danger");
         }
         return $st . $this->printNotices(2);
     }
@@ -1936,14 +1938,17 @@ class InstallModule extends Common {
                 $this->prepareToInstall();
                 $this->Upgrate();
             } else {
-                $this->addNotice("Поиск обновлений", "Поиск в доступных модулях и репозиториях", "Обновления не найдены", "warning");
+                $this->addNotice($this->translate->tr("Поиск обновлений"), $this->translate->tr("Поиск в доступных модулях и репозиториях"), $this->translate->tr("Обновления не найдены"), "warning");
             }
 
             $this->db->commit();
 
         } catch (Exception $e) {
             $this->db->rollback();
-            $this->addNotice("Обновление", "Обновление прервано, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
+            $msg = $e->getMessage();
+            if ($this->config->debug->on) $msg .= "<pre>" . $e->getTraceAsString() . "</div>";
+            //TODO вести лог
+            $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление прервано, произведен откат транзакции"), "Ошибка: {$msg}", "danger");
         }
 
         return $st . $this->printNotices(1);
