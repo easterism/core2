@@ -1306,7 +1306,7 @@ class InstallModule extends Common {
 
         } catch (Exception $e) {
             $this->db->rollback();
-            $this->addNotice("Установщик", "Установка прервана, произведен откат транзакции", "Ошибка: {$e->getMessage()}", "danger");
+            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$e->getMessage()}", "danger");
         }
         return $st . $this->printNotices(2);
     }

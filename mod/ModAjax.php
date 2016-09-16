@@ -704,7 +704,7 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                require_once('core2/mod/admin/installModule.php');
+                require_once('core2/mod/admin/InstallModule.php');
 
                 $inst                          = new InstallModule();
                 $mInfo                         = array('install' => array());
