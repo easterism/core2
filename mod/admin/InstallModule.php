@@ -857,7 +857,7 @@ class InstallModule extends Common {
             if ($this->checkSQL($sql)) {
                 return $sql;
             } else {
-                $this->addNotice($this->translate->tr("Таблицы модуля"), "В SQL для удаления модуля обнаружена попытка удаления таблиц не относящихся к модулю", "SQL проигнорирован", "warning");
+                $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("В SQL для удаления модуля обнаружена попытка удаления таблиц не относящихся к модулю"), "SQL проигнорирован", "warning");
                 return null;
             }
         }
@@ -1663,22 +1663,22 @@ class InstallModule extends Common {
                                 try {
                                     $this->db->query($qu);//выполняем
                                 } catch (Exception $e) {
-                                    $this->addNotice("Таблицы модуля", "Ошибка при удалении таблиц (удаление продолжается)", $e->getMessage(), "warning");
+                                    $this->addNotice($this->translate->tr("Таблицы модуля"), "Ошибка при удалении таблиц (удаление продолжается)", $e->getMessage(), "warning");
                                 }
                             }
-                            $this->addNotice("Таблицы модуля", "Удаление таблиц", "Выполнение SQL завершено", "info");
+                            $this->addNotice($this->translate->tr("Таблицы модуля"), "Удаление таблиц", "Выполнение SQL завершено", "info");
                         } else {
-                            $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю, удалите их самостоятельно!", "warning");
+                            $this->addNotice($this->translate->tr("Таблицы модуля"), "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю, удалите их самостоятельно!", "warning");
                         }
                     } else {
-                        $this->addNotice("Таблицы модуля", "Таблицы не удалены", "Инструкции по удалению не найдены, удалите их самостоятельно!", "warning");
+                        $this->addNotice($this->translate->tr("Таблицы модуля"), "Таблицы не удалены", "Инструкции по удалению не найдены, удалите их самостоятельно!", "warning");
                     }
                     //удаляем субмодули
                     $this->db->delete("core_submodules", $this->db->quoteInto("m_id =?", $m_id));
-                    $this->addNotice("Субмодули", "Удаление субмодулей", "Выполнено", "info");
+                    $this->addNotice($this->translate->tr("Субмодули"), "Удаление субмодулей", "Выполнено", "info");
                     //удаляем регистрацию модуля
                     $this->db->delete('core_modules', $this->db->quoteInto("module_id=?", $mInfo['module_id']));
-                    $this->addNotice("Регистрация модуля", "Удаление сведений о модуле", "Выполнено", "info");
+                    $this->addNotice($this->translate->tr("Регистрация модуля"), "Удаление сведений о модуле", "Выполнено", "info");
 
                     //чистим кэш
                     $this->cache->clean(
@@ -1693,14 +1693,14 @@ class InstallModule extends Common {
                         $this->deleteFolder($modulePath);
                     } else {
 //                        $this->deleteFolder($modulePath);
-                        $this->addNotice("Файлы модуля", "Файлы не удалены", "Файлы системных модулей удаляются вручную!", "warning");
+                        $this->addNotice($this->translate->tr("Файлы модуля"), "Файлы не удалены", "Файлы системных модулей удаляются вручную!", "warning");
                     }
 
                 } else {//если используется другими модулями
                     throw new Exception("Модуль используется модулями {$is_used_by_other_modules}");
                 }
 
-                $this->addNotice("Деинсталяция", "Статус", "Завершена", "info");
+                $this->addNotice($this->translate->tr("Деинсталяция"), "Статус", "Завершена", "info");
                 return "<h3>Деинсталяция модуля " . (!empty($mInfo['m_name']) ? "'{$mInfo['m_name']}'" : "") . "</h3>" . $this->printNotices(1);
 
             } else{//если модуль не существует
@@ -1708,7 +1708,7 @@ class InstallModule extends Common {
             }
 
         } catch (Exception $e) {
-            $this->addNotice("Деинсталяция", "Ошибка: {$e->getMessage()}", "Деинсталяция прервана", "danger");
+            $this->addNotice($this->translate->tr("Деинсталяция"), "Ошибка: {$e->getMessage()}", $this->translate->tr("Деинсталяция прервана"), "danger");
             return "<h3>Деинсталяция модуля " . (!empty($mInfo['m_name']) ? "'{$mInfo['m_name']}'" : "") . "</h3>" . $this->printNotices(1);
         }
     }
