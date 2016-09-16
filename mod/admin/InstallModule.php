@@ -1,6 +1,6 @@
 <?
-    require_once(DOC_ROOT . "core2/inc/classes/Common.php");
-    require_once(DOC_ROOT . "core2/inc/classes/class.list.php");
+    require_once("../../inc/classes/Common.php");
+    require_once("../../inc/classes/class.list.php");
 
 /**
  * Class InstallModule
@@ -701,25 +701,25 @@ class InstallModule extends Common {
     /**
      * Удаление директории с файлами и объединение уведомлений
      *
-     * @param   $dir директория с файлами
+     * @param   $folder - путь к папке с файлами
      *
      * @return  void
      */
-    public function deleteFolder ($dir){
+    public function deleteFolder ($folder){
         $this->deleteFilesInfo = array();
-        $this->checkAndDeleteFiles($dir);
+        $this->checkAndDeleteFiles($folder);
         if (!empty($this->deleteFilesInfo['is_not_writeable'])) {
 //            asort($this->deleteFilesInfo['is_not_writeable']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['is_not_writeable']), "Папка закрыта для записи, удалите её самостоятельно", "danger");
-            $this->addNotice("Файлы модуля", "Удаление", "Папка закрыта для записи, удалите её самостоятельно", "danger");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Папка закрыта для записи, удалите её самостоятельно", "danger");
         } elseif (!empty($this->deleteFilesInfo['not_exists'])) {
 //            asort($this->deleteFilesInfo['not_exists']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['not_exists']), "Не существует", "info");
-            $this->addNotice("Файлы модуля", "Удаление", "Файлы не найдены", "info");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Файлы не найдены", "info");
         } elseif (!empty($this->deleteFilesInfo['success'])) {
 //            asort($this->deleteFilesInfo['success']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
-            $this->addNotice("Файлы модуля", "Удаление", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Успешно", "info");
         }
     }
 
@@ -1230,6 +1230,7 @@ class InstallModule extends Common {
      */
     public function mInstall($mod_id){
         $this->db->beginTransaction();
+        $st = '';
         try {
             //подготовка к установке модуля
             $temp = $this->db->fetchRow(
@@ -1260,7 +1261,7 @@ class InstallModule extends Common {
             return $st . $this->printNotices(2);
 
         } catch (Exception $e) {
-            $this->db->rollback();
+            $this->db->rollBack();
             $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$e->getMessage()}", "danger");
             return $st . $this->printNotices(2);
         }
@@ -1277,6 +1278,7 @@ class InstallModule extends Common {
      */
     public function mInstallFromRepo($repo_url, $m_id){
         $this->db->beginTransaction();
+        $st = '';
         try {
             //запрашиваем модуль из репозитория
             $out = $this->doCurlRequestToRepo($repo_url, $m_id);
@@ -1304,7 +1306,7 @@ class InstallModule extends Common {
             $this->db->commit();
 
         } catch (Exception $e) {
-            $this->db->rollback();
+            $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= $e->getTraceAsString();
             //TODO вести лог
@@ -1592,8 +1594,8 @@ class InstallModule extends Common {
                 if (!empty($val)) {
                     $copy_list[$module_id]['version'] .= " <a href=\"\" onclick=\"$('.repo_table_{$_GET['repo_id']}_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
                     $copy_list[$module_id]['version'] .= "<table width=\"100%\" class=\"repo_table_{$_GET['repo_id']}_{$module_id}\" style=\"display: none;\"><tbody>";
-                    foreach ($val as $version=>$val) {
-                        $copy_list[$module_id]['version'] .= "<tr><td style=\"border: 0px; padding: 0px;\">{$version}</td><td style=\"border: 0px; text-align: right; padding: 0px;\">{$val['install_info']}</td></tr>";
+                    foreach ($val as $version => $val2) {
+                        $copy_list[$module_id]['version'] .= "<tr><td style=\"border: 0px; padding: 0px;\">{$version}</td><td style=\"border: 0px; text-align: right; padding: 0px;\">{$val2['install_info']}</td></tr>";
                     }
                     $copy_list[$module_id]['version'] .= "</tbody></table>";
                 }
@@ -1604,20 +1606,18 @@ class InstallModule extends Common {
 //            $list->setRecordCount($per_page);
 
             //пагинация
-            $ss = new Zend_Session_Namespace('Search');
-            $ssi = 'main_' . $list_id;
-            $ss = $ss->$ssi;
-            if (!empty($ss["count_{$list_id}"])) {
-                $per_page = empty($ss["count_{$list_id}"]) ? 1 : (int)$ss["count_{$list_id}"];
-            }
+            $ss         = new Zend_Session_Namespace('Search');
+            $ssi        = 'main_' . $list_id;
+            $ss         = $ss->$ssi;
+            $per_page   = empty($ss["count_{$list_id}"]) ? 1 : (int)$ss["count_{$list_id}"];
             $list->recordsPerPage = $per_page;
 
-            $page = empty($_GET["_page_{$list_id}"]) ? 1 : (int)$_GET["_page_{$list_id}"];
-            $from = ($page - 1) * $per_page;
-            $to = $page * $per_page;
+            $page       = empty($_GET["_page_{$list_id}"]) ? 1 : (int)$_GET["_page_{$list_id}"];
+            $from       = ($page - 1) * $per_page;
+            $to         = $page * $per_page;
+            $i          = 0;
+            $tmp        = array();
             $list->setRecordCount(count($copy_list));
-            $i = 0;
-            $tmp = array();
             foreach ($copy_list as $val) {
                 $i++;
                 if ($i > $from && $i <= $to) {
@@ -1666,19 +1666,19 @@ class InstallModule extends Common {
                                     $this->addNotice($this->translate->tr("Таблицы модуля"), "Ошибка при удалении таблиц (удаление продолжается)", $e->getMessage(), "warning");
                                 }
                             }
-                            $this->addNotice($this->translate->tr("Таблицы модуля"), "Удаление таблиц", "Выполнение SQL завершено", "info");
+                            $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Удаление таблиц"), $this->translate->tr("Выполнение SQL завершено"), "info");
                         } else {
-                            $this->addNotice($this->translate->tr("Таблицы модуля"), "Таблицы не удалены", "Попытка удаления таблиц не относящихся к модулю, удалите их самостоятельно!", "warning");
+                            $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы не удалены"), "Попытка удаления таблиц не относящихся к модулю, удалите их самостоятельно!", "warning");
                         }
                     } else {
-                        $this->addNotice($this->translate->tr("Таблицы модуля"), "Таблицы не удалены", "Инструкции по удалению не найдены, удалите их самостоятельно!", "warning");
+                        $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы не удалены"), "Инструкции по удалению не найдены, удалите их самостоятельно!", "warning");
                     }
                     //удаляем субмодули
                     $this->db->delete("core_submodules", $this->db->quoteInto("m_id =?", $m_id));
-                    $this->addNotice($this->translate->tr("Субмодули"), "Удаление субмодулей", "Выполнено", "info");
+                    $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Удаление субмодулей"), $this->translate->tr("Выполнено"), "info");
                     //удаляем регистрацию модуля
                     $this->db->delete('core_modules', $this->db->quoteInto("module_id=?", $mInfo['module_id']));
-                    $this->addNotice($this->translate->tr("Регистрация модуля"), "Удаление сведений о модуле", "Выполнено", "info");
+                    $this->addNotice($this->translate->tr("Регистрация модуля"), $this->translate->tr("Удаление сведений о модуле"), $this->translate->tr("Выполнено"), "info");
 
                     //чистим кэш
                     $this->cache->clean(
@@ -1693,7 +1693,7 @@ class InstallModule extends Common {
                         $this->deleteFolder($modulePath);
                     } else {
 //                        $this->deleteFolder($modulePath);
-                        $this->addNotice($this->translate->tr("Файлы модуля"), "Файлы не удалены", "Файлы системных модулей удаляются вручную!", "warning");
+                        $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Файлы не удалены"), $this->translate->tr("Файлы системных модулей удаляются вручную!"), "warning");
                     }
 
                 } else {//если используется другими модулями
@@ -1704,7 +1704,7 @@ class InstallModule extends Common {
                 return "<h3>Деинсталяция модуля " . (!empty($mInfo['m_name']) ? "'{$mInfo['m_name']}'" : "") . "</h3>" . $this->printNotices(1);
 
             } else{//если модуль не существует
-                throw new Exception("Модуль уже удален или не существует!");
+                throw new Exception($this->translate->tr("Модуль уже удален или не существует!"));
             }
 
         } catch (Exception $e) {
@@ -1944,7 +1944,7 @@ class InstallModule extends Common {
             $this->db->commit();
 
         } catch (Exception $e) {
-            $this->db->rollback();
+            $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= "<pre>" . $e->getTraceAsString() . "</div>";
             //TODO вести лог
@@ -2346,7 +2346,7 @@ class InstallModule extends Common {
     /**
      * Проверяем, и если все ок, то удаляем файлы
      *
-     * @param      $loc  Директория или файл
+     * @param      $loc - Директория или файл
      * @param bool $is_delete_root
      */
     private function checkAndDeleteFiles($loc, $is_delete_root = true){
