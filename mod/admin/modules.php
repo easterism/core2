@@ -112,7 +112,7 @@ $tab->beginContainer("Модули");
 				$dep_list = array();
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
-					$edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
+					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($variable['m_name']));
 					if (!in_array($variable['module_id'], $availableModules)) {
 						$variable['m_name'] .= " <i style=\"color:#F44336\">(deleted)</i>";
 					}
@@ -125,7 +125,7 @@ $tab->beginContainer("Модули");
 
 			} else {
                 foreach ($mod_list as $variable) {
-                    $edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
+                    $edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($variable['m_name']));
                     $dep_list[$variable['module_id']] = $variable['m_name'];
                 }
             }
@@ -373,8 +373,8 @@ $tab->beginContainer("Модули");
 			$mods = array();
 			foreach ($data as $key => $val) {
 				$mods[$val[2]] = $val[0];
-				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . $val[1] . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
+				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
 			}
 			$list->data = $data;
 			$list->paintCondition	= "'TCOL_07' == 'N'";
