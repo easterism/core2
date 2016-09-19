@@ -235,6 +235,18 @@ class listTable extends initList {
 					} else {
 						if ($next['type']) {
 							if ($next['type'] == 'date') {
+                                try {
+                                    if ($search_value[0]) {
+                                        $dt = new DateTime($search_value[0]);
+                                        $search_value[0] = $dt->format("Y-m-d");
+                                    }
+                                    if ($search_value[1]) {
+                                        $dt = new DateTime($search_value[1]);
+                                        $search_value[1] = $dt->format("Y-m-d");
+                                    }
+                                } catch (Exception $e) {
+                                    $this->error = $e->getMessage();
+                                }
 								if ($search_value[0] && !$search_value[1]) {
 									$search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') >= ?";
 									$questions[] = $search_value[0];

@@ -1,5 +1,5 @@
 {
-"name": "easterism/core2",
+  "name": "easterism/core2",
   "type": "framework",
   "description": "Fullstack framework for business application",
   "keywords": ["framework"],
@@ -19,7 +19,7 @@
     "smottt/wideimage": ">=1.1.1",
     "mpdf/mpdf": "5.7.4",
     "components/jquery": "2.1.4",
-    "monolog/monolog": "1.21.x",
+    "monolog/monolog": "1.21.0",
     "ext-mbstring": "*"
   }
 }

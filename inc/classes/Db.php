@@ -1,9 +1,13 @@
 <?
 
-require_once("Zend/Db/Table.php");
-require_once("Zend/Registry.php");
-require_once("Zend/Cache.php");
+require_once 'Zend/Db/Table.php';
+require_once 'Zend/Registry.php';
+require_once 'Zend/Cache.php';
 
+
+/**
+ * Class Db
+ */
 class Db {
 	protected $config;
 	protected $frontendOptions = array(
@@ -12,25 +16,31 @@ class Db {
 	);
 	protected $backendOptions = array();
 	protected $backend = 'File';
-    private $_s = array();
-    private $_settings = array();
+	private $_s        = array();
+	private $_settings = array();
 
+
+	/**
+	 * Db constructor.
+	 * @param null $config
+	 */
 	public function __construct($config = null) {
-        if (is_null($config)) {
-            $this->config = Zend_Registry::get('config');
-        } else {
-            $this->config = $config;
+		if (is_null($config)) {
+			$this->config = Zend_Registry::get('config');
+		} else {
+			$this->config = $config;
 		}
-        if (!$config) return false;
+		if (!$config) return false;
 
 	}
 
 
-    /**
-     * @param string $k
-     * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract
-     * @throws Zend_Exception
-     */
+	/**
+	 * @param string $k
+	 * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract|\Core2\Log
+	 * @throws Zend_Exception
+	 * @throws Exception
+	 */
 	public function __get($k) {
 		if ($k == 'db') {
 			$reg = Zend_Registry::getInstance();
@@ -47,9 +57,9 @@ class Db {
 			$reg = Zend_Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
 				$v = Zend_Cache::factory('Core',
-						$this->backend,
-						$this->frontendOptions,
-						array('cache_dir' => $this->config->cache));
+					$this->backend,
+					$this->frontendOptions,
+					array('cache_dir' => $this->config->cache));
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
@@ -58,53 +68,54 @@ class Db {
 		}
 		// Получение экземпляра переводчика
 		if ($k == 'translate') {
-            if (array_key_exists($k, $this->_s)) {
-                $v = $this->_s[$k];
-            } else {
-                $v = Zend_Registry::get('translate');
-                $this->_s[$k] = $v;
-            }
+			if (array_key_exists($k, $this->_s)) {
+				$v = $this->_s[$k];
+			} else {
+				$v = Zend_Registry::get('translate');
+				$this->_s[$k] = $v;
+			}
 			return $v;
 		}
-        // Получение экземпляра логера
-        elseif ($k == 'log') {
-            if (array_key_exists($k, $this->_s)) {
-                $v = $this->_s[$k];
-            } else {
-                $v = new \Core2\Log();
-                $this->_s[$k] = $v;
-            }
-            return $v;
-        }
-        // Получение экземпляра модели текущего модуля
-        elseif (strpos($k, 'data') === 0) {
-            if (array_key_exists($k, $this->_s)) {
-                $v = $this->_s[$k];
-            } else {
+		// Получение экземпляра логера
+		elseif ($k == 'log') {
+			if (array_key_exists($k, $this->_s)) {
+				$v = $this->_s[$k];
+			} else {
+				$v = new \Core2\Log();
+				$this->_s[$k] = $v;
+			}
+			return $v;
+		}
+		// Получение экземпляра модели текущего модуля
+		elseif (strpos($k, 'data') === 0) {
+			if (array_key_exists($k, $this->_s)) {
+				$v = $this->_s[$k];
+			} else {
 				$this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
-                $module   = explode("|", $k);
-                $model    = substr($module[0], 4);
-                $module   = !empty($module[1]) ? $module[1] : 'admin';
-                $location = $module == 'admin'
-                        ? DOC_ROOT . "core2/mod/admin"
-                        : $this->getModuleLocation($this->module);
+				$module   = explode("|", $k);
+				$model    = substr($module[0], 4);
+				$module   = !empty($module[1]) ? $module[1] : 'admin';
+				$location = $module == 'admin'
+					? DOC_ROOT . "core2/mod/admin"
+					: $this->getModuleLocation($this->module);
 
-                if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
-                require_once($location . "/Model/$model.php");
-                $v            = new $model();
-                $this->_s[$k] = $v;
-            }
-            return $v;
-        }
+				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
+				require_once($location . "/Model/$model.php");
+				$v            = new $model();
+				$this->_s[$k] = $v;
+			}
+			return $v;
+		}
 	}
 
+
 	/**
-	 * @param $database
+	 * @param mixed $database
 	 * @return Zend_Db_Adapter_Abstract
 	 */
 	protected function establishConnection($database) {
 		try {
-            $db = Zend_Db::factory($database);
+			$db = Zend_Db::factory($database);
 			Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
@@ -117,36 +128,38 @@ class Db {
 		return $db;
 	}
 
-    /**
-     * Установка соединения с произвольной базой MySQL
-     * @param        $dbname
-     * @param        $username
-     * @param        $password
-     * @param string $host
-     * @param string $charset
-     * @param string $adapter
-     *
-     * @return void|Zend_Db_Adapter_Abstract
-     */
+
+	/**
+	 * Установка соединения с произвольной базой MySQL
+	 * @param string $dbname
+	 * @param string $username
+	 * @param string $password
+	 * @param string $host
+	 * @param string $charset
+	 * @param string $adapter
+	 *
+	 * @return void|Zend_Db_Adapter_Abstract
+	 */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
-        $temp = array('host'             => $host,
-                      'username'         => $username,
-                      'password'         => $password,
-                      'dbname'           => $dbname,
-                      'charset'          => $charset,
-                      'adapterNamespace' => 'Core_Db_Adapter'
-        );
+		$temp = array(
+			'host'     => $host,
+			'username' => $username,
+			'password' => $password,
+			'dbname'   => $dbname,
+			'charset'  => $charset
+		);
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
 			$db->getConnection();
-            return $db;
-        } catch (Zend_Db_Adapter_Exception $e) {
-            Error::catchDbException($e);
-        } catch (Zend_Exception $e) {
-            Error::catchZendException($e);
-        }
-        return;
+			return $db;
+		} catch (Zend_Db_Adapter_Exception $e) {
+			Error::catchDbException($e);
+		} catch (Zend_Exception $e) {
+			Error::catchZendException($e);
+		}
+		return;
 	}
+
 
 	/**
 	 * @param string $resId
@@ -179,11 +192,12 @@ class Db {
 		return $res;
 	}
 
-    /**
-     * Сохранение информации о входе пользователя
-     * @param string $auth
-     */
-    protected function storeSession(Zend_Session_Namespace $auth) {
+
+	/**
+	 * Сохранение информации о входе пользователя
+	 * @param Zend_Session_Namespace $auth
+	 */
+	protected function storeSession(Zend_Session_Namespace $auth) {
 		if ($auth && $auth->ID && $auth->ID > 0) {
 			$sid = Zend_Session::getId();
 			$s_id = $this->db->fetchOne("SELECT id FROM core_session WHERE logout_time IS NULL AND user_id=? AND sid=? AND ip=? LIMIT 1", array($sid, $auth->ID, $_SERVER['REMOTE_ADDR']));
@@ -199,8 +213,8 @@ class Db {
 		}
 	}
 
+
 	/**
-	 * @param string $auth
 	 * @param string $expired
 	 */
 	public function closeSession($expired = 'N') {
@@ -217,9 +231,11 @@ class Db {
 		}
 	}
 
+
 	/**
 	 * логирование активности простых пользователей
-	 * @param Zend_Session_Namespace $auth
+	 * @param array $exclude исключения адресов
+	 * @throws Exception
 	 */
 	public function logActivity($exclude = array()) {
 		$auth = Zend_Registry::get('auth');
@@ -242,34 +258,35 @@ class Db {
 				$data['action'] = serialize($arr);
 			}
 			if (isset($this->config->log) && $this->config->log &&
-                isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
-            ) {
+				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
+			) {
 				if (!$this->config->log->system->file) {
 					throw new Exception($this->traslate->tr('Не задан файл журнала запросов'));
 				}
 
-                $log = new \Core2\Log('access');
-                $log->access($auth->NAME);
+				$log = new \Core2\Log('access');
+				$log->access($auth->NAME);
 
 			} else {
 				$this->db->insert('core_log', $data);
-            }
-            // обновление записи о последней активности
-            $where = array($this->db->quoteInto("sid=?", $data['sid']),
-                    $this->db->quoteInto("ip=?", $data['ip']),
-                    $this->db->quoteInto("user_id=?", $data['user_id']),
-                    'logout_time IS NULL'
-            );
-            $this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
-        }
+			}
+			// обновление записи о последней активности
+			$where = array($this->db->quoteInto("sid=?", $data['sid']),
+						   $this->db->quoteInto("ip=?", $data['ip']),
+						   $this->db->quoteInto("user_id=?", $data['user_id']),
+						   'logout_time IS NULL'
+			);
+			$this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
+		}
 	}
+
 
 	/**
 	 * @param string $code
 	 * @return string
 	 */
 	public function getSetting($code) {
-        $this->getAllSettings();
+		$this->getAllSettings();
 		return isset($this->_settings[$code]) ? $this->_settings[$code]['value'] : false;
 	}
 
@@ -279,24 +296,26 @@ class Db {
 	 * @return string
 	 */
 	public function getCustomSetting($code) {
-        $this->getAllSettings();
-        if (isset($this->_settings[$code]) && $this->_settings[$code]['is_custom_sw'] == 'Y') {
-            return $this->_settings[$code]['value'];
-        }
-        return false;
+		$this->getAllSettings();
+		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_custom_sw'] == 'Y') {
+			return $this->_settings[$code]['value'];
+		}
+		return false;
 	}
+
 
 	/**
 	 * @param string $code
 	 * @return string
 	 */
 	public function getPersonalSetting($code) {
-        $this->getAllSettings();
-        if (isset($this->_settings[$code]) && $this->_settings[$code]['is_personal_sw'] == 'Y') {
-            return $this->_settings[$code]['value'];
-        }
+		$this->getAllSettings();
+		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_personal_sw'] == 'Y') {
+			return $this->_settings[$code]['value'];
+		}
 		return false;
 	}
+
 
 	/**
 	 * @param string $global_id
@@ -326,6 +345,7 @@ class Db {
 		return $data;
 	}
 
+
 	/**
 	 * Формирует пару ключ=>значение
 	 *
@@ -342,13 +362,14 @@ class Db {
 									WHERE is_active_sw='Y'
 									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
 									ORDER BY seq",
-				$global_id
+			$global_id
 		);
 		if ($empty_first) {
 			$data = array('' => '') + $data;
 		}
 		return $data;
 	}
+
 
 	/**
 	 * Получает значение справочника по первичному ключу
@@ -360,6 +381,7 @@ class Db {
 		$res = $this->db->fetchOne("SELECT name FROM core_enum WHERE id = ?", $id);
 		return $res;
 	}
+
 
 	/**
 	 * @param int $id
@@ -382,20 +404,22 @@ class Db {
 		return $res;
 	}
 
+
 	/**
 	 * @param int $id
 	 * @return bool|string
 	 */
-    final public function isUserActive($id) {
+	final public function isUserActive($id) {
 		if ($id === -1) return true;
 		return $this->db->fetchOne("SELECT 1 FROM core_users WHERE u_id=? AND visible='Y'", $id);
 	}
+
 
 	/**
 	 * @param string $module_id
 	 * @return string
 	 */
-    final public function isModuleActive($module_id) {
+	final public function isModuleActive($module_id) {
 		$key = "is_active_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
@@ -406,6 +430,7 @@ class Db {
 		return $is;
 	}
 
+
 	/**
 	 * Определяет, является ли субмодуль активным
 	 * Если модуль не активен, то все его субмодели НЕ активны, в независимости от значения в БД
@@ -413,19 +438,19 @@ class Db {
 	 *
 	 * @return string
 	 */
-    final public function isSubModuleActive($submodule_id)
-	{
+	final public function isSubModuleActive($submodule_id) {
 		$id = explode("_", $submodule_id);
 		if (isset($id[1]) && $this->isModuleActive($id[0])) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
 										INNER JOIN core_submodules AS s ON s.m_id=m.m_id
 									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'",
-					$id);
+				$id);
 		} else {
 			$is = 0;
 		}
 		return $is;
 	}
+
 
 	/**
 	 * Получаем информацию о субмодуле
@@ -447,7 +472,7 @@ class Db {
 											  AND m.module_id = ?
 											  AND sm_key = ?
 											  ORDER BY sm.seq",
-					$id);
+				$id);
 			$this->cache->save($mods, $key, array('is_active_core_modules'));
 		} else {
 			$mods = $this->cache->load($key);
@@ -455,12 +480,13 @@ class Db {
 		return $mods;
 	}
 
+
 	/**
 	 * @param string $module_id
 	 * @return string
 	 */
-    final public function isModuleInstalled($module_id) {
-        $module_id = trim(strtolower($module_id));
+	final public function isModuleInstalled($module_id) {
+		$module_id = trim(strtolower($module_id));
 		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
 		if (!($this->cache->test($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
@@ -471,40 +497,43 @@ class Db {
 		return $is;
 	}
 
-    /**
-     * Возврат абсолютного пути до директории в которой находится модуль
-     *
-     * @param string $module_id
-     * @return mixed
-     */
-    final public function getModuleLocation($module_id) {
-        return DOC_ROOT . $this->getModuleLoc($module_id);
-    }
+
+	/**
+	 * Возврат абсолютного пути до директории в которой находится модуль
+	 *
+	 * @param string $module_id
+	 * @return mixed
+	 */
+	final public function getModuleLocation($module_id) {
+		return DOC_ROOT . $this->getModuleLoc($module_id);
+	}
+
 
 	/**
 	 * возврат версии модуля
-     * @param string $module_id
-     * @return string
-     */
-    final public function getModuleVersion($module_id) {
+	 * @param string $module_id
+	 * @return string
+	 */
+	final public function getModuleVersion($module_id) {
 
-        return $this->db->fetchOne("
+		return $this->db->fetchOne("
             SELECT version
             FROM core_modules
             WHERE module_id = ?
         ", $module_id);
-    }
+	}
+
 
 	/**
 	 * Получение абсолютного адреса папки модуля
 	 * @param  string $module_id
 	 * @return string
 	 */
-    final public function getModuleSrc($module_id)
-	{
-        $loc = $this->getModuleLoc($module_id);
+	final public function getModuleSrc($module_id) {
+		$loc = $this->getModuleLoc($module_id);
 		return DOC_PATH . $loc;
 	}
+
 
 	/**
 	 * Получение относительного адреса папки модуля
@@ -514,27 +543,26 @@ class Db {
 	 * @return false|mixed|string
 	 * @throws Exception
 	 */
-	final public function getModuleLoc($module_id)
-	{
+	final public function getModuleLoc($module_id) {
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new Exception($this->traslate->tr("Не определен идентификатор модуля."));
 		if (!($this->cache->test($module_id))) {
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
 			} else {
-                $m = $this->db->fetchRow("SELECT is_system, version FROM core_modules WHERE module_id = ?", $module_id);
-                if ($m) {
-                    if ($m['is_system'] == "Y") {
-                        $loc = "core2/mod/{$module_id}/v{$m['version']}";
-                    } else {
-                        $loc = "mod/{$module_id}/v{$m['version']}";
-                        if (!is_dir(DOC_ROOT . $loc)) {
-                            $loc = "mod/{$module_id}";
-                        }
-                    }
-                } else {
-                    throw new Exception($this->traslate->tr("Модуль не существует"), 404);
-                }
+				$m = $this->db->fetchRow("SELECT is_system, version FROM core_modules WHERE module_id = ?", $module_id);
+				if ($m) {
+					if ($m['is_system'] == "Y") {
+						$loc = "core2/mod/{$module_id}/v{$m['version']}";
+					} else {
+						$loc = "mod/{$module_id}/v{$m['version']}";
+						if (!is_dir(DOC_ROOT . $loc)) {
+							$loc = "mod/{$module_id}";
+						}
+					}
+				} else {
+					throw new Exception($this->traslate->tr("Модуль не существует"), 404);
+				}
 			}
 			$this->cache->save($loc, $module_id);
 		} else {
@@ -543,36 +571,45 @@ class Db {
 		return $loc;
 	}
 
-    final public function getModule($module_id) {
 
-    }
+	/**
+	 * @param string $module_id
+	 */
+	final public function getModule($module_id) {
 
-    /**
-     * Получение всех настроек системы
-     */
+	}
+
+
+	/**
+	 * @param string $name
+	 * @return \Core2\Log
+	 */
+	final public function log($name) {
+
+		$log = new \Core2\Log($name);
+		return $log;
+	}
+
+
+	/**
+	 * Получение всех настроек системы
+	 */
 	final private function getAllSettings() {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->test($key))) {
 			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
-            $is = array();
-            foreach ($res as $item) {
-                $is[$item['code']] = array(
-                        'value' => $item['value'],
-                        'is_custom_sw' => $item['is_custom_sw'],
-                        'is_personal_sw' => $item['is_personal_sw']
-                );
-            }
+			$is = array();
+			foreach ($res as $item) {
+				$is[$item['code']] = array(
+					'value' => $item['value'],
+					'is_custom_sw' => $item['is_custom_sw'],
+					'is_personal_sw' => $item['is_personal_sw']
+				);
+			}
 			$this->cache->save($is, $key);
 		} else {
 			$is = $this->cache->load($key);
 		}
-        $this->_settings = $is;
+		$this->_settings = $is;
 	}
-
-
-    final public function log($name) {
-
-        $log = new \Core2\Log($name);
-        return $log;
-    }
 }
