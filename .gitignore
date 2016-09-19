@@ -1,0 +1,11 @@
+/mod/cron
+/mod/webservice
+/mod/profile
+/mod/queue
+/mod/repo
+/mod/settings
+/.svn
+/vendor
+/mod/billing
+*.lock
+/translations/*.mo

@@ -69,7 +69,6 @@ class Image {
 		}
 	}
 
-
     /**
      * @param $source
      * @param $target

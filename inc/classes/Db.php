@@ -1,13 +1,9 @@
 <?
 
-require_once 'Zend/Db/Table.php';
-require_once 'Zend/Registry.php';
-require_once 'Zend/Cache.php';
+require_once("Zend/Db/Table.php");
+require_once("Zend/Registry.php");
+require_once("Zend/Cache.php");
 
-
-/**
- * Class Db
- */
 class Db {
 	protected $config;
 	protected $frontendOptions = array(
@@ -16,19 +12,14 @@ class Db {
 	);
 	protected $backendOptions = array();
 	protected $backend = 'File';
-    private $_s        = array();
+    private $_s = array();
     private $_settings = array();
 
-
-    /**
-     * Db constructor.
-     * @param null $config
-     */
 	public function __construct($config = null) {
-		if (is_null($config)) {
-			$this->config = Zend_Registry::get('config');
-		} else {
-			$this->config = $config;
+        if (is_null($config)) {
+            $this->config = Zend_Registry::get('config');
+        } else {
+            $this->config = $config;
 		}
         if (!$config) return false;
 
@@ -37,9 +28,8 @@ class Db {
 
     /**
      * @param string $k
-     * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract|\Core2\Log
+     * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract
      * @throws Zend_Exception
-     * @throws Exception
      */
 	public function __get($k) {
 		if ($k == 'db') {
@@ -108,14 +98,13 @@ class Db {
         }
 	}
 
-
 	/**
-	 * @param mixed $database
+	 * @param $database
 	 * @return Zend_Db_Adapter_Abstract
 	 */
 	protected function establishConnection($database) {
 		try {
-			$db = Zend_Db::factory($database);
+            $db = Zend_Db::factory($database);
 			Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
@@ -128,12 +117,11 @@ class Db {
 		return $db;
 	}
 
-
     /**
      * Установка соединения с произвольной базой MySQL
-     * @param string $dbname
-     * @param string $username
-     * @param string $password
+     * @param        $dbname
+     * @param        $username
+     * @param        $password
      * @param string $host
      * @param string $charset
      * @param string $adapter
@@ -141,12 +129,12 @@ class Db {
      * @return void|Zend_Db_Adapter_Abstract
      */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
-		$temp = array(
-            'host'     => $host,
-            'username' => $username,
-            'password' => $password,
-            'dbname'   => $dbname,
-            'charset'  => $charset
+        $temp = array('host'             => $host,
+                      'username'         => $username,
+                      'password'         => $password,
+                      'dbname'           => $dbname,
+                      'charset'          => $charset,
+                      'adapterNamespace' => 'Core_Db_Adapter'
         );
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
@@ -159,7 +147,6 @@ class Db {
         }
         return;
 	}
-
 
 	/**
 	 * @param string $resId
@@ -192,10 +179,9 @@ class Db {
 		return $res;
 	}
 
-
     /**
      * Сохранение информации о входе пользователя
-     * @param Zend_Session_Namespace $auth
+     * @param string $auth
      */
     protected function storeSession(Zend_Session_Namespace $auth) {
 		if ($auth && $auth->ID && $auth->ID > 0) {
@@ -213,8 +199,8 @@ class Db {
 		}
 	}
 
-
 	/**
+	 * @param string $auth
 	 * @param string $expired
 	 */
 	public function closeSession($expired = 'N') {
@@ -231,11 +217,9 @@ class Db {
 		}
 	}
 
-
-    /**
+	/**
 	 * логирование активности простых пользователей
-	 * @param array $exclude исключения адресов
-     * @throws Exception
+	 * @param Zend_Session_Namespace $auth
 	 */
 	public function logActivity($exclude = array()) {
 		$auth = Zend_Registry::get('auth');
@@ -280,8 +264,7 @@ class Db {
         }
 	}
 
-
-    /**
+	/**
 	 * @param string $code
 	 * @return string
 	 */
@@ -303,8 +286,7 @@ class Db {
         return false;
 	}
 
-
-    /**
+	/**
 	 * @param string $code
 	 * @return string
 	 */
@@ -316,8 +298,7 @@ class Db {
 		return false;
 	}
 
-
-    /**
+	/**
 	 * @param string $global_id
 	 * @return array
 	 */
@@ -345,8 +326,7 @@ class Db {
 		return $data;
 	}
 
-
-    /**
+	/**
 	 * Формирует пару ключ=>значение
 	 *
 	 * @param string $global_id - глобальный идентификатор справочника
@@ -370,8 +350,7 @@ class Db {
 		return $data;
 	}
 
-
-    /**
+	/**
 	 * Получает значение справочника по первичному ключу
 	 *
 	 * @param int $id
@@ -381,7 +360,6 @@ class Db {
 		$res = $this->db->fetchOne("SELECT name FROM core_enum WHERE id = ?", $id);
 		return $res;
 	}
-
 
 	/**
 	 * @param int $id
@@ -404,7 +382,6 @@ class Db {
 		return $res;
 	}
 
-
 	/**
 	 * @param int $id
 	 * @return bool|string
@@ -413,7 +390,6 @@ class Db {
 		if ($id === -1) return true;
 		return $this->db->fetchOne("SELECT 1 FROM core_users WHERE u_id=? AND visible='Y'", $id);
 	}
-
 
 	/**
 	 * @param string $module_id
@@ -430,7 +406,6 @@ class Db {
 		return $is;
 	}
 
-
 	/**
 	 * Определяет, является ли субмодуль активным
 	 * Если модуль не активен, то все его субмодели НЕ активны, в независимости от значения в БД
@@ -438,7 +413,8 @@ class Db {
 	 *
 	 * @return string
 	 */
-    final public function isSubModuleActive($submodule_id) {
+    final public function isSubModuleActive($submodule_id)
+	{
 		$id = explode("_", $submodule_id);
 		if (isset($id[1]) && $this->isModuleActive($id[0])) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
@@ -450,7 +426,6 @@ class Db {
 		}
 		return $is;
 	}
-
 
 	/**
 	 * Получаем информацию о субмодуле
@@ -480,7 +455,6 @@ class Db {
 		return $mods;
 	}
 
-
 	/**
 	 * @param string $module_id
 	 * @return string
@@ -497,7 +471,6 @@ class Db {
 		return $is;
 	}
 
-
     /**
      * Возврат абсолютного пути до директории в которой находится модуль
      *
@@ -507,7 +480,6 @@ class Db {
     final public function getModuleLocation($module_id) {
         return DOC_ROOT . $this->getModuleLoc($module_id);
     }
-
 
 	/**
 	 * возврат версии модуля
@@ -523,17 +495,16 @@ class Db {
         ", $module_id);
     }
 
-
 	/**
 	 * Получение абсолютного адреса папки модуля
 	 * @param  string $module_id
 	 * @return string
 	 */
-    final public function getModuleSrc($module_id) {
+    final public function getModuleSrc($module_id)
+	{
         $loc = $this->getModuleLoc($module_id);
 		return DOC_PATH . $loc;
 	}
-
 
 	/**
 	 * Получение относительного адреса папки модуля
@@ -543,7 +514,8 @@ class Db {
 	 * @return false|mixed|string
 	 * @throws Exception
 	 */
-	final public function getModuleLoc($module_id) {
+	final public function getModuleLoc($module_id)
+	{
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new Exception($this->traslate->tr("Не определен идентификатор модуля."));
 		if (!($this->cache->test($module_id))) {
@@ -571,45 +543,36 @@ class Db {
 		return $loc;
 	}
 
-
-    /**
-     * @param string $module_id
-     */
     final public function getModule($module_id) {
 
     }
 
+    /**
+     * Получение всех настроек системы
+     */
+	final private function getAllSettings() {
+		$key = "all_settings_" . $this->config->database->params->dbname;
+		if (!($this->cache->test($key))) {
+			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
+            $is = array();
+            foreach ($res as $item) {
+                $is[$item['code']] = array(
+                        'value' => $item['value'],
+                        'is_custom_sw' => $item['is_custom_sw'],
+                        'is_personal_sw' => $item['is_personal_sw']
+                );
+            }
+			$this->cache->save($is, $key);
+		} else {
+			$is = $this->cache->load($key);
+		}
+        $this->_settings = $is;
+	}
 
-	/**
-	 * @param string $name
-	 * @return \Core2\Log
-	 */
+
     final public function log($name) {
 
         $log = new \Core2\Log($name);
         return $log;
     }
-
-
-	/**
-	 * Получение всех настроек системы
-	 */
-	final private function getAllSettings() {
-		$key = "all_settings_" . $this->config->database->params->dbname;
-		if (!($this->cache->test($key))) {
-			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
-			$is = array();
-			foreach ($res as $item) {
-				$is[$item['code']] = array(
-					'value' => $item['value'],
-					'is_custom_sw' => $item['is_custom_sw'],
-					'is_personal_sw' => $item['is_personal_sw']
-				);
-			}
-			$this->cache->save($is, $key);
-		} else {
-			$is = $this->cache->load($key);
-		}
-		$this->_settings = $is;
-	}
 }
