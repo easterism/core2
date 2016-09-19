@@ -1,6 +1,6 @@
 <?
-    require_once("../../inc/classes/Common.php");
-    require_once("../../inc/classes/class.list.php");
+    require_once(DOC_ROOT . "core2/inc/classes/Common.php");
+    require_once(DOC_ROOT . "core2/inc/classes/class.list.php");
 
 /**
  * Class InstallModule
