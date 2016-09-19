@@ -482,7 +482,7 @@ $(document).ready(function() {
             submodulesContainer.show();
             var offsets = this.getBoundingClientRect();
 
-            if ($(this)[0].offsetTop > 200) {
+            if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
                 submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
             } else {
                 submodulesContainer.css('top', (offsets.top + 1) + 'px');
