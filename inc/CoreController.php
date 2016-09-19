@@ -958,7 +958,7 @@ class CoreController extends Common {
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
 
-        require_once "core2/mod/admin/InstallModule.php";
+        require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
         $install    = new InstallModule();
 
         foreach ($data as $val) {

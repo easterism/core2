@@ -28,7 +28,7 @@ class initList extends Acl {
 										'DELETE_MSG'=>'Вы действительно хотите удалить эту запись?'
 										);
 	public function __construct() {
-		parent::__construct();
+        parent::__construct();
         $mask_date = $this->getSetting('mask_date');
         if ($mask_date) {
             $this->date_mask = $mask_date;
