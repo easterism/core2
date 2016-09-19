@@ -7,3 +7,5 @@
 /.svn
 /vendor
 /mod/billing
+*.lock
+/translations/*.mo
