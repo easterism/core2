@@ -280,9 +280,9 @@ class Bs_CsvUtil {
   /**
   * works on a string to include in a csv string/file.
   * @access private
-  * @param  string $val
-  * @param  string $separator
-  * @param  mixed  $trimFunction (bool FALSE or 'rtrim' or so.)
+  * @param  string      $val
+  * @param  string      $separator
+  * @param  string|bool $trimFunction (bool FALSE or 'rtrim' or so.)
   * @return string
   * @see    arrayToCsvString() and others.
   */

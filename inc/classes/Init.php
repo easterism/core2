@@ -20,27 +20,27 @@
         Error::Exception("Отсутствует конфигурационный файл.");
     }
     $config = array(
-            'system'       => array('name' => 'CORE'),
-            'include_path' => '',
-            'cache'        => 'cache',
-            'temp'         => getenv('TMP'),
-            'debug'        => array('on' => false),
-            'database'     => array(
-                    'adapter'                    => 'Pdo_Mysql',
-                    'params'                     => array(
-                            'charset'          => 'utf8',
-                            'adapterNamespace' => 'Core_Db_Adapter'
-                    ),
-                    'isDefaultTableAdapter'      => true,
-                    'profiler'                   => array(
-                            'enabled' => false,
-                            'class'   => 'Zend_Db_Profiler_Firebug'
-                    ),
-                    'caseFolding'                => true,
-                    'autoQuoteIdentifiers'       => true,
-                    'allowSerialization'         => true,
-                    'autoReconnectOnUnserialize' => true
-            )
+        'system'       => array('name' => 'CORE'),
+        'include_path' => '',
+        'cache'        => 'cache',
+        'temp'         => getenv('TMP'),
+        'debug'        => array('on' => false),
+        'database'     => array(
+            'adapter'                    => 'Pdo_Mysql',
+            'params'                     => array(
+                'charset'          => 'utf8',
+                'adapterNamespace' => 'Core_Db_Adapter'
+            ),
+            'isDefaultTableAdapter'      => true,
+            'profiler'                   => array(
+                'enabled' => false,
+                'class'   => 'Zend_Db_Profiler_Firebug'
+            ),
+            'caseFolding'                => true,
+            'autoQuoteIdentifiers'       => true,
+            'allowSerialization'         => true,
+            'autoReconnectOnUnserialize' => true
+        )
     );
 	// определяем путь к темповой папке
     if (empty($config['temp'])) {
@@ -161,7 +161,7 @@
 			parent::__construct();
 
 			if (empty($_SERVER['HTTPS'])) {
-				if (isset($this->config->system) && !empty($this->config->system->https)) {
+				if (isset($this->config->system) && ! empty($this->config->system->https)) {
 					header('Location: https://' . $_SERVER['SERVER_NAME']);
 				}
 			}
@@ -382,7 +382,7 @@
             else {
                 // GET LOGIN PAGE
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
-                    throw new Exception('expired');
+                    //throw new Exception('expired');
                 }
                 return $this->getLogin();
             }

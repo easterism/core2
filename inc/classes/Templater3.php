@@ -58,6 +58,15 @@ class Templater3 {
 
 
     /**
+     * The final render
+     * @return string
+     */
+    public function __toString() {
+        return $this->render();
+    }
+
+
+    /**
      * Load the HTML file to parse
      * @param  string     $filename
      * @throws Exception
