@@ -16,10 +16,10 @@ class Db {
     private $_settings = array();
 
 	public function __construct($config = null) {
-		if (is_null($config)) {
-			$this->config = Zend_Registry::get('config');
-		} else {
-			$this->config = $config;
+        if (is_null($config)) {
+            $this->config = Zend_Registry::get('config');
+        } else {
+            $this->config = $config;
 		}
         if (!$config) return false;
 
@@ -104,7 +104,7 @@ class Db {
 	 */
 	protected function establishConnection($database) {
 		try {
-			$db = Zend_Db::factory($database);
+            $db = Zend_Db::factory($database);
 			Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
