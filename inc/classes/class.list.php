@@ -281,7 +281,6 @@ class listTable extends initList {
 									}
 								}
 							}
-
 						}
 					}
 					$next = next($map);

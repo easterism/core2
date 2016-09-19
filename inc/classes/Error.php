@@ -39,9 +39,9 @@ class Error {
 	 * @param Exception $exception
 	 */
 	public static function catchException(Exception $exception) {
-		$cnf = self::getConfig();
-		$message = $exception->getMessage();
-		$code = $exception->getCode();
+        $cnf     = self::getConfig();
+        $message = $exception->getMessage();
+        $code    = $exception->getCode();
 
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
 			$trace = $exception->getTraceAsString();
@@ -64,7 +64,7 @@ class Error {
 			die();
 		}
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
-		if ($cnf->debug->on) {
+		if ($cnf->debug && $cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
@@ -73,7 +73,10 @@ class Error {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
 		} else {
-			if (substr($message, 0, 8) == 'SQLSTATE') $message = 'Ошибка базы данных'; //TODO вести журнал
+			if (substr($message, 0, 8) == 'SQLSTATE') {
+			    $message = 'Ошибка базы данных';
+                //TODO вести журнал
+            }
             self::Exception($message, $code);
 		}
 	}

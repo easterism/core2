@@ -51,10 +51,10 @@ class Core_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	 *
 	 * @return App_Zend_Db_Adapter_Mysqli
 	 */
-	public function rollback()
+	public function rollBack()
 	{
 		if ($this->_transactionLevel === 1) {
-			parent::rollback();
+			parent::rollBack();
 		}
 		$this->_transactionLevel--;
 

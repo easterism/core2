@@ -112,11 +112,13 @@ $tab->beginContainer("Модули");
 				$dep_list = array();
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
-					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($variable['m_name']));
+                    // FIXME иногда переменной m_name нету у тех модулей которые имеют зависимости
+                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : $variable['module_name'];
+					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($m_name));
 					if (!in_array($variable['module_id'], $availableModules)) {
 						$variable['m_name'] .= " <i style=\"color:#F44336\">(deleted)</i>";
 					}
-					$dep_list[$variable['module_id']] = $variable['m_name'];
+					$dep_list[$variable['module_id']] = $m_name;
 				}
 				
 				

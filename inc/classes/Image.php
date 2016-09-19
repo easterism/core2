@@ -68,7 +68,14 @@ class Image {
 			return false;
 		}
 	}
-	
+
+
+    /**
+     * @param $source
+     * @param $target
+     *
+     * @return bool
+     */
 	private function imageChecks($source, $target) {
 		if (Image::checkDir($target)) {
 	    	if ($source && Image::checkTypeImage($source)) {
