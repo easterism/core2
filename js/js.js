@@ -318,7 +318,7 @@ var load = function (url, data, id, callback) {
 		if (locData.data) {
 			//$(locData.id).load('index.php' + url, callback);
 			$(locData.id).load('index.php' + url, locData.data, callback);
-			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
+			//xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 		} else {
 			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 				.done(function (n) {
