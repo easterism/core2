@@ -59,7 +59,7 @@ class CoreController extends Common {
             } else {
                 $alert->danger($this->translate->tr("Обнаружены изменения в файлах модулей:"), implode(", ", $changedMods), true);
             }
-            if (!$this->moduleConfig->database || $this->moduleConfig->database->admin->username) {
+            if (!$this->moduleConfig->database || !$this->moduleConfig->database->admin || !$this->moduleConfig->database->admin->username) {
                 $alert->warning($this->translate->tr("Не задан администратор базы данных"), "Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", true);
             }
         } catch (Exception $e) {
