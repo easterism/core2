@@ -146,7 +146,8 @@ class Db {
 			'username' => $username,
 			'password' => $password,
 			'dbname'   => $dbname,
-			'charset'  => $charset
+			'charset'  => $charset,
+            'adapterNamespace' => 'Core_Db_Adapter'
 		);
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
