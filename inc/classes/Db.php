@@ -108,24 +108,23 @@ class Db {
 		}
 	}
 
-
-	/**
-	 * @param mixed $database
-	 * @return Zend_Db_Adapter_Abstract
-	 */
-	protected function establishConnection($database) {
+    /**
+     * @param Zend_Config $database
+     * @return Zend_Db_Adapter_Abstract
+     */
+    protected function establishConnection(Zend_Config $database) {
 		try {
 			$db = Zend_Db::factory($database);
 			Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
 			Zend_Registry::getInstance()->set('db', $db);
 			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
-		} catch (Zend_Db_Adapter_Exception $e) {
-			Error::catchDbException($e);
-		} catch (Zend_Exception $e) {
-			Error::catchZendException($e);
-		}
-		return $db;
+            return $db;
+        } catch (Zend_Db_Adapter_Exception $e) {
+            Error::catchDbException($e);
+        } catch (Zend_Exception $e) {
+            Error::catchZendException($e);
+        }
 	}
 
 
@@ -138,11 +137,13 @@ class Db {
 	 * @param string $charset
 	 * @param string $adapter
 	 *
-	 * @return void|Zend_Db_Adapter_Abstract
+	 * @return Zend_Db_Adapter_Abstract
 	 */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
+	    $host = explode(":", $host);
 		$temp = array(
-			'host'     => $host,
+			'host'     => $host[0],
+			'port'     => isset($host[1]) ? $host[1] : 3306,
 			'username' => $username,
 			'password' => $password,
 			'dbname'   => $dbname,
@@ -152,13 +153,12 @@ class Db {
 		try {
 			$db = Zend_Db::factory($adapter, $temp);
 			$db->getConnection();
-			return $db;
-		} catch (Zend_Db_Adapter_Exception $e) {
-			Error::catchDbException($e);
-		} catch (Zend_Exception $e) {
-			Error::catchZendException($e);
-		}
-		return;
+            return $db;
+        } catch (Zend_Db_Adapter_Exception $e) {
+            Error::catchDbException($e);
+        } catch (Zend_Exception $e) {
+            Error::catchZendException($e);
+        }
 	}
 
 

@@ -113,6 +113,10 @@ class InstallModule extends Common {
         $this->module = 'admin';
     }
 
+    /**
+     * @param string $k
+     * @return Common|CoreController|mixed|null|void|Zend_Config_Ini|Zend_Db_Adapter_Abstract
+     */
     public function __get($k)
     {
         if ($k == 'db') {
@@ -134,6 +138,7 @@ class InstallModule extends Common {
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
+        Zend_Registry::set('db', $db);
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -405,7 +410,6 @@ class InstallModule extends Common {
      * @return  array|bool
      */
     private function getSubModules($m_id) {
-        echo "";
         $Inf = $this->mInfo;
         $arrSubModules = array();
         if (!empty($Inf['install']['submodules']['sm'])) {
@@ -507,8 +511,10 @@ class InstallModule extends Common {
             $arrForInsert['access_add']     = $access['access_add'];
         }
         //регистрация модуля
+
         $this->db->insert('core_modules', $arrForInsert);
-        $lastId = $this->db->lastInsertId();
+        //$lastId = $this->db->lastInsertId('core_modules'); //FIXME Не работает, не знаю почему :(
+        $lastId = $this->db->fetchOne("SELECT m_id FROM core_modules WHERE module_id=?", $arrForInsert['module_id']);
         $this->addNotice("Регистрация модуля", "Операция выполнена", "Успешно", "info");
         //регистрация субмодулей модуля
         $subModules = $this->getSubModules($lastId);
@@ -1277,6 +1283,7 @@ class InstallModule extends Common {
      * @return  string              HTML процесса установки
      */
     public function mInstallFromRepo($repo_url, $m_id){
+        //echo "<pre>";print_r($this->db);echo "</pre>";die;
         $this->db->beginTransaction();
         $st = '';
         try {
@@ -1892,11 +1899,11 @@ class InstallModule extends Common {
      */
     public function checkModUpdates($mod_id) {
         $this->db->beginTransaction();
-        $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
-        $m_name = $mod['m_name'];
-        $m_v    = $mod['version'];
-        $st = "<h3>Обновляем модуль '{$mod['m_name']}'</h3>";
         try {
+            $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
+            $m_name = $mod['m_name'];
+            $m_v    = $mod['version'];
+            $st = "<h3>Обновляем модуль '{$mod['m_name']}'</h3>";
             $data       = '';
             $files_hash = '';
 

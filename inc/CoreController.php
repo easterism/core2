@@ -48,8 +48,6 @@ class CoreController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
         $alert = new Alert();
 
-
-
         $tab = new tabs('mod');
         $tab->beginContainer($this->translate->tr("События аудита"));
         try {
