@@ -112,7 +112,7 @@ class Common extends Acl {
 					$modConfig->setReadOnly();
 					$v = $this->{$k} = $modConfig;
 				} else {
-					Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
+                    \Core2\Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
 				}
 			}
 			// Получение экземпляра контроллера указанного модуля

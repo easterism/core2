@@ -121,9 +121,9 @@ class Db {
 			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
             return $db;
         } catch (Zend_Db_Adapter_Exception $e) {
-            Error::catchDbException($e);
+            \Core2\Error::catchDbException($e);
         } catch (Zend_Exception $e) {
-            Error::catchZendException($e);
+            \Core2\Error::catchZendException($e);
         }
 	}
 
@@ -155,9 +155,9 @@ class Db {
 			$db->getConnection();
             return $db;
         } catch (Zend_Db_Adapter_Exception $e) {
-            Error::catchDbException($e);
+            \Core2\Error::catchDbException($e);
         } catch (Zend_Exception $e) {
-            Error::catchZendException($e);
+            \Core2\Error::catchZendException($e);
         }
 	}
 

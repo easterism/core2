@@ -32,7 +32,7 @@ Installation
  
   	echo $init->dispatch();
   } catch (Exception $e) {
-  	Error::catchException($e);
+  	\Core2\Error::catchException($e);
   }
  ```
 5. Create *conf.ini* file near the index.php

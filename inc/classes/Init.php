@@ -7,7 +7,7 @@
 
     $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
     if (!file_exists($conf_file)) {
-        Error::Exception("Отсутствует загрузчик.");
+        \Core2\Error::Exception("Отсутствует загрузчик.");
     }
     require_once($conf_file);
     require_once("Error.php");
@@ -17,7 +17,7 @@
     $conf_file = DOC_ROOT . "conf.ini";
 
     if (!file_exists($conf_file)) {
-        Error::Exception("Отсутствует конфигурационный файл.");
+        \Core2\Error::Exception("Отсутствует конфигурационный файл.");
     }
     $config = array(
         'system'       => array('name' => 'CORE'),
@@ -73,7 +73,7 @@
         }
         $config->merge($config2);
     } catch (Zend_Config_Exception $e) {
-        Error::Exception($e->getMessage());
+        \Core2\Error::Exception($e->getMessage());
     }
 
     // отладка приложения
@@ -106,8 +106,8 @@
 		$realm = $config->auth->params->realm;
 		$users = $config->auth->params->users;
 		if ($code = Tool::httpAuth($realm, $users)) {
-			if ($code == 1) Error::Exception("Неверный пользователь.");
-			if ($code == 2) Error::Exception("Неверный пароль.");
+			if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
+			if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
 		}
 	}
 
@@ -230,19 +230,19 @@
                 $this->setContext('webservice');
 
                 if ( ! $this->isModuleActive('webservice')) {
-                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
+                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
                 }
 
                 $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
 
                 if ( ! file_exists($webservice_controller_path)) {
-                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
                 }
 
                 require_once($webservice_controller_path);
 
                 if ( ! class_exists('ModWebserviceController')) {
-                    Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
+                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
                 }
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchWebToken($token);
@@ -304,20 +304,20 @@
 
                 // Инициализация модуля вебсервиса
                 if ( ! $this->isModuleActive('webservice')) {
-                    return Error::catchJsonException(array('message' => 'Module webservice does not active'), 503);
+                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice does not active'), 503);
                 }
 
                 $webservice_location        = $this->getModuleLocation('webservice');
                 $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
 
                 if ( ! file_exists($webservice_controller_path)) {
-                    return Error::catchJsonException(array('message' => 'Module does not exists'), 500);
+                    return \Core2\Error::catchJsonException(array('message' => 'Module does not exists'), 500);
                 }
 
                 require_once($webservice_controller_path);
 
                 if ( ! class_exists('ModWebserviceController')) {
-                    return Error::catchJsonException(array('message' => 'Module broken'), 500);
+                    return \Core2\Error::catchJsonException(array('message' => 'Module broken'), 500);
                 }
 
                 if ( ! empty($matches[2])) {
@@ -608,10 +608,11 @@
             if ($this->auth->MOBILE) { //если core2m
                 return $this->getMenuMobile();
             }
-            require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
+            //require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
             $xajax = new xajax();
             //$xajax->configure("debug", true);
-            $xajax->configure('javascript URI', 'core2/ext/xajax_0.5_minimal/');
+            //$xajax->configure('javascript URI', 'core2/ext/xajax_0.5_minimal/');
+            $xajax->configure('javascript URI', 'core2/vendor/xajax/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
             //$xajax->registerFunction('post');
             $xajax->processRequest();
@@ -1040,7 +1041,7 @@
                 try {
                     return $xajax->$func($data);
                 } catch (Exception $e) {
-                    Error::catchXajax($e, $res);
+                    \Core2\Error::catchXajax($e, $res);
                 }
             } else {
                 throw new Exception($translate->tr("Метод не найден"), 60);
@@ -1071,7 +1072,7 @@
                         $data['params'] = $params;
                         return $xajax->$func($data);
                     } catch (Exception $e) {
-                        Error::catchXajax($e, $res);
+                        \Core2\Error::catchXajax($e, $res);
                     }
                 } else {
                     throw new Exception($translate->tr("Метод не найден"), 60);

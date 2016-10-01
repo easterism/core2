@@ -555,7 +555,7 @@ class CoreController extends Common {
 				}
 				echo '{}';
 			} catch (Exception $e) {
-				Error::catchJsonException(array('error' => array($e->getMessage())), 503);
+                \Core2\Error::catchJsonException(array('error' => array($e->getMessage())), 503);
 			}
 			return;
 		}
