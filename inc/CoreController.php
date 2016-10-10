@@ -102,7 +102,7 @@ class CoreController extends Common {
 		    if ($errorNamespace->numberOfPageRequests > 5) {
 		    	
 		    	$blockNamespace->blocked = time();
-		    	$blockNamespace->setExpirationSeconds(10);
+		    	$blockNamespace->setExpirationSeconds(60);
 		    	
 		    	$errorNamespace->numberOfPageRequests = 1;
 		    }
@@ -121,8 +121,7 @@ class CoreController extends Common {
 		$blockNamespace = new Zend_Session_Namespace('Block');
 		$tokenNamespace = new Zend_Session_Namespace('Token');
 		if (!empty($post['js_disabled'])) {
-			$errorNamespace->ERROR = $this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!");
-            header("HTTP/1.1 400 Bad Request");
+			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
             header("Location: index.php");
 			return;
 		}
@@ -132,28 +131,33 @@ class CoreController extends Common {
 		}
 		else {
 			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
-				$errorNamespace->ERROR = $this->translate->tr("Ошибка авторизации!");
-                header("HTTP/1.1 400 Bad Request");
+				$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
                 header("Location: index.php");
 				return;
 			}
 			try {
 				$db = Zend_Db::factory($this->config->database);
 				$db->getConnection();
-				//Zend_Db_Table::setDefaultAdapter($db);
 			} catch (Exception $e) {
 				$errorNamespace->ERROR = $this->catchLoginException($e);
-                header("HTTP/1.1 503 Service Unavailable");
                 header("Location: index.php");
 				return;
 			}
 			$authLDAP = false;
-			if ($post['login'] !== 'root') {
+            $login = trim($post['login']);
+            $passw = $post['password'];
+
+            if (!ctype_print($passw)) {
+                $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
+                header("Location: index.php");
+                return;
+            }
+			if ($login !== 'root') {
 				//ldap
 				if (!empty($this->config->ldap->active) && $this->config->ldap->active) {
 					require_once 'core2/inc/classes/LdapAuth.php';
                     $ldapAuth = new LdapAuth();
-                    $ldapAuth->auth($post['login'], $post['password']);
+                    $ldapAuth->auth($login, $passw);
                     $ldapStatus = $ldapAuth->getStatus();
 					switch ($ldapStatus) {
 						case LdapAuth::ST_LDAP_AUTH_SUCCESS :
@@ -184,8 +188,7 @@ class CoreController extends Common {
 //							$this->setError($errorNamespace, $blockNamespace, "Пользователь не найден");
 							//удаляем пользователя если его нету в AD и с префиксом LDAP_%
 							//$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
-							$login = $post['login'];
-							$post['password'] = md5($post['password']);
+                            $passw = md5($passw);
 						break;
 						
 						case LdapAuth::ST_LDAP_INVALID_PASSWORD :
@@ -200,9 +203,6 @@ class CoreController extends Common {
 							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Неизвестная ошибка авторизации по LDAP"));
 						break;
 					}
-
-				} else {
-					$login = $_POST['login'];
 				}
 
 				if (empty($res)) {
@@ -223,7 +223,7 @@ class CoreController extends Common {
 					$res['LDAP'] = false;
 				}
 
-				$md5_pass = Tool::pass_salt($_POST['password']);
+				$md5_pass = Tool::pass_salt($passw);
 
 				if ($res['LDAP']) {
 					$res['u_pass'] = $md5_pass;
@@ -278,10 +278,20 @@ class CoreController extends Common {
 		return;
 	}
 
+    /**
+     * Обработка исключений входа в систему
+     * @param $exception
+     * @return mixed
+     */
     private function catchLoginException($exception)
     {
         $message = $exception->getMessage();
         $code = $exception->getCode();
+        if ($code == 400) {
+            header("HTTP/1.1 400 Bad Request");
+        } else {
+            header("HTTP/1.1 503 Service Unavailable");
+        }
         if ($code == 1044) {
             return $this->translate->tr('Нет доступа к базе данных.');
         } elseif ($code == 2002) {
@@ -297,7 +307,7 @@ class CoreController extends Common {
      * установка данных дя пользователя root
      * @return array
      */
-    private function setRoot() {
+    private final function setRoot() {
         $res            = array();
         $res['u_pass']  = self::RP;
         $res['u_id']    = -1;
@@ -311,7 +321,7 @@ class CoreController extends Common {
 	public function action_exit() {
 		$this->closeSession();
 		Zend_Session::destroy();
-        header("Location: index.php");
+        return;
 	}
 
 

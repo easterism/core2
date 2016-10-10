@@ -25,6 +25,8 @@
         'cache'        => 'cache',
         'temp'         => getenv('TMP'),
         'debug'        => array('on' => false),
+        'session'      => array('cookie_httponly'  => true,
+                                'use_only_cookies' => true),
         'database'     => array(
             'adapter'                    => 'Pdo_Mysql',
             'params'                     => array(
@@ -368,21 +370,22 @@
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
                 // LOG USER ACTIVITY
-                $logExclude = array('module=profile&unread=1'); //TODO сделать управление исключениями
+                $logExclude = array('module=profile&unread=1'); //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
-                // SETUP ACL
                 require_once 'core2/inc/classes/Acl.php';
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
+                // SETUP ACL
                 $this->acl = new Acl();
                 $this->acl->setupAcl();
             }
             else {
                 // GET LOGIN PAGE
+                setcookie($this->config->system->name, false);
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
-                    //throw new Exception('expired');
+                    throw new Exception('expired');
                 }
                 return $this->getLogin();
             }
