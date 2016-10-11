@@ -229,10 +229,7 @@ table.sTable {
 	font-family:Tahoma;
 	font-size:11px;
 }
-table.sTable > tr > td,
-table.sTable > thead > tr > td,
-table.sTable > tbody > tr > td,
-table.sTable > tfoot > tr > td  {
+table.sTable td{
 	border:solid 1px silver;
 	font-size:11px;
 	padding:2px 5px 2px 5px;
