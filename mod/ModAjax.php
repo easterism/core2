@@ -712,11 +712,9 @@ class ModAjax extends ajaxFunc {
                 $inst->setMInfo($mInfo);
                 $errors    = array();
                 $filesList = $inst->getFilesList($destinationFolder);
+
 				//для проверки ошибок в файлах пхп
-				$php_path = '';
-				if (!empty($this->config->php) || !empty($this->config->php->path)) {
-					$php_path = $this->config->php->path;
-				}
+				$php_path = $this->getPHPPath();
                 foreach ($filesList as $path) {
                     $fName = substr($path, strripos($path, '/') + 1);
                     //проверка файлов php
@@ -729,6 +727,7 @@ class ModAjax extends ajaxFunc {
                         }
                     }
                 }
+
                 //проверка наличия подключаемых файлов
                 if (!empty($xmlObj->install->sql)) {
                     $path = $destinationFolder . "/install/" . $xmlObj->install->sql;
@@ -841,9 +840,12 @@ class ModAjax extends ajaxFunc {
      */
     private function getPHPPath() {
 
-        $php_path = $this->moduleConfig->php_path;
+        $php_path = '';
+        if (!empty($this->config->php) || !empty($this->config->php->path)) {
+            $php_path = $this->config->php->path;
+        }
 
-        if (empty($php_path)) {
+        if (!$php_path) {
             $system_php_path = exec('which php');
             if ( ! empty($system_php_path)) {
                 $php_path = $system_php_path;

@@ -406,7 +406,6 @@ HTML;
 	}
 	
 	if ($tab->activeTab == 2) { //ДОСТУПНЫЕ МОДУЛИ
-
         $edit = new editTable('mod_available');
 
 		/* Добавление нового модуля */
