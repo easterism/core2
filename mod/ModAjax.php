@@ -704,7 +704,7 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                require_once('core2/mod/admin/InstallModule.php');
+                require_once('admin/InstallModule.php');
 
                 $inst                          = new InstallModule();
                 $mInfo                         = array('install' => array());
@@ -714,7 +714,7 @@ class ModAjax extends ajaxFunc {
                 $filesList = $inst->getFilesList($destinationFolder);
 				//для проверки ошибок в файлах пхп
 				$php_path = '';
-				if (empty($this->config->php) || empty($this->config->php->path)) {
+				if (!empty($this->config->php) || !empty($this->config->php->path)) {
 					$php_path = $this->config->php->path;
 				}
                 foreach ($filesList as $path) {

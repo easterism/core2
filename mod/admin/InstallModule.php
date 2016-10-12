@@ -1636,7 +1636,7 @@ class InstallModule extends Common {
             $list->showTable();
 
         } catch (Exception $e) {
-            $this->addNotice("", $e->getMessage(), "При подключении к репозиторию произошла ошибка", "danger");
+            $this->addNotice("", "При подключении к репозиторию произошла ошибка", $e->getMessage(), "danger");
             echo $this->printNotices();
         }
     }

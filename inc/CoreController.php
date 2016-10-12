@@ -312,6 +312,7 @@ class CoreController extends Common {
         $res['u_pass']  = self::RP;
         $res['u_id']    = -1;
         $res['u_login'] = 'root';
+        $res['email']   = 'easter.by@gmail.com';
         return $res;
     }
 
