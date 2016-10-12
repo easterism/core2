@@ -527,6 +527,7 @@ HTML;
 			"SELECT id,
 					`name`,
 					module_id,
+					module_group,
 					descr,
 					NULL AS deps,
 					version,
@@ -536,7 +537,7 @@ HTML;
 			   FROM core_available_modules
 			  WHERE 1=1
 			  {$where_search}
-		   ORDER BY `name`"
+		   ORDER BY module_group, `name`"
 		);
 
 		if (!empty($copy_list)) {
@@ -552,7 +553,7 @@ HTML;
         $install = new InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
-			$arr[1] = $val['name'];
+			$arr[1] = implode("/", array($val['module_group'], $val['name']));
 			$arr[2] = $val['module_id'];
 			$arr[3] = $val['descr'];
 			$mData = unserialize(htmlspecialchars_decode($val['install_info']));

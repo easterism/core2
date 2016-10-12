@@ -758,6 +758,7 @@ class CoreController extends Common {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$app = "index.php?module=admin&action=audit&loc=core";
 		require_once $this->path . 'DBMaster.php';
+		require_once $this->path . 'InstallModule.php';
 		require_once $this->path . 'audit.php';
 	}
 
