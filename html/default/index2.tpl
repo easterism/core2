@@ -28,7 +28,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/default/js/control_datepicker_range.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
-	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
+	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.9.3/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
