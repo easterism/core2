@@ -553,7 +553,7 @@ HTML;
         $install = new InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
-			$arr[1] = implode("/", array($val['module_group'], $val['name']));
+			$arr[1] = ($val['module_group'] ? "/" . $val['module_group'] : '') . $val['name'];
 			$arr[2] = $val['module_id'];
 			$arr[3] = $val['descr'];
 			$mData = unserialize(htmlspecialchars_decode($val['install_info']));
