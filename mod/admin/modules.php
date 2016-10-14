@@ -112,11 +112,13 @@ $tab->beginContainer("Модули");
 				$dep_list = array();
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
-					$edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
+                    // FIXME иногда переменной m_name нету у тех модулей которые имеют зависимости
+                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : $variable['module_name'];
+					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($m_name));
 					if (!in_array($variable['module_id'], $availableModules)) {
 						$variable['m_name'] .= " <i style=\"color:#F44336\">(deleted)</i>";
 					}
-					$dep_list[$variable['module_id']] = $variable['m_name'];
+					$dep_list[$variable['module_id']] = $m_name;
 				}
 				
 				
@@ -125,7 +127,7 @@ $tab->beginContainer("Модули");
 
 			} else {
                 foreach ($mod_list as $variable) {
-                    $edit->addParams("dep_" . $variable['module_id'], $variable['m_name']);
+                    $edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($variable['m_name']));
                     $dep_list[$variable['module_id']] = $variable['m_name'];
                 }
             }
@@ -373,8 +375,8 @@ $tab->beginContainer("Модули");
 			$mods = array();
 			foreach ($data as $key => $val) {
 				$mods[$val[2]] = $val[0];
-				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . $val[1] . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . $val[1] . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
+				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
 			}
 			$list->data = $data;
 			$list->paintCondition	= "'TCOL_07' == 'N'";
@@ -404,13 +406,12 @@ HTML;
 	}
 	
 	if ($tab->activeTab == 2) { //ДОСТУПНЫЕ МОДУЛИ
-
         $edit = new editTable('mod_available');
 
 		/* Добавление нового модуля */
 		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
 
-			if (empty($this->config->php) && empty($this->config->php->path)) {
+			if (empty($this->config->php) || empty($this->config->php->path)) {
 				$edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
 			}
 
@@ -526,6 +527,7 @@ HTML;
 			"SELECT id,
 					`name`,
 					module_id,
+					module_group,
 					descr,
 					NULL AS deps,
 					version,
@@ -535,7 +537,7 @@ HTML;
 			   FROM core_available_modules
 			  WHERE 1=1
 			  {$where_search}
-		   ORDER BY `name`"
+		   ORDER BY module_group, `name`"
 		);
 
 		if (!empty($copy_list)) {
@@ -551,7 +553,7 @@ HTML;
         $install = new InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
-			$arr[1] = $val['name'];
+			$arr[1] = ($val['module_group'] ? "/" . $val['module_group'] : '') . $val['name'];
 			$arr[2] = $val['module_id'];
 			$arr[3] = $val['descr'];
 			$mData = unserialize(htmlspecialchars_decode($val['install_info']));
@@ -653,7 +655,12 @@ HTML;
 
 
         //параметр со списком репозиториев
-        $s_id = $this->db->fetchOne("SELECT id FROM core_settings WHERE `code` = 'repo' LIMIT 1");
+        $s_id = $this->db->fetchOne("
+            SELECT id
+            FROM core_settings
+            WHERE `code` = 'repo'
+            LIMIT 1
+        ");
         if (empty($s_id)) {
             $this->db->insert('core_settings', array(
                 'code'           => 'repo',
@@ -664,6 +671,7 @@ HTML;
                 'is_custom_sw'   => 'Y',
                 'is_personal_sw' => 'N'
             ));
+            $s_id = $this->db->lastInsertId("core_settings");
         }
         //достаем список репозиторием
         $mod_repos = $this->getSetting('repo');
@@ -675,7 +683,7 @@ HTML;
 				<span>
 					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&edit=yes')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
 
@@ -686,7 +694,7 @@ HTML;
 				<span>
 					Для работы с репозиториями используется параметр \"repo\", в котором находяться адреса репозиториев (с регистрацией в репозитории http://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации http://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&edit=yes')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
         }
@@ -703,9 +711,8 @@ HTML;
 
                 echo "<div id=\"repo_{$i}\"> Подключаемся...</div>";
                 echo "<script type=\"text\/javascript\" language=\"javascript\">";
-                echo    "$(document).ready(function () {";
-				//ассинхронно получаем списки из репозитория
-                echo        "window.setTimeout(modules.repo('{$repo}', {$i}), 1);";
+                echo    "$(document).ready(function () {";//ассинхронно получаем списки из репозитория
+                echo        "window.setTimeout(modules.repo('" . urlencode($repo) . "', {$i}), 1);";
                 echo    "});";
                 echo "</script>";
                 echo "<br><br><br>";
@@ -714,7 +721,7 @@ HTML;
 
 	}
 	
-	if ($tab->activeTab == 3) {
+	if ($tab->activeTab == 3) { //Шаблоны модулей
 
 		if (isset($_GET['file_mod']) && $_GET['file_mod'] != ""){
 			$readme = "core2/mod_tpl/".$_GET['file_mod']."/Readme.txt";

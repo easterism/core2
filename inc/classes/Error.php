@@ -1,6 +1,8 @@
 <?
-    require_once 'Tool.php';
-    require_once("Zend/Registry.php");
+namespace Core2;
+
+require_once 'Tool.php';
+require_once("Zend/Registry.php");
 
 class Error {
 
@@ -38,10 +40,10 @@ class Error {
 	 *
 	 * @param Exception $exception
 	 */
-	public static function catchException(Exception $exception) {
-		$cnf = self::getConfig();
-		$message = $exception->getMessage();
-		$code = $exception->getCode();
+	public static function catchException(\Exception $exception) {
+        $cnf     = self::getConfig();
+        $message = $exception->getMessage();
+        $code    = $exception->getCode();
 
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
 			$trace = $exception->getTraceAsString();
@@ -64,7 +66,7 @@ class Error {
 			die();
 		}
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
-		if ($cnf->debug->on) {
+		if ($cnf->debug && $cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
@@ -73,7 +75,10 @@ class Error {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
 		} else {
-			if (substr($message, 0, 8) == 'SQLSTATE') $message = 'Ошибка базы данных'; //TODO вести журнал
+			if (substr($message, 0, 8) == 'SQLSTATE') {
+			    $message = 'Ошибка базы данных';
+                //TODO вести журнал
+            }
             self::Exception($message, $code);
 		}
 	}
@@ -110,7 +115,7 @@ class Error {
 	private static function getConfig() {
 		// Zend_Registry MUST present
 		try {
-			$cnf = Zend_Registry::get('config');
+			$cnf = \Zend_Registry::get('config');
 		} catch (Zend_Exception $e) {
 			self::Exception($e->getMessage(), 500);
 		}

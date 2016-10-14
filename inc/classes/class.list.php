@@ -293,7 +293,6 @@ class listTable extends initList {
 									}
 								}
 							}
-
 						}
 					}
 					$next = next($map);
@@ -574,16 +573,15 @@ class listTable extends initList {
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
 				}
 				elseif ($value['type'] == 'date') {
-					$HTML = "<div>
-					        <span class=\"dateFields\">
-                                <input size=\"10\" id=\"date_{$searchFieldId}0\" class=\"input\" type=\"text\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[0]}\">
-                                <>
-                                <input size=\"10\" id=\"date_{$searchFieldId}1\" class=\"input\" type=\"text\" name=\"search[{$this->main_table_id}][$key][]\" value=\"{$next[1]}\">
-                            </span>
-                            <span><script>listx.create_date('{$searchFieldId}','" . str_replace("yyyy", "yy", strtolower($this->date_mask)) . "');</script>
-							{$value['out']}</span>".
-						"</div>";
-					$tpl->fields->assign('{FIELD_CONTROL}', $HTML);
+					$tpl_date = new Templater2(DOC_ROOT . 'core2/html/' . THEME . "/list/search_date.tpl");
+					$tpl_date->assign('[ID]',         $searchFieldId);
+					$tpl_date->assign('[NAME]',       "search[{$this->main_table_id}][$key][]");
+					$tpl_date->assign('[VALUE_FROM]', ! empty($next[0]) ? $next[0] : '');
+					$tpl_date->assign('[VALUE_TO]',   ! empty($next[1]) ? $next[1] : '');
+					$tpl_date->assign("[OUT]",        $value['out']);
+					$tpl_date->assign("[OUT]",        $value['out']);
+
+					$tpl->fields->assign('{FIELD_CONTROL}', $tpl_date->parse());
 				}
 				elseif ($value['type'] == 'checkbox' || $value['type'] == 'checkbox2') {
 					$temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);

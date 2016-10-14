@@ -162,6 +162,10 @@ a {color: #337AB7}
     padding: 10px 15px;
     text-decoration: none;
     text-align: left;
+    direction: ltr;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 #menu-modules .menu-module:hover a,
 #menu-modules .menu-module a:hover,

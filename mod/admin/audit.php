@@ -66,7 +66,8 @@ if ($tab->activeTab == 1) {
         echo "Все ОК";
     }
 
-} elseif ($tab->activeTab == 2) {
+}
+elseif ($tab->activeTab == 2) {
 
     $install    = new InstallModule();
 

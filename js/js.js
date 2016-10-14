@@ -69,7 +69,12 @@ function goHome() {
 
 function logout() {
 	if (confirm('Вы уверены, что хотите выйти?')) {
-		window.location='index.php?module=admin&action=exit';
+		$.ajax({url:'index.php?module=admin&action=exit'})
+			.done(function (n) {
+				window.location='index.php';
+			}).fail(function (a,b,t){
+				alert("Произошла ошибка: " + a.statusText);
+		});
 	}
 }
 
@@ -318,7 +323,7 @@ var load = function (url, data, id, callback) {
 		if (locData.data) {
 			//$(locData.id).load('index.php' + url, callback);
 			$(locData.id).load('index.php' + url, locData.data, callback);
-			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
+			//xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 		} else {
 			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 				.done(function (n) {
