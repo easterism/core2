@@ -15,8 +15,8 @@ class Audit extends \Common {
             die;
         } else {
             require_once $pathToArray;
-            $o_master = new DBMaster($this->getDb());
-            $a_result = $o_master->checkCurrentDB($DB_ARRAY);
+            $o_master       = new DBMaster($this->getDb());
+            $a_result       = $o_master->checkCurrentDB($DB_ARRAY);
             $AuditNamespace = new \Zend_Session_Namespace('Audit');
             //echo "<pre>";print_r($AuditNamespace->RES);die;
             //echo "<pre>";print_r($a_result);
@@ -37,7 +37,7 @@ class Audit extends \Common {
                     while (list($key, $val) = each($a_result['COM'])) {
                         $a_tmp = explode('<!--NEW_LINE_FOR_DB_CORRECT_SCRIPT-->', $a_result['SQL'][$key]);
                         while (list($k, $v) = each($a_tmp)) {
-                            if ($v != '') {
+                            if ($v) {
                                 $o_master->execute($v);
                             }
                         }
@@ -50,9 +50,9 @@ class Audit extends \Common {
             if (count($a_result['COM']) > 0) {
                 reset($a_result['COM']);
                 while (list($key, $val) = each($a_result['COM'])) {
-                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:load('?module=admin&action=audit&loc=core&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
+                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
                 }
-                echo "<input class=\"auditButton\" type=\"button\" value=\"Исправить все\" onclick=\"load('?module=admin&action=audit&loc=core&db_update=1')\"/>";
+                echo "<input class=\"auditButton\" type=\"button\" value=\"Исправить все\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
                 echo "<h3>Предупреждения:</h3>";
                 if ( ! empty($a_result['WARNING'])) {
                     foreach ($a_result['WARNING'] as $val) {

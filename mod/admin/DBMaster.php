@@ -17,7 +17,9 @@ class DBMaster {
 	}
 
 	public function execute($sql) {
-	    $this->db->exec($sql);
+        foreach ($sql as $item) {
+            $this->db->query($item);
+        }
     }
 
 	/**
@@ -34,7 +36,7 @@ class DBMaster {
 		$a_result['SQL'] = array();
 		
 		$curArr = $this->getTableList('core_%');
-	
+
 		$a_ini_tables = $inArr['TABLES'];
 		$a_cur_tables = $curArr;
 		//echo "<pre>";print_r($curArr); die;
@@ -398,7 +400,6 @@ class DBMaster {
             }
         }
 
-		
 		// --- TAKE INFORMATION ABOUT 
 		
 		$strSQL = "SELECT usg.table_name,
