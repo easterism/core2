@@ -41,7 +41,7 @@ class ajaxFunc extends Common {
 		$order_fields = $this->getSessForm($class_id);
 
 		$control  = $data['control']; //данные полей формы
-		$script   = "for(var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++){if(document.getElementById('{$class_id}_mainform').elements[i].className=='reqField')document.getElementById('{$class_id}_mainform').elements[i].className='input'};";
+		$script   = "for(var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++){document.getElementById('{$class_id}_mainform').elements[i].classList.remove('reqField')};";
 		$req      = array();
 		$email    = array();
 		$date     = array();
@@ -107,7 +107,7 @@ class ajaxFunc extends Common {
 		}
 		if (count($req)) {
 			foreach ($req as $val) {
-				$script .= "document.getElementById('" . $class_id . $val . "').className='reqField';";
+				$script .= "document.getElementById('" . $class_id . $val . "').classList.add('reqField');";
 			}
 			$this->error[] = "- {$this->translate->tr('Пожалуйста, заполните обязательные поля.')}<br/>";
 		}
@@ -121,7 +121,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -134,7 +134,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -175,7 +175,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -231,7 +231,6 @@ class ajaxFunc extends Common {
     	$this->response->assign($class_id . "_error", "innerHTML", '<a name="' . $class_id . '_error"> </a>' . implode("<br/>", $this->error));
 		$this->response->assign($class_id . "_error", "style.display", 'block');
 		$this->response->script("toAnchor('{$class_id}_error')");
-		$this->response->script("top.preloader.progressbarStop();");
     }
 
 	/**
