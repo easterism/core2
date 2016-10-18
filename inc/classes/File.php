@@ -164,7 +164,7 @@
          */
         public function handleFileList($table, $id, $filed) {
 
-            $quote_table_files = $this->db->quoteIdentifier($table.'_files');
+            $quote_table_files = $this->db->quoteIdentifier($table . '_files');
 
             $SQL = "SELECT * FROM {$quote_table_files} WHERE refid = ?";
             $arr = array($id);

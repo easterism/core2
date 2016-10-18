@@ -406,7 +406,6 @@ HTML;
 	}
 	
 	if ($tab->activeTab == 2) { //ДОСТУПНЫЕ МОДУЛИ
-
         $edit = new editTable('mod_available');
 
 		/* Добавление нового модуля */
@@ -528,6 +527,7 @@ HTML;
 			"SELECT id,
 					`name`,
 					module_id,
+					module_group,
 					descr,
 					NULL AS deps,
 					version,
@@ -537,7 +537,7 @@ HTML;
 			   FROM core_available_modules
 			  WHERE 1=1
 			  {$where_search}
-		   ORDER BY `name`"
+		   ORDER BY module_group, `name`"
 		);
 
 		if (!empty($copy_list)) {
@@ -553,7 +553,7 @@ HTML;
         $install = new InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
-			$arr[1] = $val['name'];
+			$arr[1] = ($val['module_group'] ? "/" . $val['module_group'] : '') . $val['name'];
 			$arr[2] = $val['module_id'];
 			$arr[3] = $val['descr'];
 			$mData = unserialize(htmlspecialchars_decode($val['install_info']));
@@ -683,7 +683,7 @@ HTML;
 				<span>
 					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
 
@@ -694,7 +694,7 @@ HTML;
 				<span>
 					Для работы с репозиториями используется параметр \"repo\", в котором находяться адреса репозиториев (с регистрацией в репозитории http://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации http://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&loc=core&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
         }
@@ -711,9 +711,8 @@ HTML;
 
                 echo "<div id=\"repo_{$i}\"> Подключаемся...</div>";
                 echo "<script type=\"text\/javascript\" language=\"javascript\">";
-                echo    "$(document).ready(function () {";
-				//ассинхронно получаем списки из репозитория
-                echo        "window.setTimeout(modules.repo('{$repo}', {$i}), 1);";
+                echo    "$(document).ready(function () {";//ассинхронно получаем списки из репозитория
+                echo        "window.setTimeout(modules.repo('" . urlencode($repo) . "', {$i}), 1);";
                 echo    "});";
                 echo "</script>";
                 echo "<br><br><br>";
@@ -722,7 +721,7 @@ HTML;
 
 	}
 	
-	if ($tab->activeTab == 3) {
+	if ($tab->activeTab == 3) { //Шаблоны модулей
 
 		if (isset($_GET['file_mod']) && $_GET['file_mod'] != ""){
 			$readme = "core2/mod_tpl/".$_GET['file_mod']."/Readme.txt";

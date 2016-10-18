@@ -13,7 +13,7 @@ require_once DOC_ROOT . 'core2/inc/classes/Templater2.php';
 
 
 if ( ! Tool::file_exists_ip("/Zend/Config.php")) {
-    Error::Exception("Требуется ZF компонент \"Config\"");
+    \Core2\Error::Exception("Требуется ZF компонент \"Config\"");
 }
 
 require_once("Zend/Config.php");
@@ -74,7 +74,7 @@ if (empty($config['temp'])) {
 try {
     $config = new Zend_Config($config, true);
 } catch (Zend_Config_Exception $e) {
-    Error::Exception($e->getMessage());
+    \Core2\Error::Exception($e->getMessage());
 }
 
 //подключаем собственный адаптер
@@ -88,22 +88,22 @@ if (isset($config->auth) && $config->auth->on) {
     $realm = $config->auth->params->realm;
     $users = $config->auth->params->users;
     if ($code = Tool::httpAuth($realm, $users)) {
-        if ($code == 1) Error::Exception("Неверный пользователь.");
-        if ($code == 2) Error::Exception("Неверный пароль.");
+        if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
+        if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
     }
 }
 
 if ( ! Tool::file_exists_ip("/Zend/Registry.php")) {
-    Error::Exception("Требуется ZF компонент \"Registry\"");
+    \Core2\Error::Exception("Требуется ZF компонент \"Registry\"");
 }
 if ( ! Tool::file_exists_ip("/Zend/Db.php")) {
-    Error::Exception("Требуется ZF компонент \"Db\"");
+    \Core2\Error::Exception("Требуется ZF компонент \"Db\"");
 }
 if ( ! Tool::file_exists_ip("/Zend/Session.php")) {
-    Error::Exception("Требуется ZF компонент \"Session\"");
+    \Core2\Error::Exception("Требуется ZF компонент \"Session\"");
 }
 if ( ! Tool::file_exists_ip("/Zend/Acl.php")) {
-    Error::Exception("Требуется ZF компонент \"Acl\"");
+    \Core2\Error::Exception("Требуется ZF компонент \"Acl\"");
 }
 
 require_once("Zend/Registry.php");

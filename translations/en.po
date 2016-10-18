@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: core2\n"
 "POT-Creation-Date: 2016-09-16 19:47+0300\n"
-"PO-Revision-Date: 2016-09-16 20:07+0300\n"
+"PO-Revision-Date: 2016-10-02 00:26+0300\n"
 "Last-Translator: easter <easter.by@gmail.com>\n"
 "Language-Team: English (http://www.transifex.com/projects/p/core2/language/"
 "en/) <easter.by@gmail.com>\n"
@@ -40,7 +40,7 @@ msgstr ""
 
 #: inc/CoreController.php:66 inc/MobileController.php:62
 msgid "Ошибка"
-msgstr ""
+msgstr "Error"
 
 #: inc/CoreController.php:126
 msgid "Javascript выключен или ваш браузер его не поддерживает!"

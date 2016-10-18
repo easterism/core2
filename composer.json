@@ -16,6 +16,7 @@
   "prefer-stable": true,
   "require": {
     "php": ">=5.4.0",
+    "xajax/xajax": "dev-master",
     "smottt/wideimage": ">=1.1.1",
     "mpdf/mpdf": "5.7.4",
     "components/jquery": "2.1.4",

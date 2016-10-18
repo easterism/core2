@@ -1,6 +1,8 @@
 <?
-    require_once 'Tool.php';
-    require_once("Zend/Registry.php");
+namespace Core2;
+
+require_once 'Tool.php';
+require_once("Zend/Registry.php");
 
 class Error {
 
@@ -38,7 +40,7 @@ class Error {
 	 *
 	 * @param Exception $exception
 	 */
-	public static function catchException(Exception $exception) {
+	public static function catchException(\Exception $exception) {
         $cnf     = self::getConfig();
         $message = $exception->getMessage();
         $code    = $exception->getCode();
@@ -113,7 +115,7 @@ class Error {
 	private static function getConfig() {
 		// Zend_Registry MUST present
 		try {
-			$cnf = Zend_Registry::get('config');
+			$cnf = \Zend_Registry::get('config');
 		} catch (Zend_Exception $e) {
 			self::Exception($e->getMessage(), 500);
 		}

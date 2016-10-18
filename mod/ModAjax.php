@@ -704,19 +704,18 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                require_once('core2/mod/admin/InstallModule.php');
+                require_once('admin/InstallModule.php');
 
                 $inst                          = new InstallModule();
                 $mInfo                         = array('install' => array());
                 $mInfo['install']['module_id'] = $xmlObj->install->module_id;
+                $mInfo['install']['module_group'] = !empty($xmlObj->install->module_group) ? $xmlObj->install->module_group : '';
                 $inst->setMInfo($mInfo);
                 $errors    = array();
                 $filesList = $inst->getFilesList($destinationFolder);
+
 				//для проверки ошибок в файлах пхп
-				$php_path = '';
-				if (empty($this->config->php) || empty($this->config->php->path)) {
-					$php_path = $this->config->php->path;
-				}
+				$php_path = $this->getPHPPath();
                 foreach ($filesList as $path) {
                     $fName = substr($path, strripos($path, '/') + 1);
                     //проверка файлов php
@@ -729,6 +728,7 @@ class ModAjax extends ajaxFunc {
                         }
                     }
                 }
+
                 //проверка наличия подключаемых файлов
                 if (!empty($xmlObj->install->sql)) {
                     $path = $destinationFolder . "/install/" . $xmlObj->install->sql;
@@ -780,22 +780,25 @@ class ModAjax extends ajaxFunc {
                     throw new Exception($this->translate->tr("Не удалось получить хэшь файлов модуля"));
                 }
 
-                $is_exist = $this->db->fetchOne(
-                    "SELECT id
-                       FROM core_available_modules
-                      WHERE module_id = ?
-                        AND version = ?",
-                    array($xmlObj->install->module_id, $xmlObj->install->version)
-                );
+                $SQL = "SELECT id
+                           FROM core_available_modules
+                          WHERE module_id = ?
+                            AND version = ?";
+                $vars = array($xmlObj->install->module_id, $xmlObj->install->version);
+                if (!empty($xmlObj->install->module_group)) {
+                    $SQL .= " AND module_group=?";
+                    $vars[] = $xmlObj->install->module_group;
+                } else {
+                    $SQL .= " AND module_group IS NULL";
+                }
+                $is_exist = $this->db->fetchOne($SQL, $vars);
                 if (!empty($is_exist)) {
                     $this->db->update(
                         'core_available_modules',
                         array(
                             'name' 	        => $xmlObj->install->module_name,
-                            'module_id' 	=> $xmlObj->install->module_id,
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
-                            'version' 	    => $xmlObj->install->version,
                             'install_info'  => serialize($inst->xmlParse($xmlObj)),
                             'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
                             'lastuser' 	    => $this->auth->ID,
@@ -809,6 +812,7 @@ class ModAjax extends ajaxFunc {
                         array(
                             'name' 	        => $xmlObj->install->module_name,
                             'module_id' 	=> $xmlObj->install->module_id,
+                            'module_group' 	=> !empty($xmlObj->install->module_group) ? $xmlObj->install->module_group : new Zend_Db_Expr("NULL"),
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
                             'version' 	    => $xmlObj->install->version,
@@ -841,9 +845,12 @@ class ModAjax extends ajaxFunc {
      */
     private function getPHPPath() {
 
-        $php_path = $this->moduleConfig->php_path;
+        $php_path = '';
+        if (!empty($this->config->php) || !empty($this->config->php->path)) {
+            $php_path = $this->config->php->path;
+        }
 
-        if (empty($php_path)) {
+        if (!$php_path) {
             $system_php_path = exec('which php');
             if ( ! empty($system_php_path)) {
                 $php_path = $system_php_path;

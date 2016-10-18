@@ -32,7 +32,7 @@ class I18n
                 if ($config->translate->adapter == 'gettext') {
                     $content = "core2/translations/$lng.mo";
                 } else {
-                    Error::Exception("Адаптер перевода не поддерживается");
+                    \Core2\Error::Exception("Адаптер перевода не поддерживается");
                 }
                 $this->locale = $lng;
                 $this->setup(array(
@@ -41,7 +41,7 @@ class I18n
                         'locale'  => $lng
                 ));
             } catch (Zend_Translate_Exception $e) {
-                Error::Exception($e->getMessage());
+                \Core2\Error::Exception($e->getMessage());
             }
         }
         Zend_Registry::set('translate', $this);
@@ -113,7 +113,7 @@ class I18n
                 if ($config->translate->adapter == 'gettext') {
                     $content = $location . "/translations/$lng.mo";
                 } else {
-                    Error::Exception("Адаптер перевода модуля не поддерживается");
+                    \Core2\Error::Exception("Адаптер перевода модуля не поддерживается");
                 }
                 try {
                     $translate_second = new Zend_Translate(
@@ -131,7 +131,7 @@ class I18n
                     );
                     unset($translate_second);
                 } catch (Zend_Translate_Exception $e) {
-                    Error::Exception($e->getMessage());
+                    \Core2\Error::Exception($e->getMessage());
                 }
                 Zend_Registry::set('translate', $this);
             }
