@@ -45,7 +45,7 @@ $tab->beginContainer($this->translate->tr("Роли и доступ"));
 			foreach ($res as $value) {
 				$accessAddHTML = '';
 				if ($value['access_add']) {
-					$accessAddData = unserialize(base64_decode($value['access_add']));
+					$accessAddData = @unserialize(base64_decode($value['access_add']));
 					if ($accessAddData) {
 						foreach ($accessAddData as $keyAD => $valueAD) {
 							if ($keyAD) {

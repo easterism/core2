@@ -35,7 +35,7 @@ class DBMaster {
 		$a_result['COM'] = array();
 		$a_result['SQL'] = array();
 		
-		$curArr = $this->getTableList('core_%');
+		$curArr = $this->getTableList();
 
 		$a_ini_tables = $inArr['TABLES'];
 		$a_cur_tables = $curArr;
@@ -387,10 +387,9 @@ class DBMaster {
 	 * Return array of tables for Selected Schema and according to Table Template condition - correct 
 	 * order taking into consideration foreigns for tables.
 	 *
-	 * @param unknown_type $inTableTemplate
 	 * @param unknown_type $inSchema
 	 */
-	public function getTableList($inTableTemplate) {
+	public function getTableList() {
 	    $tables = $this->db->listTables();
 
 		$a_tables = array();
@@ -641,7 +640,7 @@ class DBMaster {
 	}
 	
 	public function getSystemInstallDBArray() {
-		$a_tables = $this->getTableList('core_%');
+		$a_tables = $this->getTableList();
 		$str = "";
 		$this->addCommentToInstallArray($str, 'DB Array Initilizing');
 		$this->addToInstallArray($str, 'array()');
