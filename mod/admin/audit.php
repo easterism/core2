@@ -1,4 +1,7 @@
 <?
+
+require_once __DIR__ . "/../admin/InstallModule.php";
+
 $tab = new tabs('audit');
 
 $tab->addTab($this->translate->tr("База данных"), 		    $app, 100);

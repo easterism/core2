@@ -7,6 +7,7 @@ body {
 	font-size: 14px;
 	height: 100%;
 	width: 100%;
+    background-color: #e6e6e6;
 }
 #rootContainer {
 	position: relative;
@@ -1364,7 +1365,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     overflow: hidden;
 }
 .core-panel > .core-panel-heading {
-    padding: 20px 25px 6px 25px;
+    padding: 20px 20px 6px 20px;
     margin-bottom: -15px;
     border-bottom: 1px solid transparent;
     -webkit-border-top-left-radius: 3px;
@@ -1379,7 +1380,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
             border-top-right-radius: 3px;
 }
 .core-panel > .core-panel-body {
-    padding: 25px;
+    padding: 25px 20px;
 }
 .core-panel > .core-panel-body .tab-content > .tab-pane,
 .core-panel > .core-panel-body .pill-content > .pill-pane {display: none}
