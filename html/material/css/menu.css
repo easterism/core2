@@ -2,7 +2,7 @@ a {color: #337AB7}
 #main {
     height: 100%;
     width: 100%;
-    background-color: #607D8B;
+    /*background-color: #607D8B;*/
 }
 #main-content {
     position: relative;
@@ -19,11 +19,11 @@ a {color: #337AB7}
     -ms-box-sizing: border-box;
     -o-box-sizing: border-box;
     box-sizing: border-box;
-    -webkit-box-shadow: 2px 0 5px #000;
-    -moz-box-shadow: 2px 0 5px #000;
-    -ms-box-shadow: 2px 0 5px #000;
-    -o-box-shadow: 2px 0 5px #000;
-    box-shadow: 2px 0 5px #000;
+    /*-webkit-box-shadow: 2px 0 5px #000;*/
+    /*-moz-box-shadow: 2px 0 5px #000;*/
+    /*-ms-box-shadow: 2px 0 5px #000;*/
+    /*-o-box-shadow: 2px 0 5px #000;*/
+    /*box-shadow: 2px 0 5px #000;*/
 }
 #main-content #sidebar-toggle {
     background-color: #607D8B;
@@ -293,4 +293,6 @@ a {color: #337AB7}
 }
 .nav-second-level-toggle {
     padding-top: 4px;
+    position: absolute;
+    right: 15px;
 }

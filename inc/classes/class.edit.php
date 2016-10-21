@@ -527,14 +527,18 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'date2') {
                             if ($this->readOnly) {
-                                $day	= substr($value['default'], 8, 2);
-                                $month 	= substr($value['default'], 5, 2);
-                                $year 	= substr($value['default'], 0, 4);
-                                $insert = str_replace("dd", $day, strtolower($this->date_mask));
-                                $insert = str_replace("mm", $month, $insert);
-                                $insert = str_replace("yyyy", $year, $insert);
-                                $insert = str_replace("yy", $year, $insert);
-                                $controlGroups[$cellId]['html'][$key] .= $insert;
+								if ($value['default']) {
+                                    $day	= substr($value['default'], 8, 2);
+                                    $month 	= substr($value['default'], 5, 2);
+                                    $year 	= substr($value['default'], 0, 4);
+                                    $insert = str_replace("dd", $day, strtolower($this->date_mask));
+                                    $insert = str_replace("mm", $month, $insert);
+                                    $insert = str_replace("yyyy", $year, $insert);
+                                    $insert = str_replace("yy", $year, $insert);
+                                    $controlGroups[$cellId]['html'][$key] .= $insert;
+                                } else {
+                                    $controlGroups[$cellId]['html'][$key] .= '';
+                                }
                             } else {
                                 $this->scripts['date2'] = true;
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/date2.html');
@@ -547,17 +551,21 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'datetime2') {
                             if ($this->readOnly) {
-                                $day	= substr($value['default'], 8, 2);
-                                $month 	= substr($value['default'], 5, 2);
-                                $year 	= substr($value['default'], 0, 4);
-                                $insert = str_replace("dd", $day, strtolower($this->date_mask));
-                                $insert = str_replace("mm", $month, $insert);
-                                $insert = str_replace("yyyy", $year, $insert);
-                                $insert = str_replace("yy", $year, $insert);
-                                $h  = substr($value['default'], 11, 2);
-                                $mi = substr($value['default'], 14, 2);
-                                $insert .= " $h:$mi";
-                                $controlGroups[$cellId]['html'][$key] .= $insert;
+                                if ($value['default']) {
+                                    $day    = substr($value['default'], 8, 2);
+                                    $month  = substr($value['default'], 5, 2);
+                                    $year   = substr($value['default'], 0, 4);
+                                    $insert = str_replace("dd", $day, strtolower($this->date_mask));
+                                    $insert = str_replace("mm", $month, $insert);
+                                    $insert = str_replace("yyyy", $year, $insert);
+                                    $insert = str_replace("yy", $year, $insert);
+                                    $h      = substr($value['default'], 11, 2);
+                                    $mi     = substr($value['default'], 14, 2);
+                                    $insert .= " $h:$mi";
+                                    $controlGroups[$cellId]['html'][$key] .= $insert;
+                                } else {
+                                    $controlGroups[$cellId]['html'][$key] .= '';
+                                }
                             } else {
                                 $this->scripts['datetime2'] = true;
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime2.html');
@@ -1287,16 +1295,16 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload-ui.css");
                     Tool::printJs("core2/js/tmpl.min.js", true);
                     Tool::printJs("core2/js/load-image.min.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-process.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-image.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-audio.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-video.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-validate.js", true);
-                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/jquery.fileupload-ui.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-process.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-image.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-audio.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-video.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-validate.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/jQuery-File-Upload/js/jquery.fileupload-ui.js", true);
                 }
                 if (isset($this->scripts['modal'])) {
-                    Tool::printJs("core2/ext/jQuery/plugins/simplemodal-1.4.5/src/jquery.simplemodal.js", true);
+                    Tool::printJs("core2/ext/jQuery/plugins/simplemodal/src/jquery.simplemodal.js", true);
                 }
             }
 

@@ -383,7 +383,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                setcookie($this->config->system->name, false);
+                setcookie(preg_replace("~[=,; \t\r\n\013\014]~", '_', $this->config->system->name), false);
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
