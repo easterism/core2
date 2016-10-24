@@ -2,7 +2,7 @@
 namespace Core2;
 
 require_once 'Tool.php';
-require_once("Zend/Registry.php");
+require_once "Zend/Registry.php";
 
 
 /**
@@ -42,23 +42,27 @@ class Error {
 	/**
 	 * Основной обработчик исключений
 	 *
-	 * @param Exception $exception
+	 * @param \Exception $exception
 	 */
 	public static function catchException(\Exception $exception) {
         $cnf     = self::getConfig();
         $message = $exception->getMessage();
         $code    = $exception->getCode();
 
-		if ($cnf->log && $cnf->log->on && $cnf->log->path &&
-            (file_exists($cnf->log->path) && is_writable($cnf->log->path)) ||
-            is_dir(basename($cnf->log->path)) && is_writable(basename($cnf->log->path))
-        ) {
-            $trace = $exception->getTraceAsString();
-            $str   = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
+		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
+            if ((file_exists($cnf->log->path) && is_writable($cnf->log->path)) ||
+                ( ! file_exists($cnf->log->path) && is_dir(basename($cnf->log->path)) && is_writable(basename($cnf->log->path)))
+            ) {
+                $trace = $exception->getTraceAsString();
+                $str   = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 
-            $f = fopen($cnf->log->path, 'a');
-            fwrite($f, $str . chr(10) . chr(13));
-            fclose($f);
+                $f = fopen($cnf->log->path, 'a');
+                fwrite($f, $str . chr(10) . chr(13));
+                fclose($f);
+            } else {
+                $text = sprintf('Нет доступа на запись в файл %s.', $cnf->log->path);
+                self::Exception($text, $code);
+            }
         }
         if ($code == 503) {
             self::Exception($message, $code);
