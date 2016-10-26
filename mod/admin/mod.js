@@ -1,13 +1,14 @@
 var modules = {
     'repo': function (repo_url, repo_id) {
-        $.get('index.php?module=admin&action=modules&repo',
-            {'getModsListFromRepo': repo_url},
-            function(data, textStatus){
-                if(textStatus == 'success') {
-                    $("#repo_" + repo_id).html(data);
-                }
-            },
-            'html');
+        $.ajax({url:'index.php?module=admin&action=modules&getModsListFromRepo=' + repo_url})
+		.done(function(data, textStatus){
+			if(textStatus == 'success') {
+				$("#repo_" + repo_id).html(data);
+			}
+		})
+		.fail(function (a,b,t){
+			$("#repo_" + repo_id).html("Фатальная ошибка!");
+		});
     },
     'spoiler': function (id) {
         $('.' + id).toggle();

@@ -165,7 +165,7 @@ class Tool {
 		try {
 			$firephp->fb($text);
 		} catch (Exception $e) {
-			Error::Exception($e->getMessage());
+			\Core2\Error::Exception($e->getMessage());
     	}
     }
 

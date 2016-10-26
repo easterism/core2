@@ -11,7 +11,6 @@ require_once 'Db.php';
  */
 class Email {
 
-    public $is_immediately = false;
     protected $mail_data = array(
         'from'       => '',
         'to'         => '',

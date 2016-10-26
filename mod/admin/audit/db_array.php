@@ -345,6 +345,12 @@ $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['NULL']   
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_id']['EXTRA']   = "";
 
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_group'] = array();
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_group']['TYPE']    = "varchar(60)";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_group']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_group']['DEFAULT'] = "";
+$DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['module_group']['EXTRA']   = "";
+
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['name'] = array();
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['name']['TYPE']    = "varchar(60)";
 $DB_ARRAY['TABLES']['core_available_modules']['COLUMNS']['name']['NULL']    = "YES";

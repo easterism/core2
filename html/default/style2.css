@@ -446,10 +446,6 @@ table.editTable td {
 	width: 300px;
 }
 
-.buttonSave {
-	position:absolute;
-	margin-left:-4000;
-}
 .editResizeDiv {
 	z-index:100000;
 	width:505px;

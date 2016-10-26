@@ -82,8 +82,8 @@ class ToolsTest extends \PHPUnit_Framework_TestCase
         //$realm = array('username' => 'bbb', 'password' => 'bbb');
         $realm = array('username' => 'Aladdin', 'password' => 'open');
         if ($code = \Tool::httpAuth($realm, $users)) {
-            if ($code == 1) \Error::Exception("Неверный пользователь.");
-            if ($code == 2) \Error::Exception("Неверный пароль.");
+            if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
+            if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
         }
     }
 
