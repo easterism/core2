@@ -5,7 +5,7 @@
 if (!empty($_GET['checkModsUpdates'])) {
 	$mods = array();
 	try {
-		$install = new InstallModule();
+		$install = new \Core2\InstallModule();
 		$ups = $install->checkInstalledModsUpdates();
 		foreach ($_GET['checkModsUpdates'] as $module_id => $m_id) {
 			if (!empty($ups[$module_id])) {
@@ -22,20 +22,20 @@ if (!empty($_GET['checkModsUpdates'])) {
 }
 //список модулей из репозитория
 if (!empty($_GET['getModsListFromRepo'])) {
-    $install = new InstallModule();
+    $install = new \Core2\InstallModule();
     $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
     exit();
 }
 
 //скачивание архива модуля
 if (!empty($_GET['download_mod'])) {
-    $install = new InstallModule();
+    $install = new \Core2\InstallModule();
     $install->downloadAvailMod($_GET['download_mod']);
 }
 
 /* скачивание архива шаблона */
 if (!empty($_GET['download_mod_tpl'])) {
-    $install = new InstallModule();
+    $install = new \Core2\InstallModule();
     $install->downloadModTemplate($_GET['download_mod_tpl']);
 }
 
@@ -52,21 +52,21 @@ $tab->beginContainer("Модули");
 		if (!empty($_POST)) {
 			/* Обновление файлов модуля */
 			if (!empty($_POST['refreshFilesModule'])) {
-				$install = new InstallModule();
+				$install = new \Core2\InstallModule();
 				echo $install->mRefreshFiles($_POST['refreshFilesModule']);
 				exit();
 			}
 
 			/* Обновление модуля */
 			if (!empty($_POST['updateModule'])) {
-				$install = new InstallModule();
+				$install = new \Core2\InstallModule();
 				echo $install->checkModUpdates($_POST['updateModule']);
 				exit();
 			}
 
 			//Деинсталяция модуля
 			if (isset($_POST['uninstall'])) {
-				$install = new InstallModule();
+				$install = new \Core2\InstallModule();
 				echo $install->mUninstall($_POST['uninstall']);
 				exit();
 			}
@@ -474,7 +474,7 @@ HTML;
 
         // Инсталяция модуля
         if (!empty($_POST['install'])) {
-            $install = new InstallModule();
+            $install = new \Core2\InstallModule();
             echo $install->mInstall($_POST['install']);
             exit();
         }
@@ -482,7 +482,7 @@ HTML;
 
         // Инсталяция модуля из репозитория
         if (!empty($_POST['install_from_repo'])) {
-            $install = new InstallModule();
+            $install = new \Core2\InstallModule();
             echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
             exit();
         }
@@ -550,7 +550,7 @@ HTML;
 
         $tmp = array();
         $_GET['_page_mod_available'] = !empty($_GET['_page_mod_available']) ? (int)$_GET['_page_mod_available'] : 0;
-        $install = new InstallModule();
+        $install = new \Core2\InstallModule();
         foreach ($copy_list as $val) {
 			$arr[0] = $val['id'];
 			$arr[1] = ($val['module_group'] ? "/" . $val['module_group'] : '') . $val['name'];

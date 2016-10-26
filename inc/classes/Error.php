@@ -51,7 +51,7 @@ class Error {
 
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
             if ((file_exists($cnf->log->path) && is_writable($cnf->log->path)) ||
-                ( ! file_exists($cnf->log->path) && is_dir(basename($cnf->log->path)) && is_writable(basename($cnf->log->path)))
+                ( ! file_exists($cnf->log->path) && is_dir(dirname($cnf->log->path)) && is_writable(dirname($cnf->log->path)))
             ) {
                 $trace = $exception->getTraceAsString();
                 $str   = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";

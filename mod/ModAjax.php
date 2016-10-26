@@ -706,7 +706,7 @@ class ModAjax extends ajaxFunc {
                 //проверяем все SQL и PHP файлы на ошибки
                 require_once('admin/InstallModule.php');
 
-                $inst                          = new InstallModule();
+                $inst                          = new \Core2\InstallModule();
                 $mInfo                         = array('install' => array());
                 $mInfo['install']['module_id'] = $xmlObj->install->module_id;
                 $mInfo['install']['module_group'] = !empty($xmlObj->install->module_group) ? $xmlObj->install->module_group : '';
