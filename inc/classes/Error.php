@@ -82,7 +82,7 @@ class Error {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
-				Tool::fb($str);
+				\Tool::fb($str);
 			} else {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
@@ -128,7 +128,7 @@ class Error {
 		// Zend_Registry MUST present
 		try {
 			$cnf = \Zend_Registry::get('config');
-		} catch (Zend_Exception $e) {
+		} catch (\Zend_Exception $e) {
 			self::Exception($e->getMessage(), 500);
 		}
 		return $cnf;
@@ -163,7 +163,7 @@ class Error {
 		return self::Exception(json_encode($out), $code);
 	}
 
-	public static function catchXajax(Exception $e, xajaxResponse $res) {
+	public static function catchXajax(\Exception $e, \xajaxResponse $res) {
 		$res->alert($e->getMessage());
 		return $res;
 	}
