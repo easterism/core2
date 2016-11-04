@@ -500,7 +500,7 @@ class CoreController extends Common {
 	 */
 	public function action_settings () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=settings&loc=core";
+		$app = "index.php?module=admin&action=settings";
 		require_once $this->path . 'settings.php';
 
 	}
@@ -717,7 +717,7 @@ class CoreController extends Common {
 	 */
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=roles&loc=core";
+		$app = "index.php?module=admin&action=roles";
 		$this->printCss($this->path . "role.css");
 		require_once $this->path . 'roles.php';
 	}
@@ -730,7 +730,7 @@ class CoreController extends Common {
 	public function action_enum() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$this->printJs("core2/mod/admin/enum.js");
-		$app = "index.php?module=admin&action=enum&loc=core";
+		$app = "index.php?module=admin&action=enum";
 		require_once $this->path . 'enum.php';
 	}
 
@@ -742,7 +742,7 @@ class CoreController extends Common {
 	public function action_monitoring() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
-            $app = "index.php?module=admin&action=monitoring&loc=core";
+            $app = "index.php?module=admin&action=monitoring";
             require_once $this->path . 'monitoring.php';
         } catch (Exception $e) {
             Alert::printDanger($e->getMessage());
@@ -756,10 +756,23 @@ class CoreController extends Common {
 	 */
 	public function action_audit() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=audit&loc=core";
-		require_once $this->path . 'DBMaster.php';
-		require_once $this->path . 'InstallModule.php';
-		require_once $this->path . 'audit.php';
+		$app = "index.php?module=admin&action=audit";
+		require_once $this->path . 'audit/Audit.php';
+        $audit = new \Core2\Audit();
+        $tab = new tabs('audit');
+
+        $tab->addTab($this->translate->tr("База данных"), 		    $app, 100);
+        $tab->addTab($this->translate->tr("Контроль целостности"),	$app, 150);
+
+        $tab->beginContainer("Аудит");
+
+        if ($tab->activeTab == 1) {
+            $audit->database();
+        }
+        elseif ($tab->activeTab == 2) {
+            $audit->integrity();
+        }
+        $tab->endContainer();
 	}
 
 
@@ -805,7 +818,7 @@ class CoreController extends Common {
 
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		if ($_POST['class_id'] == 'main_set') {
-			$app = "index.php?module=admin&action=settings&loc=core";
+			$app = "index.php?module=admin&action=settings";
 			header("Location:$app");
 		}
 		if ($_POST['class_id'] == 'main_user') {
@@ -959,7 +972,7 @@ class CoreController extends Common {
                 );
                 $id = $this->db->lastInsertId("core_settings");
             }
-            $notice->info($this->translate->tr("Отправка уведомлений отключена"), "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&loc=core&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений");
+            $notice->info($this->translate->tr("Отправка уведомлений отключена"), "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений");
         }
         if (!$server) {
             $notice->info($this->translate->tr("Отправка уведомлений отключена"), $this->translate->tr("Не задан параметр 'host' в conf.ini"));
@@ -969,7 +982,7 @@ class CoreController extends Common {
         $mods = array();
 
         require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
-        $install    = new InstallModule();
+        $install    = new \Core2\InstallModule();
 
         foreach ($data as $val) {
             $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));

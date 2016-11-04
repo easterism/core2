@@ -1,71 +1,27 @@
 <?
+namespace Core2;
+
+/**
+ * Class DBMaster
+ * @package Core2
+ */
 class DBMaster {
-	protected $db;
-	protected $current_db_name;
+	private $db;
+    private $current_db_name;
 	
-	function __construct() {
-		global $config;
-		
-		$db_name = $config->database->params->dbname;
-		$db_user = $config->database->params->username;
-		$db_pass = $config->database->params->password;
-		$db_host = $config->database->params->host;
-		
-		$this->db = mysql_connect($db_host, $db_user, $db_pass);
-		mysql_select_db ($db_name);
-		
-		$this->current_db_name = $db_name;	
+	function __construct(\Core_Db_Adapter_Pdo_Mysql $db) {
+
+		$this->db = $db;
+		$config = $this->db->getConfig();
+		$this->current_db_name = $config['dbname'];
 	}
-	
-	/**
-	 * Function for executing all SQL
-	 *
-	 * @param unknown_type $inSQL
-	 * @param unknown_type $withDebug
-	 * @param unknown_type $iniDb
-	 * @return unknown
-	 */
-	public function exeSQL($inSQL,$withDebug = true) {
-		
-		$result = mysql_query($inSQL, $this->db);
-		
-	    $error = mysql_error($this->db);
-	    
-	    if ($withDebug && $error) {
-	    	echo $error;
-			print "<pre>";
-			print ($inSQL);
-	    	die();
-	    }
-	    
-	    // -- CHECK IF IT WAS INSERTION ---
-	    
-	    // -- TRY TO RETURN DATASET
-	     $arr = @mysql_fetch_array($result);
-	    // -- NO RESULT AT ALL
-	    if (is_array($arr)) {
-	    
-		    // -- RETURN AS VARCHAR ----
-		    if (count($arr) <= 2) return $arr[0];
-		    
-		    // FORM RESULT ARRAY TO RETURN TO USER
-		    $res = array();
-		    while ($arr) {
-		    	$res[] = $arr;
-		    	$arr = mysql_fetch_array($result);
-		    }
-		           
-		    return $res;
-	    } else {
-	    	$id = mysql_insert_id($this->db);
-			if ($id > 0) {
-			  	return $id;
-			}    	
-	    }
-	    
-	    return '';
-	}
-	
+
+	public function execute($sql) {
+        foreach ($sql as $item) {
+            $this->db->query($item);
+        }
+    }
+
 	/**
 	 * This function compare arrays and return array of SQL and array of Comments
 	 *
@@ -79,8 +35,8 @@ class DBMaster {
 		$a_result['COM'] = array();
 		$a_result['SQL'] = array();
 		
-		$curArr = $this->getTableList('core_%');
-	
+		$curArr = $this->getTableList();
+
 		$a_ini_tables = $inArr['TABLES'];
 		$a_cur_tables = $curArr;
 		//echo "<pre>";print_r($curArr); die;
@@ -431,27 +387,18 @@ class DBMaster {
 	 * Return array of tables for Selected Schema and according to Table Template condition - correct 
 	 * order taking into consideration foreigns for tables.
 	 *
-	 * @param unknown_type $inTableTemplate
 	 * @param unknown_type $inSchema
 	 */
-	public function getTableList($inTableTemplate) {
+	public function getTableList() {
+	    $tables = $this->db->listTables();
 
-		$strSQL = "SELECT table_name, 
-		                  1 as col_1 
-		             FROM INFORMATION_SCHEMA.TABLES
-                    WHERE table_schema = '$this->current_db_name'
-                          AND table_name LIKE '$inTableTemplate'
-                    ORDER BY table_name";
-		
-		$rows = $this->exeSQL($strSQL);
-				
-		if (!is_array($rows)) $rows = array();
-		
 		$a_tables = array();
-		while (list($key, $val) = each($rows)) {
-			$a_tables[$val['table_name']] = 0; 	
-		}
-		
+        foreach ($tables as $k => $table) {
+            if (strpos($table, 'core_') === 0) {
+                $a_tables[$table] = 0;
+            }
+        }
+
 		// --- TAKE INFORMATION ABOUT 
 		
 		$strSQL = "SELECT usg.table_name,
@@ -463,23 +410,21 @@ class DBMaster {
                      FROM information_schema.key_column_usage AS usg
                           JOIN information_schema.tables AS tbl
                                ON usg.table_name = tbl.table_name 
-                                  AND tbl.table_schema = '$this->current_db_name'
-                    WHERE constraint_schema = '$this->current_db_name'
+                                  AND tbl.table_schema = ?
+                    WHERE constraint_schema = ?
                           AND referenced_table_name IS NOT NULL
                     ORDER BY table_name";
 		
 		$a_reffers  = array();
 		$a_ref_cols = array();
 		$a_comments = array();
-		$rows = $this->exeSQL($strSQL);
-		if (is_array($rows)) {
-			while (list($key, $val) = each($rows)) {
-				$a_reffers[$val['table_name']][$val['referenced_table_name']] = 1;
-				$a_ref_cols[$val['table_name']][$val['constraint_name']] = $val;
-				$a_comments[$val['table_name']] = $val['table_comment'];
-			}
-		}
-		
+		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
+        while (list($key, $val) = each($rows)) {
+            $a_reffers[$val['table_name']][$val['referenced_table_name']] = 1;
+            $a_ref_cols[$val['table_name']][$val['constraint_name']] = $val;
+            $a_comments[$val['table_name']] = $val['table_comment'];
+        }
+
 		// --- SORTING TABLE
 		$tbl_count = count($a_tables);
 		
@@ -503,10 +448,10 @@ class DBMaster {
 		
 		reset($a_result_tables);
 		while (list($key, $val) = each($a_result_tables)) {
-			
-			
-			$rows = $this->exeSQL("explain $key");
-			$a_tmp = array();
+
+
+            $rows = $this->db->fetchAll("explain $key");
+            $a_tmp = array();
 			
 			while (list($k, $v) = each($rows)) {
 				while (list($k1, $v1) = each($v)) {
@@ -517,7 +462,7 @@ class DBMaster {
 			}
 			
 			$strSQL = "SHOW CREATE TABLE " . $key;
-			$row    = $this->exeSQL($strSQL);
+			$row    = $this->db->fetchAll($strSQL);
 						
 			$script = $row[0]['Create Table'];				
 			
@@ -637,7 +582,7 @@ class DBMaster {
 		
 		if ($script == '') {
 			$strSQL = "SHOW CREATE TABLE $inTable";
-			$row = $this->exeSQL($strSQL);
+			$row = $this->fetchAll($strSQL);
 			$script = $row[0]['Create Table'];
 		}
 		$a_tmp = explode(chr(10), $script);
@@ -695,7 +640,7 @@ class DBMaster {
 	}
 	
 	public function getSystemInstallDBArray() {
-		$a_tables = $this->getTableList('core_%');
+		$a_tables = $this->getTableList();
 		$str = "";
 		$this->addCommentToInstallArray($str, 'DB Array Initilizing');
 		$this->addToInstallArray($str, 'array()');
@@ -804,144 +749,8 @@ class DBMaster {
 		}
 		return true;
 	}
-	
-	/**
-	 * Returns DB Array for selected Module according to it's real DB
-	 *
-	 * @param unknown_type $inModuleID
-	 */
-	public function getModuleDBArray($inModuleID) {
-		if (!is_numeric($inModuleID)) {
-			$table_tmpl = 'cms_%';
-		} else {
-			$table_tmpl = 'mod_' . $inModuleID . '%';
-		}
 
-		$a_tables = $this->getTableList($table_tmpl);
-		reset($a_tables);
-		return $a_tables;
-	}
-	
-	/**
-	 * Return HTML DB Script for selected module
-	 *
-	 * @param unknown_type $inModuleID
-	 * @return unknown
-	 */
-	public function getModuleDBScript($inModuleID) {
-		$a_tables = $this->getModuleDBArray($inModuleID);
-		
-		$str = '';
-		reset($a_tables);
-		while (list($key, $val) = each($a_tables)) {
-			    $val['SCRIPT'] = $this->prepareScriptToShow($val["SCRIPT"]);
-			  	
-			    
-			    
-				$str .= $val['SCRIPT'];
-				$str .= ";<br/><br/><br/>";
-		}
-		
-		
-		$str .=  $this->prepareScriptToShow("/*INSERTION OF MENU ITEMS*/" . chr(10));
-		$str .=  $this->prepareScriptToShow("DELETE FROM `mod_".$inModuleID."_menu`;" . chr(10));
-		
-		// --- MENUE INSERTION --------------------
-		$strSQL = "SELECT * FROM mod_".$inModuleID."_menu ORDER BY mm_order";
-		$str .= $this->prepareScriptToShow($this->getInsertScriptFromSQL("mod_".$inModuleID."_menu", $strSQL)) . chr(10);
-		
-		$str .=  $this->prepareScriptToShow("/*INSERTION INTO MODULE TABLE*/" . chr(10));
-		
-		$strSQL = "SELECT * FROM cms_modules WHERE m_global_id = $inModuleID";
-		$str .= $this->prepareScriptToShow($this->getInsertScriptFromSQL('cms_modules', $strSQL, array('m_id'))) . chr(10);		
-		
-		
-		return $str;
-	}
-	
-	public function getInsertScriptFromSQL($inTable, $inSQL, $notIncludeArr = '') {
-		if(!is_array($notIncludeArr)) {
-			$notIncludeArr = array();
-		}
-		
-		$a_not = array();
-		
-		foreach ($notIncludeArr as $key => $val) {
-			$a_not[$val] = 1;			
-		}
-		
-		$result = $this->exeSQL($inSQL);
-		
 
-		
-		$str = "";
-		
-		foreach ($result as $key => $val) {
-			$str.= "INSERT INTO `$inTable` (";
-
-			foreach ($val as $k => $v) {
-				if (is_numeric($k) or $a_not[$k] == 1) continue;
-				$str .= ' `'.$k . '`, ';					
-			}	
-			
-			$str = trim($str, ', ') . ')' . chr(10) . ' VALUES (';	
-			
-			foreach ($val as $k => $v) {
-				$v = str_replace("'", "''", $v);
-				if (is_numeric($k) or $a_not[$k] == 1) continue;
-				if ($v == '') {
-					$str .= "NULL" . ', ';
-					continue;		
-				}
-				$str .= "'$v'" . ', ';					
-			}			
-			
-			$str = trim($str, ', ') . ') ON DUPLICATE KEY UPDATE ' . chr(10);	
-			
-			foreach ($val as $k => $v) {
-				$v = str_replace("'", "''", $v);
-				if (is_numeric($k) or $a_not[$k] == 1) continue;
-				if ($v == '') {
-					$str .= "`$k` = NULL" . ', ';	
-					continue;
-				}
-				$str .= "`$k` = '$v'" . ', ';		
-			}
-			
-			$str = trim($str, ', ') . ';' . chr(10) . chr(10);
-			
-		}
-		
-		
-		return trim($str, chr(10));
-		
-	}
-	
-	
-	/**
-	 * Function is used to display array for module installation
-	 *
-	 * @param integer $inModuleID
-	 * @return varchar
-	 */
-	public function getModuleInstallDBArray($inModuleID) {
-		$a_tables = $this->getModuleDBArray($inModuleID);
-		
-		$str = '<span style="color:#0000bb">$MODULE_INFO</span><span style="color:#007700">[</span><span style="color:#dd0000">\'mod_sql\'</span><span style="color:#007700">]</span><span style="color:#007700"> = array();</span>';
-		$this->addEmptyLines($str, 2);
-				
-		$pos = 1;
-
-		while (list ($key, $val) = each($a_tables)) {
-			if ($key == "mod_$inModuleID"."_menu") continue;
-			$this->addArrayItemToModuleInstallation($str, $pos, $val['SCRIPT']);
-			$this->addEmptyLines($str, 1);
-			$pos++;
-		}
-		
-		
-		return $str;
-	}
 	
 	private function addArrayItemToModuleInstallation(&$inStr, $inPos, $inScript) {
 		
@@ -1014,5 +823,3 @@ class DBMaster {
 	}
 	
 }
-
-?>

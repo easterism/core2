@@ -20,12 +20,11 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead-1.2.9/jquery.floatThead.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead.min.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/control_datepicker_range.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
 	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.9.3/js/cors/jquery.xdr-transport.js"></script>

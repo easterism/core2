@@ -1,11 +1,13 @@
 <?
+namespace Core2;
+
 require_once DOC_ROOT . "/core2/inc/classes/Common.php";
 require_once DOC_ROOT . "/core2/inc/classes/class.list.php";
 
 /**
  * Class InstallModule
  */
-class InstallModule extends Common {
+class InstallModule extends \Common {
 
     /**
      * путь для установки модуля
@@ -138,11 +140,11 @@ class InstallModule extends Common {
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
-        Zend_Registry::set('db', $db);
+        \Zend_Registry::set('db', $db);
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
-        $db->getConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $db->getConnection()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $db->getConnection()->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         //$db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
         return $db;
     }
@@ -157,7 +159,7 @@ class InstallModule extends Common {
      */
     private function checkXml() {
         if (!is_file($this->tempDir . "/install/install.xml")) {
-            throw new Exception($this->translate->tr("install.xml не найден. Установка прервана."));
+            throw new \Exception($this->translate->tr("install.xml не найден. Установка прервана."));
         }
     }
 
@@ -258,7 +260,7 @@ class InstallModule extends Common {
      * @throws  Exception
      */
     public function extractZip($destinationFolder) {
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
         $this->autoDestination($destinationFolder);
         if ($zip->open($this->zipFile) === true){
             /* Распаковка всех файлов архива */
@@ -267,7 +269,7 @@ class InstallModule extends Common {
             }
             $zip->close();
         } else {
-            throw new Exception($this->translate->tr("Ошибка архива"));
+            throw new \Exception($this->translate->tr("Ошибка архива"));
         }
     }
 
@@ -283,7 +285,7 @@ class InstallModule extends Common {
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
             if (!mkdir($destinationFolder)) {
-                throw new Exception("Не могу создать директорию для разархивирования ('{$destinationFolder}').");
+                throw new \Exception("Не могу создать директорию для разархивирования ('{$destinationFolder}').");
             }
         }
     }
@@ -327,7 +329,7 @@ class InstallModule extends Common {
                 }
                 $this->addNotice("Права доступа", "Дополнительные права", "Добавлены", "info");
             } elseif (!empty($Inf['install']['access']['additional']) && is_array($Inf['install']['access']['additional'])) {
-                throw new Exception("Ошибки в структуре install.xml (access > additional)");
+                throw new \Exception("Ошибки в структуре install.xml (access > additional)");
             }
         $access = base64_encode(serialize($access));
         $access_add = base64_encode(serialize($access_add));
@@ -361,7 +363,7 @@ class InstallModule extends Common {
                 }
             }
             if ($is_stop) {
-                throw new Exception("Установите все необходимые модули!");
+                throw new \Exception("Установите все необходимые модули!");
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
@@ -389,12 +391,12 @@ class InstallModule extends Common {
                 }
             }
             if ($is_stop) {
-                throw new Exception("Установите все необходимые модули!");
+                throw new \Exception("Установите все необходимые модули!");
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
         } elseif (!empty($Inf)) {
-            throw new Exception("Ошибки в структуре install.xml (dependent_modules)");
+            throw new \Exception("Ошибки в структуре install.xml (dependent_modules)");
         } else {
             $this->addNotice("Зависимость от модулей", "Проверка выполнена", "Не имеет зависимостей", "info");
             return false;
@@ -448,7 +450,7 @@ class InstallModule extends Common {
                             $access_add[$value["name"]] = ($value["all"] == "on") ? "all" : ($value["owner"] == "on" ? "owner" : "");
                         }
                     } elseif (!empty($valsub['access']['additional']) && is_array($valsub['access']['additional'])) {
-                        throw new Exception("Ошибки в структуре install.xml (submodules > access > additional)");
+                        throw new \Exception("Ошибки в структуре install.xml (submodules > access > additional)");
                     }
                     $access_add = base64_encode(serialize($access_add));
 
@@ -468,7 +470,7 @@ class InstallModule extends Common {
             }
             return $arrSubModules;
         } elseif (!empty($Inf['install']['submodules']) && is_array($Inf['install']['submodules'])) {
-            throw new Exception("Ошибки в структуре install.xml (submodules)");
+            throw new \Exception("Ошибки в структуре install.xml (submodules)");
         } else {
             $this->addNotice("Субмодули", "Проверка выполнена", "Модуль не имеет субмодулей", "info");
             return false;
@@ -527,7 +529,7 @@ class InstallModule extends Common {
         }
         //перезаписываем путь к файлам модуля
         $this->cache->clean(
-            Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
             array('is_active_core_modules')
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
@@ -564,7 +566,7 @@ class InstallModule extends Common {
                 }
                 $this->addNotice("Таблицы модуля", "Таблицы добавлены", "Успешно", "info");
             } else {
-                throw new Exception("Попытка удаления таблиц не относящихся к модулю!");
+                throw new \Exception("Попытка удаления таблиц не относящихся к модулю!");
             }
         }
     }
@@ -585,7 +587,7 @@ class InstallModule extends Common {
             if (!empty($file_name) && is_file($file_loc)) {
                 $sql = file_get_contents($file_loc);
             } else {
-                throw new Exception($this->translate->tr("Не найден файл $file_name для обновления модуля!"));
+                throw new \Exception($this->translate->tr("Не найден файл $file_name для обновления модуля!"));
             }
         }
         if (!$sql) {
@@ -593,7 +595,7 @@ class InstallModule extends Common {
         } else {
             $sql = $this->SQLPrepareToExecute($sql);//готовим
             if (!$this->checkSQL($sql)) {
-                throw new Exception($this->translate->tr("Попытка удаления таблиц не относящихся к модулю!"));
+                throw new \Exception($this->translate->tr("Попытка удаления таблиц не относящихся к модулю!"));
             }
             //разбиваем запросы на отдельные
             $sql = $this->SQLToQueriesArray($sql);
@@ -686,7 +688,7 @@ class InstallModule extends Common {
         }
         //перезаписываем путь к файлам модуля
         $this->cache->clean(
-            Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
             array('is_active_core_modules')
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
@@ -796,7 +798,7 @@ class InstallModule extends Common {
 
             $this->returnZipToDownload($mod['data'], $mod['module_id'] . $mod['version']);
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
             echo $e->getMessage();
         }
         exit;
@@ -841,10 +843,10 @@ class InstallModule extends Common {
 
                 $this->returnZipToDownload(file_get_contents($zip_file), 'templateMod');
             } else {
-                throw new Exception($this->translate->tr("Ошибка создания архива"));
+                throw new \Exception($this->translate->tr("Ошибка создания архива"));
             }
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
             echo $e->getMessage();
         }
         exit;
@@ -927,14 +929,14 @@ class InstallModule extends Common {
     {
         //проверка актуальности версии
         if ($this->curVer == $this->mInfo['install']['version']) {
-            throw new Exception($this->translate->tr("У вас уже установлена эта версия!"));
+            throw new \Exception($this->translate->tr("У вас уже установлена эта версия!"));
         } elseif ($this->curVer > $this->mInfo['install']['version']) {
-            throw new Exception($this->translate->tr("У вас стоит более актуальная версия!"));
+            throw new \Exception($this->translate->tr("У вас стоит более актуальная версия!"));
         }
         //проверка предусмотрено ли обновление
         $curVer = "v" . trim($this->curVer);
         if (!isset($this->mInfo['migrate'][$curVer])) {
-            throw new Exception("обновление для {$curVer} не предусмотрено!");
+            throw new \Exception("обновление для {$curVer} не предусмотрено!");
         }
     }
 
@@ -1207,7 +1209,7 @@ class InstallModule extends Common {
         //проверяем не изменились ли файлы
         $compare = $this->compareFilesHash($this->extractHashForFiles($this->tempDir), unserialize($this->mData['files_hash']), false);
         if (!empty($compare)) {
-            throw new Exception($this->translate->tr("Хэши файлов модуля не совпадают с эталоном! Установка прервана."));
+            throw new \Exception($this->translate->tr("Хэши файлов модуля не совпадают с эталоном! Установка прервана."));
         }
 
         //проверяем есть ли install.xml и забераем оттуда инфу
@@ -1220,7 +1222,7 @@ class InstallModule extends Common {
         $this->installPath 	= ((strtolower($mInfo['install']['module_system']) == "y" ? "core2/" : "") . "mod/{$mInfo['install']['module_id']}/v{$mInfo['install']['version']}");
 
         //ID юзера, ставящего модуль
-        $authNamespace 		= Zend_Registry::get('auth');
+        $authNamespace 		= \Zend_Registry::get('auth');
         $this->lastUser 	= $authNamespace->ID < 0 ? NULL : $authNamespace->ID;
 
         $this->module_is_off = array();
@@ -1249,7 +1251,7 @@ class InstallModule extends Common {
                 $mod_id
             );
             if (empty($temp)) {
-                throw new Exception($this->translate->tr('Модуль не найден в доступных модулях'));
+                throw new \Exception($this->translate->tr('Модуль не найден в доступных модулях'));
             }
             $this->mData['data']          = $temp['data'];
             $this->mData['files_hash']    = $temp['files_hash'];
@@ -1266,7 +1268,7 @@ class InstallModule extends Common {
             $this->db->commit();
             return $st . $this->printNotices(2);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->db->rollBack();
             $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$e->getMessage()}", "danger");
             return $st . $this->printNotices(2);
@@ -1298,7 +1300,7 @@ class InstallModule extends Common {
                 $this->mData['data']        = $data;
                 $this->mData['files_hash']  = $files_hash;
             } else{//если есть сообщение значит что-то не так
-                throw new Exception($out->massage);
+                throw new \Exception($out->massage);
             }
             $this->prepareToInstall();
 
@@ -1312,7 +1314,7 @@ class InstallModule extends Common {
 
             $this->db->commit();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= $e->getTraceAsString();
@@ -1341,12 +1343,12 @@ class InstallModule extends Common {
 
         $repo_url = trim($repo_url);
         $url = "{$repo_url}&key={$key}";
-        $curl = Tool::doCurlRequest($url);
+        $curl = \Tool::doCurlRequest($url);
 
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200) {
             if (!empty($curl['error'])) {
-                throw new Exception("CURL - {$curl['error']}");
+                throw new \Exception("CURL - {$curl['error']}");
             } else {
                 if (isset($curl['answer'])) {
                     $out = json_decode($curl['answer']);
@@ -1355,7 +1357,7 @@ class InstallModule extends Common {
                     $message = '';
                 }
 
-                throw new Exception("Ответ репозитория - {$message}");
+                throw new \Exception("Ответ репозитория - {$message}");
             }
         }
 
@@ -1400,7 +1402,7 @@ class InstallModule extends Common {
         //формируем url
         $server = trim($repo_url);
         if (substr_count($server, "webservice?reg_apikey=") == 0) {
-            throw new Exception("Не верно задан адрес \"{$server}\"(пример http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY) для репозитория!");
+            throw new \Exception("Не верно задан адрес \"{$server}\"(пример http://REPOSITORY/api/webservice?reg_apikey=YOUR_KEY) для репозитория!");
         } else {
             $tmp = explode("webservice?reg_apikey=", $server);
             $key = $tmp[1];
@@ -1408,15 +1410,15 @@ class InstallModule extends Common {
         }
         $url =  "{$server}webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
         //получаем apikey
-        $curl = Tool::doCurlRequest($url);
+        $curl = \Tool::doCurlRequest($url);
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200)
         {
             if (!empty($curl['error'])) {
-                throw new Exception("CURL - {$curl['error']}");
+                throw new \Exception("CURL - {$curl['error']}");
             } else {
                 $out = json_decode($curl['answer']);
-                throw new Exception("Ответ вебсервиса репозитория - {$out->message}");
+                throw new \Exception("Ответ вебсервиса репозитория - {$out->message}");
             }
         }
         //если всё гуд
@@ -1475,7 +1477,7 @@ class InstallModule extends Common {
             $list->getData();
 
             //ПОИСК
-            $ss = new Zend_Session_Namespace('Search');
+            $ss = new \Zend_Session_Namespace('Search');
             $ssi = 'main_' . $list_id;
             $ss = $ss->$ssi;
             $search = array();
@@ -1613,7 +1615,7 @@ class InstallModule extends Common {
 //            $list->setRecordCount($per_page);
 
             //пагинация
-            $ss         = new Zend_Session_Namespace('Search');
+            $ss         = new \Zend_Session_Namespace('Search');
             $ssi        = 'main_' . $list_id;
             $ss         = $ss->$ssi;
             $per_page   = empty($ss["count_{$list_id}"]) ? 1 : (int)$ss["count_{$list_id}"];
@@ -1635,7 +1637,7 @@ class InstallModule extends Common {
             $list->data = $copy_list;
             $list->showTable();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->addNotice("", "При подключении к репозиторию произошла ошибка", $e->getMessage(), "danger");
             echo $this->printNotices();
         }
@@ -1669,7 +1671,7 @@ class InstallModule extends Common {
                                 //даже если ошибки в скрипте, удаление продолжается
                                 try {
                                     $this->db->query($qu);//выполняем
-                                } catch (Exception $e) {
+                                } catch (\Exception $e) {
                                     $this->addNotice($this->translate->tr("Таблицы модуля"), "Ошибка при удалении таблиц (удаление продолжается)", $e->getMessage(), "warning");
                                 }
                             }
@@ -1689,7 +1691,7 @@ class InstallModule extends Common {
 
                     //чистим кэш
                     $this->cache->clean(
-                        Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+                        \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
                         array('is_active_core_modules')
                     );
                     $this->cache->remove($this->mInfo['install']['module_id']);
@@ -1704,17 +1706,17 @@ class InstallModule extends Common {
                     }
 
                 } else {//если используется другими модулями
-                    throw new Exception("Модуль используется модулями {$is_used_by_other_modules}");
+                    throw new \Exception("Модуль используется модулями {$is_used_by_other_modules}");
                 }
 
                 $this->addNotice($this->translate->tr("Деинсталяция"), "Статус", "Завершена", "info");
                 return "<h3>Деинсталяция модуля " . (!empty($mInfo['m_name']) ? "'{$mInfo['m_name']}'" : "") . "</h3>" . $this->printNotices(1);
 
             } else{//если модуль не существует
-                throw new Exception($this->translate->tr("Модуль уже удален или не существует!"));
+                throw new \Exception($this->translate->tr("Модуль уже удален или не существует!"));
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->addNotice($this->translate->tr("Деинсталяция"), "Ошибка: {$e->getMessage()}", $this->translate->tr("Деинсталяция прервана"), "danger");
             return "<h3>Деинсталяция модуля " . (!empty($mInfo['m_name']) ? "'{$mInfo['m_name']}'" : "") . "</h3>" . $this->printNotices(1);
         }
@@ -1787,7 +1789,7 @@ class InstallModule extends Common {
                     $this->addNotice("Обновление файлов", "Перезапись файлов прервана", "Папка закрыта для записи", "danger");
                 } else {
                     //записываем новые файлы
-                    $config                 = Zend_Registry::getInstance()->get('config');
+                    $config                 = \Zend_Registry::getInstance()->get('config');
                     $tempDir                = $config->temp . "/tmp_" . uniqid();
                     $this->make_zip($data);
                     $this->extractZip($tempDir);
@@ -1811,7 +1813,7 @@ class InstallModule extends Common {
                 }
                 $this->addNotice("Обновление файлов", "Не найдены " . implode(" и ", $t), "Перезапись файлов прервана", "danger");
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->addNotice("Обновление файлов", $e->getMessage(), "Ошибка", "danger");
         }
 
@@ -1882,7 +1884,8 @@ class InstallModule extends Common {
                         }
                     }
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
+
             }
         }
 
@@ -1950,7 +1953,7 @@ class InstallModule extends Common {
 
             $this->db->commit();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= "<pre>" . $e->getTraceAsString() . "</div>";
@@ -2419,12 +2422,12 @@ class InstallModule extends Common {
             try {
                 $this->db->prepare($qu);
             }
-            catch (Exception $e) {
+            catch (\Exception $e) {
                 $errors[] = $e->getMessage();
             }
         }
         if (!empty($errors)) {
-            throw new Exception(implode("<br>", $errors));
+            throw new \Exception(implode("<br>", $errors));
         }
     }
 
