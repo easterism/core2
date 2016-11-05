@@ -177,6 +177,11 @@
             list($module, $action) = explode("_", $this->resource);
 
             $image = new \Image();
+
+            $base_urn = $action == 'index'
+                ? "index.php?module=$module&filehandler=$table"
+                : "index.php?module=$module&action=$action&filehandler=$table";
+
             foreach ($res as $key => $value) {
                 $type2 = explode("/", $value['type']);
                 $type2 = $type2[1];
@@ -188,13 +193,13 @@
                     if (!$image->checkGD()) {
                         throw new \Exception("GD not installed", 500);
                     }
-                    $file->thumbnail_url = "index.php?module=$module&action=$action&filehandler=$table&thumbid=" . $value['id'];
+                    $file->thumbnail_url = "{$base_urn}&thumbid=" . $value['id'];
                 }
                 else {
                     //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
                 }
-                $file->url 			= "index.php?module=$module&action=$action&filehandler=$table&fileid=" . $value['id'];
-                $file->delete_url 	= "index.php?module=$module&action=$action&filehandler=$table&fileid=" . rawurlencode($value['filename']);
+                $file->url 			= "{$base_urn}&filehandler=$table&fileid=" . $value['id'];
+                $file->delete_url 	= "{$base_urn}&filehandler=$table&fileid=" . rawurlencode($value['filename']);
                 $file->delete_type 	= 'DELETE';
                 $file->delete_id 	= $value['id'];
                 $file->type 		= $value['type'];
