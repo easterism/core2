@@ -247,28 +247,27 @@ class Db {
 			$arr = array();
 			if (!empty($_POST)) $arr['POST'] = $_POST;
 			if (!empty($_GET)) $arr['GET'] = $_GET;
-			$data = array(
-				'ip' 			=> $_SERVER['REMOTE_ADDR'],
-				'sid' 			=> Zend_Session::getId(),
-				'request_method' => $_SERVER['REQUEST_METHOD'],
-				'remote_port' 	=> $_SERVER['REMOTE_PORT'],
-				'query' 		=> $_SERVER['QUERY_STRING'],
-				'user_id' 		=> $auth->ID
-			);
-			if ($arr) {
-				$data['action'] = serialize($arr);
-			}
+            $data = array(
+                'ip'             => $_SERVER['REMOTE_ADDR'],
+                'sid'            => Zend_Session::getId(),
+                'request_method' => $_SERVER['REQUEST_METHOD'],
+                'remote_port'    => $_SERVER['REMOTE_PORT'],
+                'query'          => $_SERVER['QUERY_STRING'],
+                'user_id'        => $auth->ID
+            );
+
 			if (isset($this->config->log) && $this->config->log &&
 				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
 			) {
 				if (!$this->config->log->system->file) {
 					throw new Exception($this->traslate->tr('Не задан файл журнала запросов'));
 				}
-
 				$log = new \Core2\Log('access');
 				$log->access($auth->NAME);
-
 			} else {
+                if ($arr) {
+                    $data['action'] = serialize($arr);
+                }
 				$this->db->insert('core_log', $data);
 			}
 			// обновление записи о последней активности

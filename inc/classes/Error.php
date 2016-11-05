@@ -70,7 +70,7 @@ class Error {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
-				Tool::fb($str);
+				\Tool::fb($str);
 			} else {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
@@ -101,7 +101,7 @@ class Error {
 			if ($cnf->debug->on) {
 				$message = $exception->getMessage(); //TODO вести журнал
 			} else {
-				$message = "Ошибка базы данных";
+				$message = "Ошибка базы данных!";
 			}
 		}
 		self::Exception($message, $code);
