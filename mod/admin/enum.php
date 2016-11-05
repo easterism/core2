@@ -107,7 +107,7 @@ $tab->beginContainer($title);
 						}
 					}
 
-					$edit->addControl($this->translate->tr("Значение:"), "TEXT", "maxlength=\"128\" size=\"60\"", "", "");
+					$edit->addControl($this->translate->tr("Значение:"), "TEXT", "maxlength=\"128\" size=\"60\"", "", "", true);
 					if (is_array($fields) && count($fields)) {
 						$fields_sql = "\n";
 						foreach ($fields as $key => $val) {
@@ -175,7 +175,7 @@ $tab->beginContainer($title);
 					$edit->showTable();
 				}
 				//ENUM dtl list
-				$list = new listTable('enumxxx3');
+				$list = new listTable('enumxxx3'.$_GET['edit']);
 				$list->table = "core_enum";
 				$list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
 
@@ -187,7 +187,7 @@ $tab->beginContainer($title);
 					$fields_sql = "\n";
 					foreach ($fields as $key => $val) {
 						$fields_sql .= "'id_{$val['label']}',\n";
-						$list->addColumn($val['label'], "", "TEXT");
+						$list->addColumn($val['label'], "", "TEXT", '', '', false);
 					}
 					$fields_sql = rtrim($fields_sql);
 
@@ -216,18 +216,24 @@ $tab->beginContainer($title);
 				$list->deleteKey		= "core_enum.id";
 
 				$list->getData();
-				foreach ($list->data as $key => $value) {
-					$name_val = explode(":::", end($value));
+				foreach ($list->data as $key => $row) {
+					$name_val = explode(":::", end($row));
                     if ( ! empty($name_val)) {
                         foreach ($name_val as $v) {
                             if (strpos($v, '::') !== false) {
                                 $temp = explode("::", $v);
-                                if (($k = array_search('id_' . $temp[0], $value))) {
+                                if (($k = array_search('id_' . $temp[0], $row))) {
                                     $list->data[$key][$k] = $temp[1];
                                 }
                             }
                         }
 					}
+                    // очищает незаполненые поля
+                    for ($i = 3; $i < count($row) - 3; $i++) {
+                        if ( ! empty($list->data[$key][$i]) && strpos($list->data[$key][$i], 'id_') === 0) {
+                            $list->data[$key][$i] = '';
+                        }
+                    }
 				}
 				$list->showTable();
 				$tab->endContainer();

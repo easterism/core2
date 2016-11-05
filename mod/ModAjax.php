@@ -303,6 +303,7 @@ class ModAjax extends ajaxFunc {
 
         $this->error = array();
         $fields      = array(
+            'name'          => 'req',
             'is_active_sw'  => 'req',
             'is_default_sw' => 'req'
         );
