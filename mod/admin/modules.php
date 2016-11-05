@@ -357,7 +357,7 @@ $tab->beginContainer("Модули");
 								 is_system,
 								 is_public,
 								 seq,	
-								 '',							 								 
+								 '' AS act,
 								 visible
 							FROM core_modules
 							WHERE m_id > 0
