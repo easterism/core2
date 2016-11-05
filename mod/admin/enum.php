@@ -92,7 +92,9 @@ $tab->beginContainer($title);
 					$add = (int)$_GET['add'];
 					$edit = new editTable('enumxxxur');
 
-					if ($add) $res2 = $this->dataEnum->find($add)->current()->custom_field;
+					if ($add) {
+                        $res2 = $this->dataEnum->find($add)->current()->custom_field;
+                    }
 					$arr_fields = array();
 
 					/* Формирование массива кастомных полей из строки */
@@ -101,8 +103,7 @@ $tab->beginContainer($title);
 						$name_val = explode(":::", $res2);
 						foreach ($name_val as $v) {
 							$temp  = explode("::", $v);
-							$arr_fields[$temp[0]] = (!empty($temp[1])) ? $temp[1] : "";
-
+							$arr_fields[$temp[0]] = isset($temp[1]) ? $temp[1] : "";
 						}
 					}
 
@@ -110,13 +111,24 @@ $tab->beginContainer($title);
 					if (is_array($fields) && count($fields)) {
 						$fields_sql = "\n";
 						foreach ($fields as $key => $val) {
-							$label = $arr_fields ? $arr_fields[$val['label']] : '';
-							$fields_sql .= "'{$label}' AS id_$key,\n";
+							$label       = isset($arr_fields[$val['label']]) ? $arr_fields[$val['label']] : '';
+                            $default     = '';
+                            $fields_sql .= "'{$label}' AS id_$key,\n";
 
 							if ($val['type'] == 1) $type = 'TEXT';
 							elseif ($val['type'] == 2) {
 								$type = 'LIST';
 								$edit->selectSQL[] = $this->getEnumDropdown($val['enum'], true, true);
+                                $default = $this->db->fetchOne("
+                                    SELECT e.name
+                                    FROM core_enum AS e
+                                    WHERE e.is_default_sw = 'Y'
+                                      AND (SELECT id
+                                           FROM core_enum
+                                           WHERE global_id = ?
+                                           LIMIT 1) = e.parent_id
+                                ", $val['enum']);
+
 							} elseif ($val['type'] == 3) {
 								$type = 'CHECKBOX';
 								$edit->selectSQL[] = $this->getEnumDropdown($val['enum'], true);
@@ -134,7 +146,7 @@ $tab->beginContainer($title);
 								}
 								$edit->selectSQL[] = $arr;
 							}
-							$edit->addControl($val['label'], $type, "", "", "");
+							$edit->addControl($val['label'], $type, '', '', $default);
 						}
 						$fields_sql = rtrim($fields_sql);
 						$edit->addParams("custom_fields", base64_encode(serialize($fields)));
@@ -206,17 +218,16 @@ $tab->beginContainer($title);
 				$list->getData();
 				foreach ($list->data as $key => $value) {
 					$name_val = explode(":::", end($value));
-					foreach ($name_val as $v) {
-						$temp  = explode("::", $v);
-						$k = array_search('id_' . $temp[0], $value);
-						if ($k) $value[$k] = $temp[1];
+                    if ( ! empty($name_val)) {
+                        foreach ($name_val as $v) {
+                            if (strpos($v, '::') !== false) {
+                                $temp = explode("::", $v);
+                                if (($k = array_search('id_' . $temp[0], $value))) {
+                                    $list->data[$key][$k] = $temp[1];
+                                }
+                            }
+                        }
 					}
-					foreach ($value as $k => $v) {
-						if (strpos($v, 'id_') === 0) {
-							$value[$k] = '';
-						}
-					}
-					$list->data[$key] = $value;
 				}
 				$list->showTable();
 				$tab->endContainer();

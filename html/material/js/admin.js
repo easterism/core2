@@ -18,7 +18,7 @@ var main_menu = {
         $('.menu-module, .menu-module-selected').each(function(){
             var module = $(this).attr('id').substr(7);
             if ($('li[id^=submodule-' + module + '-]')[0]) {
-                $('a', this).append('<span class="nav-second-level-toggle fa fa-angle-right pull-right"></span>');
+                $('a', this).append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
             }
         });
     }

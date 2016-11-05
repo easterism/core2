@@ -117,12 +117,12 @@ class InstallModule extends \Common {
 
     /**
      * @param string $k
-     * @return Common|CoreController|mixed|null|void|Zend_Config_Ini|Zend_Db_Adapter_Abstract
+     * @return \Common|\CoreController|mixed|null|void|\Zend_Config_Ini|\Zend_Db_Adapter_Abstract
      */
     public function __get($k)
     {
         if ($k == 'db') {
-            $db = $this->setDb();
+            $db = $this->{$k} = $this->setDb();
             return $db;
         } else {
             return parent::__get($k);
@@ -131,7 +131,7 @@ class InstallModule extends \Common {
 
     /**
      * Собственное подключение к базе данных
-     * @return void|Zend_Db_Adapter_Abstract
+     * @return void|\Zend_Db_Adapter_Abstract
      */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
@@ -140,7 +140,6 @@ class InstallModule extends \Common {
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
-        \Zend_Registry::set('db', $db);
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -153,7 +152,7 @@ class InstallModule extends \Common {
     /**
      * Проверка существования файла install.xml во временной папке с модулем
      *
-     * @throws Exception
+     * @throws \Exception
      *
      * @return void
      */
@@ -219,7 +218,7 @@ class InstallModule extends \Common {
      * Копируем файлы модуля из временной папки в папку с модулями
      *
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     private function copyModFiles() {
         //смотрим в какую папку устанавливать
@@ -257,7 +256,7 @@ class InstallModule extends \Common {
      * @param   string      $destinationFolder Папка в которую распаковать архив
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function extractZip($destinationFolder) {
         $zip = new \ZipArchive();
@@ -280,7 +279,7 @@ class InstallModule extends \Common {
      * @param   string  $destinationFolder Папка
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
@@ -314,9 +313,9 @@ class InstallModule extends \Common {
                         }
                     }
                 }
-                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Добавлены", "info");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Права по умолчанию"), $this->translate->tr("Добавлены"), "info");
             } else {
-                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Отсутствуют", "warning");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Права по умолчанию"), $this->translate->tr("Отсутствуют"), "warning");
             }
             if (!empty($Inf['install']['access']['additional']['rule'])) {
                 if (!empty($Inf['install']['access']['additional']['rule']['name'])) {
@@ -327,7 +326,7 @@ class InstallModule extends \Common {
                 foreach ($Inf['install']['access']['additional']['rule'] as $value) {
                     $access_add[$value["name"]] = ($value["all"] == "on") ? "all" : ($value["owner"] == "on" ? "owner" : "");
                 }
-                $this->addNotice("Права доступа", "Дополнительные права", "Добавлены", "info");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Дополнительные права"), $this->translate->tr("Добавлены"), "info");
             } elseif (!empty($Inf['install']['access']['additional']) && is_array($Inf['install']['access']['additional'])) {
                 throw new \Exception("Ошибки в структуре install.xml (access > additional)");
             }
@@ -356,14 +355,14 @@ class InstallModule extends \Common {
             foreach ($Inf['m'] as $dep_value) {
                 $depend[] = $dep_value;
                 if ($this->checkModuleDepend($dep_value) == false) {
-                    $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Требуется модуль \"{$dep_value['module_name']}\" версии {$dep_value['version']}", "danger");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), $this->translate->tr("Модуль не установлен"), "Требуется модуль \"{$dep_value['module_name']}\" версии {$dep_value['version']}", "danger");
                     $is_stop = true;
                 } else {
-                    $this->addNotice("Зависимость от модулей", "Зависит от '{$dep_value['module_name']}'", !in_array($dep_value['module_name'], $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value['module_name'], $this->module_is_off) ? "info" : "warning");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), "Зависит от '{$dep_value['module_name']}'", !in_array($dep_value['module_name'], $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value['module_name'], $this->module_is_off) ? "info" : "warning");
                 }
             }
             if ($is_stop) {
-                throw new \Exception("Установите все необходимые модули!");
+                throw new \Exception($this->translate->tr("Установите все необходимые модули!"));
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
@@ -391,14 +390,14 @@ class InstallModule extends \Common {
                 }
             }
             if ($is_stop) {
-                throw new \Exception("Установите все необходимые модули!");
+                throw new \Exception($this->translate->tr("Установите все необходимые модули!"));
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
         } elseif (!empty($Inf)) {
             throw new \Exception("Ошибки в структуре install.xml (dependent_modules)");
         } else {
-            $this->addNotice("Зависимость от модулей", "Проверка выполнена", "Не имеет зависимостей", "info");
+            $this->addNotice($this->translate->tr("Зависимость от модулей"), $this->translate->tr("Проверка выполнена"), $this->translate->tr("Не имеет зависимостей"), "info");
             return false;
         }
     }
@@ -472,7 +471,7 @@ class InstallModule extends \Common {
         } elseif (!empty($Inf['install']['submodules']) && is_array($Inf['install']['submodules'])) {
             throw new \Exception("Ошибки в структуре install.xml (submodules)");
         } else {
-            $this->addNotice("Субмодули", "Проверка выполнена", "Модуль не имеет субмодулей", "info");
+            $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Проверка выполнена"), $this->translate->tr("Модуль не имеет субмодулей"), "info");
             return false;
         }
 
@@ -1457,7 +1456,7 @@ class InstallModule extends \Common {
             $api_key = explode("?apikey=", $repo_url);
             $list_id = "repo_table_" . !empty($api_key[1]) ? $api_key[1] : uniqid();
 
-            $list = new listTable($list_id);
+            $list = new \listTable($list_id);
             $list->ajax = true;
             $list->extOrder = true;
             $list->addSearch("Имя модуля",      '`name`',  	'TEXT');
