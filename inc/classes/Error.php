@@ -113,7 +113,7 @@ class Error {
 			if ($cnf->debug->on) {
 				$message = $exception->getMessage(); //TODO вести журнал
 			} else {
-				$message = "Ошибка базы данных";
+				$message = "Ошибка базы данных!";
 			}
 		}
 		self::Exception($message, $code);

@@ -18,7 +18,7 @@ class DBMaster {
 
 	public function execute($sql) {
         foreach ($sql as $item) {
-            $this->db->query($item);
+            $this->db->exec($item);
         }
     }
 
@@ -414,11 +414,12 @@ class DBMaster {
                     WHERE constraint_schema = ?
                           AND referenced_table_name IS NOT NULL
                     ORDER BY table_name";
-		
+
 		$a_reffers  = array();
 		$a_ref_cols = array();
 		$a_comments = array();
 		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
+
         while (list($key, $val) = each($rows)) {
             $a_reffers[$val['table_name']][$val['referenced_table_name']] = 1;
             $a_ref_cols[$val['table_name']][$val['constraint_name']] = $val;
@@ -554,6 +555,7 @@ class DBMaster {
 						$a_res[$cnt_name]['TYPE'] = 'UNIQ';
 						continue;	
 					}
+					if (!isset($a_res[$cnt_name]['COLS'])) $a_res[$cnt_name]['COLS'] = array();
 					$a_res[$cnt_name]['COLS'][$v] = @count($a_res[$cnt_name]['COLS']); 
 				}
 			}			

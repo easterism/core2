@@ -306,7 +306,7 @@
 
                 // Инициализация модуля вебсервиса
                 if ( ! $this->isModuleActive('webservice')) {
-                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice does not active'), 503);
+                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice is not active'), 503);
                 }
 
                 $webservice_location        = $this->getModuleLocation('webservice');
@@ -383,7 +383,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                setcookie(preg_replace("~[=,; \t\r\n\013\014]~", '_', $this->config->system->name), false);
+                setcookie($this->config->session->name, false);
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }

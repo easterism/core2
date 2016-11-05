@@ -7,7 +7,7 @@ require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 class Audit extends \Common {
 
     public function database() {
-        $DB_ARRAY = '';
+        $DB_ARRAY = array();
         $pathToArray = "core2/mod/admin/audit/db_array.php";
         //$o_master = new DBMaster(); print_r($o_master->getSystemInstallDBArray());
         if (!file_exists($pathToArray)) {
@@ -15,7 +15,10 @@ class Audit extends \Common {
             die;
         } else {
             require_once $pathToArray;
-            $o_master       = new DBMaster($this->getDb());
+
+            $a_result = array();
+
+            $o_master       = new DBMaster($this->db);
             $a_result       = $o_master->checkCurrentDB($DB_ARRAY);
             $AuditNamespace = new \Zend_Session_Namespace('Audit');
             //echo "<pre>";print_r($AuditNamespace->RES);die;
@@ -25,7 +28,8 @@ class Audit extends \Common {
                 if ($a_result['COM'] > 0 && is_array($AuditNamespace->RES)) {
                     $a_tmp = explode('<!--NEW_LINE_FOR_DB_CORRECT_SCRIPT-->', $AuditNamespace->RES['SQL'][$_GET['number']]);
                     if ($a_tmp) {
-                        $o_master->execute($a_tmp);
+                        $admin_master = new DBMaster($this->getDb());
+                        $admin_master->execute($a_tmp);
                     }
                     $a_result = $o_master->checkCurrentDB($DB_ARRAY);
                 }
@@ -38,7 +42,8 @@ class Audit extends \Common {
                         $a_tmp = explode('<!--NEW_LINE_FOR_DB_CORRECT_SCRIPT-->', $a_result['SQL'][$key]);
                         while (list($k, $v) = each($a_tmp)) {
                             if ($v) {
-                                $o_master->execute($v);
+                                $admin_master = new DBMaster($this->getDb());
+                                $admin_master->execute($v);
                             }
                         }
                     }
@@ -47,7 +52,7 @@ class Audit extends \Common {
             }
 
 
-            if (count($a_result['COM']) > 0) {
+            if ($a_result && count($a_result['COM']) > 0) {
                 reset($a_result['COM']);
                 while (list($key, $val) = each($a_result['COM'])) {
                     echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
@@ -174,6 +179,10 @@ class Audit extends \Common {
         echo $html;
     }
 
+    /**
+     * Получаем адаптер базы данных с учетом конфигурации модуля admin
+     * @return \Zend_Db_Adapter_Abstract
+     */
     private function getDb() {
         //делаем свое подключение к БД и включаем отображение исключений
         if ($this->moduleConfig->database && $this->moduleConfig->database->admin->username) {

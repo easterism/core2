@@ -329,8 +329,8 @@ var load = function (url, data, id, callback) {
 				.done(function (n) {
 					$(locData.id).html(n);
 					preloader.hide();
-				}).fail(function (a,b,t)
-				{
+				})
+				.fail(function (a,b,t) {
 					if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
 					else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
 					else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
