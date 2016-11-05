@@ -296,3 +296,7 @@ a {color: #337AB7}
     position: absolute;
     right: 15px;
 }
+#menu-modules .menu-module-selected > a > i,
+#menu-modules .menu-module > a > i {
+    min-width: 18px;
+}
