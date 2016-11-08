@@ -383,7 +383,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                setcookie($this->config->session->name, false);
+                // setcookie($this->config->session->name, false);
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
