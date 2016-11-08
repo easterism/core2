@@ -117,12 +117,12 @@ class InstallModule extends \Common {
 
     /**
      * @param string $k
-     * @return Common|CoreController|mixed|null|void|Zend_Config_Ini|Zend_Db_Adapter_Abstract
+     * @return \Common|\CoreController|mixed|null|void|\Zend_Config_Ini|\Zend_Db_Adapter_Abstract
      */
     public function __get($k)
     {
         if ($k == 'db') {
-            $db = $this->setDb();
+            $db = $this->{$k} = $this->setDb();
             return $db;
         } else {
             return parent::__get($k);
@@ -131,7 +131,7 @@ class InstallModule extends \Common {
 
     /**
      * Собственное подключение к базе данных
-     * @return void|Zend_Db_Adapter_Abstract
+     * @return void|\Zend_Db_Adapter_Abstract
      */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
@@ -140,7 +140,6 @@ class InstallModule extends \Common {
         } else {
             $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
-        \Zend_Registry::set('db', $db);
         if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
 
         $db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -153,7 +152,7 @@ class InstallModule extends \Common {
     /**
      * Проверка существования файла install.xml во временной папке с модулем
      *
-     * @throws Exception
+     * @throws \Exception
      *
      * @return void
      */
@@ -219,7 +218,7 @@ class InstallModule extends \Common {
      * Копируем файлы модуля из временной папки в папку с модулями
      *
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     private function copyModFiles() {
         //смотрим в какую папку устанавливать
@@ -257,7 +256,7 @@ class InstallModule extends \Common {
      * @param   string      $destinationFolder Папка в которую распаковать архив
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function extractZip($destinationFolder) {
         $zip = new \ZipArchive();
@@ -280,7 +279,7 @@ class InstallModule extends \Common {
      * @param   string  $destinationFolder Папка
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
@@ -295,6 +294,7 @@ class InstallModule extends \Common {
      * Обработка прав доступа для модуля
      *
      * @return array
+     * @throws \Exception
      */
     private function getAccess() {
         $Inf = $this->mInfo;
@@ -314,9 +314,9 @@ class InstallModule extends \Common {
                         }
                     }
                 }
-                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Добавлены", "info");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Права по умолчанию"), $this->translate->tr("Добавлены"), "info");
             } else {
-                $this->addNotice($this->translate->tr("Права доступа"), "Права по умолчанию", "Отсутствуют", "warning");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Права по умолчанию"), $this->translate->tr("Отсутствуют"), "warning");
             }
             if (!empty($Inf['install']['access']['additional']['rule'])) {
                 if (!empty($Inf['install']['access']['additional']['rule']['name'])) {
@@ -327,7 +327,7 @@ class InstallModule extends \Common {
                 foreach ($Inf['install']['access']['additional']['rule'] as $value) {
                     $access_add[$value["name"]] = ($value["all"] == "on") ? "all" : ($value["owner"] == "on" ? "owner" : "");
                 }
-                $this->addNotice("Права доступа", "Дополнительные права", "Добавлены", "info");
+                $this->addNotice($this->translate->tr("Права доступа"), $this->translate->tr("Дополнительные права"), $this->translate->tr("Добавлены"), "info");
             } elseif (!empty($Inf['install']['access']['additional']) && is_array($Inf['install']['access']['additional'])) {
                 throw new \Exception("Ошибки в структуре install.xml (access > additional)");
             }
@@ -341,7 +341,7 @@ class InstallModule extends \Common {
      * Получаем модули необходимые для работы устанавливаемого модуля
      *
      * @return array|bool|string
-     * @throws Exception
+     * @throws \Exception
      */
     private function checkNecMods() {
         $Inf = empty($this->mInfo['install']['dependent_modules']) ? array() : $this->mInfo['install']['dependent_modules'];
@@ -356,14 +356,14 @@ class InstallModule extends \Common {
             foreach ($Inf['m'] as $dep_value) {
                 $depend[] = $dep_value;
                 if ($this->checkModuleDepend($dep_value) == false) {
-                    $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Требуется модуль \"{$dep_value['module_name']}\" версии {$dep_value['version']}", "danger");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), $this->translate->tr("Модуль не установлен"), "Требуется модуль \"{$dep_value['module_name']}\" версии {$dep_value['version']}", "danger");
                     $is_stop = true;
                 } else {
-                    $this->addNotice("Зависимость от модулей", "Зависит от '{$dep_value['module_name']}'", !in_array($dep_value['module_name'], $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value['module_name'], $this->module_is_off) ? "info" : "warning");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), "Зависит от '{$dep_value['module_name']}'", !in_array($dep_value['module_name'], $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value['module_name'], $this->module_is_off) ? "info" : "warning");
                 }
             }
             if ($is_stop) {
-                throw new \Exception("Установите все необходимые модули!");
+                throw new \Exception($this->translate->tr("Установите все необходимые модули!"));
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
@@ -391,14 +391,14 @@ class InstallModule extends \Common {
                 }
             }
             if ($is_stop) {
-                throw new \Exception("Установите все необходимые модули!");
+                throw new \Exception($this->translate->tr("Установите все необходимые модули!"));
             }
             $depend = base64_encode(serialize($depend));
             return $depend;
         } elseif (!empty($Inf)) {
             throw new \Exception("Ошибки в структуре install.xml (dependent_modules)");
         } else {
-            $this->addNotice("Зависимость от модулей", "Проверка выполнена", "Не имеет зависимостей", "info");
+            $this->addNotice($this->translate->tr("Зависимость от модулей"), $this->translate->tr("Проверка выполнена"), $this->translate->tr("Не имеет зависимостей"), "info");
             return false;
         }
     }
@@ -472,7 +472,7 @@ class InstallModule extends \Common {
         } elseif (!empty($Inf['install']['submodules']) && is_array($Inf['install']['submodules'])) {
             throw new \Exception("Ошибки в структуре install.xml (submodules)");
         } else {
-            $this->addNotice("Субмодули", "Проверка выполнена", "Модуль не имеет субмодулей", "info");
+            $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Проверка выполнена"), $this->translate->tr("Модуль не имеет субмодулей"), "info");
             return false;
         }
 
@@ -483,7 +483,7 @@ class InstallModule extends \Common {
      * Установка модуля
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function Install() {
         $arrForInsert = array();
@@ -551,7 +551,7 @@ class InstallModule extends \Common {
      * Установка таблиц модуля
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function installSql() {
         $file = $this->mInfo['install']['sql'];//достаём имя файла со структурой
@@ -576,7 +576,7 @@ class InstallModule extends \Common {
      * Обновление таблиц модуля
      *
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     public function migrateSql() {
         $curVer = "v" . trim($this->curVer);
@@ -645,38 +645,38 @@ class InstallModule extends \Common {
      * Обновление модуля
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
-    private function Upgrate() {
-        $arrForUpgrate = array();
+    private function Upgrade() {
+        $arrForUpgrade = array();
         //проверка обновляемой версии версии
         $this->curVer = $this->db->fetchOne("SELECT `version` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
         $this->checkVer();
         //проверяем зависимости от модулей
         if ($depend = $this->checkNecMods()) {
-            $arrForUpgrate['dependencies'] = $depend;
+            $arrForUpgrade['dependencies'] = $depend;
         }
         //обновляем таблицы модуля
         $this->migrateSql();
         //копируем файлы из архива
         $this->copyModFiles();
         //инфа о модуле
-        $arrForUpgrate['m_name']        = $this->mInfo['install']['module_name'];
-        $arrForUpgrate['lastuser']      = $this->lastUser;
-        $arrForUpgrate['is_system']     = $this->mInfo['install']['module_system'];
-        $arrForUpgrate['is_public']     = $this->mInfo['install']['module_public'];
-        $arrForUpgrate['uninstall']     = $this->getUninstallSQL();
-        $arrForUpgrate['version']       = $this->mInfo['install']['version'];
-        $arrForUpgrate['files_hash']    = $this->mData['files_hash'];
-        $arrForUpgrate['visible']       = $this->is_visible == "N" ? "N" : "Y";
+        $arrForUpgrade['m_name']        = $this->mInfo['install']['module_name'];
+        $arrForUpgrade['lastuser']      = $this->lastUser;
+        $arrForUpgrade['is_system']     = $this->mInfo['install']['module_system'];
+        $arrForUpgrade['is_public']     = $this->mInfo['install']['module_public'];
+        $arrForUpgrade['uninstall']     = $this->getUninstallSQL();
+        $arrForUpgrade['version']       = $this->mInfo['install']['version'];
+        $arrForUpgrade['files_hash']    = $this->mData['files_hash'];
+        $arrForUpgrade['visible']       = $this->is_visible == "N" ? "N" : "Y";
         //обрабатываем доступ
         if ($access = $this->getAccess()) {
-            $arrForUpgrate['access_default'] = $access['access_default'];
-            $arrForUpgrate['access_add']     = $access['access_add'];
+            $arrForUpgrade['access_default'] = $access['access_default'];
+            $arrForUpgrade['access_add']     = $access['access_add'];
         }
         //обновляем инфу о модуле
         $where = $this->db->quoteInto('module_id = ?', $this->mInfo['install']['module_id']);
-        $this->db->update('core_modules', $arrForUpgrate, $where);
+        $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
         $this->db->query("DELETE FROM `core_submodules` WHERE m_id = {$m_id}");
@@ -817,8 +817,8 @@ class InstallModule extends \Common {
             $zip_file = $this->config->temp.'/' . $template . '_tmp_'. uniqid() . ".zip";
             $template_path = "core2/mod_tpl/" . $template;
 
-            $zip = new ZipArchive;
-            $res = $zip->open($zip_file, ZipArchive::CREATE);
+            $zip = new \ZipArchive;
+            $res = $zip->open($zip_file, \ZipArchive::CREATE);
             if ($res === TRUE) {
                 $dir = opendir($template_path) or die("Не могу открыть");
                 while ($file = readdir($dir)){
@@ -900,7 +900,7 @@ class InstallModule extends \Common {
 
     /**
      * собираем сообщения в строку
-     *
+     * @param bool $tab
      * @return string HTML сообщения
      */
     public function printNotices($tab = false){
@@ -923,7 +923,7 @@ class InstallModule extends \Common {
      * Проверка обновляемой версии модуля
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function checkVer()
     {
@@ -1110,9 +1110,8 @@ class InstallModule extends \Common {
      * Массив с разлициями хэшей файлов пересобираем
      * по категориям удалено/добавлено/изменено
      *
-     *@param array $arr    Массив различий хэшей файлов
-     *
-     *@return array        Массив по категориям удалено/добавлено/изменено
+     * @param array $arr Массив различий хэшей файлов
+     * @return array     Массив по категориям удалено/добавлено/изменено
      */
     public function branchesCompareFilesHash($arr) {
         $tmp = array();
@@ -1160,8 +1159,8 @@ class InstallModule extends \Common {
     /**
      * Удаляем файлы или директорию с файлами
      *
-     * @param   string  $loc    Директория или файл
-     *
+     * @param string $loc            Директория или файл
+     * @param bool   $is_delete_root
      * @return  void
      */
     public function justDeleteFiles ($loc, $is_delete_root = true){
@@ -1197,7 +1196,7 @@ class InstallModule extends \Common {
      * Подготовка к установке модуля
      *
      * @return  void
-     * @throws  Exception
+     * @throws  \Exception
      */
     private function prepareToInstall() {
 
@@ -1259,7 +1258,7 @@ class InstallModule extends \Common {
 
             if ($this->isModuleInstalled($this->mInfo['install']['module_id'])) {
                 $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}' до v{$this->mInfo['install']['version']}</h3>";
-                $this->Upgrate();
+                $this->Upgrade();
             } else {
                 $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}' v{$this->mInfo['install']['version']}</h3>";
                 $this->Install();
@@ -1306,7 +1305,7 @@ class InstallModule extends \Common {
 
             if ($this->isModuleInstalled($this->mInfo['install']['module_id'])) {
                 $st = "<h3>Обновляем модуль '{$this->mInfo['install']['module_name']}' до v{$this->mInfo['install']['version']}</h3>";
-                $this->Upgrate();
+                $this->Upgrade();
             } else {
                 $st = "<h3>Устанавливаем модуль '{$this->mInfo['install']['module_name']}' v{$this->mInfo['install']['version']}</h3>";
                 $this->Install();
@@ -1332,7 +1331,7 @@ class InstallModule extends \Common {
      * @param   string      $request    Ид из репозитория или repo_list
      *
      * @return  array                   Ответ запроса + http-код ответа
-     * @throws  Exception
+     * @throws  \Exception
      */
     private function doCurlRequestToRepo($repo_url, $request) {
         //готовим ссылку для запроса модуля из репозитория
@@ -1371,7 +1370,7 @@ class InstallModule extends \Common {
      * @param   string      $repo_url   Подготовленный URL для запроса к репозиторию
      *
      * @return  mixed                   Массив с информацией о доступных для установки модулей
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function getModsListFromRepo($repo_url) {
         //проверяем есть ли ключ к репозиторию, если нет то получаем
@@ -1396,7 +1395,7 @@ class InstallModule extends \Common {
      * @param   string      $repo_url   Подготовленный URL для запроса к репозиторию
      *
      * @return  string                  Apikey для доступа к репозиторию
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function getRepoKey($repo_url) {
         //формируем url
@@ -1418,7 +1417,13 @@ class InstallModule extends \Common {
                 throw new \Exception("CURL - {$curl['error']}");
             } else {
                 $out = json_decode($curl['answer']);
-                throw new \Exception("Ответ вебсервиса репозитория - {$out->message}");
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $message = isset($out->message) ? $out->message : '';
+                } else {
+                    $message = strip_tags($curl['answer'], '<p><b><i><span><small><a><div><ul><ol><li><br><hr><input><select><button><table><caption><tr><th><td>');
+                }
+
+                throw new \Exception("Ответ вебсервиса репозитория - {$message}");
             }
         }
         //если всё гуд
@@ -1457,7 +1462,7 @@ class InstallModule extends \Common {
             $api_key = explode("?apikey=", $repo_url);
             $list_id = "repo_table_" . !empty($api_key[1]) ? $api_key[1] : uniqid();
 
-            $list = new listTable($list_id);
+            $list = new \listTable($list_id);
             $list->ajax = true;
             $list->extOrder = true;
             $list->addSearch("Имя модуля",      '`name`',  	'TEXT');
@@ -1844,7 +1849,7 @@ class InstallModule extends \Common {
      * получаем инфу о всех модулях, которые доступны для установки
      *
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
     public function getInfoAllAvailMods () {
         $list = array();
@@ -1946,7 +1951,7 @@ class InstallModule extends \Common {
                 $this->mData['data']          = $data;
                 $this->mData['files_hash']    = $files_hash;
                 $this->prepareToInstall();
-                $this->Upgrate();
+                $this->Upgrade();
             } else {
                 $this->addNotice($this->translate->tr("Поиск обновлений"), $this->translate->tr("Поиск в доступных модулях и репозиториях"), $this->translate->tr("Обновления не найдены"), "warning");
             }
@@ -2409,7 +2414,7 @@ class InstallModule extends \Common {
      *
      * @param $sql
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function SQLСheckingSyntax($sql) {
         //заменяем "служебные слова"

@@ -235,12 +235,40 @@ class ModAjax extends ajaxFunc {
      * @return xajaxResponse
      */
     public function saveEnum($data) {
-    	//echo "<pre>";  print_r($data); die;
+
     	$this->error = array();
-		$fields = array('name' => 'req', 'is_active_sw' => 'req');
+		$fields      = array(
+			'name'         => 'req',
+			'is_active_sw' => 'req'
+		);
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
 		}
+
+		try {
+			$refid = $this->getSessFormField($data['class_id'], 'refid');
+            if (empty($refid)) {
+                $is_duplicate_enum = $this->db->fetchOne("
+                    SELECT 1
+                    FROM core_enum
+                    WHERE global_id = ?
+                      AND id != ?
+                ", array(
+                    $data['control']['global_id'],
+                    $refid,
+                ));
+
+                if ($is_duplicate_enum) {
+                    throw new Exception($this->translate->tr('Указанный идентификатор справочника уже существует.'));
+                }
+			}
+
+		} catch (Exception $e) {
+			$this->error[] = $e->getMessage();
+			$this->displayError($data);
+			return $this->response;
+		}
+
 		$custom_fields = array();
 		if (isset($data['customField']) && is_array($data['customField'])) {
 			foreach($data['customField'] as $k => $v) {
@@ -257,7 +285,7 @@ class ModAjax extends ajaxFunc {
 		if ($custom_fields) $data['control']['custom_field'] = base64_encode(serialize($custom_fields));
 		else $data['control']['custom_field'] = new Zend_Db_Expr('NULL');
 
-		if (!$lastId = $this->saveData($data)) {
+		if ( ! $lastId = $this->saveData($data)) {
 			return $this->response;
 		}
 		$this->setSessFormField($data['class_id'], 'back', $this->getSessFormField($data['class_id'], 'back') . "&edit=$lastId");
@@ -273,14 +301,41 @@ class ModAjax extends ajaxFunc {
      */
     public function saveEnumValue(array $data) {
 
-    	$this->error = array();
-		$fields = array(
-			'is_active_sw' => 'req',
-			'is_default_sw' => 'req'
-		);
+        $this->error = array();
+        $fields      = array(
+            'name'          => 'req',
+            'is_active_sw'  => 'req',
+            'is_default_sw' => 'req'
+        );
 		if ($this->ajaxValidate($data, $fields)) {
 			return $this->response;
-		}		
+		}
+
+
+        try {
+            $refid = $this->getSessFormField($data['class_id'], 'refid');
+            $is_duplicate_enum_value = $this->db->fetchOne("
+                SELECT 1
+                FROM core_enum
+                WHERE parent_id = ?
+                  AND `name` = ?
+                  AND id != ?
+            ", array(
+                $data['control']['parent_id'],
+                $data['control']['name'],
+                $refid,
+            ));
+
+            if ($is_duplicate_enum_value) {
+                throw new Exception($this->translate->tr('Указанное значение уже существует в данном справочнике.'));
+            }
+
+        } catch (Exception $e) {
+            $this->error[] = $e->getMessage();
+            $this->displayError($data);
+            return $this->response;
+        }
+
 		$str = "";
 		$cu_fi = array();
 		if (!empty($data['custom_fields'])) {
@@ -296,7 +351,7 @@ class ModAjax extends ajaxFunc {
    			if (strpos($key, 'id_') === 0) {
    				unset($data['control'][$key]);
 				if (is_array($val)) $val = implode(',', $val);
-   				$str_val = ($val == "") ? ":::" : "::" . $val . ":::";
+   				$str_val = ($val === "") ? ":::" : "::" . $val . ":::";
    				$str .= $cu_fi[substr($key, 3)]['label'] . $str_val;
    			} 
    		}

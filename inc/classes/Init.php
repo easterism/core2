@@ -306,7 +306,7 @@
 
                 // Инициализация модуля вебсервиса
                 if ( ! $this->isModuleActive('webservice')) {
-                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice does not active'), 503);
+                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice is not active'), 503);
                 }
 
                 $webservice_location        = $this->getModuleLocation('webservice');

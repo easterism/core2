@@ -2,8 +2,12 @@
 namespace Core2;
 
 require_once 'Tool.php';
-require_once("Zend/Registry.php");
+require_once "Zend/Registry.php";
 
+
+/**
+ * Class Error
+ */
 class Error {
 
     /**
@@ -38,7 +42,7 @@ class Error {
 	/**
 	 * Основной обработчик исключений
 	 *
-	 * @param Exception $exception
+	 * @param \Exception $exception
 	 */
 	public static function catchException(\Exception $exception) {
         $cnf     = self::getConfig();
@@ -46,12 +50,20 @@ class Error {
         $code    = $exception->getCode();
 
 		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
-			$trace = $exception->getTraceAsString();
-			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
-			$f = fopen($cnf->log->path, 'a');
-			fwrite($f, $str . chr(10) . chr(13));
-			fclose($f);
-		}
+            if ((file_exists($cnf->log->path) && is_writable($cnf->log->path)) ||
+                ( ! file_exists($cnf->log->path) && is_dir(dirname($cnf->log->path)) && is_writable(dirname($cnf->log->path)))
+            ) {
+                $trace = $exception->getTraceAsString();
+                $str   = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
+
+                $f = fopen($cnf->log->path, 'a');
+                fwrite($f, $str . chr(10) . chr(13));
+                fclose($f);
+            } else {
+                $text = sprintf('Нет доступа на запись в файл %s.', $cnf->log->path);
+                self::Exception($text, $code);
+            }
+        }
         if ($code == 503) {
             self::Exception($message, $code);
         }
@@ -70,7 +82,7 @@ class Error {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
-				Tool::fb($str);
+				\Tool::fb($str);
 			} else {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
@@ -101,7 +113,7 @@ class Error {
 			if ($cnf->debug->on) {
 				$message = $exception->getMessage(); //TODO вести журнал
 			} else {
-				$message = "Ошибка базы данных";
+				$message = "Ошибка базы данных!";
 			}
 		}
 		self::Exception($message, $code);
@@ -116,7 +128,7 @@ class Error {
 		// Zend_Registry MUST present
 		try {
 			$cnf = \Zend_Registry::get('config');
-		} catch (Zend_Exception $e) {
+		} catch (\Zend_Exception $e) {
 			self::Exception($e->getMessage(), 500);
 		}
 		return $cnf;
@@ -151,7 +163,7 @@ class Error {
 		return self::Exception(json_encode($out), $code);
 	}
 
-	public static function catchXajax(Exception $e, xajaxResponse $res) {
+	public static function catchXajax(\Exception $e, \xajaxResponse $res) {
 		$res->alert($e->getMessage());
 		return $res;
 	}

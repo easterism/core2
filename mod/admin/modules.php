@@ -357,12 +357,12 @@ $tab->beginContainer("Модули");
 								 is_system,
 								 is_public,
 								 seq,	
-								 '',							 								 
+								 '' AS act,
 								 visible
 							FROM core_modules
 							WHERE m_id > 0
 						   ORDER BY seq";
-			$list->addColumn($this->translate->tr("Модуль"), "", "TEXT");
+			$list->addColumn($this->translate->tr("Модуль"), "", "HTML");
 			$list->addColumn($this->translate->tr("Идентификатор"), "", "TEXT");
 			$list->addColumn($this->translate->tr("Версия"), "", "TEXT");
 			$list->addColumn($this->translate->tr("Системный"), "", "TEXT");
@@ -375,8 +375,8 @@ $tab->beginContainer("Модули");
 			$mods = array();
 			foreach ($data as $key => $val) {
 				$mods[$val[2]] = $val[0];
-				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . htmlspecialchars($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
+				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
+				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
 			}
 			$list->data = $data;
 			$list->paintCondition	= "'TCOL_07' == 'N'";

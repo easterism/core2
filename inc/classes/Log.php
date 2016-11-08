@@ -25,7 +25,7 @@ class Log {
      * @param string $name
      */
     public function __construct($name = 'core2') {
-        if ($name != 'access') {
+        if ($name !== 'access') {
             $this->log    = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
             $this->config = \Zend_Registry::getInstance()->get('core_config');
 
@@ -40,6 +40,7 @@ class Log {
             }
 
         } else {
+            $this->config = \Zend_Registry::getInstance()->get('config');
             $this->log = new Logger($name);
         }
     }
@@ -66,7 +67,7 @@ class Log {
     public function access($name) {
         $this->setWriter();
         $this->log->pushProcessor(new WebProcessor());
-        $this->log->addInfo($name, array('sid' => \Zend_Session::getId()));
+        $this->log->info($name, array('sid' => \Zend_Session::getId()));
     }
 
 

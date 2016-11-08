@@ -97,6 +97,12 @@ class Panel {
             $tpl->title->assign('[TITLE]', $this->title);
         }
 
+        if ($this->active_tab == '' && ! empty($this->tabs)) {
+            reset($this->tabs);
+            $tab = current($this->tabs);
+            $this->active_tab = $tab['id'];
+        }
+
         if ( ! empty($this->tabs)) {
             foreach ($this->tabs as $tab) {
 
