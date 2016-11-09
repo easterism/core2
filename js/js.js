@@ -107,17 +107,25 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
+var glob = {'toAnchor':false};
+
 function toAnchor(id) {
 	if (!id) return;
 	if (typeof id != 'string') return;
+	if (id.substr(-9) == '_mainform') {
+		glob['toAnchor'] = true;
+	}
 	if (id.indexOf('#') < 0) {
 		id = "#" + id;
 	}
 	var ofy = $(id);
 	if (ofy[0]) {
-		$('html,body').animate({
-			scrollTop : ofy.offset().top - $("#menuContainer").height()
-		}, 'fast');
+		if (!glob['toAnchor']) {
+			$('html,body').animate({
+				scrollTop: ofy.offset().top - $("#menuContainer").height()
+			}, 'fast');
+		}
+		glob['toAnchor'] = false;
 	}
 }
 
