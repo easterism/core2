@@ -583,10 +583,16 @@ class CoreController extends Common {
 	 */
 	public function feedbackForm() {
 
-		$mods = $this->db->fetchAll("SELECT m.module_id, m.m_name, sm.sm_key, sm.sm_name
-							 FROM core_modules AS m
-							 LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-							 WHERE m.visible = 'Y' ORDER BY sm.seq");
+		$mods = $this->db->fetchAll("
+			SELECT m.module_id,
+				   m.m_name,
+				   sm.sm_key,
+				   sm.sm_name
+			FROM core_modules AS m
+			    LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
+			WHERE m.visible = 'Y'
+			ORDER BY sm.seq
+        ");
 
 		$selectMods = '';
 		if (count($mods)) {
@@ -599,6 +605,10 @@ class CoreController extends Common {
 				} elseif (!$this->checkAcl($value['module_id'], 'access')) {
 					continue;
 				}
+
+                $value['m_name']  = strip_tags($value['m_name']);
+                $value['sm_name'] = strip_tags($value['sm_name']);
+
 				if (!isset($currentMod[$value['m_name']])) {
 					$currentMod[$value['m_name']] = array();
 				}

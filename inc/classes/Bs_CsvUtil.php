@@ -1,30 +1,40 @@
 <?php 
 /**
-* csv util class. csv = comma separated value.
-* 
-* features:
-*   - supports any separator char sequence, default is semicolon ";"
-*   - supports separator characters in the values. eg you use a ; as separator, your line may look like
-*     blah;hello world;"foo";"foo;bar";"this is a ""string""";got it?;foo
-*     as you can see, the values can be in "quotes". if your text uses quotes itself as in the "string" 
-*     example, they are escaped in ms-style with 2 quotes. and by using quotes we can even have your 
-*     separator inside the text (example "foo;bar").
-*   - line breaks. a csv line may spread over multiple lines using crlf in a field value.
-*     see the checkMultiline param and the _checkMultiline() method.
-* 
-* missing:
-*   - option to change quote char (") to something else
-* 
-* thanks to: steffen at hung dot ch
-* 
-* dependencies: none.
-* 
-* @author     andrej arn <andrej at blueshoes dot org>
-* @copyright  blueshoes.org
-* @version    4.2.$id$
-* @package    util
-* @access     pseudostatic
-*/
+ * csv util class. csv = comma separated value.
+ *
+ * features:
+ *   - supports any separator char sequence, default is semicolon ";"
+ *   - supports separator characters in the values. eg you use a ; as separator, your line may look like
+ *     blah;hello world;"foo";"foo;bar";"this is a ""string""";got it?;foo
+ *     as you can see, the values can be in "quotes". if your text uses quotes itself as in the "string"
+ *     example, they are escaped in ms-style with 2 quotes. and by using quotes we can even have your
+ *     separator inside the text (example "foo;bar").
+ *   - line breaks. a csv line may spread over multiple lines using crlf in a field value.
+ *     see the checkMultiline param and the _checkMultiline() method.
+ *
+ * missing:
+ *   - option to change quote char (") to something else
+ *
+ * thanks to: steffen at hung dot ch
+ *
+ * dependencies: none.
+ *
+ * @author     andrej arn <andrej at blueshoes dot org>
+ * @copyright  blueshoes.org
+ * @version    4.2.$id$
+ * @package    util
+ * @access     pseudostatic
+ *
+ *
+ *
+ *
+ *
+ *
+ * DEPRECATED
+ *
+ *
+ *
+ */
 class Bs_CsvUtil {
   
   
