@@ -333,6 +333,8 @@
                     $action = 'Index';
                 }
 
+                require_once 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
             }
@@ -367,7 +369,6 @@
 
             // Парсим маршрут
             $this->routeParse();
-
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
                 // LOG USER ACTIVITY
                 $logExclude = array('module=profile&unread=1'); //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
@@ -383,7 +384,6 @@
             }
             else {
                 // GET LOGIN PAGE
-                setcookie($this->config->session->name, false);
                 if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }

@@ -579,7 +579,7 @@ class listTable extends initList {
 					$tpl_date->assign('[VALUE_FROM]', ! empty($next[0]) ? $next[0] : '');
 					$tpl_date->assign('[VALUE_TO]',   ! empty($next[1]) ? $next[1] : '');
 					$tpl_date->assign("[OUT]",        $value['out']);
-					$tpl_date->assign("[OUT]",        $value['out']);
+					$tpl_date->assign("[MASK]",       str_replace("yyyy", "yy", strtolower($this->date_mask)));
 
 					$tpl->fields->assign('{FIELD_CONTROL}', $tpl_date->parse());
 				}

@@ -212,7 +212,8 @@ class CoreController extends Common {
 								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
 								WHERE u.`visible` = 'Y' AND u.u_login=? LIMIT 1", $login);
 				}
-			} else {
+			}
+			else {
 				$res = $this->setRoot();
 			}
 			if ($res) {
