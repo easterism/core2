@@ -339,11 +339,13 @@ var load = function (url, data, id, callback) {
 					preloader.hide();
 				})
 				.fail(function (a,b,t) {
-					if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-					else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
-					else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
-					else if (a.status == 403) document.location.reload();
-					else alert("Произошла ошибка: " + a.statusText);
+					if (a.statusText != 'abort') {
+						if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+						else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
+						else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
+						else if (a.status == 403) document.location.reload();
+						else alert("Произошла ошибка: " + a.statusText);
+					}
 					preloader.hide();
 				});
 		}
@@ -385,7 +387,7 @@ $(document).ready(function() {
 	}
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
-		if (a.request.status == '0') {
+		if (a.request.statusText != 'abort' && a.request.status == '0') {
 			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
 		}
 		else if (a.request.status == 500) {
