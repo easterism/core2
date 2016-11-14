@@ -120,7 +120,7 @@ function toAnchor(id) {
 	}
 	var ofy = $(id);
 	if (ofy[0]) {
-		if (!glob['toAnchor']) {
+		if (glob['toAnchor'] == false) {
 			$('html,body').animate({
 				scrollTop: ofy.offset().top - $("#menuContainer").height()
 			}, 'fast');
@@ -145,30 +145,24 @@ var preloader = {
 		$("#preloader div").html("");
 		$("#preloader").hide();
 	},
-	callback : function (response, status, xhr) {
-		if (status == "error") {
-
-		} else {
-			if (preloader.extraLoad) {
-				for (var el in preloader.extraLoad) {
-					var aUrl = preloader.extraLoad[el];
-					if (aUrl) {
-						aUrl = JSON.parse(aUrl);
-						var bUrl = [];
-						for (var k in aUrl) {
-							if (aUrl.hasOwnProperty(k)) {
-								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
-							}
+	callback : function () {
+		if (preloader.extraLoad) {
+			for (var el in preloader.extraLoad) {
+				var aUrl = preloader.extraLoad[el];
+				if (aUrl) {
+					aUrl = JSON.parse(aUrl);
+					var bUrl = [];
+					for (var k in aUrl) {
+						if (aUrl.hasOwnProperty(k)) {
+							bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 						}
-						$('#' + el).load("index.php?" + bUrl.join('&'));
 					}
+					$('#' + el).load("index.php?" + bUrl.join('&'));
 				}
-				preloader.extraLoad = {};
 			}
-			toAnchor(locData.id);
-		};
+			preloader.extraLoad = {};
+		}
 		preloader.hide();
-		//resize();
 	},
 	qs : function(url) {
 		//PARSE query string
@@ -336,7 +330,8 @@ var load = function (url, data, id, callback) {
 			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 				.done(function (n) {
 					$(locData.id).html(n);
-					preloader.hide();
+					toAnchor(locData.id);
+					callback();
 				})
 				.fail(function (a,b,t) {
 					if (a.statusText != 'abort') {
