@@ -113,18 +113,16 @@ function goHome() {
 	load('index.php?module=admin&action=welcome');
 }
 
+
 function logout() {
-    if (alertify) {
-        alertify.confirm('Вы уверены, что хотите выйти?', function (e) {
-            if (e) {
-                window.location='index.php?module=admin&action=exit';
-            }
-        });
-    } else {
-        if (confirm('Вы уверены, что хотите выйти?')) {
-            window.location='index.php?module=admin&action=exit';
-        }
-    }
+	alertify.confirm('Вы уверены, что хотите выйти?', function (e) {
+		$.ajax({url:'index.php?module=admin&action=exit'})
+			.done(function (n) {
+				window.location='index.php';
+			}).fail(function (a,b,t){
+			alert("Произошла ошибка: " + a.statusText);
+		});
+	});
 }
 
 function jsToHead(src) {

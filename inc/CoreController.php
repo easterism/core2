@@ -46,25 +46,24 @@ class CoreController extends Common {
      */
 	public function action_index() {
         if (!$this->auth->ADMIN) throw new Exception(911);
-        $alert = new Alert();
 
         $tab = new tabs('mod');
         $tab->beginContainer($this->translate->tr("События аудита"));
         try {
-            $changedMods = $this->checkModulesChanges($alert);
+            $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
-                $alert->info($this->translate->tr("Система работает в штатном режиме."));
+                Alert::session()->info($this->translate->tr("Система работает в штатном режиме."));
             } else {
-                $alert->danger($this->translate->tr("Обнаружены изменения в файлах модулей:"), implode(", ", $changedMods), true);
+				Alert::session()->danger(implode(", ", $changedMods), $this->translate->tr("Обнаружены изменения в файлах модулей:"));
             }
             if (!$this->moduleConfig->database || !$this->moduleConfig->database->admin || !$this->moduleConfig->database->admin->username) {
-                $alert->warning($this->translate->tr("Не задан администратор базы данных"), "Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", true);
+				Alert::session()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->translate->tr("Не задан администратор базы данных"));
             }
         } catch (Exception $e) {
-            $alert->danger($this->translate->tr("Ошибка"), $e->getMessage());
+			Alert::session()->danger($this->translate->tr("Ошибка"), $e->getMessage());
         }
 
-        $alert->draw();
+        echo Alert::get();
         $tab->endContainer();
 	}
 
@@ -755,7 +754,7 @@ class CoreController extends Common {
             $app = "index.php?module=admin&action=monitoring";
             require_once $this->path . 'monitoring.php';
         } catch (Exception $e) {
-            Alert::printDanger($e->getMessage());
+            echo Alert::danger($e->getMessage());
         }
 	}
 
@@ -960,11 +959,9 @@ class CoreController extends Common {
     /**
      * Проверяем файлы модулей на изменения
      *
-     * @param $notice
-     *
      * @return array
      */
-    private function checkModulesChanges(Alert $notice) {
+    private function checkModulesChanges() {
         $server = $this->config->system->host;
         $admin_email = $this->getSetting('admin_email');
 
@@ -982,10 +979,10 @@ class CoreController extends Common {
                 );
                 $id = $this->db->lastInsertId("core_settings");
             }
-            $notice->info($this->translate->tr("Отправка уведомлений отключена"), "Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений");
+            Alert::session()->info("Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", $this->translate->tr("Отправка уведомлений отключена"));
         }
         if (!$server) {
-            $notice->info($this->translate->tr("Отправка уведомлений отключена"), $this->translate->tr("Не задан параметр 'host' в conf.ini"));
+            Alert::session()->info($this->translate->tr("Не задан параметр 'host' в conf.ini"), $this->translate->tr("Отправка уведомлений отключена"));
         }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
@@ -1033,7 +1030,7 @@ class CoreController extends Common {
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
-                            $notice->danger($this->translate->tr("Уведомление не отправлено"), $answer['error']);
+                            Alert::session()->danger($answer['error'], $this->translate->tr("Уведомление не отправлено"));
                         }
                     }
                 }
