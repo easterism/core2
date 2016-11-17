@@ -7,15 +7,16 @@
  */
 class Alert {
 
-    protected static $in_session = false;
+    private static $memory    = array();
+    private static $in_memory = false;
 
 
     /**
      * Alert constructor.
-     * @param bool $in_session
+     * @param bool $in_memory
      */
-    public function __construct($in_session = false) {
-        self::$in_session = (bool)$in_session;
+    public function __construct($in_memory = false) {
+        self::$in_memory = (bool)$in_memory;
     }
 
 
@@ -34,7 +35,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение об успешном выполнении
      * @param string $str
-     * @return string
      */
     public static function printSuccess($str) {
         echo self::getSuccess($str);
@@ -57,7 +57,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение с информацией
      * @param string $str
-     * @return string
      */
     public static function printInfo($str) {
         echo self::getInfo($str);
@@ -79,7 +78,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение с предупреждением
      * @param string $str
-     * @return string
      */
     public static function printWarning($str) {
         echo self::getWarning($str);
@@ -101,7 +99,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение об ошибке или опасности
      * @param string $str
-     * @return string
      */
     public static function printDanger($str) {
         echo self::getDanger($str);
@@ -109,7 +106,7 @@ class Alert {
 
 
     /**
-     * Returns a message
+     * Возвращает сообщение
      * @param string $type
      * @param string $header
      * @param string $message
@@ -120,18 +117,17 @@ class Alert {
         $header_str    = $header ? "<h4>{$header}</h4>" : '';
         $alert_message = "<div class=\"alert alert-{$type}\">{$header_str}{$message}</div>";
 
-        if (self::$in_session && isset($_SESSION)) {
-            session_status();
-            $_SESSION['alert_messages'][] = [$type, $alert_message];
+        if (self::$in_memory) {
+            self::$memory[] = [$type, $alert_message];
         }
 
-        self::$in_session = false;
+        self::$in_memory = false;
         return $alert_message;
     }
 
 
     /**
-     * Распечатывает сообщение об успешном выполнении
+     * Возвращает сообщение об успешном выполнении
      * @param string $message
      * @param string $header
      * @return string
@@ -142,7 +138,7 @@ class Alert {
 
 
     /**
-     * Распечатывает сообщение с информацией
+     * Возвращает сообщение с информацией
      * @param string $message
      * @param string $header
      * @return string
@@ -153,7 +149,7 @@ class Alert {
 
 
     /**
-     * Распечатывает сообщение с предупреждением
+     * Возвращает сообщение с предупреждением
      * @param string $header,
      * @param string $message
      * @return string
@@ -164,7 +160,7 @@ class Alert {
 
 
     /**
-     * Распечатывает сообщение об ошибке или опасности
+     * Возвращает сообщение об ошибке или опасности
      * @param string $header,
      * @param string $message
      * @return string
@@ -175,16 +171,16 @@ class Alert {
 
 
     /**
-     * Record the following message in the session
+     * Запись следующего сообщения в память
      * @return Alert
      */
-    public static function session() {
+    public static function memory() {
         return new Alert(true);
     }
 
 
     /**
-     * Receiving messages session
+     * Возвращает сообщения памяти
      * @param string $type
      * @return string
      */
@@ -192,17 +188,14 @@ class Alert {
 
         $alert_messages = array();
 
-        if ( ! empty($_SESSION) &&
-            ! empty($_SESSION['alert_messages']) &&
-            is_array($_SESSION['alert_messages'])
-        ) {
-            foreach ($_SESSION['alert_messages'] as $key => $alert_message) {
+        if ( ! empty(self::$memory)) {
+            foreach (self::$memory as $key => $alert_message) {
                 if ( ! empty($alert_message[0]) && is_string($alert_message[0]) &&
-                    ! empty($alert_message[1]) && is_string($alert_message[1]) &&
-                    (empty($type) || $type == $alert_message[0])
+                     ! empty($alert_message[1]) && is_string($alert_message[1]) &&
+                     (empty($type) || $type == $alert_message[0])
                 ) {
                     $alert_messages[] = $alert_message[1];
-                    unset($_SESSION['alert_messages'][$key]);
+                    unset(self::$memory[$key]);
                 }
             }
         }
