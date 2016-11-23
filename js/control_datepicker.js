@@ -16,7 +16,11 @@ var control_datepicker = {
             dateFormat: dateFormat,
             defaultDate: $input.val(),
             beforeShowDay: function(date) {
-                var date1   = $.datepicker.parseDate(dateFormat, $input.val());
+                try {
+                    var date1 = $.datepicker.parseDate(dateFormat, $input.val());
+                } catch (err) {
+                    date1 = '';
+                }
                 var classes = date1 && date.getTime() == date1.getTime()
                     ? ' ctrl-dp-highlight '
                     : '';
