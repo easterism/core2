@@ -74,6 +74,7 @@ class Error {
             header("HTTP/1.1 404 Page not found");
 			self::Exception('Нет такой страницы', $code);
 		} elseif ($message == 'expired') {
+            setcookie($cnf->session->name, false);
 			header("HTTP/1.1 403 Forbidden");
 			die();
 		}
