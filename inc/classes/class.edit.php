@@ -1368,7 +1368,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 		}
 
 		if (!$this->readOnly) {
-			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;");
+			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
 		$this->HTML .= 	"</div></div>";
 		if (!$this->readOnly) {
@@ -1463,9 +1463,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 	 * @param string $onclick
 	 * @return string
 	 */
-	private function button($value, $type = "Submit", $onclick = "") {
+	private function button($value, $type = "Submit", $onclick = "", $cssClass = "button") {
 		$id = uniqid();
-		$out = '<input type="' . $type . '" class="button" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
+		$out = '<input type="' . $type . '" class="' . $cssClass . '" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
 
 		return $out;
 	}

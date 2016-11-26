@@ -3,7 +3,7 @@
 			<div class="recordNum"><b>Всего:</b>&nbsp;[TOTAL_RECORD_COUNT]</div>
             <!-- BEGIN delButton -->
             <div style="float:right;">
-                <input type="button" class="button" value="Удалить" onclick="[delURL]"/>
+                <input type="button" class="button del" value="Удалить" onclick="[delURL]"/>
             </div>
             <!-- END delButton -->
             <!-- BEGIN addButton -->
