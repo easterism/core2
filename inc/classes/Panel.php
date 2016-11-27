@@ -12,7 +12,6 @@ class Panel {
     protected $title          = '';
     protected $content        = '';
     protected $resource       = '';
-    protected $url            = '';
     protected $tabs           = array();
     protected $theme_src      = '';
     protected $theme_location = '';
@@ -21,13 +20,9 @@ class Panel {
     /**
      * Panel constructor.
      * @param string $resource
-     * @param string $url
      */
-    public function __construct($resource, $url = '') {
-
+    public function __construct($resource) {
         $this->resource = $resource;
-        $this->url      = str_replace('?', '#', $url);
-
         if (isset($_GET[$this->resource])) {
             $this->active_tab = $_GET[$this->resource];
         }
@@ -46,12 +41,14 @@ class Panel {
      * Добавление таба
      * @param string $title
      * @param string $id
+     * @param string $url
      * @param bool   $disabled
      */
-    public function addTab($title, $id, $disabled = false) {
+    public function addTab($title, $id, $url, $disabled = false) {
         $this->tabs[] = array(
             'title'    => $title,
             'id'       => $id,
+            'url'      => str_replace('?', '#', $url),
             'disabled' => $disabled
         );
     }
@@ -111,7 +108,7 @@ class Panel {
                     $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
 
                 } else {
-                    $url   = (strpos($this->url, "#") !== false ? $this->url . "&" : $this->url . "#") . "{$this->resource}={$tab['id']}";
+                    $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
                     $class = $this->active_tab == $tab['id'] ? 'active' : '';
 
                     $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);

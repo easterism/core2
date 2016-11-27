@@ -6,37 +6,28 @@
  * Class Alert
  */
 class Alert {
-    private $info = array();
-    private $success = array();
-    private $warning = array();
-    private $danger = array();
-    private $i = 0;
-    private $s = 0;
-    private $w = 0;
-    private $d = 0;
 
-    public function __construct() {
+    private static $memory    = array();
+    private static $in_memory = false;
 
-    }
 
     /**
-     * Возвращает сообщение об успешном выполнении
-     * @param string $status
-     * @param string $message
-     * @return string
+     * Alert constructor.
+     * @param bool $in_memory
      */
-    public static function get($status, $message) {
-        return "<div class=\"alert alert-{$status}\">{$message}</div>";
+    public function __construct($in_memory = false) {
+        self::$in_memory = (bool)$in_memory;
     }
 
 
     /**
+     * DEPRECATED
      * Возвращает сообщение об успешном выполнении
      * @param string $message
      * @return string
      */
     public static function getSuccess($message) {
-        return self::get('success', $message);
+        return self::create('success', $message);
     }
 
 
@@ -44,7 +35,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение об успешном выполнении
      * @param string $str
-     * @return string
      */
     public static function printSuccess($str) {
         echo self::getSuccess($str);
@@ -52,12 +42,13 @@ class Alert {
 
 
     /**
+     * DEPRECATED
      * Возвращает сообщение с информацией
      * @param string $message
      * @return string
      */
     public static function getInfo($message) {
-        return self::get('info', $message);
+        return self::create('info', $message);
     }
 
 
@@ -66,7 +57,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение с информацией
      * @param string $str
-     * @return string
      */
     public static function printInfo($str) {
         echo self::getInfo($str);
@@ -74,12 +64,13 @@ class Alert {
 
 
     /**
+     * DEPRECATED
      * Возвращает сообщение с предупреждением
      * @param string $message
      * @return string
      */
     public static function getWarning($message) {
-        return self::get('warning', $message);
+        return self::create('warning', $message);
     }
 
 
@@ -87,7 +78,6 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение с предупреждением
      * @param string $str
-     * @return string
      */
     public static function printWarning($str) {
         echo self::getWarning($str);
@@ -95,12 +85,13 @@ class Alert {
 
 
     /**
+     * DEPRECATED
      * Возвращает сообщение об ошибке или опасности
      * @param string $message
      * @return string
      */
     public static function getDanger($message) {
-        return self::get('danger', $message);
+        return self::create('danger', $message);
     }
 
 
@@ -108,131 +99,107 @@ class Alert {
      * DEPRECATED
      * Распечатывает сообщение об ошибке или опасности
      * @param string $str
-     * @return string
      */
     public static function printDanger($str) {
         echo self::getDanger($str);
     }
 
 
-
-
-
-
     /**
-     * Регистрация информационного сообщения
-     * @param        $head
-     * @param string $explanation
-     * @param bool   $force - признак принудительного вывода
-     *
-     * @return $this
+     * Возвращает сообщение
+     * @param string $type
+     * @param string $header
+     * @param string $message
+     * @return string
      */
-    public function info($head, $explanation = '', $force = false) {
-        if ($force) {
-            echo "<div class=\"im-msg-green\">{$head}<br><span>{$explanation}</span></div>";
-            return;
+    public static function create($type, $message, $header = '') {
+
+        $header_str    = $header ? "<h4>{$header}</h4>" : '';
+        $alert_message = "<div class=\"alert alert-{$type}\">{$header_str}{$message}</div>";
+
+        if (self::$in_memory) {
+            self::$memory[] = [$type, $alert_message];
         }
-        $this->info[] = array($head, $explanation);
-        $this->i++;
-        return $this;
+
+        self::$in_memory = false;
+        return $alert_message;
     }
 
-    /**
-     * Регистрация сообщения об успешном выполнении чего-либо
-     * @param        $head
-     * @param string $explanation
-     * @param bool   $force
-     *
-     * @return $this
-     */
-    public function success($head, $explanation = '', $force = false) {
-        if ($force) {
-            echo "<div class=\"im-msg-green\">{$head}<br><span>{$explanation}</span></div>";
-            return;
-        }
-        $this->success[] = array($head, $explanation);
-        $this->s++;
-        return $this;
-    }
 
     /**
-     * Регистрация важного сообщения
-     * @param        $head
-     * @param string $explanation
-     * @param bool   $force
-     *
-     * @return $this
+     * Возвращает сообщение об успешном выполнении
+     * @param string $message
+     * @param string $header
+     * @return string
      */
-    public function warning($head, $explanation = '', $force = false) {
-        if ($force) {
-            echo "<div class=\"im-msg-yellow\">{$head}<br><span>{$explanation}</span></div>";
-            return;
-        }
-        $this->warning[] = array($head, $explanation);
-        $this->w++;
-        return $this;
+    public static function success($message, $header = '') {
+        return self::create('success', $message, $header);
     }
 
-    /**
-     * Регистрация критического сообщения
-     * @param        $head
-     * @param string $explanation
-     * @param bool   $force
-     *
-     * @return $this|void
-     */
-    public function danger($head, $explanation = '', $force = false) {
-        if ($force) {
-            echo "<div class=\"im-msg-red\">{$head}<br><span>{$explanation}</span></div>";
-            return;
-        }
-        $this->danger[] = array($head, $explanation);
-        $this->d++;
-        return $this;
-    }
 
     /**
-     * Принудительная очистка накопленных сообщений
-     * (пока не используется)
+     * Возвращает сообщение с информацией
+     * @param string $message
+     * @param string $header
+     * @return string
      */
-    public function clear() {
-        $this->info = array();
-        $this->success = array();
-        $this->warning = array();
-        $this->danger = array();
-        $this->i = 0;
-        $this->s = 0;
-        $this->w = 0;
-        $this->d = 0;
+    public static function info($message, $header = '') {
+        return self::create('info', $message, $header);
     }
 
-    /**
-     * Вывод всех имеющихся сообщений
-     * с учетом группировки по теме
-     */
-    public function draw() {
-        if ($msg = $this->getMsg('info')) echo "<div class=\"im-msg-blue\">" . implode("<br>", $msg) . "</div>";
-        if ($msg = $this->getMsg('success')) echo "<div class=\"im-msg-green\">" . implode("<br>", $msg) . "</div>";
-        if ($msg = $this->getMsg('warning')) echo "<div class=\"im-msg-yellow\">" . implode("<br>", $msg) . "</div>";
-        if ($msg = $this->getMsg('danger')) echo "<div class=\"im-msg-red\">" . implode("<br>", $msg) . "</div>";
-    }
 
     /**
-     * Группировка сообщений по теме
-     * @param $kind
-     *
-     * @return array
+     * Возвращает сообщение с предупреждением
+     * @param string $header,
+     * @param string $message
+     * @return string
      */
-    private function getMsg($kind) {
-        $msg = array();
-        foreach ($this->$kind as $k => $item) {
-            if (!isset($msg[$item[0]])) {
-                $msg[$item[0]] = "{$item[0]}<br><span>{$item[1]}</span>";
-            } else {
-                $msg[$item[0]] .= "<br><span>{$item[1]}</span>";
+    public static function warning($message, $header = '') {
+        return self::create('warning', $message, $header);
+    }
+
+
+    /**
+     * Возвращает сообщение об ошибке или опасности
+     * @param string $header,
+     * @param string $message
+     * @return string
+     */
+    public static function danger($message, $header = '') {
+        return self::create('danger', $message, $header);
+    }
+
+
+    /**
+     * Запись следующего сообщения в память
+     * @return Alert
+     */
+    public static function memory() {
+        return new Alert(true);
+    }
+
+
+    /**
+     * Возвращает сообщения памяти
+     * @param string $type
+     * @return string
+     */
+    public static function get($type = '') {
+
+        $alert_messages = array();
+
+        if ( ! empty(self::$memory)) {
+            foreach (self::$memory as $key => $alert_message) {
+                if ( ! empty($alert_message[0]) && is_string($alert_message[0]) &&
+                     ! empty($alert_message[1]) && is_string($alert_message[1]) &&
+                     (empty($type) || $type == $alert_message[0])
+                ) {
+                    $alert_messages[] = $alert_message[1];
+                    unset(self::$memory[$key]);
+                }
             }
-            unset($this->$kind[$k]);
         }
-        return $msg;
+
+        return implode('', $alert_messages);
     }
 }

@@ -876,29 +876,35 @@ table td.homeTD {
 }
 
 .alert {
-	padding: 1px 15px;
+	padding: 8px 15px;
 	margin: 10px;
-	min-height: 25px;
 	border-left-width: 5px;
 	border-left-style: solid;
 	color: #000;
-    min-height: 25px;
 }
 .alert-success {
 	background-color: #dff0d8;
 	border-color: #3c763d;
+	color: #3c763d;
 }
 .alert-info {
 	background-color: #d9edf7;
 	border-color: #31708f;
+	color: #31708f;
 }
 .alert-warning {
 	background-color: #fcf8e3;
 	border-color: #8a6d3b;
+	color: #8a6d3b;
 }
 .alert-danger {
 	background-color: #f2dede;
 	border-color: #a94442;
+	color: #a94442;
+}
+.alert > h4 {
+	margin: 0 0 5px 0;
+	color: #000;
 }
 .fileinput-button {
 	box-sizing: border-box;
