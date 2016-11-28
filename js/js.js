@@ -107,17 +107,25 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
+var glob = {'toAnchor':false};
+
 function toAnchor(id) {
 	if (!id) return;
 	if (typeof id != 'string') return;
+	if (id.substr(-9) == '_mainform') {
+		glob['toAnchor'] = true;
+	}
 	if (id.indexOf('#') < 0) {
 		id = "#" + id;
 	}
 	var ofy = $(id);
 	if (ofy[0]) {
-		$('html,body').animate({
-			scrollTop : ofy.offset().top - $("#menuContainer").height()
-		}, 'fast');
+		if (glob['toAnchor'] == false) {
+			$('html,body').animate({
+				scrollTop: ofy.offset().top - $("#menuContainer").height()
+			}, 'fast');
+		}
+		glob['toAnchor'] = false;
 	}
 }
 
@@ -137,30 +145,24 @@ var preloader = {
 		$("#preloader div").html("");
 		$("#preloader").hide();
 	},
-	callback : function (response, status, xhr) {
-		if (status == "error") {
-
-		} else {
-			if (preloader.extraLoad) {
-				for (var el in preloader.extraLoad) {
-					var aUrl = preloader.extraLoad[el];
-					if (aUrl) {
-						aUrl = JSON.parse(aUrl);
-						var bUrl = [];
-						for (var k in aUrl) {
-							if (aUrl.hasOwnProperty(k)) {
-								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
-							}
+	callback : function () {
+		if (preloader.extraLoad) {
+			for (var el in preloader.extraLoad) {
+				var aUrl = preloader.extraLoad[el];
+				if (aUrl) {
+					aUrl = JSON.parse(aUrl);
+					var bUrl = [];
+					for (var k in aUrl) {
+						if (aUrl.hasOwnProperty(k)) {
+							bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 						}
-						$('#' + el).load("index.php?" + bUrl.join('&'));
 					}
+					$('#' + el).load("index.php?" + bUrl.join('&'));
 				}
-				preloader.extraLoad = {};
 			}
-			toAnchor(locData.id);
-		};
+			preloader.extraLoad = {};
+		}
 		preloader.hide();
-		//resize();
 	},
 	qs : function(url) {
 		//PARSE query string
@@ -328,14 +330,17 @@ var load = function (url, data, id, callback) {
 			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
 				.done(function (n) {
 					$(locData.id).html(n);
-					preloader.hide();
+					toAnchor(locData.id);
+					callback();
 				})
 				.fail(function (a,b,t) {
-					if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-					else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
-					else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
-					else if (a.status == 403) document.location.reload();
-					else alert("Произошла ошибка: " + a.statusText);
+					if (a.statusText != 'abort') {
+						if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+						else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
+						else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
+						else if (a.status == 403) document.location.reload();
+						else alert("Произошла ошибка: " + a.statusText);
+					}
 					preloader.hide();
 				});
 		}
@@ -377,7 +382,7 @@ $(document).ready(function() {
 	}
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
-		if (a.request.status == '0') {
+		if (a.request.statusText != 'abort' && a.request.status == '0') {
 			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
 		}
 		else if (a.request.status == 500) {

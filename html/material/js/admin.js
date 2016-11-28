@@ -225,32 +225,16 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 	if (jqxhr.status == '0') {
 		//alert("Соединение прервано.");
 	} else if (jqxhr.statusText == 'error') {
-        if (alertify) {
-            alertify.alert("Отсутствует соединение с Интернет.");
-        } else {
-            alert("Отсутствует соединение с Интернет.");
-        }
+		alert("Отсутствует соединение с Интернет.");
 	}
     else if (jqxhr.status == 403) {
-        if (alertify) {
-            alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-        } else {
-            alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-        }
+		alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
     }
 	else if (jqxhr.status == 500) {
-        if (alertify) {
-            alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
-        } else {
-            alert("Ой! Что-то сломалось, подождите пока мы починим.");
-        }
+		alert("Ой! Что-то сломалось, подождите пока мы починим.");
 	} else {
 		if (exception != 'abort') {
-            if (alertify) {
-                alertify.alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-            } else {
-                alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-            }
+			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
 		}
 	}
 });
@@ -531,30 +515,13 @@ $(document).ready(function() {
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
 		if (a.request.status == '0') {
-            if (alertify) {
-                alertify.alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-            } else {
-                alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-            }
-		}
-		else if (a.request.status == 500) {
-            if (alertify) {
-                alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
-            } else {
-                alert("Ой! Что-то сломалось, подождите пока мы починим.");
-            }
-		}else if (a.request.status == 203) {
-            if (alertify) {
-                alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-            } else {
-                alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-            }
+			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+		} else if (a.request.status == 500) {
+            alert("Ой! Что-то сломалось, подождите пока мы починим.");
+		} else if (a.request.status == 203) {
+			alert("Время жизни вашей сес	сии истекло. Чтобы войти в систему заново, обновите страницу.");
 		} else {
-            if (alertify) {
-                alertify.alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-            } else {
-                alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-            }
+			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
 		}
 	}
 	xajax.callback.global.onResponseDelay = function () {

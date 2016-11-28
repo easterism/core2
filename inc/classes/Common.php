@@ -228,7 +228,18 @@ class Common extends Acl {
 	 */
 	protected function printCss($href) {
         Tool::printCss($href);
-	} 
+	}
+
+
+	/**
+	 * Print link to CSS file
+     * @param string $module module name
+	 * @param string $href   CSS filename
+	 */
+	protected function printCssModule($module, $href) {
+        $src_mod = $this->getModuleSrc($module);
+        Tool::printCss($src_mod . $href);
+	}
 
 
 	/**
@@ -239,6 +250,18 @@ class Common extends Acl {
 	 */
 	protected function printJs($src, $chachable = false) {
         Tool::printJs($src, $chachable);
+	}
+
+
+	/**
+	 * Print link to JS file
+	 * @param string $module    module name
+	 * @param string $src       JS filename
+	 * @param bool   $chachable
+	 */
+	protected function printJsModule($module, $src, $chachable = false) {
+		$src_mod = $this->getModuleSrc($module);
+        Tool::printJs($src_mod . $src, $chachable);
 	}
 }
 

@@ -52,15 +52,15 @@ class CoreController extends Common {
         try {
             $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
-                Alert::session()->info($this->translate->tr("Система работает в штатном режиме."));
+                Alert::memory()->info($this->translate->tr("Система работает в штатном режиме."));
             } else {
-				Alert::session()->danger(implode(", ", $changedMods), $this->translate->tr("Обнаружены изменения в файлах модулей:"));
+				Alert::memory()->danger(implode(", ", $changedMods), $this->translate->tr("Обнаружены изменения в файлах модулей:"));
             }
             if (!$this->moduleConfig->database || !$this->moduleConfig->database->admin || !$this->moduleConfig->database->admin->username) {
-				Alert::session()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->translate->tr("Не задан администратор базы данных"));
+				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->translate->tr("Не задан администратор базы данных"));
             }
         } catch (Exception $e) {
-			Alert::session()->danger($this->translate->tr("Ошибка"), $e->getMessage());
+			Alert::memory()->danger($this->translate->tr("Ошибка"), $e->getMessage());
         }
 
         echo Alert::get();
@@ -211,7 +211,8 @@ class CoreController extends Common {
 								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
 								WHERE u.`visible` = 'Y' AND u.u_login=? LIMIT 1", $login);
 				}
-			} else {
+			}
+			else {
 				$res = $this->setRoot();
 			}
 			if ($res) {
@@ -979,10 +980,10 @@ class CoreController extends Common {
                 );
                 $id = $this->db->lastInsertId("core_settings");
             }
-            Alert::session()->info("Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", $this->translate->tr("Отправка уведомлений отключена"));
+            Alert::memory()->info("Создайте дополнительный параметр <a href=\"\" onclick=\"load('index.php#module=admin&action=settings&edit={$id}&tab_settings=2'); return false;\">'admin_email'</a> с адресом для уведомлений", $this->translate->tr("Отправка уведомлений отключена"));
         }
         if (!$server) {
-            Alert::session()->info($this->translate->tr("Не задан параметр 'host' в conf.ini"), $this->translate->tr("Отправка уведомлений отключена"));
+            Alert::memory()->info($this->translate->tr("Не задан параметр 'host' в conf.ini"), $this->translate->tr("Отправка уведомлений отключена"));
         }
 
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
@@ -1030,7 +1031,7 @@ class CoreController extends Common {
                             ->body("<b>{$server}:</b> обнаружены изменения в структуре модуля {$val['module_id']}. Обнаружено  {$n} несоответствий.")
                             ->send();
                         if (isset($answer['error'])) {
-                            Alert::session()->danger($answer['error'], $this->translate->tr("Уведомление не отправлено"));
+                            Alert::memory()->danger($answer['error'], $this->translate->tr("Уведомление не отправлено"));
                         }
                     }
                 }
