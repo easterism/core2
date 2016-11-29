@@ -205,7 +205,7 @@ class Templater3 {
             if (is_array($option)) {
                 $html .= "<optgroup label=\"{$value}\">";
                 foreach ($option as $val => $opt) {
-                    $sel = $selected !== null && ((is_array($selected) && in_array((string)$val, $selected)) || (string)$val === (string)$selected)
+                    $sel = $selected !== null && ((is_array($selected) && in_array((string)$val, $selected)) || (is_scalar($selected) && (string)$val === (string)$selected))
                         ? 'selected="selected" '
                         : '';
                     $html .= "<option {$sel}value=\"{$val}\">{$opt}</option>";
