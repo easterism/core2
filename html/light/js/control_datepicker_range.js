@@ -19,8 +19,12 @@ var control_datepicker_range = {
             numberOfMonths: 2,
             dateFormat: dateFormat,
             beforeShowDay: function(date) {
-                var date1   = $.datepicker.parseDate(dateFormat, $input_from.val());
-                var date2   = $.datepicker.parseDate(dateFormat, $input_to.val());
+                try {
+                    var date1 = $.datepicker.parseDate(dateFormat, $input_from.val());
+                } catch (err) {date1 = '';}
+                try {
+                    var date2   = $.datepicker.parseDate(dateFormat, $input_to.val());
+                } catch (err) {date2 = '';}
                 var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date < date2))
                     ? 'ctrl-dpr-highlight'
                     : '';
