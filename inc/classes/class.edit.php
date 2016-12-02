@@ -758,7 +758,7 @@ class editTable extends initEdit {
 							} else {
 								foreach ($temp as $row) {
 									$id = $this->main_table_id . rand();
-									$controlGroups[$cellId]['html'][$key] .= "<label><input id=\"$id\" type=\"radio\" value='" . $row[0] . "' name=\"control[$field]\"";
+									$controlGroups[$cellId]['html'][$key] .= "<label class=\"edit-radio\"><input id=\"$id\" type=\"radio\" value='" . $row[0] . "' name=\"control[$field]\"";
 									if ($row[0] == $value['default']) {
 										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
 									}
@@ -798,7 +798,7 @@ class editTable extends initEdit {
 							} else {
 								foreach ($temp as $row) {
 									$id = $this->main_table_id . rand();
-									$controlGroups[$cellId]['html'][$key] .= "<div><label><input id=\"$id\" type=\"radio\" value='" . $row[0] . "' name=\"control[$field]\"";
+									$controlGroups[$cellId]['html'][$key] .= "<div><label class=\"edit-radio2\"><input id=\"$id\" type=\"radio\" value='" . $row[0] . "' name=\"control[$field]\"";
 									if ($row[0] == $value['default']) {
 										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
 									}

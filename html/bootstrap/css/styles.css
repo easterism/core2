@@ -576,6 +576,8 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox {
     margin-right: 10px;
 }
+.edit-radio2 input[type=radio],
+.edit-radio input[type=radio],
 .edit-checkbox2 input[type=checkbox],
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
