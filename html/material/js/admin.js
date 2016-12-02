@@ -491,8 +491,19 @@ $(document).ready(function() {
         $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").removeClass('module-hover');
     });
 
-    $("#sidebar-toggle").click(function() {
+    if ($.cookie('sidebar_collapse')) {
+        $('#main-content, #menu-container, #navbar-top').css('transition', "none");
         $('#main').toggleClass('s-toggle');
+    }
+
+    $("#sidebar-toggle").click(function() {
+        $('#main-content, #menu-container, #navbar-top').css('transition', "");
+        $('#main').toggleClass('s-toggle')
+		if ($.cookie('sidebar_collapse')) {
+            $.cookie('sidebar_collapse', '');
+		} else {
+            $.cookie('sidebar_collapse', 1);
+		}
     });
 
     $(".swipe-area").swipe({

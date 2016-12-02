@@ -19,6 +19,7 @@
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
