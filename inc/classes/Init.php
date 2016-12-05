@@ -677,7 +677,7 @@
                         $modController = new $modController();
                         if (method_exists($modController, 'topJs')) {
                             if ($modEvent = $modController->topJs()) {
-                                $js += $modEvent;
+                                $js = array_merge($js, $modEvent);
                             }
                         }
                     }
