@@ -126,7 +126,7 @@ a {color: #337AB7}
 .navbar-header {
     float: left;
 }
-.navbar-default {
+#main-content > .navbar-default {
     background-color: #FFFFFF;
     border: none;
 }
