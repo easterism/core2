@@ -412,7 +412,7 @@ var control_datepicker_range = {
                         isFind = true;
                     }
                 } else {
-                    $(this).focus();
+                    $(this).focus().select();
                     return false;
                 }
             });
