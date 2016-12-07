@@ -541,11 +541,13 @@ class editTable extends initEdit {
                                 }
                             } else {
                                 $this->scripts['date2'] = true;
+								$options = is_array($value['in']) ? json_encode($value['in']) : '{}';
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/date2.html');
-                                $tpl = str_replace('[THEME_DIR]',  'core2/html/' . THEME,     $tpl);
-                                $tpl = str_replace('[NAME]',       'control[' . $field . ']', $tpl);
-                                $tpl = str_replace('[DATE]',       $value['default'],         $tpl);
-                                $tpl = str_replace('[KEY]',        uniqid(),                  $tpl);
+                                $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
+                                $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
+                                $tpl = str_replace('[OPTIONS]',   $options,                  $tpl);
+                                $tpl = str_replace('[KEY]',       uniqid(),                  $tpl);
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
                         }

@@ -1,40 +1,48 @@
 
 var control_datepicker = {
 
+    defaults_options : {
+        firstDay: 1,
+        dateFormat: 'yy-mm-dd'
+    },
+
+
     /**
      * Создание календаря
      * @param {object} wrapper
+     * @param {object} options
      */
-    create : function(wrapper) {
+    create : function(wrapper, options) {
         var $input = $('.ctrl-dp-value', wrapper);
         control_datepicker.createDate($input, wrapper);
         control_datepicker.createEvents(wrapper);
 
-        var dateFormat  = 'yy-mm-dd';
-        $('.ctrl-dp-container', wrapper).datepicker({
-            firstDay: 1,
-            dateFormat: dateFormat,
-            defaultDate: $input.val(),
-            beforeShowDay: function(date) {
-                try {
-                    var date1 = $.datepicker.parseDate(dateFormat, $input.val());
-                } catch (err) {
-                    date1 = '';
-                }
-                var classes = date1 && date.getTime() == date1.getTime()
-                    ? ' ctrl-dp-highlight '
-                    : '';
-                var classes2 = control_datepicker.callbackDayClass(date);
-                classes += classes2 ? ' ' + classes2 + ' ' : '';
-                return [true, classes];
-            },
-            onSelect: function(dateText, inst) {
-                $input.val(dateText);
-                control_datepicker.createDate($input, wrapper);
-                control_datepicker.callbackChange(dateText, '', wrapper);
-                $('.ctrl-dp-container', wrapper).hide('fast');
+
+        var settings = $.extend({}, control_datepicker.defaults_options, options);
+        settings['defaultDate']   = $input.val();
+        settings['beforeShowDay'] = function(date) {
+            try {
+                var date1 = $.datepicker.parseDate(settings.dateFormat, $input.val());
+            } catch (err) {
+                date1 = '';
             }
-        });
+            var classes = date1 && date.getTime() == date1.getTime()
+                ? ' ctrl-dp-highlight '
+                : '';
+            var classes2 = control_datepicker.callbackDayClass(date);
+            classes += classes2 ? ' ' + classes2 + ' ' : '';
+            return [true, classes];
+        }
+
+        settings['onSelect'] = function(dateText, inst) {
+            $input.val(dateText);
+            control_datepicker.createDate($input, wrapper);
+            control_datepicker.callbackChange(dateText, '', wrapper);
+            $('.ctrl-dp-container', wrapper).hide('fast');
+        }
+
+
+        $('.ctrl-dp-container', wrapper).datepicker(settings);
     },
 
 
@@ -260,7 +268,7 @@ var control_datepicker = {
                         isFind = true;
                     }
                 } else {
-                    $(this).focus();
+                    $(this).focus().select();
                     return false;
                 }
             });

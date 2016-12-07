@@ -534,3 +534,8 @@
        -o-animation: progressbar-stripes 1.5s linear infinite;
           animation: progressbar-stripes 1.5s linear infinite;
 }
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    top: 50%;
+    margin-top: -11px;
+}
