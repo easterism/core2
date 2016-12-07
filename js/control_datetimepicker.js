@@ -319,7 +319,7 @@ var control_datetimepicker = {
                         isFind = true;
                     }
                 } else {
-                    $(this).focus();
+                    $(this).focus().select();
                     return false;
                 }
             });
