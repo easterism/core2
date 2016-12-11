@@ -424,12 +424,24 @@ LIST class search container
 	background-image: url(../list/img/clearview.png);
 }
 .columnFilterIcon {
-	cursor: pointer;
-	width: 16px;
-	height: 16px;
-	margin: 5px;
-	float: left;
-	background-image: url(../list/img/application_view_columns.png);
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    margin: 0 10px;
+    float: left;
+    font-weight: normal;
+    background-image: url(../list/img/application_view_columns.png);
+    background-repeat: no-repeat;
+    padding-left: 20px;
+}
+.columnFilterIcon:hover {
+    text-decoration: underline;
+}
+.list-filter-container {
+    margin-bottom: 15px;
+}
+.list-filter-container .checkbox label {
+    line-height: 20px;
 }
 table.paginTable td {
     border: 0;
