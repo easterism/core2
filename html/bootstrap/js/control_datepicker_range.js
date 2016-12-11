@@ -9,7 +9,7 @@ var control_datepicker_range = {
         var $input_from = $('.ctrl-dpr-from-value', wrapper);
         var $input_to   = $('.ctrl-dpr-to-value', wrapper);
 
-        control_datepicker_range.createDate($input_from, $input_to, wrapper);
+        control_datepicker_range.createTime($input_from, $input_to, wrapper);
         control_datepicker_range.createEvents(wrapper);
 
         var dateFormat = 'yy-mm-dd';
@@ -72,7 +72,7 @@ var control_datepicker_range = {
                     control_datepicker_range.callbackChange($input_from.val(), dateText, wrapper);
                 }
 
-                control_datepicker_range.createDate($input_from, $input_to, wrapper);
+                control_datepicker_range.createTime($input_from, $input_to, wrapper);
             }
         });
     },

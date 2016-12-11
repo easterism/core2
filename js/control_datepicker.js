@@ -14,7 +14,7 @@ var control_datepicker = {
      */
     create : function(wrapper, options) {
         var $input = $('.ctrl-dp-value', wrapper);
-        control_datepicker.createDate($input, wrapper);
+        control_datepicker.createTime($input, wrapper);
         control_datepicker.createEvents(wrapper);
 
 
@@ -36,7 +36,7 @@ var control_datepicker = {
 
         settings['onSelect'] = function(dateText, inst) {
             $input.val(dateText);
-            control_datepicker.createDate($input, wrapper);
+            control_datepicker.createTime($input, wrapper);
             control_datepicker.callbackChange(dateText, '', wrapper);
             $('.ctrl-dp-container', wrapper).hide('fast');
         }

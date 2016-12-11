@@ -7,7 +7,7 @@ var control_datetimepicker = {
      */
     create : function(wrapper) {
         var $input = $('.ctrl-dtp-value', wrapper);
-        control_datetimepicker.createDate($input, wrapper);
+        control_datetimepicker.createTime($input, wrapper);
         control_datetimepicker.createEvents(wrapper);
 
         var dateFormat  = 'yy-mm-dd';
@@ -41,7 +41,7 @@ var control_datetimepicker = {
                 }
 
                 $input.val(dateText);
-                control_datetimepicker.createDate($input, wrapper);
+                control_datetimepicker.createTime($input, wrapper);
                 control_datetimepicker.callbackChange(dateText);
                 $('.ctrl-dtp-container', wrapper).hide('fast');
             }
