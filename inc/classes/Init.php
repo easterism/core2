@@ -862,7 +862,7 @@
          * Основной роутер
          */
         private function routeParse() {
-            $temp  = explode("/", dirname($_SERVER['SCRIPT_NAME']));
+            $temp  = explode("/", str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])));
             $temp2 = explode("/", $_SERVER['REQUEST_URI']);
 
             $i = -1;
