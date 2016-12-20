@@ -21,6 +21,20 @@ var main_menu = {
                 $('a', this).append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
             }
         });
+    },
+
+    /**
+	 *
+	 */
+    setIconLetter : function() {
+
+        $('.menu-module, .menu-module-selected').each(function(){
+            var $i = $(this).find('i');
+            if ( ! $i[0]) {
+				var letter = $(this).text().trim().substr(0, 1);
+                $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
+            }
+        });
     }
 }
 
@@ -92,14 +106,23 @@ function goHome() {
 }
 
 function logout() {
-    alertify.confirm('Вы уверены, что хотите выйти?', function (e) {
-        $.ajax({url:'index.php?module=admin&action=exit'})
-            .done(function (n) {
-                window.location='index.php';
-            }).fail(function (a,b,t){
-            alert("Произошла ошибка: " + a.statusText);
-        });
-	});
+    swal({
+        title: 'Вы уверены, что хотите выйти?',
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#f0ad4e',
+        confirmButtonText: "Да",
+        cancelButtonText: "Нет"
+    }, function(isConfirm) {
+        if (isConfirm) {
+            $.ajax({url:'index.php?module=admin&action=exit'})
+                .done(function (n) {
+                    window.location='index.php';
+                }).fail(function (a,b,t){
+                alert("Произошла ошибка: " + a.statusText);
+            });
+        }
+    });
 }
 
 function jsToHead(src) {
@@ -354,10 +377,10 @@ var load = function (url, data, id, callback) {
         locData['loc']  = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
 
-		var mod_title    = $('#module-' + load_module + ' > a').text();
+		var mod_title    = $('#module-' + load_module + ' > a .module-title').text();
 		var action_title = $('#submodule-' + load_module + '-' + load_action + ' > a').text();
 
-        if (load_module == 'admin' && (load_action == 'welcome' || load_action == 'index')) {
+        if (load_module == 'admin' && load_action == 'welcome') {
             mod_title = '';
         }
 
@@ -451,6 +474,7 @@ $(window).resize(resize);
 $(document).ready(function() {
 
     main_menu.setAngles();
+    main_menu.setIconLetter();
 
     $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseenter(function() {
         $('.menu-submodule, .menu-submodule-selected').hide();
@@ -492,12 +516,12 @@ $(document).ready(function() {
     });
 
     if ($.cookie('sidebar_collapse')) {
-        $('#main-content, #menu-container, #navbar-top').css('transition', "none");
+        $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
         $('#main').toggleClass('s-toggle');
     }
 
     $("#sidebar-toggle").click(function() {
-        $('#main-content, #menu-container, #navbar-top').css('transition', "");
+        $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "");
         $('#main').toggleClass('s-toggle')
 		if ($.cookie('sidebar_collapse')) {
             $.cookie('sidebar_collapse', '');
@@ -564,10 +588,58 @@ $(document).ready(function() {
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
-    alertify.set({ labels : { ok: "Ок", cancel: "Отмена" } });
-
     try {
-        alert = alertify.alert;
+        alert = function(title, message) {
+            swal(title, message);
+        };
+        // !!!!!!!!! DEPRECATED !!!!!!!!!
+        alertify = {
+            alert: function(title) {
+                swal(title);
+            },
+            confirm: function(question, callback) {
+                swal({
+                    title: question,
+                    type: "info",
+                    showCancelButton: true,
+                    confirmButtonColor: '#5bc0de',
+                    confirmButtonText: "Да",
+                    cancelButtonText: "Нет"
+                }, function(isConfirm){
+                    if (callback) {
+                        callback(isConfirm);
+                    }
+                });
+            },
+            prompt: function(message, callback) {
+                swal({
+                    title: message,
+                    type: "input",
+                    confirmButtonText: "Далее",
+                    cancelButtonText: "Отмена",
+                    showCancelButton: true
+                }, function(inputValue){
+                    if (callback) {
+                        callback(inputValue !== false, inputValue);
+                    }
+                });
+            },
+            log: function(message) {
+                $.growl({ message: message });
+            },
+            error: function(message) {
+                $.growl.error({ message: message });
+            },
+            info: function(message) {
+                $.growl.info({ message: message });
+            },
+            warning: function(message) {
+                $.growl.warning({ message: message });
+            },
+            success: function(message) {
+                $.growl.notice({ message: message });
+            }
+        }
     } catch (e) {
         console.error(e.message)
     }

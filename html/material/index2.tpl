@@ -19,9 +19,8 @@
 
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
-
-	<link rel="stylesheet" href="core2/html/material/css/alertify/alertify.core.css" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/alertify/alertify.bootstrap3.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/sweetalert.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/jquery.growl.css" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
@@ -33,7 +32,8 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/cleave.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/alertify.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/sweetalert.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.growl.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/control_datepicker_range.js"></script>
