@@ -439,7 +439,6 @@
                             throw new Exception(911);
                         }
                     }
-
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
                         if ($this->translate->isSetup()) {
@@ -450,6 +449,10 @@
                             $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
                         } else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
+                        }
+                        $autoload = $location . "/vendor/autoload.php";
+                        if (file_exists($autoload)) {
+                            require_once $autoload;
                         }
                         $this->requireController($location, $modController);
                         $modController = new $modController();
