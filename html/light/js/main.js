@@ -22,7 +22,7 @@ var main_menu = {
             }
         });
     }
-}
+};
 
 
 function changeSub(obj, path) {
@@ -78,7 +78,7 @@ function checkInt(evt) {
 	var keycode;
 	if (evt.keyCode) keycode = evt.keyCode;
 	else if(evt.which) keycode = evt.which;
-	var av = new Array(8, 9, 35, 36, 37, 38, 39, 40, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57);
+	var av = [8, 9, 35, 36, 37, 38, 39, 40, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
 	for (var i = 0; i < av.length; i++) {
 		if (av[i] == keycode) return true;
 	}
@@ -93,13 +93,22 @@ function goHome() {
 
 
 function logout() {
-	alertify.confirm('Вы уверены, что хотите выйти?', function (e) {
-		$.ajax({url:'index.php?module=admin&action=exit'})
-			.done(function (n) {
-				window.location='index.php';
-			}).fail(function (a,b,t){
-			alert("Произошла ошибка: " + a.statusText);
-		});
+	swal({
+		title: 'Вы уверены, что хотите выйти?',
+		type: "warning",
+		showCancelButton: true,
+		confirmButtonColor: '#f0ad4e',
+		confirmButtonText: "Да",
+		cancelButtonText: "Нет"
+	}, function(isConfirm) {
+		if (isConfirm) {
+			$.ajax({url:'index.php?module=admin&action=exit'})
+				.done(function (n) {
+					window.location='index.php';
+				}).fail(function (a,b,t){
+				alert("Произошла ошибка: " + a.statusText);
+			});
+		}
 	});
 }
 
@@ -177,7 +186,7 @@ var preloader = {
 			$('html').animate({
 				scrollTop: 0
 			});
-		};
+		}
 		preloader.hide();
 		//resize();
 	},
@@ -226,39 +235,23 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 	if (jqxhr.status == '0') {
 		//alert("Соединение прервано.");
 	} else if (jqxhr.statusText == 'error') {
-        if (alertify) {
-            alertify.alert("Отсутствует соединение с Интернет.");
-        } else {
-            alert("Отсутствует соединение с Интернет.");
-        }
+		alert("Отсутствует соединение с Интернет.");
 	}
     else if (jqxhr.status == 403) {
-        if (alertify) {
-            alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-        } else {
-            alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-        }
+		alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
     }
 	else if (jqxhr.status == 500) {
-        if (alertify) {
-            alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
-        } else {
-            alert("Ой! Что-то сломалось, подождите пока мы починим.");
-        }
+		alert("Ой! Что-то сломалось, подождите пока мы починим.");
 	} else {
 		if (exception != 'abort') {
-            if (alertify) {
-                alertify.alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-            } else {
-                alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-            }
+			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
 		}
 	}
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
 	if (xhr.status == 203) {
 		top.document.location = settings.url;
-	};
+	}
 });
 
 var load = function (url, data, id, callback) {
@@ -440,12 +433,12 @@ var loadPDF = function (url) {
         'top'         : '50px',
         'margin-left' : '-30px',
         'position'    : 'absolute'
-    })
+    });
 	$("iframe").load( function() {
 		preloader.hide();
 	});
 
-}
+};
 
 function resize() {
 	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
@@ -457,7 +450,7 @@ $(function(){
 		var hash = location.hash;
 		var url = preloader.prepare(hash.substr(1));
 		load(url);
-	})
+	});
 	// Since the event is only triggered when the hash changes, we need to trigger
 	// the event now, to handle the hash the page may have loaded with.
 	$(window).hashchange();
@@ -508,45 +501,28 @@ $(document).ready(function() {
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
-	}
+	};
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
 		if (a.request.status == '0') {
-            if (alertify) {
-                alertify.alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-            } else {
-                alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-            }
-		}
-		else if (a.request.status == 500) {
-            if (alertify) {
-                alertify.alert("Ой! Что-то сломалось, подождите пока мы починим.");
-            } else {
-                alert("Ой! Что-то сломалось, подождите пока мы починим.");
-            }
-		}else if (a.request.status == 203) {
-            if (alertify) {
-                alertify.alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-            } else {
-                alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-            }
+			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+		} else if (a.request.status == 500) {
+			alert("Ой! Что-то сломалось, подождите пока мы починим.");
+		} else if (a.request.status == 203) {
+			alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
 		} else {
-            if (alertify) {
-                alertify.alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-            } else {
-                alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-            }
+			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
 		}
-	}
+	};
 	xajax.callback.global.onResponseDelay = function () {
 		//alert("Отсутствует соединение с Интернет.");
-	}
+	};
 	xajax.callback.global.onExpiration = function () {
 		//alert("Отсутствует соединение с Интернет.");
-	}
+	};
 	xajax.callback.global.onComplete = function () {
 		preloader.hide();
-	}
+	};
 	resize();
 
     $.datepicker.setDefaults($.datepicker.regional[ "ru_RU" ]);
@@ -567,10 +543,58 @@ $(document).ready(function() {
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
-    alertify.set({ labels : { ok: "Ок", cancel: "Отмена" } });
-
     try {
-        alert = alertify.alert;
+		alert = function(title, message) {
+			swal(title, message);
+		};
+		// !!!!!!!!! DEPRECATED !!!!!!!!!
+		alertify = {
+			alert: function(title) {
+				swal(title);
+			},
+			confirm: function(question, callback) {
+				swal({
+					title: question,
+					type: "info",
+					showCancelButton: true,
+					confirmButtonColor: '#5bc0de',
+					confirmButtonText: "Да",
+					cancelButtonText: "Нет"
+				}, function(isConfirm){
+					if (callback) {
+						callback(isConfirm);
+					}
+				});
+			},
+			prompt: function(message, callback) {
+				swal({
+					title: message,
+					type: "input",
+					confirmButtonText: "Далее",
+					cancelButtonText: "Отмена",
+					showCancelButton: true
+				}, function(inputValue){
+					if (callback) {
+						callback(inputValue !== false, inputValue);
+					}
+				});
+			},
+			log: function(message) {
+				$.growl({ message: message });
+			},
+			error: function(message) {
+				$.growl.error({ message: message });
+			},
+			info: function(message) {
+				$.growl.info({ message: message });
+			},
+			warning: function(message) {
+				$.growl.warning({ message: message });
+			},
+			success: function(message) {
+				$.growl.notice({ message: message });
+			}
+		}
     } catch (e) {
         console.error(e.message)
     }
