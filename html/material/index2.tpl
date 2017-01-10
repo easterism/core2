@@ -45,7 +45,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/admin.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js"></script>
     <script type="text/javascript">
         jQuery(document).ready(function() {
             if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
