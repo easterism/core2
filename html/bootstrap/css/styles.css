@@ -269,7 +269,7 @@ LIST class table
     border-width: 1px;
     margin: 0 0 15px;
     position: relative;
-    overflow: auto;
+    /*overflow: auto;*/
 }
 table.sTable {
     margin-bottom:0;
