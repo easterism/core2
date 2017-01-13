@@ -116,7 +116,7 @@ class ajaxFunc extends Common {
 			require_once("Zend/Validate/EmailAddress.php");
 			$validator = new Zend_Validate_EmailAddress();
 			foreach ($email as $field) {
-				if (!$validator->isValid($control[$field])) {
+                if (!$validator->isValid($control[$field]) && !preg_match('/^((([0-9A-Za-z]{1}[-0-9A-z\.]{1,}[0-9A-Za-z]{1})|([0-9А-Яа-я]{1}[-0-9А-я\.]{1,}[0-9А-Яа-я]{1}))@([-0-9A-Za-zА-Яа-я]{1,}\.){1,2}[-A-Za-zрфбел]{2,})$/u', $control[$field])) {
 				    // email is invalid; print the reasons
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
