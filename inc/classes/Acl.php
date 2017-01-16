@@ -1,8 +1,4 @@
 <?
-require_once("Db.php");
-require_once("Zend/Acl.php");
-require_once("Zend/Acl/Role.php");
-require_once("Zend/Acl/Resource.php");
 
 class Acl extends Db {
 	

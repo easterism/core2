@@ -113,7 +113,6 @@ class ajaxFunc extends Common {
 		}
 		
 		if (count($email)) {
-			require_once("Zend/Validate/EmailAddress.php");
 			$validator = new Zend_Validate_EmailAddress();
 			foreach ($email as $field) {
                 if (!$validator->isValid($control[$field]) && !preg_match('/^((([0-9A-Za-z]{1}[-0-9A-z\.]{1,}[0-9A-Za-z]{1})|([0-9А-Яа-я]{1}[-0-9А-я\.]{1,}[0-9А-Яа-я]{1}))@([-0-9A-Za-zА-Яа-я]{1,}\.){1,2}[-A-Za-zрфбел]{2,})$/u', $control[$field])) {
@@ -127,7 +126,6 @@ class ajaxFunc extends Common {
 		}
 		
 		if (count($float)) {
-			require_once("Zend/Validate/Float.php");
 			$validator = new Zend_Validate_Float();
 			foreach ($float as $field) {
 				if (!$validator->isValid($control[$field])) {
@@ -168,7 +166,6 @@ class ajaxFunc extends Common {
 		}*/
 		
 		if (count($int)) {
-			require_once("Zend/Validate/Int.php");
 			$validator = new Zend_Validate_Int();
 			foreach ($int as $field) {
 				if (!$validator->isValid($control[$field])) {
@@ -188,7 +185,6 @@ class ajaxFunc extends Common {
 		}
 		
 		if (count($host)) {
-			require_once("Zend/Validate/Hostname.php");
 			$validator = new Zend_Validate_Hostname();
 			$validator->setMessage('Недопустимый тип данных, значение должно быть строкой', Zend_Validate_Hostname::INVALID);
 			$validator->setMessage("Значение '%value%' выглядит как IP-адрес, но IP-адреса не разрешены", Zend_Validate_Hostname::IP_ADDRESS_NOT_ALLOWED);

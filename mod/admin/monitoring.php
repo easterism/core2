@@ -142,8 +142,6 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 			$list = new listTable($this->resId . 'xxx2'); 
 			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
 			$list->addSearch("IP", "ip", "TEXT");
-			$list->sqlSearch[] = array('Y' => 'Да', 'N' =>'Нет');
-			$list->addSearch("Криптосредства", "crypto_sw", "LIST");
 			//$list->addSearch("Отображать под", "r.boss", "text");
 			$list->SQL = "SELECT user_id,
 								 login_time,
@@ -236,7 +234,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 
 			$h = fopen($fileForDownload, 'rb');
 			if (!$h) {
-				throw new Exception("Файл не найден!");
+				throw new Exception($this->translate->tr("Файл не найден!"));
 			}
 			$fs = filesize($fileForDownload);
 			$md5_sum = md5_file($fileForDownload);
@@ -270,7 +268,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 				/* Запись во временный файл */
 				$f = fopen($tempFile, 'w');
 				if (!$f) {
-					throw new Exception("Ошибка записи во временный файл");
+					throw new Exception($this->translate->tr("Ошибка записи во временный файл"));
 				}
 				$zip = new ZipArchive();
 				if ($zip->open($zipFile, ZipArchive::CREATE) !== TRUE) {
@@ -355,7 +353,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		
 		closedir($dir);
 		$list->data = $dataForList;
-		$list->classText['ADD'] = "Сформировать архив"; 
+		$list->classText['ADD'] = $this->translate->tr("Сформировать архив");
 		$list->addURL 			= $app . "&tab_admin_monitoring=4&edit=0"; 		
 		$list->showTable();
 		

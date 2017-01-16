@@ -5,7 +5,6 @@
  * Date: 01.07.14
  * Time: 18:57
  */
-require_once("Zend/Db/Adapter/Pdo/Mysql.php");
 
 class Core_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 
