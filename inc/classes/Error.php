@@ -2,8 +2,6 @@
 namespace Core2;
 
 require_once 'Tool.php';
-require_once "Zend/Registry.php";
-
 
 /**
  * Class Error
