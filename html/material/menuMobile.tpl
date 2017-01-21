@@ -40,7 +40,7 @@
 					<div class="module-action"></div>
 				</div>
 				<ul id="user-section" class="nav navbar-top-links navbar-right">
-					<li class="dropdown">
+					<li class="pull-left dropdown">
 						<div class="dropdown-toggle" data-toggle="dropdown">
 							<div class="avatar-container">
 								<img src="[GRAVATAR_URL]?&s=28&d=mm" alt=""/>
