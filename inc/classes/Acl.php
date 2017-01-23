@@ -1,9 +1,9 @@
 <?
-require_once("Db.php");
-require_once("Zend/Acl.php");
-require_once("Zend/Acl/Role.php");
-require_once("Zend/Acl/Resource.php");
+require_once 'Db.php';
 
+/**
+ * Class Acl
+ */
 class Acl extends Db {
 	
 	const INHER_ROLES = 'N';

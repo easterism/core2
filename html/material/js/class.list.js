@@ -69,7 +69,7 @@ function dateInt(evt) {
     if (document.all) {
         code = evt.keyCode;
     }
-    var av = new Array(0,48,49,50,51,52,53,54,55,56,57);
+    var av = [0,48,49,50,51,52,53,54,55,56,57];
     for (var i = 0; i < av.length; i++) {
         if (av[i] == code) return true;
     }
@@ -79,7 +79,7 @@ function dateInt(evt) {
 
 var listx = {
 
-    gMonths : new Array("","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"),
+    gMonths : ["","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
     loc : {},
 
     /**
@@ -134,7 +134,7 @@ var listx = {
                     ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-100px'});
                 }, 5);
             }
-        }
+        };
         $('#date_' + cal).datepicker(opt);
     },
 
@@ -259,9 +259,9 @@ var listx = {
                         }
                     }
                 },
-                'json'
-            );
-        }});
+                'json');
+            }
+        });
     },
 
 
@@ -329,7 +329,7 @@ var listx = {
         }
         obj.className = "button";
         obj.disabled = false;
-        return;
+
     },
 
 
@@ -385,7 +385,9 @@ var listx = {
                         preloader.show();
                         $("#main_" + id + "_error").hide();
                         var container = '';
-                        if (isAjax) var container = document.getElementById("list" + id).parentNode;
+                        if (isAjax) {
+                            container = document.getElementById("list" + id).parentNode;
+                        }
                         if (listx.loc[id]) {
                             $.ajax({
                                 method: "DELETE",
@@ -468,7 +470,7 @@ var listx = {
             if (gotit >= 2) obj.style.display = '';
             else obj.style.display = 'none';
         }
-        return;
+
     },
 
 
@@ -488,7 +490,7 @@ var listx = {
                 j++;
             }
         }
-        return;
+
     },
 
 
@@ -499,7 +501,7 @@ var listx = {
         var f = $("#filter" + id);
         this.toggle(f);
         f.find("form")[0].elements[0].focus();
-        return;
+
     },
 
 
@@ -604,7 +606,7 @@ var listx = {
      */
     doOrder : function(id, data, isAjax) {
         var container = '';
-        var post = {}
+        var post = {};
         post['orderField_main_' + id] = data;
         if (listx.loc[id]) {
             if (isAjax) {
@@ -636,11 +638,11 @@ var listx = {
             update : function (event, ui) {
 
                 var src = ui.item[0].parentNode.childNodes;
-                var so = new Array();
+                var so = [];
                 if (src) {
                     for (var k in src) {
                         if (src[k].childNodes && src[k].childNodes.length) {
-                            var el = src[k].childNodes[0]
+                            var el = src[k].childNodes[0];
                             if (el && el.nodeName == "TD") {
                                 if (typeof el.getAttribute == "function") {
                                     var id = el.getAttribute("title");
@@ -659,7 +661,7 @@ var listx = {
                             alert(textStatus);
                         } else {
                             if (data && data.error) {
-                                alert(data.error);
+                                swal(data.error, '', 'error');
                             }
                         }
                     },

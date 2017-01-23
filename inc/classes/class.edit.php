@@ -547,7 +547,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
                                 $tpl = str_replace('[OPTIONS]',   $options,                  $tpl);
-                                $tpl = str_replace('[KEY]',       uniqid(),                  $tpl);
+                                $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
                         }
@@ -574,7 +574,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
-                                $tpl = str_replace('[KEY]',       uniqid(),                  $tpl);
+                                $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
                         }
@@ -608,7 +608,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $options['url']);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       uniqid());
+                                $tpl->assign('[KEY]',       crc32(uniqid('', true)));
 
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');

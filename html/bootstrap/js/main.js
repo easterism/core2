@@ -11,32 +11,51 @@
 var main_menu = {
 
     /**
-     *
+     * Проверяет влезают ли модули в одну строку
+     * @returns {boolean}
      */
-    setAngles : function() {
+    is_overflow : function() {
+        var menu_container = document.getElementById('menu-modules');
+        var wieght_max     = menu_container.offsetWidth;
+        var wieght_modules = 0;
+        var overflow_menu  = false;
 
-        $('.menu-module, .menu-module-selected').each(function(){
-            var module = $(this).attr('id').substr(7);
-            if ($('li[id^=submodule-' + module + '-]')[0]) {
-                $('a', this).append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
+        for (var i = 0; i < menu_container.children.length; i++) {
+            if (typeof window.hasOwnProperty == 'function' && window.hasOwnProperty('getComputedStyle')) {
+                var marginLeft = window.getComputedStyle(menu_container.children[i]).marginLeft.replace(/[^0-9]/g, '');
+                var marginRight = window.getComputedStyle(menu_container.children[i]).marginRight.replace(/[^0-9]/g, '');
+
+                if (marginLeft) {
+                    wieght_modules += parseInt(marginLeft);
+                }
+                if (marginRight) {
+                    wieght_modules += parseInt(marginRight);
+                }
             }
-        });
+            wieght_modules += menu_container.children[i].offsetWidth;
+
+            if (wieght_modules > wieght_max) {
+                overflow_menu  = true;
+                break;
+            }
+        }
+
+        return overflow_menu;
     },
 
     /**
-	 *
-	 */
-    setIconLetter : function() {
-
-        $('.menu-module, .menu-module-selected').each(function(){
-            var $i = $(this).find('i');
-            if ( ! $i[0]) {
-				var letter = $(this).text().trim().substr(0, 1);
-                $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
-            }
-        });
+     * Добавление класса к модулям
+     * @param {string} class_name
+     */
+    addClassModules : function(class_name) {
+        var menu_container = document.getElementById('menu-modules');
+        for (var i = 0; i < menu_container.children.length; i++) {
+            var re = new RegExp("(^|\\s)" + class_name + "(\\s|$)", "g");
+            if (re.test(menu_container.children[i].className)) continue;
+            menu_container.children[i].className = (menu_container.children[i].className + " " + class_name).replace(/\s+/g, " ").replace(/(^ | $)/g, "");
+        }
     }
-}
+};
 
 
 function changeSub(obj, path) {
@@ -77,22 +96,11 @@ function changeRoot(obj, to) {
 	if (to) load(to);
 }
 
-function viewport() {
-    var e = window
-        , a = 'inner';
-    if ( !( 'innerWidth' in window ) )
-    {
-        a = 'client';
-        e = document.documentElement || document.body;
-    }
-    return { width : e[ a+'Width' ] , height : e[ a+'Height' ] }
-}
-
 function checkInt(evt) {
 	var keycode;
 	if (evt.keyCode) keycode = evt.keyCode;
 	else if(evt.which) keycode = evt.which;
-	var av = new Array(8, 9, 35, 36, 37, 38, 39, 40, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57);
+	var av = [8, 9, 35, 36, 37, 38, 39, 40, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
 	for (var i = 0; i < av.length; i++) {
 		if (av[i] == keycode) return true;
 	}
@@ -105,24 +113,25 @@ function goHome() {
 	load('index.php?module=admin&action=welcome');
 }
 
+
 function logout() {
-    swal({
-        title: 'Вы уверены, что хотите выйти?',
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: '#f0ad4e',
-        confirmButtonText: "Да",
-        cancelButtonText: "Нет"
-    }, function(isConfirm) {
-        if (isConfirm) {
-            $.ajax({url:'index.php?module=admin&action=exit'})
-                .done(function (n) {
-                    window.location='index.php';
-                }).fail(function (a,b,t){
-                alert("Произошла ошибка: " + a.statusText);
-            });
-        }
-    });
+	swal({
+		title: 'Вы уверены, что хотите выйти?',
+		type: "warning",
+		showCancelButton: true,
+		confirmButtonColor: '#f0ad4e',
+		confirmButtonText: "Да",
+		cancelButtonText: "Нет"
+	}, function(isConfirm) {
+		if (isConfirm) {
+			$.ajax({url:'index.php?module=admin&action=exit'})
+				.done(function (n) {
+					window.location='index.php';
+				}).fail(function (a,b,t){
+				alert("Произошла ошибка: " + a.statusText);
+			});
+		}
+	});
 }
 
 function jsToHead(src) {
@@ -137,8 +146,8 @@ function jsToHead(src) {
 				}
 			}
 			if (s[i].src == src || s[i].src == h + src.replace(/^\//, '')) {
-                return;
-            }
+				return;
+			}
 		}
 	}
 	s = document.createElement("script");
@@ -157,7 +166,7 @@ function toAnchor(id){
         var ofy = $(id);
         if (ofy[0]) {
             $('html,body').animate({
-                scrollTop : ofy.offset().top - $("#navbar-top").height() - 115
+                scrollTop : ofy.offset().top - $("#menu-container").height()
             }, 'fast');
         }
     }, 0);
@@ -199,7 +208,7 @@ var preloader = {
 			$('html').animate({
 				scrollTop: 0
 			});
-		};
+		}
 		preloader.hide();
 		//resize();
 	},
@@ -249,11 +258,9 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 		//alert("Соединение прервано.");
 	} else if (jqxhr.statusText == 'error') {
 		alert("Отсутствует соединение с Интернет.");
-	}
-    else if (jqxhr.status == 403) {
+	} else if (jqxhr.status == 403) {
 		alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-    }
-	else if (jqxhr.status == 500) {
+	} else if (jqxhr.status == 500) {
 		alert("Ой! Что-то сломалось, подождите пока мы починим.");
 	} else {
 		if (exception != 'abort') {
@@ -264,7 +271,7 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 $(document).ajaxSuccess(function (event, xhr, settings) {
 	if (xhr.status == 203) {
 		top.document.location = settings.url;
-	};
+	}
 });
 
 var load = function (url, data, id, callback) {
@@ -338,10 +345,7 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected, ' +
-			  '#module-settings.menu-module-selected, ' +
-              '#module-billing.menu-module-selected')[0]
-        ) {
+        if ($('#module-profile.menu-module-selected, #module-settings.menu-module-selected')[0]) {
             $('#user-section').addClass('active');
         } else {
             $('#user-section').removeClass('active');
@@ -376,26 +380,6 @@ var load = function (url, data, id, callback) {
 		locData['data'] = data;
         locData['loc']  = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
-
-		var mod_title    = $('#module-' + load_module + ' > a .module-title').text();
-		var action_title = $('#submodule-' + load_module + '-' + load_action + ' > a').text();
-
-        if (load_module == 'admin' && load_action == 'welcome') {
-            mod_title = '';
-        }
-
-        var css_mod_title = action_title == ''
-            ? {'fontSize': '18px', 'paddingTop': '15px','lineHeight': '20px'}
-            : {'fontSize': '',     'paddingTop': '',    'lineHeight': ''};
-
-        $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
-        $('#navbar-top .module-action').text(action_title);
-
-
-
-
-
-
 
         var $container = $(locData.id);
 		if (locData.data) {
@@ -440,18 +424,13 @@ var load = function (url, data, id, callback) {
 
 var loadPDF = function (url) {
 	preloader.show();
+    $("#main_body").css('height', ($("body").height() - ($("#menu-container").height() + 25)));
 	$("#main_body").html('<iframe frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
-    $("#main_body > iframe").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height())),
-        'top'         : '50px',
-        'margin-left' : '-30px',
-        'position'    : 'absolute'
-    })
 	$("iframe").load( function() {
 		preloader.hide();
 	});
 
-}
+};
 
 function resize() {
 	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
@@ -463,7 +442,7 @@ $(function(){
 		var hash = location.hash;
 		var url = preloader.prepare(hash.substr(1));
 		load(url);
-	})
+	});
 	// Since the event is only triggered when the hash changes, we need to trigger
 	// the event now, to handle the hash the page may have loaded with.
 	$(window).hashchange();
@@ -472,102 +451,31 @@ $(function(){
 $(window).resize(resize);
 
 $(document).ready(function() {
-
-    main_menu.setAngles();
-    main_menu.setIconLetter();
-
-    $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseenter(function() {
-        $('.menu-submodule, .menu-submodule-selected').hide();
-
-        var submodulesContainer = $('#menu-submodules').hide();
-        var module              = $(this).attr('id').substr(7);
-        var submodules          = $('li[id^=submodule-' + module + '-]').show();
-
-        if (submodules[0]) {
-            submodulesContainer.show();
-            var offsets = this.getBoundingClientRect();
-
-            if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
-                submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
-            } else {
-                submodulesContainer.css('top', (offsets.top + 1) + 'px');
-            }
-        }
-    });
-    $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseleave(function(e) {
-        var target = e.toElement || e.relatedTarget || e.target;
-
-        if (target) {
-            var module = $(this).attr('id').substr(7);
-
-            if ($(target).parent().parent().attr('id') == 'menu-submodules') {
-                $(this).addClass('module-hover');
-            } else {
-                $('#menu-submodules').hide();
-            }
-
-        } else {
-            $('#menu-submodules').hide();
-        }
-    });
-    $("#menu-submodules").mouseleave(function() {
-        $(this).hide();
-        $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").removeClass('module-hover');
-    });
-
-    if ($.cookie('sidebar_collapse')) {
-        $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
-        $('#main').toggleClass('s-toggle');
-    }
-
-    $("#sidebar-toggle").click(function() {
-        $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "");
-        $('#main').toggleClass('s-toggle')
-		if ($.cookie('sidebar_collapse')) {
-            $.cookie('sidebar_collapse', '');
-		} else {
-            $.cookie('sidebar_collapse', 1);
-		}
-    });
-
-    $(".swipe-area").swipe({
-        swipeStatus: function(event, phase, direction, distance, duration, fingers) {
-            var width = $(window).width();
-            if (phase == "move" && ((width <= 768 && direction == "right") || (width > 768 && direction == "left"))) {
-                $("#main").addClass("s-toggle");
-                return false;
-            }
-            if (phase == "move" && ((width <= 768 && direction == "left") || (width > 768 && direction == "right"))) {
-                $("#main").removeClass("s-toggle");
-                return false;
-            }
-        }
-    });
-
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
-	}
+	};
 	xajax.callback.global.onFailure = function (a) {
 		preloader.hide();
 		if (a.request.status == '0') {
 			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
 		} else if (a.request.status == 500) {
-            alert("Ой! Что-то сломалось, подождите пока мы починим.");
+			alert("Ой! Что-то сломалось, подождите пока мы починим.");
 		} else if (a.request.status == 203) {
-			alert("Время жизни вашей сес	сии истекло. Чтобы войти в систему заново, обновите страницу.");
+			alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
 		} else {
 			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
 		}
-	}
+	};
 	xajax.callback.global.onResponseDelay = function () {
 		//alert("Отсутствует соединение с Интернет.");
-	}
+	};
 	xajax.callback.global.onExpiration = function () {
 		//alert("Отсутствует соединение с Интернет.");
-	}
+	};
 	xajax.callback.global.onComplete = function () {
 		preloader.hide();
-	}
+	};
+	var h = top.document.location.hash;
 	resize();
 
     $.datepicker.setDefaults($.datepicker.regional[ "ru_RU" ]);
@@ -589,57 +497,57 @@ $(document).ready(function() {
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
     try {
-        alert = function(title, message) {
-            swal(title, message);
-        };
-        // !!!!!!!!! DEPRECATED !!!!!!!!!
-        alertify = {
-            alert: function(title) {
-                swal(title);
-            },
-            confirm: function(question, callback) {
-                swal({
-                    title: question,
-                    type: "info",
-                    showCancelButton: true,
-                    confirmButtonColor: '#5bc0de',
-                    confirmButtonText: "Да",
-                    cancelButtonText: "Нет"
-                }, function(isConfirm){
-                    if (callback) {
-                        callback(isConfirm);
-                    }
-                });
-            },
-            prompt: function(message, callback) {
-                swal({
-                    title: message,
-                    type: "input",
-                    confirmButtonText: "Далее",
-                    cancelButtonText: "Отмена",
-                    showCancelButton: true
-                }, function(inputValue){
-                    if (callback) {
-                        callback(inputValue !== false, inputValue);
-                    }
-                });
-            },
-            log: function(message) {
-                $.growl({ message: message });
-            },
-            error: function(message) {
-                $.growl.error({ message: message });
-            },
-            info: function(message) {
-                $.growl.info({ message: message });
-            },
-            warning: function(message) {
-                $.growl.warning({ message: message });
-            },
-            success: function(message) {
-                $.growl.notice({ message: message });
-            }
-        }
+		alert = function(title, message) {
+			swal(title, message);
+		};
+		// !!!!!!!!! DEPRECATED !!!!!!!!!
+		alertify = {
+			alert: function(title) {
+				swal(title);
+			},
+			confirm: function(question, callback) {
+				swal({
+					title: question,
+					type: "info",
+					showCancelButton: true,
+					confirmButtonColor: '#5bc0de',
+					confirmButtonText: "Да",
+					cancelButtonText: "Нет"
+				}, function(isConfirm){
+					if (callback) {
+						callback(isConfirm);
+					}
+				});
+			},
+			prompt: function(message, callback) {
+				swal({
+					title: message,
+					type: "input",
+					confirmButtonText: "Далее",
+					cancelButtonText: "Отмена",
+					showCancelButton: true
+				}, function(inputValue){
+					if (callback) {
+						callback(inputValue !== false, inputValue);
+					}
+				});
+			},
+			log: function(message) {
+				$.growl({ message: message });
+			},
+			error: function(message) {
+				$.growl.error({ message: message });
+			},
+			info: function(message) {
+				$.growl.info({ message: message });
+			},
+			warning: function(message) {
+				$.growl.warning({ message: message });
+			},
+			success: function(message) {
+				$.growl.notice({ message: message });
+			}
+		}
     } catch (e) {
         console.error(e.message)
     }

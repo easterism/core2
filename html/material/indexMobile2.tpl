@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="core2/html/material/css/bootstrap.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/font-awesome.min.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/material/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/menu.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/styles.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
@@ -39,7 +40,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/admin.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js"></script>
     <script type="text/javascript">
         jQuery(document).ready(function() {
             if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
