@@ -119,7 +119,8 @@
 	} else {
 		define('THEME', 'default');
 	}
-	//MPDF PATH
+
+	// DEPRECATED!!! MPDF PATH
 	define("_MPDF_TEMP_PATH", rtrim($config->cache, "/") . '/');
 	define("_MPDF_TTFONTDATAPATH", rtrim($config->cache, "/") . '/');
 
@@ -152,6 +153,9 @@
         protected $auth;
         protected $tpl;
         protected $acl;
+        private $is_cli = false;
+        private $is_rest = false;
+        private $is_soap = false;
 
 		public function __construct() {
 			parent::__construct();
@@ -178,6 +182,18 @@
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth);
+                return;
+            }
+            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = true;
+                return;
+            }
+            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = true;
+                return;
+            }
+            if (PHP_SAPI === 'cli') {
+                $this->is_cli = true;
                 return;
             }
 
@@ -225,23 +241,31 @@
                 Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
                 $this->setContext('webservice');
 
-                if ( ! $this->isModuleActive('webservice')) {
-                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
-                }
+                $this->checkWebservice();
 
-                $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
-
-                if ( ! file_exists($webservice_controller_path)) {
-                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
-                }
-
-                require_once($webservice_controller_path);
-
-                if ( ! class_exists('ModWebserviceController')) {
-                    \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
-                }
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchWebToken($token);
+            }
+        }
+
+        /**
+         * Проверка на наличие и работоспособноси модуля Webservice
+         */
+        private function checkWebservice() {
+            if ( ! $this->isModuleActive('webservice')) {
+                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
+            }
+
+            $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
+
+            if ( ! file_exists($webservice_controller_path)) {
+                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+            }
+
+            require_once($webservice_controller_path);
+
+            if ( ! class_exists('ModWebserviceController')) {
+                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
             }
         }
 
@@ -254,31 +278,16 @@
          */
         public function dispatch() {
 
-            if (PHP_SAPI === 'cli') {
+            if ($this->is_cli || PHP_SAPI === 'cli') {
                 return $this->cli();
             }
 
             // Веб-сервис (SOAP)
             $matches = array();
-            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+            if ($this->is_soap || preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
                 $this->setContext('webservice');
-                // Инициализация модуля вебсервиса
-                if ( ! $this->isModuleActive('webservice')) {
-                    throw new Exception($this->translate->tr("Модуль Webservice не активен"));
-                }
 
-                $webservice_location        = $this->getModuleLocation('webservice');
-                $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
-
-                if ( ! file_exists($webservice_controller_path)) {
-                    throw new Exception($this->translate->tr("Модуль Webservice не существует"));
-                }
-
-                require_once($webservice_controller_path);
-
-                if ( ! class_exists('ModWebserviceController')) {
-                    throw new Exception($this->translate->tr("Модуль Webservice сломан"));
-                }
+                $this->checkWebservice();
 
                 if (isset($matches[2]) && $matches[2]) {
                     $service_request_action = 'wsdl';
@@ -294,27 +303,11 @@
 
             // Веб-сервис (REST)
             $matches = array();
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            if ($this->is_rest || preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
 
                 $this->setContext('webservice');
 
-                // Инициализация модуля вебсервиса
-                if ( ! $this->isModuleActive('webservice')) {
-                    return \Core2\Error::catchJsonException(array('message' => 'Module webservice is not active'), 503);
-                }
-
-                $webservice_location        = $this->getModuleLocation('webservice');
-                $webservice_controller_path = $webservice_location . '/ModWebserviceController.php';
-
-                if ( ! file_exists($webservice_controller_path)) {
-                    return \Core2\Error::catchJsonException(array('message' => 'Module does not exists'), 500);
-                }
-
-                require_once($webservice_controller_path);
-
-                if ( ! class_exists('ModWebserviceController')) {
-                    return \Core2\Error::catchJsonException(array('message' => 'Module broken'), 500);
-                }
+                $this->checkWebservice();
 
                 if ( ! empty($matches[2])) {
                     if (strpos($matches[2], '/')) {
