@@ -177,24 +177,24 @@
          * @throws Zend_Session_Exception
          */
         public function checkAuth() {
+
             // проверяем, есть ли в запросе токен
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth);
-                return;
+                return; //выходим, если авторизация состоялась
             }
-            $matches = array();
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
-                return;
-            }
-            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = $matches;
+
+            $this->detectWebService();
+            $this->auth = new StdClass();
+            if ($this->is_rest || $this->is_soap) {
+                Zend_Registry::set('auth', $this->auth);
                 return;
             }
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
+                Zend_Registry::set('auth', $this->auth);
                 return;
             }
 
@@ -220,6 +220,26 @@
                     //$this->auth->NAME = '';
                 }
                 Zend_Registry::set('auth', $this->auth);
+            }
+        }
+
+        /**
+         * Направлен ли запрос к вебсервису
+         * //TODO прогнать через роутер
+         */
+        private function detectWebService() {
+            if ($this->is_rest || $this->is_soap) {
+                return;
+            }
+            if (!isset($_SERVER['REQUEST_URI'])) return;
+            $matches = array();
+            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
+                return;
+            }
+            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = $matches;
+                return;
             }
         }
 
@@ -291,6 +311,22 @@
                 return $this->cli();
             }
 
+            $this->detectWebService();
+
+            // Веб-сервис (REST)
+            if ($matches = $this->is_rest) {
+
+                $this->setContext('webservice');
+
+                $this->checkWebservice();
+
+                require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+                $this->routeParse();
+
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchRest($_GET['module'], $_GET['action']); //TODO сделать через DI
+            }
+
             // Веб-сервис (SOAP)
             if ($matches = $this->is_soap) {
                 $this->setContext('webservice');
@@ -307,30 +343,6 @@
 
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchSoap($module_name, $service_request_action);
-            }
-
-            // Веб-сервис (REST)
-            if ($matches = $this->is_rest) {
-
-                $this->setContext('webservice');
-
-                $this->checkWebservice();
-
-                if ( ! empty($matches[2])) {
-                    if (strpos($matches[2], '/')) {
-                        $path   = explode('/', $matches[2]);
-                        $action = implode('', array_map('ucfirst', $path));
-                    } else {
-                        $action = ucfirst(strtolower($matches[2]));
-                    }
-                } else {
-                    $action = 'Index';
-                }
-
-                require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
-
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
             }
 
             // Billing
@@ -870,12 +882,14 @@
                     unset($temp2[$k]);
                 }
             }
+            reset($temp2);
+            if (current($temp2) === 'api') unset($temp2[key($temp2)]); //TODO do it for SOAP
 
             if (count($temp2) > 1) {
                 $i = 0;
                 foreach ($temp2 as $k => $v) {
-                    if ($i == 0) $_GET['module'] = $v;
-                    elseif ($i == 1) $_GET['action'] = $v;
+                    if ($i == 0) $_GET['module'] = strtolower($v);
+                    elseif ($i == 1) $_GET['action'] = strtolower($v);
                     else {
                         if (!ceil($i%2)) {
                             $v = explode("?", $v);
