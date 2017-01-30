@@ -154,8 +154,8 @@
         protected $tpl;
         protected $acl;
         private $is_cli = false;
-        private $is_rest = false;
-        private $is_soap = false;
+        private $is_rest = array();
+        private $is_soap = array();
 
 		public function __construct() {
 			parent::__construct();
@@ -184,12 +184,13 @@
                 Zend_Registry::set('auth', $this->auth);
                 return;
             }
+            $matches = array();
             if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = true;
+                $this->is_rest = $matches;
                 return;
             }
             if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = true;
+                $this->is_soap = $matches;
                 return;
             }
             if (PHP_SAPI === 'cli') {
@@ -224,6 +225,7 @@
 
         /**
          * Проверка наличия токена в запросе
+         * Только для запросов с авторизацией по токену!
          *
          * @return StdClass|void
          */
@@ -234,11 +236,11 @@
                 $token = $_SERVER['HTTP_AUTHORIZATION'];
             }
             else if (!empty($_SERVER['HTTP_CORE2M'])) {
-                $token = $_SERVER['HTTP_CORE2M'];
+                $token = $_SERVER['HTTP_CORE2M']; //DEPRECATED
             }
 
             if ($token) {
-                Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
+
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
@@ -256,10 +258,16 @@
                 \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
             }
 
-            $webservice_controller_path = $this->getModuleLocation('webservice') . '/ModWebserviceController.php';
+            $location = $this->getModuleLocation('webservice');
+            $webservice_controller_path =  $location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
                 \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+            }
+
+            $autoload = $location . "/vendor/autoload.php";
+            if (file_exists($autoload)) {
+                require_once $autoload;
             }
 
             require_once($webservice_controller_path);
@@ -267,6 +275,7 @@
             if ( ! class_exists('ModWebserviceController')) {
                 \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
             }
+            Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
 
@@ -283,8 +292,7 @@
             }
 
             // Веб-сервис (SOAP)
-            $matches = array();
-            if ($this->is_soap || preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+            if ($matches = $this->is_soap) {
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
@@ -302,8 +310,7 @@
             }
 
             // Веб-сервис (REST)
-            $matches = array();
-            if ($this->is_rest || preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            if ($matches = $this->is_rest) {
 
                 $this->setContext('webservice');
 
@@ -320,7 +327,7 @@
                     $action = 'Index';
                 }
 
-                require_once 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+                require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
 
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
@@ -345,7 +352,7 @@
                 require_once($billing_page_path);
 
                 if ( ! class_exists('Billing_Disable')) {
-                    throw new Exception("Class Billing_Disable does not exists");
+                    throw new Exception($this->translate->tr("Class Billing_Disable does not exists"));
                 }
 
                 $billing_disable = new Billing_Disable();
@@ -356,9 +363,10 @@
 
             // Парсим маршрут
             $this->routeParse();
+
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
                 // LOG USER ACTIVITY
-                $logExclude = array('module=profile&unread=1'); //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
