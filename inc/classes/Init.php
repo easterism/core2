@@ -177,20 +177,17 @@
          * @throws Zend_Session_Exception
          */
         public function checkAuth() {
+
             // проверяем, есть ли в запросе токен
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth);
-                return;
+                return; //выходим, если авторизация состоялась
             }
-            $matches = array();
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
-                return;
-            }
-            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = $matches;
+
+            $this->detectWebService();
+            if ($this->is_rest || $this->is_soap) {
                 return;
             }
             if (PHP_SAPI === 'cli') {
@@ -220,6 +217,25 @@
                     //$this->auth->NAME = '';
                 }
                 Zend_Registry::set('auth', $this->auth);
+            }
+        }
+
+        /**
+         * Направлен ли запрос к вебсервису
+         * //TODO прогнать через роутер
+         */
+        private function detectWebService() {
+            if ($this->is_rest || $this->is_soap) {
+                return;
+            }
+            $matches = array();
+            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
+                return;
+            }
+            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = $matches;
+                return;
             }
         }
 
@@ -291,23 +307,7 @@
                 return $this->cli();
             }
 
-            // Веб-сервис (SOAP)
-            if ($matches = $this->is_soap) {
-                $this->setContext('webservice');
-
-                $this->checkWebservice();
-
-                if (isset($matches[2]) && $matches[2]) {
-                    $service_request_action = 'wsdl';
-                    $module_name = strtolower($matches[2]);
-                } else {
-                    $service_request_action = 'server';
-                    $module_name = strtolower($matches[3]);
-                }
-
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchSoap($module_name, $service_request_action);
-            }
+            $this->detectWebService();
 
             // Веб-сервис (REST)
             if ($matches = $this->is_rest) {
@@ -331,6 +331,24 @@
 
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest(strtolower($matches[1]), $action);
+            }
+
+            // Веб-сервис (SOAP)
+            if ($matches = $this->is_soap) {
+                $this->setContext('webservice');
+
+                $this->checkWebservice();
+
+                if (isset($matches[2]) && $matches[2]) {
+                    $service_request_action = 'wsdl';
+                    $module_name = strtolower($matches[2]);
+                } else {
+                    $service_request_action = 'server';
+                    $module_name = strtolower($matches[3]);
+                }
+
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchSoap($module_name, $service_request_action);
             }
 
             // Billing
