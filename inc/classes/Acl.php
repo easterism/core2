@@ -1,5 +1,9 @@
 <?
+require_once 'Db.php';
 
+/**
+ * Class Acl
+ */
 class Acl extends Db {
 	
 	const INHER_ROLES = 'N';
