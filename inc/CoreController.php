@@ -540,10 +540,14 @@ class CoreController extends Common {
 			   		    LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
 			   		WHERE cu.u_id = ?", $this->auth->ID
 				);
-				if ($dataUser) {
 
+				if ($dataUser) {
 					$to = $this->getSetting('feedback_email');
 					$cc = $this->getSetting('feedback_email_cc');
+
+					if (empty($to)) {
+                        throw new Exception($this->translate->tr('Администратор забыл указать свой email. Из за этого сообщение не может быть отправлено.'));
+                    }
 
 					$supportFormMessage = "<pre>{$supportFormMessage}</pre>";
 					$supportFormMessage .= '<hr/><small>';
@@ -552,10 +556,16 @@ class CoreController extends Common {
 					$supportFormMessage .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
 					$supportFormMessage .= '</small>';
 
-                    $result = $this->createEmail()
-                        ->from($dataUser['email'])
-                        ->to($to)
-                        ->cc($cc)
+                    $email = $this->createEmail();
+
+                    if ( ! empty($dataUser['email'])) {
+                        $email->from($dataUser['email']);
+                    }
+                    if ( ! empty($cc)) {
+                        $email->cc($cc);
+                    }
+
+                    $email->to($to)
                         ->subject('Запрос обратной связи (модуль ' . $supportFormModule . ').')
                         ->body($supportFormMessage)
                         ->send();
