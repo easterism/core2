@@ -311,7 +311,7 @@ function mceSetup(id, opt) {
         forced_root_block : false,
         force_br_newlines : true,
         force_p_newlines : false,
-        verify_html : false,
+        verify_html : true,
         convert_urls : false,
         relative_urls : false,
         plugins: [

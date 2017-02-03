@@ -117,6 +117,13 @@ a {color: #337AB7}
     padding: 0 10px;
     margin-right: 0px;
 }
+#user-section .nav-item a {
+    height: 50px;
+    width: 50px;
+    line-height: 32px;
+    font-size: 20px;
+    color: #BDBDBD;
+}
 #menu-row-1 {
     height: 60px;
     background-color: #fff;

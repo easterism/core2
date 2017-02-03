@@ -11,8 +11,6 @@
     }
     require_once($conf_file);
     require_once("Error.php");
-    require_once("Zend/Config.php");
-    require_once("Zend/Config/Ini.php");
 
     $conf_file = DOC_ROOT . "conf.ini";
 
@@ -114,10 +112,6 @@
 	}
 
 	require_once("Log.php");
-	require_once("Zend/Db.php");
-	require_once("Zend/Session.php");
-	require_once("Zend/Cache.php");
-	require_once("Zend/Json.php"); //DEPRECATED
 
 	//устанавливаем шкурку
 	if (!empty($config->theme)) {

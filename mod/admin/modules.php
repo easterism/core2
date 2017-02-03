@@ -45,7 +45,7 @@ $tab = new tabs('mod');
 $tab->addTab($this->translate->tr("Установленные модули"), $app, 170);
 $tab->addTab($this->translate->tr("Доступные модули"),	 $app, 130);
 $tab->addTab($this->translate->tr("Шаблоны модулей"),	     $app, 130);
-$tab->beginContainer("Модули");
+$tab->beginContainer($this->translate->tr("Модули"));
 
 //$sid = session_id();
 	if ($tab->activeTab == 1) {
@@ -149,7 +149,7 @@ $tab->beginContainer("Модули");
 			if ($refid > 0) {
 				$edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
 			} else {
-				$edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", " маленикие латинские буквы или цифры", "", true);
+				$edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", " " . $this->translate->tr("маленикие латинские буквы или цифры"), "", true);
 			}
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
 			$edit->addControl($this->translate->tr("Системный:"), "RADIO", "", "", "N");
@@ -435,7 +435,7 @@ HTML;
             $res = $this->db->fetchRow("SELECT name, version, readme, install_info
                                         FROM core_available_modules
                                         WHERE id=?", $_GET['add_mod']);
-            $title = "<h2><b>Инструкция по установке модуля</b></h2>";
+            $title = "<h2><b>" . $this->translate->tr("Инструкция по установке модуля") . "</b></h2>";
             $content = $res['readme'];
             $inf = unserialize($res['install_info']);
 
@@ -465,7 +465,7 @@ HTML;
 
             $edit->addButton($this->translate->tr("Вернуться к списку Модулей"), "load('$app&tab_mod=2')");
 
-            $edit->addButtonCustom('<input class="button" type="button" value="Скачать файлы модуля" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
+            $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . ' onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
 
             $edit->showTable();
 
@@ -583,7 +583,7 @@ HTML;
                 //проверяем в соответствии с условиямив се ли нужные модули установлены
                 $deps = $install->getNeedToInstallDependedModList($Inf['m']);
             } elseif (!empty($Inf)) {
-                $deps[] = "<span style=\"color: red;\">Неверный install.xml</span>";
+                $deps[] = "<span style=\"color: red;\">" . $this->translate->tr("Неверный install.xml") . "</span>";
             }
             $arr[4] = implode("<br>", $deps);
 
@@ -614,7 +614,7 @@ HTML;
             $copy_list[$module_id] = $val[$max_ver];
             unset($val[$max_ver]);
             if (!empty($val)) {
-                $copy_list[$module_id][5] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
+                $copy_list[$module_id][5] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">" . $this->translate->tr("Предыдущие версии") . "</a><br>";
                 $copy_list[$module_id][5] .= "<table width=\"100%\" class=\"mod_available_{$module_id}\" style=\"display: none;\"><tbody>";
                 foreach ($val as $version=>$val) {
                     $copy_list[$module_id][5] .= "
@@ -666,7 +666,7 @@ HTML;
             $this->db->insert('core_settings', array(
                 'code'           => 'repo',
                 'type'           => 'text',
-                'system_name'    => 'Адреса репозиториев для загрузки модулей',
+                'system_name'    => $this->translate->tr('Адреса репозиториев для загрузки модулей'),
                 'value'    		 => '',
                 'visible'        => 'Y',
                 'is_custom_sw'   => 'Y',
@@ -684,7 +684,7 @@ HTML;
 				<span>
 					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
 				</span>
 			</div>";
 
@@ -726,7 +726,7 @@ HTML;
 
 		if (isset($_GET['file_mod']) && $_GET['file_mod'] != ""){
 			$readme = "core2/mod_tpl/".$_GET['file_mod']."/Readme.txt";
-			$file = "<h2><b>Краткое описание шаблона ".$_GET['file_mod']."</b></h2>";
+			$file = "<h2><b>" . sprintf($this->translate->tr("Краткое описание шаблона %s"), $_GET['file_mod']) . "</b></h2>";
 			
 			if (file_exists($readme))
 				$handle = fopen ($readme, "r");
@@ -742,7 +742,7 @@ HTML;
 		$list = new listTable('mod_tamplates');
         $list->extOrder = true;
 		$list->SQL = "SELECT 1";
-		$list->addColumn("Имя шаблона", "", "TEXT");
+		$list->addColumn($this->translate->tr("Имя шаблона"), "", "TEXT");
 		$list->addColumn("Описание", "", "TEXT");
 		$list->addColumn("Загрузить", "5%", "BLOCK",'align=center', false);
 		$list->getData();

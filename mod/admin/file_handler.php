@@ -32,7 +32,7 @@
 		}
 		header("Content-type: {$res2['type']}");
 		header("Content-Disposition: filename=\"{$res2['filename']}\"");
-		if (isset($res2['thumb'])) {
+		if ( ! empty($res2['thumb'])) {
 			echo $res2['thumb'];
 		} else {
 			$Image = new Image();
