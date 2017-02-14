@@ -883,36 +883,51 @@
                 }
             }
             reset($temp2);
-            if (current($temp2) === 'api') unset($temp2[key($temp2)]); //TODO do it for SOAP
+            $api = false; //TODO переделать на $this->is_rest
+            if (current($temp2) === 'api') {
+                unset($temp2[key($temp2)]);
+                $api = true;
+            } //TODO do it for SOAP
 
-            if (count($temp2) > 1) {
-                $i = 0;
-                foreach ($temp2 as $k => $v) {
-                    if ($i == 0) $_GET['module'] = strtolower($v);
-                    elseif ($i == 1) $_GET['action'] = strtolower($v);
-                    else {
-                        if (!ceil($i%2)) {
-                            $v = explode("?", $v);
-                            if (isset($v[1])) {
-                                $_GET[$v[0]] = '';
-                                break;
-                            } else {
-                                if (isset($temp2[$k + 1])) {
-                                    $vv          = explode("?", $temp2[$k + 1]);
-                                    $_GET[$v[0]] = $vv[0];
-                                    if (isset($vv[1])) {
-                                        break;
-                                    }
-                                } else {
+            $co = count($temp2);
+            if ($co) {
+                if ($co > 1) {
+                    $i = 0;
+                    foreach ($temp2 as $k => $v) {
+                        if ($i == 0) $_GET['module'] = strtolower($v);
+                        elseif ($i == 1) $_GET['action'] = strtolower($v);
+                        else {
+                            if (!ceil($i%2)) {
+                                $v = explode("?", $v);
+                                if (isset($v[1])) {
                                     $_GET[$v[0]] = '';
                                     break;
+                                } else {
+                                    if (isset($temp2[$k + 1])) {
+                                        $vv          = explode("?", $temp2[$k + 1]);
+                                        $_GET[$v[0]] = $vv[0];
+                                        if (isset($vv[1])) {
+                                            break;
+                                        }
+                                    } else {
+                                        $_GET[$v[0]] = '';
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        $i++;
                     }
-                    $i++;
+                } elseif ($api) {
+                    $vv  = explode("?", current($temp2));
+                    if (!empty($vv[1])) {
+                        parse_str($vv[1], $_GET);
+                    }
+                    $_GET['module'] = $vv[0];
+                    $_GET['action'] = 'index';
                 }
             }
+
         }
 
         /**
