@@ -218,9 +218,9 @@ PRELOADERS
     height: 100%;
     background-color: #fff;
     -webkit-box-shadow: inset 0 0 10px #D8D8D8;
-    -moz-box-shadow: inset 0 0 10px #D8D8D8;
-    -o-box-shadow: inset 0 0 10px #D8D8D8;
-    box-shadow: inset 0 0 10px #D8D8D8;
+       -moz-box-shadow: inset 0 0 10px #D8D8D8;
+         -o-box-shadow: inset 0 0 10px #D8D8D8;
+            box-shadow: inset 0 0 10px #D8D8D8;
     opacity: .2;
     cursor: wait;
 }
@@ -235,27 +235,21 @@ PRELOADERS
     padding: 20px;
     margin-left: -150px;
     margin-top: -120px;
-    border: 1px solid #C7C7C7;
-    -webkit-box-shadow: 0 0 40px #848484;
-    -moz-box-shadow: 0 0 40px #848484;
-    -ms-box-shadow: 0 0 40px #848484;
-    -o-box-shadow: 0 0 40px #848484;
     -webkit-border-radius: 90px;
-    -moz-border-radius: 90px;
-    -ms-border-radius: 90px;
-    -o-border-radius: 90px;
+       -moz-border-radius: 90px;
+        -ms-border-radius: 90px;
+         -o-border-radius: 90px;
     border-radius: 6px;
     -webkit-box-shadow: 0 0 40px #848484;
-    -moz-box-shadow: 0 0 40px #848484;
-    -o-box-shadow: 0 0 40px #848484;
-    box-shadow: 0 0 30px #848484;
+       -moz-box-shadow: 0 0 40px #848484;
+         -o-box-shadow: 0 0 40px #848484;
+            box-shadow: 0 0 30px #848484;
     cursor: wait;
     background-image: url("../img/preloader.gif");
     background-repeat: no-repeat;
     background-position: center;
     background-color: white;
     border: 1px solid silver;
-
 }
 
 /*
@@ -269,7 +263,7 @@ LIST class table
     border-width: 1px;
     margin: 0 0 15px;
     position: relative;
-    /*overflow: auto;*/
+    overflow: auto;
 }
 table.sTable {
     margin-bottom:0;

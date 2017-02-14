@@ -181,7 +181,11 @@ class Common extends Acl {
                     } else {
                         require_once "CommonApi.php";
                         require_once $location . "/{$module_api}.php";
-                        $v = $this->{$k} = new $module_api();
+                        $api = new $module_api();
+                        if (!is_subclass_of($api, 'CommonApi')) {
+                            return new stdObject();
+                        }
+                        $v = $this->{$k} = $api;
                     }
                 } else {
                     return new stdObject();

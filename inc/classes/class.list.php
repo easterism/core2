@@ -1119,14 +1119,16 @@ class listTable extends initList {
 	public function showTable() {
 		if ($this->checkAcl($this->resource, 'list_all') || $this->checkAcl($this->resource, 'list_owner')) {
 			$this->makeTable();
-            $this->setSessData('loc', $_SERVER['QUERY_STRING']);
+			$loc = $this->ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING'];
+            $this->setSessData('loc', $loc);
             $this->setSessData('deleteKey', $this->deleteKey);
+
 			echo "<script>
 				if (!listx){
 				    alert('listx не найден!')
 				}
 				else {
-					listx.loc['{$this->resource}'] = '{$_SERVER['QUERY_STRING']}';
+					listx.loc['{$this->resource}'] = '{$loc}';
 				}
 			</script>";
 			echo $this->HTML;

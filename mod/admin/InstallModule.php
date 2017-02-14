@@ -131,7 +131,7 @@ class InstallModule extends \Common {
 
     /**
      * Собственное подключение к базе данных
-     * @return void|\Zend_Db_Adapter_Abstract
+     * @return \Zend_Db_Adapter_Abstract
      */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
@@ -517,7 +517,7 @@ class InstallModule extends \Common {
         $this->db->insert('core_modules', $arrForInsert);
         //$lastId = $this->db->lastInsertId('core_modules'); //FIXME Не работает, не знаю почему :(
         $lastId = $this->db->fetchOne("SELECT m_id FROM core_modules WHERE module_id=?", $arrForInsert['module_id']);
-        $this->addNotice("Регистрация модуля", "Операция выполнена", "Успешно", "info");
+        $this->addNotice($this->translate->tr("Регистрация модуля"), $this->translate->tr("Операция выполнена"), $this->translate->tr("Успешно"), "info");
         //регистрация субмодулей модуля
         $subModules = $this->getSubModules($lastId);
         if (!empty($subModules)) {
@@ -525,7 +525,7 @@ class InstallModule extends \Common {
             {
                 $this->db->insert('core_submodules', $subval);
             }
-            $this->addNotice("Субмодули", "Субмодули добавлены", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули добавлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
         $this->cache->clean(
@@ -540,9 +540,9 @@ class InstallModule extends \Common {
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "' а потом этот модуль") : " включите модуль";
-            $this->addNotice("Установка", "Установка завершена", "Для работы{$msg}", "warning");
+            $this->addNotice($this->translate->tr("Установка"), $this->translate->tr("Установка завершена"), "Для работы{$msg}", "warning");
         } else {
-            $this->addNotice("Установка", "Установка завершена", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Установка"), $this->translate->tr("Установка завершена"), $this->translate->tr("Успешно"), "info");
         }
     }
 
@@ -562,11 +562,11 @@ class InstallModule extends \Common {
                 //разбиваем запросы на отдельные
                 $sql = $this->SQLToQueriesArray($sql);
                 foreach ($sql as $qu) {
-                    $this->db->query($qu);//выполняем
+                    $this->db->query($qu);//TODO исправить работу с last_insert_id()
                 }
-                $this->addNotice("Таблицы модуля", "Таблицы добавлены", "Успешно", "info");
+                $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы добавлены"), $this->translate->tr("Успешно"), "info");
             } else {
-                throw new \Exception("Попытка удаления таблиц не относящихся к модулю!");
+                throw new \Exception($this->translate->tr("Попытка удаления таблиц не относящихся к модулю!"));
             }
         }
     }
@@ -661,7 +661,7 @@ class InstallModule extends \Common {
         //копируем файлы из архива
         $this->copyModFiles();
         //инфа о модуле
-        $arrForUpgrade['m_name']        = $this->mInfo['install']['module_name'];
+        //$arrForUpgrade['m_name']        = $this->mInfo['install']['module_name'];
         $arrForUpgrade['lastuser']      = $this->lastUser;
         $arrForUpgrade['is_system']     = $this->mInfo['install']['module_system'];
         $arrForUpgrade['is_public']     = $this->mInfo['install']['module_public'];
@@ -684,7 +684,7 @@ class InstallModule extends \Common {
             foreach ($subModules as $subval) {
                 $this->db->insert('core_submodules', $subval);
             }
-            $this->addNotice("Субмодули", "Субмодули обновлены", "Успешно", "info");
+            $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули обновлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
         $this->cache->clean(
@@ -701,7 +701,7 @@ class InstallModule extends \Common {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "', а потом этот модуль") : " включите модуль";
             $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление завершено"), "Для работы{$msg}", "warning");
         } else {
-            $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление завершено"), "Успешно", "info");
+            $this->addNotice($this->translate->tr("Обновление"), $this->translate->tr("Обновление завершено"), $this->translate->tr("Успешно"), "info");
         }
     }
 
@@ -719,15 +719,15 @@ class InstallModule extends \Common {
         if (!empty($this->deleteFilesInfo['is_not_writeable'])) {
 //            asort($this->deleteFilesInfo['is_not_writeable']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['is_not_writeable']), "Папка закрыта для записи, удалите её самостоятельно", "danger");
-            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Папка закрыта для записи, удалите её самостоятельно", "danger");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), $this->translate->tr("Папка закрыта для записи, удалите её самостоятельно"), "danger");
         } elseif (!empty($this->deleteFilesInfo['not_exists'])) {
 //            asort($this->deleteFilesInfo['not_exists']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['not_exists']), "Не существует", "info");
-            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Файлы не найдены", "info");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), $this->translate->tr("Файлы не найдены"), "info");
         } elseif (!empty($this->deleteFilesInfo['success'])) {
 //            asort($this->deleteFilesInfo['success']);
 //            $this->addNotice("Файлы модуля", implode("<br>", $this->deleteFilesInfo['success']), "Файлы удалены", "info");
-            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), "Успешно", "info");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Удаление"), $this->translate->tr("Успешно"), "info");
         }
     }
 
@@ -1451,7 +1451,6 @@ class InstallModule extends \Common {
      *
      * @param   string  $repo_url   Подготовленный URL для запроса к репозиторию
      *
-     * @return  string              HTML
      */
     public function getHTMLModsListFromRepo($repo_url) {
         $_GET['repo_id'] = !empty($_GET['repo_id']) ? $_GET['repo_id'] : "";
@@ -1643,7 +1642,7 @@ class InstallModule extends \Common {
             $list->showTable();
 
         } catch (\Exception $e) {
-            $this->addNotice("", "При подключении к репозиторию произошла ошибка", $e->getMessage(), "danger");
+            $this->addNotice("", $this->translate->tr("При подключении к репозиторию произошла ошибка"), $e->getMessage(), "danger");
             echo $this->printNotices();
         }
     }
@@ -1911,9 +1910,10 @@ class InstallModule extends \Common {
             $mod    = $this->db->fetchRow("SELECT m_name, version FROM core_modules WHERE module_id = ?", $mod_id);
             $m_name = $mod['m_name'];
             $m_v    = $mod['version'];
-            $st = "<h3>Обновляем модуль '{$mod['m_name']}'</h3>";
+            $st         = "<h3>Обновляем модуль '{$mod['m_name']}'</h3>";
             $data       = '';
             $files_hash = '';
+            $ver        = '';
 
             //получаем список всех доступных модулей
             $availMods = $this->getInfoAllAvailMods();

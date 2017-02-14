@@ -1,7 +1,4 @@
 <?
-require_once("Zend/Ldap.php");
-require_once("Zend/Auth.php");
-require_once("Zend/Auth/Adapter/Ldap.php");
 
 class LdapAuth extends Common {
 	const ST_LDAP_AUTH_SUCCESS 		= 1;
