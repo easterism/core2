@@ -22,6 +22,7 @@
     "zf1/zend-db": "~1.12",
     "zf1/zend-cache": "~1.12",
     "zf1/zend-acl": "~1.12",
+    "zf1/zend-validate": "~1.12",
     "zf1/zend-translate": "~1.12",
     "zf1/zend-mail": "~1.12",
     "zf1/zend-ldap": "~1.12",
