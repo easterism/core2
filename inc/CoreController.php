@@ -11,7 +11,7 @@ require_once 'classes/Alert.php';
  */
 class CoreController extends Common {
 
-	const RP = 'e3fb5f90f7bcb59fd5b9dbc030335c07';
+	const RP = '8c1733d4cd0841199aa02ec9362be324';
 	protected $tpl = '';
 	protected $theme = 'default';
 	
@@ -146,7 +146,7 @@ class CoreController extends Common {
             $login = trim($post['login']);
             $passw = $post['password'];
 
-            if (!ctype_print($passw)) {
+            if (!ctype_print($passw) || strlen($passw) < 30) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
                 header("Location: index.php");
                 return;
