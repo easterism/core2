@@ -907,11 +907,7 @@
                             $_GET['module'] = $route['module']; //DEPRECATED
                         }
                         elseif ($i == 1) {
-                            $_GET['action'] = $route['action']; //DEPRECATED
                             $vv  = explode("?", $v);
-                            if (!empty($vv[1])) {
-                                parse_str($vv[1], $_GET);
-                            }
                             $route['action'] = strtolower($vv[0]);
                         }
                         else {
