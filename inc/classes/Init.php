@@ -908,11 +908,7 @@
                         }
                         elseif ($i == 1) {
                             $vv  = explode("?", $v);
-                            if (!empty($vv[1])) {
-                                parse_str($vv[1], $_GET);
-                            }
                             $route['action'] = strtolower($vv[0]);
-                            $_GET['action'] = $route['action']; //DEPRECATED
                         }
                         else {
                             if (!ceil($i%2)) {
