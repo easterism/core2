@@ -321,10 +321,15 @@
                 $this->checkWebservice();
 
                 require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
-                $this->routeParse();
 
+                $route = $this->routeParse();
+                $method = ucfirst($route['action']);
+                foreach ($route['params'] as $param => $value) {
+                    $method .= ucfirst($param) . ucfirst($value);
+                }
+                
                 $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchRest($_GET['module'], $_GET['action']); //TODO сделать через DI
+                return $webservice_controller->dispatchRest($route['module'], $method); //TODO сделать через DI
             }
 
             // Веб-сервис (SOAP)
@@ -374,7 +379,7 @@
             }
 
             // Парсим маршрут
-            $this->routeParse();
+            $route = $this->routeParse();
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
                 // LOG USER ACTIVITY
@@ -406,9 +411,10 @@
                 return $this->getMenu();
             } else {
                 if ($this->deleteAction()) return;
-                if (empty($_GET['module'])) throw new Exception($this->translate->tr("Модуль не найден"), 404);
-                $module = strtolower($_GET['module']);
-                $action = empty($_GET['action']) ? 'index' : strtolower($_GET['action']);
+
+                $module = $route['module'];
+                if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
+                $action = $route['action'];
                 $this->setContext($module, $action);
 
                 if ($this->fileAction()) return;
@@ -888,54 +894,60 @@
                 unset($temp2[key($temp2)]);
                 $api = true;
             } //TODO do it for SOAP
+            
+            $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
 
             $co = count($temp2);
             if ($co) {
                 if ($co > 1) {
                     $i = 0;
                     foreach ($temp2 as $k => $v) {
-                        if ($i == 0) $_GET['module'] = strtolower($v);
+                        if ($i == 0) {
+                            $route['module'] = strtolower($v);
+                            $_GET['module'] = $route['module']; //DEPRECATED
+                        }
                         elseif ($i == 1) {
                             $vv  = explode("?", $v);
                             if (!empty($vv[1])) {
-                                parse_str($vv[1], $params);
-                                foreach ($params as $params_name => $params_value) {
-                                    $_GET[$params_name] = $params_value;
-                                }
+                                parse_str($vv[1], $_GET);
                             }
-                            $_GET['action'] = strtolower($vv[0]);
+                            $route['action'] = strtolower($vv[0]);
+                            $_GET['action'] = $route['action']; //DEPRECATED
                         }
                         else {
                             if (!ceil($i%2)) {
                                 $v = explode("?", $v);
                                 if (isset($v[1])) {
-                                    $_GET[$v[0]] = '';
-                                    break;
+                                    $route['params'][$v[0]] = '';
+                                    $_GET[$v[0]] = ''; //DEPRECATED
                                 } else {
                                     if (isset($temp2[$k + 1])) {
                                         $vv          = explode("?", $temp2[$k + 1]);
-                                        $_GET[$v[0]] = $vv[0];
-                                        if (isset($vv[1])) {
-                                            break;
-                                        }
+                                        $route['params'][$v[0]] = $vv[0];
+                                        $_GET[$v[0]] = $vv[0]; //DEPRECATED
+
                                     } else {
-                                        $_GET[$v[0]] = '';
-                                        break;
+                                        $route['params'][$v[0]] = '';
+                                        $_GET[$v[0]] = ''; //DEPRECATED
                                     }
                                 }
                             }
                         }
                         $i++;
                     }
-                } elseif ($api) {
+                } else {
                     $vv  = explode("?", current($temp2));
                     if (!empty($vv[1])) {
                         parse_str($vv[1], $_GET);
                     }
-                    $_GET['module'] = $vv[0];
-                    $_GET['action'] = 'index';
+                    $route['module'] = $vv[0];
+                    if (!$route['module'] || $route['module'] == 'index.php') { //DEPRECATED
+                        $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
+                        $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
+                    }
                 }
             }
+            return $route;
         }
 
         /**
