@@ -113,16 +113,16 @@ function logout() {
         confirmButtonColor: '#f0ad4e',
         confirmButtonText: "Да",
         cancelButtonText: "Нет"
-    }, function(isConfirm) {
-        if (isConfirm) {
+    }).then(
+        function(result) {
             $.ajax({url:'index.php?module=admin&action=exit'})
-                .done(function (n) {
-                    window.location='index.php';
-                }).fail(function (a,b,t){
-                alert("Произошла ошибка: " + a.statusText);
-            });
-        }
-    });
+				.done(function (n) {
+					window.location='index.php';
+				}).fail(function (a,b,t){
+					alert("Произошла ошибка: " + a.statusText);
+				});
+        }, function(dismiss) {}
+    );
 }
 
 function jsToHead(src) {
@@ -473,6 +473,31 @@ $(window).resize(resize);
 
 $(document).ready(function() {
 
+    jQuery(document).ready(function() {
+        if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
+            $("#mainContainer").prepend(
+                "<h2>" +
+                "<span style=\"color:red\">Внимание!</span> " +
+                "Вы пользуетесь устаревшей версией браузера. " +
+                "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
+                "</h2>"
+            );
+        }
+        if ($('#module-profile')[0]) {
+            $('.dropdown-profile.profile').addClass('show');
+            $('.dropdown-profile.divider').addClass('show');
+            if ($('#submodule-profile-messages')[0]) {
+                $('.dropdown-profile.messages').addClass('show');
+            }
+        }
+        if ($('#module-settings')[0]) {
+            $('.dropdown-settings').addClass('show');
+        }
+        if ($('#module-billing')[0]) {
+            $('.dropdown-billing').addClass('show');
+        }
+    });
+
     main_menu.setAngles();
     main_menu.setIconLetter();
 
@@ -590,39 +615,51 @@ $(document).ready(function() {
 
     try {
         alert = function(title, message) {
-            swal(title, message);
+            swal(title, message).catch(swal.noop);
         };
         // !!!!!!!!! DEPRECATED !!!!!!!!!
         alertify = {
             alert: function(title) {
-                swal(title);
+                swal(title).catch(swal.noop);
             },
             confirm: function(question, callback) {
                 swal({
                     title: question,
-                    type: "info",
+                    type: "question",
                     showCancelButton: true,
                     confirmButtonColor: '#5bc0de',
                     confirmButtonText: "Да",
                     cancelButtonText: "Нет"
-                }, function(isConfirm){
-                    if (callback) {
-                        callback(isConfirm);
+                }).then(
+                    function(result) {
+                        if (callback) {
+                            callback(true);
+                        }
+                    }, function(dismiss) {
+                        if (callback) {
+                            callback(false);
+                        }
                     }
-                });
+                );
             },
             prompt: function(message, callback) {
                 swal({
                     title: message,
-                    type: "input",
+                    input: 'text',
                     confirmButtonText: "Далее",
                     cancelButtonText: "Отмена",
                     showCancelButton: true
-                }, function(inputValue){
-                    if (callback) {
-                        callback(inputValue !== false, inputValue);
+                }).then(
+                    function(result) {
+                        if (callback) {
+                            callback(true, result);
+                        }
+                    }, function(dismiss) {
+                        if (callback) {
+                            callback(false, '');
+                        }
                     }
-                });
+                );
             },
             log: function(message) {
                 $.growl({ message: message });
@@ -638,6 +675,9 @@ $(document).ready(function() {
             },
             success: function(message) {
                 $.growl.notice({ message: message });
+            },
+            message: function(message) {
+                $.growl({ message: message });
             }
         }
     } catch (e) {
