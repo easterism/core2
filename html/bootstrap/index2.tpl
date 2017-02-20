@@ -20,7 +20,8 @@
 
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/bootstrap/css/sweetalert.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/bootstrap/css/sweetalert2.min.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/bootstrap/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.growl.css" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
@@ -32,7 +33,8 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/cleave.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/sweetalert.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/es6-promise.auto.min.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/sweetalert2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/jquery.growl.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/control_datepicker_range.js"></script>
@@ -45,29 +47,6 @@
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.edit.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/main.js"></script>
-    <script type="text/javascript">
-        jQuery(document).ready(function() {
-            if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
-                $("#mainContainer").prepend(
-                    "<h2>" +
-                        "<span style=\"color:red\">Внимание!</span> " +
-                        "Вы пользуетесь устаревшей версией браузера. " +
-                        "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
-                    "</h2>"
-                );
-            }
-			if ($('#module-profile')[0]) {
-                $('.dropdown-profile.profile').addClass('show');
-                $('.dropdown-profile.divider').addClass('show');
-                if ($('#submodule-profile-messages')[0]) {
-                    $('.dropdown-profile.messages').addClass('show');
-                }
-            }
-			if ($('#module-settings')[0]) {
-                $('.dropdown-settings').addClass('show');
-            }
-        });
-    </script>
     <!--[if IE]>
     <link rel="shortcut icon" href="favicon.ico">
     <![endif]-->

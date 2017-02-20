@@ -241,11 +241,9 @@ var listx = {
             showCancelButton: true,
             confirmButtonColor: is_active == 'Y' ? '#5bc0de' : '#f0ad4e',
             confirmButtonText: "Да",
-            cancelButtonText: "Нет",
-            closeOnConfirm: true,
-            closeOnCancel: true
-        }, function(isConfirm){
-            if (isConfirm) {
+            cancelButtonText: "Нет"
+        }).then(
+            function(result) {
                 $.post('index.php?module=admin&action=switch&loc=core', {
                     data:      data,
                     is_active: is_active,
@@ -256,13 +254,13 @@ var listx = {
                         $($this).attr('alt', new_alt);
                     } else {
                         if (data.status) {
-                            swal(data.status);
+                            swal(data.status).catch(swal.noop);
                         }
                     }
                 },
                 'json');
-            }
-        });
+            }, function(dismiss) {}
+        );
     },
 
 
@@ -378,11 +376,9 @@ var listx = {
                     showCancelButton: true,
                     confirmButtonColor: '#f0ad4e',
                     confirmButtonText: "Да",
-                    cancelButtonText: "Нет",
-                    closeOnConfirm: true,
-                    closeOnCancel: true
-                }, function(isConfirm) {
-                    if (isConfirm) {
+                    cancelButtonText: "Нет"
+                }).then(
+                    function(result) {
                         preloader.show();
                         $("#main_" + id + "_error").hide();
                         var container = '';
@@ -398,7 +394,7 @@ var listx = {
                                     if (data == true) {
                                         load(listx.loc[id], '', container);
                                     } else {
-                                        if ( ! data || data.error) {
+                                        if (!data || data.error) {
                                             var msg = data.error ? data.error : "Не удалось выполнить удаление";
                                             $("#main_" + id + "_error").html(msg);
                                             $("#main_" + id + "_error").show();
@@ -413,15 +409,15 @@ var listx = {
                                     }
                                 }
                             }).fail(function () {
-                                swal("Не удалось выполнить удаление", '', 'error');
+                                swal("Не удалось выполнить удаление", '', 'error').catch(swal.noop);
                             }).always(function () {
                                 preloader.hide();
                             });
                         }
-                    }
-                });
+                    }, function(dismiss) {}
+                );
             } else {
-                swal('Нужно выбрать хотя бы одну запись', '', 'warning');
+                swal('Нужно выбрать хотя бы одну запись', '', 'warning').catch(swal.noop);
             }
         }
     },
@@ -662,7 +658,7 @@ var listx = {
                             alert(textStatus);
                         } else {
                             if (data && data.error) {
-                                swal(data.error, '', 'error');
+                                swal(data.error, '', 'error').catch(swal.noop);
                             }
                         }
                     },
