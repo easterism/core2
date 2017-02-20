@@ -937,7 +937,7 @@
                         parse_str($vv[1], $_GET);
                     }
                     $route['module'] = $vv[0];
-                    if (!$route['module'] || $route['module'] == 'index.php') { //DEPRECATED
+                    if (!$route['module'] || strpos($route['module'], '.')) { //DEPRECATED
                         $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
                         $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                     }
