@@ -260,7 +260,6 @@
             }
 
             if ($token) {
-
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
@@ -270,8 +269,9 @@
             }
         }
 
+
         /**
-         * Проверка на наличие и работоспособноси модуля Webservice
+         * Проверка на наличие и работоспособности модуля Webservice
          */
         private function checkWebservice() {
             if ( ! $this->isModuleActive('webservice')) {
@@ -327,7 +327,7 @@
                 foreach ($route['params'] as $param => $value) {
                     $method .= ucfirst($param) . ucfirst($value);
                 }
-                
+
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route['module'], $method); //TODO сделать через DI
             }
@@ -894,7 +894,7 @@
                 unset($temp2[key($temp2)]);
                 $api = true;
             } //TODO do it for SOAP
-            
+
             $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
 
             $co = count($temp2);

@@ -396,6 +396,7 @@ LIST class search container
 	vertical-align: top;
     padding-right: 10px;
     font-weight: 600;
+    padding-top: 8px;
 }
 .showFilterIcon {
     cursor:pointer;

@@ -806,54 +806,6 @@ class InstallModule extends \Common {
 
 
     /**
-     * Отдаём архив с шаблоном модуля на скачку
-     *
-     * @param int   $template Название шаблона
-     *
-     * @return void
-     */
-    public function downloadModTemplate($template) {
-        try {
-            $zip_file = $this->config->temp.'/' . $template . '_tmp_'. uniqid() . ".zip";
-            $template_path = "core2/mod_tpl/" . $template;
-
-            $zip = new \ZipArchive;
-            $res = $zip->open($zip_file, \ZipArchive::CREATE);
-            if ($res === TRUE) {
-                $dir = opendir($template_path) or die("Не могу открыть");
-                while ($file = readdir($dir)){
-                    if ($file != "." && $file != "..") {
-                        if (is_dir($template_path."/".$file)) {//если есть вложеные папки
-
-                            $dir2 = opendir($template_path."/".$file) or die("Не могу открыть");
-                            while ($file2 = readdir($dir2)){
-                                if ($file2 != "." && $file2 != "..") {
-                                    if (is_file($template_path . "/" . $file . "/" . $file2))  {
-                                        $zip->addFile($template_path . "/" . $file . "/" . $file2, $file . "/" . $file2);
-                                    }
-                                }
-                            }
-
-                        } else if (is_file($template_path."/".$file))  {
-                            $zip->addFile($template_path."/".$file, $file);
-                        }
-                    }
-                }
-                $zip->close();
-
-                $this->returnZipToDownload(file_get_contents($zip_file), 'templateMod');
-            } else {
-                throw new \Exception($this->translate->tr("Ошибка создания архива"));
-            }
-        }
-        catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-        exit;
-    }
-
-
-    /**
      * получаем sql с деинсталяцией для модуля
      *
      * @return bool|string
