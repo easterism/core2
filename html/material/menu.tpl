@@ -1,6 +1,9 @@
 <div id="preloader" style="display:none">
     <div class="lock-screen"></div>
-    <div class="block"></div>
+    <div class="block">
+        <div class="spinner-icon"></div>
+        <div class="">Загрузка...</div>
+    </div>
 </div>
 <table id="main" width="100%"><tbody><tr>
     <td id="menu-container" valign="top">

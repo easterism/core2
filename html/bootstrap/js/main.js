@@ -253,20 +253,18 @@ var preloader = {
 };
 
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
-	preloader.hide();
-	if (jqxhr.status == '0') {
-		//alert("Соединение прервано.");
-	} else if (jqxhr.statusText == 'error') {
-		alert("Отсутствует соединение с Интернет.");
-	} else if (jqxhr.status == 403) {
-		alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-	} else if (jqxhr.status == 500) {
-		alert("Ой! Что-то сломалось, подождите пока мы починим.");
-	} else {
-		if (exception != 'abort') {
-			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-		}
-	}
+    preloader.hide();
+    if (jqxhr.status == '0') {
+        //alert("Соединение прервано.");
+    } else if (jqxhr.statusText == 'error') {
+        swal("Отсутствует соединение с Интернет.", '', 'error').catch(swal.noop);
+    } else if (jqxhr.status == 403) {
+        swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+    } else if (jqxhr.status == 500) {
+        swal("Ой, извините!", "Во время обработки вашего запроса произошла ошибка.", 'error').catch(swal.noop);
+    } else if (exception != 'abort') {
+        swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+    }
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
 	if (xhr.status == 203) {
@@ -477,16 +475,16 @@ $(document).ready(function() {
 		preloader.show();
 	};
 	xajax.callback.global.onFailure = function (a) {
-		preloader.hide();
-		if (a.request.status == '0') {
-			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-		} else if (a.request.status == 500) {
-			alert("Ой! Что-то сломалось, подождите пока мы починим.");
-		} else if (a.request.status == 203) {
-			alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-		} else {
-			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-		}
+        preloader.hide();
+        if (a.request.status == '0') {
+            swal("Превышено время ожидания ответа", 'Проверьте соединение с Интернет', 'error').catch(swal.noop);
+        } else if (a.request.status == 500) {
+            swal("Ой, извините!", 'Во время обработки вашего запроса произошла ошибка.', 'error').catch(swal.noop);
+        } else if (a.request.status == 203) {
+            swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+        } else {
+            swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+        }
 	};
 	xajax.callback.global.onResponseDelay = function () {
 		//alert("Отсутствует соединение с Интернет.");
