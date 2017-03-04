@@ -104,6 +104,16 @@ class Db {
 		}
 	}
 
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    public function _($str) {
+        return $this->translate->tr($str);
+	}
+
+
     /**
      * @param Zend_Config $database
      * @return Zend_Db_Adapter_Abstract

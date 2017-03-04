@@ -1,5 +1,5 @@
 <?
-    require_once "core2/mod/admin/InstallModule.php";
+require_once "core2/mod/admin/InstallModule.php";
 
 //проверка наличия обновлений для модулей
 if (!empty($_GET['checkModsUpdates'])) {
@@ -33,18 +33,11 @@ if (!empty($_GET['download_mod'])) {
     $install->downloadAvailMod($_GET['download_mod']);
 }
 
-/* скачивание архива шаблона */
-if (!empty($_GET['download_mod_tpl'])) {
-    $install = new \Core2\InstallModule();
-    $install->downloadModTemplate($_GET['download_mod_tpl']);
-}
-
 $this->printJs("core2/mod/admin/mod.js");
 
 $tab = new tabs('mod'); 
 $tab->addTab($this->translate->tr("Установленные модули"), $app, 170);
 $tab->addTab($this->translate->tr("Доступные модули"),	 $app, 130);
-$tab->addTab($this->translate->tr("Шаблоны модулей"),	     $app, 130);
 $tab->beginContainer($this->translate->tr("Модули"));
 
 //$sid = session_id();
@@ -228,7 +221,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 			
 			
 			$edit->back = $app;
-			$edit->addButton($this->translate->tr("Вернуться к списку Модулей"), "load('$app')");
+			$edit->addButton($this->translate->tr("Отмена"), "load('$app')");
 			$edit->save("xajax_saveModule(xajax.getFormValues(this.id))");
 			$edit->showTable();
 
@@ -438,12 +431,18 @@ HTML;
             $content = $res['readme'];
             $inf = unserialize($res['install_info']);
 
-            $modId = $inf['install']['module_id'];
-            $modVers = $inf['install']['version'];
-            $modName = $inf['install']['module_name'];
-            $is_module = $this->db->fetchRow("SELECT m_id FROM core_modules WHERE module_id=? and version=?",
-					array($modId, $modVers)
-			);
+            $modId   = isset($inf['install']['module_id'])   ? $inf['install']['module_id']   : '';
+            $modVers = isset($inf['install']['version'])     ? $inf['install']['version']     : '';
+            $modName = isset($inf['install']['module_name']) ? $inf['install']['module_name'] : '';
+            $is_module = $this->db->fetchRow("
+                SELECT m_id 
+                FROM core_modules 
+                WHERE module_id = ? 
+                  AND version = ?
+            ", array(
+                $modId,
+                $modVers
+            ));
 
             if (empty($content)) {
                 $content = $title . "<br>" . $this->translate->tr("Информация по установке отсутствует");
@@ -462,10 +461,8 @@ HTML;
                 $edit->readOnly = true;
             }
 
-            $edit->addButton($this->translate->tr("Вернуться к списку Модулей"), "load('$app&tab_mod=2')");
-
-            $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . ' onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
-
+            $edit->addButton($this->translate->tr("Отмена"), "load('$app&tab_mod=2')");
+            $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
             $edit->showTable();
 
             die;
@@ -720,55 +717,6 @@ HTML;
         }
 
 	}
-	
-	if ($tab->activeTab == 3) { //Шаблоны модулей
-
-		if (isset($_GET['file_mod']) && $_GET['file_mod'] != ""){
-			$readme = "core2/mod_tpl/".$_GET['file_mod']."/Readme.txt";
-			$file = "<h2><b>" . sprintf($this->translate->tr("Краткое описание шаблона %s"), $_GET['file_mod']) . "</b></h2>";
-			
-			if (file_exists($readme))
-				$handle = fopen ($readme, "r");
-				echo $file;
-				while (!feof ($handle)) {
-    			$buffer = fgets($handle, 100);
-    			echo $buffer."<br>";
-                }
-			
-		}
-
-
-		$list = new listTable('mod_tamplates');
-        $list->extOrder = true;
-		$list->SQL = "SELECT 1";
-		$list->addColumn($this->translate->tr("Имя шаблона"), "", "TEXT");
-		$list->addColumn("Описание", "", "TEXT");
-		$list->addColumn("Загрузить", "5%", "BLOCK",'align=center', false);
-		$list->getData();
-		$dir = opendir("core2/mod_tpl");
-		$folder = array();
-		$i = 0;
-		while ($file = readdir($dir))
-		{		
-			$i++;				
-			if ($file != "." && $file != ".." && !strpos($file, "svn"))
-				if(is_dir("core2/mod_tpl/".$file))
-				{					
-					
-					$folder[$i][] = $i;
-					$folder[$i][] = $file;
-					$folder[$i][] = "";					 
-					$folder[$i][] = "<a href=\"?module=admin&action=modules&loc=core&tab_mod=3&download_mod_tpl=".$file."\"><img src=\"core2/html/".THEME."/img/templates_button.png\" border=\"0\"/></a>";
-					
-				}
-		}
-		
-		closedir($dir);
-		$list->data = $folder;
-		$list->editURL = $app."&tab_mod=3&file_mod=TCOL_01";
-		$list->showTable();
-	}
-
 
 $tab->endContainer();
 
