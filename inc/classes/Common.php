@@ -4,6 +4,8 @@ require_once 'Acl.php';
 
 /**
  * Class Common
+ * @property StdClass        $acl
+ * @property Zend_Config_Ini $moduleConfig
  */
 class Common extends Acl {
 

@@ -3,8 +3,16 @@
 
 /**
  * Class Db
+ * @property Zend_Db_Adapter_Abstract $db
+ * @property Zend_Cache_Core          $cache
+ * @property I18n                     $translate
+ * @property \Core2\Log               $log
  */
 class Db {
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	protected $frontendOptions = array(
 		'lifetime'                => 40000,
