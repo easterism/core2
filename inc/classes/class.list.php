@@ -59,7 +59,7 @@ class listTable extends initList {
 		$this->recordCount = $value;
 	}
 	
-	private function commafy($_, $del = ';psbn&') {
+	private function commafy($_, $del = ' ') {
 	    return strrev( (string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $del , strrev( $_ ) ) );
 	}
 
@@ -869,6 +869,9 @@ class listTable extends initList {
                     $temp  = "";
                     if ($value['type'] == 'block') {
                         $temp .= " onclick=\"listx.cancel(event)\"";
+                    }
+                    if ($value['type'] == 'number') {
+                        $temp .= " nowrap=\"nowrap\"";
                     }
                     if ($value['width']) {
                         $temp .= " width=\"{$value['width']}\"";
