@@ -822,7 +822,12 @@ class CoreController extends Common {
 		}
 		elseif (substr($context, 0, 6) == 'field_') {
             header('Content-type: application/json');
-			$f->handleFileList($table, $id, substr($context, 6));
+            try {
+                $res = array('files' => $f->handleFileList($table, $id, substr($context, 6)));
+            } catch (Exception $e) {
+                $res = array('error' => $e->getMessage());
+            }
+            echo json_encode($res);
 			return true;
 		}
 		$f->dispatch();
@@ -846,9 +851,9 @@ class CoreController extends Common {
 			$sess_form = new Zend_Session_Namespace('Form');
 			$orderFields = $sess_form->main_user;
 
-			$firstname = $data['control']['firstname'];
-			$lastname = $data['control']['lastname'];
-			$middlename = $data['control']['middlename'];
+            $firstname = $data['control']['firstname'];
+            $lastname = $data['control']['lastname'];
+            $middlename = $data['control']['middlename'];
 			$this->db->beginTransaction();
 			
 			try {

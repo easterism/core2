@@ -643,6 +643,12 @@ HTML;
                 $tmp[] = $val;
             }
         }
+        if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
+            Tool::printJs("core2/ext/jQuery/plugins/simplemodal/src/jquery.simplemodal.js", true);
+            Tool::printJs("core2/mod/admin/gitlab/gl.js", true);
+            $list->addButtonCustom("<button class=\"button\" onclick=\"gl.modal()\">Загрузать с GitLab</button>");
+            echo "<div id=\"modal_gitlab\"></div>";
+        }
 
         $list->data 		= $tmp;
         $list->addURL 		= $app . "&add_mod=0&tab_mod=2";
