@@ -404,8 +404,7 @@ HTML;
 
 		/* Добавление нового модуля */
 		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
-
-			if (empty($this->config->php) || empty($this->config->php->path)) {
+            if (empty($this->config->php) || empty($this->config->php->path)) {
 				$edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
 			}
 

@@ -59,7 +59,7 @@ class listTable extends initList {
 		$this->recordCount = $value;
 	}
 	
-	private function commafy($_, $del = ';psbn&') {
+	private function commafy($_, $del = ' ') {
 	    return strrev( (string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $del , strrev( $_ ) ) );
 	}
 
@@ -870,6 +870,9 @@ class listTable extends initList {
                     if ($value['type'] == 'block') {
                         $temp .= " onclick=\"listx.cancel(event)\"";
                     }
+                    if ($value['type'] == 'number') {
+                        $temp .= " nowrap=\"nowrap\"";
+                    }
                     if ($value['width']) {
                         $temp .= " width=\"{$value['width']}\"";
                     }
@@ -1161,7 +1164,7 @@ class listTable extends initList {
 		$tres = "";
 		$temp = explode("TCOL_", $tcol);
 		foreach ($temp as $tkey => $tvalue) {
-			$index = substr($tvalue, 0, 2) * 1;
+			$index = intval(substr($tvalue, 0, 2));
 			if ($tkey == 0) {
 				$tres .= $tvalue;
 			} elseif (isset($row[$index])) {
@@ -1176,7 +1179,7 @@ class listTable extends initList {
 		$temp = explode("TCOL64_", $tres);
 		$tres2 = "";
 		foreach ($temp as $tkey => $tvalue) {
-			$index = substr($tvalue, 0, 2) * 1;
+			$index = intval(substr($tvalue, 0, 2));
 			if ($tkey == 0) {
 				$tres2 .= $tvalue;
 			} elseif (isset($row[$index])) {
@@ -1191,7 +1194,7 @@ class listTable extends initList {
 		$temp  = explode("TCOL64URL_", $tres);
 		$tres2 = "";
 		foreach ($temp as $tkey => $tvalue) {
-			$index = substr($tvalue, 0, 2) * 1;
+			$index = intval(substr($tvalue, 0, 2));
 			if ($tkey == 0) {
 				$tres2 .= $tvalue;
 			} elseif (isset($row[$index])) {
@@ -1203,7 +1206,11 @@ class listTable extends initList {
 		if ($tres2) $tres = $tres2;
 		return $tres;
 	}
-	
+
+    /**
+     * @param $va
+     * @param $value
+     */
 	function addParams($va, $value) {
 		$this->params[$va] = $value;
 	}

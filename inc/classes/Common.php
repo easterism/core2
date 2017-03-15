@@ -79,7 +79,6 @@ class Common extends Acl {
      * @throws Exception
      */
     public function __get($k) {
-
 		//исключение для герета базы или кеша, выполняется всегда
 		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
 			return parent::__get($k);

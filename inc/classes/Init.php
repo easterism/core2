@@ -260,6 +260,7 @@
             }
 
             if ($token) {
+
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
@@ -269,9 +270,8 @@
             }
         }
 
-
         /**
-         * Проверка на наличие и работоспособности модуля Webservice
+         * Проверка на наличие и работоспособноси модуля Webservice
          */
         private function checkWebservice() {
             if ( ! $this->isModuleActive('webservice')) {
@@ -327,7 +327,6 @@
                 foreach ($route['params'] as $param => $value) {
                     $method .= ucfirst($param) . ucfirst($value);
                 }
-
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route['module'], $method); //TODO сделать через DI
             }
@@ -350,38 +349,15 @@
                 return $webservice_controller->dispatchSoap($module_name, $service_request_action);
             }
 
-            // Billing
-            if ($this->isModuleActive('billing') &&
-                (empty($_GET['module']) ||
-                $_GET['module'] != 'billing' ||
-                empty($_POST['system_name']) ||
-                empty($_POST['type_operation']))
-            ) {
-                $this->setContext('billing');
 
-                $billing_location  = $this->getModuleLocation('billing');
-                $billing_page_path = $billing_location . '/classes/Billing_Disable.php';
-
-                if ( ! file_exists($billing_page_path)) {
-                    throw new Exception("File '{$billing_page_path}' does not exists");
-                }
-
-                require_once($billing_page_path);
-
-                if ( ! class_exists('Billing_Disable')) {
-                    throw new Exception($this->translate->tr("Class Billing_Disable does not exists"));
-                }
-
-                $billing_disable = new Billing_Disable();
-                if ($billing_disable->isDisable()) {
-                    return $billing_disable->getDisablePage();
-                }
-            }
 
             // Парсим маршрут
             $route = $this->routeParse();
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+
+                if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
                 // LOG USER ACTIVITY
                 $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
                 $this->logActivity($logExclude);
@@ -878,9 +854,8 @@
          * Основной роутер
          */
         private function routeParse() {
-            $temp  = explode("/", str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])));
+            $temp  = explode("/", DOC_PATH);
             $temp2 = explode("/", $_SERVER['REQUEST_URI']);
-
             $i = -1;
             foreach ($temp as $k => $v) {
                 if ($temp2[$k] == $v) {
@@ -894,7 +869,7 @@
                 unset($temp2[key($temp2)]);
                 $api = true;
             } //TODO do it for SOAP
-
+            
             $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
 
             $co = count($temp2);
@@ -1041,6 +1016,36 @@
          */
         private function setContext($module, $action = 'index') {
             Zend_Registry::set('context', array($module, $action));
+        }
+
+        private function checkBilling() {
+            // Billing
+            if ($this->isModuleActive('billing') &&
+                (empty($_GET['module']) ||
+                    $_GET['module'] != 'billing' ||
+                    empty($_POST['system_name']) ||
+                    empty($_POST['type_operation']))
+            ) {
+                $this->setContext('billing');
+
+                $billing_location  = $this->getModuleLocation('billing');
+                $billing_page_path = $billing_location . '/classes/Billing_Disable.php';
+
+                if ( ! file_exists($billing_page_path)) {
+                    throw new Exception("File '{$billing_page_path}' does not exists");
+                }
+
+                require_once($billing_page_path);
+
+                if ( ! class_exists('Billing_Disable')) {
+                    throw new Exception($this->translate->tr("Class Billing_Disable does not exists"));
+                }
+
+                $billing_disable = new Billing_Disable();
+                if ($billing_disable->isDisable()) {
+                    return $billing_disable->getDisablePage();
+                }
+            }
         }
     }
 

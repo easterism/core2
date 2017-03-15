@@ -101,7 +101,7 @@ class Db {
 				$module   = !empty($module[1]) ? $module[1] : 'admin';
 				$location = $module == 'admin'
 					? DOC_ROOT . "core2/mod/admin"
-					: $this->getModuleLocation($this->module);
+					: $this->getModuleLocation($module);
 
 				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
 				require_once($location . "/Model/$model.php");
