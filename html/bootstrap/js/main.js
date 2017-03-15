@@ -565,22 +565,23 @@ $(document).ready(function() {
                 );
             },
             log: function(message) {
-                $.growl({ message: message });
+                var d = new Date();
+                $.growl({ title: d.getHours()  + ':' + d.getMinutes() + ':' + d.getSeconds(), message: message });
             },
             error: function(message) {
-                $.growl.error({ message: message });
+                $.growl.error({title: "Ошибка!", message: message });
             },
             info: function(message) {
-                $.growl.info({ message: message });
+                $.growl.notice({title: "Уведомление!", message: message });
             },
             warning: function(message) {
-                $.growl.warning({ message: message });
+                $.growl.warning({title: "Внимание!",  message: message });
             },
             success: function(message) {
-                $.growl.notice({ message: message });
+                $.growl.notice({title: "Успех!",  message: message });
             },
             message: function(message) {
-                $.growl({ message: message });
+                $.growl({title: "Сообщение!", message: message });
             }
 		}
     } catch (e) {
