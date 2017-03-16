@@ -493,15 +493,20 @@ class Tool {
      * Делаем запрос через CURL и отдаем ответ
      *
      * @param   string $url URL
+     * @param   array $data данные которые нужно запостить
+     * @param   array $headers заголовки запроса
      *
      * @return  array       ответ запроса + http-код ответа
      */
-    public static function doCurlRequest($url, $data = '', $headers = false)
+    public static function doCurlRequest($url, $data = array(), $headers = array())
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 7000);
-        curl_setopt($curl, CURLOPT_HEADER, $headers);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+        if ($headers) {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        }
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		if ($data) {
 			curl_setopt($curl, CURLOPT_POST, true);

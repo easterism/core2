@@ -14,4 +14,4 @@ RewriteCond %{REQUEST_FILENAME} ^(.*\.js)$
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^(.*)$ - [L]
 
-RewriteRule ^(.*)$ http://masha24.by
+#RewriteRule ^(.*)$ http://masha24.by

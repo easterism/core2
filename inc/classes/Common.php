@@ -4,6 +4,8 @@ require_once 'Acl.php';
 
 /**
  * Class Common
+ * @property StdClass        $acl
+ * @property Zend_Config_Ini $moduleConfig
  */
 class Common extends Acl {
 
@@ -77,7 +79,6 @@ class Common extends Acl {
      * @throws Exception
      */
     public function __get($k) {
-
 		//исключение для герета базы или кеша, выполняется всегда
 		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
 			return parent::__get($k);

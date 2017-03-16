@@ -401,6 +401,7 @@ LIST class search container
 	vertical-align: top;
     padding-right: 10px;
     font-weight: 600;
+    padding-top: 8px;
 }
 .showFilterIcon {
     cursor:pointer;
@@ -704,7 +705,6 @@ table.calendar {
 	background-color: #EEEEEE;
 	border: 1px solid silver;
 }
-button,
 .button,
 .buttonSmall {
     margin: 0 3px 0 0;
@@ -733,8 +733,6 @@ button,
     border-color: #ccc;
     height: 34px;
 }
-
-button:active,
 .button:active,
 .buttonSmall:active {
     background-image: none;
@@ -742,9 +740,6 @@ button:active,
     -webkit-box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
     box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
 }
-button:active,
-button:focus,
-button:hover,
 .button:active,
 .button:focus,
 .button:hover,

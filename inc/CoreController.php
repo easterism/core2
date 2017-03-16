@@ -5,6 +5,7 @@ require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
+require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 
 /**
  * Class CoreController
@@ -332,6 +333,45 @@ class CoreController extends Common {
 	 */
 	public function action_modules() {
         if (!$this->auth->ADMIN) throw new Exception(911);
+
+        //проверка наличия обновлений для модулей
+        if (!empty($_GET['checkModsUpdates'])) {
+            $mods = array();
+            try {
+                $install = new \Core2\InstallModule();
+                $ups = $install->checkInstalledModsUpdates();
+                foreach ($_GET['checkModsUpdates'] as $module_id => $m_id) {
+                    if (!empty($ups[$module_id])) {
+                        $ups[$module_id]['m_id'] = $m_id;
+                        $mods[] = $ups[$module_id];
+                    }
+                }
+            } catch (Exception $e) {
+                $mods[] = $e->getMessage();
+            }
+
+            echo json_encode($mods);
+            return;
+        }
+        //список модулей из репозитория
+        if (!empty($_GET['getModsListFromRepo'])) {
+            $install = new \Core2\InstallModule();
+            $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+            return;
+        }
+        //скачивание архива модуля
+        if (!empty($_GET['download_mod'])) {
+            $install = new \Core2\InstallModule();
+            $install->downloadAvailMod($_GET['download_mod']);
+            return;
+        }
+        if (!empty($_GET['__gitlab'])) {
+            if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host && $this->moduleConfig->gitlab->token) {
+                $install = new \Core2\InstallModule();
+                $install->getGitlabTags($this->moduleConfig->gitlab->host, $this->moduleConfig->gitlab->token);
+            }
+            return;
+        }
 
 		$app = "index.php?module={$this->module}&action=modules";
 		require_once $this->path . 'modules.php';
@@ -822,7 +862,12 @@ class CoreController extends Common {
 		}
 		elseif (substr($context, 0, 6) == 'field_') {
             header('Content-type: application/json');
-			$f->handleFileList($table, $id, substr($context, 6));
+            try {
+                $res = array('files' => $f->handleFileList($table, $id, substr($context, 6)));
+            } catch (Exception $e) {
+                $res = array('error' => $e->getMessage());
+            }
+            echo json_encode($res);
 			return true;
 		}
 		$f->dispatch();
@@ -846,9 +891,9 @@ class CoreController extends Common {
 			$sess_form = new Zend_Session_Namespace('Form');
 			$orderFields = $sess_form->main_user;
 
-			$firstname = $data['control']['firstname'];
-			$lastname = $data['control']['lastname'];
-			$middlename = $data['control']['middlename'];
+            $firstname = $data['control']['firstname'];
+            $lastname = $data['control']['lastname'];
+            $middlename = $data['control']['middlename'];
 			$this->db->beginTransaction();
 			
 			try {

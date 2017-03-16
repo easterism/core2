@@ -801,55 +801,6 @@ class InstallModule extends \Common {
         catch (\Exception $e) {
             echo $e->getMessage();
         }
-        exit;
-    }
-
-
-    /**
-     * Отдаём архив с шаблоном модуля на скачку
-     *
-     * @param int   $template Название шаблона
-     *
-     * @return void
-     */
-    public function downloadModTemplate($template) {
-        try {
-            $zip_file = $this->config->temp.'/' . $template . '_tmp_'. uniqid() . ".zip";
-            $template_path = "core2/mod_tpl/" . $template;
-
-            $zip = new \ZipArchive;
-            $res = $zip->open($zip_file, \ZipArchive::CREATE);
-            if ($res === TRUE) {
-                $dir = opendir($template_path) or die("Не могу открыть");
-                while ($file = readdir($dir)){
-                    if ($file != "." && $file != "..") {
-                        if (is_dir($template_path."/".$file)) {//если есть вложеные папки
-
-                            $dir2 = opendir($template_path."/".$file) or die("Не могу открыть");
-                            while ($file2 = readdir($dir2)){
-                                if ($file2 != "." && $file2 != "..") {
-                                    if (is_file($template_path . "/" . $file . "/" . $file2))  {
-                                        $zip->addFile($template_path . "/" . $file . "/" . $file2, $file . "/" . $file2);
-                                    }
-                                }
-                            }
-
-                        } else if (is_file($template_path."/".$file))  {
-                            $zip->addFile($template_path."/".$file, $file);
-                        }
-                    }
-                }
-                $zip->close();
-
-                $this->returnZipToDownload(file_get_contents($zip_file), 'templateMod');
-            } else {
-                throw new \Exception($this->translate->tr("Ошибка создания архива"));
-            }
-        }
-        catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-        exit;
     }
 
 
@@ -2447,7 +2398,11 @@ class InstallModule extends \Common {
     }
 
 
-
+    /**
+     * получаем список файлов заданной директории
+     * @param $dir
+     * @return array
+     */
     public function getFilesList($dir) {
         $cdir = scandir($dir);
         $files = array();
@@ -2462,5 +2417,48 @@ class InstallModule extends \Common {
             }
         }
         return $files;
+    }
+
+    /**
+     * Получаем список всех релизов из Gitlab
+     *
+     * @param $host
+     * @param $token
+     */
+    public function getGitlabTags($host, $token) {
+        $data = \Tool::doCurlRequest("https://$host/api/v3/projects/owned?statistics=1&per_page=100", array(), array("PRIVATE-TOKEN:$token"));
+        if ($data['http_code'] == 200) {
+            $data = json_decode($data['answer']);
+            $arch = array();
+            foreach ($data as $repo) {
+                $tags = \Tool::doCurlRequest("https://$host/api/v3/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
+                if ($tags && $tags['answer']) {
+                    $tags = json_decode($tags['answer']);
+                    if ($tags) {
+                        if (!isset($arch[$repo->id])) $arch[$repo->id] = array('name' => $repo->path_with_namespace, 'tags' => array());
+                        foreach ($tags as $tag) {
+                            //echo "<pre>";print_r($tag);echo "</pre>";//die;
+                            $arch[$repo->id]['tags'][] = array('name' => $tag->name,
+                                'message' => $tag->message,
+                                'author_name' => $tag->commit->author_name,
+                                'author_email' => $tag->commit->author_email,
+                                'authored_date' => $tag->commit->authored_date
+                            );
+                        }
+                    }
+                }
+            }
+            //echo "<pre>";print_r($arch);echo "</pre>";die;
+            foreach ($arch as $item) {
+                echo $item['name'];
+                echo "<ul>";
+                foreach ($item['tags'] as $tag) {
+                    echo "<li><a href=\"javascript:gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
+                    {$tag['author_name']} ({$tag['author_email']})
+                    </li>";
+                }
+                echo "</ul>";
+            }
+        }
     }
 }

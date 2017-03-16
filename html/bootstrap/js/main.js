@@ -115,23 +115,23 @@ function goHome() {
 
 
 function logout() {
-	swal({
-		title: 'Вы уверены, что хотите выйти?',
-		type: "warning",
-		showCancelButton: true,
-		confirmButtonColor: '#f0ad4e',
-		confirmButtonText: "Да",
-		cancelButtonText: "Нет"
-	}, function(isConfirm) {
-		if (isConfirm) {
-			$.ajax({url:'index.php?module=admin&action=exit'})
-				.done(function (n) {
-					window.location='index.php';
-				}).fail(function (a,b,t){
-				alert("Произошла ошибка: " + a.statusText);
-			});
-		}
-	});
+    swal({
+        title: 'Вы уверены, что хотите выйти?',
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#f0ad4e',
+        confirmButtonText: "Да",
+        cancelButtonText: "Нет"
+    }).then(
+        function(result) {
+            $.ajax({url:'index.php?module=admin&action=exit'})
+                .done(function (n) {
+                    window.location='index.php';
+                }).fail(function (a,b,t){
+                alert("Произошла ошибка: " + a.statusText);
+            });
+        }, function(dismiss) {}
+    );
 }
 
 function jsToHead(src) {
@@ -253,20 +253,18 @@ var preloader = {
 };
 
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
-	preloader.hide();
-	if (jqxhr.status == '0') {
-		//alert("Соединение прервано.");
-	} else if (jqxhr.statusText == 'error') {
-		alert("Отсутствует соединение с Интернет.");
-	} else if (jqxhr.status == 403) {
-		alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-	} else if (jqxhr.status == 500) {
-		alert("Ой! Что-то сломалось, подождите пока мы починим.");
-	} else {
-		if (exception != 'abort') {
-			alert("Произошла ошибка: " + jqxhr.status + ' ' + exception);
-		}
-	}
+    preloader.hide();
+    if (jqxhr.status == '0') {
+        //alert("Соединение прервано.");
+    } else if (jqxhr.statusText == 'error') {
+        swal("Отсутствует соединение с Интернет.", '', 'error').catch(swal.noop);
+    } else if (jqxhr.status == 403) {
+        swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+    } else if (jqxhr.status == 500) {
+        swal("Ой, извините!", "Во время обработки вашего запроса произошла ошибка.", 'error').catch(swal.noop);
+    } else if (exception != 'abort') {
+        swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+    }
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
 	if (xhr.status == 203) {
@@ -451,20 +449,42 @@ $(function(){
 $(window).resize(resize);
 
 $(document).ready(function() {
+    jQuery(document).ready(function() {
+        if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
+            $("#mainContainer").prepend(
+                "<h2>" +
+                "<span style=\"color:red\">Внимание!</span> " +
+                "Вы пользуетесь устаревшей версией браузера. " +
+                "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
+                "</h2>"
+            );
+        }
+        if ($('#module-profile')[0]) {
+            $('.dropdown-profile.profile').addClass('show');
+            $('.dropdown-profile.divider').addClass('show');
+            if ($('#submodule-profile-messages')[0]) {
+                $('.dropdown-profile.messages').addClass('show');
+            }
+        }
+        if ($('#module-settings')[0]) {
+            $('.dropdown-settings').addClass('show');
+        }
+    });
+
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
 	};
 	xajax.callback.global.onFailure = function (a) {
-		preloader.hide();
-		if (a.request.status == '0') {
-			alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-		} else if (a.request.status == 500) {
-			alert("Ой! Что-то сломалось, подождите пока мы починим.");
-		} else if (a.request.status == 203) {
-			alert("Время жизни вашей сессии истекло. Чтобы войти в систему заново, обновите страницу.");
-		} else {
-			alert("Произошла ошибка: " + a.request.status + ' ' + a.request.statusText);
-		}
+        preloader.hide();
+        if (a.request.status == '0') {
+            swal("Превышено время ожидания ответа", 'Проверьте соединение с Интернет', 'error').catch(swal.noop);
+        } else if (a.request.status == 500) {
+            swal("Ой, извините!", 'Во время обработки вашего запроса произошла ошибка.', 'error').catch(swal.noop);
+        } else if (a.request.status == 203) {
+            swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+        } else {
+            swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+        }
 	};
 	xajax.callback.global.onResponseDelay = function () {
 		//alert("Отсутствует соединение с Интернет.");
@@ -497,56 +517,71 @@ $(document).ready(function() {
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
 
     try {
-		alert = function(title, message) {
-			swal(title, message);
-		};
-		// !!!!!!!!! DEPRECATED !!!!!!!!!
-		alertify = {
-			alert: function(title) {
-				swal(title);
-			},
-			confirm: function(question, callback) {
-				swal({
-					title: question,
-					type: "info",
-					showCancelButton: true,
-					confirmButtonColor: '#5bc0de',
-					confirmButtonText: "Да",
-					cancelButtonText: "Нет"
-				}, function(isConfirm){
-					if (callback) {
-						callback(isConfirm);
-					}
-				});
-			},
-			prompt: function(message, callback) {
-				swal({
-					title: message,
-					type: "input",
-					confirmButtonText: "Далее",
-					cancelButtonText: "Отмена",
-					showCancelButton: true
-				}, function(inputValue){
-					if (callback) {
-						callback(inputValue !== false, inputValue);
-					}
-				});
-			},
-			log: function(message) {
-				$.growl({ message: message });
-			},
-			error: function(message) {
-				$.growl.error({ message: message });
-			},
-			info: function(message) {
-				$.growl.info({ message: message });
-			},
-			warning: function(message) {
-				$.growl.warning({ message: message });
-			},
-			success: function(message) {
-				$.growl.notice({ message: message });
-			}
+        alert = function(title, message) {
+            swal(title, message).catch(swal.noop);
+        };
+        // !!!!!!!!! DEPRECATED !!!!!!!!!
+        alertify = {
+            alert: function(title) {
+                swal(title).catch(swal.noop);
+            },
+            confirm: function(question, callback) {
+                swal({
+                    title: question,
+                    type: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: '#5bc0de',
+                    confirmButtonText: "Да",
+                    cancelButtonText: "Нет"
+                }).then(
+                    function(result) {
+                        if (callback) {
+                            callback(true);
+                        }
+                    }, function(dismiss) {
+                        if (callback) {
+                            callback(false);
+                        }
+                    }
+                );
+            },
+            prompt: function(message, callback) {
+                swal({
+                    title: message,
+                    input: 'text',
+                    confirmButtonText: "Далее",
+                    cancelButtonText: "Отмена",
+                    showCancelButton: true
+                }).then(
+                    function(result) {
+                        if (callback) {
+                            callback(true, result);
+                        }
+                    }, function(dismiss) {
+                        if (callback) {
+                            callback(false, '');
+                        }
+                    }
+                );
+            },
+            log: function(message) {
+                $.growl({ message: message });
+            },
+            error: function(message) {
+                $.growl.error({ message: message });
+            },
+            info: function(message) {
+                $.growl.info({ message: message });
+            },
+            warning: function(message) {
+                $.growl.warning({ message: message });
+            },
+            success: function(message) {
+                $.growl.notice({ message: message });
+            },
+            message: function(message) {
+                $.growl({ message: message });
+            }
 		}
     } catch (e) {
         console.error(e.message)

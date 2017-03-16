@@ -3,8 +3,16 @@
 
 /**
  * Class Db
+ * @property Zend_Db_Adapter_Abstract $db
+ * @property Zend_Cache_Core          $cache
+ * @property I18n                     $translate
+ * @property \Core2\Log               $log
  */
 class Db {
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	protected $frontendOptions = array(
 		'lifetime'                => 40000,
@@ -93,7 +101,7 @@ class Db {
 				$module   = !empty($module[1]) ? $module[1] : 'admin';
 				$location = $module == 'admin'
 					? DOC_ROOT . "core2/mod/admin"
-					: $this->getModuleLocation($this->module);
+					: $this->getModuleLocation($module);
 
 				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
 				require_once($location . "/Model/$model.php");
@@ -103,6 +111,16 @@ class Db {
 			return $v;
 		}
 	}
+
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    public function _($str) {
+        return $this->translate->tr($str);
+	}
+
 
     /**
      * @param Zend_Config $database
