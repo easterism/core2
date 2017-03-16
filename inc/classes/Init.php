@@ -225,7 +225,7 @@
 
         /**
          * Направлен ли запрос к вебсервису
-         * //TODO прогнать через роутер
+         * @todo прогнать через роутер
          */
         private function detectWebService() {
             if ($this->is_rest || $this->is_soap) {
