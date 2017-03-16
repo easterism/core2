@@ -865,7 +865,7 @@ class ModAjax extends ajaxFunc {
                 if (empty($files_hash)) {
                     throw new Exception($this->translate->tr("Не удалось получить хэшь файлов модуля"));
                 }
-                rmdir($destinationFolder);
+                $this->deleteDir($destinationFolder);
 
                 $SQL = "SELECT id
                            FROM core_available_modules
@@ -995,4 +995,20 @@ class ModAjax extends ajaxFunc {
 			throw new Exception($this->translate->tr("Пользователь с таким email уже существует."));
 		}
 	}
+
+    /**
+     * @param string $dir
+     * @return bool
+     */
+    private function deleteDir($dir) {
+
+        $files = array_diff(scandir($dir), array('.','..'));
+        if ( ! empty($files)) {
+            foreach ($files as $file) {
+                (is_dir("$dir/$file")) ? $this->deleteDir("$dir/$file") : unlink("$dir/$file");
+            }
+        }
+
+        return rmdir($dir);
+    }
 }
