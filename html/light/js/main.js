@@ -241,7 +241,7 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
     } else if (jqxhr.status == 500) {
         swal("Ой, извините!", "Во время обработки вашего запроса произошла ошибка.", 'error').catch(swal.noop);
     } else if (exception != 'abort') {
-        swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+        swal("Произошла ошибка",jqxhr.status + ' ' + exception, 'error').catch(swal.noop);
     }
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
