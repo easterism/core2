@@ -1082,7 +1082,7 @@
         Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
 
         if ($params['module'] == 'admin') {
-            require_once DOC_ROOT . 'core2/mod/ModAjax.php';
+            require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
             $auth = Zend_Registry::get('auth');
             if ( ! $auth->ADMIN) throw new Exception(911);
 

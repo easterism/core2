@@ -1,37 +1,4 @@
 <?
-require_once "core2/mod/admin/InstallModule.php";
-
-//проверка наличия обновлений для модулей
-if (!empty($_GET['checkModsUpdates'])) {
-	$mods = array();
-	try {
-		$install = new \Core2\InstallModule();
-		$ups = $install->checkInstalledModsUpdates();
-		foreach ($_GET['checkModsUpdates'] as $module_id => $m_id) {
-			if (!empty($ups[$module_id])) {
-				$ups[$module_id]['m_id'] = $m_id;
-				$mods[] = $ups[$module_id];
-			}
-		}
-	} catch (Exception $e) {
-        $mods[] = $e->getMessage();
-	}
-
-	echo json_encode($mods);
-    exit();
-}
-//список модулей из репозитория
-if (!empty($_GET['getModsListFromRepo'])) {
-    $install = new \Core2\InstallModule();
-    $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
-    exit();
-}
-
-//скачивание архива модуля
-if (!empty($_GET['download_mod'])) {
-    $install = new \Core2\InstallModule();
-    $install->downloadAvailMod($_GET['download_mod']);
-}
 
 $this->printJs("core2/mod/admin/mod.js");
 
@@ -403,7 +370,7 @@ HTML;
         $edit = new editTable('mod_available');
 
 		/* Добавление нового модуля */
-		if (isset($_GET['add_mod']) && !$_GET['add_mod']) {
+		if (isset($_GET['add_mod']) && (!$_GET['add_mod'] || $_GET['add_mod'] < 0)) {
             if (empty($this->config->php) || empty($this->config->php->path)) {
 				$edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
 			}
@@ -412,7 +379,37 @@ HTML;
 							     name
 						    FROM core_available_modules
 						   WHERE id = 0";
-			$edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
+            if ($_GET['add_mod'] < 0) {
+                Tool::printJs("core2/mod/admin/gitlab/gl.js", true);
+                $edit->addControl("GitLab релиз", "MODAL", array(
+                    'disabled' => 'disabled',
+                    'size' => '40',
+                    'options' => "{minHeight:450,
+							   minWidth:830,
+							   position: [350,'20%'],
+					onShow: function (dialog) { 
+					    $('#modal_name').html('Загрузка...')
+					    gl.xxx={};
+					    $('#modal_name').load('index.php?module=admin&action=modules&__gitlab=1') 
+					},
+					onClose: function (dialog) {
+						dialog.data.fadeOut('fast', function () {
+							dialog.container.slideUp('fast', function () {
+								dialog.overlay.fadeOut('fast', function () {
+								    if (gl.xxx.group) {
+                                        $('#main_mod_availablename').val(gl.xxx.group + '|' + gl.xxx.tag);
+                                        $('#main_mod_availablename_text').val(gl.xxx.group + ' ' + gl.xxx.tag);
+                                     }
+									gl.xxx={};
+									$.modal.close();
+								});
+							});
+						});
+					}}"), "", "", true);
+            } else {
+                $edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
+            }
+
 			$edit->classText['SAVE'] = $this->translate->tr("Загрузить");
 			$edit->back              = $app . "&tab_mod=" . $tab->activeTab;
 			$edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
@@ -420,13 +417,13 @@ HTML;
 
 		}
 		elseif (!empty($_GET['add_mod'])) { // Инфа о модуле
-				
+			$avail_id = (int)$_GET['add_mod'];
             $edit = new editTable('modules_install');
             $edit->SQL = "SELECT 1";
 
             $res = $this->db->fetchRow("SELECT name, version, readme, install_info
                                         FROM core_available_modules
-                                        WHERE id=?", $_GET['add_mod']);
+                                        WHERE id=?", $avail_id);
             $title = "<h2><b>" . $this->translate->tr("Инструкция по установке модуля") . "</b></h2>";
             $content = $res['readme'];
             $inf = unserialize($res['install_info']);
@@ -434,15 +431,14 @@ HTML;
             $modId   = isset($inf['install']['module_id'])   ? $inf['install']['module_id']   : '';
             $modVers = isset($inf['install']['version'])     ? $inf['install']['version']     : '';
             $modName = isset($inf['install']['module_name']) ? $inf['install']['module_name'] : '';
-            $is_module = $this->db->fetchRow("
-                SELECT m_id 
-                FROM core_modules 
-                WHERE module_id = ? 
-                  AND version = ?
-            ", array(
-                $modId,
-                $modVers
-            ));
+            $is_module = $this->db->fetchRow("SELECT m_id 
+                                                FROM core_modules 
+                                                WHERE module_id = ? 
+                                                  AND version = ?
+                                            ", array(
+                                                $modId,
+                                                $modVers
+                                            ));
 
             if (empty($content)) {
                 $content = $title . "<br>" . $this->translate->tr("Информация по установке отсутствует");
@@ -456,13 +452,13 @@ HTML;
                 $tpl->touchBlock("install_button");
                 $tpl->assign("modName", $modName);
                 $tpl->assign("modVers", $modVers);
-                $tpl->assign("modInstall", $_GET['add_mod']);
+                $tpl->assign("modInstall", $avail_id);
                 $edit->addButtonCustom($tpl->parse());
                 $edit->readOnly = true;
             }
 
             $edit->addButton($this->translate->tr("Отмена"), "load('$app&tab_mod=2')");
-            $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $_GET['add_mod'] . '\')">');
+            $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $avail_id . '\')">');
             $edit->showTable();
 
             die;
@@ -642,6 +638,9 @@ HTML;
             if ($i > $from && $i <= $to) {
                 $tmp[] = $val;
             }
+        }
+        if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
+            $list->addButtonCustom("<button class=\"button\" onclick=\"load('index.php?module=admin&action=modules&add_mod=-1&tab_mod=2')\">Загрузить с GitLab</button>");
         }
 
         $list->data 		= $tmp;

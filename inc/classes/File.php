@@ -158,14 +158,15 @@
         /**
          * Получаем список файлов, связанных с оъектом
          *
-         * @param int    $id
-         * @param string $filed
+         * @param $table - название таблицы объекта
+         * @param $id
+         * @param $filed
+         * @return array
          * @throws \Exception
          */
         public function handleFileList($table, $id, $filed) {
 
             $quote_table_files = $this->db->quoteIdentifier($table . '_files');
-
             $SQL = "SELECT * FROM {$quote_table_files} WHERE refid = ?";
             $arr = array($id);
             if ($filed) {
@@ -207,7 +208,6 @@
                 $file->id_hash 		= $value['id'] . $value['hash'] . '.' . ($type2 == 'jpeg' ? 'jpg' : $type2);
                 $res[$key] 			= $file;
             }
-            header('Content-type: application/json');
-            echo json_encode(array('files' => $res));
+            return $res;
         }
     }
