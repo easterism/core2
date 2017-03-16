@@ -715,19 +715,35 @@ class ModAjax extends ajaxFunc {
      * @return xajaxResponse
      */
     public function saveAvailModule($data) {
+        //echo "<pre>";print_r($data);echo "</pre>";//die;
 
         try {
             $sid 			= Zend_Session::getId();
             $upload_dir 	= $this->config->temp . '/' . $sid;
 
-            $f = explode("###", $data['control']['files|name']);
-            $fn = $upload_dir . '/' . $f[0];
-            if (!file_exists($fn)) {
-                throw new Exception("Файл {$f[0]} не найден");
-            }
-            $size = filesize($fn);
-            if ($size !== (int)$f[1]) {
-                throw new Exception("Что-то пошло не так. Размер файла {$f[0]} не совпадает");
+            if (isset($data['control']['name']) && $this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
+                if (!$this->moduleConfig->gitlab->token) throw new Exception($this->translate->tr("Не удалось получить токен."));
+                $name = explode("|", $data['control']['name']);
+                if (!$name[0]) throw new Exception($this->translate->tr("Не удалось получить группу репозитория."));
+                if (!$name[1]) throw new Exception($this->translate->tr("Не удалось получить версию релиза."));
+                $zip = \Tool::doCurlRequest("https://{$this->moduleConfig->gitlab->host}/{$name[0]}/repository/archive.zip?ref={$name[1]}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+                if ($zip['http_code'] == 200) {
+                    $fn = tempnam($upload_dir, "gitlab");
+                    file_put_contents($fn, $zip['answer']);
+
+                } else {
+                    throw new Exception($zip['error']);
+                }
+            } else {
+                $f = explode("###", $data['control']['files|name']);
+                $fn = $upload_dir . '/' . $f[0];
+                if (!file_exists($fn)) {
+                    throw new Exception("Файл {$f[0]} не найден");
+                }
+                $size = filesize($fn);
+                if ($size !== (int)$f[1]) {
+                    throw new Exception("Что-то пошло не так. Размер файла {$f[0]} не совпадает");
+                }
             }
 
             $file_type = mime_content_type($fn);
@@ -750,7 +766,22 @@ class ModAjax extends ajaxFunc {
                 }
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
-                    throw new Exception($this->translate->tr("install.xml не найден."));
+                    //пробуем вариант, когда в архиве единственная директория
+                    $cdir = scandir($destinationFolder);
+                    $path   = $destinationFolder;
+                    foreach ($cdir as $key => $value) {
+                        if (!in_array($value, array(".", ".."))) {
+                            if (is_dir($path . DIRECTORY_SEPARATOR . $value)) {
+                                $path   .= DIRECTORY_SEPARATOR . $value;
+                                break;
+                            }
+                        }
+                    }
+                    if (is_file($path . "/install/install.xml")) {
+                        $destinationFolder = $path;
+                    } else {
+                        throw new Exception($this->translate->tr("install.xml не найден."));
+                    }
                 }
                 if (is_file($destinationFolder . "/readme.txt")) {
                     $readme = file_get_contents($destinationFolder . "/readme.txt");
@@ -759,7 +790,7 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                require_once('admin/InstallModule.php');
+                require_once('InstallModule.php');
 
                 $inst                          = new \Core2\InstallModule();
                 $mInfo                         = array('install' => array());
@@ -834,6 +865,7 @@ class ModAjax extends ajaxFunc {
                 if (empty($files_hash)) {
                     throw new Exception($this->translate->tr("Не удалось получить хэшь файлов модуля"));
                 }
+                rmdir($destinationFolder);
 
                 $SQL = "SELECT id
                            FROM core_available_modules

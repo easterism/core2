@@ -3,6 +3,7 @@
  */
 
 var gl = {
+    'xxx' : {},
     'modal': function () {
         $('#modal_gitlab').modal({
                 autoResize: true,
@@ -12,7 +13,7 @@ var gl = {
                 maxWidth: 930,
                 position: [350, '20%'],
                 onShow: function (dialog) {
-                    load('index.php?module=admin', {}, 'modal_gitlab');
+                    load('index.php?module=admin&action=modules&gitlab=1', {}, 'modal_gitlab');
                 },
                 onClose: function (dialog) {
                     dialog.data.fadeOut('fast', function () {
@@ -25,5 +26,11 @@ var gl = {
                 }
             }
         )
+    },
+    selectTag : function (group, tag) {
+        if (group && tag) {
+            this.xxx['group'] = group;
+            this.xxx['tag'] = tag;
+        }
     }
 }

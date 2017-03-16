@@ -494,6 +494,7 @@ class Tool {
      *
      * @param   string $url URL
      * @param   array $data данные которые нужно запостить
+     * @param   array $headers заголовки запроса
      *
      * @return  array       ответ запроса + http-код ответа
      */
