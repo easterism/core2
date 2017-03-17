@@ -677,9 +677,9 @@ HTML;
 			"<div class=\"im-msg-yellow\">
 				Устоновка модулей из репозитория недоступна<br>
 				<span>
-					Создайте дополнительный параметр 'repo' с адресами репозиториев через ';'  (адреса вида http://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
+					Создайте дополнительный параметр 'repo', содержащий репозиториев, разделенных ';'  (адреса вида https://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
+					<a href=\"#module=admin&action=settings&edit={$s_id}&tab_settings=2\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
 				</span>
 			</div>";
 
@@ -688,9 +688,9 @@ HTML;
             "<div class=\"im-msg-blue\">
 				Репозитории<br>
 				<span>
-					Для работы с репозиториями используется параметр \"repo\", в котором находяться адреса репозиториев (с регистрацией в репозитории http://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации http://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
+					Для работы с репозиториями используется параметр \"repo\", содержащий адреса репозиториев (с регистрацией в репозитории https://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации https://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
 					<br>
-					<a href=\"javascript:load('index.php#module=admin&action=settings&edit={$s_id}&tab_settings=2')\">Указать адреса репозиториев</a>
+					<a href=\"#module=admin&action=settings&edit={$s_id}&tab_settings=2\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
         }

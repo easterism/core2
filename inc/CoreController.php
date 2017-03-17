@@ -6,6 +6,7 @@ require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 
 /**
  * Class CoreController
@@ -366,10 +367,8 @@ class CoreController extends Common {
             return;
         }
         if (!empty($_GET['__gitlab'])) {
-            if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host && $this->moduleConfig->gitlab->token) {
-                $install = new \Core2\InstallModule();
-                $install->getGitlabTags($this->moduleConfig->gitlab->host, $this->moduleConfig->gitlab->token);
-            }
+            $gl = new \Core2\Gitlab();
+            $gl->getTags();
             return;
         }
 
