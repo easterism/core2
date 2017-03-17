@@ -151,7 +151,7 @@ class Db {
 	 * @param string $charset
 	 * @param string $adapter
 	 *
-	 * @return Zend_Db_Adapter_Abstract
+	 * @return Zend_Db_Adapter_Abstract|bool
 	 */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
 	    $host = explode(":", $host);
@@ -173,6 +173,8 @@ class Db {
         } catch (Zend_Exception $e) {
             \Core2\Error::catchZendException($e);
         }
+
+        return false;
 	}
 
 
