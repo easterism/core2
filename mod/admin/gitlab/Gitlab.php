@@ -22,7 +22,14 @@ class Gitlab extends \Common
         if ($data['http_code'] == 200) {
             $data = json_decode($data['answer']);
             $arch = array();
+            $filter_group = array();
+            if ($this->moduleConfig->gitlab->filter && $this->moduleConfig->gitlab->filter->group) {
+                $filter_group = explode(",", $this->moduleConfig->gitlab->filter->group);
+            }
             foreach ($data as $repo) {
+                if ($filter_group) {
+                    if (!in_array($repo->namespace->name, $filter_group)) continue;
+                }
                 $tags = \Tool::doCurlRequest("https://$host/api/v3/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
                 if ($tags && $tags['answer']) {
                     $tags = json_decode($tags['answer']);

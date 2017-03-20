@@ -105,12 +105,17 @@ class Common extends Acl {
 					$extMod    = $configMod->getExtends();
 					$configExt = new Zend_Config_Ini(DOC_ROOT . "conf.ini");
 					$ext       = $configExt->getExtends();
+					$section    = 'production';
 					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
-						$modConfig = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
-					} else {
-						$modConfig = new Zend_Config_Ini($conf_file, 'production');
+                        $section = $_SERVER['SERVER_NAME'];
 					}
-					$modConfig->setReadOnly();
+                    $modConfig = new Zend_Config_Ini($conf_file, $section);
+                    $conf_d = $module_loc . "conf.d.ini";
+                    if (file_exists($conf_d)) {
+                        $modConfig->merge(new Zend_Config_Ini($conf_d, $section));
+                    }
+
+                    $modConfig->setReadOnly();
 					$v = $this->{$k} = $modConfig;
 				} else {
                     \Core2\Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
