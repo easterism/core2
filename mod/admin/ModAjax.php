@@ -711,6 +711,7 @@ class ModAjax extends ajaxFunc {
 
 
     /**
+     * Сохраняет загруженные модули для последующего использования
      * @param array $data
      * @return xajaxResponse
      */
@@ -726,7 +727,9 @@ class ModAjax extends ajaxFunc {
                 $name = explode("|", $data['control']['name']);
                 if (!$name[0]) throw new Exception($this->translate->tr("Не удалось получить группу репозитория."));
                 if (!$name[1]) throw new Exception($this->translate->tr("Не удалось получить версию релиза."));
-                $zip = \Tool::doCurlRequest("https://{$this->moduleConfig->gitlab->host}/{$name[0]}/repository/archive.zip?ref={$name[1]}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+                require_once('gitlab/Gitlab.php');
+                $gl = new \Core2\Gitlab();
+                $zip = $gl->getZip($name[0], $name[1]);
                 if ($zip['http_code'] == 200) {
                     $fn = tempnam($upload_dir, "gitlab");
                     file_put_contents($fn, $zip['answer']);

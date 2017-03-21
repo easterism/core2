@@ -9,3 +9,4 @@
 /mod/billing
 *.lock
 /translations/*.mo
+/mod/admin/conf.d.ini
