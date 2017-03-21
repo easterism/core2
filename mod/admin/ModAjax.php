@@ -524,12 +524,12 @@ class ModAjax extends ajaxFunc {
 
 			if ($refid) {
 				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
-				$save = array(
-					'lastname' => $data['control']['lastname'],
-					'firstname' => $data['control']['firstname'],
-					'middlename' => $data['control']['middlename'],
-					'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
-				);
+                $save = array(
+                    'lastname'   => $data['control']['lastname'],
+                    'firstname'  => $data['control']['firstname'],
+                    'middlename' => $data['control']['middlename'],
+                    'lastuser'   => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
+                );
 				if (!$row) {
 					$row = $this->dataUsersProfile->createRow();
 					$save['user_id'] = $refid;

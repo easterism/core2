@@ -498,10 +498,11 @@ class Tool {
      * @param   string $url URL
      * @param   array $data данные которые нужно запостить
      * @param   array $headers заголовки запроса
+     * @param   array $curlopt дополнительные параметры CURLOPT_
      *
      * @return  array       ответ запроса + http-код ответа
      */
-    public static function doCurlRequest($url, $data = array(), $headers = array())
+    public static function doCurlRequest($url, $data = array(), $headers = array(), $curlopt = array())
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
@@ -515,6 +516,13 @@ class Tool {
 			curl_setopt($curl, CURLOPT_POST, true);
 			curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 		}
+		if ($curlopt) {
+            foreach ($curlopt as $opt => $value) {
+                $opt = strtoupper($opt);
+                if (strpos($opt, "CURLOPT_") !== 0) continue;
+                curl_setopt($curl, constant($opt), $value);
+		    }
+        }
 
         $curl_out = curl_exec($curl);
         //если возникла ошибка
