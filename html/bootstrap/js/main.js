@@ -423,8 +423,8 @@ var load = function (url, data, id, callback) {
 var loadPDF = function (url) {
 	preloader.show();
     $("#main_body").css('height', ($("body").height() - ($("#menu-container").height() + 25)));
-	$("#main_body").html('<iframe frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
-	$("iframe").load( function() {
+	$("#main_body").html('<iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
+	$("#core-iframe").load( function() {
 		preloader.hide();
 	});
 
