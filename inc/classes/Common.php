@@ -14,6 +14,10 @@ class Common extends Acl {
 	protected $auth;
 	protected $actionURL;
 	protected $resId;
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	private $_p = array();
 	private $AR = array(
@@ -118,7 +122,7 @@ class Common extends Acl {
                     $modConfig->setReadOnly();
 					$v = $this->{$k} = $modConfig;
 				} else {
-                    \Core2\Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
+                    \Core2\Error::Exception($this->translate->tr("Не найден конфигурационный файл модуля."), 500);
 				}
 			}
 			// Получение экземпляра контроллера указанного модуля

@@ -103,13 +103,15 @@ class Db {
 					? DOC_ROOT . "core2/mod/admin"
 					: $this->getModuleLocation($module);
 
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
+				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->translate->tr('Модель не найдена.'));
 				require_once($location . "/Model/$model.php");
 				$v            = new $model();
 				$this->_s[$k] = $v;
 			}
 			return $v;
 		}
+
+		return null;
 	}
 
 
@@ -276,7 +278,7 @@ class Db {
 				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
 			) {
 				if (!$this->config->log->system->file) {
-					throw new Exception($this->traslate->tr('Не задан файл журнала запросов'));
+					throw new Exception($this->translate->tr('Не задан файл журнала запросов'));
 				}
 				$log = new \Core2\Log('access');
 				$log->access($auth->NAME);
@@ -561,7 +563,7 @@ class Db {
 	 */
 	final public function getModuleLoc($module_id) {
 		$module_id = trim(strtolower($module_id));
-		if (!$module_id) throw new Exception($this->traslate->tr("Не определен идентификатор модуля."));
+		if (!$module_id) throw new Exception($this->translate->tr("Не определен идентификатор модуля."));
 		if (!($this->cache->test($module_id))) {
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
@@ -577,7 +579,7 @@ class Db {
 						}
 					}
 				} else {
-					throw new Exception($this->traslate->tr("Модуль не существует"), 404);
+					throw new Exception($this->translate->tr("Модуль не существует"), 404);
 				}
 			}
 			$this->cache->save($loc, $module_id);
