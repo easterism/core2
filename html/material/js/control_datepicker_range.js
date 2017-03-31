@@ -388,7 +388,7 @@ var control_datepicker_range = {
      * Выполнение функции после изменения даты
      */
     callbackChange : function(date_from, date_to, wrapper) {
-        if (typeof this.callback_change == 'function') {
+        if (typeof this.callback_change === 'function') {
             this.callback_change(date_from, date_to, wrapper);
         }
     },
@@ -408,7 +408,7 @@ var control_datepicker_range = {
             var isFind = false;
             $('input[class*="ctrl-dpr-"]:visible, select[class*="ctrl-dpr-"]:visible', wrapper).each(function () {
                 if (isFind === false) {
-                    if (currentTarget == this) {
+                    if (currentTarget === this) {
                         isFind = true;
                     }
                 } else {
@@ -425,7 +425,7 @@ var control_datepicker_range = {
      * @param func
      */
     setCallbackChange : function(func) {
-        if (typeof func == 'function') {
+        if (typeof func === 'function') {
             this.callback_change = func;
         }
     },
@@ -435,7 +435,7 @@ var control_datepicker_range = {
      * Выполнение функции для раскраски календаря
      */
     callbackDayClass : function(date) {
-        if (typeof this.callback_day_class == 'function') {
+        if (typeof this.callback_day_class === 'function') {
             return this.callback_day_class(date);
         }
     },
@@ -446,7 +446,7 @@ var control_datepicker_range = {
      * @param func
      */
     setCallbackDayClass : function(func) {
-        if (typeof func == 'function') {
+        if (typeof func === 'function') {
             this.callback_day_class = func;
         }
     }
@@ -456,7 +456,7 @@ var control_datepicker_range = {
 
 $(document).ready(function(){
     /**
-     * Cкрытие календаря
+     * Скрытие календаря
      */
     $(document).click(function(e) {
         var target = $(e.target);

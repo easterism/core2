@@ -74,7 +74,7 @@
 
         $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
         $config2 = new Zend_Config_Ini($conf_file, $section);
-        if ($conf_d) {
+        if ( ! empty($conf_d)) {
             $config2->merge(new Zend_Config_Ini($conf_d, $section));
         }
         $config->merge($config2);
@@ -156,13 +156,19 @@
      */
     class Init extends Db {
 
+        /**
+         * @var StdClass|Zend_Session_Namespace
+         */
         protected $auth;
-        protected $tpl;
         protected $acl;
         private $is_cli = false;
         private $is_rest = array();
         private $is_soap = array();
 
+
+        /**
+         * Init constructor.
+         */
 		public function __construct() {
 			parent::__construct();
 
@@ -177,6 +183,7 @@
 				date_default_timezone_set($tz);
 			}
 		}
+
 
         /**
          * Общая проверка аутентификации
@@ -229,6 +236,7 @@
             }
         }
 
+
         /**
          * Направлен ли запрос к вебсервису
          * @todo прогнать через роутер
@@ -248,6 +256,7 @@
                 return;
             }
         }
+
 
         /**
          * Проверка наличия токена в запросе
@@ -276,8 +285,9 @@
             }
         }
 
+
         /**
-         * Проверка на наличие и работоспособноси модуля Webservice
+         * Проверка на наличие и работоспособности модуля Webservice
          */
         private function checkWebservice() {
             if ( ! $this->isModuleActive('webservice')) {
@@ -392,14 +402,14 @@
             ) {
                 return $this->getMenu();
             } else {
-                if ($this->deleteAction()) return;
+                if ($this->deleteAction()) return '';
 
                 $module = $route['module'];
                 if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
                 $action = $route['action'];
                 $this->setContext($module, $action);
 
-                if ($this->fileAction()) return;
+                if ($this->fileAction()) return '';
 
                 if ($module === 'admin') {
                     if ($this->auth->MOBILE) {
@@ -462,7 +472,10 @@
                     }
                 }
             }
+
+            return '';
         }
+
 
         /**
          * Получение названия системы из conf.ini
@@ -472,6 +485,7 @@
             $res = $this->config->system->name;
             return $res;
         }
+
 
         /**
          * Получение логотипа системы из conf.ini
@@ -487,8 +501,10 @@
             }
         }
 
+
         /**
          * Форма входа в систему
+         * @return string
          */
         protected function getLogin() {
 
@@ -497,7 +513,7 @@
                 $this->setContext('admin');
                 $core = new CoreController();
                 $core->action_login($_POST);
-                return;
+                return '';
             }
             $tpl = new Templater2();
             if (Tool::isMobileBrowser()) {
@@ -539,6 +555,7 @@
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
+
 
         /**
          * Проверка удаления с последующей переадресацией
@@ -583,6 +600,7 @@
             return false;
         }
 
+
         /**
          * Проверка наличия и целостности файла контроллера
          * @param $location - путь до файла
@@ -600,6 +618,7 @@
                 throw new Exception($this->translate->tr("Модуль сломан"), 500);
             }
         }
+
 
         /**
          * Create the top menu
@@ -706,6 +725,7 @@
             return $html;
         }
 
+
         /**
          * Получаем список доступных модулей
          * @return array
@@ -760,14 +780,13 @@
             return $mods;
         }
 
+
         /**
          * Cli
          * @return string
          * @throws Exception
          */
         private function cli() {
-
-            // Модуль cron работает только начиная с версии 2.3.0
 
 	        $options = getopt('m:a:p:s:h', array(
 	            'module:',
@@ -783,11 +802,11 @@
 	                'Core 2',
 	                'Usage: php index.php [OPTIONS]',
 	                'Optional arguments:',
-	                "\t-m\t--module\tModule name",
-	                "\t-a\t--action\tCli method name",
-	                "\t-p\t--param\t\tParameter in method",
-	                "\t-s\t--section\tSection name in config file",
-					"\t-h\t--help\t\tHelp info",
+	                "   -m    --module    Module name",
+	                "   -a    --action    Cli method name",
+	                "   -p    --param     Parameter in method",
+	                "   -s    --section   Section name in config file",
+					"   -h    --help      Help info",
 					"Examples of usage:",
 	                "php index.php --module cron --action run",
 	                "php index.php --module cron --action run --section site.com",
@@ -819,28 +838,36 @@
 	                    throw new Exception("Module '$module' does not active");
 	                }
 
-	                $mod_path = $this->getModuleLocation($module);
-	                $mod_controller = 'Mod' . ucfirst(strtolower($module)) . 'Controller';
-	                $controller_path = "{$mod_path}/{$mod_controller}.php";
+	                $location     = $this->getModuleLocation($module);
+	                $mod_cli      = 'Mod' . ucfirst(strtolower($module)) . 'Cli';
+	                $mod_cli_path = "{$location}/{$mod_cli}.php";
 
-	                if ( ! file_exists($controller_path)) {
-	                    throw new Exception(sprintf($this->translate->tr("File controller '%s' does not exists"), $controller_path));
+	                if ( ! file_exists($mod_cli_path)) {
+	                    throw new Exception(sprintf($this->_("File '%s' does not exists"), $mod_cli_path));
 	                }
 
-	                require_once $controller_path;
+	                require_once $mod_cli_path;
 
-	                if ( ! class_exists($mod_controller)) {
-	                    throw new Exception(sprintf($this->translate->tr("Class controller '%s' not found"), $mod_controller));
+	                if ( ! class_exists($mod_cli)) {
+	                    throw new Exception(sprintf($this->_("Class '%s' not found"), $mod_cli));
 	                }
 
-	                $mod_methods = get_class_methods($mod_controller);
-	                $cli_method = 'cli' . ucfirst($action);
-	                if ( ! array_search($cli_method, $mod_methods)) {
-	                    throw new Exception(sprintf($this->translate->tr("Cli method '%s' not found in controller '%s'"), $cli_method, $mod_controller));
+
+                    $all_class_methods = get_class_methods($mod_cli);
+                    if ($parent_class = get_parent_class($mod_cli)) {
+                        $parent_class_methods = get_class_methods($parent_class);
+                        $self_methods = array_diff($all_class_methods, $parent_class_methods);
+                    } else {
+                        $self_methods = $all_class_methods;
+                    }
+
+
+	                if ( ! array_search($action, $self_methods)) {
+	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
 
-	                $mod_instance = new $mod_controller();
-	                $result = call_user_func_array(array($mod_instance, $cli_method), $params);
+	                $mod_instance = new $mod_cli();
+	                $result = call_user_func_array(array($mod_instance, $action), $params);
 
 	                if (is_scalar($result)) {
 	                    return (string)$result . PHP_EOL;
@@ -855,6 +882,7 @@
 
 			return PHP_EOL;
 		}
+
 
         /**
          * Основной роутер
@@ -927,6 +955,7 @@
             return $route;
         }
 
+
         /**
          * Обрабатывает запросы к файлам
          *
@@ -979,6 +1008,7 @@
             return false;
         }
 
+
         /**
          * Список доступных модулей для core2m
          * @return string
@@ -1015,6 +1045,7 @@
             return json_encode($modsList);
         }
 
+
         /**
          * Установка контекста выполнения скрипта
          * @param string $module
@@ -1024,8 +1055,13 @@
             Zend_Registry::set('context', array($module, $action));
         }
 
+
+        /**
+         * @return string
+         * @throws Exception
+         */
         private function checkBilling() {
-            // Billing
+
             if ($this->isModuleActive('billing') &&
                 (empty($_GET['module']) ||
                     $_GET['module'] != 'billing' ||
@@ -1052,6 +1088,8 @@
                     return $billing_disable->getDisablePage();
                 }
             }
+
+            return '';
         }
     }
 
