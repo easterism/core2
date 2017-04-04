@@ -1062,12 +1062,25 @@
          */
         private function checkBilling() {
 
-            if ($this->isModuleActive('billing') &&
-                (empty($_GET['module']) ||
-                    $_GET['module'] != 'billing' ||
-                    empty($_POST['system_name']) ||
-                    empty($_POST['type_operation']))
+            // НЕ проверять если это запрос на выход из системы
+            if ( ! empty($_GET['module']) &&
+                 ! empty($_GET['action']) &&
+                $_GET['module'] == 'admin' &&
+                $_GET['action'] == 'exit'
             ) {
+                return '';
+            }
+
+            // НЕ проверять если это запрос на выполнение платежной операции
+            if ( ! empty($_GET['module']) &&
+                 ! empty($_POST['system_name']) &&
+                 ! empty($_POST['type_operation']) &&
+                $_GET['module'] == 'billing'
+            ) {
+                return '';
+            }
+
+            if ($this->isModuleActive('billing')) {
                 $this->setContext('billing');
 
                 $billing_location  = $this->getModuleLocation('billing');
