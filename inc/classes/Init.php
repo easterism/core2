@@ -1080,12 +1080,17 @@
                 require_once($billing_page_path);
 
                 if ( ! class_exists('Billing_Disable')) {
-                    throw new Exception($this->translate->tr("Class Billing_Disable does not exists"));
+                    throw new Exception($this->_("Class Billing_Disable does not exists"));
                 }
 
                 $billing_disable = new Billing_Disable();
                 if ($billing_disable->isDisable()) {
-                    return $billing_disable->getDisablePage();
+
+                    $billing_disable->renewLicense();
+
+                    if ($billing_disable->isDisable()) {
+                        return $billing_disable->getDisablePage();
+                    }
                 }
             }
 

@@ -11,6 +11,10 @@ class Common extends Acl {
 
 	protected $module;
 	protected $path;
+
+    /**
+     * @var StdClass|Zend_Session_Namespace
+     */
 	protected $auth;
 	protected $actionURL;
 	protected $resId;
