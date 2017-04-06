@@ -729,13 +729,9 @@ class ModAjax extends ajaxFunc {
                 if (!$name[1]) throw new Exception($this->translate->tr("Не удалось получить версию релиза."));
                 require_once('gitlab/Gitlab.php');
                 $gl = new \Core2\Gitlab();
-                $zip = $gl->getZip($name[0], $name[1]);
-                if ($zip['http_code'] == 200) {
-                    $fn = tempnam($upload_dir, "gitlab");
-                    file_put_contents($fn, $zip['answer']);
-
-                } else {
-                    throw new Exception($zip['error']);
+                $fn = $gl->getZip($name[0], $name[1]);
+                if ($e = $gl->getError()) {
+                    throw new Exception($e);
                 }
             } else {
                 $f = explode("###", $data['control']['files|name']);
@@ -752,13 +748,12 @@ class ModAjax extends ajaxFunc {
             $file_type = mime_content_type($fn);
 
             if ($file_type == "application/zip") {
-
                 $content = file_get_contents($fn);
 
                 /* Распаковка архива */
                 $zip = new ZipArchive();
                 $destinationFolder = $upload_dir . '/t_' . uniqid();
-                if ($zip->open($fn) === true){
+                if ($zip->open($fn) === true) {
                     /* Распаковка всех файлов архива */
                     for ($i = 0; $i < $zip->numFiles; $i++) {
                         $zip->extractTo($destinationFolder, $zip->getNameIndex($i));
