@@ -423,14 +423,14 @@ var load = function (url, data, id, callback) {
 
 var loadPDF = function (url) {
 	preloader.show();
-	$("#main_body").html('<iframe frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
+	$("#main_body").html('<iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
     $("#main_body > iframe").css({
         'height'      : ($("body").height() - ($("#navbar-top").height())),
         'top'         : '50px',
         'margin-left' : '-30px',
         'position'    : 'absolute'
     });
-	$("iframe").load( function() {
+	$("#core-iframe").load( function() {
 		preloader.hide();
 	});
 

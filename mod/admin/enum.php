@@ -62,7 +62,7 @@ $tab->beginContainer($title);
 			}
 			
 			$custom = '<div id="xxx">' . $list_custom . '</div>
-			<div><span id="new_attr" class="newFieldEnum" onclick="en.newEnumField()">' . $this->translate->tr("Новое поле") . '</span></div>';
+			<div><span id="new_attr" class="newFieldEnum btn btn-link" onclick="en.newEnumField()">' . $this->translate->tr("Новое поле") . '</span></div>';
 			$edit->addControl($this->translate->tr("Дополнительные поля:"), "CUSTOM", $custom);
 			$edit->addButtonSwitch('is_active_sw', $this->dataEnum->exists("is_active_sw = 'Y' AND id=?", $_GET['edit']));
 			

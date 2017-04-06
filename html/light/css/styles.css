@@ -1405,15 +1405,15 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     padding: 10px 15px;
     background: 0 0;
     -webkit-border-radius: 4px 4px 0 0;
-    -moz-border-radius: 4px 4px 0 0;
-    -ms-border-radius: 4px 4px 0 0;
-    -o-border-radius: 4px 4px 0 0;
-    border-radius: 4px 4px 0 0;
+       -moz-border-radius: 4px 4px 0 0;
+            border-radius: 4px 4px 0 0;
 }
 .core-panel > .core-panel-body > .core-panel-tabs > li > a:hover,
 .core-panel > .core-panel-body > .core-panel-tabs > li > a:focus {
     border-bottom-color: transparent;
     text-decoration: none;
+    background-color: #eee;
+    border-bottom: 0;
 }
 .core-panel > .core-panel-body > .core-panel-tabs > .active > a,
 .core-panel > .core-panel-body > .core-panel-tabs > .active > a:hover,
