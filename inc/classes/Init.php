@@ -66,15 +66,10 @@
             }
         }
 
-        //проверяем наличие дополнительного конфига
-        $conf_d = DOC_ROOT . "conf.d.ini";
-        if (!file_exists($conf_d)) {
-            unset($conf_d);
-        }
-
         $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
         $config2 = new Zend_Config_Ini($conf_file, $section);
-        if ( ! empty($conf_d)) {
+        $conf_d = DOC_ROOT . "conf.ext.ini";
+        if (file_exists($conf_d)) {
             $config2->merge(new Zend_Config_Ini($conf_d, $section));
         }
         $config->merge($config2);
