@@ -120,11 +120,11 @@ class Common extends Acl {
                         ? $_SERVER['SERVER_NAME']
                         : 'production';
 
-                    $modConfig = new Zend_Config_Ini($conf_file, $section, array('allowModifications' => true));
-                    $conf_d    = $module_loc . "/conf.d.ini";
+                    $modConfig = new Zend_Config_Ini($conf_file, $section, true);
+                    $conf_ext  = $module_loc . "/conf.ext.ini";
 
-                    if (file_exists($conf_d)) {
-                        $modConfig->merge(new Zend_Config_Ini($conf_d, $section));
+                    if (file_exists($conf_ext)) {
+                        $modConfig->merge(new Zend_Config_Ini($conf_ext, $section));
                     }
 
                     $modConfig->setReadOnly();

@@ -216,6 +216,7 @@ class InstallModule extends \Common {
 
     /**
      * Копируем файлы модуля из временной папки в папку с модулями
+     * //TODO сделать отдельный инсталлер
      *
      * @return void
      * @throws \Exception
