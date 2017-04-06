@@ -1,6 +1,5 @@
 <?
 
-
 /**
  * Class Db
  * @property Zend_Db_Adapter_Abstract $db
@@ -35,13 +34,12 @@ class Db {
 			$this->config = $config;
 		}
 		if (!$config) return false;
-
 	}
 
 
 	/**
 	 * @param string $k
-	 * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract|\Core2\Log
+	 * @return mixed|Zend_Cache_Core|Zend_Db_Adapter_Abstract|\Core2\Log
 	 * @throws Zend_Exception
 	 * @throws Exception
 	 */

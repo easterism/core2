@@ -6,6 +6,7 @@ require_once 'Acl.php';
  * Class Common
  * @property StdClass        $acl
  * @property Zend_Config_Ini $moduleConfig
+ * @property CoreController  $modAdmin
  */
 class Common extends Acl {
 
@@ -113,12 +114,15 @@ class Common extends Acl {
 					$extMod    = $configMod->getExtends();
 					$configExt = new Zend_Config_Ini(DOC_ROOT . "conf.ini");
 					$ext       = $configExt->getExtends();
-					$section    = 'production';
-					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
-                        $section = $_SERVER['SERVER_NAME'];
-					}
-                    $modConfig = new Zend_Config_Ini($conf_file, $section);
-                    $conf_d = $module_loc . "conf.d.ini";
+                    $section   = ! empty($_SERVER['SERVER_NAME']) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $ext) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $extMod)
+                        ? $_SERVER['SERVER_NAME']
+                        : 'production';
+
+                    $modConfig = new Zend_Config_Ini($conf_file, $section, array('allowModifications' => true));
+                    $conf_d    = $module_loc . "/conf.d.ini";
+
                     if (file_exists($conf_d)) {
                         $modConfig->merge(new Zend_Config_Ini($conf_d, $section));
                     }
@@ -126,7 +130,7 @@ class Common extends Acl {
                     $modConfig->setReadOnly();
 					$v = $this->{$k} = $modConfig;
 				} else {
-                    \Core2\Error::Exception($this->translate->tr("Не найден конфигурационный файл модуля."), 500);
+                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
 				}
 			}
 			// Получение экземпляра контроллера указанного модуля

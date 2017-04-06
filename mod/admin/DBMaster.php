@@ -17,8 +17,10 @@ class DBMaster {
 	}
 
 	public function execute($sql) {
-        foreach ($sql as $item) {
-            $this->db->exec($item);
+	    if (is_array($sql) && ! empty($sql)) {
+            foreach ($sql as $item) {
+                $this->db->exec($item);
+            }
         }
     }
 

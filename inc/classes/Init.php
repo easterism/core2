@@ -1098,12 +1098,7 @@
 
                 $billing_disable = new Billing_Disable();
                 if ($billing_disable->isDisable()) {
-
-                    $billing_disable->renewLicense();
-
-                    if ($billing_disable->isDisable()) {
-                        return $billing_disable->getDisablePage();
-                    }
+                    return $billing_disable->getDisablePage();
                 }
             }
 
