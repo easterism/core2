@@ -43,7 +43,7 @@ class Audit extends \Common {
                         while (list($k, $v) = each($a_tmp)) {
                             if ($v) {
                                 $admin_master = new DBMaster($this->getDb());
-                                $admin_master->execute($v);
+                                $admin_master->execute(array($v));
                             }
                         }
                     }
