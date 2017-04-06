@@ -6,14 +6,23 @@ require_once 'Acl.php';
  * Class Common
  * @property StdClass        $acl
  * @property Zend_Config_Ini $moduleConfig
+ * @property CoreController  $modAdmin
  */
 class Common extends Acl {
 
 	protected $module;
 	protected $path;
+
+    /**
+     * @var StdClass|Zend_Session_Namespace
+     */
 	protected $auth;
 	protected $actionURL;
 	protected $resId;
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	private $_p = array();
 	private $AR = array(
@@ -105,12 +114,15 @@ class Common extends Acl {
 					$extMod    = $configMod->getExtends();
 					$configExt = new Zend_Config_Ini(DOC_ROOT . "conf.ini");
 					$ext       = $configExt->getExtends();
-					$section   = 'production';
-					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
-                        $section = $_SERVER['SERVER_NAME'];
-					}
+                    $section   = ! empty($_SERVER['SERVER_NAME']) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $ext) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $extMod)
+                        ? $_SERVER['SERVER_NAME']
+                        : 'production';
+
                     $modConfig = new Zend_Config_Ini($conf_file, $section, true);
-                    $conf_ext = $module_loc . "/conf.ext.ini";
+                    $conf_ext  = $module_loc . "/conf.ext.ini";
+
                     if (file_exists($conf_ext)) {
                         $modConfig->merge(new Zend_Config_Ini($conf_ext, $section));
                     }
@@ -118,7 +130,7 @@ class Common extends Acl {
                     $modConfig->setReadOnly();
 					$v = $this->{$k} = $modConfig;
 				} else {
-                    \Core2\Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
+                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
 				}
 			}
 			// Получение экземпляра контроллера указанного модуля

@@ -5,18 +5,31 @@ require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
+
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 
+
+
 /**
  * Class CoreController
+ * @property Users        $dataUsers
+ * @property Enum         $dataEnum
+ * @property Modules      $dataModules
+ * @property Roles        $dataRoles
+ * @property SubModules   $dataSubModules
+ * @property UsersProfile $dataUsersProfile
  */
 class CoreController extends Common {
 
 	const RP = '8c1733d4cd0841199aa02ec9362be324';
 	protected $tpl = '';
 	protected $theme = 'default';
-	
+
+
+    /**
+     * CoreController constructor.
+     */
 	public function __construct() {
 		parent::__construct();
 		$this->module = 'admin';
@@ -28,14 +41,18 @@ class CoreController extends Common {
 	}
 
 
+    /**
+     * @param string $k
+     * @param array  $arg
+     */
     public function __call ($k, $arg) {
 		if (!method_exists($this, $k)) return;
 	}
 
 
 	/**
-	 * @param $var
-	 * @param $value
+	 * @param string $var
+	 * @param mixed  $value
 	 */
 	public function setVars($var, $value) {
 		$this->$var = $value;
@@ -50,19 +67,22 @@ class CoreController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $tab = new tabs('mod');
-        $tab->beginContainer($this->translate->tr("События аудита"));
+        $tab->beginContainer($this->_("События аудита"));
         try {
             $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
-                Alert::memory()->info($this->translate->tr("Система работает в штатном режиме."));
+                Alert::memory()->info($this->_("Система работает в штатном режиме."));
             } else {
-				Alert::memory()->danger(implode(", ", $changedMods), $this->translate->tr("Обнаружены изменения в файлах модулей:"));
+				Alert::memory()->danger(implode(", ", $changedMods), $this->_("Обнаружены изменения в файлах модулей:"));
             }
-            if (!$this->moduleConfig->database || !$this->moduleConfig->database->admin || !$this->moduleConfig->database->admin->username) {
-				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->translate->tr("Не задан администратор базы данных"));
+            if ( ! $this->moduleConfig->database ||
+                 ! $this->moduleConfig->database->admin ||
+                 ! $this->moduleConfig->database->admin->username
+            ) {
+				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->_("Не задан администратор базы данных"));
             }
         } catch (Exception $e) {
-			Alert::memory()->danger($this->translate->tr("Ошибка"), $e->getMessage());
+			Alert::memory()->danger($e->getMessage(), $this->_("Ошибка"));
         }
 
         echo Alert::get();
