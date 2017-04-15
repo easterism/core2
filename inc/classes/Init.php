@@ -857,7 +857,7 @@
                     }
 
 
-	                if ( ! array_search($action, $self_methods)) {
+	                if (array_search($action, $self_methods) === false) {
 	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
 
