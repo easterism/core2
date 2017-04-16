@@ -370,7 +370,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['group'][] = $temp;
 						}
 
-						//преобразование атрибутов в строку
+						//преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -950,7 +950,7 @@ class editTable extends initEdit {
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
-								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=?", $refid);
+								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=? AND fieldid=?", array($refid, $value['default']));
 								if ($files) {
 									foreach ($files as $value) {
 										$controlGroups[$cellId]['html'][$key] .= "<div><a href='index.php?module=admin&action=handler&fileid={$value['id']}&filehandler={$this->table}'>{$value['filename']}</a></div>";
