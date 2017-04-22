@@ -29,7 +29,7 @@ class Gitlab extends \Common
             }
             foreach ($data as $repo) {
                 if ($filter_group) {
-                    if (!in_array($repo->namespace->name, $filter_group)) continue;
+                    if (!in_array($repo->namespace->full_path, $filter_group)) continue;
                 }
                 $tags = \Tool::doCurlRequest("https://$host/api/v3/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
                 if ($tags && $tags['answer']) {
