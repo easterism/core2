@@ -911,6 +911,7 @@
                             $_GET['module'] = $route['module']; //DEPRECATED
                         }
                         elseif ($i == 1) {
+                            if (!$v) $v = 'index';
                             $vv  = explode("?", $v);
                             $route['action'] = strtolower($vv[0]);
                         }
