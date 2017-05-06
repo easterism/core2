@@ -1435,3 +1435,4 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     cursor: not-allowed;
     background-color: transparent;
 }
+#main_body > .core-panel:last-child {margin-bottom: 0}

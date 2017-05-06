@@ -604,8 +604,12 @@ class CoreController extends Common {
 					$to = $this->getSetting('feedback_email');
 					$cc = $this->getSetting('feedback_email_cc');
 
+                    if (empty($to)) {
+                        $to = $this->getSetting('admin_email');
+                    }
+
 					if (empty($to)) {
-                        throw new Exception($this->translate->tr('Администратор забыл указать свой email. Из за этого сообщение не может быть отправлено.'));
+                        throw new Exception($this->translate->tr('Не удалось отправить сообщение.'));
                     }
 
 					$supportFormMessage = "<pre>{$supportFormMessage}</pre>";
