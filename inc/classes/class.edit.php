@@ -370,7 +370,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['group'][] = $temp;
 						}
 
-						//преобразование атрибутов в строку
+						//преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -956,7 +956,11 @@ class editTable extends initEdit {
                                            type 
                                     FROM `{$this->table}_files` 
                                     WHERE refid = ?
-                                ", $refid);
+                                      AND fieldid = ?
+                                ", array(
+                                    $refid,
+                                    $value['default']
+                                ));
 
 								if ($files) {
 									foreach ($files as $file) {

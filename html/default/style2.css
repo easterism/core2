@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed');
+
 html {
 	height: 100%;
 	background: transparent;
@@ -5,7 +7,7 @@ html {
 }
 body {
 	margin:0px 0px 0px 0px;
-	font-family:Tahoma;
+	font-family:'Roboto', sans-serif;
 	font-size:11px;
 	height:100%;
 	width:100%;
@@ -226,7 +228,6 @@ LIST class table
 table.sTable {
 	border:solid 1px silver;
 	background-color: white;
-	font-family:Tahoma;
 	font-size:11px;
 }
 table.sTable td{
@@ -392,7 +393,6 @@ EDIT class table
 */
 table.editTable {
 	border:0;
-	font-family:Tahoma;
 	font-size:11px;
 }
 .eFirstCell {
