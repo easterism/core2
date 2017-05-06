@@ -174,6 +174,7 @@ function toAnchor(id){
 
 var locData = {};
 var loc = ''; //DEPRECATED
+var xhrs = {};
 
 var preloader = {
 	extraLoad : {},
@@ -379,44 +380,39 @@ var load = function (url, data, id, callback) {
         locData['loc']  = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
 
-        var $container = $(locData.id);
-		if (locData.data) {
-			$container.load('index.php' + url, locData.data, function() {
-                if (current_module != load_module || current_action != load_action ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
-                ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
-                } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
-                if (typeof locData.callback === 'function') {
-                    locData.callback();
-                    locData.callback = null;
-                }
-                callback();
-			});
-		} else {
-			$container.load('index.php' + url, function() {
-                if (current_module != load_module || current_action != load_action ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
-                ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
-                } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
-                if (typeof locData.callback === 'function') {
-                    locData.callback();
-                    locData.callback = null;
-                }
-                callback();
-			});
-		}
+
+        if (xhrs[locData.id]) {
+            xhrs[locData.id].abort();
+        }
+
+        xhrs[locData.id] = $.ajax({
+            url: 'index.php' + url,
+            data: data,
+            global: false,
+            async: true,
+            method: 'GET'
+        }).done(function (result) {
+            $(locData.id).html(result);
+
+            if (current_module !== load_module || current_action !== load_action ||
+                document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
+                document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
+            ) {
+                $(locData.id).hide();
+                $(locData.id).fadeIn('fast');
+            } else {
+                $(locData.id).hide();
+                $(locData.id).fadeIn(50);
+            }
+            if (typeof locData.callback === 'function') {
+                locData.callback();
+                locData.callback = null;
+            }
+            callback();
+
+        }).fail(function (a,b,t){
+            preloader.hide();
+        });
 	}
 };
 

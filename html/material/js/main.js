@@ -43,9 +43,9 @@ function changeSub(obj, path) {
 	if (!obj) return;
 	var parent = obj.parentNode;
 	for (var i = 0; i < parent.childNodes.length; i++) {
-		if (parent.childNodes[i].nodeName == 'LI') {
+		if (parent.childNodes[i].nodeName === 'LI') {
 			parent.childNodes[i].className = 'menu-submodule';
-			if (parent.childNodes[i] == obj) {
+			if (parent.childNodes[i] === obj) {
 				parent.childNodes[i].className = 'menu-submodule-selected';
 				if (path) load(path);
 			}
@@ -57,16 +57,16 @@ function changeRoot(obj, to) {
 	if ( ! obj) return;
 	var parent = obj.parentNode;
 	for (var i = 0; i < parent.childNodes.length; i++) {
-		if (parent.childNodes[i].nodeName == 'LI') {
+		if (parent.childNodes[i].nodeName === 'LI') {
             parent.childNodes[i].className = 'menu-module';
-			if (parent.childNodes[i] == obj) {
+			if (parent.childNodes[i] === obj) {
                 parent.childNodes[i].className = 'menu-module-selected';
 				var sub = document.getElementById('menu-submodules');
 				for (var x = 0; x < sub.childNodes.length; x++) {
-					if (sub.childNodes[x].nodeName == 'LI') {
+					if (sub.childNodes[x].nodeName === 'LI') {
 						sub.childNodes[x].className = 'menu-submodule';
 						sub.childNodes[x].style.display = 'none';
-						if (sub.childNodes[x].id.indexOf(parent.childNodes[i].id + '-') != -1) {
+						if (sub.childNodes[x].id.indexOf(parent.childNodes[i].id + '-') !== -1) {
 							sub.childNodes[x].style.display = '';
 						}
 					}
@@ -78,10 +78,9 @@ function changeRoot(obj, to) {
 }
 
 function viewport() {
-    var e = window
-        , a = 'inner';alerti;
-    if ( !( 'innerWidth' in window ) )
-    {
+    var e = window,
+		a = 'inner';
+    if ( ! ('innerWidth' in window)) {
         a = 'client';
         e = document.documentElement || document.body;
     }
@@ -94,7 +93,7 @@ function checkInt(evt) {
 	else if(evt.which) keycode = evt.which;
 	var av = [8, 9, 35, 36, 37, 38, 39, 40, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
 	for (var i = 0; i < av.length; i++) {
-		if (av[i] == keycode) return true;
+		if (av[i] === keycode) return true;
 	}
 	return false;
 }
@@ -136,7 +135,7 @@ function jsToHead(src) {
 					h = temp[0];
 				}
 			}
-			if (s[i].src == src || s[i].src == h + src.replace(/^\//, '')) {
+			if (s[i].src === src || s[i].src === h + src.replace(/^\//, '')) {
                 return;
             }
 		}
@@ -165,6 +164,7 @@ function toAnchor(id){
 
 var locData = {};
 var loc = ''; //DEPRECATED
+var xhrs = {};
 
 var preloader = {
 	extraLoad : {},
@@ -177,7 +177,7 @@ var preloader = {
 		$("#preloader").hide();
 	},
 	callback : function (response, status, xhr) {
-		if (status == "error") {
+		if (status === "error") {
 
 		} else {
 			if (preloader.extraLoad) {
@@ -187,7 +187,7 @@ var preloader = {
 						aUrl = JSON.parse(aUrl);
 						var bUrl = [];
 						for (var k in aUrl) {
-							if (typeof aUrl.hasOwnProperty == 'function' && aUrl.hasOwnProperty(k)) {
+							if (typeof aUrl.hasOwnProperty === 'function' && aUrl.hasOwnProperty(k)) {
 								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 							}
 						}
@@ -220,7 +220,7 @@ var preloader = {
 		//CREATE the new location
 		var pairs = [];
 		for (var key in url)
-			if (typeof url.hasOwnProperty == 'function' && url.hasOwnProperty(key)) {
+			if (typeof url.hasOwnProperty === 'function' && url.hasOwnProperty(key)) {
 				var pu = encodeURIComponent(key) + '=' + encodeURIComponent(url[key]);
 				pairs.push(pu);
 			}
@@ -232,7 +232,7 @@ var preloader = {
 		//CREATE the new location
 		var pairs = [];
 		for (var key in url)
-			if (typeof url.hasOwnProperty == 'function' && url.hasOwnProperty(key)) {
+			if (typeof url.hasOwnProperty === 'function' && url.hasOwnProperty(key)) {
 				var pu = '"' + encodeURIComponent(key) + '":"' + encodeURIComponent(url[key]) + '"';
 				pairs.push(pu);
 			}
@@ -245,20 +245,20 @@ var preloader = {
 
 $(document).ajaxError(function (event, jqxhr, settings, exception) {
     preloader.hide();
-    if (jqxhr.status == '0') {
+    if (jqxhr.status === '0') {
         //alert("Соединение прервано.");
-    } else if (jqxhr.statusText == 'error') {
+    } else if (jqxhr.statusText === 'error') {
         swal("Отсутствует соединение с Интернет.", '', 'error').catch(swal.noop);
-    } else if (jqxhr.status == 403) {
+    } else if (jqxhr.status === 403) {
         swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
-    } else if (jqxhr.status == 500) {
+    } else if (jqxhr.status === 500) {
         swal("Ой, извините!", "Во время обработки вашего запроса произошла ошибка.", 'error').catch(swal.noop);
-    } else if (exception != 'abort') {
+    } else if (exception !== 'abort') {
         swal("Произошла ошибка", jqxhr.status + ' ' + exception, 'error').catch(swal.noop);
     }
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
-	if (xhr.status == 203) {
+	if (xhr.status === 203) {
 		top.document.location = settings.url;
 	}
 });
@@ -269,14 +269,14 @@ var load = function (url, data, id, callback) {
 	else if (typeof id === 'string') {
 		id = '#' + id;
 	}
-	if (url.indexOf("index.php") == 0) {
+	if (url.indexOf("index.php") === 0) {
 		url = url.substr(10);
 	}
 
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-	if (h != url && url.indexOf('&__') < 0) {
+	if (h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
         }
@@ -288,23 +288,23 @@ var load = function (url, data, id, callback) {
 			var r = [];
 			var ax = {};
 			for (var key in qs) {
-				if (key.indexOf('--') != 0) {
+				if (key.indexOf('--') !== 0) {
 					r.push(key + '=' + qs[key]);
 				} else {
 					ax[key] = qs[key];
 				}
 			}
 			r = r.join('&');
-			if (r == preloader.oldHash['--root']) {
+			if (r === preloader.oldHash['--root']) {
 				var gotIt = false;
 				for (var key in ax) {
-					if (preloader.oldHash[key] != ax[key]) {
+					if (preloader.oldHash[key] !== ax[key]) {
 						gotIt = true;
 						preloader.oldHash[key] = ax[key];
 						var aUrl = JSON.parse(ax[key]);
 						var bUrl = [];
 						for (var k in aUrl) {
-							if (typeof aUrl.hasOwnProperty == 'function' && aUrl.hasOwnProperty(k)) {
+							if (typeof aUrl.hasOwnProperty === 'function' && aUrl.hasOwnProperty(k)) {
 								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 							}
 						}
@@ -329,7 +329,7 @@ var load = function (url, data, id, callback) {
 		else {
 			url = '?module=admin&action=welcome';
 		}
-		if (url == '?module=admin&action=welcome') {
+		if (url === '?module=admin&action=welcome') {
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
@@ -376,61 +376,49 @@ var load = function (url, data, id, callback) {
 		var mod_title    = $('#module-' + load_module + ' > a .module-title').text();
 		var action_title = $('#submodule-' + load_module + '-' + load_action + ' > a').text();
 
-        if (load_module == 'admin' && load_action == 'welcome') {
+        if (load_module === 'admin' && load_action === 'welcome') {
             mod_title = '';
         }
 
-        var css_mod_title = action_title == ''
+        var css_mod_title = action_title === ''
             ? {'fontSize': '18px', 'paddingTop': '15px','lineHeight': '20px'}
             : {'fontSize': '',     'paddingTop': '',    'lineHeight': ''};
 
         $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
         $('#navbar-top .module-action').text(action_title);
 
+        if (xhrs[locData.id]) {
+        	xhrs[locData.id].abort();
+        }
 
+        xhrs[locData.id] = $.ajax({
+            url: 'index.php' + url,
+            data: data,
+            global: false,
+            async: true,
+            method: 'GET'
+        }).done(function (result) {
+            $(locData.id).html(result);
 
+			if (current_module !== load_module || current_action !== load_action ||
+				document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
+				document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
+			) {
+				$(locData.id).hide();
+				$(locData.id).fadeIn('fast');
+			} else {
+				$(locData.id).hide();
+				$(locData.id).fadeIn(50);
+			}
+			if (typeof locData.callback === 'function') {
+				locData.callback();
+				locData.callback = null;
+			}
+			callback();
 
-
-
-
-        var $container = $(locData.id);
-		if (locData.data) {
-			$container.load('index.php' + url, locData.data, function() {
-                if (current_module != load_module || current_action != load_action ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
-                ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
-                } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
-                if (typeof locData.callback === 'function') {
-                    locData.callback();
-                    locData.callback = null;
-                }
-                callback();
-			});
-		} else {
-			$container.load('index.php' + url, function() {
-                if (current_module != load_module || current_action != load_action ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
-                ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
-                } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
-                if (typeof locData.callback === 'function') {
-                    locData.callback();
-                    locData.callback = null;
-                }
-                callback();
-			});
-		}
+		}).fail(function (a,b,t){
+			preloader.hide();
+		});
 	}
 };
 
@@ -521,7 +509,7 @@ $(document).ready(function() {
         if (target) {
             var module = $(this).attr('id').substr(7);
 
-            if ($(target).parent().parent().attr('id') == 'menu-submodules') {
+            if ($(target).parent().parent().attr('id') === 'menu-submodules') {
                 $(this).addClass('module-hover');
             } else {
                 $('#menu-submodules').hide();
@@ -554,11 +542,11 @@ $(document).ready(function() {
     $(".swipe-area").swipe({
         swipeStatus: function(event, phase, direction, distance, duration, fingers) {
             var width = $(window).width();
-            if (phase == "move" && ((width <= 768 && direction == "right") || (width > 768 && direction == "left"))) {
+            if (phase === "move" && ((width <= 768 && direction === "right") || (width > 768 && direction === "left"))) {
                 $("#main").addClass("s-toggle");
                 return false;
             }
-            if (phase == "move" && ((width <= 768 && direction == "left") || (width > 768 && direction == "right"))) {
+            if (phase === "move" && ((width <= 768 && direction === "left") || (width > 768 && direction === "right"))) {
                 $("#main").removeClass("s-toggle");
                 return false;
             }
@@ -570,11 +558,11 @@ $(document).ready(function() {
 	};
 	xajax.callback.global.onFailure = function (a) {
         preloader.hide();
-        if (a.request.status == '0') {
+        if (a.request.status === '0') {
             swal("Превышено время ожидания ответа", 'Проверьте соединение с Интернет', 'error').catch(swal.noop);
-        } else if (a.request.status == 500) {
+        } else if (a.request.status === 500) {
             swal("Ой, извините!", 'Во время обработки вашего запроса произошла ошибка.', 'error').catch(swal.noop);
-        } else if (a.request.status == 203) {
+        } else if (a.request.status === 203) {
             swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
         } else {
             swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
@@ -694,7 +682,7 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item){
 	if (currentCategory && !item.category) {
 		item.category = '--';
 	}
-	if (item.category && item.category != currentCategory) {
+	if (item.category && item.category !== currentCategory) {
 		ul.append("<li class='ui-autocomplete-category'>" + item.category + "</li>");
 		currentCategory = item.category;
 	}
