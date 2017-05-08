@@ -950,12 +950,12 @@ class FirePHP {
                 $Type = self::LOG;
             }
         }
-        
+
         if ($this->options['includeLineNumbers']) {
             if (!isset($meta['file']) || !isset($meta['line'])) {
     
                 $trace = debug_backtrace();
-                for( $i=0 ; $trace && $i<sizeof($trace) ; $i++ ) {
+                for( $i=1 ; $trace && $i<sizeof($trace) ; $i++ ) {
           
                     if (isset($trace[$i]['class'])
                        && isset($trace[$i]['file'])
