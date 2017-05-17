@@ -168,7 +168,7 @@ class CoreController extends Common {
             $login = trim($post['login']);
             $passw = $post['password'];
 
-            if (!ctype_print($passw) || strlen($passw) < 30) {
+            if (empty($this->config->ldap->active) && (!ctype_print($passw) || strlen($passw) < 30)) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
                 header("Location: index.php");
                 return;
