@@ -1005,6 +1005,7 @@ table td.homeTD {
 	cursor: not-allowed;
 	background-color: transparent;
 }
+#main_body > .core-panel:last-child {margin-bottom: 0}
 
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
