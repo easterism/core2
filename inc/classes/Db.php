@@ -1,5 +1,7 @@
 <?
 
+use Zend\Session\Container as SessionContainer;
+
 /**
  * Class Db
  * @property Zend_Db_Adapter_Abstract $db
@@ -236,9 +238,10 @@ class Db {
 	 */
 	public function closeSession($expired = 'N') {
 		$auth = Zend_Registry::get('auth');
+		$sm = Zend_Registry::get('session');
 		if ($auth && $auth->ID && $auth->ID > 0) {
 			$where = $this->db->quoteInto("user_id = ?", $auth->ID);
-			$where2 = $this->db->quoteInto("sid=?", Zend_Session::getId());
+			$where2 = $this->db->quoteInto("sid=?", $sm->getId());
 			$where3 = $this->db->quoteInto("ip=?", $_SERVER['REMOTE_ADDR']);
 			$this->db->update('core_session', array(
 				'logout_time' => new Zend_Db_Expr('NOW()'),
@@ -246,6 +249,7 @@ class Db {
 				array($where, $where2, $where3)
 			);
 		}
+        $sm->destroy();
 	}
 
 

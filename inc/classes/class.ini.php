@@ -2,7 +2,6 @@
 
 require_once 'Acl.php';
 
-
 class initList extends Acl {
 
 	public $deleteAction			= "";

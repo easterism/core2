@@ -47,7 +47,7 @@ class Error {
         $message = $exception->getMessage();
         $code    = $exception->getCode();
 
-		if ($cnf->log && $cnf->log->on && $cnf->log->path) {
+		if ($cnf && $cnf->log && $cnf->log->on && $cnf->log->path) {
             if ((file_exists($cnf->log->path) && is_writable($cnf->log->path)) ||
                 ( ! file_exists($cnf->log->path) && is_dir(dirname($cnf->log->path)) && is_writable(dirname($cnf->log->path)))
             ) {
@@ -77,7 +77,7 @@ class Error {
 			die();
 		}
 		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
-		if ($cnf->debug && $cnf->debug->on) {
+		if ($cnf && $cnf->debug && $cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
@@ -109,7 +109,7 @@ class Error {
 			$message = 'Нет соединения с базой данных.';
 		} else {
 			$cnf = self::getConfig();
-			if ($cnf->debug->on) {
+			if ($cnf && $cnf->debug->on) {
 				$message = $exception->getMessage(); //TODO вести журнал
 			} else {
 				$message = "Ошибка базы данных!";
@@ -125,12 +125,10 @@ class Error {
 	 */
 	private static function getConfig() {
 		// Zend_Registry MUST present
-		try {
-			$cnf = \Zend_Registry::get('config');
-		} catch (\Zend_Exception $e) {
-			self::Exception($e->getMessage(), 500);
+        if (\Zend_Registry::isRegistered('config')) {
+            return \Zend_Registry::get('config');
 		}
-		return $cnf;
+		return null;
 	}
 
 	public static function catchZendException($exception) {
