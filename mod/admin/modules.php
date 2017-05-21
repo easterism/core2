@@ -336,7 +336,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 			$mods = array();
 			foreach ($data as $key => $val) {
 				$mods[$val[2]] = $val[0];
-				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"uninstallModule('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
+				$data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"modules.uninstallModule('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
 				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
 			}
 			$list->data = $data;
@@ -598,9 +598,9 @@ $tab->beginContainer($this->translate->tr("Модули"));
         //смотрим есть-ли разные версии одного мода
         //если есть, показываем последнюю, осатльные в спойлер
         $copy_list = array();
-        foreach ($tmp as $module_id=>$val) {
-            ksort($val);
-            $max_ver = (max(array_keys($val)));
+        foreach ($tmp as $module_id => $val) {
+            krsort($val, SORT_NATURAL);
+            $max_ver = key($val);
             $copy_list[$module_id] = $val[$max_ver];
             unset($val[$max_ver]);
             if (!empty($val)) {
