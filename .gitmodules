@@ -1,6 +1,3 @@
-[submodule "ext/jQuery/plugins/jstree"]
-	path = ext/jQuery/plugins/jstree
-	url = git@github.com:vakata/jstree.git
 [submodule "ext/jQuery/plugins/jQuery-File-Upload"]
 	path = ext/jQuery/plugins/jQuery-File-Upload
 	url = git@github.com:blueimp/jQuery-File-Upload.git
