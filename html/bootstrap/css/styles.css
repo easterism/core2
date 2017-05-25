@@ -381,6 +381,20 @@ LIST class search container
     margin: 0;
     margin-top: 10px;
 }
+.searchContainer .searchRow .list-checkbox {
+    line-height: 20px;
+    padding-left: 18px;
+    position: relative;
+    margin-top: 5px;
+}
+.searchContainer .searchRow .list-checkbox + .list-checkbox {
+    margin-left: 10px;
+}
+.searchContainer .searchRow .list-checkbox input[type=checkbox] {
+    position: absolute;
+    left: 0;
+    margin-top: 3px;
+}
 .searchContainer .searchRow input[type=submit].buttonSmall:hover {
     color: #fff;
     background-color: #286090;
@@ -1443,4 +1457,6 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     cursor: not-allowed;
     background-color: transparent;
 }
-#main_body > .core-panel:last-child {margin-bottom: 0}
+#main_body > .core-panel:last-child,
+.modal-body > .core-panel:last-child,
+.core-panel-body > .core-panel:last-child {margin-bottom: 0}
