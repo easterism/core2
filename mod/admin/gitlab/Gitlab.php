@@ -10,6 +10,8 @@ class Gitlab extends \Common
 {
     private $error;
 
+    private $api_version = 'v4';
+
     /**
      * Получаем список всех релизов из Gitlab
      *
@@ -19,7 +21,8 @@ class Gitlab extends \Common
     public function getTags() {
         $host   = $this->moduleConfig->gitlab->host;
         $token  = $this->moduleConfig->gitlab->token;
-        $data   = \Tool::doCurlRequest("https://$host/api/v3/projects/owned?statistics=1&per_page=100", array(), array("PRIVATE-TOKEN:$token"));
+        $data   = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects?statistics=1&per_page=100", array(), array("PRIVATE-TOKEN:$token"));
+
         if ($data['http_code'] == 200) {
             $data           = json_decode($data['answer']);
             $arch           = array();
@@ -31,7 +34,7 @@ class Gitlab extends \Common
                 if ($filter_group) {
                     if (!in_array($repo->namespace->name, $filter_group)) continue;
                 }
-                $tags = \Tool::doCurlRequest("https://$host/api/v3/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
+                $tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
                 if ($tags && $tags['answer']) {
                     $tags = json_decode($tags['answer']);
                     if ($tags) {

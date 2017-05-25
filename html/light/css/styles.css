@@ -223,38 +223,51 @@ PRELOADERS
     height: 100%;
     background-color: #fff;
     -webkit-box-shadow: inset 0 0 10px #D8D8D8;
-       -moz-box-shadow: inset 0 0 10px #D8D8D8;
-         -o-box-shadow: inset 0 0 10px #D8D8D8;
-            box-shadow: inset 0 0 10px #D8D8D8;
+    -moz-box-shadow: inset 0 0 10px #D8D8D8;
+    -o-box-shadow: inset 0 0 10px #D8D8D8;
+    box-shadow: inset 0 0 10px #D8D8D8;
     opacity: .2;
     cursor: wait;
 }
 #preloader > .block {
+    width: 140px;
+    padding: 8px 15px;
+    background: #ffffff;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    border: 1px solid #cdd1d8;
+    margin-left: -73px;
+    display: block;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    height: 162px;
-    width: 162px;
-    display: inline-block;
+    right: auto;
     text-align: left;
-    padding: 20px;
-    margin-left: -80px;
-    margin-top: -100px;
-    border: 1px solid #C7C7C7;
-    -webkit-border-radius: 90px;
-       -moz-border-radius: 90px;
-        -ms-border-radius: 90px;
-         -o-border-radius: 90px;
-            border-radius: 90px;
-    -webkit-box-shadow: 0 0 40px #848484;
-       -moz-box-shadow: 0 0 40px #848484;
-         -o-box-shadow: 0 0 40px #848484;
-            box-shadow: 0 0 40px #848484;
-    cursor: wait;
-    background-image: url("../img/preloader.gif");
-    background-repeat:no-repeat;
-    background-position:center;
-    background-color:white;
+    left: 50%;
+    top: 22px;
+    z-index: 1031;
+    -webkit-box-shadow: 0 1px 8px #ccc;
+    box-shadow: 0 1px 8px #ccc;
+}
+#preloader > .block .spinner-icon {
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border: solid 2px transparent;
+    border-top-color: #01a8fe;
+    border-left-color: #01a8fe;
+    border-radius: 50%;
+    float: left;
+    margin-right: 13px;
+    -webkit-animation: preloader-spinner 400ms linear infinite;
+    animation: preloader-spinner 400ms linear infinite;
+}
+
+@-webkit-keyframes preloader-spinner {
+    0%   { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+@keyframes preloader-spinner {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /*
