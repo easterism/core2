@@ -795,7 +795,7 @@ class listTable extends initList {
 
 		if (!$this->recordCount || $this->recordCount < 0) {
             $this->fixHead = false;
-			$tableBodyHTML = "<tr><td colspan=\"100\" align=\"center\" style=\"padding:5\">{$this->classText['NORESULT']}</td></tr>";
+			$tableBodyHTML = "<tr><td colspan=\"100\" align=\"center\" style=\"padding:5px\">{$this->classText['NORESULT']}</td></tr>";
 		} else {
             // Формируем основное содержимое таблицы
             foreach ($this->data as $k => $row) {

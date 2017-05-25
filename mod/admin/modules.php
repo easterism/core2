@@ -114,7 +114,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
 			$edit->addControl($this->translate->tr("Системный:"), "RADIO", "", "", "N");
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет'); 
-			$edit->addControl($this->translate->tr("Отображаемый:"), "RADIO", "", "", "N");
+			$edit->addControl($this->translate->tr("Отображаемый:"), "RADIO", "", "", "Y");
 			$edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
 			$edit->addControl($this->translate->tr("Есть главная страница:"), "RADIO", "", "", "Y");
 			$edit->selectSQL[] = $dep_list;
