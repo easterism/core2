@@ -415,6 +415,9 @@ LIST class search container
     margin: 0;
     margin-top: 10px;
 }
+.searchContainer .searchRow .checkbox label {
+    line-height: 20px;
+}
 .searchContainer .searchRow .list-checkbox {
     line-height: 20px;
     padding-left: 18px;
@@ -427,7 +430,7 @@ LIST class search container
 .searchContainer .searchRow .list-checkbox input[type=checkbox] {
     position: absolute;
     left: 0;
-     margin-top: 3px;
+    margin-top: 3px;
 }
 .searchContainer .searchRow input[type=submit].buttonSmall:hover {
     color: #fff;

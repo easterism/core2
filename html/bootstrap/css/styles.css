@@ -394,6 +394,9 @@ LIST class search container
     margin: 0;
     margin-top: 10px;
 }
+.searchContainer .searchRow .checkbox label {
+    line-height: 20px;
+}
 .searchContainer .searchRow .list-checkbox {
     line-height: 20px;
     padding-left: 18px;
