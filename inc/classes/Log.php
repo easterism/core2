@@ -67,7 +67,7 @@ class Log {
     public function access($name) {
         $this->setWriter();
         $this->log->pushProcessor(new WebProcessor());
-        $this->log->info($name, array('sid' => \Zend_Session::getId()));
+        $this->log->info($name, array('sid' => \Zend_Registry::get('session')->getId()));
     }
 
 

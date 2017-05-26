@@ -215,11 +215,11 @@ class Db {
 
 	/**
 	 * Сохранение информации о входе пользователя
-	 * @param Zend_Session_Namespace $auth
+	 * @param $auth
 	 */
-	protected function storeSession(Zend_Session_Namespace $auth) {
+	protected function storeSession($auth) {
 		if ($auth && $auth->ID && $auth->ID > 0) {
-			$sid = Zend_Session::getId();
+			$sid = Zend_Registry::get('session')->getId();
 			$s_id = $this->db->fetchOne("SELECT id FROM core_session WHERE logout_time IS NULL AND user_id=? AND sid=? AND ip=? LIMIT 1", array($sid, $auth->ID, $_SERVER['REMOTE_ADDR']));
 			if (!$s_id) {
 				$this->db->insert('core_session', array(
@@ -265,12 +265,13 @@ class Db {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
 			}
+            $sm = Zend_Registry::get('session');
 			$arr = array();
 			if (!empty($_POST)) $arr['POST'] = $_POST;
 			if (!empty($_GET)) $arr['GET'] = $_GET;
             $data = array(
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => Zend_Session::getId(),
+                'sid'            => $sm->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
