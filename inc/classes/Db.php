@@ -23,6 +23,7 @@ class Db {
 	protected $backend = 'File';
 	private $_s        = array();
 	private $_settings = array();
+	private $_locations = array();
 
 
 	/**
@@ -566,6 +567,7 @@ class Db {
 	final public function getModuleLoc($module_id) {
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new Exception($this->translate->tr("Не определен идентификатор модуля."));
+		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
 		if (!($this->cache->test($module_id))) {
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
@@ -588,6 +590,7 @@ class Db {
 		} else {
 			$loc = $this->cache->load($module_id);
 		}
+		$this->_locations[$module_id] = $loc;
 		return $loc;
 	}
 
