@@ -1199,7 +1199,7 @@ class listTable extends initList {
     private function setSessData($key, $value) {
         $sess_form       = new Zend_Session_Namespace('List');
         $ssi             = $this->resource;
-        $tmp             = $sess_form->$ssi ? : array();
+        $tmp             = ! empty($sess_form->$ssi) ? $sess_form->$ssi : array();
         $tmp[$key]       = $value;
         $sess_form->$ssi = $tmp;
     }
