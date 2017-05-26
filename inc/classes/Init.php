@@ -245,7 +245,6 @@
                     if ($sLife) {
                         $this->auth->setExpirationSeconds($sLife, "accept_answer");
                     }
-                    $this->auth->lock();
                 } else {
                     $this->closeSession('Y');
                 }
