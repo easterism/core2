@@ -9,6 +9,7 @@ require_once 'classes/Alert.php';
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 
+use Zend\Session\Container as SessionContainer;
 
 
 /**
@@ -138,9 +139,9 @@ class CoreController extends Common {
      */
     public function action_login ($post) {
 
-		$errorNamespace = new Zend_Session_Namespace('Error');
-		$blockNamespace = new Zend_Session_Namespace('Block');
-		$tokenNamespace = new Zend_Session_Namespace('Token');
+		$errorNamespace = new SessionContainer('Error');
+		$blockNamespace = new SessionContainer('Block');
+		$tokenNamespace = new SessionContainer('Token');
 		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
             header("Location: index.php");
@@ -168,7 +169,7 @@ class CoreController extends Common {
             $login = trim($post['login']);
             $passw = $post['password'];
 
-            if (!ctype_print($passw) || strlen($passw) < 30) {
+            if (empty($this->config->ldap->active) && (!ctype_print($passw) || strlen($passw) < 30)) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
                 header("Location: index.php");
                 return;
@@ -283,7 +284,6 @@ class CoreController extends Common {
 						$this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
-					$authNamespace->lock();
 					$sign = '#';
 				}
 			} else {
@@ -447,7 +447,7 @@ class CoreController extends Common {
 	 */
     public function action_delete(Array $params)
     {
-        $sess       = new Zend_Session_Namespace('List');
+        $sess       = new SessionContainer('List');
         $resource   = $params['res'];
         if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
         if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
@@ -911,7 +911,7 @@ class CoreController extends Common {
 		}
 		if ($_POST['class_id'] == 'main_user') {
 			$data = $_POST;
-			$sess_form = new Zend_Session_Namespace('Form');
+			$sess_form = new SessionContainer('Form');
 			$orderFields = $sess_form->main_user;
 
             $firstname = $data['control']['firstname'];
@@ -982,7 +982,7 @@ class CoreController extends Common {
 				$this->db->commit();				
 	     	} catch (Exception $e) {
 	     		$this->db->rollback();				
-				$errorNamespace = new Zend_Session_Namespace('Error');
+				$errorNamespace = new SessionContainer('Error');
 				$errorNamespace->ERROR =  $e->getMessage();				
 				$errorNamespace->setExpirationHops(1);
 			}			

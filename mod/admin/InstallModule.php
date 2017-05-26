@@ -1934,7 +1934,10 @@ class InstallModule extends \Common {
         foreach ($allMods as $t) {
             if (!empty($availMods[$t['module_id']])) {
                 foreach ($availMods[$t['module_id']] as $mod_v => $i) {
-                    if ($mod_v > $t['version'] && isset($i['migrate']["v{$t['version']}"]) && (empty($updates[$t['module_id']]) || $mod_v > $updates[$t['module_id']]['version'])) {
+                    if ($mod_v === $t['version']) continue;
+                    $comparer = [$mod_v, $t['version']];
+                    natsort($comparer);
+                    if (current($comparer) == $t['version'] && isset($i['migrate']["v{$t['version']}"]) && (empty($updates[$t['module_id']]) || $mod_v > $updates[$t['module_id']]['version'])) {
                         $updates[$t['module_id']] = array(
                             'module_id' => $t['module_id'],
                             'version'   => $mod_v,

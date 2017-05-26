@@ -1,5 +1,6 @@
 <?
 require_once("class.ini.php");
+
 $counter = 0;
 
 class editTable extends initEdit {
@@ -42,8 +43,8 @@ class editTable extends initEdit {
 
 
 		$this->sess_form = new Zend_Session_Namespace('Form');
-		$this->sess_form->{$this->main_table_id} = array();
-	}
+        $this->sess_form->{$this->main_table_id} = array();
+    }
 
 
     /**

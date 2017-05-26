@@ -6,6 +6,7 @@
  */
 class Tool {
 
+    private static $_curl;
 
 	/**
 	 * Проверка на существование файла
@@ -505,7 +506,10 @@ class Tool {
      */
     public static function doCurlRequest($url, $data = array(), $headers = array(), $curlopt = array())
     {
-        $curl = curl_init();
+        if (empty(self::$_curl)) {
+            self::$_curl = curl_init();
+        }
+        $curl = self::$_curl;
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 7000);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -536,7 +540,7 @@ class Tool {
         } else {
             $res['http_code'] = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         }
-        curl_close($curl);
+        //curl_close($curl);
         return $res;
     }
 

@@ -3,6 +3,8 @@
 require_once __DIR__ .'/classes/Common.php';
 require_once __DIR__ .'/classes/Image.php';
 
+use Zend\Session\Container as SessionContainer;
+
 
 /**
  * Class ajaxFunc
@@ -319,7 +321,7 @@ class ajaxFunc extends Common {
 			$control       = array();
 			$fileFlag      = array();
 			$fileFlagDel   = array();
-			$table         = trim($order_fields['table']);
+			$table         = isset($order_fields['table']) ? trim($order_fields['table']) : '';
 
 			if ( ! $table) {
 			    throw new Exception("Ошибка обработки таблицы", 500);
@@ -608,8 +610,8 @@ class ajaxFunc extends Common {
      */
     private function getSessForm($id) {
         if ( ! $this->orderFields) {
-            $sess_form = new Zend_Session_Namespace('Form');
-            if (!$id || empty($sess_form->$id)) {
+            $sess_form = new SessionContainer('Form');
+            if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
             }
             $this->orderFields = $sess_form->$id;

@@ -9,8 +9,16 @@
     if (!file_exists($conf_file)) {
         \Core2\Error::Exception("Отсутствует загрузчик.");
     }
+
+
     require_once($conf_file);
     require_once("Error.php");
+
+    use Zend\Cache\StorageFactory;
+    use Zend\Session\Config\SessionConfig;
+    use Zend\Session\SessionManager;
+    use Zend\Session\SaveHandler\Cache;
+    use Zend\Session\Container as SessionContainer;
 
     $conf_file = DOC_ROOT . "conf.ini";
 
@@ -18,27 +26,27 @@
         \Core2\Error::Exception("Отсутствует конфигурационный файл.");
     }
     $config = array(
-        'system'       => array('name' => 'CORE'),
+        'system' => array('name' => 'CORE'),
         'include_path' => '',
-        'cache'        => 'cache',
-        'temp'         => getenv('TMP'),
-        'debug'        => array('on' => false),
-        'session'      => array('cookie_httponly'  => true,
-                                'use_only_cookies' => true),
-        'database'     => array(
-            'adapter'                    => 'Pdo_Mysql',
-            'params'                     => array(
-                'charset'          => 'utf8',
+        'cache' => 'cache',
+        'temp' => getenv('TMP'),
+        'debug' => array('on' => false),
+        'session' => array('cookie_httponly' => true,
+                        'use_only_cookies' => true),
+        'database' => array(
+            'adapter' => 'Pdo_Mysql',
+            'params' => array(
+                'charset' => 'utf8',
                 'adapterNamespace' => 'Core_Db_Adapter'
             ),
-            'isDefaultTableAdapter'      => true,
-            'profiler'                   => array(
+            'isDefaultTableAdapter' => true,
+            'profiler' => array(
                 'enabled' => false,
-                'class'   => 'Zend_Db_Profiler_Firebug'
+                'class' => 'Zend_Db_Profiler_Firebug'
             ),
-            'caseFolding'                => true,
-            'autoQuoteIdentifiers'       => true,
-            'allowSerialization'         => true,
+            'caseFolding' => true,
+            'autoQuoteIdentifiers' => true,
+            'allowSerialization' => true,
             'autoReconnectOnUnserialize' => true
         )
     );
@@ -126,8 +134,23 @@
 	define("_MPDF_TTFONTDATAPATH", rtrim($config->cache, "/") . '/');
 
 	//сохраняем параметры сессии
-	if ($config->session) {
-		Zend_Session::setOptions($config->session->toArray());
+    if ($config->session) {
+        $sess_config = new SessionConfig();
+        $sess_config->setOptions($config->session);
+        $sess_manager = new SessionManager($sess_config);
+        if ($config->session->phpSaveHandler && $config->session->phpSaveHandler == 'memcache') {
+            $cache = StorageFactory::factory(array(
+                'adapter' => array(
+                    'name' => 'memcached',
+                    'options' => array(
+                        'servers' => array("host" => $config->session->savePath)
+                    ),
+                )
+            ));
+            $sess_manager->setSaveHandler(new Cache($cache));
+        }
+        //сохраняем менеджер сессий
+        Zend_Registry::set('session', $sess_manager);
 	}
 
 	//сохраняем конфиг
@@ -140,6 +163,7 @@
         Zend_Registry::set('core_config', $core_config);
     }
 
+	require_once 'Zend_Session_Namespace.php'; //DEPRECATED
 	require_once 'Db.php';
 	require_once 'Common.php';
 	require_once 'Templater.php'; //DEPRECATED
@@ -165,6 +189,8 @@
          * Init constructor.
          */
 		public function __construct() {
+
+
 			parent::__construct();
 
 			if (empty($_SERVER['HTTPS'])) {
@@ -179,10 +205,8 @@
 			}
 		}
 
-
         /**
          * Общая проверка аутентификации
-         * @throws Zend_Session_Exception
          */
         public function checkAuth() {
 
@@ -206,9 +230,10 @@
                 return;
             }
 
-            $this->auth 	= new Zend_Session_Namespace('Auth', true);
+            $this->auth 	= new SessionContainer('Auth');
             if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
-                Zend_Session::regenerateId();
+                $sm = Zend_Registry::get('session');
+                $sm->regenerateId();
                 $this->auth->initialized = true;
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
@@ -223,9 +248,6 @@
                     $this->auth->lock();
                 } else {
                     $this->closeSession('Y');
-                    Zend_Session::destroy();
-                    //$this->auth->ID = 0;
-                    //$this->auth->NAME = '';
                 }
                 Zend_Registry::set('auth', $this->auth);
             }
@@ -520,8 +542,8 @@
             $tpl->assign('{system_name}', $this->getSystemName());
             $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.tpl");
 
-            $errorNamespace = new Zend_Session_Namespace('Error');
-            $blockNamespace = new Zend_Session_Namespace('Block');
+            $errorNamespace = new SessionContainer('Error');
+            $blockNamespace = new SessionContainer('Block');
             if (!empty($blockNamespace->blocked)) {
                 $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
                 $tpl2->assign('[ERROR_LOGIN]', '');
@@ -542,10 +564,9 @@
                 $tpl2->logo->assign('{logo}', $logo);
             }
             $u = crypt(uniqid(), microtime());
-            $tokenNamespace = new Zend_Session_Namespace('Token');
+            $tokenNamespace = new SessionContainer('Token');
             $tokenNamespace->TOKEN = $u;
             $tokenNamespace->setExpirationHops(1);
-            $tokenNamespace->lock();
             $tpl2->assign('name="action"', 'name="action" value="' . $u . '"');
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
@@ -564,7 +585,7 @@
             parse_str($_SERVER['QUERY_STRING'], $params);
             if (!empty($params['res']) && !empty($params['id'])) {
                 header('Content-type: application/json; charset="utf-8"');
-                $sess       = new Zend_Session_Namespace('List');
+                $sess       = new SessionContainer('List');
                 $resource   = $params['res'];
                 $sessData   = $sess->$resource;
                 $loc = isset($sessData['loc']) ? $sessData['loc'] : '';
@@ -911,6 +932,7 @@
                             $_GET['module'] = $route['module']; //DEPRECATED
                         }
                         elseif ($i == 1) {
+                            if (!$v) $v = 'index';
                             $vv  = explode("?", $v);
                             $route['action'] = strtolower($vv[0]);
                         }
