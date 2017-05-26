@@ -132,7 +132,7 @@ class File extends \Common {
      */
     public function handleFileTemp($thumbName) {
         $config     = \Zend_Registry::get('config');
-        $sid        = \Zend_Session::getId();
+        $sid        = \Zend_Registry::get('session')->getId();
         $upload_dir = $config->temp . '/' . $sid;
         $fname      = $upload_dir . "/thumbnail/" . $thumbName;
         if (!is_file($fname)) {

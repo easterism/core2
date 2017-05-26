@@ -719,7 +719,7 @@ class ModAjax extends ajaxFunc {
         //echo "<pre>";print_r($data);echo "</pre>";//die;
 
         try {
-            $sid 			= Zend_Session::getId();
+            $sid 			= Zend_Registry::get('session')->getId();
             $upload_dir 	= $this->config->temp . '/' . $sid;
 
             if (isset($data['control']['name']) && $this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {

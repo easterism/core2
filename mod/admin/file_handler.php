@@ -43,7 +43,7 @@
 	}
 	elseif (!empty($_GET['tfile'])) {
 		$config     = Zend_Registry::get('config');
-		$sid        = Zend_Session::getId();
+		$sid        = Zend_Registry::get('session')->getId();
 		$upload_dir = $config->temp . '/' . $sid;
 		$fname      = $upload_dir . "/thumbnail/" . $_GET['tfile'];
 		if (!is_file($fname)) {
