@@ -968,12 +968,12 @@ class editTable extends initEdit {
 									    if (in_array($file['type'], array('image/jpeg', 'image/png', 'image/gif'))) {
                                             $controlGroups[$cellId]['html'][$key] .=
                                                 "<div>" .
-                                                    "<a href=\"index.php?module=admin&action=handler&fileid={$file['id']}&filehandler={$this->table}\">" .
-                                                        "<img class=\"img-rounded\" src=\"index.php?module=admin&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
+                                                    "<a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">" .
+                                                        "<img class=\"img-rounded\" src=\"index.php?module={$module}&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
                                                     "</a>" .
                                                 "</div>";
                                         } else {
-                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module=admin&action=handler&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
+                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
                                         }
 									}
 								} else {
