@@ -9,7 +9,7 @@ class UploadHandler extends Db
     function __construct($options=null) {
 		$config = Zend_Registry::get('config');
     	//echo $config->temp . '/files/';
-    	$sid = Zend_Session::getId();
+    	$sid = Zend_Registry::get('session')->getId();
     	$upload_dir = $config->temp . '/' . $sid;
     	if (!is_dir($upload_dir . "/thumbnail")) {
     		$old = umask(0);

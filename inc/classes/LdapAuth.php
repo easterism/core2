@@ -153,10 +153,8 @@ class LdapAuth extends Common {
 					'firstname' => $data['givenname'][0]
 				));
 			}
-			$this->auth->unLock();
 			$this->auth->LN = $data['sn'][0];
 			$this->auth->FN = $data['givenname'][0];
-			$this->auth->lock();
 			$this->cache->save($login, $key, array('mod_kitchen_prod'));
 		}
 	}

@@ -24,6 +24,7 @@ var feedback = {
 				$('#feedbackError')[0].className = 'completed';
 				$('#feedbackError').html('<div>Сообщение успешно отправлено</div>');
 				$('#feedbackError').show('fast');
+                me.val('');
 			})
 			.fail(function(){
 				err.push('Ошибка отправки сообщения :(');

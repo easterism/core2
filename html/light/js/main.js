@@ -152,6 +152,7 @@ function toAnchor(id){
 
 var locData = {};
 var loc = ''; //DEPRECATED
+var xhrs = {};
 
 var preloader = {
 	extraLoad : {},
@@ -241,7 +242,7 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
     } else if (jqxhr.status == 500) {
         swal("Ой, извините!", "Во время обработки вашего запроса произошла ошибка.", 'error').catch(swal.noop);
     } else if (exception != 'abort') {
-        swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);
+        swal("Произошла ошибка",jqxhr.status + ' ' + exception, 'error').catch(swal.noop);
     }
 });
 $(document).ajaxSuccess(function (event, xhr, settings) {
@@ -375,62 +376,56 @@ var load = function (url, data, id, callback) {
         $('#navbar-top .module-action').text(action_title);
 
 
+        if (xhrs[locData.id]) {
+            xhrs[locData.id].abort();
+        }
 
+        if (locData.data) {
+            $(locData.id).load('index.php' + url, locData.data, callback);
 
+        } else {
+            xhrs[locData.id] = $.ajax({
+                url: 'index.php' + url,
+                data: data,
+                global: false,
+                async: true,
+                method: 'GET'
+            }).done(function (result) {
+                $(locData.id).html(result);
 
-
-
-        var $container = $(locData.id);
-		if (locData.data) {
-			$container.load('index.php' + url, locData.data, function() {
-                if (current_module != load_module || current_action != load_action ||
+                if (current_module !== load_module || current_action !== load_action ||
                     document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
                     document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
                 ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
+                    $(locData.id).hide();
+                    $(locData.id).fadeIn('fast');
                 } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
+                    $(locData.id).hide();
+                    $(locData.id).fadeIn(50);
+                }
                 if (typeof locData.callback === 'function') {
                     locData.callback();
                     locData.callback = null;
                 }
                 callback();
-			});
-		} else {
-			$container.load('index.php' + url, function() {
-                if (current_module != load_module || current_action != load_action ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||
-                    document.location.hash.match(/^#module=([a-zA-Z0-9_]+)&action=([a-zA-Z0-9_]+)$/)
-                ) {
-                    $container.hide();
-                    $container.fadeIn('fast');
-                } else {
-					$container.hide();
-					$container.fadeIn(50);
-				}
-                if (typeof locData.callback === 'function') {
-                    locData.callback();
-                    locData.callback = null;
-                }
-                callback();
-			});
-		}
+
+            }).fail(function (a, b, t) {
+                preloader.hide();
+            });
+        }
 	}
 };
 
 var loadPDF = function (url) {
 	preloader.show();
-	$("#main_body").html('<iframe frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
+	$("#main_body").html('<iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
     $("#main_body > iframe").css({
         'height'      : ($("body").height() - ($("#navbar-top").height())),
         'top'         : '50px',
         'margin-left' : '-30px',
         'position'    : 'absolute'
     });
-	$("iframe").load( function() {
+	$("#core-iframe").load( function() {
 		preloader.hide();
 	});
 
@@ -613,22 +608,23 @@ $(document).ready(function() {
                 );
             },
             log: function(message) {
-                $.growl({ message: message });
+                var d = new Date();
+                $.growl({ title: d.getHours()  + ':' + d.getMinutes() + ':' + d.getSeconds(), message: message });
             },
             error: function(message) {
-                $.growl.error({ message: message });
+                $.growl.error({title: "Ошибка!", message: message });
             },
             info: function(message) {
-                $.growl.info({ message: message });
+                $.growl.notice({title: "Уведомление!", message: message });
             },
             warning: function(message) {
-                $.growl.warning({ message: message });
+                $.growl.warning({title: "Внимание!",  message: message });
             },
             success: function(message) {
-                $.growl.notice({ message: message });
+                $.growl.notice({title: "Успех!",  message: message });
             },
             message: function(message) {
-                $.growl({ message: message });
+                $.growl({title: "Сообщение!", message: message });
             }
 		}
     } catch (e) {

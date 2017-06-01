@@ -524,12 +524,12 @@ class ModAjax extends ajaxFunc {
 
 			if ($refid) {
 				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
-				$save = array(
-					'lastname' => $data['control']['lastname'],
-					'firstname' => $data['control']['firstname'],
-					'middlename' => $data['control']['middlename'],
-					'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
-				);
+                $save = array(
+                    'lastname'   => $data['control']['lastname'],
+                    'firstname'  => $data['control']['firstname'],
+                    'middlename' => $data['control']['middlename'],
+                    'lastuser'   => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
+                );
 				if (!$row) {
 					$row = $this->dataUsersProfile->createRow();
 					$save['user_id'] = $refid;
@@ -711,6 +711,7 @@ class ModAjax extends ajaxFunc {
 
 
     /**
+     * Сохраняет загруженные модули для последующего использования
      * @param array $data
      * @return xajaxResponse
      */
@@ -718,7 +719,7 @@ class ModAjax extends ajaxFunc {
         //echo "<pre>";print_r($data);echo "</pre>";//die;
 
         try {
-            $sid 			= Zend_Session::getId();
+            $sid 			= Zend_Registry::get('session')->getId();
             $upload_dir 	= $this->config->temp . '/' . $sid;
 
             if (isset($data['control']['name']) && $this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
@@ -726,13 +727,11 @@ class ModAjax extends ajaxFunc {
                 $name = explode("|", $data['control']['name']);
                 if (!$name[0]) throw new Exception($this->translate->tr("Не удалось получить группу репозитория."));
                 if (!$name[1]) throw new Exception($this->translate->tr("Не удалось получить версию релиза."));
-                $zip = \Tool::doCurlRequest("https://{$this->moduleConfig->gitlab->host}/{$name[0]}/repository/archive.zip?ref={$name[1]}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
-                if ($zip['http_code'] == 200) {
-                    $fn = tempnam($upload_dir, "gitlab");
-                    file_put_contents($fn, $zip['answer']);
-
-                } else {
-                    throw new Exception($zip['error']);
+                require_once('gitlab/Gitlab.php');
+                $gl = new \Core2\Gitlab();
+                $fn = $gl->getZip($name[0], $name[1]);
+                if ($e = $gl->getError()) {
+                    throw new Exception($e);
                 }
             } else {
                 $f = explode("###", $data['control']['files|name']);
@@ -749,13 +748,12 @@ class ModAjax extends ajaxFunc {
             $file_type = mime_content_type($fn);
 
             if ($file_type == "application/zip") {
-
                 $content = file_get_contents($fn);
 
                 /* Распаковка архива */
                 $zip = new ZipArchive();
                 $destinationFolder = $upload_dir . '/t_' . uniqid();
-                if ($zip->open($fn) === true){
+                if ($zip->open($fn) === true) {
                     /* Распаковка всех файлов архива */
                     for ($i = 0; $i < $zip->numFiles; $i++) {
                         $zip->extractTo($destinationFolder, $zip->getNameIndex($i));

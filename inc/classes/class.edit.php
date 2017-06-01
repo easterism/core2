@@ -1,5 +1,6 @@
 <?
 require_once("class.ini.php");
+
 $counter = 0;
 
 class editTable extends initEdit {
@@ -42,8 +43,8 @@ class editTable extends initEdit {
 
 
 		$this->sess_form = new Zend_Session_Namespace('Form');
-		$this->sess_form->{$this->main_table_id} = array();
-	}
+        $this->sess_form->{$this->main_table_id} = array();
+    }
 
 
     /**
@@ -370,7 +371,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['group'][] = $temp;
 						}
 
-						//преобразование атрибутов в строку
+						//преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -688,7 +689,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= "<pre><span>" . htmlspecialchars_decode($value['default']) . "</span></pre>";
+								$controlGroups[$cellId]['html'][$key] .= "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>";
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
@@ -950,10 +951,30 @@ class editTable extends initEdit {
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
-								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=?", $refid);
+								$files = $this->db->fetchAll("
+                                    SELECT id, 
+                                           filename,
+                                           type 
+                                    FROM `{$this->table}_files` 
+                                    WHERE refid = ?
+                                      AND fieldid = ?
+                                ", array(
+                                    $refid,
+                                    $value['default']
+                                ));
+
 								if ($files) {
-									foreach ($files as $value) {
-										$controlGroups[$cellId]['html'][$key] .= "<div><a href='index.php?module=admin&action=handler&fileid={$value['id']}&filehandler={$this->table}'>{$value['filename']}</a></div>";
+									foreach ($files as $file) {
+									    if (in_array($file['type'], array('image/jpeg', 'image/png', 'image/gif'))) {
+                                            $controlGroups[$cellId]['html'][$key] .=
+                                                "<div>" .
+                                                    "<a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">" .
+                                                        "<img class=\"img-rounded\" src=\"index.php?module={$module}&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
+                                                    "</a>" .
+                                                "</div>";
+                                        } else {
+                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
+                                        }
 									}
 								} else {
 									$controlGroups[$cellId]['html'][$key] .= '<i>нет прикрепленных файлов</i>';

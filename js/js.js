@@ -351,8 +351,8 @@ var loadPDF = function (url) {
 	preloader.show();
     $("#main_body").height($("body").height() - ($("#menuContainer").height() + 15));
 	$("#main_body").html('<iframe id="pdfiframe" frameborder="0" width="100%" height="100%"></iframe>');
-	$("iframe").attr('src', url);
-	$("iframe").load( function() {
+	$("#pdfiframe").attr('src', url);
+	$("#pdfiframe").load( function() {
 		preloader.hide();
 	});
 

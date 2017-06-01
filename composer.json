@@ -18,7 +18,8 @@
     "php": ">=5.4.0",
     "zf1/zend-registry": "~1.12",
     "zf1/zend-config": "~1.12",
-    "zf1/zend-session": "~1.12",
+    "zendframework/zend-session": "2.7.2",
+    "zendframework/zend-cache": "2.7.2",
     "zf1/zend-db": "~1.12",
     "zf1/zend-cache": "~1.12",
     "zf1/zend-acl": "~1.12",
@@ -30,7 +31,9 @@
     "xajax/xajax": "dev-master",
     "smottt/wideimage": ">=1.1.1",
     "components/jquery": "2.1.4",
-    "monolog/monolog": "1.21.0",
-    "ext-mbstring": "*"
-  }
+    "monolog/monolog": "1.21.0"
+  },
+  "post-install-cmd": [
+    "mkdir -m 0777 vendor/xajax/xajax/xajax_js/deferred"
+  ]
 }
