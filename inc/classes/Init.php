@@ -963,6 +963,7 @@
                     }
                     $route['module'] = $vv[0];
                     if (!$route['module'] || strpos($route['module'], '.')) { //DEPRECATED
+                        // FIXME Убрать модуль и экшен по умолчанию
                         $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
                         $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                     }
