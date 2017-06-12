@@ -1295,7 +1295,6 @@ class InstallModule extends \Common {
         $repo_url = trim($repo_url);
         $url = "{$repo_url}&key={$key}";
         $curl = \Tool::doCurlRequest($url);
-
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200) {
             if (!empty($curl['error'])) {
@@ -1311,7 +1310,6 @@ class InstallModule extends \Common {
                 throw new \Exception("Ответ репозитория - {$message}");
             }
         }
-
         return $curl;
     }
 

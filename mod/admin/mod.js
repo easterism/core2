@@ -100,7 +100,7 @@ var modules = {
 	},
 	checkModsUpdates: function (mods, theme) {
 		$.get('index.php?module=admin&action=modules',
-			{'checkModsUpdates': mods},
+			{'checkModsUpdates' : mods},
 			function(data, textStatus){
 				if(textStatus == 'success') {
 					data.forEach(function(item, i, arr) {
