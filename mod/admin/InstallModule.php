@@ -877,13 +877,15 @@ class InstallModule extends \Common {
      * @return  void
      * @throws  \Exception
      */
-    public function checkVer()
+    private function checkVer()
     {
+        $v = array($this->curVer, $this->mInfo['install']['version']);
+        natsort($v);
         //проверка актуальности версии
-        if ($this->curVer == $this->mInfo['install']['version']) {
+        if ($v[0] === $v[1]) {
             throw new \Exception($this->translate->tr("У вас уже установлена эта версия!"));
-        } elseif ($this->curVer > $this->mInfo['install']['version']) {
-            throw new \Exception($this->translate->tr("У вас стоит более актуальная версия!"));
+        } elseif ($v[1] === $this->curVer) {
+            throw new \Exception($this->translate->tr("У вас установлена более актуальная версия!"));
         }
         //проверка предусмотрено ли обновление
         $curVer = "v" . trim($this->curVer);
@@ -1712,7 +1714,7 @@ class InstallModule extends \Common {
                     $files_hash = base64_decode($out->files_hash);
                 }
             } else {
-                $this->addNotice("Поиск эталона", "Поиск в доступных модулях и репозиториях", "Модуль не найден", "warning");
+                $this->addNotice($this->translate->tr("Поиск эталона"), $this->translate->tr("Поиск в доступных модулях и репозиториях"), $this->translate->tr("Модуль не найден"), "warning");
             }
 
             //заменяем файлы
@@ -1740,7 +1742,7 @@ class InstallModule extends \Common {
                     mkdir($pathToVer);
                 }
                 if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
-                    $this->addNotice("Обновление файлов", "Перезапись файлов прервана", "Папка закрыта для записи", "danger");
+                    $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Перезапись файлов прервана"), $this->translate->tr("Папка закрыта для записи"), "danger");
                 } else {
                     //записываем новые файлы
                     $config                 = \Zend_Registry::getInstance()->get('config');
@@ -1750,11 +1752,11 @@ class InstallModule extends \Common {
                     $this->mData['files_hash'] = $files_hash;
                     $this->checkAndCopyFiles($tempDir, $pathToVer);
                     if (!empty($this->copyFilesInfo['error'])) {
-                        $this->addNotice("Обновление файлов", "Ошибка", "Убедитесь, что есть доступ на запись для всех файлов", "danger");
+                        $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Ошибка"), $this->translate->tr("Убедитесь, что есть доступ на запись для всех файлов"), "danger");
                     } else {
                         //обновляем инфу о хэшах
                         $this->db->update("core_modules", array('files_hash' => $files_hash), $this->db->quoteInto("module_id = ?", $mod_id));
-                        $this->addNotice("Обновление файлов", "Обновление завершено", "Успешно", "info");
+                        $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Обновление завершено"), $this->translate->tr("Успешно"), "info");
                     }
                 }
             } else {
@@ -1765,10 +1767,10 @@ class InstallModule extends \Common {
                 if (empty($data)) {
                     $t[] = "архив";
                 }
-                $this->addNotice("Обновление файлов", "Не найдены " . implode(" и ", $t), "Перезапись файлов прервана", "danger");
+                $this->addNotice($this->translate->tr("Обновление файлов"), "Не найдены " . implode(" и ", $t), $this->translate->tr("Перезапись файлов прервана"), "danger");
             }
         } catch (\Exception $e) {
-            $this->addNotice("Обновление файлов", $e->getMessage(), "Ошибка", "danger");
+            $this->addNotice($this->translate->tr("Обновление файлов"), $e->getMessage(), $this->translate->tr("Ошибка"), "danger");
         }
 
         return $st. $this->printNotices(1);
@@ -1865,18 +1867,33 @@ class InstallModule extends \Common {
             $files_hash = '';
             $ver        = '';
 
-            //получаем список всех доступных модулей
+            $update = array($m_v => array());
+            $update[$m_v]['install']['module_id'] = $mod_id;
+
+                //получаем список всех доступных модулей
             $availMods = $this->getInfoAllAvailMods();
 
             //ищем нужный модуль
-            $update = array();
             if (!empty($availMods[$mod_id])) {
                 foreach ($availMods[$mod_id] as $mod_v => $i) {
-                    if ($mod_v > $m_v && isset($i['migrate']["v{$m_v}"]) && (empty($update) || $mod_v > $update['install']['version'])) {
-                        $update = $i;
-                    }
+                    if (array_key_exists($mod_v, $update)) continue;
+                    $update[$mod_v] = $i;
                 }
             }
+            unset($availMods);
+            krsort($update, SORT_NATURAL);
+            if (count($update) > 1) {
+                $update_exists = array();
+                foreach ($update as $mod_v => $i) {
+                    if (isset($i['migrate']["v{$m_v}"])) {
+                        $update_exists = $i;
+                        break;
+                    }
+                }
+                $update = $update_exists;
+            }
+
+
             if (!empty($update)) {
                 if ($update['location'] == 'avail') {
                     $mod       = $this->db->fetchRow("SELECT `data`, files_hash FROM core_available_modules WHERE id = ?", $update['location_id']);
