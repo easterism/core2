@@ -41,11 +41,11 @@ class Modules extends Zend_Db_Table_Abstract {
 			SELECT m.*,
 				   sm_id,
 				   sm_name,
-				   sm_key
+				   sm_key,
+				   m.is_public
 			FROM core_modules AS m
 				LEFT JOIN core_submodules AS sm ON m.m_id = sm.m_id AND sm.visible = 'Y'
 			WHERE m.visible = 'Y'
-			  AND m.is_public = 'Y'
 			ORDER BY m.seq, sm.seq
 		");
 
