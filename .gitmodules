@@ -22,3 +22,6 @@
 [submodule "mod/queue/v1.4.0"]
 	path = mod/queue/v1.4.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/cron/v3.0.0"]
+	path = mod/cron/v3.0.0
+	url = git@git.rdo.belhard.com:core2/modules/cron.git
