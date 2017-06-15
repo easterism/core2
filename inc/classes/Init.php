@@ -172,6 +172,7 @@
 
 	/**
 	 * Class Init
+     * @property Modules $dataModules
      */
     class Init extends Db {
 
@@ -179,6 +180,10 @@
          * @var StdClass|Zend_Session_Namespace
          */
         protected $auth;
+
+        /**
+         * @var Acl
+         */
         protected $acl;
         private $is_cli = false;
         private $is_rest = array();
@@ -677,26 +682,29 @@
                 if (!empty($data['sm_key'])) continue;
                 $module_id = $data['module_id'];
 
-                if ($data['isset_home_page'] == 'N') {
-                    $first_action = 'index';
-                    foreach ($mods as $mod) {
-                        if ( ! empty($mod['sm_id']) && $data['m_id'] == $mod['m_id']) {
-                            $first_action = $mod['sm_key'];
-                            break;
+                if ($data['is_public'] == 'Y') {
+                    if ($data['isset_home_page'] == 'N') {
+                        $first_action = 'index';
+                        foreach ($mods as $mod) {
+                            if ( ! empty($mod['sm_id']) && $data['m_id'] == $mod['m_id']) {
+                                $first_action = $mod['sm_key'];
+                                break;
+                            }
                         }
+                        $url           = "index.php?module={$module_id}&action={$first_action}";
+                        $module_action = "&action={$first_action}";
+                    } else {
+                        $url           = "index.php?module=" . $module_id;
+                        $module_action = '';
                     }
-                    $url           = "index.php?module={$module_id}&action={$first_action}";
-                    $module_action = "&action={$first_action}";
-                } else {
-                    $url           = "index.php?module=" . $module_id;
-                    $module_action = '';
+
+                    $html .= str_replace(
+                        array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_ACTION]', '[MODULE_URL]'),
+                        array($module_id, $data['m_name'], $module_action, $url),
+                        $modtpl
+                    );
                 }
 
-                $html .= str_replace(
-                    array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_ACTION]', '[MODULE_URL]'),
-                    array($module_id, $data['m_name'], $module_action, $url),
-                    $modtpl
-                );
                 if ($module_id == 'admin') continue;
                 $location      = $this->getModuleLocation($module_id); //получение расположения модуля
                 $modController = "Mod" . ucfirst($module_id) . "Controller";
@@ -720,7 +728,7 @@
             $modtpl = $tpl2->getBlock('submodules');
             $html2 = "";
             foreach ($mods as $data) {
-                if (!empty($data['sm_key'])) {
+                if ( ! empty($data['sm_key']) && $data['is_public'] == 'Y') {
                     $url = "index.php?module=" . $data['module_id'] . "&action=" . $data['sm_key'];
                     $html2 .= str_replace(array('[MODULE_ID]', '[SUBMODULE_ID]', '[SUBMODULE_NAME]', '[SUBMODULE_URL]'),
                                           array($data['module_id'], $data['sm_key'], $data['sm_name'], $url),
@@ -760,6 +768,7 @@
                                 'm_name'          => $data['m_name'],
                                 'module_id'       => $data['module_id'],
                                 'isset_home_page' => empty($data['isset_home_page']) ? 'Y' : $data['isset_home_page'],
+                                'is_public'       => $data['is_public']
                             );
                         }
                     } else {
@@ -774,7 +783,8 @@
                     'm_id'            => $m_id,
                     'm_name'          => $module['m_name'],
                     'module_id'       => $module['module_id'],
-                    'isset_home_page' => empty($module['isset_home_page']) ? 'Y' : $module['isset_home_page']
+                    'isset_home_page' => empty($module['isset_home_page']) ? 'Y' : $module['isset_home_page'],
+                    'is_public'       => $module['is_public']
                 );
                 foreach ($data as $submodule) {
                     if (empty($submodule['sm_id'])) continue;
@@ -782,7 +792,13 @@
                 }
             }
             if ($this->auth->ADMIN || $this->auth->NAME == 'root') {
-                $tmp = array('m_id' => -1, 'm_name' => $this->translate->tr('Админ'), 'module_id' => 'admin', 'isset_home_page' => 'Y');
+                $tmp = array(
+                    'm_id'            => -1,
+                    'm_name'          => $this->translate->tr('Админ'),
+                    'module_id'       => 'admin',
+                    'isset_home_page' => 'Y',
+                    'is_public'       => 'Y'
+                );
                 $mods[] = $tmp;
                 $mods[] = array_merge($tmp, array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'sm_key' => 'modules',    'loc' => 'core'));
                 $mods[] = array_merge($tmp, array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 'sm_key' => 'settings',   'loc' => 'core'));
@@ -963,6 +979,7 @@
                     }
                     $route['module'] = $vv[0];
                     if (!$route['module'] || strpos($route['module'], '.')) { //DEPRECATED
+                        // FIXME Убрать модуль и экшен по умолчанию
                         $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
                         $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                     }
@@ -1034,16 +1051,22 @@
             $mods   = $this->getModuleList();
             $modsList = array();
             foreach ($mods as $data) {
-                $modsList[$data['m_id']] = array('module_id'  => $data['module_id'],
-                                                 'm_name'     => $data['m_name'],
-                                                 'm_id'     => $data['m_id'],
-                                                 'submodules' => array());
+                if ($data['is_public'] == 'Y') {
+                    $modsList[$data['m_id']] = array(
+                        'module_id'  => $data['module_id'],
+                        'm_name'     => $data['m_name'],
+                        'm_id'       => $data['m_id'],
+                        'submodules' => array()
+                    );
+                }
             }
             foreach ($mods as $data) {
-                if (!empty($data['sm_id'])) {
-                    $modsList[$data['m_id']]['submodules'][] = array('sm_id'   => $data['sm_id'],
-                                                                     'sm_key'  => $data['sm_key'],
-                                                                     'sm_name' => $data['sm_name']);
+                if ( ! empty($data['sm_id']) && $data['is_public'] == 'Y') {
+                    $modsList[$data['m_id']]['submodules'][] = array(
+                        'sm_id'   => $data['sm_id'],
+                        'sm_key'  => $data['sm_key'],
+                        'sm_name' => $data['sm_name']
+                    );
                 }
             }
             //проверяем наличие контроллера для core2m в модулях

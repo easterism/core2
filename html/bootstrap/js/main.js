@@ -499,7 +499,7 @@ $(document).ready(function() {
 	var h = top.document.location.hash;
 	resize();
 
-    $.datepicker.setDefaults($.datepicker.regional[ "ru_RU" ]);
+    $.datepicker.setDefaults($.datepicker.regional[ "ru" ]);
 	$.timepicker.regional['ru'] = {
 		timeOnlyTitle: 'Выберите время',
 		timeText: 'Время',

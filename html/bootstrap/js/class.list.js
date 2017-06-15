@@ -82,6 +82,8 @@ var listx = {
 
     gMonths : ["","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
     loc : {},
+    checkAllEvents: [],
+    reloadEvents: [],
 
     /**
      * @param id
@@ -97,12 +99,12 @@ var listx = {
      * @returns {boolean}
      */
     dateKeyup: function (id, obj) {
-        if (obj.id == id + '_day' && Number(obj.value) > 31) {
+        if (obj.id === id + '_day' && Number(obj.value) > 31) {
             obj.value = '';
             obj.focus();
             return false;
         }
-        if (obj.id == id + '_month' && Number(obj.value) > 12) {
+        if (obj.id === id + '_month' && Number(obj.value) > 12) {
             obj.value = '';
             obj.focus();
             return false;
@@ -167,10 +169,28 @@ var listx = {
                     location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
                 }
             } else {
-                load(listx.loc[id] + '&' + p, '', container);
+                load(listx.loc[id] + '&' + p, '', container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
-        else load(listx.loc[id] + '&' + p, '', container);
+        else load(listx.loc[id] + '&' + p, '', container, function () {
+            if (listx.reloadEvents.length > 0) {
+                $.each(listx.reloadEvents, function () {
+                    if (this.list_id === id) {
+                        this.func();
+                    }
+                })
+            }
+            preloader.callback();
+        });
     },
 
 
@@ -190,11 +210,29 @@ var listx = {
                     location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
                 }
             } else {
-                load(listx.loc[id] + '&' + p, '', container);
+                load(listx.loc[id] + '&' + p, '', container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
         else {
-            load(listx.loc[id] + '&' + p, '', container);
+            load(listx.loc[id] + '&' + p, '', container, function () {
+                if (listx.reloadEvents.length > 0) {
+                    $.each(listx.reloadEvents, function () {
+                        if (this.list_id === id) {
+                            this.func();
+                        }
+                    })
+                }
+                preloader.callback();
+            });
         }
     },
 
@@ -209,7 +247,16 @@ var listx = {
         if (isAjax)    container = document.getElementById("list" + id).parentNode;
         var post = {};
         post['count_' + id] = obj.value;
-        load(listx.loc[id], post, container);
+        load(listx.loc[id], post, container, function () {
+            if (listx.reloadEvents.length > 0) {
+                $.each(listx.reloadEvents, function () {
+                    if (this.list_id === id) {
+                        this.func();
+                    }
+                })
+            }
+            preloader.callback();
+        });
     },
 
 
@@ -224,15 +271,15 @@ var listx = {
         var alt = $($this).attr('alt');
         var val = $($this).attr('val');
         if (alt == 'on') {
-            var is_active     = "N";
-            var new_src     = src.replace("on.png", "off.png");
-            var new_alt     = "off";
-            var str         = "Деактивировать запись?";
+            var is_active = "N";
+            var new_src   = src.replace("on.png", "off.png");
+            var new_alt   = "off";
+            var str       = "Деактивировать запись?";
         } else {
-            var is_active     = "Y";
-            var new_src     = src.replace("off.png", "on.png");
-            var new_alt     = "on";
-            var str         = "Активировать запись?";
+            var is_active = "Y";
+            var new_src   = src.replace("off.png", "on.png");
+            var new_alt   = "on";
+            var str       = "Активировать запись?";
         }
 
         swal({
@@ -310,7 +357,7 @@ var listx = {
             if (val && !nocheck) {
                 val = val.slice(0, -1);
             }
-            if (!callback) {
+            if ( ! callback) {
                 callback = function(data) {
                     if (data && data.error) {
                         $('.error').html(data.error);
@@ -391,8 +438,17 @@ var listx = {
                                 dataType: "json",
                                 url: "index.php?res=" + id + "&id=" + val,
                                 success: function (data) {
-                                    if (data == true) {
-                                        load(listx.loc[id], '', container);
+                                    if (data === true) {
+                                        load(listx.loc[id], '', container, function () {
+                                            if (listx.reloadEvents.length > 0) {
+                                                $.each(listx.reloadEvents, function () {
+                                                    if (this.list_id === id) {
+                                                        this.func();
+                                                    }
+                                                })
+                                            }
+                                            preloader.callback();
+                                        });
                                     } else {
                                         if (!data || data.error) {
                                             var msg = data.error ? data.error : "Не удалось выполнить удаление";
@@ -403,7 +459,16 @@ var listx = {
                                                 alert(data.alert);
                                             }
                                             if (data.loc) {
-                                                load(data.loc, '', container);
+                                                load(data.loc, '', container, function () {
+                                                    if (listx.reloadEvents.length > 0) {
+                                                        $.each(listx.reloadEvents, function () {
+                                                            if (this.list_id === id) {
+                                                                this.func();
+                                                            }
+                                                        })
+                                                    }
+                                                    preloader.callback();
+                                                });
                                             }
                                         }
                                     }
@@ -477,10 +542,12 @@ var listx = {
      */
     checkAll : function (obj, id) {
         var j = 1;
+        var check = false;
+
         if (obj.checked) {
-            var check = true;
+            check = true;
         }
-        else var check = false;
+
         for(var i = 0; i < j; i++) {
             if (document.getElementById("check" + id + i)) {
                 document.getElementById("check" + id + i).checked = check;
@@ -488,6 +555,27 @@ var listx = {
             }
         }
 
+        if (listx.checkAllEvents.length > 0) {
+            $.each(listx.checkAllEvents, function () {
+                if (this.list_id === id) {
+                    this.func();
+                }
+            })
+        }
+    },
+
+
+    /**
+     * @param list_id
+     * @param func
+     */
+    onCheckAll : function(list_id, func) {
+        if (typeof func === 'function') {
+            listx.checkAllEvents.push({
+                list_id: list_id,
+                func: func
+            });
+        }
     },
 
 
@@ -544,9 +632,28 @@ var listx = {
         if (listx.loc[id]) {
             if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
-                load(listx.loc[id] + '&__filter=1', post, container);
+                load(listx.loc[id] + '&__filter=1', post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
+
             } else {
-                load(listx.loc[id], post, container);
+                load(listx.loc[id], post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
     },
@@ -563,9 +670,27 @@ var listx = {
         if (listx.loc[id]) {
             if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
-                load(listx.loc[id] + '&__clear=1', post, container);
+                load(listx.loc[id] + '&__clear=1', post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             } else {
-                load(listx.loc[id], post, container);
+                load(listx.loc[id], post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
     },
@@ -588,9 +713,27 @@ var listx = {
         if (listx.loc[id]) {
             if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
-                load(listx.loc[id] + '&__search=1', post, container);
+                load(listx.loc[id] + '&__search=1', post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             } else {
-                load(listx.loc[id], post, container);
+                load(listx.loc[id], post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
     },
@@ -608,9 +751,27 @@ var listx = {
         if (listx.loc[id]) {
             if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
-                load(listx.loc[id] + '&__order=1', post, container);
+                load(listx.loc[id] + '&__order=1', post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             } else {
-                load(listx.loc[id], post, container);
+                load(listx.loc[id], post, container, function () {
+                    if (listx.reloadEvents.length > 0) {
+                        $.each(listx.reloadEvents, function () {
+                            if (this.list_id === id) {
+                                this.func();
+                            }
+                        })
+                    }
+                    preloader.callback();
+                });
             }
         }
     },
@@ -640,8 +801,8 @@ var listx = {
                     for (var k in src) {
                         if (src[k].childNodes && src[k].childNodes.length) {
                             var el = src[k].childNodes[0];
-                            if (el && el.nodeName == "TD") {
-                                if (typeof el.getAttribute == "function") {
+                            if (el && el.nodeName === "TD") {
+                                if (typeof el.getAttribute === "function") {
                                     var id = el.getAttribute("title");
                                     if (id) {
                                         so.push(id);
@@ -654,7 +815,7 @@ var listx = {
                 $.post("index.php?module=admin&action=seq",
                     {data : so, tbl : tbl},
                     function (data, textStatus) {
-                        if (textStatus != 'success') {
+                        if (textStatus !== 'success') {
                             alert(textStatus);
                         } else {
                             if (data && data.error) {
@@ -667,6 +828,20 @@ var listx = {
             }
         });
         $("#list" + id + " tbody").disableSelection();
+    },
+
+
+    /**
+     * @param list_id
+     * @param func
+     */
+    onReload : function(list_id, func) {
+        if (typeof func === 'function') {
+            listx.reloadEvents.push({
+                list_id: list_id,
+                func: func
+            });
+        }
     },
 
 

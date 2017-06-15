@@ -86,7 +86,7 @@ class Gitlab extends \Common
         $zip = '';
         if ($answer['http_code'] == 200) {
             $zip = new \ZipArchive();
-            $upload_dir 	    = $this->config->temp . '/' . \Zend_Session::getId();
+            $upload_dir 	    = $this->config->temp . '/' . \Zend_Registry::get('session')->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
             $fn                 = tempnam($upload_dir, "gitlabzip");
             file_put_contents($fn, $answer['answer']);
