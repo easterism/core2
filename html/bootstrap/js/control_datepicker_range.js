@@ -21,10 +21,16 @@ var control_datepicker_range = {
             beforeShowDay: function(date) {
                 try {
                     var date1 = $.datepicker.parseDate(dateFormat, $input_from.val());
-                } catch (err) {date1 = '';}
+                } catch (err) {
+                    date1 = '';
+                    $input_from.val('')
+                }
                 try {
                     var date2   = $.datepicker.parseDate(dateFormat, $input_to.val());
-                } catch (err) {date2 = '';}
+                } catch (err) {
+                    date2 = '';
+                    $input_to.val('')
+                }
                 var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date < date2))
                     ? 'ctrl-dpr-highlight'
                     : '';
@@ -406,7 +412,7 @@ var control_datepicker_range = {
                         isFind = true;
                     }
                 } else {
-                    $(this).focus();
+                    $(this).focus().select();
                     return false;
                 }
             });

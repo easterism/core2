@@ -21,10 +21,16 @@ var control_datepicker_range = {
             beforeShowDay: function(date) {
                 try {
                     var date1 = $.datepicker.parseDate(dateFormat, $input_from.val());
-                } catch (err) {date1 = '';}
+                } catch (err) {
+                    date1 = '';
+                    $input_from.val('')
+                }
                 try {
                     var date2   = $.datepicker.parseDate(dateFormat, $input_to.val());
-                } catch (err) {date2 = '';}
+                } catch (err) {
+                    date2 = '';
+                    $input_to.val('')
+                }
                 var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date < date2))
                     ? 'ctrl-dpr-highlight'
                     : '';
@@ -382,7 +388,7 @@ var control_datepicker_range = {
      * Выполнение функции после изменения даты
      */
     callbackChange : function(date_from, date_to, wrapper) {
-        if (typeof this.callback_change == 'function') {
+        if (typeof this.callback_change === 'function') {
             this.callback_change(date_from, date_to, wrapper);
         }
     },
@@ -402,11 +408,11 @@ var control_datepicker_range = {
             var isFind = false;
             $('input[class*="ctrl-dpr-"]:visible, select[class*="ctrl-dpr-"]:visible', wrapper).each(function () {
                 if (isFind === false) {
-                    if (currentTarget == this) {
+                    if (currentTarget === this) {
                         isFind = true;
                     }
                 } else {
-                    $(this).focus();
+                    $(this).focus().select();
                     return false;
                 }
             });
@@ -419,7 +425,7 @@ var control_datepicker_range = {
      * @param func
      */
     setCallbackChange : function(func) {
-        if (typeof func == 'function') {
+        if (typeof func === 'function') {
             this.callback_change = func;
         }
     },
@@ -429,7 +435,7 @@ var control_datepicker_range = {
      * Выполнение функции для раскраски календаря
      */
     callbackDayClass : function(date) {
-        if (typeof this.callback_day_class == 'function') {
+        if (typeof this.callback_day_class === 'function') {
             return this.callback_day_class(date);
         }
     },
@@ -440,7 +446,7 @@ var control_datepicker_range = {
      * @param func
      */
     setCallbackDayClass : function(func) {
-        if (typeof func == 'function') {
+        if (typeof func === 'function') {
             this.callback_day_class = func;
         }
     }
@@ -450,7 +456,7 @@ var control_datepicker_range = {
 
 $(document).ready(function(){
     /**
-     * Cкрытие календаря
+     * Скрытие календаря
      */
     $(document).click(function(e) {
         var target = $(e.target);

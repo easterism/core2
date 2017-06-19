@@ -4,14 +4,25 @@ require_once 'Acl.php';
 
 /**
  * Class Common
+ * @property StdClass        $acl
+ * @property Zend_Config_Ini $moduleConfig
+ * @property CoreController  $modAdmin
  */
 class Common extends Acl {
 
 	protected $module;
 	protected $path;
+
+    /**
+     * @var StdClass
+     */
 	protected $auth;
 	protected $actionURL;
 	protected $resId;
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	private $_p = array();
 	private $AR = array(
@@ -77,7 +88,6 @@ class Common extends Acl {
      * @throws Exception
      */
     public function __get($k) {
-
 		//исключение для герета базы или кеша, выполняется всегда
 		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
 			return parent::__get($k);
@@ -100,19 +110,37 @@ class Common extends Acl {
 				$module_loc = $this->getModuleLocation($this->module);
 				$conf_file  = "{$module_loc}/conf.ini";
 				if (is_file($conf_file)) {
-					$configMod = new Zend_Config_Ini($conf_file);
-					$extMod    = $configMod->getExtends();
-					$configExt = new Zend_Config_Ini(DOC_ROOT . "conf.ini");
-					$ext       = $configExt->getExtends();
-					if (!empty($_SERVER['SERVER_NAME']) && array_key_exists($_SERVER['SERVER_NAME'], $ext) && array_key_exists($_SERVER['SERVER_NAME'], $extMod)) {
-						$modConfig = new Zend_Config_Ini($conf_file, $_SERVER['SERVER_NAME']);
-					} else {
-						$modConfig = new Zend_Config_Ini($conf_file, 'production');
-					}
-					$modConfig->setReadOnly();
-					$v = $this->{$k} = $modConfig;
+                    $config_glob  = new Zend_Config_Ini(DOC_ROOT . 'conf.ini');
+                    $extends_glob = $config_glob->getExtends();
+
+                    $config_mod  = new Zend_Config_Ini($conf_file);
+                    $extends_mod = $config_mod->getExtends();
+                    $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
+                        array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
+                        ? $_SERVER['SERVER_NAME']
+                        : 'production';
+
+                    $config_mod = new Zend_Config_Ini($conf_file, $section_mod, true);
+
+                    $conf_ext = $module_loc . "/conf.ext.ini";
+                    if (file_exists($conf_ext)) {
+                        $config_mod_ext  = new Zend_Config_Ini($conf_ext);
+                        $extends_mod_ext = $config_mod_ext->getExtends();
+
+                        $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
+                            array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
+                            array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
+                            ? $_SERVER['SERVER_NAME']
+                            : 'production';
+                        $config_mod->merge(new Zend_Config_Ini($conf_ext, $section_ext));
+                    }
+
+
+                    $config_mod->setReadOnly();
+					$v = $this->{$k} = $config_mod;
 				} else {
-                    \Core2\Error::Exception($this->traslate->tr("Не найден конфигурационный файл модуля."), 500);
+                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
 				}
 			}
 			// Получение экземпляра контроллера указанного модуля
@@ -181,7 +209,11 @@ class Common extends Acl {
                     } else {
                         require_once "CommonApi.php";
                         require_once $location . "/{$module_api}.php";
-                        $v = $this->{$k} = new $module_api();
+                        $api = new $module_api();
+                        if (!is_subclass_of($api, 'CommonApi')) {
+                            return new stdObject();
+                        }
+                        $v = $this->{$k} = $api;
                     }
                 } else {
                     return new stdObject();

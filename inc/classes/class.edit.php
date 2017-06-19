@@ -1,5 +1,6 @@
 <?
 require_once("class.ini.php");
+
 $counter = 0;
 
 class editTable extends initEdit {
@@ -42,8 +43,8 @@ class editTable extends initEdit {
 
 
 		$this->sess_form = new Zend_Session_Namespace('Form');
-		$this->sess_form->{$this->main_table_id} = array();
-	}
+        $this->sess_form->{$this->main_table_id} = array();
+    }
 
 
     /**
@@ -370,7 +371,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['group'][] = $temp;
 						}
 
-						//преобразование атрибутов в строку
+						//преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -541,11 +542,13 @@ class editTable extends initEdit {
                                 }
                             } else {
                                 $this->scripts['date2'] = true;
+								$options = is_array($value['in']) ? json_encode($value['in']) : '{}';
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/date2.html');
-                                $tpl = str_replace('[THEME_DIR]',  'core2/html/' . THEME,     $tpl);
-                                $tpl = str_replace('[NAME]',       'control[' . $field . ']', $tpl);
-                                $tpl = str_replace('[DATE]',       $value['default'],         $tpl);
-                                $tpl = str_replace('[KEY]',        uniqid(),                  $tpl);
+                                $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
+                                $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
+                                $tpl = str_replace('[OPTIONS]',   $options,                  $tpl);
+                                $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
                         }
@@ -572,7 +575,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
-                                $tpl = str_replace('[KEY]',       uniqid(),                  $tpl);
+                                $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
                         }
@@ -606,7 +609,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $options['url']);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       uniqid());
+                                $tpl->assign('[KEY]',       crc32(uniqid('', true)));
 
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');
@@ -686,7 +689,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= "<pre><span>" . htmlspecialchars_decode($value['default']) . "</span></pre>";
+								$controlGroups[$cellId]['html'][$key] .= "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>";
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
@@ -948,10 +951,30 @@ class editTable extends initEdit {
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
-								$files = $this->db->fetchAll("SELECT id, filename FROM `{$this->table}_files` WHERE refid=?", $refid);
+								$files = $this->db->fetchAll("
+                                    SELECT id, 
+                                           filename,
+                                           type 
+                                    FROM `{$this->table}_files` 
+                                    WHERE refid = ?
+                                      AND fieldid = ?
+                                ", array(
+                                    $refid,
+                                    $value['default']
+                                ));
+
 								if ($files) {
-									foreach ($files as $value) {
-										$controlGroups[$cellId]['html'][$key] .= "<div><a href='index.php?module=admin&action=handler&fileid={$value['id']}&filehandler={$this->table}'>{$value['filename']}</a></div>";
+									foreach ($files as $file) {
+									    if (in_array($file['type'], array('image/jpeg', 'image/png', 'image/gif'))) {
+                                            $controlGroups[$cellId]['html'][$key] .=
+                                                "<div>" .
+                                                    "<a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">" .
+                                                        "<img class=\"img-rounded\" src=\"index.php?module={$module}&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
+                                                    "</a>" .
+                                                "</div>";
+                                        } else {
+                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
+                                        }
 									}
 								} else {
 									$controlGroups[$cellId]['html'][$key] .= '<i>нет прикрепленных файлов</i>';
@@ -1368,7 +1391,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 		}
 
 		if (!$this->readOnly) {
-			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;");
+			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
 		$this->HTML .= 	"</div></div>";
 		if (!$this->readOnly) {
@@ -1463,9 +1486,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 	 * @param string $onclick
 	 * @return string
 	 */
-	private function button($value, $type = "Submit", $onclick = "") {
+	private function button($value, $type = "Submit", $onclick = "", $cssClass = "button") {
 		$id = uniqid();
-		$out = '<input type="' . $type . '" class="button" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
+		$out = '<input type="' . $type . '" class="' . $cssClass . '" value="' . $value . '" ' . ($onclick ? 'onclick="' . rtrim($onclick, ";") . '"' : '') . '/>';
 
 		return $out;
 	}

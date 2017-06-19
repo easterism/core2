@@ -1,12 +1,32 @@
 <?
 require_once 'Acl.php';
 
+
+/**
+ * Class CommonApi
+ * @property StdClass       $acl
+ * @property CoreController $modAdmin
+ */
 class CommonApi extends Acl {
+
+    /**
+     * @var StdClass|Zend_Session_Namespace
+     */
 	protected $auth;
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
-	private $module = array();
+
+	private $module;
 	private $_p = array();
 
+
+    /**
+     * CommonApi constructor.
+     * @param string $module
+     */
 	public function __construct($module) {
 		parent::__construct();
 		$this->module = $module;
@@ -14,11 +34,21 @@ class CommonApi extends Acl {
 		$this->config = Zend_Registry::get('config');
 	}
 
-    public function __call($method, $arguments)
-    {
+
+    /**
+     * @param string $method
+     * @param array  $arguments
+     * @return bool
+     */
+    public function __call($method, $arguments) {
         return false;
     }
 
+
+    /**
+     * @param string $k
+     * @return bool
+     */
 	public function __isset($k) {
 		return isset($this->_p[$k]);
 	}
@@ -72,10 +102,14 @@ class CommonApi extends Acl {
 		return $v;
 	}
 
+
+    /**
+     * @param string $k
+     * @param mixed  $v
+     * @return $this
+     */
 	public function __set($k, $v) {
 		$this->_p[$k] = $v;
 		return $this;
 	}
-
-
 }

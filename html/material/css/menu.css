@@ -2,28 +2,22 @@ a {color: #337AB7}
 #main {
     height: 100%;
     width: 100%;
-    /*background-color: #607D8B;*/
 }
 #main-content {
     position: relative;
-    background-color: #e6e6e6; /* f5f5f5*/
-    -webkit-transition:  margin-left 0.4s ease-in-out;
-       -moz-transition:  margin-left 0.4s ease-in-out;
-         -o-transition:  margin-left 0.4s ease-in-out;
-            transition:  nomargin-left 0.4s ease-in-out;
+    background-color: #e6e6e6;
+    -webkit-transition: width 0.3s ease-in-out;
+       -moz-transition: width 0.3s ease-in-out;
+         -o-transition: width 0.3s ease-in-out;
+            transition: width 0.3s ease-in-out;
     height: 100%;
     width: 100%;
     overflow: auto;
     -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -ms-box-sizing: border-box;
-    -o-box-sizing: border-box;
-    box-sizing: border-box;
-    /*-webkit-box-shadow: 2px 0 5px #000;*/
-    /*-moz-box-shadow: 2px 0 5px #000;*/
-    /*-ms-box-shadow: 2px 0 5px #000;*/
-    /*-o-box-shadow: 2px 0 5px #000;*/
-    /*box-shadow: 2px 0 5px #000;*/
+       -moz-box-sizing: border-box;
+        -ms-box-sizing: border-box;
+         -o-box-sizing: border-box;
+            box-sizing: border-box;
 }
 #main-content #sidebar-toggle {
     background-color: #607D8B;
@@ -47,10 +41,10 @@ a {color: #337AB7}
     -ms-box-sizing: border-box;
     -o-box-sizing: border-box;
     box-sizing: border-box;
-    -webkit-transition: margin-left 0.4s ease-in-out;
-       -moz-transition: margin-left 0.4s ease-in-out;
-         -o-transition: margin-left 0.4s ease-in-out;
-            transition: margin-left 0.4s ease-in-out;
+    -webkit-transition: all 0.3s ease-in-out;
+       -moz-transition: all 0.3s ease-in-out;
+         -o-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
     z-index: 20;
 }
 #menu-wrapper {
@@ -62,27 +56,12 @@ a {color: #337AB7}
     background-color: #607D8B;
     box-shadow: inset -1px 0 3px 0 #666;
     direction: rtl;
+    -webkit-transition: all 0.3s ease-in-out;
+       -moz-transition: all 0.3s ease-in-out;
+         -o-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
 }
-@media(max-width:768px) {
-    #main #main-content {margin-left: 0;}
-    #main #menu-container {margin-left: -240px;}
-    #main #navbar-top {left: 0}
-    #main.s-toggle #main-content {margin-left: 0;}
-    #main.s-toggle #menu-container {margin-left: 0;}
-    #main.s-toggle #navbar-top {left: 240px}
-}
-@media(min-width:768px) {
-    #main #main-content {margin-left: 240px;}
-    #main #menu-container {margin-left: 0;}
-    #main #navbar-top {left: 240px;}
-    #main.s-toggle #main-content {margin-left: 0;}
-    #main.s-toggle #menu-container {margin-left: -240px;}
-    #main.s-toggle #navbar-top {left: 0}
-    .navbar-top-links .dropdown-messages,
-    .navbar-top-links .dropdown-tasks,
-    .navbar-top-links .dropdown-alerts {margin-left: auto;}
-}
-#heme-button > a {
+#home-button > a {
     padding-left: 13px;
     padding-right: 10px;
     white-space: nowrap;
@@ -99,25 +78,29 @@ a {color: #337AB7}
     text-align: left;
     direction: ltr;
 }
+#main #home-button > a:hover {
+    background-color: #4C626D;
+    outline: none;
+    border-left: 3px solid #2196F3;
+    padding-left: 10px;
+}
+#home-button > a > i {
+    display: none;
+}
 #navbar-top {
     margin-bottom: 0;
-    /*margin-top: -50px;*/
-    /*position: relative;*/
-    /*top: 50px;*/
     -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.3);
        -moz-box-shadow: 0 1px 2px rgba(0,0,0,.3);
         -ms-box-shadow: 0 1px 2px rgba(0,0,0,.3);
          -o-box-shadow: 0 1px 2px rgba(0,0,0,.3);
             box-shadow: 0 1px 2px rgba(0,0,0,.3);
-
     position: fixed;
     left: 240px;
     right: 0;
-
-    -webkit-transition: left 0.4s ease-in-out;
-       -moz-transition: left 0.4s ease-in-out;
-         -o-transition: left 0.4s ease-in-out;
-            transition: left 0.4s ease-in-out;
+    -webkit-transition: left 0.3s ease-in-out;
+       -moz-transition: left 0.3s ease-in-out;
+         -o-transition: left 0.3s ease-in-out;
+            transition: left 0.3s ease-in-out;
 }
 #navbar-top .navbar-right {
     float: right;
@@ -126,13 +109,20 @@ a {color: #337AB7}
 .navbar-header {
     float: left;
 }
-.navbar-default {
+#main-content > .navbar-default {
     background-color: #FFFFFF;
     border: none;
 }
 #user-section {
     padding: 0 10px;
     margin-right: 0px;
+}
+#user-section .nav-item a {
+    height: 50px;
+    width: 50px;
+    line-height: 32px;
+    font-size: 20px;
+    color: #BDBDBD;
 }
 #menu-row-1 {
     height: 60px;
@@ -159,7 +149,7 @@ a {color: #337AB7}
     color: #fff;
     position: relative;
     display: block;
-    padding: 10px 15px;
+    padding: 10px 17px;
     text-decoration: none;
     text-align: left;
     direction: ltr;
@@ -167,6 +157,11 @@ a {color: #337AB7}
     overflow: hidden;
     white-space: nowrap;
 }
+#menu-modules .menu-module a > .module-icon-letter,
+#menu-modules .menu-module-selected a > .module-icon-letter {
+    display: none;
+}
+
 #menu-modules .menu-module:hover a,
 #menu-modules .menu-module a:hover,
 #menu-modules .menu-module a:focus,
@@ -174,7 +169,7 @@ a {color: #337AB7}
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
     background-color: #4C626D;
-    padding-left: 12px;
+    padding-left: 14px;
     outline: none;
 }
 #menu-submodules {
@@ -185,10 +180,10 @@ a {color: #337AB7}
     left: 240px;
     top: 200px;
     -webkit-box-shadow: 1px 0 2px #666;
-    -moz-box-shadow: 1px 0 2px #666;
-    -ms-box-shadow: 1px 0 2px #666;
-    -o-box-shadow: 1px 0 2px #666;
-    box-shadow: 1px 0 2px #666;
+       -moz-box-shadow: 1px 0 2px #666;
+        -ms-box-shadow: 1px 0 2px #666;
+         -o-box-shadow: 1px 0 2px #666;
+            box-shadow: 1px 0 2px #666;
     display: none;
     min-width: 160px;
     width: auto;
@@ -234,12 +229,12 @@ a {color: #337AB7}
     white-space: nowrap;
     vertical-align: middle;
     -ms-touch-action: manipulation;
-    touch-action: manipulation;
+        touch-action: manipulation;
     cursor: pointer;
     -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
     background-image: none;
     border: 1px solid transparent;
     border-radius: 4px;
@@ -296,7 +291,53 @@ a {color: #337AB7}
     position: absolute;
     right: 15px;
 }
-#menu-modules .menu-module-selected > a > i,
-#menu-modules .menu-module > a > i {
+#menu-modules .menu-module-selected > a i,
+#menu-modules .menu-module > a i {
     min-width: 18px;
+}
+
+/* Mobile */
+@media(max-width:768px) {
+    #main #main-content {margin-left: 0;}
+    #main #menu-container {margin-left: -240px;}
+    #main #navbar-top {left: 0}
+    #main.s-toggle #main-content {margin-left: 0;}
+    #main.s-toggle #menu-container {margin-left: 0;}
+    #main.s-toggle #navbar-top {left: 240px}
+}
+/* Desktop */
+@media(min-width:768px) {
+    #main #navbar-top {left: 240px;}
+    #main.s-toggle #main-content {margin-left: 0;}
+    #main.s-toggle #menu-container {width: 50px;}
+    #main.s-toggle #menu-wrapper {width: 50px;}
+    #main.s-toggle #navbar-top {left: 50px}
+    #main.s-toggle .nav-second-level-toggle {display: none;}
+    #main.s-toggle .menu-module-selected a,
+    #main.s-toggle .menu-module a {color: transparent}
+    #main.s-toggle .menu-module-selected a i,
+    #main.s-toggle .menu-module a i {color: #fff}
+    #main.s-toggle #menu-submodules {left: 50px}
+    #main.s-toggle #home-button > a span {display: none;}
+    #main.s-toggle #home-button > a i {display: inline;padding-left: 4px;}
+
+    #main.s-toggle .menu-module a > .module-title,
+    #main.s-toggle .menu-module-selected a > .module-title {
+        font-size: 0;
+    }
+    #main.s-toggle .menu-module a > .module-title > i,
+    #main.s-toggle .menu-module-selected a > .module-title > i {
+        font-size: 14px;
+    }
+
+    #main.s-toggle .menu-module a > .module-icon-letter,
+    #main.s-toggle .menu-module-selected a > .module-icon-letter {
+        display: inline-block;
+        color: #fff;
+        font-weight: 600;
+        margin-left: 2px;
+    }
+    .navbar-top-links .dropdown-messages,
+    .navbar-top-links .dropdown-tasks,
+    .navbar-top-links .dropdown-alerts {margin-left: auto;}
 }

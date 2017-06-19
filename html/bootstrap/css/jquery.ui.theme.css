@@ -405,12 +405,33 @@
 .ui-datepicker th { color: #555; }
 .ui-datepicker td.ui-datepicker-week-col { padding-left: 5px; }
 .ui-datepicker .ui-datepicker-today a {
-    background: #bfbfbf;
+    /*background: #bfbfbf;*/
     border: none;
-    color: #fff;
+    /*color: #fff;*/
+    color: #555;
     text-shadow: none;
+    position: relative;
+}
+a.ui-state-default.ui-state-highlight:before {
+    content: '';
+    display: inline-block;
+    border: solid transparent;
+    border-width: 0 0 7px 7px;
+    border-bottom-color: #2e6da4;
+    border-top-color: rgba(0, 0, 0, 0.2);
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
 }
 .ui-datepicker td .ui-state-active { background: #2e6da4; color: #fff; }
+.ctrl-dp-highlight a.ui-state-default:before,
+.ctrl-dtp-highlight a.ui-state-default:before,
+.ctrl-dpr-highlight a.ui-state-default:before,
+.ctrl-dtpr-highlight a.ui-state-default:before,
+a.ui-state-default.ui-state-highlight.ui-state-hover:before,
+a.ui-state-default.ui-state-highlight.ui-state-active:before {
+    border-bottom-color: #fff;
+}
 
 /* Accordion
 ----------------------------------*/
@@ -533,4 +554,9 @@
       -ms-animation: progressbar-stripes 1.5s linear infinite;
        -o-animation: progressbar-stripes 1.5s linear infinite;
           animation: progressbar-stripes 1.5s linear infinite;
+}
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    top: 50%;
+    margin-top: -11px;
 }

@@ -1,5 +1,4 @@
 <?
-    require_once "Zend/Translate.php";
 
 /**
  * Локализация core2

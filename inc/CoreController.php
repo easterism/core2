@@ -6,15 +6,31 @@ require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 
+require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
+
+use Zend\Session\Container as SessionContainer;
+
+
 /**
  * Class CoreController
+ * @property Users        $dataUsers
+ * @property Enum         $dataEnum
+ * @property Modules      $dataModules
+ * @property Roles        $dataRoles
+ * @property SubModules   $dataSubModules
+ * @property UsersProfile $dataUsersProfile
  */
 class CoreController extends Common {
 
-	const RP = 'e3fb5f90f7bcb59fd5b9dbc030335c07';
+	const RP = '8c1733d4cd0841199aa02ec9362be324';
 	protected $tpl = '';
 	protected $theme = 'default';
-	
+
+
+    /**
+     * CoreController constructor.
+     */
 	public function __construct() {
 		parent::__construct();
 		$this->module = 'admin';
@@ -26,14 +42,18 @@ class CoreController extends Common {
 	}
 
 
+    /**
+     * @param string $k
+     * @param array  $arg
+     */
     public function __call ($k, $arg) {
 		if (!method_exists($this, $k)) return;
 	}
 
 
 	/**
-	 * @param $var
-	 * @param $value
+	 * @param string $var
+	 * @param mixed  $value
 	 */
 	public function setVars($var, $value) {
 		$this->$var = $value;
@@ -48,19 +68,22 @@ class CoreController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $tab = new tabs('mod');
-        $tab->beginContainer($this->translate->tr("События аудита"));
+        $tab->beginContainer($this->_("События аудита"));
         try {
             $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
-                Alert::memory()->info($this->translate->tr("Система работает в штатном режиме."));
+                Alert::memory()->info($this->_("Система работает в штатном режиме."));
             } else {
-				Alert::memory()->danger(implode(", ", $changedMods), $this->translate->tr("Обнаружены изменения в файлах модулей:"));
+				Alert::memory()->danger(implode(", ", $changedMods), $this->_("Обнаружены изменения в файлах модулей:"));
             }
-            if (!$this->moduleConfig->database || !$this->moduleConfig->database->admin || !$this->moduleConfig->database->admin->username) {
-				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->translate->tr("Не задан администратор базы данных"));
+            if ( ! $this->moduleConfig->database ||
+                 ! $this->moduleConfig->database->admin ||
+                 ! $this->moduleConfig->database->admin->username
+            ) {
+				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->_("Не задан администратор базы данных"));
             }
         } catch (Exception $e) {
-			Alert::memory()->danger($this->translate->tr("Ошибка"), $e->getMessage());
+			Alert::memory()->danger($e->getMessage(), $this->_("Ошибка"));
         }
 
         echo Alert::get();
@@ -116,9 +139,9 @@ class CoreController extends Common {
      */
     public function action_login ($post) {
 
-		$errorNamespace = new Zend_Session_Namespace('Error');
-		$blockNamespace = new Zend_Session_Namespace('Block');
-		$tokenNamespace = new Zend_Session_Namespace('Token');
+		$errorNamespace = new SessionContainer('Error');
+		$blockNamespace = new SessionContainer('Block');
+		$tokenNamespace = new SessionContainer('Token');
 		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
             header("Location: index.php");
@@ -146,7 +169,7 @@ class CoreController extends Common {
             $login = trim($post['login']);
             $passw = $post['password'];
 
-            if (!ctype_print($passw)) {
+            if (empty($this->config->ldap->active) && (!ctype_print($passw) || strlen($passw) < 30)) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
                 header("Location: index.php");
                 return;
@@ -261,7 +284,6 @@ class CoreController extends Common {
 						$this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
-					$authNamespace->lock();
 					$sign = '#';
 				}
 			} else {
@@ -333,6 +355,47 @@ class CoreController extends Common {
 	public function action_modules() {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
+        //проверка наличия обновлений для модулей
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+            header('Content-type: application/json; charset="utf-8"');
+            parse_str(file_get_contents("php://input"), $put_vars);
+            if (!empty($put_vars['checkModsUpdates'])) {
+                $mods = array();
+                try {
+                    $install = new \Core2\InstallModule();
+                    $ups = $install->checkInstalledModsUpdates();
+                    foreach ($put_vars['checkModsUpdates'] as $module_id => $m_id) {
+                        if (!empty($ups[$module_id])) {
+                            $ups[$module_id]['m_id'] = $m_id;
+                            $mods[] = $ups[$module_id];
+                        }
+                    }
+                } catch (Exception $e) {
+                    $mods[] = $e->getMessage();
+                }
+                echo json_encode($mods);
+            }
+            return;
+        }
+
+        //список модулей из репозитория
+        if (!empty($_GET['getModsListFromRepo'])) {
+            $install = new \Core2\InstallModule();
+            $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+            return;
+        }
+        //скачивание архива модуля
+        if (!empty($_GET['download_mod'])) {
+            $install = new \Core2\InstallModule();
+            $install->downloadAvailMod($_GET['download_mod']);
+            return;
+        }
+        if (!empty($_GET['__gitlab'])) {
+            $gl = new \Core2\Gitlab();
+            $gl->getTags();
+            return;
+        }
+
 		$app = "index.php?module={$this->module}&action=modules";
 		require_once $this->path . 'modules.php';
 	}
@@ -388,7 +451,7 @@ class CoreController extends Common {
 	 */
     public function action_delete(Array $params)
     {
-        $sess       = new Zend_Session_Namespace('List');
+        $sess       = new SessionContainer('List');
         $resource   = $params['res'];
         if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
         if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
@@ -540,10 +603,18 @@ class CoreController extends Common {
 			   		    LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
 			   		WHERE cu.u_id = ?", $this->auth->ID
 				);
-				if ($dataUser) {
 
+				if ($dataUser) {
 					$to = $this->getSetting('feedback_email');
 					$cc = $this->getSetting('feedback_email_cc');
+
+                    if (empty($to)) {
+                        $to = $this->getSetting('admin_email');
+                    }
+
+					if (empty($to)) {
+                        throw new Exception($this->translate->tr('Не удалось отправить сообщение.'));
+                    }
 
 					$supportFormMessage = "<pre>{$supportFormMessage}</pre>";
 					$supportFormMessage .= '<hr/><small>';
@@ -552,10 +623,16 @@ class CoreController extends Common {
 					$supportFormMessage .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
 					$supportFormMessage .= '</small>';
 
-                    $result = $this->createEmail()
-                        ->from($dataUser['email'])
-                        ->to($to)
-                        ->cc($cc)
+                    $email = $this->createEmail();
+
+                    if ( ! empty($dataUser['email'])) {
+                        $email->from($dataUser['email']);
+                    }
+                    if ( ! empty($cc)) {
+                        $email->cc($cc);
+                    }
+
+                    $email->to($to)
                         ->subject('Запрос обратной связи (модуль ' . $supportFormModule . ').')
                         ->body($supportFormMessage)
                         ->send();
@@ -812,7 +889,12 @@ class CoreController extends Common {
 		}
 		elseif (substr($context, 0, 6) == 'field_') {
             header('Content-type: application/json');
-			$f->handleFileList($table, $id, substr($context, 6));
+            try {
+                $res = array('files' => $f->handleFileList($table, $id, substr($context, 6)));
+            } catch (Exception $e) {
+                $res = array('error' => $e->getMessage());
+            }
+            echo json_encode($res);
 			return true;
 		}
 		$f->dispatch();
@@ -833,12 +915,12 @@ class CoreController extends Common {
 		}
 		if ($_POST['class_id'] == 'main_user') {
 			$data = $_POST;
-			$sess_form = new Zend_Session_Namespace('Form');
+			$sess_form = new SessionContainer('Form');
 			$orderFields = $sess_form->main_user;
 
-			$firstname = $data['control']['firstname'];
-			$lastname = $data['control']['lastname'];
-			$middlename = $data['control']['middlename'];
+            $firstname = $data['control']['firstname'];
+            $lastname = $data['control']['lastname'];
+            $middlename = $data['control']['middlename'];
 			$this->db->beginTransaction();
 			
 			try {
@@ -904,7 +986,7 @@ class CoreController extends Common {
 				$this->db->commit();				
 	     	} catch (Exception $e) {
 	     		$this->db->rollback();				
-				$errorNamespace = new Zend_Session_Namespace('Error');
+				$errorNamespace = new SessionContainer('Error');
 				$errorNamespace->ERROR =  $e->getMessage();				
 				$errorNamespace->setExpirationHops(1);
 			}			

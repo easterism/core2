@@ -32,7 +32,7 @@
 		}
 		header("Content-type: {$res2['type']}");
 		header("Content-Disposition: filename=\"{$res2['filename']}\"");
-		if (isset($res2['thumb'])) {
+		if ( ! empty($res2['thumb'])) {
 			echo $res2['thumb'];
 		} else {
 			$Image = new Image();
@@ -43,7 +43,7 @@
 	}
 	elseif (!empty($_GET['tfile'])) {
 		$config     = Zend_Registry::get('config');
-		$sid        = Zend_Session::getId();
+		$sid        = Zend_Registry::get('session')->getId();
 		$upload_dir = $config->temp . '/' . $sid;
 		$fname      = $upload_dir . "/thumbnail/" . $_GET['tfile'];
 		if (!is_file($fname)) {

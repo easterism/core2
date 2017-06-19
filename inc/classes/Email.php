@@ -1,8 +1,5 @@
 <?
 
-require_once 'Zend/Mail.php';
-require_once 'Zend/Mail/Transport/Smtp.php';
-
 require_once 'Db.php';
 
 
@@ -187,7 +184,7 @@ class Email {
             $db = new Db();
 
             if (empty($this->mail_data['from'])) {
-                $config = Zend_Registry::get('config');
+                $config = \Zend_Registry::get('config');
                 $server = isset($config->system) && isset($config->system->host)
                     ? $config->system->host
                     : $_SERVER['SERVER_NAME'];
@@ -253,7 +250,7 @@ class Email {
                     }
 
 
-                    $zend_db = Zend_Registry::get('db');
+                    $zend_db = \Zend_Registry::get('db');
                     $zend_db->beginTransaction();
                     $mail_id = $queue->save();
 
@@ -309,7 +306,8 @@ class Email {
                     }
                 }
 
-            } else {
+            }
+            else {
                 $is_send = $this->zend_send(
                     $this->mail_data['from'],
                     $this->mail_data['to'],
@@ -327,7 +325,7 @@ class Email {
 
             return array('ok' => true);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return array('error' => $e->getMessage());
         }
     }
@@ -378,7 +376,7 @@ class Email {
      */
     private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
 
-        $cnf = Zend_Registry::get('config');
+        $cnf = \Zend_Registry::get('config');
         $configSmtp = array();
         if (!empty($cnf->mail->port)) {
             $configSmtp['port'] = $cnf->mail->port;
@@ -396,7 +394,7 @@ class Email {
             $configSmtp['ssl'] = $cnf->mail->ssl;
         }
 
-        $mail = new Zend_Mail('utf-8');
+        $mail = new \Zend_Mail('utf-8');
         if (is_array($from)) {
             $mail->setFrom($from[0], $from[1]);
         } else {

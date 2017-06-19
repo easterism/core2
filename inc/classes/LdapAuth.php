@@ -1,7 +1,4 @@
 <?
-require_once("Zend/Ldap.php");
-require_once("Zend/Auth.php");
-require_once("Zend/Auth/Adapter/Ldap.php");
 
 class LdapAuth extends Common {
 	const ST_LDAP_AUTH_SUCCESS 		= 1;
@@ -156,10 +153,8 @@ class LdapAuth extends Common {
 					'firstname' => $data['givenname'][0]
 				));
 			}
-			$this->auth->unLock();
 			$this->auth->LN = $data['sn'][0];
 			$this->auth->FN = $data['givenname'][0];
-			$this->auth->lock();
 			$this->cache->save($login, $key, array('mod_kitchen_prod'));
 		}
 	}

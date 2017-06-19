@@ -1,20 +1,26 @@
 <div id="preloader" style="display:none">
     <div class="lock-screen"></div>
-    <div class="block"></div>
+    <div class="block">
+        <div class="spinner-icon"></div>
+        <div class="">Загрузка...</div>
+    </div>
 </div>
 <table id="main" width="100%"><tbody><tr>
     <td id="menu-container" valign="top">
         <div id="menu-wrapper">
-            <div id="heme-button">
+            <div id="home-button">
                 <a href="index.php#module=admin&action=welcome" title="<!--SYSTEM_NAME-->" class="site-name"
-                   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');"><!--SYSTEM_NAME--></a>
+                   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');">
+                    <span><!--SYSTEM_NAME--></span>
+                    <i class="fa fa-home"></i>
+                </a>
             </div>
             <ul class="nav" id="menu-modules">
                 <!-- BEGIN modules -->
                 <li id="module-[MODULE_ID]" class="menu-module">
                     <a href="index.php#module=[MODULE_ID][MODULE_ACTION]"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID][MODULE_ACTION]');"
-                    >[MODULE_NAME]</a>
+                    ><span class="module-title">[MODULE_NAME]</span></a>
                 </li>
                 <!-- END modules -->
             </ul>
@@ -38,7 +44,7 @@
                 <div class="module-action"></div>
             </div>
             <ul id="user-section" class="nav navbar-top-links navbar-right">
-                <li class="dropdown">
+                <li class="pull-left dropdown">
                     <div class="dropdown-toggle" data-toggle="dropdown">
                         <div class="avatar-container">
                             <img src="[GRAVATAR_URL]?&s=28&d=mm" alt=""/>

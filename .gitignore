@@ -9,3 +9,9 @@
 /mod/billing
 *.lock
 /translations/*.mo
+/mod/admin/conf.d.ini
+/mod/admin/conf.ext.ini
+
+\.idea/
+
+composer\.phar

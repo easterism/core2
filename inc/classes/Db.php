@@ -1,14 +1,19 @@
 <?
 
-require_once 'Zend/Db/Table.php';
-require_once 'Zend/Registry.php';
-require_once 'Zend/Cache.php';
-
+use Zend\Session\Container as SessionContainer;
 
 /**
  * Class Db
+ * @property Zend_Db_Adapter_Abstract $db
+ * @property Zend_Cache_Core          $cache
+ * @property I18n                     $translate
+ * @property \Core2\Log               $log
  */
 class Db {
+
+    /**
+     * @var Zend_Config_Ini
+     */
 	protected $config;
 	protected $frontendOptions = array(
 		'lifetime'                => 40000,
@@ -18,6 +23,7 @@ class Db {
 	protected $backend = 'File';
 	private $_s        = array();
 	private $_settings = array();
+	private $_locations = array();
 
 
 	/**
@@ -31,13 +37,12 @@ class Db {
 			$this->config = $config;
 		}
 		if (!$config) return false;
-
 	}
 
 
 	/**
 	 * @param string $k
-	 * @return mixed|Zend_Cache_Core|Zend_Cache_Frontend|Zend_Db_Adapter_Abstract|\Core2\Log
+	 * @return mixed|Zend_Cache_Core|Zend_Db_Adapter_Abstract|\Core2\Log
 	 * @throws Zend_Exception
 	 * @throws Exception
 	 */
@@ -97,16 +102,28 @@ class Db {
 				$module   = !empty($module[1]) ? $module[1] : 'admin';
 				$location = $module == 'admin'
 					? DOC_ROOT . "core2/mod/admin"
-					: $this->getModuleLocation($this->module);
+					: $this->getModuleLocation($module);
 
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->traslate->tr('Модель не найдена.'));
+				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->translate->tr('Модель не найдена.'));
 				require_once($location . "/Model/$model.php");
 				$v            = new $model();
 				$this->_s[$k] = $v;
 			}
 			return $v;
 		}
+
+		return null;
 	}
+
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    public function _($str) {
+        return $this->translate->tr($str);
+	}
+
 
     /**
      * @param Zend_Config $database
@@ -137,7 +154,7 @@ class Db {
 	 * @param string $charset
 	 * @param string $adapter
 	 *
-	 * @return Zend_Db_Adapter_Abstract
+	 * @return Zend_Db_Adapter_Abstract|bool
 	 */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
 	    $host = explode(":", $host);
@@ -159,6 +176,8 @@ class Db {
         } catch (Zend_Exception $e) {
             \Core2\Error::catchZendException($e);
         }
+
+        return false;
 	}
 
 
@@ -196,11 +215,11 @@ class Db {
 
 	/**
 	 * Сохранение информации о входе пользователя
-	 * @param Zend_Session_Namespace $auth
+	 * @param $auth
 	 */
-	protected function storeSession(Zend_Session_Namespace $auth) {
+	protected function storeSession($auth) {
 		if ($auth && $auth->ID && $auth->ID > 0) {
-			$sid = Zend_Session::getId();
+			$sid = Zend_Registry::get('session')->getId();
 			$s_id = $this->db->fetchOne("SELECT id FROM core_session WHERE logout_time IS NULL AND user_id=? AND sid=? AND ip=? LIMIT 1", array($sid, $auth->ID, $_SERVER['REMOTE_ADDR']));
 			if (!$s_id) {
 				$this->db->insert('core_session', array(
@@ -220,9 +239,10 @@ class Db {
 	 */
 	public function closeSession($expired = 'N') {
 		$auth = Zend_Registry::get('auth');
+		$sm = Zend_Registry::get('session');
 		if ($auth && $auth->ID && $auth->ID > 0) {
 			$where = $this->db->quoteInto("user_id = ?", $auth->ID);
-			$where2 = $this->db->quoteInto("sid=?", Zend_Session::getId());
+			$where2 = $this->db->quoteInto("sid=?", $sm->getId());
 			$where3 = $this->db->quoteInto("ip=?", $_SERVER['REMOTE_ADDR']);
 			$this->db->update('core_session', array(
 				'logout_time' => new Zend_Db_Expr('NOW()'),
@@ -230,6 +250,7 @@ class Db {
 				array($where, $where2, $where3)
 			);
 		}
+        $sm->destroy();
 	}
 
 
@@ -244,12 +265,13 @@ class Db {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
 			}
+            $sm = Zend_Registry::get('session');
 			$arr = array();
 			if (!empty($_POST)) $arr['POST'] = $_POST;
 			if (!empty($_GET)) $arr['GET'] = $_GET;
             $data = array(
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => Zend_Session::getId(),
+                'sid'            => $sm->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
@@ -260,7 +282,7 @@ class Db {
 				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
 			) {
 				if (!$this->config->log->system->file) {
-					throw new Exception($this->traslate->tr('Не задан файл журнала запросов'));
+					throw new Exception($this->translate->tr('Не задан файл журнала запросов'));
 				}
 				$log = new \Core2\Log('access');
 				$log->access($auth->NAME);
@@ -318,6 +340,8 @@ class Db {
 
 
 	/**
+     * Получаем список значений справочника
+     *
 	 * @param string $global_id
 	 * @return array
 	 */
@@ -384,6 +408,7 @@ class Db {
 
 
 	/**
+     * Получаем структуру конкретного справочника
 	 * @param int $id
 	 * @return array
 	 */
@@ -406,6 +431,7 @@ class Db {
 
 
 	/**
+     * Активна ли учетка юзера
 	 * @param int $id
 	 * @return bool|string
 	 */
@@ -482,6 +508,7 @@ class Db {
 
 
 	/**
+     * Проверяем, установлен ли модуль
 	 * @param string $module_id
 	 * @return string
 	 */
@@ -545,7 +572,8 @@ class Db {
 	 */
 	final public function getModuleLoc($module_id) {
 		$module_id = trim(strtolower($module_id));
-		if (!$module_id) throw new Exception($this->traslate->tr("Не определен идентификатор модуля."));
+		if (!$module_id) throw new Exception($this->translate->tr("Не определен идентификатор модуля."));
+		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
 		if (!($this->cache->test($module_id))) {
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
@@ -561,13 +589,14 @@ class Db {
 						}
 					}
 				} else {
-					throw new Exception($this->traslate->tr("Модуль не существует"), 404);
+					throw new Exception($this->translate->tr("Модуль не существует"), 404);
 				}
 			}
 			$this->cache->save($loc, $module_id);
 		} else {
 			$loc = $this->cache->load($module_id);
 		}
+		$this->_locations[$module_id] = $loc;
 		return $loc;
 	}
 
@@ -581,6 +610,7 @@ class Db {
 
 
 	/**
+     * Получаем экземпляр логера
 	 * @param string $name
 	 * @return \Core2\Log
 	 */

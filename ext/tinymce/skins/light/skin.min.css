@@ -12,6 +12,6 @@
 .mce-primary { background: #6ba72b; }
 .mce-primary:hover, .mce-primary:hover button { background: #68a029; }
 .mce-btn-group:not(:first-child) { border-left: 3px solid #fff; }
-.mce-menu-item:hover { background: #eee; }
+/*.mce-menu-item:hover { background: #eee; }*/
 .mce-menu-item.mce-disabled * { color: #ddd !important; }
 .mce-edit-area { border: 0 solid #ddd; border-width: 1px !important; }
