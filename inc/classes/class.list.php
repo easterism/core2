@@ -589,7 +589,7 @@ class listTable extends initList {
                     if (!empty($this->sessData['search'][$key])) {
                         $value['value'] = $this->sessData['search'][$key];
                     };
-                    $tpl2->assign("{VALUE}", $value['value']);
+                    $tpl2->assign("{VALUE}", htmlspecialchars($value['value']));
                 }
 
                 if ($value['type'] == 'text') {
