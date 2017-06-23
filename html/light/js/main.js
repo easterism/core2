@@ -102,7 +102,7 @@ function logout() {
         cancelButtonText: "Нет"
     }).then(
         function(result) {
-            $.ajax({url:'index.php?module=admin&action=exit'})
+            $.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
                 .done(function (n) {
                     window.location='index.php';
                 }).fail(function (a,b,t){

@@ -198,15 +198,7 @@ var listx = {
 		}
 		var val = "";
 		if (!nocheck) {
-			var j = 1;
-			for (var i = 0; i < j; i++) {
-				if (document.getElementById("check" + id + i)) {
-					if (document.getElementById("check" + id + i).checked) {
-						val += document.getElementById("check" + id + i).value + ",";
-					}
-					j++;
-				}
-			}
+			val = this.getCheked(id);
 		}
 		if (!val && !nocheck) {
 			alert("Вы должны выбрать как минимум одну запись.");

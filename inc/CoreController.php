@@ -65,6 +65,13 @@ class CoreController extends Common {
      * @return void
      */
 	public function action_index() {
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+            parse_str(file_get_contents("php://input"), $put_vars);
+            if (!empty($put_vars['exit'])) {
+                $this->closeSession();
+                return;
+            }
+        }
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $tab = new tabs('mod');
@@ -337,15 +344,6 @@ class CoreController extends Common {
         $res['email']   = 'easter.by@gmail.com';
         return $res;
     }
-
-	/**
-     * @return void
-	 */
-	public function action_exit() {
-		$this->closeSession();
-		Zend_Session::destroy();
-        return;
-	}
 
 
 	/**
