@@ -65,6 +65,13 @@ class CoreController extends Common {
      * @return void
      */
 	public function action_index() {
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+            parse_str(file_get_contents("php://input"), $put_vars);
+            if (!empty($put_vars['exit'])) {
+                $this->closeSession();
+                return;
+            }
+        }
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $tab = new tabs('mod');
@@ -338,15 +345,6 @@ class CoreController extends Common {
         return $res;
     }
 
-	/**
-     * @return void
-	 */
-	public function action_exit() {
-		$this->closeSession();
-		Zend_Session::destroy();
-        return;
-	}
-
 
 	/**
 	 * @throws Exception
@@ -356,24 +354,28 @@ class CoreController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         //проверка наличия обновлений для модулей
-        if (!empty($_GET['checkModsUpdates'])) {
-            $mods = array();
-            try {
-                $install = new \Core2\InstallModule();
-                $ups = $install->checkInstalledModsUpdates();
-                foreach ($_GET['checkModsUpdates'] as $module_id => $m_id) {
-                    if (!empty($ups[$module_id])) {
-                        $ups[$module_id]['m_id'] = $m_id;
-                        $mods[] = $ups[$module_id];
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+            header('Content-type: application/json; charset="utf-8"');
+            parse_str(file_get_contents("php://input"), $put_vars);
+            if (!empty($put_vars['checkModsUpdates'])) {
+                $mods = array();
+                try {
+                    $install = new \Core2\InstallModule();
+                    $ups = $install->checkInstalledModsUpdates();
+                    foreach ($put_vars['checkModsUpdates'] as $module_id => $m_id) {
+                        if (!empty($ups[$module_id])) {
+                            $ups[$module_id]['m_id'] = $m_id;
+                            $mods[] = $ups[$module_id];
+                        }
                     }
+                } catch (Exception $e) {
+                    $mods[] = $e->getMessage();
                 }
-            } catch (Exception $e) {
-                $mods[] = $e->getMessage();
+                echo json_encode($mods);
             }
-
-            echo json_encode($mods);
             return;
         }
+
         //список модулей из репозитория
         if (!empty($_GET['getModsListFromRepo'])) {
             $install = new \Core2\InstallModule();

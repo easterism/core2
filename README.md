@@ -15,7 +15,7 @@ Minimum Server Requirements
 
 Installation
 ------------
-1. Put the sources inside *core2* folder anywhere on your server.
+1. Put the source code into *core2* folder anywhere on your server.
 2. Create MySQL schema with [db.sql](db.sql)
 3. Create *admin* user with the same password.
  ```sql

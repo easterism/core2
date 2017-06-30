@@ -340,6 +340,8 @@ class Db {
 
 
 	/**
+     * Получаем список значений справочника
+     *
 	 * @param string $global_id
 	 * @return array
 	 */
@@ -406,6 +408,7 @@ class Db {
 
 
 	/**
+     * Получаем структуру конкретного справочника
 	 * @param int $id
 	 * @return array
 	 */
@@ -428,6 +431,7 @@ class Db {
 
 
 	/**
+     * Активна ли учетка юзера
 	 * @param int $id
 	 * @return bool|string
 	 */
@@ -504,6 +508,7 @@ class Db {
 
 
 	/**
+     * Проверяем, установлен ли модуль
 	 * @param string $module_id
 	 * @return string
 	 */
@@ -605,6 +610,7 @@ class Db {
 
 
 	/**
+     * Получаем экземпляр логера
 	 * @param string $name
 	 * @return \Core2\Log
 	 */

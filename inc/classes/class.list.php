@@ -589,9 +589,7 @@ class listTable extends initList {
                     if (!empty($this->sessData['search'][$key])) {
                         $value['value'] = $this->sessData['search'][$key];
                     };
-                    if ($value['type'] == 'text' || $value['type'] == 'number') {
-                        $tpl2->assign("{VALUE}", htmlspecialchars($value['value']));
-                    }
+                    $tpl2->assign("{VALUE}", is_string($value['value']) ? htmlspecialchars($value['value']) : $value['value']);
                 }
 
                 if ($value['type'] == 'text') {
@@ -620,7 +618,7 @@ class listTable extends initList {
 
                         $tpl2->assign("{0}", "[$j]");
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", htmlspecialchars($k));
+                        $tpl2->assign("{VALUE}", $k);
                         $tpl2->assign("{LABEL}", $v);
                         if (is_array($next) && in_array($row[0], $next)) {
                             $tpl2->assign("{checked}", " checked=\"checked\"");
@@ -646,7 +644,7 @@ class listTable extends initList {
 
                         $tpl2->assign("{LABEL}", $v);
                         if ($row[0] === $next) {
-                            $tpl2->assign("{VALUE}", htmlspecialchars($k) . "\" checked=\"checked");
+                            $tpl2->assign("{VALUE}", $k . "\" checked=\"checked");
                         } else {
                             $tpl2->assign("{VALUE}", $k);
                         }
@@ -665,7 +663,7 @@ class listTable extends initList {
                             $k = $v['id'];
                             $v = $v['value'];
                         }
-                        $opt[htmlspecialchars($k)] = $v;
+                        $opt[$k] = $v;
                     }
                     $sqlSearchCount++;
                     $tpl2->fillDropDown('{ID}', $opt, $next);
@@ -677,7 +675,7 @@ class listTable extends initList {
                         $k = current($row);
                         $v = end($row);
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", htmlspecialchars($k));
+                        $tpl2->assign("{VALUE}", $k);
                         $tpl2->assign("{LABEL}", $v);
 
                         if (is_array($next) && in_array($row[0], $next)) {

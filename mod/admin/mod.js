@@ -99,21 +99,25 @@ var modules = {
         }
 	},
 	checkModsUpdates: function (mods, theme) {
-		$.get('index.php?module=admin&action=modules',
-			{'checkModsUpdates': mods},
-			function(data, textStatus){
-				if(textStatus == 'success') {
-					data.forEach(function(item, i, arr) {
-						var obj = $('td[title=' + item.m_id + ']');
-						var obj_ver = obj.next().next().next();
-						obj_ver.html(obj_ver.html() + ' <b style="color: #008000;"> Доступно обновление до v' + item.version + '</b>');
-						var obj_do = obj.next().next().next().next().next().next().next();
-						obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
-					});
-				}
-			},
-			'json'
-		);
+        $.ajax({
+            url: "index.php?module=admin&action=modules",
+            data: {"checkModsUpdates": mods},
+            method: 'PUT',
+            success: function(data, textStatus) {
+                if (textStatus == 'success') {
+                    data.forEach(function(item, i, arr) {
+                        var obj = $('td[title=' + item.m_id + ']');
+                        var obj_ver = obj.next().next().next();
+                        obj_ver.html(obj_ver.html() + ' <b style="color: #008000;"> Доступно обновление до v' + item.version + '</b>');
+                        var obj_do = obj.next().next().next().next().next().next().next();
+                        obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
+                    });
+                }
+            }
+
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alertify.error(textStatus);
+        });
 	},
     /**
      * Разинсталирование модуля
