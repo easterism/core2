@@ -489,7 +489,8 @@
                             throw new Exception($this->translate->tr("Метод не существует"), 404);
                         }
                     } else {
-                        header("Location: " . $mods['sm_path']);
+                        echo "<iframe src=\"{$mods['sm_path']}\" width=\"100%\" height=\"100%\" style=\"border:0\"></iframe>";
+                        //header("Location: " . $mods['sm_path']);
                     }
                 }
             }
