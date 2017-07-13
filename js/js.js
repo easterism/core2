@@ -69,7 +69,7 @@ function goHome() {
 
 function logout() {
 	if (confirm('Вы уверены, что хотите выйти?')) {
-		$.ajax({url:'index.php?module=admin&action=exit'})
+		$.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
 			.done(function (n) {
 				window.location='index.php';
 			}).fail(function (a,b,t){
