@@ -342,52 +342,38 @@ class Db {
 	/**
      * Получаем список значений справочника
      *
-	 * @param string $global_id
+	 * @param string $global_id - глобальный идентификатор справочника
+     * @param bool $active - только активные записи
 	 * @return array
 	 */
-	public function getEnumList($global_id) {
-		$res = $this->db->fetchAll("SELECT id, name, custom_field, is_default_sw
-									FROM core_enum
-									WHERE is_active_sw = 'Y'
-									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
-									ORDER BY seq", $global_id);
+	public function getEnumList($global_id, $active = true) {
+		$res = $this->modAdmin->dataEnum->getEnum($global_id);
 		$data = array();
-		foreach ($res as $value) {
-			$data[$value['id']] = array(
-				'value' => $value['name'],
-				'is_default' => ($value['is_default_sw'] == 'Y' ? true : false)
-			);
-			$data[$value['id']]['custom'] = array();
-			if ($value['custom_field']) {
-				$temp = explode(":::", $value['custom_field']);
-				foreach ($temp as $val) {
-					$temp2 = explode("::", $val);
-					$data[$value['id']]['custom'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
-				}
-			}
-		}
+		foreach ($res as $id => $value) {
+		    if ($active && $value['is_active_sw'] !== 'Y') continue;
+            $data[$id] = $value;
+        }
 		return $data;
 	}
-
 
 	/**
 	 * Формирует пару ключ=>значение
 	 *
 	 * @param string $global_id - глобальный идентификатор справочника
-	 * @param bool $name_as_id
-	 * @param bool $empty_first
+	 * @param bool $name_as_id - использовать имя в качестве значения списка
+	 * @param bool $empty_first - добавлять пустое значение вначале списка
+	 * @param bool $active - только активные записи
 	 * @return array
 	 */
-	public function getEnumDropdown($global_id, $name_as_id = false, $empty_first = false) {
-		if (!$name_as_id) $name_as_id = 'id';
-		else $name_as_id = 'name';
-		$data = $this->db->fetchPairs("SELECT `$name_as_id`, `name`
-									FROM core_enum
-									WHERE is_active_sw='Y'
-									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
-									ORDER BY seq",
-			$global_id
-		);
+	public function getEnumDropdown($global_id, $name_as_id = false, $empty_first = false, $active = true) {
+        $res = $this->modAdmin->dataEnum->getEnum($global_id);
+        $data = array();
+        foreach ($res as $id => $value) {
+            if ($active && $value['is_active_sw'] !== 'Y') continue;
+
+            if ($name_as_id) $data[$value['value']] = $value['value'];
+            else $data[$id] = $value['value'];
+        }
 		if ($empty_first) {
 			$data = array('' => '') + $data;
 		}

@@ -491,8 +491,10 @@ class ModAjax extends ajaxFunc {
 			$refid = $this->getSessFormField($data['class_id'], 'refid');
 			if ($refid == 0) {
                 $update = false;
-				$dataForSave['u_login'] = trim(strip_tags($data['control']['u_login']));
-				$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
+                $data['control']['u_login'] = trim(strip_tags($data['control']['u_login']));
+
+				$dataForSave['u_login']     = $data['control']['u_login'];
+				$dataForSave['date_added']  = new Zend_Db_Expr('NOW()');
 
 				$this->checkUniqueLogin(0, $dataForSave['u_login']);
 				if ($data['control']['email']) {
@@ -533,7 +535,9 @@ class ModAjax extends ajaxFunc {
 				if (!$row) {
 					$row = $this->dataUsersProfile->createRow();
 					$save['user_id'] = $refid;
-				}
+				} else {
+                    $data['control']['u_login'] = $this->dataUsers->fetchRow($this->dataUsers->select()->where("u_id=?", $refid)->limit(1))->u_login;
+                }
 				$row->setFromArray($save);
 				$row->save();
 			}
@@ -674,14 +678,6 @@ class ModAjax extends ajaxFunc {
      */
     private function sendUserInformation($dataNewUser, $isUpdate = 0) {
 
-		$dataUser = $this->dataUsersProfile->getFIO($this->auth->ID);
-
-		if ($dataUser) {
-            $from = array($dataUser['email'],  $dataUser['lastname'] . ' ' . $dataUser['firstname']);
-		} else {
-			$from = 'noreply@' . $_SERVER["SERVER_NAME"];
-		}
-
         $body  = "";
         $crlf = "<br>";
         $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>." . $crlf;
@@ -693,17 +689,16 @@ class ModAjax extends ajaxFunc {
         	Или перейдите по ссылке <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
 		}
         $body .= "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
-        $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
+        if (isset($dataNewUser['u_pass'])) $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
         $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Профиль\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
 
 
         $result = $this->modAdmin->createEmail()
-            ->from($from)
+            ->from('noreply@' . $_SERVER["SERVER_NAME"])
             ->to($dataNewUser['email'])
             ->subject('Информация о регистрации на портале ' . $_SERVER["SERVER_NAME"])
             ->body($body)
             ->send();
-
         if ( ! $result) {
             throw new Exception($this->translate->tr('Не удалось отправить сообщение пользователю'));
         }
