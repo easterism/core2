@@ -36,7 +36,6 @@
 					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label><br>
 					<!-- END filterColumn -->
 					<input type="submit" class="buttonSmall" value="Применить" style="margin:5px"/>
-					<input type="button" class="buttonSmall" value="Очистить" style="margin:5px"/>
 				</form>
 			</div>
 		</td>
