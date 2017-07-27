@@ -73,7 +73,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
                     // FIXME иногда переменной m_name нету у тех модулей которые имеют зависимости
-                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : $variable['module_name'];
+                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : (isset($variable['module_name']) ? $variable['module_name'] : '');
                     //FIXME $variable['module_name'] не всегда существует
 					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($m_name));
 					if (!in_array($variable['module_id'], $availableModules)) {
