@@ -22,3 +22,6 @@
 [submodule "mod/cron/v3.0.0"]
 	path = mod/cron/v3.0.0
 	url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/webservice/v1.8.0"]
+	path = mod/webservice/v1.8.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git

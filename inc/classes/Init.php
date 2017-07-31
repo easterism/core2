@@ -489,7 +489,7 @@
                             throw new Exception($this->translate->tr("Метод не существует"), 404);
                         }
                     } else {
-                        echo "<script>loadPDF('{$mods['sm_path']}')</script>";
+                        return "<script>loadPDF('{$mods['sm_path']}')</script>";
                         //header("Location: " . $mods['sm_path']);
                     }
                 }
