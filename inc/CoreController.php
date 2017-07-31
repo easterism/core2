@@ -357,8 +357,8 @@ class CoreController extends Common {
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
             header('Content-type: application/json; charset="utf-8"');
             parse_str(file_get_contents("php://input"), $put_vars);
+            $mods = array();
             if (!empty($put_vars['checkModsUpdates'])) {
-                $mods = array();
                 try {
                     $install = new \Core2\InstallModule();
                     $ups = $install->checkInstalledModsUpdates();
@@ -371,9 +371,8 @@ class CoreController extends Common {
                 } catch (Exception $e) {
                     $mods[] = $e->getMessage();
                 }
-                echo json_encode($mods);
             }
-            return;
+            return json_encode($mods);
         }
 
         //список модулей из репозитория
