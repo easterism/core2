@@ -38,7 +38,6 @@
                     </div>
 					<!-- END filterColumn -->
 					<input type="submit" class="buttonSmall btn btn-primary" value="Применить"/>
-					<input type="button" class="buttonSmall hide" value="Очистить"/>
 				</form>
 			</div>
 		</td>

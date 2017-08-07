@@ -50,3 +50,8 @@ Installation
 Usage
 -----
 Open URL of new index.php file in your browser. Use 'admin' username and 'admin' password.
+
+Support
+-------
+<img src="phpStorm.png"/>
+<a href="https://www.jetbrains.com/phpstorm/" target="_blank">PhpStorm</a>
