@@ -3,6 +3,7 @@ namespace Core2;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\SlackWebhookHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Processor\WebProcessor;
 use Monolog\Formatter\NormalizerFormatter;
@@ -18,6 +19,7 @@ class Log {
     private $config;
     private $writer;
     private $writer_custom;
+    private $handlers;
 
 
     /**
@@ -26,23 +28,58 @@ class Log {
      */
     public function __construct($name = 'core2') {
         if ($name !== 'access') {
-            $this->log    = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
+            //эта секция предназначена для работы ядра
+            $this->log = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
             $this->config = \Zend_Registry::getInstance()->get('core_config');
 
-            if (isset($this->config->log) &&
-                isset($this->config->log->system) &&
-                ! empty($this->config->log->system->file) &&
-                is_string($this->config->log->system->file)
-            ) {
-                $stream = new StreamHandler($this->config->log->system->file);
-                //$stream->setFormatter(new NormalizerFormatter());
-                $this->log->pushHandler($stream);
-            }
+            if ($name === 'webhook') {
+                if (isset($this->config->log) &&
+                    isset($this->config->log->webhook))
+                {
 
+                    //TODO add more webhooks
+                } else {
+                    return new \stdClass();
+                }
+            } else {
+                if (isset($this->config->log) &&
+                    isset($this->config->log->system) &&
+                    !empty($this->config->log->system->file) &&
+                    is_string($this->config->log->system->file)
+                ) {
+                    $stream = new StreamHandler($this->config->log->system->file);
+                    //$stream->setFormatter(new NormalizerFormatter());
+                    $this->log->pushHandler($stream);
+                }
+            }
         } else {
             $this->config = \Zend_Registry::getInstance()->get('config');
             $this->log = new Logger($name);
         }
+    }
+
+    public function __call($name, $arguments)
+    {
+        if ($name == 'slack') {
+            $channel = null;
+            $username = null;
+            $useAttachment = true;
+            $iconEmoji = null;
+            $useShortAttachment = false;
+            $includeContextAndExtra = false;
+            $level = Logger::CRITICAL;
+            $bubble = true;
+            $excludeFields = array();
+
+            if (isset($arguments[0])) $channel = $arguments[0];
+            if (isset($arguments[1])) $username = $arguments[1];
+
+            //TODO add other params
+            $this->handlers[$name] = array($this->config->log->webhook->slack->url, $channel, $username, $useAttachment, $iconEmoji, $useShortAttachment, $includeContextAndExtra, $level, $bubble, $excludeFields);
+
+            return $this;
+        }
+        return null;
     }
 
 
@@ -81,6 +118,9 @@ class Log {
             $context = $msg;
             $msg = '-';
         }
+        if ($this->handlers) {
+            $this->setHandler(Logger::INFO);
+        }
         $this->log->info($msg, $context);
         $this->removeCustomWriter();
     }
@@ -96,6 +136,9 @@ class Log {
             $context = $msg;
             $msg = '-';
         }
+        if ($this->handlers) {
+            $this->setHandler(Logger::WARNING);
+        }
         $this->log->warning($msg, $context);
         $this->removeCustomWriter();
     }
@@ -110,6 +153,9 @@ class Log {
         if (is_array($msg)) {
             $context = $msg;
             $msg = '-';
+        }
+        if ($this->handlers) {
+            $this->setHandler(Logger::DEBUG);
         }
         $this->log->debug($msg, $context);
         $this->removeCustomWriter();
@@ -144,5 +190,18 @@ class Log {
                 $this->writer = 'syslog';
             }
         }
+    }
+
+    private function setHandler($level) {
+        while ($this->log->getHandlers()) {
+            $this->log->popHandler();
+        }
+        foreach ($this->handlers as $name => $params) {
+            if ($name == 'slack') {
+                $handler = new SlackWebhookHandler($params[0], $params[1], $params[2], $params[3], $params[4], $params[5], $params[6], $level);
+                $this->log->pushHandler($handler);
+            }
+        }
+
     }
 }
