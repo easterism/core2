@@ -237,7 +237,7 @@ PRELOADERS
     right: auto;
     text-align: left;
     left: 50%;
-    top: 22px;
+    top: -10px;
     z-index: 1031;
     -webkit-box-shadow: 0 1px 8px #ccc;
     box-shadow: 0 1px 8px #ccc;
