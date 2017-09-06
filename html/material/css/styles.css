@@ -103,15 +103,6 @@ textarea:focus {
 }
 input[disabled],
 textarea[disabled],
-select[disabled],
-input[readonly],
-textarea[readonly],
-select[readonly] {
-    background-color: #eee;
-    opacity: 1;
-}
-input[disabled],
-textarea[disabled],
 select[disabled] {cursor: not-allowed}
 select[multiple] {height:auto}
   .checkbox {
