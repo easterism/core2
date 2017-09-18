@@ -9,8 +9,9 @@ namespace Core2;
 class Gitlab extends \Common
 {
     private $error;
-
     private $api_version = 'v4';
+    private $per_page = '80';
+    private $projects = array();
 
     /**
      * Получаем список всех релизов из Gitlab
@@ -21,57 +22,51 @@ class Gitlab extends \Common
     public function getTags() {
         $host   = $this->moduleConfig->gitlab->host;
         $token  = $this->moduleConfig->gitlab->token;
-        $data   = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects?statistics=1&per_page=100", array(), array("PRIVATE-TOKEN:$token"));
 
-        if ($data['http_code'] == 200) {
-            $data           = json_decode($data['answer']);
-            $arch           = array();
-            $filter_group   = array();
-            if ($this->moduleConfig->gitlab->filter && $this->moduleConfig->gitlab->filter->group) {
-                $filter_group = explode(",", $this->moduleConfig->gitlab->filter->group);
+        $arch           = array();
+        $filter_group   = array();
+        if ($this->moduleConfig->gitlab->filter && $this->moduleConfig->gitlab->filter->group) {
+            $filter_group = explode(",", $this->moduleConfig->gitlab->filter->group);
+        }
+
+        $this->getProjects();
+        $data           = $this->projects;
+        foreach ($data as $repo) {
+            if ($filter_group) {
+                if (!in_array($repo->namespace->full_path, $filter_group)) continue;
             }
-            foreach ($data as $repo) {
-                if ($filter_group) {
-                    if (!in_array($repo->namespace->full_path, $filter_group)) continue;
-                }
-                $tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
-                if ($tags && $tags['answer']) {
-                    $tags = json_decode($tags['answer']);
-                    if ($tags) {
-                        if (!isset($arch[$repo->id])) $arch[$repo->id] = array('name' => $repo->path_with_namespace, 'tags' => array());
-                        foreach ($tags as $tag) {
-                            //echo "<pre>";print_r($tag);echo "</pre>";//die;
-                            $arch[$repo->id]['tags'][] = array('name' => $tag->name,
-                                'message' => $tag->message,
-                                'author_name' => $tag->commit->author_name,
-                                'author_email' => $tag->commit->author_email,
-                                'authored_date' => $tag->commit->authored_date
-                            );
-                        }
+            $tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
+            if ($tags && $tags['answer']) {
+                $tags = json_decode($tags['answer']);
+                if ($tags) {
+                    if (!isset($arch[$repo->id])) $arch[$repo->id] = array('name' => $repo->path_with_namespace, 'tags' => array());
+                    foreach ($tags as $tag) {
+                        //echo "<pre>";print_r($tag);echo "</pre>";//die;
+                        $arch[$repo->id]['tags'][] = array('name' => $tag->name,
+                            'message' => $tag->message,
+                            'author_name' => $tag->commit->author_name,
+                            'author_email' => $tag->commit->author_email,
+                            'authored_date' => $tag->commit->authored_date
+                        );
                     }
                 }
             }
-            //echo "<pre>";print_r($arch);echo "</pre>";die;
-            foreach ($arch as $item) {
-                echo $item['name'];
-                echo "<ul>";
-                foreach ($item['tags'] as $tag) {
-                    echo "<li><a href=\"javascript:gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
-                    {$tag['author_name']} ({$tag['author_email']})
-                    </li>";
-                }
-                echo "</ul>";
+            else {
+                $this->printError($tags);
             }
         }
-        else {
-            if (!empty($data['answer'])) {
-                $msg = json_decode($data['answer']);
-                echo "<h3>{$msg->message}</h3>";
+        //echo "<pre>";print_r($arch);echo "</pre>";die;
+        foreach ($arch as $item) {
+            echo $item['name'];
+            echo "<ul>";
+            foreach ($item['tags'] as $tag) {
+                echo "<li><a href=\"javascript:gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
+                {$tag['author_name']} ({$tag['author_email']})
+                </li>";
             }
-            else if (!empty($data['error'])) {
-                echo "<h3>{$data['error']}</h3>";
-            }
+            echo "</ul>";
         }
+
     }
 
     /**
@@ -138,6 +133,12 @@ class Gitlab extends \Common
         return $this->error;
     }
 
+    /**
+     * запаковывает директорию
+     * @param \ZipArchive $zip
+     * @param $path
+     * @param int $pos
+     */
     private function zipDir(\ZipArchive $zip, $path, $pos = 0) {
         if (!$pos) $pos = strlen($path);
         $nodes = glob($path . '/*');
@@ -148,6 +149,40 @@ class Gitlab extends \Common
             } else if (is_file($node))  {
                 $zip->addFile($node, substr($node, $pos));
             }
+        }
+    }
+
+    /**
+     * получаем список всех доступных проектов
+     * @param int $page
+     */
+    private function getProjects($page = 1) {
+        $host   = $this->moduleConfig->gitlab->host;
+        $token  = $this->moduleConfig->gitlab->token;
+        $data   = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects?page=$page&per_page={$this->per_page}", array(), array("PRIVATE-TOKEN:$token"));
+        if ($data['http_code'] == 200) {
+            $data = json_decode($data['answer']);
+            if ($data) {
+                $this->projects = array_merge($this->projects, $data); //сохраняем результат
+                $this->getProjects($page + 1);
+            }
+        }
+        else {
+            $this->printError($data);
+        }
+    }
+
+    /**
+     * вывод сообщения об ошибке curl запроса
+     * @param $data
+     */
+    private function printError($data) {
+        if (!empty($data['answer'])) {
+            $msg = json_decode($data['answer']);
+            echo "<h3>{$msg->message}</h3>";
+        }
+        else if (!empty($data['error'])) {
+            echo "<h3>{$data['error']}</h3>";
         }
     }
 
