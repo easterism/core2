@@ -1337,7 +1337,7 @@ class InstallModule extends \Common {
         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
         //достаём список модулей
         $out = json_decode($out['answer']);
-        return unserialize(base64_decode($out->data));
+        return ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
     }
 
 
@@ -1446,50 +1446,52 @@ class InstallModule extends \Common {
             $this->prepareSearchDependedMods();
             //готовим данные для таблицы
             $arr = array();
-            foreach ($repo_list as $key=>$val) {
-                $ins = $val['install'];
-                //перевариваем зависимости
-                $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
-                $Inf = $ins['dependent_modules'];
-                if (
-                    !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
-                    || !empty($Inf['m']) //старая версия
-                ) {
+            if ( ! empty($repo_list)) {
+                foreach ($repo_list as $key => $val) {
+                    $ins = $val['install'];
+                    //перевариваем зависимости
+                    $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
+                    $Inf = $ins['dependent_modules'];
                     if (
-                        !empty($Inf['m']['module_name'])  //новая версия
-                        || !is_array($Inf['m']) //старая версия
+                        !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                        || !empty($Inf['m']) //старая версия
                     ) {
-                        $tmp2 = $Inf['m'];
-                        $Inf['m'] = array();
-                        $Inf['m'][] = $tmp2;
-                    }
-                    //старая версия
-                    foreach ($Inf['m'] as $k => $dep_value) {
-                        if (is_string($dep_value)) {
-                            $Inf['m'][$k] = array('module_id' => $dep_value);
+                        if (
+                            !empty($Inf['m']['module_name'])  //новая версия
+                            || !is_array($Inf['m']) //старая версия
+                        ) {
+                            $tmp2 = $Inf['m'];
+                            $Inf['m'] = array();
+                            $Inf['m'][] = $tmp2;
                         }
+                        //старая версия
+                        foreach ($Inf['m'] as $k => $dep_value) {
+                            if (is_string($dep_value)) {
+                                $Inf['m'][$k] = array('module_id' => $dep_value);
+                            }
+                        }
+                        $ins['dependent_modules'] = $Inf;
                     }
-                    $ins['dependent_modules'] = $Inf;
-                }
 
-                if (
-                    (!empty($search[0]) && !mb_substr_count(mb_strtolower($ins['module_name'], 'utf-8'), $search[0], 'utf-8'))
-                    || (!empty($search[1]) && !mb_substr_count(mb_strtolower($ins['module_id'], 'utf-8'), $search[1], 'utf-8'))
-                ) {
-                    continue;
+                    if (
+                        (!empty($search[0]) && !mb_substr_count(mb_strtolower($ins['module_name'], 'utf-8'), $search[0], 'utf-8'))
+                        || (!empty($search[1]) && !mb_substr_count(mb_strtolower($ins['module_id'], 'utf-8'), $search[1], 'utf-8'))
+                    ) {
+                        continue;
+                    }
+                    $arr[$key]['id']            = $key;
+                    $arr[$key]['name']          = $ins['module_name'];
+                    $arr[$key]['module_id']     = $ins['module_id'];
+                    $arr[$key]['descr']         = $ins['description'];
+                    $arr[$key]['depends']       = $ins['dependent_modules']['m'];
+                    $arr[$key]['version']       = $ins['version'];
+                    $arr[$key]['author']        = $ins['author'];
+                    $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
+                    $arr[$key]['install_info']  = $val;
+                    //добавляем к списку доступных зовисимостей зависимости из репозитория
+                    if (!isset($this->dependedModList[$ins['module_id']])) $this->dependedModList[$ins['module_id']] = array();
+                    $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
                 }
-                $arr[$key]['id']            = $key;
-                $arr[$key]['name']          = $ins['module_name'];
-                $arr[$key]['module_id']     = $ins['module_id'];
-                $arr[$key]['descr']         = $ins['description'];
-                $arr[$key]['depends']       = $ins['dependent_modules']['m'];
-                $arr[$key]['version']       = $ins['version'];
-                $arr[$key]['author']        = $ins['author'];
-                $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
-                $arr[$key]['install_info']  = $val;
-                //добавляем к списку доступных зовисимостей зависимости из репозитория
-                if (!isset($this->dependedModList[$ins['module_id']])) $this->dependedModList[$ins['module_id']] = array();
-                $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
             }
 
 
@@ -1829,7 +1831,7 @@ class InstallModule extends \Common {
                         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
                         $out = json_decode($out['answer']);
                         //достаём список модулей и ищем нужный
-                        $repo_list = unserialize(base64_decode($out->data));
+                        $repo_list = ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
                         foreach ($repo_list as $m_id=>$i) {
                             if (empty($list[$i['install']['module_id']][$i['install']['version']])) {
                                 $i['location']      = 'repo';
