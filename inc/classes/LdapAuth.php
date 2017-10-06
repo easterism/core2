@@ -105,6 +105,9 @@ class LdapAuth extends Common {
 		}
 	}
 
+    /**
+     * @param $login
+     */
 	public function getLdapInfo($login) {
 
 		$config = Zend_Registry::getInstance()->get('config');
@@ -155,7 +158,7 @@ class LdapAuth extends Common {
 			}
 			$this->auth->LN = $data['sn'][0];
 			$this->auth->FN = $data['givenname'][0];
-			$this->cache->save($login, $key, array('mod_kitchen_prod'));
+			$this->cache->save($login, $key, array('core_users'));
 		}
 	}
 }
