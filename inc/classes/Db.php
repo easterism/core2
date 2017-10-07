@@ -103,7 +103,15 @@ class Db {
 				$location = $module == 'admin'
 					? DOC_ROOT . "core2/mod/admin"
 					: $this->getModuleLocation($module);
-
+                $r = new \ReflectionClass(get_called_class());
+                $classLoc = $r->getFileName();
+                $classPath = strstr($classLoc, '/mod/');
+                if ($classPath && strpos($classPath, dirname(strstr($location, '/mod/'))) !== 0) {
+                    //происходит если модель вызывается из метода, который был вызван из другого модуля
+                    $classPath = substr($classPath, 5);
+                    $module    = substr($classPath, 0, strpos($classPath, "/"));
+                    $location  = $this->getModuleLocation($module);
+                }
 				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->translate->tr('Модель не найдена.'));
 				require_once($location . "/Model/$model.php");
 				$v            = new $model();
