@@ -7,28 +7,23 @@
  * Time: 0:58
  */
 namespace Store;
+
 require_once(DOC_ROOT . "core2/inc/classes/Image.php");
 
 class File extends \Common {
     private $that;
     private $content;
     private $resource;
+    private $imgWidth = 80;
+    private $imgHeight = 80;
 
     /**
      * File constructor.
      */
-    public function __construct() {
+    public function __construct($res) {
         parent::__construct();
-    }
-
-
-    /**
-     * @param \Zend_Registry $res
-     */
-    public function setResource($res) {
         $this->resource = $res;
     }
-
 
     /**
      *
@@ -120,7 +115,7 @@ class File extends \Common {
             $this->content = $res2['thumb'];
         } else {
             $image = new \Image();
-            $image->outStringResized($res2['content'], $res2['type'], 80, 80);
+            $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
         }
     }
 
@@ -209,5 +204,16 @@ class File extends \Common {
             $res[$key] 			= $file;
         }
         return $res;
+    }
+
+    /**
+     * @param $size
+     */
+    public function setThumbSize($size) {
+        $size = explode("x", $size);
+        $width = (int)$size[0];
+        $height = (int)$size[1];
+        if ($width) $this->imgWidth = $width;
+        if ($height) $this->imgHeight = $height;
     }
 }
