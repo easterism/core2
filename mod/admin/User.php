@@ -9,8 +9,6 @@
 namespace Core2;
 
 
-use WideImage\Exception\Exception;
-
 /**
  * Class User
  * @package Core2
@@ -47,7 +45,7 @@ class User extends \Common
      */
     public function get($id) {
         $this->_user = $this->dataUsers->find($id)->current();
-        if (!$this->_user) throw new Exception(404);
+        if (!$this->_user) throw new \Exception(404);
     }
 
     /**
