@@ -20,6 +20,25 @@ class Users extends Zend_Db_Table_Abstract {
 		return $this->fetchRow($sel->limit(1));
 	}
 
+    /**
+     * Получаем значение одного поля
+     *
+     * @param $field
+     * @param $expr
+     * @param array $var
+     * @return string
+     */
+    public function fetchOne($field, $expr, $var = array())
+    {
+        $sel = $this->select();
+        if ($var) {
+            $sel->where($expr, $var);
+        } else {
+            $sel->where($expr);
+        }
+        return $this->fetchRow($sel)->$field;
+    }
+
 
     /**
      * @param string $id

@@ -8,8 +8,11 @@ require_once 'classes/Alert.php';
 
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
+require_once DOC_ROOT . "core2/mod/admin/User.php";
 
 use Zend\Session\Container as SessionContainer;
+use Core2\User as User;
+use Core2\InstallModule as Install;
 
 
 /**
@@ -360,7 +363,7 @@ class CoreController extends Common {
             $mods = array();
             if (!empty($put_vars['checkModsUpdates'])) {
                 try {
-                    $install = new \Core2\InstallModule();
+                    $install = new Install();
                     $ups = $install->checkInstalledModsUpdates();
                     foreach ($put_vars['checkModsUpdates'] as $module_id => $m_id) {
                         if (!empty($ups[$module_id])) {
@@ -377,13 +380,13 @@ class CoreController extends Common {
 
         //список модулей из репозитория
         if (!empty($_GET['getModsListFromRepo'])) {
-            $install = new \Core2\InstallModule();
+            $install = new Install();
             $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
             return;
         }
         //скачивание архива модуля
         if (!empty($_GET['download_mod'])) {
-            $install = new \Core2\InstallModule();
+            $install = new Install();
             $install->downloadAvailMod($_GET['download_mod']);
             return;
         }
@@ -543,6 +546,8 @@ class CoreController extends Common {
 
 
 	/**
+     * Субмодуль Пользователи
+     *
 	 * @throws Exception
      * @return void
 	 */
@@ -550,7 +555,22 @@ class CoreController extends Common {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		//require_once 'core2/mod/ModAjax.php';
 		$app = "index.php?module={$this->module}&action=users";
-		require_once $this->path . 'users.php';
+		$user = new User();
+        $tab = new tabs('users');
+        $title = $this->translate->tr("Справочник пользователей системы");
+        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
+            $user->create();
+            $title = $this->translate->tr("Создание нового пользователя");
+        }
+        else if (!empty($_GET['edit'])) {
+            $user->get($_GET['edit']);
+            $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
+        }
+        $tab->beginContainer($title);
+        if ($tab->activeTab == 1) {
+            $user->dispatch();
+        }
+        $tab->endContainer();
 	}
 
 
@@ -630,7 +650,7 @@ class CoreController extends Common {
                     }
 
                     $email->to($to)
-                        ->subject('Запрос обратной связи (модуль ' . $supportFormModule . ').')
+                        ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
                         ->body($supportFormMessage)
                         ->send();
 
@@ -864,7 +884,30 @@ class CoreController extends Common {
 	 *
 	 */
 	public function action_upload() {
-		require_once $this->path . 'upload.php';
+        require_once 'classes/FileUploader.php';
+
+        $upload_handler = new FileUploader();
+
+        header('Pragma: no-cache');
+        header('Cache-Control: private, no-cache');
+        header('Content-Disposition: inline; filename="files.json"');
+        header('X-Content-Type-Options: nosniff');
+
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'HEAD':
+            case 'GET':
+                $upload_handler->get();
+                //$upload_handler->getDb();
+                break;
+            case 'POST':
+                $upload_handler->post();
+                break;
+            case 'DELETE':
+                $upload_handler->delete();
+                break;
+            default:
+                header('HTTP/1.0 405 Method Not Allowed');
+        }
 	}
 
 
@@ -873,12 +916,14 @@ class CoreController extends Common {
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
 		require_once 'classes/File.php';
-		$f = new \Store\File();
-        $f->setResource($resource);
+		$f = new \Store\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
 		}
 		elseif ($context == 'thumbid') {
+		    if (!empty($_GET['size'])) {
+		        $f->setThumbSize($_GET['size']);
+            }
 			$f->handleThumb($table, $id);
 		}
 		elseif ($context == 'tfile') {
@@ -1068,8 +1113,7 @@ class CoreController extends Common {
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
 
-        require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
-        $install    = new \Core2\InstallModule();
+        $install    = new Install();
 
         foreach ($data as $val) {
             $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));
