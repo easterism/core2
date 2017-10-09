@@ -683,7 +683,7 @@ class CoreController extends Common {
 				   sm.sm_name
 			FROM core_modules AS m
 			    LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-			WHERE m.visible = 'Y'
+			WHERE m.visible = 'Y' AND m.is_public = 'Y'
 			ORDER BY sm.seq
         ");
 
