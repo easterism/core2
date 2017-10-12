@@ -9,9 +9,11 @@ require_once 'classes/Alert.php';
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/User.php";
+require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 
 use Zend\Session\Container as SessionContainer;
 use Core2\User as User;
+use Core2\Settings as Settings;
 use Core2\InstallModule as Install;
 
 
@@ -554,7 +556,6 @@ class CoreController extends Common {
 	public function action_users () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		//require_once 'core2/mod/ModAjax.php';
-		$app = "index.php?module={$this->module}&action=users";
 		$user = new User();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
@@ -580,9 +581,41 @@ class CoreController extends Common {
 	 */
 	public function action_settings () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=settings";
-		require_once $this->path . 'settings.php';
+        $app = "index.php?module=admin&action=settings";
+        $settings = new Settings();
+        $tab = new tabs('settings');
+        $tab->addTab($this->translate->tr("Настройки системы"), 			$app, 130);
+        $tab->addTab($this->translate->tr("Дополнительные параметры"), 		$app, 180);
+        $tab->addTab($this->translate->tr("Персональные параметры"), 		$app, 180);
 
+        $title = $this->translate->tr("Конфигурация");
+        $tab->beginContainer($title);
+
+        if ($tab->activeTab == 1) {
+            if (!empty($_GET['edit'])) {
+                $settings->edit(-1);
+            }
+            $settings->stateSystem();
+        } elseif ($tab->activeTab == 2) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->stateAdd();
+        } elseif ($tab->activeTab == 3) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->statePersonal();
+        }
+        $tab->endContainer();
 	}
 
 
