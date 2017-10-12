@@ -34,8 +34,8 @@
     "monolog/monolog": ">=1.23"
   },
   "scripts": {
-    "post-install-cmd": [
-      "mkdir -m 0777 vendor/xajax/xajax/xajax_js/deferred"
+    "post-update-cmd": [
+      "mkdir -p -m 0777 vendor/xajax/xajax/xajax_js/deferred"
     ]
   }
 }
