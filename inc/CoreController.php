@@ -240,11 +240,7 @@ class CoreController extends Common {
 				}
 
 				if (empty($res)) {
-					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
-								 FROM `core_users` AS u
-								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
-								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
-								WHERE u.`visible` = 'Y' AND u.u_login=? LIMIT 1", $login);
+					$res   = $this->dataUsers->getUserByLogin($login);
 				}
 			}
 			else {
@@ -293,7 +289,7 @@ class CoreController extends Common {
 						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
 						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : -1;
-						$this->storeSession($authNamespace);
+                        $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
 					$sign = '#';
@@ -311,6 +307,32 @@ class CoreController extends Common {
         header("Location: $url");
 		return;
 	}
+
+    /**
+     * Сохранение информации о входе пользователя
+     * @param SessionContainer $auth
+     * @return mixed
+     */
+    private function storeSession(SessionContainer $auth) {
+        if ($auth && $auth->ID && $auth->ID > 0) {
+            $sid = Zend_Registry::get('session')->getId();
+            $sess = $this->dataSession;
+            $row = $sess->fetchRow($sess->select()->where("logout_time IS NULL AND user_id=?", $auth->ID)
+                                                ->where("sid=?", $sid)
+                                                ->where("ip=?", $_SERVER['REMOTE_ADDR'])
+                                                ->limit(1));
+            if (!$row) {
+                $row = $sess->createRow();
+                $row->sid = $sid;
+                $row->login_time = new Zend_Db_Expr('NOW()');
+                $row->user_id = $auth->ID;
+                $row->ip = $_SERVER['REMOTE_ADDR'];
+                $row->save();
+            }
+            if (!$row->id) throw new Exception($this->translate->tr("Не удалось сохранить данные сессии"));
+            return $row->id;
+        }
+    }
 
     /**
      * Обработка исключений входа в систему

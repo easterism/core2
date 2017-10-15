@@ -221,25 +221,7 @@ class Db {
 	}
 
 
-	/**
-	 * Сохранение информации о входе пользователя
-	 * @param $auth
-	 */
-	protected function storeSession($auth) {
-		if ($auth && $auth->ID && $auth->ID > 0) {
-			$sid = Zend_Registry::get('session')->getId();
-			$s_id = $this->db->fetchOne("SELECT id FROM core_session WHERE logout_time IS NULL AND user_id=? AND sid=? AND ip=? LIMIT 1", array($sid, $auth->ID, $_SERVER['REMOTE_ADDR']));
-			if (!$s_id) {
-				$this->db->insert('core_session', array(
-						'sid' => $sid,
-						'login_time' => new Zend_Db_Expr('NOW()'),
-						'user_id' => $auth->ID,
-						'ip' => $_SERVER['REMOTE_ADDR']
-					)
-				);
-			}
-		}
-	}
+
 
 
 	/**
@@ -248,15 +230,11 @@ class Db {
 	public function closeSession($expired = 'N') {
 		$auth = Zend_Registry::get('auth');
 		$sm = Zend_Registry::get('session');
-		if ($auth && $auth->ID && $auth->ID > 0) {
-			$where = $this->db->quoteInto("user_id = ?", $auth->ID);
-			$where2 = $this->db->quoteInto("sid=?", $sm->getId());
-			$where3 = $this->db->quoteInto("ip=?", $_SERVER['REMOTE_ADDR']);
-			$this->db->update('core_session', array(
-				'logout_time' => new Zend_Db_Expr('NOW()'),
-				'is_expired_sw' => $expired),
-				array($where, $where2, $where3)
-			);
+		if ($auth && $auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+			$row = $this->dataSession->find($auth->LIVEID)->current();
+            $row->logout_time   = new Zend_Db_Expr('NOW()');
+            $row->is_expired_sw = $expired;
+            $row->save();
 		}
         $sm->destroy();
 	}
@@ -301,12 +279,11 @@ class Db {
 				$this->db->insert('core_log', $data);
 			}
 			// обновление записи о последней активности
-			$where = array($this->db->quoteInto("sid=?", $data['sid']),
-						   $this->db->quoteInto("ip=?", $data['ip']),
-						   $this->db->quoteInto("user_id=?", $data['user_id']),
-						   'logout_time IS NULL'
-			);
-			$this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
+            if ($auth->LIVEID) {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                $row->last_activity = new Zend_Db_Expr('NOW()');
+                $row->save();
+            }
 		}
 	}
 
