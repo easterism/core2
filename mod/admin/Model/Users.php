@@ -60,7 +60,7 @@ class Users extends Zend_Db_Table_Abstract {
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
                 LEFT JOIN core_roles AS r ON r.id = u.role_id
             WHERE u.`visible` = 'Y' 
-              AND u.u_login = ? 
+              AND u.u_id = ? 
             LIMIT 1
         ", $id);
 
