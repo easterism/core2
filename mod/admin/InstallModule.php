@@ -839,13 +839,13 @@ class InstallModule extends \Common {
         If (empty($type)) {
             $this->noticeMsg[$group][] = "<h3>$head</h3>";
         } elseif ($type == 'info') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-green\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-success\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'info2') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-blue\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-primary\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'warning') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-yellow\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-warning\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'danger') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-red\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-danger\">{$head}<br><span>{$explanation}</span></div>";
         }
     }
 

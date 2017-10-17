@@ -286,7 +286,7 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-	if (h != url && url.indexOf('&__') < 0) {
+	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
         }
@@ -298,23 +298,23 @@ var load = function (url, data, id, callback) {
 			var r = [];
 			var ax = {};
 			for (var key in qs) {
-				if (key.indexOf('--') != 0) {
+				if (key.indexOf('--') !== 0) {
 					r.push(key + '=' + qs[key]);
 				} else {
 					ax[key] = qs[key];
 				}
 			}
 			r = r.join('&');
-			if (r == preloader.oldHash['--root']) {
+			if (r === preloader.oldHash['--root']) {
 				var gotIt = false;
 				for (var key in ax) {
-					if (preloader.oldHash[key] != ax[key]) {
+					if (preloader.oldHash[key] !== ax[key]) {
 						gotIt = true;
 						preloader.oldHash[key] = ax[key];
 						var aUrl = JSON.parse(ax[key]);
 						var bUrl = [];
 						for (var k in aUrl) {
-							if (typeof aUrl.hasOwnProperty == 'function' && aUrl.hasOwnProperty(k)) {
+							if (typeof aUrl.hasOwnProperty === 'function' && aUrl.hasOwnProperty(k)) {
 								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 							}
 						}
@@ -339,7 +339,7 @@ var load = function (url, data, id, callback) {
 		else {
 			url = '?module=admin&action=welcome';
 		}
-		if (url == '?module=admin&action=welcome') {
+		if (url === '?module=admin&action=welcome') {
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
