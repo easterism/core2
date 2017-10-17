@@ -555,6 +555,10 @@ class InstallModule extends \Common {
      * @throws  \Exception
      */
     public function installSql() {
+        if (empty($this->mInfo['install'])) {
+            return;
+        }
+
         $file = $this->mInfo['install']['sql'];//достаём имя файла со структурой
         $sql = file_get_contents($this->tempDir . "/install/" . $file);//достаём из файла структуру
         if (!empty($sql)) {
@@ -811,6 +815,9 @@ class InstallModule extends \Common {
      * @return bool|string
      */
     public function getUninstallSQL() {
+        if (empty($this->mInfo['uninstall'])) {
+            return null;
+        }
         $sql = file_get_contents($this->tempDir . "/install/" . $this->mInfo['uninstall']['sql']);
         if (!empty($sql)) {
             $sql = $this->SQLPrepareToExecute($sql);
