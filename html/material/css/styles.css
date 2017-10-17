@@ -873,40 +873,10 @@ table.calendar {
     background-color: #c9302c;
     border-color: #ac2925;
 }
-.im-msg-blue,
-.im-msg-yellow,
-.im-msg-red,
-.im-msg-green {
-    padding: 15px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-}
-.im-msg-blue,
-.alert-info {
-    color: #31708f;
-    background-color: #BFEBFF;
-    border-color: #BBDEFB;
-}
-.im-msg-yellow,
-.alert-warning {
-    color: #8a6d3b;
-    background-color: #FFECB3;
-    border-color: #FFE0B2;
-}
-.im-msg-red,
-.alert-danger {
-    color: #a94442;
-    background-color: #FFCECE;
-    border-color: #FFB4B4;
-}
-.im-msg-green,
-.alert-success {
-    color: #3c763d;
-    background-color: #D7F9AC;
-    border-color: #C5E1A5;
-}
+.alert-info {color: #31708f}
+.alert-warning {color: #8a6d3b}
+.alert-danger {color: #a94442}
+.alert-success {color: #3c763d}
 .alert h1,
 .alert h2,
 .alert h3,

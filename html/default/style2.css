@@ -818,62 +818,10 @@ table td.homeTD {
 }
 
 /* css for Alert class */
-.im-msg-red {
-    background-color: #f2dede;
-    width:96%;
-    border-left:5px solid #a94442;
-    padding-left:15px;
-    padding-top:1px;
-    padding-bottom:1px;
-    padding-right:15px;
-    color:black;
-    margin: 10px;
-}
-.im-msg-red > span{
-    color: #a94442;
-}
-.im-msg-green {
-    background-color: #dff0d8;
-    width:96%;
-    border-left:5px solid #3c763d;
-    padding-left:15px;
-    padding-top:1px;
-    padding-bottom:1px;
-    padding-right:15px;
-    color:black;
-    margin: 10px;
-}
-.im-msg-green > span{
-    color: #3c763d;
-}
-.im-msg-blue {
-    background-color: #d9edf7;
-    width:96%;
-    border-left:5px solid #31708f;
-    padding-left:15px;
-    padding-top:1px;
-    padding-bottom:1px;
-    padding-right:15px;
-    color: black;
-    margin: 10px;
-}
-.im-msg-blue > span{
-    color: #31708f;
-}
-.im-msg-yellow {
-    background-color: #fcf8e3;
-    width:96%;
-    border-left:5px solid #8a6d3b;
-    padding-left:15px;
-    padding-top:1px;
-    padding-bottom:1px;
-    padding-right:15px;
-    color: black;
-    margin: 10px;
-}
-.im-msg-yellow > span{
-    color: #8a6d3b;
-}
+.text-info {color: #31708f}
+.text-warning {color: #8a6d3b}
+.text-danger {color: #a94442}
+.text-success {color: #3c763d}
 
 .alert {
 	padding: 8px 15px;

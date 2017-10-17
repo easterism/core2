@@ -672,7 +672,8 @@ $tab->beginContainer($this->translate->tr("Модули"));
 		if (empty($mod_repos)) {
 
 			echo
-			"<div class=\"im-msg-yellow\">
+			"<br>
+             <div class=\"text-warning\">
 				Устоновка модулей из репозитория недоступна<br>
 				<span>
 					Создайте дополнительный параметр 'repo', содержащий репозиториев, разделенных ';'  (адреса вида https://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
@@ -683,7 +684,8 @@ $tab->beginContainer($this->translate->tr("Модули"));
 
 		} else {
             echo
-            "<div class=\"im-msg-blue\">
+            "<br>
+             <div class=\"text-primary\">
 				Репозитории<br>
 				<span>
 					Для работы с репозиториями используется параметр \"repo\", содержащий адреса репозиториев (с регистрацией в репозитории https://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации https://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
