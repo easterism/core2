@@ -815,7 +815,7 @@ class InstallModule extends \Common {
      * @return bool|string
      */
     public function getUninstallSQL() {
-        if (empty($this->mInfo['uninstall'])) {
+        if (empty($this->mInfo['uninstall']) || empty($this->mInfo['uninstall']['sql'])) {
             return null;
         }
         $sql = file_get_contents($this->tempDir . "/install/" . $this->mInfo['uninstall']['sql']);
