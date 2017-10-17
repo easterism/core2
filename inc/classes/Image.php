@@ -328,6 +328,13 @@ class Image {
         return false;
     }
 
+    /**
+     * @param $image_string
+     * @param $type
+     * @param int $def_width
+     * @param int $def_height
+     * @param bool $enlarge
+     */
     public function outStringResized($image_string, $type, $def_width = 150, $def_height = 150, $enlarge = false) {
         $image = imagecreatefromstring($image_string);
         if ($image !== false) {

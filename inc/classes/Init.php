@@ -151,7 +151,7 @@
         }
         //сохраняем менеджер сессий
         Zend_Registry::set('session', $sess_manager);
-	}
+    }
 
 	//сохраняем конфиг
 	Zend_Registry::set('config', $config);
@@ -194,7 +194,6 @@
          * Init constructor.
          */
 		public function __construct() {
-
 
 			parent::__construct();
 
@@ -246,6 +245,12 @@
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
+                    if ($this->auth->LIVEID) {
+                        $row = $this->dataSession->find($this->auth->LIVEID)->current();
+                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
+                            $this->closeSession();
+                        }
+                    }
                     $sLife = $this->getSetting('session_lifetime');
                     if ($sLife) {
                         $this->auth->setExpirationSeconds($sLife, "accept_answer");

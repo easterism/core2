@@ -50,8 +50,8 @@ if (isset($_GET['download'])) {
 
 $tab = new tabs($this->resId); 
 
-$tab->addTab($this->translate->tr("Активные пользователи"), $app, 150);
-$tab->addTab($this->translate->tr("История посещений"),     $app, 150);
+$tab->addTab($this->translate->tr("Активные пользователи"), $app, 170);
+$tab->addTab($this->translate->tr("История посещений"),     $app, 170);
 $tab->addTab($this->translate->tr("Журнал запросов"),       $app, 150);
 $tab->addTab($this->translate->tr("Архив журнала"),         $app, 150);
 
@@ -63,18 +63,14 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 			
 		} else {
 			if ( ! empty($_GET['kick'])) {
-				$sid = $this->db->fetchOne("
-                    SELECT sid
-                    FROM core_session
-                    WHERE id = ?
-                ", $_GET['kick']);
+				$sess = $this->dataSession->find($_GET['kick'])->current();
 
-				if ($sid) {
-					if ($this->config->session && $this->config->session->save_path) {
-						unlink($this->config->session->save_path . '/sess_' . $sid);
-					}
-					$where = $this->db->quoteInto('id = ?', $_GET['kick']);
-					$this->db->update('core_session', array('logout_time' => new Zend_Db_Expr('NOW()')), $where);
+				if ($sess->sid) {
+
+                    $sess->logout_time  = new Zend_Db_Expr('NOW()');
+                    $sess->is_kicked_sw = 'Y';
+                    $sess->save();
+
 				}
 			}
 			$sLife = $this->getSetting("session_lifetime");

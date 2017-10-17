@@ -20,6 +20,25 @@ class Users extends Zend_Db_Table_Abstract {
 		return $this->fetchRow($sel->limit(1));
 	}
 
+    /**
+     * Получаем значение одного поля
+     *
+     * @param $field
+     * @param $expr
+     * @param array $var
+     * @return string
+     */
+    public function fetchOne($field, $expr, $var = array())
+    {
+        $sel = $this->select();
+        if ($var) {
+            $sel->where($expr, $var);
+        } else {
+            $sel->where($expr);
+        }
+        return $this->fetchRow($sel)->$field;
+    }
+
 
     /**
      * @param string $id
@@ -41,7 +60,7 @@ class Users extends Zend_Db_Table_Abstract {
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
                 LEFT JOIN core_roles AS r ON r.id = u.role_id
             WHERE u.`visible` = 'Y' 
-              AND u.u_login = ? 
+              AND u.u_id = ? 
             LIMIT 1
         ", $id);
 
