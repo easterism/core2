@@ -8,6 +8,7 @@
  */
 namespace Store;
 
+require_once(DOC_ROOT . "core2/inc/classes/Common.php");
 require_once(DOC_ROOT . "core2/inc/classes/Image.php");
 
 class File extends \Common {

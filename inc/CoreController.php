@@ -941,7 +941,7 @@ class CoreController extends Common {
 	public function action_upload() {
         require_once 'classes/FileUploader.php';
 
-        $upload_handler = new FileUploader();
+        $upload_handler = new \Store\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
