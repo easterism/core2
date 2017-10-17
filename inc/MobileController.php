@@ -7,6 +7,16 @@ require_once 'classes/class.tab.php';
 require_once 'classes/installModule.php';
 require_once 'classes/Alert.php';
 
+require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
+require_once DOC_ROOT . "core2/mod/admin/User.php";
+require_once DOC_ROOT . "core2/mod/admin/Settings.php";
+
+use Zend\Session\Container as SessionContainer;
+use Core2\User as User;
+use Core2\Settings as Settings;
+use Core2\InstallModule as Install;
+
 /**
  * Class CoreController
  */
@@ -223,10 +233,25 @@ class MobileController extends Common {
      * @return void
 	 */
 	public function action_users () {
-		if (!$this->auth->ADMIN) throw new Exception(911);
-		//require_once 'core2/mod/ModAjax.php';
-		$app = "index.php?module={$this->module}&action=users";
-		require_once $this->path . 'users.php';
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        //require_once 'core2/mod/ModAjax.php';
+        $app = "index.php?module={$this->module}&action=users";
+        $user = new User();
+        $tab = new tabs('users');
+        $title = $this->translate->tr("Справочник пользователей системы");
+        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
+            $user->create();
+            $title = $this->translate->tr("Создание нового пользователя");
+        }
+        else if (!empty($_GET['edit'])) {
+            $user->get($_GET['edit']);
+            $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
+        }
+        $tab->beginContainer($title);
+        if ($tab->activeTab == 1) {
+            $user->dispatch();
+        }
+        $tab->endContainer();
 	}
 
 
@@ -235,9 +260,42 @@ class MobileController extends Common {
      * @return void
 	 */
 	public function action_settings () {
-		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=settings&loc=core";
-		require_once $this->path . 'settings.php';
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        $app = "index.php?module=admin&action=settings";
+        $settings = new Settings();
+        $tab = new tabs('settings');
+        $tab->addTab($this->translate->tr("Настройки системы"), 			$app, 130);
+        $tab->addTab($this->translate->tr("Дополнительные параметры"), 		$app, 180);
+        $tab->addTab($this->translate->tr("Персональные параметры"), 		$app, 180);
+
+        $title = $this->translate->tr("Конфигурация");
+        $tab->beginContainer($title);
+
+        if ($tab->activeTab == 1) {
+            if (!empty($_GET['edit'])) {
+                $settings->edit(-1);
+            }
+            $settings->stateSystem();
+        } elseif ($tab->activeTab == 2) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->stateAdd();
+        } elseif ($tab->activeTab == 3) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->statePersonal();
+        }
+        $tab->endContainer();
 
 	}
 
@@ -501,18 +559,65 @@ class MobileController extends Common {
 	/**
 	 *
 	 */
-	public function action_upload() {
-		require_once $this->path . 'upload.php';
-	}
+    public function action_upload() {
+        require_once 'classes/FileUploader.php';
+
+        $upload_handler = new FileUploader();
+
+        header('Pragma: no-cache');
+        header('Cache-Control: private, no-cache');
+        header('Content-Disposition: inline; filename="files.json"');
+        header('X-Content-Type-Options: nosniff');
+
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'HEAD':
+            case 'GET':
+                $upload_handler->get();
+                //$upload_handler->getDb();
+                break;
+            case 'POST':
+                $upload_handler->post();
+                break;
+            case 'DELETE':
+                $upload_handler->delete();
+                break;
+            default:
+                header('HTTP/1.0 405 Method Not Allowed');
+        }
+    }
 
 
-	/**
-	 *
-	 */
-	public function action_handler() {
-		require_once $this->path . 'file_handler.php';
-	}
-
+    /**
+     * обработка запросов на содержимое файлов
+     */
+    public function fileHandler($resource, $context, $table, $id) {
+        require_once 'classes/File.php';
+        $f = new \Store\File($resource);
+        if ($context == 'fileid') {
+            $f->handleFile($table, $id);
+        }
+        elseif ($context == 'thumbid') {
+            if (!empty($_GET['size'])) {
+                $f->setImgSize($_GET['size']);
+            }
+            $f->handleThumb($table, $id);
+        }
+        elseif ($context == 'tfile') {
+            $f->handleFileTemp($id);
+        }
+        elseif (substr($context, 0, 6) == 'field_') {
+            header('Content-type: application/json');
+            try {
+                $res = array('files' => $f->handleFileList($table, $id, substr($context, 6)));
+            } catch (Exception $e) {
+                $res = array('error' => $e->getMessage());
+            }
+            echo json_encode($res);
+            return true;
+        }
+        $f->dispatch();
+        return true;
+    }
 
 	/**
 	 * @throws Exception

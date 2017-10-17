@@ -1,25 +1,33 @@
-<?
+<?php
+/**
+ * Created by PhpStorm.
+ * User: easter
+ * Date: 20.09.17
+ * Time: 15:51
+ */
 
-require_once("core2/inc/classes/Image.php");
+namespace Store;
 
-class UploadHandler extends Db
+require_once(DOC_ROOT . "core2/inc/classes/Image.php");
+
+class FileUploader extends \Db
 {
     private $options;
-    
+
     function __construct($options=null) {
-		$config = Zend_Registry::get('config');
-    	//echo $config->temp . '/files/';
-    	$sid = Zend_Registry::get('session')->getId();
-    	$upload_dir = $config->temp . '/' . $sid;
-    	if (!is_dir($upload_dir . "/thumbnail")) {
-    		$old = umask(0);
-    		if (!is_dir($upload_dir)) {
-    			mkdir($upload_dir, 0777, true);
-    		}
-    		mkdir($upload_dir . "/thumbnail", 0777);
-    		umask($old);
-    	}
-		$upload_dir .= "/";
+        $config = Zend_Registry::get('config');
+        //echo $config->temp . '/files/';
+        $sid = Zend_Registry::get('session')->getId();
+        $upload_dir = $config->temp . '/' . $sid;
+        if (!is_dir($upload_dir . "/thumbnail")) {
+            $old = umask(0);
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            mkdir($upload_dir . "/thumbnail", 0777);
+            umask($old);
+        }
+        $upload_dir .= "/";
         $this->options = array(
             'script_url' 		=> $_SERVER['PHP_SELF'],
             'upload_dir' 		=> $upload_dir,
@@ -60,7 +68,7 @@ class UploadHandler extends Db
             $this->options = array_replace_recursive($this->options, $options);
         }
     }
-    
+
     private function get_file_object($file_name) {
         $file_path = $this->options['upload_dir'].$file_name;
         if (is_file($file_path) && $file_name[0] !== '.') {
@@ -80,39 +88,39 @@ class UploadHandler extends Db
         }
         return null;
     }
-    
+
     private function get_file_objects() {
         return array_values(array_filter(array_map(
             array($this, 'get_file_object'),
             scandir($this->options['upload_dir'])
         )));
     }
-    
-    
+
+
     private function get_db_objects($tbl, $refid, $fieldid = '') {
 
-		//echo "<PRE>";print_r($this->options);echo "</PRE>";die;
-    	$SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
-		$arr = array($refid);
-		if ($fieldid) {
-			$SQL .= ' AND fieldid=?';
-			$arr[] = $fieldid;
-		}
-		$res = $this->db->fetchAll($SQL, $arr);
+        //echo "<PRE>";print_r($this->options);echo "</PRE>";die;
+        $SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
+        $arr = array($refid);
+        if ($fieldid) {
+            $SQL .= ' AND fieldid=?';
+            $arr[] = $fieldid;
+        }
+        $res = $this->db->fetchAll($SQL, $arr);
 
-		$Image = new Image();
-		foreach ($res as $key => $value) {
-			$type2 = explode("/", $value['type']);
-			$type2 = $type2[1];
+        $Image = new Image();
+        foreach ($res as $key => $value) {
+            $type2 = explode("/", $value['type']);
+            $type2 = $type2[1];
 
-    		$file = new stdClass();
-    		$file->name 		= $value['filename'];
+            $file = new stdClass();
+            $file->name 		= $value['filename'];
             $file->size 		= (int)$value['filesize'];
-			if (preg_match(Image::FORMAT_PICTURE, $type2)) {
-				$file->thumbnail_url = $this->options['thumb_url'] . $value['id'] . '&t=' . $tbl;
-			} else {
-				//$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
-			}
+            if (preg_match(Image::FORMAT_PICTURE, $type2)) {
+                $file->thumbnail_url = $this->options['thumb_url'] . $value['id'] . '&t=' . $tbl;
+            } else {
+                //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
+            }
             $file->url 			= $this->options['upload_id'] . $value['id'] . '&t=' . $tbl;
             $file->delete_url 	= $this->options['upload_id'] . rawurlencode($value['filename']);
             $file->delete_type 	= 'DELETE';
@@ -120,8 +128,8 @@ class UploadHandler extends Db
             $file->type 		= $value['type'];
             $file->hash 		= $value['hash'];
             $file->id_hash 		= $value['id'] . $value['hash'] . '.' . ($type2 == 'jpeg' ? 'jpg' : $type2);
-    		$res[$key] 			= $file;
-    	}
+            $res[$key] 			= $file;
+        }
         return $res;
     }
 
@@ -161,20 +169,20 @@ class UploadHandler extends Db
                 $src_img = $image_method = null;
         }
         $success = $src_img && @imagecopyresampled(
-            $new_img,
-            $src_img,
-            0, 0, 0, 0,
-            $new_width,
-            $new_height,
-            $img_width,
-            $img_height
-        ) && $write_image($new_img, $new_file_path);
+                $new_img,
+                $src_img,
+                0, 0, 0, 0,
+                $new_width,
+                $new_height,
+                $img_width,
+                $img_height
+            ) && $write_image($new_img, $new_file_path);
         // Free up memory (imagedestroy does not delete files):
         @imagedestroy($src_img);
         @imagedestroy($new_img);
         return $success;
     }
-    
+
     private function has_error($uploaded_file, $file, $error) {
         if ($error) {
             return $error;
@@ -190,7 +198,7 @@ class UploadHandler extends Db
         if ($this->options['max_file_size'] && (
                 $file_size > $this->options['max_file_size'] ||
                 $file->size > $this->options['max_file_size'])
-            ) {
+        ) {
             return 'maxFileSize';
         }
         if ($this->options['min_file_size'] &&
@@ -199,12 +207,12 @@ class UploadHandler extends Db
         }
         if (is_int($this->options['max_number_of_files']) && (
                 count($this->get_file_objects()) >= $this->options['max_number_of_files'])
-            ) {
+        ) {
             return 'maxNumberOfFiles';
         }
         return $error;
     }
-    
+
     private function handle_file_upload($uploaded_file, $name, $size, $type, $error) {
         $file = new stdClass();
         // Remove path information and dots around the filename, to prevent uploading
@@ -259,24 +267,24 @@ class UploadHandler extends Db
         }
         return $file;
     }
-    
+
     public function get() {
-		$info = array();
-		if (!empty($_GET['refid']) && !empty($_GET['tbl'])) {
-			$tbl = trim(strip_tags($_GET['tbl']));
-			$info = $this->get_db_objects($tbl, $_GET['refid'], $_GET['f']);
-		} else {
-			$file_name = isset($_GET['file']) ? basename(stripslashes($_REQUEST['file'])) : null;
-			if ($file_name) {
-				$info = $this->get_file_object($file_name);
-			} else {
-				//$info = $this->get_file_objects();
-			}
-		}
+        $info = array();
+        if (!empty($_GET['refid']) && !empty($_GET['tbl'])) {
+            $tbl = trim(strip_tags($_GET['tbl']));
+            $info = $this->get_db_objects($tbl, $_GET['refid'], $_GET['f']);
+        } else {
+            $file_name = isset($_GET['file']) ? basename(stripslashes($_REQUEST['file'])) : null;
+            if ($file_name) {
+                $info = $this->get_file_object($file_name);
+            } else {
+                //$info = $this->get_file_objects();
+            }
+        }
         header('Content-type: application/json');
         echo json_encode(array('files' => $info));
     }
-    
+
     public function post() {
         $upload = isset($_FILES[$this->options['param_name']]) ?
             $_FILES[$this->options['param_name']] : array(
@@ -321,7 +329,7 @@ class UploadHandler extends Db
         }
         echo json_encode($info);
     }
-    
+
     public function delete() {
         $file_name = isset($_REQUEST['file']) ?
             basename(stripslashes($_REQUEST['file'])) : null;
@@ -338,27 +346,4 @@ class UploadHandler extends Db
         header('Content-type: application/json');
         echo json_encode($success);
     }
-}
-
-$upload_handler = new UploadHandler();
-
-header('Pragma: no-cache');
-header('Cache-Control: private, no-cache');
-header('Content-Disposition: inline; filename="files.json"');
-header('X-Content-Type-Options: nosniff');
-
-switch ($_SERVER['REQUEST_METHOD']) {
-    case 'HEAD':
-    case 'GET':
-        $upload_handler->get();
-        //$upload_handler->getDb();
-        break;
-    case 'POST':
-        $upload_handler->post();
-        break;
-    case 'DELETE':
-        $upload_handler->delete();
-        break;
-    default:
-        header('HTTP/1.0 405 Method Not Allowed');
 }

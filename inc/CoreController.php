@@ -8,8 +8,13 @@ require_once 'classes/Alert.php';
 
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
+require_once DOC_ROOT . "core2/mod/admin/User.php";
+require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 
 use Zend\Session\Container as SessionContainer;
+use Core2\User as User;
+use Core2\Settings as Settings;
+use Core2\InstallModule as Install;
 
 
 /**
@@ -235,11 +240,7 @@ class CoreController extends Common {
 				}
 
 				if (empty($res)) {
-					$res   = $db->fetchRow("SELECT `u_id`, `u_pass`, u.email, `u_login`, p.lastname, p.firstname, p.middlename, u.is_admin_sw, r.name AS role, u.role_id
-								 FROM `core_users` AS u
-								 	  LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
-								 	  LEFT JOIN core_roles AS r ON r.id = u.role_id
-								WHERE u.`visible` = 'Y' AND u.u_login=? LIMIT 1", $login);
+					$res   = $this->dataUsers->getUserByLogin($login);
 				}
 			}
 			else {
@@ -288,7 +289,7 @@ class CoreController extends Common {
 						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
 						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : -1;
-						$this->storeSession($authNamespace);
+                        $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
 					$sign = '#';
@@ -306,6 +307,32 @@ class CoreController extends Common {
         header("Location: $url");
 		return;
 	}
+
+    /**
+     * Сохранение информации о входе пользователя
+     * @param SessionContainer $auth
+     * @return mixed
+     */
+    private function storeSession(SessionContainer $auth) {
+        if ($auth && $auth->ID && $auth->ID > 0) {
+            $sid = Zend_Registry::get('session')->getId();
+            $sess = $this->dataSession;
+            $row = $sess->fetchRow($sess->select()->where("logout_time IS NULL AND user_id=?", $auth->ID)
+                                                ->where("sid=?", $sid)
+                                                ->where("ip=?", $_SERVER['REMOTE_ADDR'])
+                                                ->limit(1));
+            if (!$row) {
+                $row = $sess->createRow();
+                $row->sid = $sid;
+                $row->login_time = new Zend_Db_Expr('NOW()');
+                $row->user_id = $auth->ID;
+                $row->ip = $_SERVER['REMOTE_ADDR'];
+                $row->save();
+            }
+            if (!$row->id) throw new Exception($this->translate->tr("Не удалось сохранить данные сессии"));
+            return $row->id;
+        }
+    }
 
     /**
      * Обработка исключений входа в систему
@@ -360,7 +387,7 @@ class CoreController extends Common {
             $mods = array();
             if (!empty($put_vars['checkModsUpdates'])) {
                 try {
-                    $install = new \Core2\InstallModule();
+                    $install = new Install();
                     $ups = $install->checkInstalledModsUpdates();
                     foreach ($put_vars['checkModsUpdates'] as $module_id => $m_id) {
                         if (!empty($ups[$module_id])) {
@@ -377,13 +404,13 @@ class CoreController extends Common {
 
         //список модулей из репозитория
         if (!empty($_GET['getModsListFromRepo'])) {
-            $install = new \Core2\InstallModule();
+            $install = new Install();
             $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
             return;
         }
         //скачивание архива модуля
         if (!empty($_GET['download_mod'])) {
-            $install = new \Core2\InstallModule();
+            $install = new Install();
             $install->downloadAvailMod($_GET['download_mod']);
             return;
         }
@@ -543,14 +570,30 @@ class CoreController extends Common {
 
 
 	/**
+     * Субмодуль Пользователи
+     *
 	 * @throws Exception
      * @return void
 	 */
 	public function action_users () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		//require_once 'core2/mod/ModAjax.php';
-		$app = "index.php?module={$this->module}&action=users";
-		require_once $this->path . 'users.php';
+		$user = new User();
+        $tab = new tabs('users');
+        $title = $this->translate->tr("Справочник пользователей системы");
+        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
+            $user->create();
+            $title = $this->translate->tr("Создание нового пользователя");
+        }
+        else if (!empty($_GET['edit'])) {
+            $user->get($_GET['edit']);
+            $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
+        }
+        $tab->beginContainer($title);
+        if ($tab->activeTab == 1) {
+            $user->dispatch();
+        }
+        $tab->endContainer();
 	}
 
 
@@ -560,9 +603,41 @@ class CoreController extends Common {
 	 */
 	public function action_settings () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=settings";
-		require_once $this->path . 'settings.php';
+        $app = "index.php?module=admin&action=settings";
+        $settings = new Settings();
+        $tab = new tabs('settings');
+        $tab->addTab($this->translate->tr("Настройки системы"), 			$app, 130);
+        $tab->addTab($this->translate->tr("Дополнительные параметры"), 		$app, 180);
+        $tab->addTab($this->translate->tr("Персональные параметры"), 		$app, 180);
 
+        $title = $this->translate->tr("Конфигурация");
+        $tab->beginContainer($title);
+
+        if ($tab->activeTab == 1) {
+            if (!empty($_GET['edit'])) {
+                $settings->edit(-1);
+            }
+            $settings->stateSystem();
+        } elseif ($tab->activeTab == 2) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->stateAdd();
+        } elseif ($tab->activeTab == 3) {
+            if (isset($_GET['edit'])) {
+                if ($_GET['edit']) {
+                    $settings->edit($_GET['edit']);
+                } else {
+                    $settings->create();
+                }
+            }
+            $settings->statePersonal();
+        }
+        $tab->endContainer();
 	}
 
 
@@ -630,7 +705,7 @@ class CoreController extends Common {
                     }
 
                     $email->to($to)
-                        ->subject('Запрос обратной связи (модуль ' . $supportFormModule . ').')
+                        ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
                         ->body($supportFormMessage)
                         ->send();
 
@@ -663,7 +738,7 @@ class CoreController extends Common {
 				   sm.sm_name
 			FROM core_modules AS m
 			    LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-			WHERE m.visible = 'Y'
+			WHERE m.visible = 'Y' AND m.is_public = 'Y'
 			ORDER BY sm.seq
         ");
 
@@ -864,7 +939,30 @@ class CoreController extends Common {
 	 *
 	 */
 	public function action_upload() {
-		require_once $this->path . 'upload.php';
+        require_once 'classes/FileUploader.php';
+
+        $upload_handler = new FileUploader();
+
+        header('Pragma: no-cache');
+        header('Cache-Control: private, no-cache');
+        header('Content-Disposition: inline; filename="files.json"');
+        header('X-Content-Type-Options: nosniff');
+
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'HEAD':
+            case 'GET':
+                $upload_handler->get();
+                //$upload_handler->getDb();
+                break;
+            case 'POST':
+                $upload_handler->post();
+                break;
+            case 'DELETE':
+                $upload_handler->delete();
+                break;
+            default:
+                header('HTTP/1.0 405 Method Not Allowed');
+        }
 	}
 
 
@@ -873,12 +971,14 @@ class CoreController extends Common {
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
 		require_once 'classes/File.php';
-		$f = new \Store\File();
-        $f->setResource($resource);
+		$f = new \Store\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
 		}
 		elseif ($context == 'thumbid') {
+		    if (!empty($_GET['size'])) {
+		        $f->setThumbSize($_GET['size']);
+            }
 			$f->handleThumb($table, $id);
 		}
 		elseif ($context == 'tfile') {
@@ -1068,8 +1168,7 @@ class CoreController extends Common {
         $data = $this->db->fetchAll("SELECT module_id FROM core_modules WHERE is_system = 'N' AND files_hash IS NOT NULL");
         $mods = array();
 
-        require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
-        $install    = new \Core2\InstallModule();
+        $install    = new Install();
 
         foreach ($data as $val) {
             $dirhash    = $install->extractHashForFiles($this->getModuleLocation($val['module_id']));

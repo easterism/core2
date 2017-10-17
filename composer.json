@@ -15,7 +15,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=5.4.0",
+    "php": ">=5.6.0",
     "zf1/zend-registry": "~1.12",
     "zf1/zend-config": "~1.12",
     "zendframework/zend-session": "2.7.2",
@@ -29,11 +29,16 @@
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
     "xajax/xajax": "dev-master",
-    "smottt/wideimage": ">=1.1.1",
+    "smottt/wideimage": "1.1.*",
     "components/jquery": "2.1.4",
-    "monolog/monolog": ">=1.23"
+    "monolog/monolog": "1.23.*"
   },
-  "post-install-cmd": [
-    "mkdir -m 0777 vendor/xajax/xajax/xajax_js/deferred"
-  ]
+  "scripts": {
+    "xajax-cmd": [
+      "mkdir -p -m 0777 vendor/xajax/xajax/xajax_js/deferred"
+    ],
+    "post-update-cmd": [
+      "@xajax-cmd"
+    ]
+  }
 }
