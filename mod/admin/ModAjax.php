@@ -729,6 +729,9 @@ class ModAjax extends ajaxFunc {
                     throw new Exception($e);
                 }
             } else {
+                if (empty($data['control']['files|name'])) {
+                    throw new Exception("Файл не выбран");
+                }
                 $f = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if (!file_exists($fn)) {

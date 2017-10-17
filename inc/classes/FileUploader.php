@@ -1,50 +1,57 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: easter
- * Date: 20.09.17
- * Time: 15:51
- */
-
 namespace Store;
 
-require_once(DOC_ROOT . "core2/inc/classes/Image.php");
+require_once DOC_ROOT . "core2/inc/classes/Db.php";
+require_once DOC_ROOT . "core2/inc/classes/Image.php";
 
-class FileUploader extends \Db
-{
+
+/**
+ * Class FileUploader
+ * @package Store
+ */
+class FileUploader extends \Db {
+
     private $options;
 
-    function __construct($options=null) {
-        $config = Zend_Registry::get('config');
-        //echo $config->temp . '/files/';
-        $sid = Zend_Registry::get('session')->getId();
+    /**
+     * FileUploader constructor.
+     * @param array $options
+     */
+    function __construct($options = null) {
+
+        parent::__construct();
+
+        $config     = \Zend_Registry::get('config');
+        $sid        = \Zend_Registry::get('session')->getId();
         $upload_dir = $config->temp . '/' . $sid;
-        if (!is_dir($upload_dir . "/thumbnail")) {
+
+        if ( ! is_dir($upload_dir . "/thumbnail")) {
             $old = umask(0);
-            if (!is_dir($upload_dir)) {
+            if ( ! is_dir($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
             }
             mkdir($upload_dir . "/thumbnail", 0777);
             umask($old);
         }
-        $upload_dir .= "/";
-        $this->options = array(
-            'script_url' 		=> $_SERVER['PHP_SELF'],
-            'upload_dir' 		=> $upload_dir,
-            'upload_dir_thumb' 	=> $upload_dir . "thumbnail",
-            'upload_url' 		=> 'index.php?module=admin&action=handler&tfile=',
-            'thumb_url' 		=> 'index.php?module=admin&action=handler&thumbid=',
-            'upload_id' 		=> 'index.php?module=admin&action=handler&fileid=',
-            'thumb_id' 			=> 'index.php?module=admin&action=handler&thumb=1&fileid=',
-            'param_name' 		=> 'files',
+
+        $upload_dir   .= "/";
+        $this->options = [
+            'script_url'              => $_SERVER['PHP_SELF'],
+            'upload_dir'              => $upload_dir,
+            'upload_dir_thumb'        => $upload_dir . "thumbnail",
+            'upload_url'              => 'index.php?module=admin&action=handler&tfile=',
+            'thumb_url'               => 'index.php?module=admin&action=handler&thumbid=',
+            'upload_id'               => 'index.php?module=admin&action=handler&fileid=',
+            'thumb_id'                => 'index.php?module=admin&action=handler&thumb=1&fileid=',
+            'param_name'              => 'files',
             // The php.ini settings upload_max_filesize and post_max_size
             // take precedence over the following max_file_size setting:
-            'max_file_size' => null,
-            'min_file_size' => 1,
-            'accept_file_types' => '/.+$/i',
-            'max_number_of_files' => null,
+            'max_file_size'           => null,
+            'min_file_size'           => 1,
+            'accept_file_types'       => '/.+$/i',
+            'max_number_of_files'     => null,
             'discard_aborted_uploads' => true,
-            'image_versions' => array(
+            'image_versions'          => [
                 // Uncomment the following version to restrict the size of
                 // uploaded images. You can also add additional versions with
                 // their own upload directories:
@@ -56,23 +63,26 @@ class FileUploader extends \Db
                     'max_height' => 1200
                 ),
                 */
-                'thumbnail' => array(
+                'thumbnail' => [
                     'upload_dir' => $upload_dir . "thumbnail/",
                     'upload_url' => 'index.php?module=admin&action=handler&tfile=',
-                    'max_width' => 80,
+                    'max_width'  => 80,
                     'max_height' => 80
-                )
-            )
-        );
+                ]
+            ]
+        ];
+
+
         if ($options) {
             $this->options = array_replace_recursive($this->options, $options);
         }
     }
 
+
     private function get_file_object($file_name) {
         $file_path = $this->options['upload_dir'].$file_name;
         if (is_file($file_path) && $file_name[0] !== '.') {
-            $file = new stdClass();
+            $file = new \stdClass();
             $file->name = $file_name;
             $file->size = filesize($file_path);
             $file->url = $this->options['upload_url'].rawurlencode($file->name);
@@ -108,15 +118,15 @@ class FileUploader extends \Db
         }
         $res = $this->db->fetchAll($SQL, $arr);
 
-        $Image = new Image();
+        $Image = new \Image();
         foreach ($res as $key => $value) {
             $type2 = explode("/", $value['type']);
             $type2 = $type2[1];
 
-            $file = new stdClass();
+            $file = new \stdClass();
             $file->name 		= $value['filename'];
             $file->size 		= (int)$value['filesize'];
-            if (preg_match(Image::FORMAT_PICTURE, $type2)) {
+            if (preg_match(\Image::FORMAT_PICTURE, $type2)) {
                 $file->thumbnail_url = $this->options['thumb_url'] . $value['id'] . '&t=' . $tbl;
             } else {
                 //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
@@ -214,7 +224,7 @@ class FileUploader extends \Db
     }
 
     private function handle_file_upload($uploaded_file, $name, $size, $type, $error) {
-        $file = new stdClass();
+        $file = new \stdClass();
         // Remove path information and dots around the filename, to prevent uploading
         // into different directories or replacing hidden system files.
         // Also remove control characters and spaces (\x00..\x20) around the filename:
