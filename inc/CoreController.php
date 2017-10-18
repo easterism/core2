@@ -669,12 +669,7 @@ class CoreController extends Common {
 					throw new Exception($this->translate->tr('Введите текст сообщения.'));
 				}
 
-				$dataUser = $this->db->fetchRow("
-                    SELECT lastname, firstname, middlename, cu.email, u_login
-			   		FROM core_users as cu
-			   		    LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
-			   		WHERE cu.u_id = ?", $this->auth->ID
-				);
+				$dataUser = $this->dataUsers->getUserById($this->auth->ID);
 
 				if ($dataUser) {
 					$to = $this->getSetting('feedback_email');
