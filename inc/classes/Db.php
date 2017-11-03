@@ -112,7 +112,9 @@ class Db {
                     $module    = substr($classPath, 0, strpos($classPath, "/"));
                     $location  = $this->getModuleLocation($module);
                 }
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->translate->tr('Модель не найдена.'));
+				if (!file_exists($location . "/Model/$model.php")) {
+                    throw new Exception($this->translate->tr('Модель не найдена.'));
+                }
 				require_once($location . "/Model/$model.php");
 				$v            = new $model();
 				$this->_s[$k] = $v;
