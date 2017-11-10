@@ -467,6 +467,17 @@ class Tool {
             array('миллион', 'миллиона', 'миллионов', 0),
             array('миллиард', 'милиарда', 'миллиардов', 0),
         );
+
+        $morph = function($n, $f1, $f2, $f5)
+        {
+            $n = abs(intval($n)) % 100;
+            if ($n > 10 && $n < 20) return $f5;
+            $n = $n % 10;
+            if ($n > 1 && $n < 5) return $f2;
+            if ($n == 1) return $f1;
+            return $f5;
+        };
+
         list($rub, $kop) = explode('.', sprintf("%015.2f", floatval($num)));
         $out = array();
         if (intval($rub) > 0) {
@@ -485,16 +496,16 @@ class Tool {
                 else $out[] = $i2 > 0 ? $a20[$i3] : $ten[$gender][$i3]; # 10-19 | 1-9
                 // units without rub & kop
                 if ($uk >= 0) {
-                    $out[]= self::morph($v, $unit[$uk][0], $unit[$uk][1], $unit[$uk][2]);
+                    $out[]= $morph($v, $unit[$uk][0], $unit[$uk][1], $unit[$uk][2]);
                 }
             }
         }
         else $out[] = $nul;
         if ($integer_arr) {
-            $out[] = self::morph(intval($rub), $integer_arr[0], $integer_arr[1], $integer_arr[2]); // rub
+            $out[] = $morph(intval($rub), $integer_arr[0], $integer_arr[1], $integer_arr[2]); // rub
         }
         if ($fractional_arr && $kop > 0) {
-            $out[] = $kop . ' ' . self::morph($kop, $fractional_arr[0], $fractional_arr[1], $fractional_arr[2]); // kop
+            $out[] = $kop . ' ' . $morph($kop, $fractional_arr[0], $fractional_arr[1], $fractional_arr[2]); // kop
         }
         return trim(preg_replace('/ {2,}/', ' ', join(' ', $out)));
     }
@@ -618,19 +629,4 @@ class Tool {
 
         return (int)$size;
     }
-
-
-    /**
-     * Склоняем словоформу
-     * @ author runcore
-     */
-    private static function morph($n, $f1, $f2, $f5) {
-        $n = abs(intval($n)) % 100;
-        if ($n > 10 && $n < 20) return $f5;
-        $n = $n % 10;
-        if ($n > 1 && $n < 5) return $f2;
-        if ($n == 1) return $f1;
-        return $f5;
-    }
-
 }
