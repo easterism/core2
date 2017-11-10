@@ -106,6 +106,13 @@ class InstallModule extends \Common {
      */
     private $deleteFilesInfo = array();
 
+    /**
+     * Адаптер базы данных
+     *
+     * @var \Zend_Db_Adapter_Abstract
+     */
+    private $db;
+
 
     /**
      *
@@ -113,39 +120,26 @@ class InstallModule extends \Common {
     function __construct() {
         parent::__construct();
         $this->module = 'admin';
-    }
-
-    /**
-     * @param string $k
-     * @return \Common|\CoreController|mixed|null|void|\Zend_Config_Ini|\Zend_Db_Adapter_Abstract
-     */
-    public function __get($k)
-    {
-        if ($k == 'db') {
-            $db = $this->{$k} = $this->setDb();
-            return $db;
-        } else {
-            return parent::__get($k);
-        }
+        $this->setDb();
     }
 
     /**
      * Собственное подключение к базе данных
-     * @return \Zend_Db_Adapter_Abstract
+     *
+     * @return void
      */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
         if ($this->moduleConfig->database && $this->moduleConfig->database->admin->username) {
-            $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
+            $this->db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
         } else {
-            $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
+            $this->db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
-        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+        if ($this->config->system->timezone) $this->db->query("SET time_zone = '{$this->config->system->timezone}'");
 
-        $db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $db->getConnection()->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $this->db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->db->getConnection()->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         //$db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
-        return $db;
     }
 
 
@@ -555,7 +549,7 @@ class InstallModule extends \Common {
      * @throws  \Exception
      */
     public function installSql() {
-        if (empty($this->mInfo['install'])) {
+        if (empty($this->mInfo['install']) || empty($this->mInfo['install']['sql'])) {
             return;
         }
 
@@ -815,7 +809,7 @@ class InstallModule extends \Common {
      * @return bool|string
      */
     public function getUninstallSQL() {
-        if (empty($this->mInfo['uninstall'])) {
+        if (empty($this->mInfo['uninstall']) || empty($this->mInfo['uninstall']['sql'])) {
             return null;
         }
         $sql = file_get_contents($this->tempDir . "/install/" . $this->mInfo['uninstall']['sql']);
@@ -1356,7 +1350,7 @@ class InstallModule extends \Common {
      * @return  string                  Apikey для доступа к репозиторию
      * @throws  \Exception
      */
-    public function getRepoKey($repo_url) {
+    private function getRepoKey($repo_url) {
         //формируем url
         $server = trim($repo_url);
         if (substr_count($server, "webservice?reg_apikey=") == 0) {
@@ -1389,9 +1383,10 @@ class InstallModule extends \Common {
         else
         {
             $out = json_decode($curl['answer']);
-            $repos = $this->getCustomSetting("repo");
+            $repos = $this->getSetting("repo");
+            if ($repos === false) throw new \Exception("Не задан адрес репозитория модулей");
             $repos = explode(";", $repos);
-            foreach($repos as $k=>$r){
+            foreach ($repos as $k => $r) {
                 //если находим нашь репозиторий
                 if (substr_count($r, $server) > 0) {
                     $repos[$k] = "{$server}repo?apikey={$out->apikey}";
@@ -1399,6 +1394,7 @@ class InstallModule extends \Common {
             }
             $repos = implode(";", $repos);
             $this->db->update("core_settings", array("value" => $repos), "code = 'repo'");
+            $this->cache->remove("all_settings_" . $this->config->database->params->dbname);
         }
 
         return $out->apikey;
@@ -1418,7 +1414,9 @@ class InstallModule extends \Common {
             $repo_list = $this->getModsListFromRepo($repo_url);
 
             $api_key = explode("?apikey=", $repo_url);
-            $list_id = "repo_table_" . !empty($api_key[1]) ? $api_key[1] : uniqid();
+            $api_key = !empty($api_key[1]) ? $api_key[1] : uniqid();
+
+            $list_id = "repo_table_" . $api_key;
 
             $list = new \listTable($list_id);
             $list->ajax = true;
@@ -1459,8 +1457,7 @@ class InstallModule extends \Common {
                     //перевариваем зависимости
                     $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
                     $Inf = $ins['dependent_modules'];
-                    if (
-                        !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                    if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
                         || !empty($Inf['m']) //старая версия
                     ) {
                         if (

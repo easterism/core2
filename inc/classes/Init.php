@@ -1217,6 +1217,11 @@
             $file_path = $location . "/ModAjax.php";
 
             if (file_exists($file_path)) {
+                $autoload = $location . "/vendor/autoload.php";
+                if (file_exists($autoload)) {
+                    require_once $autoload;
+                }
+
                 require_once $file_path;
                 $xajax = new ModAjax($res);
                 $func = 'ax' . ucfirst($func);
