@@ -1,6 +1,8 @@
 <?php
 namespace Store;
 
+use Zend\Session\Container as SessionContainer;
+
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 require_once DOC_ROOT . "core2/inc/classes/Image.php";
 
@@ -22,7 +24,7 @@ class FileUploader extends \Db {
         parent::__construct();
 
         $config     = \Zend_Registry::get('config');
-        $sid        = \Zend_Registry::get('session')->getId();
+        $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $config->temp . '/' . $sid;
 
         if ( ! is_dir($upload_dir . "/thumbnail")) {

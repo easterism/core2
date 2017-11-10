@@ -1,6 +1,8 @@
 <?
 namespace Core2;
 
+use WideImage\Exception\Exception;
+
 require_once DOC_ROOT . "/core2/inc/classes/Common.php";
 require_once DOC_ROOT . "/core2/inc/classes/class.list.php";
 
@@ -339,6 +341,19 @@ class InstallModule extends \Common {
      * @throws \Exception
      */
     private function checkNecMods() {
+        //проверка зависимости от версии ядра
+        if (isset($this->mInfo['install']['required_core'])) { //значит модуль зависит от версии ядра
+            if (!$required_core = $this->mInfo['install']['required_core']) {
+                throw new \Exception($this->translate->tr("Не удалось определить требуемую версию ядра"));
+            } else {
+                $config = \Zend_Registry::getInstance()->get('core_config');
+                if (!$config->version) {
+                    throw new \Exception($this->translate->tr("Не задана версия ядра"));
+                } else {
+                    if ($config->version < $required_core) throw new \Exception(sprintf($this->translate->tr("Требуется ядро %s"), "v$required_core"));
+                }
+            }
+        }
         $Inf = empty($this->mInfo['install']['dependent_modules']) ? array() : $this->mInfo['install']['dependent_modules'];
         if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
             $depend = array();
@@ -529,9 +544,7 @@ class InstallModule extends \Common {
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
-        if (!empty($this->mInfo['install']['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['install']['php'])) {
-            require_once($this->tempDir . "/install/" . $this->mInfo['install']['php']);
-        }
+        $this->installFile();
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "' а потом этот модуль") : " включите модуль";
@@ -548,7 +561,7 @@ class InstallModule extends \Common {
      * @return  void
      * @throws  \Exception
      */
-    public function installSql() {
+    private function installSql() {
         if (empty($this->mInfo['install']) || empty($this->mInfo['install']['sql'])) {
             return;
         }
@@ -570,6 +583,14 @@ class InstallModule extends \Common {
         }
     }
 
+    /**
+     * выполнение скриптов инсталляции
+     */
+    private function installFile() {
+        if (!empty($this->mInfo['install']['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['install']['php'])) {
+            require_once($this->tempDir . "/install/" . $this->mInfo['install']['php']);
+        }
+    }
 
     /**
      * Обновление таблиц модуля
@@ -577,7 +598,7 @@ class InstallModule extends \Common {
      * @return bool
      * @throws \Exception
      */
-    public function migrateSql() {
+    private function migrateSql() {
         $curVer = "v" . trim($this->curVer);
         $file_name = !empty($this->mInfo['migrate'][$curVer]['sql']) ? $this->mInfo['migrate'][$curVer]['sql'] : "";
         $sql = '';
@@ -586,7 +607,7 @@ class InstallModule extends \Common {
             if (!empty($file_name) && is_file($file_loc)) {
                 $sql = file_get_contents($file_loc);
             } else {
-                throw new \Exception($this->translate->tr("Не найден файл $file_name для обновления модуля!"));
+                throw new \Exception(sprintf($this->translate->tr("Не найден файл %s для обновления модуля!"), $file_name));
             }
         }
         if (!$sql) {
@@ -603,6 +624,33 @@ class InstallModule extends \Common {
             }
             $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы добавлены"), "Успешно", "info");
         }
+        return true;
+    }
+
+    /**
+     * выполнение скриптов миграции
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    private function migrateFile() {
+        $curVer = "v" . trim($this->curVer);
+        $file_php = !empty($this->mInfo['migrate'][$curVer]['php']) ? $this->mInfo['migrate'][$curVer]['php'] : "";
+        //подключаем *.php если задан
+        $sql = '';
+        if (!empty($file_php)) {
+            $file_loc = $this->tempDir . "/install/" . $file_php;
+            if (!empty($file_php) && is_file($file_loc)) {
+                try {
+                    require_once($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php']);
+                } catch (\Exception $e) {
+                    throw new \Exception($e->getMessage());
+                }
+            } else {
+                throw new \Exception(sprintf($this->translate->tr("Не найден файл %s для обновления модуля!"), $file_php));
+            }
+        }
+
         return true;
     }
 
@@ -678,7 +726,7 @@ class InstallModule extends \Common {
         $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
-        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = {$m_id}");
+        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ", $m_id);
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
                 $this->db->insert('core_submodules', $subval);
@@ -692,9 +740,7 @@ class InstallModule extends \Common {
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
-        if (!empty($this->mInfo['migrate']["v" . trim($this->curVer)]['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php'])) {
-            require_once($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php']);
-        }
+        $this->migrateFile();
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "', а потом этот модуль") : " включите модуль";
@@ -1836,7 +1882,7 @@ class InstallModule extends \Common {
                         $out = json_decode($out['answer']);
                         //достаём список модулей и ищем нужный
                         $repo_list = ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
-                        foreach ($repo_list as $m_id=>$i) {
+                        foreach ($repo_list as $m_id => $i) {
                             if (empty($list[$i['install']['module_id']][$i['install']['version']])) {
                                 $i['location']      = 'repo';
                                 $i['location_id']   = $m_id;
@@ -1876,7 +1922,7 @@ class InstallModule extends \Common {
             $update = array($m_v => array());
             $update[$m_v]['install']['module_id'] = $mod_id;
 
-                //получаем список всех доступных модулей
+            //получаем список всех доступных модулей
             $availMods = $this->getInfoAllAvailMods();
 
             //ищем нужный модуль

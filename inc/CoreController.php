@@ -281,14 +281,15 @@ class CoreController extends Common {
 					$authNamespace->NAME 	= $res['u_login'];
 					$authNamespace->EMAIL 	= $res['email'];
 					if ($res['u_login'] == 'root') {
-						$authNamespace->ADMIN = true;
+						$authNamespace->ADMIN   = true;
+                        $authNamespace->ROLEID 	= 0;
 					} else {
 						$authNamespace->LN 		= $res['lastname'];
 						$authNamespace->FN 		= $res['firstname'];
 						$authNamespace->MN 		= $res['middlename'];
 						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
-						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : -1;
+						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : 0;
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
@@ -315,7 +316,7 @@ class CoreController extends Common {
      */
     private function storeSession(SessionContainer $auth) {
         if ($auth && $auth->ID && $auth->ID > 0) {
-            $sid = Zend_Registry::get('session')->getId();
+            $sid = $auth->getManager()->getId();
             $sess = $this->dataSession;
             $row = $sess->fetchRow($sess->select()->where("logout_time IS NULL AND user_id=?", $auth->ID)
                                                 ->where("sid=?", $sid)

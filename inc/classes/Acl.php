@@ -1,4 +1,7 @@
 <?
+
+namespace Core2;
+
 require_once 'Db.php';
 
 
@@ -37,14 +40,14 @@ class Acl extends Db {
 	 *
 	 */
 	public function setupAcl() {
-		$registry 	= Zend_Registry::getInstance();
+		$registry 	= \Zend_Registry::getInstance();
 		$registry->set('addRes', $this->addRes);
-		$auth 		= Zend_Registry::get('auth');
+		$auth 		= $registry->get('auth');
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
 
 		if (!($this->cache->test($key))) {
-			$acl = new Zend_Acl();
+			$acl = new \Zend_Acl();
 			$SQL = "SELECT *
 					  FROM (
 						(SELECT module_id, m.seq, m.access_default, m.access_add
@@ -67,7 +70,7 @@ class Acl extends Db {
 
 			// Если не назначена роль, добавляем виртуальную роль в ACL
 			if ($auth->ROLE === -1) {
-				$acl->addRole(new Zend_Acl_Role($auth->ROLE));
+				$acl->addRole(new \Zend_Acl_Role($auth->ROLE));
 			}
 
 			// обрабатываем только модули
@@ -84,7 +87,7 @@ class Acl extends Db {
 				$mod2 = explode('_', $data['module_id']);
 				if (!in_array($mod2[0], $resources)) {
 					$resources[] = $mod2[0];
-					$acl->addResource(new Zend_Acl_Resource($mod2[0]));
+					$acl->addResource(new \Zend_Acl_Resource($mod2[0]));
 				}
 			}
 
@@ -94,7 +97,7 @@ class Acl extends Db {
 				if (!empty($mod2[1])) {
 					if (!in_array($data['module_id'], $resources2)) {
 						$resources2[] = $data['module_id'];
-						$acl->addResource(new Zend_Acl_Resource($data['module_id']), $mod2[0]);
+						$acl->addResource(new \Zend_Acl_Resource($data['module_id']), $mod2[0]);
 					}
 				}
 			}
@@ -110,12 +113,12 @@ class Acl extends Db {
 					$roleName = $value['name'];
 					if (self::INHER_ROLES == 'Y') {
 						if ($i == 1) {
-							$acl->addRole(new Zend_Acl_Role($value['name']));
+							$acl->addRole(new \Zend_Acl_Role($value['name']));
 						} else {
-							$acl->addRole(new Zend_Acl_Role($value['name']), $roleName);
+							$acl->addRole(new \Zend_Acl_Role($value['name']), $roleName);
 						}
 					} else {
-						$acl->addRole(new Zend_Acl_Role($roleName));
+						$acl->addRole(new \Zend_Acl_Role($roleName));
 					}
 
 					$access = unserialize($value['access']);
@@ -212,18 +215,18 @@ class Acl extends Db {
 
     /**
      * Проверка существования и установка ресурса в ACL
-     * @param Zend_Registry $registry
+     * @param \Zend_Registry $registry
      * @param               $resource
      *
-     * @throws Zend_Exception
+     * @throws \Zend_Exception
      */
-    private function setResource(Zend_Registry $registry, $resource) {
+    private function setResource(\Zend_Registry $registry, $resource) {
         $acl         = $registry->get('acl');
         $addRes      = $registry->get('addRes');
         $availRes    = $registry->get('availRes');
         $availSubRes = $registry->get('availSubRes');
         if (!in_array($resource, $availRes) && !in_array($resource, $addRes) && !in_array($resource, $availSubRes)) {
-            $acl->addResource(new Zend_Acl_Resource($resource));
+            $acl->addResource(new \Zend_Acl_Resource($resource));
             $addRes[] = $resource;
         }
         if ($addRes) $registry->set('addRes', $addRes);
@@ -237,7 +240,7 @@ class Acl extends Db {
 	 * @param $type
 	 */
 	public function allow($role, $resource, $type = 'access') {
-        $registry    = Zend_Registry::getInstance();
+        $registry    = \Zend_Registry::getInstance();
         $acl         = $registry->get('acl');
         $this->setResource($registry, $resource);
         $acl->allow($role, $resource, $type);
@@ -273,11 +276,11 @@ class Acl extends Db {
      * @param $resource
      * @param $type
      *
-     * @throws Zend_Exception
+     * @throws \Zend_Exception
      */
     public function deny($role, $resource, $type = 'access')
     {
-        $registry    = Zend_Registry::getInstance();
+        $registry    = \Zend_Registry::getInstance();
         $acl         = $registry->get('acl');
         $this->setResource($registry, $resource);
         $acl->deny($role, $resource, $type);
@@ -291,7 +294,7 @@ class Acl extends Db {
 	 * @return bool
 	 */
 	public function checkAcl($source, $type = 'access') {
-        $registry = Zend_Registry::getInstance();
+        $registry = \Zend_Registry::getInstance();
 		$xxx = strrpos($source, 'xxx');
 		if ($xxx > 0) {
 			$source   = substr($source, 0, $xxx); //TODO SHOULD BE FIX

@@ -150,7 +150,7 @@
             $sess_manager->setSaveHandler(new Cache($cache));
         }
         //сохраняем менеджер сессий
-        Zend_Registry::set('session', $sess_manager);
+        SessionContainer::setDefaultManager($sess_manager);
     }
 
 	//сохраняем конфиг
@@ -174,7 +174,7 @@
 	 * Class Init
      * @property Modules $dataModules
      */
-    class Init extends Db {
+    class Init extends \Core2\Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -182,7 +182,7 @@
         protected $auth;
 
         /**
-         * @var Acl
+         * @var \Core2\Acl
          */
         protected $acl;
         private $is_cli = false;
@@ -236,8 +236,7 @@
 
             $this->auth 	= new SessionContainer('Auth');
             if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
-                $sm = Zend_Registry::get('session');
-                $sm->regenerateId();
+                $this->auth->getManager()->regenerateId();
                 $this->auth->initialized = true;
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
@@ -297,7 +296,7 @@
                 $token = $_SERVER['HTTP_AUTHORIZATION'];
             }
             else if (!empty($_SERVER['HTTP_CORE2M'])) {
-                $token = $_SERVER['HTTP_CORE2M']; //DEPRECATED
+                $token = $_SERVER['HTTP_CORE2M'];
             }
 
             if ($token) {
@@ -409,7 +408,7 @@
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
                 // SETUP ACL
-                $this->acl = new Acl();
+                $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();
             }
             else {
@@ -1179,7 +1178,7 @@
         parse_str($loc, $params);
         if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-        $acl = new Acl();
+        $acl = new \Core2\Acl();
 
         Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
 
@@ -1212,7 +1211,7 @@
                 }
             }
 
-            $db        = new Db;
+            $db        = new \Core2\Db;
             $location  = $db->getModuleLocation($params['module']);
             $file_path = $location . "/ModAjax.php";
 

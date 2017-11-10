@@ -515,7 +515,7 @@ class ajaxFunc extends Common {
      */
     private function saveFile($table, $last_insert_id, $file_controls) {
 
-        $sid        = Zend_Registry::get('session')->getId();
+        $sid        = \SessionContainer::getDefaultManager()->getId();
         $upload_dir = $this->config->temp . '/' . $sid;
         $thumb_dir  = $upload_dir . '/thumbnail';
 

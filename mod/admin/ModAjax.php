@@ -283,7 +283,7 @@ class ModAjax extends ajaxFunc {
 			}
 		}
 		if ($custom_fields) $data['control']['custom_field'] = base64_encode(serialize($custom_fields));
-		else $data['control']['custom_field'] = new Zend_Db_Expr('NULL');
+		else $data['control']['custom_field'] = new \Zend_Db_Expr('NULL');
 
 		if ( ! $lastId = $this->saveData($data)) {
 			return $this->response;
@@ -475,7 +475,7 @@ class ModAjax extends ajaxFunc {
 			$dataForSave = array(
 				'visible'         => $data['control']['visible'],
 				'email'           => $data['control']['email'] ? $data['control']['email'] : NULL,
-				'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL'),
+				'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
 				'is_admin_sw'     => $data['control']['is_admin_sw'],
 				'is_email_wrong'  => $data['control']['is_email_wrong'],
 				'is_pass_changed' => $data['control']['is_pass_changed'],
@@ -494,7 +494,7 @@ class ModAjax extends ajaxFunc {
                 $data['control']['u_login'] = trim(strip_tags($data['control']['u_login']));
 
 				$dataForSave['u_login']     = $data['control']['u_login'];
-				$dataForSave['date_added']  = new Zend_Db_Expr('NOW()');
+				$dataForSave['date_added']  = new \Zend_Db_Expr('NOW()');
 
 				$this->checkUniqueLogin(0, $dataForSave['u_login']);
 				if ($data['control']['email']) {
@@ -530,7 +530,7 @@ class ModAjax extends ajaxFunc {
                     'lastname'   => $data['control']['lastname'],
                     'firstname'  => $data['control']['firstname'],
                     'middlename' => $data['control']['middlename'],
-                    'lastuser'   => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
+                    'lastuser'   => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL')
                 );
 				if (!$row) {
 					$row = $this->dataUsersProfile->createRow();
@@ -569,7 +569,7 @@ class ModAjax extends ajaxFunc {
 		}
 		$refid = $this->getSessFormField($data['class_id'], 'refid');
 		if ($refid == 0) {
-			$data['control']['date_added'] = new Zend_Db_Expr('NOW()');
+			$data['control']['date_added'] = new \Zend_Db_Expr('NOW()');
 		}
 		if (!isset($data['access'])) $data['access'] = array();
 		$data['control']['access'] = serialize($data['access']);
@@ -602,7 +602,7 @@ class ModAjax extends ajaxFunc {
 				$this->db->update('core_settings',
 					array(
 						'value'    => $value,
-						'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new Zend_Db_Expr('NULL')
+						'lastuser' => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL')
 					),
 					$where
 				);
@@ -714,7 +714,7 @@ class ModAjax extends ajaxFunc {
         //echo "<pre>";print_r($data);echo "</pre>";//die;
 
         try {
-            $sid 			= Zend_Registry::get('session')->getId();
+            $sid 			= $this->auth->getManager()->getId();
             $upload_dir 	= $this->config->temp . '/' . $sid;
 
             if (isset($data['control']['name']) && $this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
@@ -735,11 +735,11 @@ class ModAjax extends ajaxFunc {
                 $f = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if (!file_exists($fn)) {
-                    throw new Exception("Файл {$f[0]} не найден");
+                    throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
                 }
                 $size = filesize($fn);
                 if ($size !== (int)$f[1]) {
-                    throw new Exception("Что-то пошло не так. Размер файла {$f[0]} не совпадает");
+                    throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
                 }
             }
 
@@ -883,7 +883,7 @@ class ModAjax extends ajaxFunc {
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
                             'install_info'  => serialize($inst->xmlParse($xmlObj)),
-                            'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
+                            'readme' 	    => !empty($readme) ? $readme : new \Zend_Db_Expr('NULL'),
                             'lastuser' 	    => $this->auth->ID,
                             'files_hash'    => serialize($files_hash)
                         ),
@@ -895,12 +895,12 @@ class ModAjax extends ajaxFunc {
                         array(
                             'name' 	        => $xmlObj->install->module_name,
                             'module_id' 	=> $xmlObj->install->module_id,
-                            'module_group' 	=> !empty($xmlObj->install->module_group) ? $xmlObj->install->module_group : new Zend_Db_Expr("NULL"),
+                            'module_group' 	=> !empty($xmlObj->install->module_group) ? $xmlObj->install->module_group : new \Zend_Db_Expr("NULL"),
                             'data' 		    => $content,
                             'descr' 	    => $xmlObj->install->description,
                             'version' 	    => $xmlObj->install->version,
                             'install_info'  => serialize($inst->xmlParse($xmlObj)),
-                            'readme' 	    => !empty($readme) ? $readme : new Zend_Db_Expr('NULL'),
+                            'readme' 	    => !empty($readme) ? $readme : new \Zend_Db_Expr('NULL'),
                             'lastuser' 	    => $this->auth->ID,
                             'files_hash'    => serialize($files_hash)
                         )
