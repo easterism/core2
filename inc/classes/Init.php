@@ -109,7 +109,7 @@
 
     //подключаем мультиязычность
     require_once 'I18n.php';
-    $translate = new I18n($config);
+    $translate = new \Core2\I18n($config);
 
 	if (isset($config->auth) && $config->auth->on) {
 		$realm = $config->auth->params->realm;

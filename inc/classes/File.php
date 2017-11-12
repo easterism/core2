@@ -6,7 +6,7 @@
  * Date: 04.03.2016
  * Time: 0:58
  */
-namespace Store;
+namespace Core2\Store;
 
 use Zend\Session\Container as SessionContainer;
 

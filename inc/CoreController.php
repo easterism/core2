@@ -937,7 +937,7 @@ class CoreController extends Common {
 	public function action_upload() {
         require_once 'classes/FileUploader.php';
 
-        $upload_handler = new \Store\FileUploader();
+        $upload_handler = new \Core2\Store\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
@@ -967,7 +967,7 @@ class CoreController extends Common {
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
 		require_once 'classes/File.php';
-		$f = new \Store\File($resource);
+		$f = new \Core2\Store\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
 		}
@@ -1129,7 +1129,7 @@ class CoreController extends Common {
     public function createEmail() {
 
         require_once 'classes/Email.php';
-        return new Email();
+        return new \Core2\Email();
     }
 
     /**

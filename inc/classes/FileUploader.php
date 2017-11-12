@@ -1,5 +1,5 @@
 <?php
-namespace Store;
+namespace Core2\Store;
 
 use Zend\Session\Container as SessionContainer;
 
@@ -11,7 +11,7 @@ require_once DOC_ROOT . "core2/inc/classes/Image.php";
  * Class FileUploader
  * @package Store
  */
-class FileUploader extends \Db {
+class FileUploader extends \Core2\Db {
 
     private $options;
 

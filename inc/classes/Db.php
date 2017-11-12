@@ -7,7 +7,7 @@ use Zend\Session\Container as SessionContainer;
  * Class Db
  * @property \Zend_Db_Adapter_Abstract $db
  * @property \Zend_Cache_Core          $cache
- * @property I18n                     $translate
+ * @property \Core2\I18n               $translate
  * @property Log               $log
  */
 class Db {
