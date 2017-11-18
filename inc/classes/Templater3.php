@@ -2,7 +2,7 @@
 
 /**
  * Class Templater3
- * @see https://github.com/shinji00/Micro_Templater
+ * @see https://github.com/shabuninil/Micro_Templater
  */
 class Templater3 {
 
