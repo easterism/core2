@@ -1,8 +1,6 @@
 <?
 namespace Core2;
 
-use WideImage\Exception\Exception;
-
 require_once DOC_ROOT . "/core2/inc/classes/Common.php";
 require_once DOC_ROOT . "/core2/inc/classes/class.list.php";
 
@@ -726,7 +724,7 @@ class InstallModule extends \Common {
         $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
-        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ", $m_id);
+        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ?", $m_id);
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
                 $this->db->insert('core_submodules', $subval);

@@ -547,7 +547,6 @@ class CoreController extends Common {
 	 * Обновление последовательности записей
 	 */
 	public function action_seq () {
-
 		$this->db->beginTransaction();
 		try {
 			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);

@@ -29,7 +29,6 @@
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
     "xajax/xajax": "dev-master",
-    "smottt/wideimage": "1.1.*",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*"
   },

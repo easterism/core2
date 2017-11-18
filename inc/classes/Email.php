@@ -1,7 +1,7 @@
 <?
 namespace Core2;
 
-require_once 'Db.php';
+require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
 
 /**
