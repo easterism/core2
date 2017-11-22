@@ -7,7 +7,7 @@ require_once 'Acl.php';
  * @property StdClass       $acl
  * @property CoreController $modAdmin
  */
-class CommonApi extends Acl {
+class CommonApi extends \Core2\Acl {
 
     /**
      * @var StdClass|Zend_Session_Namespace

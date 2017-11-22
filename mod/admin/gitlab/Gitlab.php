@@ -1,5 +1,8 @@
 <?php
 namespace Core2;
+
+use Zend\Session\Container as SessionContainer;
+
 /**
  * Created by PhpStorm.
  * User: StepovichPE
@@ -81,7 +84,7 @@ class Gitlab extends \Common
         $zip = '';
         if ($answer['http_code'] == 200) {
             $zip = new \ZipArchive();
-            $upload_dir 	    = $this->config->temp . '/' . \Zend_Registry::get('session')->getId();
+            $upload_dir 	    = $this->config->temp . '/' . SessionContainer::getDefaultManager()->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
             $fn                 = tempnam($upload_dir, "gitlabzip");
             file_put_contents($fn, $answer['answer']);

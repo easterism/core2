@@ -5,7 +5,7 @@ require_once 'Acl.php';
 /**
  * Class initList
  */
-class initList extends Acl {
+class initList extends \Core2\Acl {
 
 	public $deleteAction   = "";
 	public $date_mask	   = "dd-mm-yyyy";
@@ -48,7 +48,7 @@ class initList extends Acl {
 /**
  * Class initEdit
  */
-class initEdit extends Acl {
+class initEdit extends \Core2\Acl {
 	public $tableClass = "editTable";
 	public $date_mask  = "dd-mm-yyyy";
 	public $imgDir     = "core/img";

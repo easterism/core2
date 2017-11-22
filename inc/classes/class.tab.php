@@ -24,7 +24,7 @@ class tabs extends initTabs {
 	 * tabs constructor.
 	 * @param string $name
 	 */
-	public function tabs($name = '') {
+	public function __construct($name = '') {
 		if (empty($name)) {
 			$name = time();
 		}

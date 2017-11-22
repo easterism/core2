@@ -1,6 +1,7 @@
 <?
+namespace Core2;
 
-require_once 'Db.php';
+require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
 
 /**
@@ -226,10 +227,10 @@ class Email {
                     $location = $db->getModuleLocation('queue');
                     require_once $location . '/ModQueueController.php';
 
-                    $queue = new modQueueController();
+                    $queue = new \modQueueController();
 
                     $this->mail_data['date_send'] = $immediately
-                        ? new Zend_Db_Expr('NOW()')
+                        ? new \Zend_Db_Expr('NOW()')
                         : null;
 
                     $queue->createEmail(
@@ -256,7 +257,7 @@ class Email {
 
                     if ( ! $mail_id || $mail_id <= 0) {
                         $zend_db->rollback();
-                        throw new Exception('Ошибка добавления сообщения в очередь');
+                        throw new \Exception('Ошибка добавления сообщения в очередь');
 
                     }
                     $zend_db->commit();
@@ -273,7 +274,7 @@ class Email {
                         );
 
                         if ( ! $is_send) {
-                            throw new Exception('Не удалось отправить сообщение');
+                            throw new \Exception('Не удалось отправить сообщение');
                         }
                     }
 
@@ -281,10 +282,10 @@ class Email {
                     $location = $db->getModuleLocation('queue');
                     require_once $location . '/ModQueueController.php';
 
-                    $queue = new modQueueController();
+                    $queue = new \modQueueController();
 
                     $this->mail_data['date_send'] = $immediately
-                        ? new Zend_Db_Expr('NOW()')
+                        ? new \Zend_Db_Expr('NOW()')
                         : null;
 
                     $queue->createMail($this->mail_data);
@@ -301,7 +302,7 @@ class Email {
                         );
 
                         if ( ! $is_send) {
-                            throw new Exception('Не удалось отправить сообщение');
+                            throw new \Exception('Не удалось отправить сообщение');
                         }
                     }
                 }
@@ -319,7 +320,7 @@ class Email {
                 );
 
                 if ( ! $is_send) {
-                    throw new Exception('Не удалось отправить сообщение');
+                    throw new \Exception('Не удалось отправить сообщение');
                 }
             }
 
@@ -350,12 +351,12 @@ class Email {
             );
 
             if ( ! $is_send) {
-                throw new Exception('Не удалось отправить сообщение');
+                throw new \Exception('Не удалось отправить сообщение');
             }
 
             return array('ok' => true);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return array('error' => $e->getMessage());
         }
     }
@@ -423,7 +424,7 @@ class Email {
 
         $tr = null;
         if (!empty($cnf->mail->server)) {
-            $tr = new Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
+            $tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
         }
 
         return $mail->send($tr);

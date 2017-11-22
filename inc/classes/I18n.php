@@ -1,5 +1,5 @@
 <?
-
+namespace Core2;
 /**
  * Локализация core2
  *
@@ -20,7 +20,7 @@ class I18n
      *
      * инициализируется свойство $translate
      */
-	public function __construct(Zend_Config $config)
+	public function __construct(\Zend_Config $config)
 	{
         if (isset($config->translate) && $config->translate->on) {
             try {
@@ -31,7 +31,7 @@ class I18n
                 if ($config->translate->adapter == 'gettext') {
                     $content = "core2/translations/$lng.mo";
                 } else {
-                    \Core2\Error::Exception("Адаптер перевода не поддерживается");
+                    Error::Exception("Адаптер перевода не поддерживается");
                 }
                 $this->locale = $lng;
                 $this->setup(array(
@@ -39,11 +39,11 @@ class I18n
                         'content' => DOC_ROOT . $content,
                         'locale'  => $lng
                 ));
-            } catch (Zend_Translate_Exception $e) {
-                \Core2\Error::Exception($e->getMessage());
+            } catch (\Zend_Translate_Exception $e) {
+                Error::Exception($e->getMessage());
             }
         }
-        Zend_Registry::set('translate', $this);
+        \Zend_Registry::set('translate', $this);
 	}
 
 
@@ -55,7 +55,7 @@ class I18n
 	public function setup($config)
 	{
         if ($config['locale'] == 'ru') return;
-        $this->translate = new Zend_Translate($config);
+        $this->translate = new \Zend_Translate($config);
 	}
 
     /**
@@ -102,9 +102,9 @@ class I18n
                 }
             }
             if ($goit) {
-                $config = new Zend_Config_Ini($location . "/conf.ini", $_SERVER['SERVER_NAME']);
+                $config = new \Zend_Config_Ini($location . "/conf.ini", $_SERVER['SERVER_NAME']);
             } else {
-                $config = new Zend_Config_Ini($location . "/conf.ini", 'production');
+                $config = new \Zend_Config_Ini($location . "/conf.ini", 'production');
             }
             if (isset($config->translate) && $config->translate->on) {
 
@@ -112,10 +112,10 @@ class I18n
                 if ($config->translate->adapter == 'gettext') {
                     $content = $location . "/translations/$lng.mo";
                 } else {
-                    \Core2\Error::Exception("Адаптер перевода модуля не поддерживается");
+                    Error::Exception("Адаптер перевода модуля не поддерживается");
                 }
                 try {
-                    $translate_second = new Zend_Translate(
+                    $translate_second = new \Zend_Translate(
                             array(
                                     'adapter' => $config->translate->adapter,
                                     'content' => $content,
@@ -129,10 +129,10 @@ class I18n
                             )
                     );
                     unset($translate_second);
-                } catch (Zend_Translate_Exception $e) {
-                    \Core2\Error::Exception($e->getMessage());
+                } catch (\Zend_Translate_Exception $e) {
+                    Error::Exception($e->getMessage());
                 }
-                Zend_Registry::set('translate', $this);
+                \Zend_Registry::set('translate', $this);
             }
         }
     }

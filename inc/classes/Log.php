@@ -7,6 +7,7 @@ use Monolog\Handler\SlackWebhookHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Processor\WebProcessor;
 use Monolog\Formatter\NormalizerFormatter;
+use Zend\Session\Container as SessionContainer;
 
 
 /**
@@ -104,7 +105,7 @@ class Log {
     public function access($name) {
         $this->setWriter();
         $this->log->pushProcessor(new WebProcessor());
-        $this->log->info($name, array('sid' => \Zend_Registry::get('session')->getId()));
+        $this->log->info($name, array('sid' => SessionContainer::getDefaultManager()->getId()));
     }
 
 
