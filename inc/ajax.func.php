@@ -105,11 +105,16 @@ class ajaxFunc extends Common {
 		}
 
 		foreach ($fields as $field => $val) {
-			if ( ! isset($control[$field])) {
-			    continue;
+            $params = explode(",", $val);
+
+            if (in_array("req", $params) && ! array_key_exists($field, $control)) {
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь пожалуйста к администратору за решением этой проблемы.')}<br/>";
+                break;
             }
 
-			$params = explode(",", $val);			
+            if ( ! isset($control[$field])) {
+			    continue;
+            }
 
 			if (in_array("req", $params) &&
                 (is_null($control[$field]) ||
