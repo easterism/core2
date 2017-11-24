@@ -879,6 +879,13 @@ table td.homeTD {
     overflow: hidden;
     border-bottom: 1px solid #CCCCCC;
 }
+.core-panel > .core-panel-heading > .core-panel-subtitle {
+	color: #757575;
+	font-size: 14px;
+	font-weight: normal;
+	overflow: hidden;
+	padding: 5px 0 0;
+}
 
 .core-panel > .core-panel-body {
 	padding: 5px;
