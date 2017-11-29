@@ -1123,7 +1123,7 @@ class CoreController extends Common {
 
     /**
      * Создание письма
-     * @return Email
+     * @return \Core2\Email
      */
     public function createEmail() {
 
