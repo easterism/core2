@@ -625,15 +625,19 @@ class ModAjax extends ajaxFunc {
     /**
      * @param array $data
      * @return xajaxResponse
+     * @throws Exception
      */
     public function saveCustomSettings($data) {
 
-		$fields = array('code' => 'req');
-		if ($this->ajaxValidate($data, $fields)) {
-			return $this->response;
+        $refid = $this->getSessFormField($data['class_id'], 'refid');
+
+        if ( ! $refid) {
+            $fields = array('code' => 'req');
+            if ($this->ajaxValidate($data, $fields)) {
+                return $this->response;
+            }
 		}
 
-        $refid = $this->getSessFormField($data['class_id'], 'refid');
         if ( ! $refid) {
             $seq = $this->db->fetchOne("
                 SELECT MAX(seq)
@@ -651,17 +655,23 @@ class ModAjax extends ajaxFunc {
     }
 
 
-	/**
-	 * Сохранение персональных настроек
-	 * @param $data
-	 * @return xajaxResponse
-	 */
+    /**
+     * Сохранение персональных настроек
+     * @param array $data
+     * @return xajaxResponse
+     * @throws Exception
+     */
 	public function savePersonalSettings($data) {
 
-		$fields = array('code' 		=> 'req');
-		if ($this->ajaxValidate($data, $fields)) {
-			return $this->response;
-		}
+        $refid = $this->getSessFormField($data['class_id'], 'refid');
+
+        if ( ! $refid) {
+            $fields = array('code' 		=> 'req');
+            if ($this->ajaxValidate($data, $fields)) {
+                return $this->response;
+            }
+        }
+
 		$data['control']['is_personal_sw'] = 'Y';
 		if (!$last_insert_id = $this->saveData($data)) {
 			return $this->response;
