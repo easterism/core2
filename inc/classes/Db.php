@@ -1,18 +1,19 @@
 <?
+namespace Core2;
 
 use Zend\Session\Container as SessionContainer;
 
 /**
  * Class Db
- * @property Zend_Db_Adapter_Abstract $db
- * @property Zend_Cache_Core          $cache
- * @property I18n                     $translate
- * @property \Core2\Log               $log
+ * @property \Zend_Db_Adapter_Abstract $db
+ * @property \Zend_Cache_Core          $cache
+ * @property \Core2\I18n               $translate
+ * @property Log               $log
  */
 class Db {
 
     /**
-     * @var Zend_Config_Ini
+     * @var \Zend_Config_Ini
      */
 	protected $config;
 	protected $frontendOptions = array(
@@ -32,7 +33,7 @@ class Db {
 	 */
 	public function __construct($config = null) {
 		if (is_null($config)) {
-			$this->config = Zend_Registry::get('config');
+			$this->config = \Zend_Registry::get('config');
 		} else {
 			$this->config = $config;
 		}
@@ -42,13 +43,13 @@ class Db {
 
 	/**
 	 * @param string $k
-	 * @return mixed|Zend_Cache_Core|Zend_Db_Adapter_Abstract|\Core2\Log
-	 * @throws Zend_Exception
-	 * @throws Exception
+	 * @return mixed|\Zend_Cache_Core|\Zend_Db_Adapter_Abstract|Log
+	 * @throws \Zend_Exception
+	 * @throws \Exception
 	 */
 	public function __get($k) {
 		if ($k == 'db') {
-			$reg = Zend_Registry::getInstance();
+			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				$db = $this->establishConnection($this->config->database);
@@ -59,9 +60,9 @@ class Db {
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-			$reg = Zend_Registry::getInstance();
+			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
-				$v = Zend_Cache::factory('Core',
+				$v = \Zend_Cache::factory('Core',
 					$this->backend,
 					$this->frontendOptions,
 					array('cache_dir' => $this->config->cache));
@@ -76,7 +77,7 @@ class Db {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
-				$v = Zend_Registry::get('translate');
+				$v = \Zend_Registry::get('translate');
 				$this->_s[$k] = $v;
 			}
 			return $v;
@@ -86,7 +87,7 @@ class Db {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
-				$v = new \Core2\Log();
+				$v = new Log();
 				$this->_s[$k] = $v;
 			}
 			return $v;
@@ -103,8 +104,18 @@ class Db {
 				$location = $module == 'admin'
 					? DOC_ROOT . "core2/mod/admin"
 					: $this->getModuleLocation($module);
-
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception($this->translate->tr('Модель не найдена.'));
+                $r = new \ReflectionClass(get_called_class());
+                $classLoc = $r->getFileName();
+                $classPath = strstr($classLoc, '/mod/');
+                if ($classPath && strpos($classPath, dirname(strstr($location, '/mod/'))) !== 0) {
+                    //происходит если модель вызывается из метода, который был вызван из другого модуля
+                    $classPath = substr($classPath, 5);
+                    $module    = substr($classPath, 0, strpos($classPath, "/"));
+                    $location  = $this->getModuleLocation($module);
+                }
+				if (!file_exists($location . "/Model/$model.php")) {
+                    throw new \Exception($this->translate->tr('Модель не найдена.'));
+                }
 				require_once($location . "/Model/$model.php");
 				$v            = new $model();
 				$this->_s[$k] = $v;
@@ -126,21 +137,21 @@ class Db {
 
 
     /**
-     * @param Zend_Config $database
-     * @return Zend_Db_Adapter_Abstract
+     * @param \Zend_Config $database
+     * @return \Zend_Db_Adapter_Abstract
      */
-    protected function establishConnection(Zend_Config $database) {
+    protected function establishConnection(\Zend_Config $database) {
 		try {
-			$db = Zend_Db::factory($database);
-			Zend_Db_Table::setDefaultAdapter($db);
+			$db = \Zend_Db::factory($database);
+			\Zend_Db_Table::setDefaultAdapter($db);
 			$db->getConnection();
-			Zend_Registry::getInstance()->set('db', $db);
+			\Zend_Registry::getInstance()->set('db', $db);
 			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
             return $db;
-        } catch (Zend_Db_Adapter_Exception $e) {
-            \Core2\Error::catchDbException($e);
-        } catch (Zend_Exception $e) {
-            \Core2\Error::catchZendException($e);
+        } catch (\Zend_Db_Adapter_Exception $e) {
+            Error::catchDbException($e);
+        } catch (\Zend_Exception $e) {
+            Error::catchZendException($e);
         }
 	}
 
@@ -154,7 +165,7 @@ class Db {
 	 * @param string $charset
 	 * @param string $adapter
 	 *
-	 * @return Zend_Db_Adapter_Abstract|bool
+	 * @return \Zend_Db_Adapter_Abstract|bool
 	 */
 	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
 	    $host = explode(":", $host);
@@ -168,13 +179,13 @@ class Db {
             'adapterNamespace' => 'Core_Db_Adapter'
 		);
 		try {
-			$db = Zend_Db::factory($adapter, $temp);
+			$db = \Zend_Db::factory($adapter, $temp);
 			$db->getConnection();
             return $db;
-        } catch (Zend_Db_Adapter_Exception $e) {
-            \Core2\Error::catchDbException($e);
-        } catch (Zend_Exception $e) {
-            \Core2\Error::catchZendException($e);
+        } catch (\Zend_Db_Adapter_Exception $e) {
+            Error::catchDbException($e);
+        } catch (\Zend_Exception $e) {
+            Error::catchZendException($e);
         }
 
         return false;
@@ -213,65 +224,41 @@ class Db {
 	}
 
 
-	/**
-	 * Сохранение информации о входе пользователя
-	 * @param $auth
-	 */
-	protected function storeSession($auth) {
-		if ($auth && $auth->ID && $auth->ID > 0) {
-			$sid = Zend_Registry::get('session')->getId();
-			$s_id = $this->db->fetchOne("SELECT id FROM core_session WHERE logout_time IS NULL AND user_id=? AND sid=? AND ip=? LIMIT 1", array($sid, $auth->ID, $_SERVER['REMOTE_ADDR']));
-			if (!$s_id) {
-				$this->db->insert('core_session', array(
-						'sid' => $sid,
-						'login_time' => new Zend_Db_Expr('NOW()'),
-						'user_id' => $auth->ID,
-						'ip' => $_SERVER['REMOTE_ADDR']
-					)
-				);
-			}
-		}
-	}
+
 
 
 	/**
 	 * @param string $expired
 	 */
 	public function closeSession($expired = 'N') {
-		$auth = Zend_Registry::get('auth');
-		$sm = Zend_Registry::get('session');
-		if ($auth && $auth->ID && $auth->ID > 0) {
-			$where = $this->db->quoteInto("user_id = ?", $auth->ID);
-			$where2 = $this->db->quoteInto("sid=?", $sm->getId());
-			$where3 = $this->db->quoteInto("ip=?", $_SERVER['REMOTE_ADDR']);
-			$this->db->update('core_session', array(
-				'logout_time' => new Zend_Db_Expr('NOW()'),
-				'is_expired_sw' => $expired),
-				array($where, $where2, $where3)
-			);
+		$auth = \Zend_Registry::get('auth');
+		if ($auth && $auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+			$row = $this->dataSession->find($auth->LIVEID)->current();
+            $row->logout_time   = new \Zend_Db_Expr('NOW()');
+            $row->is_expired_sw = $expired;
+            $row->save();
 		}
-        $sm->destroy();
+        $auth->getManager()->destroy();
 	}
 
 
 	/**
 	 * логирование активности простых пользователей
 	 * @param array $exclude исключения адресов
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function logActivity($exclude = array()) {
-		$auth = Zend_Registry::get('auth');
+		$auth = \Zend_Registry::get('auth');
 		if ($auth->ID && $auth->ID > 0) {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
 			}
-            $sm = Zend_Registry::get('session');
 			$arr = array();
 			if (!empty($_POST)) $arr['POST'] = $_POST;
 			if (!empty($_GET)) $arr['GET'] = $_GET;
             $data = array(
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => $sm->getId(),
+                'sid'            => $auth->getManager()->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
@@ -282,9 +269,9 @@ class Db {
 				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
 			) {
 				if (!$this->config->log->system->file) {
-					throw new Exception($this->translate->tr('Не задан файл журнала запросов'));
+					throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
 				}
-				$log = new \Core2\Log('access');
+				$log = new Log('access');
 				$log->access($auth->NAME);
 			} else {
                 if ($arr) {
@@ -293,12 +280,11 @@ class Db {
 				$this->db->insert('core_log', $data);
 			}
 			// обновление записи о последней активности
-			$where = array($this->db->quoteInto("sid=?", $data['sid']),
-						   $this->db->quoteInto("ip=?", $data['ip']),
-						   $this->db->quoteInto("user_id=?", $data['user_id']),
-						   'logout_time IS NULL'
-			);
-			$this->db->update('core_session', array('last_activity' => new Zend_Db_Expr('NOW()')), $where);
+            if ($auth->LIVEID) {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                $row->last_activity = new \Zend_Db_Expr('NOW()');
+                $row->save();
+            }
 		}
 	}
 
@@ -342,52 +328,38 @@ class Db {
 	/**
      * Получаем список значений справочника
      *
-	 * @param string $global_id
+	 * @param string $global_id - глобальный идентификатор справочника
+     * @param bool $active - только активные записи
 	 * @return array
 	 */
-	public function getEnumList($global_id) {
-		$res = $this->db->fetchAll("SELECT id, name, custom_field, is_default_sw
-									FROM core_enum
-									WHERE is_active_sw = 'Y'
-									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
-									ORDER BY seq", $global_id);
+	public function getEnumList($global_id, $active = true) {
+		$res = $this->modAdmin->dataEnum->getEnum($global_id);
 		$data = array();
-		foreach ($res as $value) {
-			$data[$value['id']] = array(
-				'value' => $value['name'],
-				'is_default' => ($value['is_default_sw'] == 'Y' ? true : false)
-			);
-			$data[$value['id']]['custom'] = array();
-			if ($value['custom_field']) {
-				$temp = explode(":::", $value['custom_field']);
-				foreach ($temp as $val) {
-					$temp2 = explode("::", $val);
-					$data[$value['id']]['custom'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
-				}
-			}
-		}
+		foreach ($res as $id => $value) {
+		    if ($active && $value['is_active_sw'] !== 'Y') continue;
+            $data[$id] = $value;
+        }
 		return $data;
 	}
-
 
 	/**
 	 * Формирует пару ключ=>значение
 	 *
 	 * @param string $global_id - глобальный идентификатор справочника
-	 * @param bool $name_as_id
-	 * @param bool $empty_first
+	 * @param bool $name_as_id - использовать имя в качестве значения списка
+	 * @param bool $empty_first - добавлять пустое значение вначале списка
+	 * @param bool $active - только активные записи
 	 * @return array
 	 */
-	public function getEnumDropdown($global_id, $name_as_id = false, $empty_first = false) {
-		if (!$name_as_id) $name_as_id = 'id';
-		else $name_as_id = 'name';
-		$data = $this->db->fetchPairs("SELECT `$name_as_id`, `name`
-									FROM core_enum
-									WHERE is_active_sw='Y'
-									AND parent_id = (SELECT id FROM core_enum WHERE global_id=? AND is_active_sw='Y')
-									ORDER BY seq",
-			$global_id
-		);
+	public function getEnumDropdown($global_id, $name_as_id = false, $empty_first = false, $active = true) {
+        $res = $this->modAdmin->dataEnum->getEnum($global_id);
+        $data = array();
+        foreach ($res as $id => $value) {
+            if ($active && $value['is_active_sw'] !== 'Y') continue;
+
+            if ($name_as_id) $data[$value['value']] = $value['value'];
+            else $data[$id] = $value['value'];
+        }
 		if ($empty_first) {
 			$data = array('' => '') + $data;
 		}
@@ -568,11 +540,11 @@ class Db {
 	 * @param $module_id
 	 *
 	 * @return false|mixed|string
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	final public function getModuleLoc($module_id) {
 		$module_id = trim(strtolower($module_id));
-		if (!$module_id) throw new Exception($this->translate->tr("Не определен идентификатор модуля."));
+		if (!$module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
 		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
 		if (!($this->cache->test($module_id))) {
 			if ($module_id == 'admin') {
@@ -589,7 +561,7 @@ class Db {
 						}
 					}
 				} else {
-					throw new Exception($this->translate->tr("Модуль не существует"), 404);
+					throw new \Exception($this->translate->tr("Модуль не существует"), 404);
 				}
 			}
 			$this->cache->save($loc, $module_id);
@@ -612,11 +584,11 @@ class Db {
 	/**
      * Получаем экземпляр логера
 	 * @param string $name
-	 * @return \Core2\Log
+	 * @return Log
 	 */
 	final public function log($name) {
 
-		$log = new \Core2\Log($name);
+		$log = new Log($name);
 		return $log;
 	}
 

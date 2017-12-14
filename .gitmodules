@@ -4,12 +4,9 @@
 [submodule "ext/jQuery/plugins/floatThead"]
 	path = ext/jQuery/plugins/floatThead
 	url = git@github.com:mkoryak/floatThead.git
-[submodule "mod/profile/v1.9.1"]
-	path = mod/profile/v1.9.1
-	url = git@git.rdo.belhard.com:core2/modules/profile.git
-[submodule "mod/profile/v1.9.2"]
-	path = mod/profile/v1.9.2
-	url = git@git.rdo.belhard.com:core2/modules/profile.git
+[submodule "ext/jQuery/plugins/simplemodal"]
+	path = ext/jQuery/plugins/simplemodal
+	url = git@github.com:ericmmartin/simplemodal.git
 [submodule "mod/profile/v1.10.0"]
 	path = mod/profile/v1.10.0
 	url = git@git.rdo.belhard.com:core2/modules/profile.git
@@ -19,6 +16,9 @@
 [submodule "mod/queue/v1.4.0"]
 	path = mod/queue/v1.4.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
-[submodule "mod/cron/v3.0.0"]
-	path = mod/cron/v3.0.0
+[submodule "mod/cron/v3.0.1"]
+	path = mod/cron/v3.0.1
 	url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/webservice/v1.10.0"]
+	path = mod/webservice/v1.10.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git

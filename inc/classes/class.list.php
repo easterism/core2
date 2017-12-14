@@ -589,7 +589,7 @@ class listTable extends initList {
                     if (!empty($this->sessData['search'][$key])) {
                         $value['value'] = $this->sessData['search'][$key];
                     };
-                    $tpl2->assign("{VALUE}", $value['value']);
+                    $tpl2->assign("{VALUE}", is_string($value['value']) ? htmlspecialchars($value['value']) : $value['value']);
                 }
 
                 if ($value['type'] == 'text') {
@@ -870,6 +870,7 @@ class listTable extends initList {
                 if ($recordClass) {
                     $tableBodyHTML .= " class=\"" . implode(" ", $recordClass) . "\"";
                 }
+                reset($row);
                 $tableBodyHTML .= "><td title=\"" . current($row) . "\">$recordNumber</td>";
                 $look = "";
 
@@ -1141,7 +1142,10 @@ class listTable extends initList {
             </script>";
             echo $this->HTML;
             if ($this->fixHead) {
-                echo "<script>
+                echo "
+                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead.min.js\"></script>
+                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead-slim.min.js\"></script>
+                <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');
                     });

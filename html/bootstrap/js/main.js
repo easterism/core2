@@ -124,7 +124,7 @@ function logout() {
         cancelButtonText: "Нет"
     }).then(
         function(result) {
-            $.ajax({url:'index.php?module=admin&action=exit'})
+            $.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
                 .done(function (n) {
                     window.location='index.php';
                 }).fail(function (a,b,t){
@@ -286,7 +286,7 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-	if (h != url && url.indexOf('&__') < 0) {
+	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
         }
@@ -298,23 +298,23 @@ var load = function (url, data, id, callback) {
 			var r = [];
 			var ax = {};
 			for (var key in qs) {
-				if (key.indexOf('--') != 0) {
+				if (key.indexOf('--') !== 0) {
 					r.push(key + '=' + qs[key]);
 				} else {
 					ax[key] = qs[key];
 				}
 			}
 			r = r.join('&');
-			if (r == preloader.oldHash['--root']) {
+			if (r === preloader.oldHash['--root']) {
 				var gotIt = false;
 				for (var key in ax) {
-					if (preloader.oldHash[key] != ax[key]) {
+					if (preloader.oldHash[key] !== ax[key]) {
 						gotIt = true;
 						preloader.oldHash[key] = ax[key];
 						var aUrl = JSON.parse(ax[key]);
 						var bUrl = [];
 						for (var k in aUrl) {
-							if (typeof aUrl.hasOwnProperty == 'function' && aUrl.hasOwnProperty(k)) {
+							if (typeof aUrl.hasOwnProperty === 'function' && aUrl.hasOwnProperty(k)) {
 								bUrl.push(encodeURIComponent(k) + '=' + encodeURIComponent(aUrl[k]));
 							}
 						}
@@ -339,7 +339,7 @@ var load = function (url, data, id, callback) {
 		else {
 			url = '?module=admin&action=welcome';
 		}
-		if (url == '?module=admin&action=welcome') {
+		if (url === '?module=admin&action=welcome') {
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
@@ -416,6 +416,13 @@ var load = function (url, data, id, callback) {
 
 			}).fail(function (a,b,t){
 				preloader.hide();
+                if (a.statusText !== 'abort') {
+                    if (!a.status) swal("Превышено время ожидания ответа. Проверьте соединение с Интернет.", '', 'error').catch(swal.noop);
+                    else if (a.status === 500) swal("Во время обработки вашего запроса произошла ошибка.", '', 'error').catch(swal.noop);
+                    else if (a.status === 404) swal("Запрашиваемый ресурс не найден.", '', 'error').catch(swal.noop);
+                    else if (a.status === 403) swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+                    else swal("Произошла ошибка: " + a.statusText, '', 'error').catch(swal.noop);
+                }
 			});
         }
 	}

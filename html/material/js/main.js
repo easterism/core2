@@ -114,7 +114,7 @@ function logout() {
         cancelButtonText: "Нет"
     }).then(
         function(result) {
-            $.ajax({url:'index.php?module=admin&action=exit'})
+            $.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
 				.done(function (n) {
 					window.location='index.php';
 				}).fail(function (a,b,t){
@@ -276,7 +276,7 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-	if (h !== url && url.indexOf('&__') < 0) {
+	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
         }
@@ -422,6 +422,13 @@ var load = function (url, data, id, callback) {
 
 			}).fail(function (a,b,t){
 				preloader.hide();
+				if (a.statusText !== 'abort') {
+					if (!a.status) swal("Превышено время ожидания ответа. Проверьте соединение с Интернет.", '', 'error').catch(swal.noop);
+					else if (a.status === 500) swal("Во время обработки вашего запроса произошла ошибка.", '', 'error').catch(swal.noop);
+					else if (a.status === 404) swal("Запрашиваемый ресурс не найден.", '', 'error').catch(swal.noop);
+					else if (a.status === 403) swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+					else swal("Произошла ошибка: " + a.statusText, '', 'error').catch(swal.noop);
+				}
 			});
         }
 	}

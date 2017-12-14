@@ -73,7 +73,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
                     // FIXME иногда переменной m_name нету у тех модулей которые имеют зависимости
-                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : $variable['module_name'];
+                    $m_name = isset($variable['m_name']) ? $variable['m_name'] : (isset($variable['module_name']) ? $variable['module_name'] : '');
                     //FIXME $variable['module_name'] не всегда существует
 					$edit->addParams("dep_" . $variable['module_id'], htmlspecialchars($m_name));
 					if (!in_array($variable['module_id'], $availableModules)) {
@@ -672,23 +672,25 @@ $tab->beginContainer($this->translate->tr("Модули"));
 		if (empty($mod_repos)) {
 
 			echo
-			"<div class=\"im-msg-yellow\">
+			"<br>
+             <div class=\"text-warning\">
 				Устоновка модулей из репозитория недоступна<br>
 				<span>
 					Создайте дополнительный параметр 'repo', содержащий репозиториев, разделенных ';'  (адреса вида https://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"#module=admin&action=settings&edit={$s_id}&tab_settings=2\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
+					<a href=\"#module=admin&action=settings&edit={$s_id}\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
 				</span>
 			</div>";
 
 		} else {
             echo
-            "<div class=\"im-msg-blue\">
+            "<br>
+             <div class=\"text-primary\">
 				Репозитории<br>
 				<span>
 					Для работы с репозиториями используется параметр \"repo\", содержащий адреса репозиториев (с регистрацией в репозитории https://REPOSITORY.COM/api/webservice?reg_apikey=REG_APIKEY, без регистрации https://REPOSITORY.COM/api/repo?apikey=APIKEY). Адреса разделяются \";\".
 					<br>
-					<a href=\"#module=admin&action=settings&edit={$s_id}&tab_settings=2\">Указать адреса репозиториев</a>
+					<a href=\"#module=admin&action=settings&edit={$s_id}\">Указать адреса репозиториев</a>
 				</span>
 			</div>";
         }

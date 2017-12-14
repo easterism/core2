@@ -109,7 +109,7 @@
 
     //подключаем мультиязычность
     require_once 'I18n.php';
-    $translate = new I18n($config);
+    $translate = new \Core2\I18n($config);
 
 	if (isset($config->auth) && $config->auth->on) {
 		$realm = $config->auth->params->realm;
@@ -150,8 +150,8 @@
             $sess_manager->setSaveHandler(new Cache($cache));
         }
         //сохраняем менеджер сессий
-        Zend_Registry::set('session', $sess_manager);
-	}
+        SessionContainer::setDefaultManager($sess_manager);
+    }
 
 	//сохраняем конфиг
 	Zend_Registry::set('config', $config);
@@ -174,7 +174,7 @@
 	 * Class Init
      * @property Modules $dataModules
      */
-    class Init extends Db {
+    class Init extends \Core2\Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -182,7 +182,7 @@
         protected $auth;
 
         /**
-         * @var Acl
+         * @var \Core2\Acl
          */
         protected $acl;
         private $is_cli = false;
@@ -194,7 +194,6 @@
          * Init constructor.
          */
 		public function __construct() {
-
 
 			parent::__construct();
 
@@ -237,8 +236,7 @@
 
             $this->auth 	= new SessionContainer('Auth');
             if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
-                $sm = Zend_Registry::get('session');
-                $sm->regenerateId();
+                $this->auth->getManager()->regenerateId();
                 $this->auth->initialized = true;
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
@@ -246,6 +244,12 @@
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
+                    if ($this->auth->LIVEID) {
+                        $row = $this->dataSession->find($this->auth->LIVEID)->current();
+                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
+                            $this->closeSession();
+                        }
+                    }
                     $sLife = $this->getSetting('session_lifetime');
                     if ($sLife) {
                         $this->auth->setExpirationSeconds($sLife, "accept_answer");
@@ -292,7 +296,7 @@
                 $token = $_SERVER['HTTP_AUTHORIZATION'];
             }
             else if (!empty($_SERVER['HTTP_CORE2M'])) {
-                $token = $_SERVER['HTTP_CORE2M']; //DEPRECATED
+                $token = $_SERVER['HTTP_CORE2M'];
             }
 
             if ($token) {
@@ -404,7 +408,7 @@
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
                 // SETUP ACL
-                $this->acl = new Acl();
+                $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();
             }
             else {
@@ -489,7 +493,8 @@
                             throw new Exception($this->translate->tr("Метод не существует"), 404);
                         }
                     } else {
-                        header("Location: " . $mods['sm_path']);
+                        return "<script>loadPDF('{$mods['sm_path']}')</script>";
+                        //header("Location: " . $mods['sm_path']);
                     }
                 }
             }
@@ -1173,7 +1178,7 @@
         parse_str($loc, $params);
         if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-        $acl = new Acl();
+        $acl = new \Core2\Acl();
 
         Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
 
@@ -1206,11 +1211,16 @@
                 }
             }
 
-            $db        = new Db;
+            $db        = new \Core2\Db;
             $location  = $db->getModuleLocation($params['module']);
             $file_path = $location . "/ModAjax.php";
 
             if (file_exists($file_path)) {
+                $autoload = $location . "/vendor/autoload.php";
+                if (file_exists($autoload)) {
+                    require_once $autoload;
+                }
+
                 require_once $file_path;
                 $xajax = new ModAjax($res);
                 $func = 'ax' . ucfirst($func);

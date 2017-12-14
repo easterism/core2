@@ -32,14 +32,15 @@ var control_datepicker = {
             var classes2 = control_datepicker.callbackDayClass(date);
             classes += classes2 ? ' ' + classes2 + ' ' : '';
             return [true, classes];
-        }
+        };
 
-        settings['onSelect'] = function(dateText, inst) {
-            $input.val(dateText);
+        settings['onSelect'] = function(dateNew, inst) {
+            var dateOld = $input.val();
+            $input.val(dateNew);
             control_datepicker.createDate($input, wrapper);
-            control_datepicker.callbackChange(dateText, '', wrapper);
+            control_datepicker.callbackChange(dateNew, dateOld, wrapper);
             $('.ctrl-dp-container', wrapper).hide('fast');
-        }
+        };
 
 
         $('.ctrl-dp-container', wrapper).datepicker(settings);
