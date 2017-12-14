@@ -88,15 +88,6 @@ textarea:focus {
 }
 input[disabled],
 textarea[disabled],
-select[disabled],
-input[readonly],
-textarea[readonly],
-select[readonly] {
-    background-color: #eee;
-    opacity: 1;
-}
-input[disabled],
-textarea[disabled],
 select[disabled] {cursor: not-allowed}
 select[multiple] {height:auto}
   .checkbox {
@@ -863,40 +854,10 @@ table.calendar {
     background-color: #c9302c;
     border-color: #ac2925;
 }
-.im-msg-blue,
-.im-msg-yellow,
-.im-msg-red,
-.im-msg-green {
-    padding: 15px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-}
-.im-msg-blue,
-.alert-info {
-    color: #31708f;
-    background-color: #BFEBFF;
-    border-color: #BBDEFB;
-}
-.im-msg-yellow,
-.alert-warning {
-    color: #8a6d3b;
-    background-color: #FFECB3;
-    border-color: #FFE0B2;
-}
-.im-msg-red,
-.alert-danger {
-    color: #a94442;
-    background-color: #FFCECE;
-    border-color: #FFB4B4;
-}
-.im-msg-green,
-.alert-success {
-    color: #3c763d;
-    background-color: #D7F9AC;
-    border-color: #C5E1A5;
-}
+.alert-info {color: #31708f}
+.alert-warning {color: #8a6d3b}
+.alert-danger {color: #a94442}
+.alert-success {color: #3c763d}
 .alert h1,
 .alert h2,
 .alert h3,
@@ -1398,6 +1359,13 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     -o-border-top-right-radius: 3px;
     border-top-right-radius: 3px;
 }
+.core-panel > .core-panel-heading > .core-panel-subtitle {
+    color: #757575;
+    font-size: 14px;
+    font-weight: normal;
+    overflow: hidden;
+    padding: 5px 0 0;
+}
 .core-panel > .core-panel-body {
     padding: 25px;
 }
@@ -1443,7 +1411,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     border-bottom-color: transparent;
     text-decoration: none;
     background-color: #eee;
-    border-bottom: 0;
+    /*border-bottom: 0;*/
 }
 .core-panel > .core-panel-body > .core-panel-tabs > .active > a,
 .core-panel > .core-panel-body > .core-panel-tabs > .active > a:hover,
@@ -1468,3 +1436,141 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 #main_body > .core-panel:last-child,
 .modal-body > .core-panel:last-child,
 .core-panel-body > .core-panel:last-child {margin-bottom: 0}
+
+.core-panel > .core-panel-body > .core-panel-tabs-bottom,
+.core-panel > .core-panel-body > .core-panel-tabs-right,
+.core-panel > .core-panel-body > .core-panel-tabs-left {border-bottom: 0}
+.core-panel > .core-panel-body > .core-panel-tabs-bottom {
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li {
+    margin-top: -1px;
+    margin-bottom: 0;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a {
+    -webkit-border-radius: 0 0 4px 4px;
+    -moz-border-radius: 0 0 4px 4px;
+    border-radius: 0 0 4px 4px;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a:focus {
+    border-top-color: #ddd;
+    border-bottom-color: #fff;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a,
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
+.core-panel > .core-panel-body > .core-panel-tabs-left > li,
+.core-panel > .core-panel-body > .core-panel-tabs-right > li {float: none}
+.core-panel > .core-panel-body > .core-panel-tabs-left > li > a,
+.core-panel > .core-panel-body > .core-panel-tabs-right > li > a {
+    min-width: 74px;
+    margin-right: 0;
+    margin-bottom: 3px;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-left {
+    float: left;
+    margin-right: 19px;
+    border-right: 1px solid #ddd;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-left > li > a {
+    margin-right: -1px;
+    -webkit-border-radius: 4px 0 0 4px;
+    -moz-border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 4px;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a,
+.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a:focus {
+    border-color: #ddd #fff #ddd #ddd;
+    border-right-color: #ffffff;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-right {
+    float: right;
+    margin-left: 19px;
+    border-left: 1px solid #ddd;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-right > li > a {
+    margin-left: -1px;
+    -webkit-border-radius: 0 4px 4px 0;
+    -moz-border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 4px 0;
+}
+.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a,
+.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a:focus {
+    border-color: #ddd #ddd #ddd #fff;
+}
+.core-panel > .core-panel-body > .core-panel-pills-bottom,
+.core-panel > .core-panel-body > .core-panel-pills-right,
+.core-panel > .core-panel-body > .core-panel-pills-left {border-bottom: 0}
+.core-panel > .core-panel-body > .core-panel-pills-bottom {
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li {
+    margin-top: -1px;
+    margin-bottom: 0;
+}
+.core-panel > .core-panel-body > .core-panel-pills-left > li,
+.core-panel > .core-panel-body > .core-panel-pills-right > li {float: none}
+.core-panel > .core-panel-body > .core-panel-pills-left > li > a,
+.core-panel > .core-panel-body > .core-panel-pills-right > li > a {
+    min-width: 74px;
+    margin-right: 0;
+    margin-bottom: 3px;
+}
+.core-panel > .core-panel-body > .core-panel-pills-left {
+    float: left;
+    margin-right: 19px;
+}
+.core-panel > .core-panel-body > .core-panel-pills-top > li,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li,
+.core-panel > .core-panel-body > .core-panel-pills-right > li,
+.core-panel > .core-panel-body > .core-panel-pills-left > li {
+    margin-bottom: 5px;
+}
+.core-panel > .core-panel-body > .core-panel-pills-top,
+.core-panel > .core-panel-body > .core-panel-pills-bottom,
+.core-panel > .core-panel-body > .core-panel-pills-right,
+.core-panel > .core-panel-body > .core-panel-pills-left {border-width: 0}
+.core-panel > .core-panel-body > .core-panel-pills-top > li > a,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li > a,
+.core-panel > .core-panel-body > .core-panel-pills-right > li > a,
+.core-panel > .core-panel-body > .core-panel-pills-left > li > a {
+    margin-right: -1px;
+    border: 0;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+.core-panel > .core-panel-body > .core-panel-pills-right {
+    float: right;
+    margin-left: 19px;
+}
+.core-panel > .core-panel-body > .core-panel-pills-top > li,
+.core-panel > .core-panel-body > .core-panel-pills-left > li,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li,
+.core-panel > .core-panel-body > .core-panel-pills-right > li {margin-right: 4px}
+.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a,
+.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a:focus,
+.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a,
+.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a:focus,
+.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a,
+.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a:focus,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a:hover,
+.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a:focus {
+    color: #fff;
+    background-color: #428bca;
+    border-width: 0;
+}
+::-webkit-input-placeholder {color:#aaa;}
+::-moz-placeholder          {color:#aaa;}/* Firefox 19+ */
+:-moz-placeholder           {color:#aaa;}/* Firefox 18- */
+:-ms-input-placeholder      {color:#aaa;}

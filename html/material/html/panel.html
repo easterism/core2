@@ -1,10 +1,22 @@
 <div class="core-panel core-panel-default" id="core-panel-[RESOURCE]">
     <!-- BEGIN title -->
-    <div class="core-panel-heading">[TITLE]</div>
+    <div class="core-panel-heading">
+        [TITLE]
+        <!-- BEGIN description -->
+        <div class="core-panel-subtitle">[DESCRIPTION]</div>
+        <!-- END description -->
+    </div>
     <!-- END title -->
     <div class="core-panel-body">
+        <!-- BEGIN content_top -->
+        <div class="core-panel-content">
+            [CONTENT]
+        </div>
+        <div class="clearfix"></div>
+        <!-- END content_top -->
+
         <!-- BEGIN tabs -->
-        <ul class="core-panel-tabs">
+        <ul class="core-panel-tabs core-panel-[TYPE]-[POSITION]">
             <!-- BEGIN elements -->
                 <!-- BEGIN tab -->
                 <li id="panel-[RESOURCE]-[ID]" class="[CLASS]"><a href="[URL]" onclick="if (event.button === 0 && ! event.ctrlKey) load('[URL]');">[TITLE]</a></li>
@@ -15,6 +27,12 @@
             <!-- END elements -->
         </ul>
         <!-- END tabs -->
-        [CONTENT]
+
+        <!-- BEGIN content_bottom -->
+        <div class="core-panel-content">
+            [CONTENT]
+        </div>
+        <div class="clearfix"></div>
+        <!-- END content_bottom -->
     </div>
 </div>

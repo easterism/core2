@@ -8,7 +8,7 @@ require_once 'Acl.php';
  * @property Zend_Config_Ini $moduleConfig
  * @property CoreController  $modAdmin
  */
-class Common extends Acl {
+class Common extends \Core2\Acl {
 
 	protected $module;
 	protected $path;
@@ -106,10 +106,10 @@ class Common extends Acl {
 			if ($k == 'acl') {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
 			}
-			elseif ($k == 'moduleConfig') {
-				$module_loc = $this->getModuleLocation($this->module);
-				$conf_file  = "{$module_loc}/conf.ini";
-				if (is_file($conf_file)) {
+			elseif ($k === 'moduleConfig') {
+                $module_loc = $this->getModuleLocation($this->module);
+                $conf_file  = "{$module_loc}/conf.ini";
+                if (is_file($conf_file)) {
                     $config_glob  = new Zend_Config_Ini(DOC_ROOT . 'conf.ini');
                     $extends_glob = $config_glob->getExtends();
 
@@ -147,11 +147,10 @@ class Common extends Acl {
 			elseif (strpos($k, 'mod') === 0) {
 				$module = strtolower(substr($k, 3));
 
-				if ($module == 'admin') {
+				if ($module === 'admin') {
 					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
 					$v         = $this->modAdmin = new CoreController();
 					$v->module = $module;
-
 				} elseif ($location = $this->getModuleLocation($module)) {
 					if (!$this->isModuleActive($module)) {
 						throw new Exception("Модуль \"{$module}\" не активен");

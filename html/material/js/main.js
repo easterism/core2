@@ -276,7 +276,7 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-	if (h !== url && url.indexOf('&__') < 0) {
+	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
         }

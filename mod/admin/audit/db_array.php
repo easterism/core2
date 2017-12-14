@@ -545,6 +545,12 @@ $DB_ARRAY['TABLES']['core_session']['COLUMNS']['crypto_sw']['NULL']    = "NO";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['crypto_sw']['DEFAULT'] = "N";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['crypto_sw']['EXTRA']   = "";
 
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_kicked_sw'] = array();
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_kicked_sw']['TYPE']    = "enum('N','Y')";
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_kicked_sw']['NULL']    = "NO";
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_kicked_sw']['DEFAULT'] = "N";
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_kicked_sw']['EXTRA']   = "";
+
 
 //Table Key array
 $DB_ARRAY['TABLES']['core_session']['KEY'] = array();
@@ -556,6 +562,13 @@ $DB_ARRAY['TABLES']['core_session']['KEY']['sid'] = array();
 $DB_ARRAY['TABLES']['core_session']['KEY']['sid']['COLUMNS'] = array();
 $DB_ARRAY['TABLES']['core_session']['KEY']['sid']['COLUMNS']['sid']     = "0";
 
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_expired_sw'] = array();
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_expired_sw']['COLUMNS'] = array();
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_expired_sw']['COLUMNS']['is_expired_sw']     = "0";
+
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_kicked_sw'] = array();
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_kicked_sw']['COLUMNS'] = array();
+$DB_ARRAY['TABLES']['core_session']['KEY']['is_kicked_sw']['COLUMNS']['is_kicked_sw']     = "0";
 
 //TABLE: core_settings
 $DB_ARRAY['TABLES']['core_settings'] = array();

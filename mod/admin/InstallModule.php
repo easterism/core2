@@ -106,6 +106,13 @@ class InstallModule extends \Common {
      */
     private $deleteFilesInfo = array();
 
+    /**
+     * Адаптер базы данных
+     *
+     * @var \Zend_Db_Adapter_Abstract
+     */
+    private $db;
+
 
     /**
      *
@@ -113,39 +120,26 @@ class InstallModule extends \Common {
     function __construct() {
         parent::__construct();
         $this->module = 'admin';
-    }
-
-    /**
-     * @param string $k
-     * @return \Common|\CoreController|mixed|null|void|\Zend_Config_Ini|\Zend_Db_Adapter_Abstract
-     */
-    public function __get($k)
-    {
-        if ($k == 'db') {
-            $db = $this->{$k} = $this->setDb();
-            return $db;
-        } else {
-            return parent::__get($k);
-        }
+        $this->setDb();
     }
 
     /**
      * Собственное подключение к базе данных
-     * @return \Zend_Db_Adapter_Abstract
+     *
+     * @return void
      */
     private function setDb() {
         //делаем свое подключение к БД и включаем отображение исключений
         if ($this->moduleConfig->database && $this->moduleConfig->database->admin->username) {
-            $db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
+            $this->db = $this->newConnector($this->config->database->params->dbname, $this->moduleConfig->database->admin->username, $this->moduleConfig->database->admin->password, $this->config->database->params->host);
         } else {
-            $db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
+            $this->db = $this->newConnector($this->config->database->params->dbname, $this->config->database->params->username, $this->config->database->params->password, $this->config->database->params->host);
         }
-        if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+        if ($this->config->system->timezone) $this->db->query("SET time_zone = '{$this->config->system->timezone}'");
 
-        $db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $db->getConnection()->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        $this->db->getConnection()->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->db->getConnection()->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         //$db->getConnection()->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
-        return $db;
     }
 
 
@@ -345,6 +339,19 @@ class InstallModule extends \Common {
      * @throws \Exception
      */
     private function checkNecMods() {
+        //проверка зависимости от версии ядра
+        if (isset($this->mInfo['install']['required_core'])) { //значит модуль зависит от версии ядра
+            if (!$required_core = $this->mInfo['install']['required_core']) {
+                throw new \Exception($this->translate->tr("Не удалось определить требуемую версию ядра"));
+            } else {
+                $config = \Zend_Registry::getInstance()->get('core_config');
+                if (!$config->version) {
+                    throw new \Exception($this->translate->tr("Не задана версия ядра"));
+                } else {
+                    if ($config->version < $required_core) throw new \Exception(sprintf($this->translate->tr("Требуется ядро %s"), "v$required_core"));
+                }
+            }
+        }
         $Inf = empty($this->mInfo['install']['dependent_modules']) ? array() : $this->mInfo['install']['dependent_modules'];
         if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
             $depend = array();
@@ -535,9 +542,7 @@ class InstallModule extends \Common {
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
-        if (!empty($this->mInfo['install']['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['install']['php'])) {
-            require_once($this->tempDir . "/install/" . $this->mInfo['install']['php']);
-        }
+        $this->installFile();
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "' а потом этот модуль") : " включите модуль";
@@ -554,7 +559,11 @@ class InstallModule extends \Common {
      * @return  void
      * @throws  \Exception
      */
-    public function installSql() {
+    private function installSql() {
+        if (empty($this->mInfo['install']) || empty($this->mInfo['install']['sql'])) {
+            return;
+        }
+
         $file = $this->mInfo['install']['sql'];//достаём имя файла со структурой
         $sql = file_get_contents($this->tempDir . "/install/" . $file);//достаём из файла структуру
         if (!empty($sql)) {
@@ -572,6 +581,14 @@ class InstallModule extends \Common {
         }
     }
 
+    /**
+     * выполнение скриптов инсталляции
+     */
+    private function installFile() {
+        if (!empty($this->mInfo['install']['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['install']['php'])) {
+            require_once($this->tempDir . "/install/" . $this->mInfo['install']['php']);
+        }
+    }
 
     /**
      * Обновление таблиц модуля
@@ -579,7 +596,7 @@ class InstallModule extends \Common {
      * @return bool
      * @throws \Exception
      */
-    public function migrateSql() {
+    private function migrateSql() {
         $curVer = "v" . trim($this->curVer);
         $file_name = !empty($this->mInfo['migrate'][$curVer]['sql']) ? $this->mInfo['migrate'][$curVer]['sql'] : "";
         $sql = '';
@@ -588,7 +605,7 @@ class InstallModule extends \Common {
             if (!empty($file_name) && is_file($file_loc)) {
                 $sql = file_get_contents($file_loc);
             } else {
-                throw new \Exception($this->translate->tr("Не найден файл $file_name для обновления модуля!"));
+                throw new \Exception(sprintf($this->translate->tr("Не найден файл %s для обновления модуля!"), $file_name));
             }
         }
         if (!$sql) {
@@ -605,6 +622,33 @@ class InstallModule extends \Common {
             }
             $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы добавлены"), "Успешно", "info");
         }
+        return true;
+    }
+
+    /**
+     * выполнение скриптов миграции
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    private function migrateFile() {
+        $curVer = "v" . trim($this->curVer);
+        $file_php = !empty($this->mInfo['migrate'][$curVer]['php']) ? $this->mInfo['migrate'][$curVer]['php'] : "";
+        //подключаем *.php если задан
+        $sql = '';
+        if (!empty($file_php)) {
+            $file_loc = $this->tempDir . "/install/" . $file_php;
+            if (!empty($file_php) && is_file($file_loc)) {
+                try {
+                    require_once($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php']);
+                } catch (\Exception $e) {
+                    throw new \Exception($e->getMessage());
+                }
+            } else {
+                throw new \Exception(sprintf($this->translate->tr("Не найден файл %s для обновления модуля!"), $file_php));
+            }
+        }
+
         return true;
     }
 
@@ -680,7 +724,7 @@ class InstallModule extends \Common {
         $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
-        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = {$m_id}");
+        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ?", $m_id);
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
                 $this->db->insert('core_submodules', $subval);
@@ -694,9 +738,7 @@ class InstallModule extends \Common {
         );
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
-        if (!empty($this->mInfo['migrate']["v" . trim($this->curVer)]['php']) && file_exists($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php'])) {
-            require_once($this->tempDir . "/install/" . $this->mInfo['migrate']["v" . trim($this->curVer)]['php']);
-        }
+        $this->migrateFile();
         //выводим сообщения
         if ($this->is_visible == "N") {
             $msg = !empty($this->module_is_off) ? (" вклчючите '" . implode("','", $this->module_is_off) . "', а потом этот модуль") : " включите модуль";
@@ -811,6 +853,9 @@ class InstallModule extends \Common {
      * @return bool|string
      */
     public function getUninstallSQL() {
+        if (empty($this->mInfo['uninstall']) || empty($this->mInfo['uninstall']['sql'])) {
+            return null;
+        }
         $sql = file_get_contents($this->tempDir . "/install/" . $this->mInfo['uninstall']['sql']);
         if (!empty($sql)) {
             $sql = $this->SQLPrepareToExecute($sql);
@@ -839,13 +884,13 @@ class InstallModule extends \Common {
         If (empty($type)) {
             $this->noticeMsg[$group][] = "<h3>$head</h3>";
         } elseif ($type == 'info') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-green\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-success\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'info2') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-blue\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-primary\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'warning') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-yellow\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-warning\">{$head}<br><span>{$explanation}</span></div>";
         } elseif ($type == 'danger') {
-            $this->noticeMsg[$group][] = "<div class=\"im-msg-red\">{$head}<br><span>{$explanation}</span></div>";
+            $this->noticeMsg[$group][] = "<div class=\"text-danger\">{$head}<br><span>{$explanation}</span></div>";
         }
     }
 
@@ -1337,7 +1382,7 @@ class InstallModule extends \Common {
         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
         //достаём список модулей
         $out = json_decode($out['answer']);
-        return unserialize(base64_decode($out->data));
+        return ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
     }
 
 
@@ -1349,7 +1394,7 @@ class InstallModule extends \Common {
      * @return  string                  Apikey для доступа к репозиторию
      * @throws  \Exception
      */
-    public function getRepoKey($repo_url) {
+    private function getRepoKey($repo_url) {
         //формируем url
         $server = trim($repo_url);
         if (substr_count($server, "webservice?reg_apikey=") == 0) {
@@ -1382,9 +1427,10 @@ class InstallModule extends \Common {
         else
         {
             $out = json_decode($curl['answer']);
-            $repos = $this->getCustomSetting("repo");
+            $repos = $this->getSetting("repo");
+            if ($repos === false) throw new \Exception("Не задан адрес репозитория модулей");
             $repos = explode(";", $repos);
-            foreach($repos as $k=>$r){
+            foreach ($repos as $k => $r) {
                 //если находим нашь репозиторий
                 if (substr_count($r, $server) > 0) {
                     $repos[$k] = "{$server}repo?apikey={$out->apikey}";
@@ -1392,6 +1438,7 @@ class InstallModule extends \Common {
             }
             $repos = implode(";", $repos);
             $this->db->update("core_settings", array("value" => $repos), "code = 'repo'");
+            $this->cache->remove("all_settings_" . $this->config->database->params->dbname);
         }
 
         return $out->apikey;
@@ -1411,7 +1458,9 @@ class InstallModule extends \Common {
             $repo_list = $this->getModsListFromRepo($repo_url);
 
             $api_key = explode("?apikey=", $repo_url);
-            $list_id = "repo_table_" . !empty($api_key[1]) ? $api_key[1] : uniqid();
+            $api_key = !empty($api_key[1]) ? $api_key[1] : uniqid();
+
+            $list_id = "repo_table_" . $api_key;
 
             $list = new \listTable($list_id);
             $list->ajax = true;
@@ -1446,50 +1495,51 @@ class InstallModule extends \Common {
             $this->prepareSearchDependedMods();
             //готовим данные для таблицы
             $arr = array();
-            foreach ($repo_list as $key=>$val) {
-                $ins = $val['install'];
-                //перевариваем зависимости
-                $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
-                $Inf = $ins['dependent_modules'];
-                if (
-                    !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
-                    || !empty($Inf['m']) //старая версия
-                ) {
-                    if (
-                        !empty($Inf['m']['module_name'])  //новая версия
-                        || !is_array($Inf['m']) //старая версия
+            if ( ! empty($repo_list)) {
+                foreach ($repo_list as $key => $val) {
+                    $ins = $val['install'];
+                    //перевариваем зависимости
+                    $ins['dependent_modules']['m'] = !empty($ins['dependent_modules']['m']) ? $ins['dependent_modules']['m'] : array();
+                    $Inf = $ins['dependent_modules'];
+                    if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
+                        || !empty($Inf['m']) //старая версия
                     ) {
-                        $tmp2 = $Inf['m'];
-                        $Inf['m'] = array();
-                        $Inf['m'][] = $tmp2;
-                    }
-                    //старая версия
-                    foreach ($Inf['m'] as $k => $dep_value) {
-                        if (is_string($dep_value)) {
-                            $Inf['m'][$k] = array('module_id' => $dep_value);
+                        if (
+                            !empty($Inf['m']['module_name'])  //новая версия
+                            || !is_array($Inf['m']) //старая версия
+                        ) {
+                            $tmp2 = $Inf['m'];
+                            $Inf['m'] = array();
+                            $Inf['m'][] = $tmp2;
                         }
+                        //старая версия
+                        foreach ($Inf['m'] as $k => $dep_value) {
+                            if (is_string($dep_value)) {
+                                $Inf['m'][$k] = array('module_id' => $dep_value);
+                            }
+                        }
+                        $ins['dependent_modules'] = $Inf;
                     }
-                    $ins['dependent_modules'] = $Inf;
-                }
 
-                if (
-                    (!empty($search[0]) && !mb_substr_count(mb_strtolower($ins['module_name'], 'utf-8'), $search[0], 'utf-8'))
-                    || (!empty($search[1]) && !mb_substr_count(mb_strtolower($ins['module_id'], 'utf-8'), $search[1], 'utf-8'))
-                ) {
-                    continue;
+                    if (
+                        (!empty($search[0]) && !mb_substr_count(mb_strtolower($ins['module_name'], 'utf-8'), $search[0], 'utf-8'))
+                        || (!empty($search[1]) && !mb_substr_count(mb_strtolower($ins['module_id'], 'utf-8'), $search[1], 'utf-8'))
+                    ) {
+                        continue;
+                    }
+                    $arr[$key]['id']            = $key;
+                    $arr[$key]['name']          = $ins['module_name'];
+                    $arr[$key]['module_id']     = $ins['module_id'];
+                    $arr[$key]['descr']         = $ins['description'];
+                    $arr[$key]['depends']       = $ins['dependent_modules']['m'];
+                    $arr[$key]['version']       = $ins['version'];
+                    $arr[$key]['author']        = $ins['author'];
+                    $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
+                    $arr[$key]['install_info']  = $val;
+                    //добавляем к списку доступных зовисимостей зависимости из репозитория
+                    if (!isset($this->dependedModList[$ins['module_id']])) $this->dependedModList[$ins['module_id']] = array();
+                    $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
                 }
-                $arr[$key]['id']            = $key;
-                $arr[$key]['name']          = $ins['module_name'];
-                $arr[$key]['module_id']     = $ins['module_id'];
-                $arr[$key]['descr']         = $ins['description'];
-                $arr[$key]['depends']       = $ins['dependent_modules']['m'];
-                $arr[$key]['version']       = $ins['version'];
-                $arr[$key]['author']        = $ins['author'];
-                $arr[$key]['module_system'] = $ins['module_system'] == 'Y' ? "Да" : "Нет";
-                $arr[$key]['install_info']  = $val;
-                //добавляем к списку доступных зовисимостей зависимости из репозитория
-                if (!isset($this->dependedModList[$ins['module_id']])) $this->dependedModList[$ins['module_id']] = array();
-                $this->dependedModList[$ins['module_id']][$ins['version']] = $ins['dependent_modules']['m'];
             }
 
 
@@ -1829,8 +1879,8 @@ class InstallModule extends \Common {
                         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
                         $out = json_decode($out['answer']);
                         //достаём список модулей и ищем нужный
-                        $repo_list = unserialize(base64_decode($out->data));
-                        foreach ($repo_list as $m_id=>$i) {
+                        $repo_list = ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
+                        foreach ($repo_list as $m_id => $i) {
                             if (empty($list[$i['install']['module_id']][$i['install']['version']])) {
                                 $i['location']      = 'repo';
                                 $i['location_id']   = $m_id;
@@ -1870,7 +1920,7 @@ class InstallModule extends \Common {
             $update = array($m_v => array());
             $update[$m_v]['install']['module_id'] = $mod_id;
 
-                //получаем список всех доступных модулей
+            //получаем список всех доступных модулей
             $availMods = $this->getInfoAllAvailMods();
 
             //ищем нужный модуль

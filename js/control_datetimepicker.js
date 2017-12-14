@@ -28,21 +28,22 @@ var control_datetimepicker = {
                 classes += classes2 ? ' ' + classes2 + ' ' : '';
                 return [true, classes];
             },
-            onSelect: function(dateText, inst) {
+            onSelect: function(dateNew, inst) {
                 var hour   = $('.ctrl-dtp-hour', wrapper).val();
                 var minute = $('.ctrl-dtp-minute', wrapper).val();
 
                 if (hour != '' && minute != '') {
-                    dateText += ' ' + hour + ':' + minute;
+                    dateNew += ' ' + hour + ':' + minute;
                 } else if (hour != '' && minute == '') {
-                    dateText += ' ' + hour + ':00';
+                    dateNew += ' ' + hour + ':00';
                 } else if (hour == '' && minute != '') {
-                    dateText += ' 00:' + minute;
+                    dateNew += ' 00:' + minute;
                 }
 
-                $input.val(dateText);
+                var dateOld = $input.val();
+                $input.val(dateNew);
                 control_datetimepicker.createDate($input, wrapper);
-                control_datetimepicker.callbackChange(dateText);
+                control_datetimepicker.callbackChange(dateNew, dateOld, wrapper);
                 $('.ctrl-dtp-container', wrapper).hide('fast');
             }
         });
@@ -101,8 +102,9 @@ var control_datetimepicker = {
             }
         }
 
+        var dateOld = $('.ctrl-dtp-value', wrapper).val();
         $('.ctrl-dtp-value', wrapper).val(date);
-        control_datetimepicker.callbackChange(date);
+        control_datetimepicker.callbackChange(date, dateOld, wrapper);
         this.rebuildCalendar(wrapper);
     },
 
@@ -251,6 +253,8 @@ var control_datetimepicker = {
          * Очистка даты
          */
         $('.ctrl-dtp-clear', wrapper).click(function() {
+            var dateOld = $('.ctrl-dtp-value', wrapper).val();
+
             $('.ctrl-dtp-value', wrapper).val('');
             $('.ctrl-dtp-day', wrapper).val('');
             $('.ctrl-dtp-month', wrapper).val('');
@@ -258,7 +262,7 @@ var control_datetimepicker = {
             $('.ctrl-dtp-hour', wrapper).val('');
             $('.ctrl-dtp-minute', wrapper).val('');
 
-            control_datetimepicker.callbackChange('');
+            control_datetimepicker.callbackChange('', dateOld, wrapper);
             $('.ctrl-dtp-container', wrapper).datepicker('refresh');
         });
 
@@ -315,7 +319,7 @@ var control_datetimepicker = {
             var isFind = false;
             $('input[class*="ctrl-dtp-"]:visible, select[class*="ctrl-dtp-"]:visible', wrapper).each(function(){
                 if (isFind === false) {
-                    if (currentTarget == this) {
+                    if (currentTarget === this) {
                         isFind = true;
                     }
                 } else {
@@ -330,9 +334,9 @@ var control_datetimepicker = {
     /**
      * Выполнение функции после изменения даты
      */
-    callbackChange : function(date) {
-        if (typeof this.callback_change == 'function') {
-            this.callback_change(date);
+    callbackChange : function(dateNew, dateOld, wrapper) {
+        if (typeof this.callback_change === 'function') {
+            this.callback_change(dateNew, dateOld, wrapper);
         }
     },
 
@@ -342,7 +346,7 @@ var control_datetimepicker = {
      * @param func
      */
     setCallbackChange : function(func) {
-        if (typeof func == 'function') {
+        if (typeof func === 'function') {
             this.callback_change = func;
         }
     },
@@ -352,7 +356,7 @@ var control_datetimepicker = {
      * Выполнение функции для раскраски календаря
      */
     callbackDayClass : function(date) {
-        if (typeof this.callback_day_class == 'function') {
+        if (typeof this.callback_day_class === 'function') {
             return this.callback_day_class(date);
         }
     },

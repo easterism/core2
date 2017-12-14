@@ -1,7 +1,7 @@
 <?
 require_once 'Acl.php';
 
-class CommonPlugin extends Acl {
+class CommonPlugin extends \Core2\Acl {
 
     private $_p = array();
     protected $module = '';
