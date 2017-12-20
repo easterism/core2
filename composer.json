@@ -18,7 +18,7 @@
     "php": ">=5.6.0",
     "zf1/zend-registry": "~1.12",
     "zf1/zend-config": "~1.12",
-    "zendframework/zend-session": "2.7.2",
+    "zendframework/zend-session": "2.8.*",
     "zendframework/zend-cache": "2.7.2",
     "zf1/zend-db": "~1.12",
     "zf1/zend-cache": "~1.12",
@@ -29,7 +29,6 @@
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
     "xajax/xajax": "dev-master",
-    "smottt/wideimage": "1.1.*",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*"
   },

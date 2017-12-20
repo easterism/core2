@@ -870,6 +870,7 @@ class listTable extends initList {
                 if ($recordClass) {
                     $tableBodyHTML .= " class=\"" . implode(" ", $recordClass) . "\"";
                 }
+                reset($row);
                 $tableBodyHTML .= "><td title=\"" . current($row) . "\">$recordNumber</td>";
                 $look = "";
 

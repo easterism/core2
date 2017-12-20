@@ -6,7 +6,9 @@
  * Date: 04.03.2016
  * Time: 0:58
  */
-namespace Store;
+namespace Core2\Store;
+
+use Zend\Session\Container as SessionContainer;
 
 require_once(DOC_ROOT . "core2/inc/classes/Common.php");
 require_once(DOC_ROOT . "core2/inc/classes/Image.php");
@@ -128,7 +130,7 @@ class File extends \Common {
      */
     public function handleFileTemp($thumbName) {
         $config     = \Zend_Registry::get('config');
-        $sid        = \Zend_Registry::get('session')->getId();
+        $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $config->temp . '/' . $sid;
         $fname      = $upload_dir . "/thumbnail/" . $thumbName;
         if (!is_file($fname)) {

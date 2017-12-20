@@ -105,11 +105,16 @@ class ajaxFunc extends Common {
 		}
 
 		foreach ($fields as $field => $val) {
-			if ( ! isset($control[$field])) {
-			    continue;
+            $params = explode(",", $val);
+
+            if (in_array("req", $params) && ! array_key_exists($field, $control)) {
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                break;
             }
 
-			$params = explode(",", $val);			
+            if ( ! isset($control[$field])) {
+			    continue;
+            }
 
 			if (in_array("req", $params) &&
                 (is_null($control[$field]) ||
@@ -515,7 +520,7 @@ class ajaxFunc extends Common {
      */
     private function saveFile($table, $last_insert_id, $file_controls) {
 
-        $sid        = Zend_Registry::get('session')->getId();
+        $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $this->config->temp . '/' . $sid;
         $thumb_dir  = $upload_dir . '/thumbnail';
 
