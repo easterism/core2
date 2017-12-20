@@ -18,6 +18,7 @@ class Panel {
 
     protected $active_tab     = '';
     protected $title          = '';
+    protected $description    = '';
     protected $content        = '';
     protected $resource       = '';
     protected $tabs           = array();
@@ -79,9 +80,11 @@ class Panel {
 
     /**
      * @param string $title
+     * @param string $description
      */
-    public function setTitle($title) {
-        $this->title = $title;
+    public function setTitle($title, $description = '') {
+        $this->title       = $title;
+        $this->description = $description;
     }
 
 
@@ -147,6 +150,10 @@ class Panel {
 
         if ( ! empty($this->title)) {
             $tpl->title->assign('[TITLE]', $this->title);
+
+            if ( ! empty($this->description)) {
+                $tpl->title->description->assign('[DESCRIPTION]', $this->description);
+            }
         }
 
         if ($this->active_tab == '' && ! empty($this->tabs)) {
