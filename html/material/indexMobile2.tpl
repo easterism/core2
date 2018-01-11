@@ -16,10 +16,10 @@
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/sweetalert2.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/material/css/jquery.growl.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>просто ftp
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
@@ -33,7 +33,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/control_datepicker_range.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.growl.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/snarl.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>
     <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
