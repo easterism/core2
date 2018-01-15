@@ -22,7 +22,7 @@
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/bootstrap/css/sweetalert2.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/bootstrap/css/animate.min.css" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.growl.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/bootstrap/css/snarl.min.css" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
@@ -35,7 +35,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/cleave.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/es6-promise.auto.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/sweetalert2.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/jquery.growl.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/snarl.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/control_datepicker_range.js"></script>
 

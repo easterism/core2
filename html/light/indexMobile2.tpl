@@ -16,7 +16,7 @@
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/animate.min.css" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/jquery.growl.css" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/snarl.min.css" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
@@ -31,7 +31,7 @@
     <script type="text/javascript" language="javascript" src="core2/html/light/js/sweetalert2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/bootstrap.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/control_datepicker_range.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/light/js/jquery.growl.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/light/js/snarl.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>
     <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
