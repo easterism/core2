@@ -716,6 +716,10 @@
                 $file_path     = $location . "/" . $modController . ".php";
                 if (file_exists($file_path)) {
                     ob_start();
+                    $autoload = $location . "/vendor/autoload.php";
+                    if (file_exists($autoload)) {
+                        require_once $autoload;
+                    }
                     require_once $file_path;
                     if (class_exists($modController)) { // подключаем класс модуля
                         $this->setContext($module_id);
