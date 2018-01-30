@@ -154,7 +154,7 @@ var load = function (url, data, id, callback) {
 			}
 			//Activate root menu
 			if (qs['module']) {
-				changeRoot($('#module-' + qs['module'])[0]);
+				changeRoot($('#module-' + qs['module'])[0], false, qs['action']);
 				if (qs['action']) {
 					changeSub($('#submodule-' + qs['module'] + '-' + qs['action'])[0])
 				}
