@@ -238,7 +238,7 @@ class InstallModule extends \Common {
         }
         if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
             $this->is_visible = "N";
-            $this->addNotice("Файлы модуля", "Копирование файлов:", "Ошибка: нет доступа для записи, скопируйте файлы вручную", "danger");
+            $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Копирование файлов:"), $this->translate->tr("Ошибка: нет доступа для записи, скопируйте файлы вручную"), "danger");
         } else {
             $this->copyFiles($this->tempDir, $pathToVer);
         }
@@ -279,7 +279,7 @@ class InstallModule extends \Common {
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
             if (!mkdir($destinationFolder)) {
-                throw new \Exception("Не могу создать директорию для разархивирования ('{$destinationFolder}').");
+                throw new \Exception($this->translate->tr("Не могу создать директорию для разархивирования") . " ('{$destinationFolder}').");
             }
         }
     }
@@ -389,13 +389,13 @@ class InstallModule extends \Common {
                 $depend[] = array('module_id' => $dep_value);
                 $is_installed = $this->db->fetchOne("SELECT visible FROM core_modules WHERE module_id = ?", $dep_value);
                 if (empty($is_installed)) {
-                    $this->addNotice("Зависимость от модулей", "Модуль не установлен" , "Требуется модуль \"{$dep_value}\"", "danger");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), "Модуль не установлен" , "Требуется модуль \"{$dep_value}\"", "danger");
                     $is_stop = true;
                 } else {
                     if ($is_installed == 'N') {
                         $this->module_is_off[] = $dep_value;
                     }
-                    $this->addNotice("Зависимость от модулей", "Зависит от '{$dep_value}'", !in_array($dep_value, $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value, $this->module_is_off) ? "info" : "warning");
+                    $this->addNotice($this->translate->tr("Зависимость от модулей"), "Зависит от '{$dep_value}'", !in_array($dep_value, $this->module_is_off) ? "Модуль включен" : "Следует включить этот модуль", !in_array($dep_value, $this->module_is_off) ? "info" : "warning");
                 }
             }
             if ($is_stop) {
