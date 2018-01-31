@@ -18,7 +18,12 @@ var main_menu = {
         $('.menu-module, .menu-module-selected').each(function(){
             var module = $(this).attr('id').substr(7);
             if ($('li[id^=submodule-' + module + '-]')[0]) {
-                $('a', this).append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
+
+            	if ($(this).hasClass('menu-module-selected')) {
+                    $(this).find('>a').append('<span class="nav-second-level-toggle fa"></span>');
+				} else {
+                    $(this).find('>a').append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
+				}
             }
         });
     },
@@ -41,35 +46,80 @@ var main_menu = {
 
 function changeSub(obj, path) {
 	if (!obj) return;
+
 	var parent = obj.parentNode;
 	for (var i = 0; i < parent.childNodes.length; i++) {
 		if (parent.childNodes[i].nodeName === 'LI') {
 			parent.childNodes[i].className = 'menu-submodule';
 			if (parent.childNodes[i] === obj) {
 				parent.childNodes[i].className = 'menu-submodule-selected';
+
+
+                var module_name = parent.childNodes[i].id.split('-')[1];
+                var href        = $(parent.childNodes[i]).find('>a').attr('href');
+
+                if (module_name && href) {
+                	$('#module-' + module_name).find('.module-submodules > a[href="' + href + '"]').addClass('module-submodules-selected');
+				}
+
 				if (path) load(path);
 			}
 		}
 	}
 }
 
-function changeRoot(obj, to) {
+function changeRoot(obj, to, actionSelect) {
 	if ( ! obj) return;
+
+    $('#menu-wrapper .module-submodules').empty();
+    $('#menu-submodules').hide();
+
 	var parent = obj.parentNode;
 	for (var i = 0; i < parent.childNodes.length; i++) {
 		if (parent.childNodes[i].nodeName === 'LI') {
             parent.childNodes[i].className = 'menu-module';
+
+            $(parent.childNodes[i]).find('.nav-second-level-toggle').addClass('fa-angle-right');
+
 			if (parent.childNodes[i] === obj) {
                 parent.childNodes[i].className = 'menu-module-selected';
-				var sub = document.getElementById('menu-submodules');
+
+                var module_id = parent.childNodes[i].id;
+				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
+					if ( ! actionSelect) {
+						$(parent.childNodes[i]).find('>a').addClass('index-select');
+					} else {
+						$(parent.childNodes[i]).find('>a').removeClass('index-select');
+					}
+                }
+
+                var issetSubmodules = false;
+				var sub 			= document.getElementById('menu-submodules');
+
 				for (var x = 0; x < sub.childNodes.length; x++) {
 					if (sub.childNodes[x].nodeName === 'LI') {
 						sub.childNodes[x].className = 'menu-submodule';
 						sub.childNodes[x].style.display = 'none';
 						if (sub.childNodes[x].id.indexOf(parent.childNodes[i].id + '-') !== -1) {
+                            if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
+                                issetSubmodules = true;
+                                $(parent.childNodes[i]).find('.module-submodules').append(
+                                    $(sub.childNodes[x]).find('>a').clone()
+                                );
+                            }
+
 							sub.childNodes[x].style.display = '';
 						}
 					}
+				}
+
+				if (issetSubmodules) {
+                    $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-right');
+                    if ($(window).width() < 768 || ! $('.s-toggle')[0]) {
+                        $(parent.childNodes[i]).find('.module-submodules').show()
+                    }
+				} else {
+					$(parent.childNodes[i]).find('.module-submodules').hide()
 				}
 			}
 		}
@@ -320,7 +370,7 @@ var load = function (url, data, id, callback) {
 			}
 			//Activate root menu
 			if (qs['module']) {
-				changeRoot($('#module-' + qs['module'])[0]);
+				changeRoot($('#module-' + qs['module'])[0], false, qs['action']);
 				if (qs['action']) {
 					changeSub($('#submodule-' + qs['module'] + '-' + qs['action'])[0])
 				}
@@ -498,37 +548,39 @@ $(document).ready(function() {
     main_menu.setIconLetter();
 
     $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseenter(function() {
-        $('.menu-submodule, .menu-submodule-selected').hide();
+        if ($(window).width() >= 768 && ($(this).hasClass('menu-module') || $('.s-toggle')[0])) {
+			$('.menu-submodule, .menu-submodule-selected').hide();
 
-        var submodulesContainer = $('#menu-submodules').hide();
-        var module              = $(this).attr('id').substr(7);
-        var submodules          = $('li[id^=submodule-' + module + '-]').show();
+			var submodulesContainer = $('#menu-submodules').hide();
+			var module              = $(this).attr('id').substr(7);
+			var submodules          = $('li[id^=submodule-' + module + '-]').show();
 
-        if (submodules[0]) {
-            submodulesContainer.show();
-            var offsets = this.getBoundingClientRect();
+			if (submodules[0]) {
+				submodulesContainer.show();
+				var offsets = this.getBoundingClientRect();
 
-            if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
-                submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
-            } else {
-                submodulesContainer.css('top', (offsets.top + 1) + 'px');
-            }
+				if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
+					submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
+				} else {
+					submodulesContainer.css('top', (offsets.top + 1) + 'px');
+				}
+			}
         }
     });
     $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").mouseleave(function(e) {
-        var target = e.toElement || e.relatedTarget || e.target;
+        if ($(window).width() >= 768 && ($(this).hasClass('menu-module') || $('.s-toggle')[0])) {
+			var target = e.toElement || e.relatedTarget || e.target;
 
-        if (target) {
-            var module = $(this).attr('id').substr(7);
+			if (target) {
+				if ($(target).parent().parent().attr('id') === 'menu-submodules') {
+					$(this).addClass('module-hover');
+				} else {
+					$('#menu-submodules').hide();
+				}
 
-            if ($(target).parent().parent().attr('id') === 'menu-submodules') {
-                $(this).addClass('module-hover');
-            } else {
-                $('#menu-submodules').hide();
-            }
-
-        } else {
-            $('#menu-submodules').hide();
+			} else {
+				$('#menu-submodules').hide();
+			}
         }
     });
     $("#menu-submodules").mouseleave(function() {
@@ -539,11 +591,24 @@ $(document).ready(function() {
     if ($.cookie('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
         $('#main').toggleClass('s-toggle');
+        if ($(window).width() >= 768) {
+        	$('#menu-wrapper .module-submodules').hide();
+		}
     }
 
     $("#sidebar-toggle").click(function() {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "");
         $('#main').toggleClass('s-toggle');
+
+
+        if ($(window).width() >= 768) {
+			if ($('#main').hasClass('s-toggle')) {
+				$('#menu-wrapper .module-submodules').hide();
+			} else {
+				$('#menu-wrapper .module-submodules').show();
+			}
+		}
+
 		if ($.cookie('sidebar_collapse')) {
             $.cookie('sidebar_collapse', '');
 		} else {
@@ -556,10 +621,18 @@ $(document).ready(function() {
             var width = $(window).width();
             if (phase === "move" && ((width <= 768 && direction === "right") || (width > 768 && direction === "left"))) {
                 $("#main").addClass("s-toggle");
+                if (width >= 768) {
+                    $('#menu-wrapper .module-submodules').hide();
+                }
+                $.cookie('sidebar_collapse', 1);
                 return false;
             }
             if (phase === "move" && ((width <= 768 && direction === "left") || (width > 768 && direction === "right"))) {
                 $("#main").removeClass("s-toggle");
+                if (width >= 768) {
+                    $('#menu-wrapper .module-submodules').show();
+                }
+                $.cookie('sidebar_collapse', '');
                 return false;
             }
         }
