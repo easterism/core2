@@ -560,12 +560,11 @@ class CoreController extends Common {
 				}
 			}
 			$this->db->commit();
-			echo '{}';
+            return '{}';
 		} catch (Exception $e) {
 			$this->db->rollback();
-			echo json_encode(array('error' => $e->getMessage()));
+            return json_encode(array('error' => $e->getMessage()));
 		}
-		die;
 	}
 
 
@@ -992,134 +991,6 @@ class CoreController extends Common {
 		$f->dispatch();
         return true;
 	}
-
-
-	/**
-	 * @throws Exception
-     * @return void
-	 */
-	public function action_saveUser() {
-
-		if (!$this->auth->ADMIN) throw new Exception(911);
-		if ($_POST['class_id'] == 'main_set') {
-			$app = "index.php?module=admin&action=settings";
-			header("Location:$app");
-		}
-		if ($_POST['class_id'] == 'main_user') {
-			$data = $_POST;
-			$sess_form = new SessionContainer('Form');
-			$orderFields = $sess_form->main_user;
-
-            $firstname = $data['control']['firstname'];
-            $lastname = $data['control']['lastname'];
-            $middlename = $data['control']['middlename'];
-			$this->db->beginTransaction();
-			
-			try {
-				$authNamespace = Zend_Registry::get('auth');
-				$send_info_sw = false;
-			  	if (!empty($data['control']['send_info_sw'][0]) && $data['control']['send_info_sw'][0] == 'Y') {
-		     		$send_info_sw = true;
-		     	} 
-				$dataForSave = array(					
-					'visible' 		=> $data['control']['visible'],
-					'email' 		=> $data['control']['email'],
-					'lastuser' 		=> $authNamespace->ID,
-					'is_email_wrong' 	=> $data['control']['is_email_wrong'],
-					'is_admin_sw' 	=> $data['control']['is_admin_sw'],
-					'role_id' 		=> $data['control']['role_id']
-				);
-				if (isset($_FILES) && !empty($_FILES['control']['tmp_name']['certificate']) && $_FILES['control']['error']['certificate'] == 0) {
-					$file = file_get_contents($_FILES['control']['tmp_name']['certificate']);
-					if ($file) {
-						$dataForSave['certificate'] = base64_encode($file);
-					}					
-				} elseif (!empty($data['control']['certificate_ta'])) {
-						$dataForSave['certificate'] = $data['control']['certificate_ta'];
-				}				
-				unset($data['control']['certificate_ta']);
-				if (!empty($data['control']['u_pass'])) {
-					$dataForSave['u_pass'] = md5($data['control']['u_pass']);
-				}
-				if ($orderFields['refid'] == 0) {
-					$dataForSave['u_login'] = $data['control']['u_login'];
-					$dataForSave['date_added'] = new Zend_Db_Expr('NOW()');
-					$this->db->insert('core_users', $dataForSave);						
-					$last_insert_id = $this->db->lastInsertId('core_users');
-				} else {
-					$last_insert_id = $orderFields['refid'];
-					$where = $this->db->quoteInto('u_id = ?', $last_insert_id);
-					$this->db->update('core_users', $dataForSave, $where);
-				}				
-
-				if ($last_insert_id) {
-					$refid = $this->db->fetchOne("SELECT id FROM core_users_profile WHERE user_id=? LIMIT 1", $last_insert_id); 
-					if (!$refid) {
-						$this->db->insert('core_users_profile', array(
-                                'user_id'    => $last_insert_id,
-                                'lastname'   => $lastname,
-                                'firstname'  => $firstname,
-                                'middlename' => $middlename,
-                                'lastuser'   => $authNamespace->ID)
-                        );
-					} else {						
-						$where = $this->db->quoteInto('user_id = ?', $last_insert_id);
-						$this->db->update('core_users_profile', 
-										array('lastname' => $lastname, 
-												'firstname' => $firstname, 
-												'middlename' => $middlename, 
-												'lastuser' => $authNamespace->ID),
-										$where);
-					}
-				}
-				if ($send_info_sw) {
-					$this->sendUserInformation($data['control']);
-				}
-				$this->db->commit();				
-	     	} catch (Exception $e) {
-	     		$this->db->rollback();				
-				$errorNamespace = new SessionContainer('Error');
-				$errorNamespace->ERROR =  $e->getMessage();				
-				$errorNamespace->setExpirationHops(1);
-			}			
-			header("Location:{$_POST['back']}");			
-		}
-	}
-
-
-	/**
-	 * @param $dataNewUser
-	 * @throws Exception
-     * @return void
-	 */
-	private function sendUserInformation($dataNewUser) {
-
-		$dataUser = $this->db->fetchRow("SELECT lastname, firstname, middlename, email
-			   							 FROM core_users AS cu
-			   							 LEFT JOIN core_users_profile AS cup ON cu.u_id = cup.user_id
-			   							 WHERE cu.u_id = ?",
-			$this->auth->ID
-		);
-
-        $body = "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']} {$dataNewUser['middlename']}</b>.<br/>";
-        $body .= "Вы зарегистрированы на портале <a href=\"http://{$_SERVER["SERVER_NAME"]}\">{$_SERVER["SERVER_NAME"]}</a>.<br/>";
-        $body .= "Ваш логин: '{$dataNewUser['u_login']}'.<br/>";
-        $body .= "Ваш пароль: '{$dataNewUser['u_pass']}'.<br/>";
-        $body .= "Зайти на портал можно по адресу <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>.";
-
-        $result = $this->createEmail()
-            ->from($dataUser['email'])
-            ->to($dataUser['lastname'] . ' ' . $dataUser['firstname'])
-            ->subject(sprintf($this->translate->tr("Информация о регистрации на портале %s"), $_SERVER["SERVER_NAME"]))
-            ->body($body)
-            ->importance('HIGH')
-            ->send();
-
-  	    if (!$result) {
-  	    	throw new Exception($this->translate->tr('Не удалось отправить сообщение пользователю'));
-  	    }
-	}
-
 
     /**
      * Создание письма

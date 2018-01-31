@@ -149,7 +149,7 @@ a {color: #337AB7}
     color: #fff;
     position: relative;
     display: block;
-    padding: 10px 17px;
+    padding: 10px 16px 10px 17px;
     text-decoration: none;
     text-align: left;
     direction: ltr;
@@ -165,12 +165,25 @@ a {color: #337AB7}
 #menu-modules .menu-module:hover a,
 #menu-modules .menu-module a:hover,
 #menu-modules .menu-module a:focus,
-#menu-modules .menu-module.module-hover a,
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
-    background-color: #4C626D;
+    background-color: #546E7A;
     padding-left: 14px;
     outline: none;
+}
+#menu-modules .module-submodules > a {
+    padding: 8px 16px 8px 36px;
+    line-height: 16px;
+}
+#menu-modules .menu-module.module-hover a,
+#menu-modules .menu-module > a:hover,
+#menu-modules .menu-module-selected > a.index-select,
+#menu-modules .menu-module-selected > a:hover,
+#menu-modules .module-submodules > a:hover {
+    background-color: #4C626D;
+}
+#menu-modules a.module-submodules-selected {
+    background-color: #4C626D;
 }
 #menu-submodules {
     margin: 0;
