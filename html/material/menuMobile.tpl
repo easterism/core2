@@ -20,6 +20,7 @@
 						<a href="index.php#module=[MODULE_ID][MODULE_ACTION]"
 						   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=[MODULE_ID][MODULE_ACTION]');"
 						><span class="module-title">[MODULE_NAME]</span></a>
+						<div class="module-submodules" style="display: none"></div>
 					</li>
 					<!-- END modules -->
 				</ul>
