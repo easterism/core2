@@ -62,6 +62,7 @@ class Log {
     public function __call($name, $arguments)
     {
         if ($name == 'slack') {
+            if (!$this->config->log || !$this->config->log->webhook->slack) return new \stdObject();
             $channel = null;
             $username = null;
             $useAttachment = true;

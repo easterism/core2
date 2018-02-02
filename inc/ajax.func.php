@@ -306,7 +306,6 @@ class ajaxFunc extends Common {
 	 * @throws Exception
 	 */
 	protected function saveData($data, $inTrans = true) {
-
 		if ( ! $inTrans) {
 		    $this->db->beginTransaction();
         }
