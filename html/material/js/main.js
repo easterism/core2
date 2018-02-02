@@ -20,7 +20,7 @@ var main_menu = {
             if ($('li[id^=submodule-' + module + '-]')[0]) {
 
             	if ($(this).hasClass('menu-module-selected')) {
-                    $(this).find('>a').append('<span class="nav-second-level-toggle fa fa-angle-down"></span>');
+                    $(this).find('>a').append('<span class="nav-second-level-toggle fa"></span>');
 				} else {
                     $(this).find('>a').append('<span class="nav-second-level-toggle fa fa-angle-right"></span>');
 				}
@@ -79,16 +79,19 @@ function changeRoot(obj, to, actionSelect) {
 		if (parent.childNodes[i].nodeName === 'LI') {
             parent.childNodes[i].className = 'menu-module';
 
-            $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-down').addClass('fa-angle-right');
+            $(parent.childNodes[i]).find('.nav-second-level-toggle').addClass('fa-angle-right');
 
 			if (parent.childNodes[i] === obj) {
                 parent.childNodes[i].className = 'menu-module-selected';
 
-                if ( ! actionSelect) {
-                    $(parent.childNodes[i]).find('>a').addClass('index-select');
-				} else {
-                    $(parent.childNodes[i]).find('>a').removeClass('index-select');
-				}
+                var module_id = parent.childNodes[i].id;
+				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
+					if ( ! actionSelect) {
+						$(parent.childNodes[i]).find('>a').addClass('index-select');
+					} else {
+						$(parent.childNodes[i]).find('>a').removeClass('index-select');
+					}
+                }
 
                 var issetSubmodules = false;
 				var sub 			= document.getElementById('menu-submodules');
@@ -98,11 +101,12 @@ function changeRoot(obj, to, actionSelect) {
 						sub.childNodes[x].className = 'menu-submodule';
 						sub.childNodes[x].style.display = 'none';
 						if (sub.childNodes[x].id.indexOf(parent.childNodes[i].id + '-') !== -1) {
-                            issetSubmodules = true;
-
-                            $(parent.childNodes[i]).find('.module-submodules').append(
-                                $(sub.childNodes[x]).find('>a').clone()
-							);
+                            if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
+                                issetSubmodules = true;
+                                $(parent.childNodes[i]).find('.module-submodules').append(
+                                    $(sub.childNodes[x]).find('>a').clone()
+                                );
+                            }
 
 							sub.childNodes[x].style.display = '';
 						}
@@ -110,7 +114,7 @@ function changeRoot(obj, to, actionSelect) {
 				}
 
 				if (issetSubmodules) {
-                    $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-right').addClass('fa-angle-down');
+                    $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-right');
                     if ($(window).width() < 768 || ! $('.s-toggle')[0]) {
                         $(parent.childNodes[i]).find('.module-submodules').show()
                     }
@@ -548,18 +552,36 @@ $(document).ready(function() {
 			$('.menu-submodule, .menu-submodule-selected').hide();
 
 			var submodulesContainer = $('#menu-submodules').hide();
-			var module              = $(this).attr('id').substr(7);
-			var submodules          = $('li[id^=submodule-' + module + '-]').show();
+            var module              = $(this).attr('id').substr(7);
+            var submodules          = $('li[id^=submodule-' + module + '-]').show();
 
-			if (submodules[0]) {
-				submodulesContainer.show();
-				var offsets = this.getBoundingClientRect();
+			if ($('.s-toggle')[0] || submodules[0]) {
+                $('#menu-submodules').find('.submenu-module-title').remove();
 
-				if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
-					submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
-				} else {
-					submodulesContainer.css('top', (offsets.top + 1) + 'px');
-				}
+				if ($('.s-toggle')[0]) {
+                    var issetSelectSubmodule = $('li[id^=submodule-' + module + '-].menu-submodule-selected')[0];
+					var selectedClass        = ! issetSelectSubmodule && $(this).hasClass('menu-module-selected') ? 'selected' : '';
+                    var $moduleElement       = $(this).find('>a');
+                    var moduleHref 	         = $moduleElement.attr('href');
+                    var moduleOnClick        = $moduleElement.attr('onclick');
+                    var moduleTitle          = $moduleElement.find('>.module-title').text().trim();
+
+                    $('#menu-submodules').prepend(
+                        '<li class="submenu-module-title ' + selectedClass + '">' +
+                        	'<a href="' + moduleHref + '" onclick="' + moduleOnClick + '">' + moduleTitle + '</a>' +
+                        '</li>'
+                    );
+                }
+
+                submodulesContainer.show();
+
+                var offsets = this.getBoundingClientRect();
+
+                if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
+                    submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
+                } else {
+                    submodulesContainer.css('top', (offsets.top + 1) + 'px');
+                }
 			}
         }
     });
