@@ -552,18 +552,36 @@ $(document).ready(function() {
 			$('.menu-submodule, .menu-submodule-selected').hide();
 
 			var submodulesContainer = $('#menu-submodules').hide();
-			var module              = $(this).attr('id').substr(7);
-			var submodules          = $('li[id^=submodule-' + module + '-]').show();
+            var module              = $(this).attr('id').substr(7);
+            var submodules          = $('li[id^=submodule-' + module + '-]').show();
 
-			if (submodules[0]) {
-				submodulesContainer.show();
-				var offsets = this.getBoundingClientRect();
+			if ($('.s-toggle')[0] || submodules[0]) {
+                $('#menu-submodules').find('.submenu-module-title').remove();
 
-				if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
-					submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
-				} else {
-					submodulesContainer.css('top', (offsets.top + 1) + 'px');
-				}
+				if ($('.s-toggle')[0]) {
+                    var issetSelectSubmodule = $('li[id^=submodule-' + module + '-].menu-submodule-selected')[0];
+					var selectedClass        = ! issetSelectSubmodule && $(this).hasClass('menu-module-selected') ? 'selected' : '';
+                    var $moduleElement       = $(this).find('>a');
+                    var moduleHref 	         = $moduleElement.attr('href');
+                    var moduleOnClick        = $moduleElement.attr('onclick');
+                    var moduleTitle          = $moduleElement.find('>.module-title').text().trim();
+
+                    $('#menu-submodules').prepend(
+                        '<li class="submenu-module-title ' + selectedClass + '">' +
+                        	'<a href="' + moduleHref + '" onclick="' + moduleOnClick + '">' + moduleTitle + '</a>' +
+                        '</li>'
+                    );
+                }
+
+                submodulesContainer.show();
+
+                var offsets = this.getBoundingClientRect();
+
+                if (($(window).height() - $(this)[0].offsetTop) < submodulesContainer.height()) {
+                    submodulesContainer.css('top', (offsets.top - submodulesContainer.height() + 27) + 'px');
+                } else {
+                    submodulesContainer.css('top', (offsets.top + 1) + 'px');
+                }
 			}
         }
     });
