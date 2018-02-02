@@ -214,7 +214,8 @@ a {color: #337AB7}
     z-index: 999;
 }
 #menu-submodules .menu-submodule a,
-#menu-submodules .menu-submodule-selected a {
+#menu-submodules .menu-submodule-selected a,
+#menu-submodules .submenu-module-title a {
     font-size: 14px;
     display: inline-block;
     cursor: pointer;
@@ -225,8 +226,13 @@ a {color: #337AB7}
     width: 100%;
 }
 #menu-submodules .menu-submodule:hover a,
+#menu-submodules .submenu-module-title:hover a,
+#menu-submodules .submenu-module-title.selected a,
 #menu-submodules .menu-submodule-selected a {
     background-color: #4C626D;
+}
+#menu-submodules .submenu-module-title a {
+    font-weight: bold;
 }
 #user-section {
     color: #463265;
