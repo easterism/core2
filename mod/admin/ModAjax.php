@@ -705,7 +705,7 @@ class ModAjax extends ajaxFunc {
 
 
     /**
-     * Отправка уведомления о создании пользователя
+     * Отправка уведомления о создании или обновлении пользователя
      * @param array $dataNewUser
      * @param int $isUpdate
      * @throws Exception
@@ -715,18 +715,18 @@ class ModAjax extends ajaxFunc {
 
         $body  = "";
         $crlf = "<br>";
+        $protocol = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') ||
+                    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
         $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>." . $crlf;
 		if ($isUpdate) {
-			$body .= "Ваш профиль на портале <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a> был обновлен." . $crlf;
+			$body .= "Ваш профиль на портале <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">{$protocol}://{$_SERVER["SERVER_NAME"]}</a> был обновлен." . $crlf;
 		} else {
         	$body .= "Вы зарегистрированы на портале {$_SERVER["SERVER_NAME"]}{$crlf}
-        	Для входа введите в строке адреса: http://{$_SERVER["SERVER_NAME"]}{$crlf}
-        	Или перейдите по ссылке <a href=\"http://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
+        	Для входа введите в строке адреса: {$_SERVER["SERVER_NAME"]}{$crlf}
+        	Или перейдите по ссылке <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
 		}
-        $body .= "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
+        $body .= $crlf . "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
         if (isset($dataNewUser['u_pass'])) $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
-        $body .= "Вы также можете зайти на портал и изменить пароль. Это можно сделать в модуле \"Профиль\". Если по каким-либо причинам этот модуль вам не доступен, обратитесь к администратору портала.";
-
 
         $result = $this->modAdmin->createEmail()
             ->from('noreply@' . $_SERVER["SERVER_NAME"])

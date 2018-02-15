@@ -574,22 +574,26 @@ $(document).ready(function() {
             },
             log: function(message) {
                 var d = new Date();
-                $.growl({ title: d.getHours()  + ':' + d.getMinutes() + ':' + d.getSeconds(), message: message });
+                Snarl.addNotification({
+                    title: d.getHours()  + ':' + d.getMinutes() + ':' + d.getSeconds(),
+                    icon: '<i class="fa fa-exclamation-circle"></i>',
+                    text: message
+                });
             },
             error: function(message) {
-                $.growl.error({title: "Ошибка!", message: message });
+                Snarl.addNotification({title: "Ошибка", icon: '<i class="fa fa-times"></i>', text: message });
             },
             info: function(message) {
-                $.growl.notice({title: "Уведомление!", message: message });
+                Snarl.addNotification({title: "Уведомление", icon: '<i class="fa fa-info"></i>', text: message });
             },
             warning: function(message) {
-                $.growl.warning({title: "Внимание!",  message: message });
+                Snarl.addNotification({title: "Внимание", icon: '<i class="fa fa-warning"></i>',  text: message });
             },
             success: function(message) {
-                $.growl.notice({title: "Успех!",  message: message });
+                Snarl.addNotification({title: "Успех", icon: '<i class="fa fa-check"></i>',  text: message });
             },
             message: function(message) {
-                $.growl({title: "Сообщение!", message: message });
+                Snarl.addNotification({title: "Сообщение", icon: '<i class="fa fa-comment-o"></i>', text: message });
             }
 		}
     } catch (e) {
