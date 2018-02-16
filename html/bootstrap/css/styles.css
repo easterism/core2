@@ -1094,6 +1094,8 @@ label.control-label {font-weight: 700}
 .modal-control .modal-control-button {height: 34px}
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
+.ctrl-tp-controls > * ,
+.ctrl-tpr-controls > * ,
 .ctrl-dp-controls > * {
     float: left
 }
@@ -1116,6 +1118,14 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-minute,
 .ctrl-dtp-clear,
 .ctrl-dtp-trigger,
+.ctrl-tp-hour,
+.ctrl-tp-minute,
+.ctrl-tp-clear,
+.ctrl-tp-trigger,
+.ctrl-tpr-hour,
+.ctrl-tpr-minute,
+.ctrl-tpr-clear,
+.ctrl-tpr-trigger,
 .ctrl-dp-day,
 .ctrl-dp-month,
 .ctrl-dp-year,
@@ -1131,6 +1141,12 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-month,
 .ctrl-dtp-minute,
 .ctrl-dtp-hour,
+.ctrl-tp-minute,
+.ctrl-tp-hour,
+.ctrl-tpr-from-minute,
+.ctrl-tpr-from-hour,
+.ctrl-tpr-to-minute,
+.ctrl-tpr-to-hour,
 .ctrl-dp-day,
 .ctrl-dp-month {
     width: 40px;
@@ -1152,6 +1168,12 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-minute:focus,
 .ctrl-dtp-hour:focus,
 .ctrl-dtp-year:focus,
+.ctrl-tpr-from-minute:focus,
+.ctrl-tpr-from-hour:focus,
+.ctrl-tpr-to-minute:focus,
+.ctrl-tpr-to-hour:focus,
+.ctrl-tp-minute:focus,
+.ctrl-tp-hour:focus,
 .ctrl-dp-day:focus,
 .ctrl-dp-month:focus,
 .ctrl-dp-year:focus {
@@ -1163,6 +1185,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger,
 .ctrl-dtp-clear,
 .ctrl-dtp-trigger,
+.ctrl-tpr-clear,
+.ctrl-tpr-trigger,
+.ctrl-tp-clear,
+.ctrl-tp-trigger,
 .ctrl-dp-clear,
 .ctrl-dp-trigger {
     border: 1px solid #ccc;
@@ -1183,6 +1209,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger:hover,
 .ctrl-dtp-clear:hover,
 .ctrl-dtp-trigger:hover,
+.ctrl-tpr-clear:hover,
+.ctrl-tpr-trigger:hover,
+.ctrl-tp-clear:hover,
+.ctrl-tp-trigger:hover,
 .ctrl-dp-clear:hover,
 .ctrl-dp-trigger:hover {
     color: #333;
@@ -1193,6 +1223,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger:active,
 .ctrl-dtp-clear:active,
 .ctrl-dtp-trigger:active,
+.ctrl-tpr-clear:active,
+.ctrl-tpr-trigger:active,
+.ctrl-tp-clear:active,
+.ctrl-tp-trigger:active,
 .ctrl-dp-clear:active,
 .ctrl-dp-trigger:active {
     background-image: none;
@@ -1202,6 +1236,8 @@ label.control-label {font-weight: 700}
 }
 .ctrl-dpr-container,
 .ctrl-dtp-container,
+.ctrl-tpr-container,
+.ctrl-tp-container,
 .ctrl-dp-container {
     position: absolute;
     display: none;
@@ -1238,6 +1274,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr input[type=number]::-webkit-inner-spin-button,
 .ctrl-dtp input[type=number]::-webkit-outer-spin-button,
 .ctrl-dtp input[type=number]::-webkit-inner-spin-button,
+.ctrl-tpr input[type=number]::-webkit-outer-spin-button,
+.ctrl-tpr input[type=number]::-webkit-inner-spin-button,
+.ctrl-tp input[type=number]::-webkit-outer-spin-button,
+.ctrl-tp input[type=number]::-webkit-inner-spin-button,
 .ctrl-dp input[type=number]::-webkit-outer-spin-button,
 .ctrl-dp input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -1245,6 +1285,8 @@ label.control-label {font-weight: 700}
 }
 .ctrl-dpr input[type=number],
 .ctrl-dtp input[type=number],
+.ctrl-tpr input[type=number],
+.ctrl-tp input[type=number],
 .ctrl-dp input[type=number] {-moz-appearance:textfield}
 div[id^=fileupload-main_] .table {
     margin: 0;
