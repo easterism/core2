@@ -305,7 +305,7 @@ $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['uninstall']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['uninstall']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash'] = array();
-$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['TYPE']    = "text";
+$DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['TYPE']    = "longtext";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['NULL']    = "YES";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_modules']['COLUMNS']['files_hash']['EXTRA']   = "";
