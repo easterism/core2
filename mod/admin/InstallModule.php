@@ -2417,7 +2417,7 @@ class InstallModule extends \Common {
      * @return mixed
      */
     private function SQLToQueriesArray($sql){
-        $sql = explode(';', $sql);
+        $sql = preg_split("~;\s*\n~", $sql);
         $queries = array();
         foreach ($sql as $qu) {
             $qu = trim($qu);
