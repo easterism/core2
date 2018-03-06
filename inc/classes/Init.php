@@ -7,7 +7,7 @@
 
     $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
     if (!file_exists($conf_file)) {
-        \Core2\Error::Exception("Отсутствует загрузчик.");
+        \Core2\Error::Exception("Composer autoload is missing.");
     }
 
 
@@ -23,7 +23,7 @@
     $conf_file = DOC_ROOT . "conf.ini";
 
     if (!file_exists($conf_file)) {
-        \Core2\Error::Exception("Отсутствует конфигурационный файл.");
+        \Core2\Error::Exception("conf.ini is missing.");
     }
     $config = array(
         'system' => array('name' => 'CORE'),
@@ -460,11 +460,11 @@
                             throw new Exception(911);
                         }
                         $_GET['action'] = "index";
-                        if (!$this->isModuleActive($module)) throw new Exception($this->translate->tr("Модуль не существует"), 404);
+                        if (!$this->isModuleActive($module)) throw new Exception(sprintf($this->translate->tr("Модуль % не существует"), $module), 404);
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
-                        if (!$mods) throw new Exception($this->translate->tr("Субмодуль не существует"), 404);
+                        if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль % не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }
@@ -490,7 +490,7 @@
                         if (method_exists($modController, $action)) {
                             return $modController->$action();
                         } else {
-                            throw new Exception($this->translate->tr("Метод не существует"), 404);
+                            throw new Exception(sprintf($this->translate->tr("Метод % не существует"), $action), 404);
                         }
                     } else {
                         return "<script>loadPDF('{$mods['sm_path']}')</script>";
@@ -1063,7 +1063,7 @@
                 if ($data['is_public'] == 'Y') {
                     $modsList[$data['m_id']] = array(
                         'module_id'  => $data['module_id'],
-                        'm_name'     => $data['m_name'],
+                        'm_name'     => strip_tags($data['m_name']),
                         'm_id'       => $data['m_id'],
                         'submodules' => array()
                     );
@@ -1074,7 +1074,7 @@
                     $modsList[$data['m_id']]['submodules'][] = array(
                         'sm_id'   => $data['sm_id'],
                         'sm_key'  => $data['sm_key'],
-                        'sm_name' => $data['sm_name']
+                        'sm_name' => strip_tags($data['sm_name'])
                     );
                 }
             }
@@ -1086,7 +1086,7 @@
                     unset($modsList[$k]);
                 }
             }
-            $modsList = array('system_name' => $this->getSystemName(),
+            $modsList = array('system_name' => strip_tags($this->getSystemName()),
                               'login'       => $this->auth->NAME,
                               'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
                               'modules'     => $modsList);

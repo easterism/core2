@@ -128,6 +128,8 @@ class Db {
 
 
     /**
+     * Ищет перевод для строки $str
+     *
      * @param string $str
      * @return string
      */
