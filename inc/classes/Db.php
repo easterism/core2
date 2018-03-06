@@ -286,8 +286,10 @@ class Db {
 			// обновление записи о последней активности
             if ($auth->LIVEID) {
                 $row = $this->dataSession->find($auth->LIVEID)->current();
-                $row->last_activity = new \Zend_Db_Expr('NOW()');
-                $row->save();
+                if ($row) {
+                    $row->last_activity = new \Zend_Db_Expr('NOW()');
+                    $row->save();
+                }
             }
 		}
 	}
