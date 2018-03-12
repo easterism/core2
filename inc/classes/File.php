@@ -112,13 +112,15 @@ class File extends \Common {
                 }
             }
         }
+
         header("Content-type: {$res2['type']}");
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
-        if (isset($res2['thumb'])) {
-            $this->content = $res2['thumb'];
-        } else {
+        //Если задан размер тамбнейла или если тамбнейла нет в базе
+        if (!empty($_GET['size']) || !$res2['thumb']) {
             $image = new \Image();
             $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
+        } else {
+            $this->content = $res2['thumb'];
         }
     }
 
