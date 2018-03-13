@@ -120,7 +120,7 @@ class FileUploader extends \Core2\Db {
         }
         $res = $this->db->fetchAll($SQL, $arr);
 
-        $Image = new \Image();
+        $Image = new \Core2\Image();
         foreach ($res as $key => $value) {
             $type2 = explode("/", $value['type']);
             $type2 = $type2[1];

@@ -1,4 +1,5 @@
 <?
+namespace Core2;
 /**
  * Class Image
  *
