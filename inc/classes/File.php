@@ -73,7 +73,7 @@ class File extends \Common {
             }
         }
 
-        $image = new \Core2\Image();
+        $image = new \Core2\Store\Image();
         if ($image->isImage($res2['type'])) {
             if (!$image->checkGD()) {
                 throw new \Exception("GD not installed", 500);
@@ -117,7 +117,7 @@ class File extends \Common {
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
         //Если задан размер тамбнейла или если тамбнейла нет в базе
         if (!empty($_GET['size']) || !$res2['thumb']) {
-            $image = new \Core2\Image();
+            $image = new \Core2\Store\Image();
             $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
         } else {
             $this->content = $res2['thumb'];
@@ -177,7 +177,7 @@ class File extends \Common {
 
         list($module, $action) = explode("_", $this->resource);
 
-        $image = new \Core2\Image();
+        $image = new \Core2\Store\Image();
 
         $base_urn = $action == 'index'
             ? "index.php?module=$module&filehandler=$table"

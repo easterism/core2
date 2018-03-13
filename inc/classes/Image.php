@@ -1,5 +1,5 @@
 <?
-namespace Core2;
+namespace Core2\Store;
 /**
  * Class Image
  *
