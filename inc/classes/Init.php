@@ -407,6 +407,7 @@
                 require_once 'core2/inc/classes/Acl.php';
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
+                require_once 'core2/inc/Interfaces/Subscribe.php';
                 // SETUP ACL
                 $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();

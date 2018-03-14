@@ -1,5 +1,6 @@
 <?
 require_once 'Acl.php';
+require_once 'Emitter.php';
 
 
 /**
@@ -294,6 +295,12 @@ class Common extends \Core2\Acl {
 		$src_mod = $this->getModuleSrc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
+
+	protected function emit($event_name) {
+	    $em = new \Core2\Emitter($this, $this->module);
+        $em->addEvent($event_name);
+        $em->emit();
+    }
 }
 
 
