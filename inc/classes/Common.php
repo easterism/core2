@@ -296,10 +296,16 @@ class Common extends \Core2\Acl {
         Tool::printJs($src_mod . $src, $chachable);
 	}
 
-	protected function emit($event_name) {
+    /**
+     * Порождает событие для модулей, реализующих интерфейс Subscribe
+     *
+     * @param $event_name
+     * @param array $data
+     */
+	protected function emit($event_name, $data = []) {
 	    $em = new \Core2\Emitter($this, $this->module);
-        $em->addEvent($event_name);
-        $em->emit();
+        $em->addEvent($event_name, $data);
+        return $em->emit();
     }
 }
 

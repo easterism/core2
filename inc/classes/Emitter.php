@@ -21,13 +21,14 @@ class Emitter
         $this->that = $that;
     }
 
-    public function addEvent($event_name) {
-        if (!in_array($event_name, $this->events)) $this->events[] = $event_name;
+    public function addEvent($event_name, $data = []) {
+        if (!array_key_exists($event_name, $this->events)) $this->events[$event_name] = $data;
     }
 
     public function emit() {
         $mods = $this->that->modAdmin->dataModules->getIds();
         $auth = \Zend_Registry::get('auth');
+        $out = [];
         foreach ($mods as $id => $mod) {
             if ($mod === $this->module) continue;
             if ($auth->MOBILE) {
@@ -46,10 +47,12 @@ class Emitter
                 $iface = class_implements($modController);
                 if (!in_array('Subscribe', class_implements($modController))) continue;
                 $obj = new $modController();
-                foreach ($this->events as $event) {
-                    $obj->listen($this->module, $event);
+                foreach ($this->events as $event => $data) {
+                    $res = $obj->listen($this->module, $event, $data);
+                    if ($res) $out[] = $res;
                 }
             }
         }
+        return $out;
     }
 }
