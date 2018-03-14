@@ -7,9 +7,6 @@
 [submodule "ext/jQuery/plugins/simplemodal"]
 	path = ext/jQuery/plugins/simplemodal
 	url = git@github.com:ericmmartin/simplemodal.git
-[submodule "mod/profile/v1.10.0"]
-	path = mod/profile/v1.10.0
-	url = git@git.rdo.belhard.com:core2/modules/profile.git
 [submodule "mod/repo/v1.4.1"]
 	path = mod/repo/v1.4.1
 	url = git@git.rdo.belhard.com:core2/modules/repo.git
