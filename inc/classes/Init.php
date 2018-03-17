@@ -461,11 +461,11 @@
                             throw new Exception(911);
                         }
                         $_GET['action'] = "index";
-                        if (!$this->isModuleActive($module)) throw new Exception(sprintf($this->translate->tr("Модуль % не существует"), $module), 404);
+                        if (!$this->isModuleActive($module)) throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
-                        if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль % не существует"), $action), 404);
+                        if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }
@@ -491,7 +491,7 @@
                         if (method_exists($modController, $action)) {
                             return $modController->$action();
                         } else {
-                            throw new Exception(sprintf($this->translate->tr("Метод % не существует"), $action), 404);
+                            throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
                     } else {
                         return "<script>loadPDF('{$mods['sm_path']}')</script>";
