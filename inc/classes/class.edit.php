@@ -1343,13 +1343,12 @@ $controlGroups[$cellId]['html'][$key] .= "
 					$html .= '<div class="accordion">';
 					$ingroup = false;
 					foreach ($value['html'] as $key => $control) {
-
 						foreach ($value['group'] as $group) {
 							if ($group['key'] == $key) {
 								if ($ingroup) {
 									$html .= '</div>';
 								}
-								$html .= '<h3><a href="#">' . $group['name'] . '</a></h3><div>';
+								$html .= '<h3><a href="#">' . $group['name'] . '</a></h3>' . ($group['collapsed'] ? '<div style="display: none;">' : '<div>');
 								$ingroup = true;
 								break;
 							}

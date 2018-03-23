@@ -29,13 +29,13 @@
     "zf1/zend-mail": "~1.12",
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
-    "xajax/xajax": "dev-master",
+    "belhard/xajax": "dev-master",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*"
   },
   "scripts": {
     "xajax-cmd": [
-      "mkdir -p -m 0777 vendor/xajax/xajax/xajax_js/deferred"
+      "mkdir -p -m 0777 vendor/belhard/xajax/xajax_js/deferred"
     ],
     "post-update-cmd": [
       "@xajax-cmd"
