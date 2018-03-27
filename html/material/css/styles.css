@@ -357,6 +357,9 @@ table.sTable > tfoot > tr > th:last-child {
 table.sTable tbody tr.rowOver {background-color:#E1ECF1}
 table.sTable tbody tr.pointer {cursor: pointer;}
 table.sTable > tbody > tr:hover {background-color: #E1ECF1!important}
+tr.headerText {
+    background-color: white;
+}
 tr.headerText td {
     font-weight: bold;
     font-size: 12px;
