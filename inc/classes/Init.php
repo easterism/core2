@@ -539,7 +539,13 @@
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
-                $core->action_login($_POST);
+                $url = "index.php";
+                if ($core->action_login($_POST)) {
+                    if (!empty($_SERVER['QUERY_STRING'])) {
+                        $url .= "#" . $_SERVER['QUERY_STRING'];
+                    }
+                }
+                header("Location: $url");
                 return '';
             }
             $tpl = new Templater2();
