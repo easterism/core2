@@ -478,7 +478,7 @@ var listx = {
 		$("#list" + id + " tbody").disableSelection();
 	},
 	fixHead: function (id) {
-		$('#' + id + ' table').floatThead({top: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
+		$('#' + id).floatThead({top: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
 	}
 	
 };
