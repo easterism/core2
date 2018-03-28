@@ -612,19 +612,18 @@ class listTable extends initList {
                 }
                 elseif ($value['type'] == 'checkbox' || $value['type'] == 'checkbox2') {
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $tpl2->touchBlock('checkbox');
                     foreach ($temp as $j => $row) {
                         $k = current($row);
                         $v = end($row);
 
-                        $tpl2->assign("{0}", "[$j]");
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", $k);
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->checkbox->assign("{0}", "[$j]");
+                        $tpl2->checkbox->assign("{VALUE}", $k);
+                        $tpl2->checkbox->assign("{LABEL}", $v);
                         if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->assign("{checked}", " checked=\"checked\"");
+                            $tpl2->checkbox->assign("{checked}", " checked=\"checked\"");
                         } else {
-                            $tpl2->assign("{checked}", "");
+                            $tpl2->checkbox->assign("{checked}", "");
                         }
                         $tpl2->checkbox->reassign();
                     }
@@ -635,7 +634,6 @@ class listTable extends initList {
                 }
                 elseif ($value['type'] == 'radio') {
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $tpl2->touchBlock('radio');
                     foreach ($temp as $row) {
                         $k = current($row);
                         $v = end($row);
@@ -643,11 +641,11 @@ class listTable extends initList {
                             $v = $v['value'];
                         }
 
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->radio->assign("{LABEL}", $v);
                         if ($row[0] === $next) {
-                            $tpl2->assign("{VALUE}", $k . "\" checked=\"checked");
+                            $tpl2->radio->assign("{VALUE}", $k . "\" checked=\"checked");
                         } else {
-                            $tpl2->assign("{VALUE}", $k);
+                            $tpl2->radio->assign("{VALUE}", $k);
                         }
                         $tpl2->radio->reassign();
                     }
@@ -690,13 +688,13 @@ class listTable extends initList {
                         $k = current($row);
                         $v = end($row);
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", $k);
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->opt->assign("{VALUE}", $k);
+                        $tpl2->opt->assign("{LABEL}", $v);
 
                         if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->assign("{selected}", " selected=\"selected\"");
+                            $tpl2->opt->assign("{selected}", " selected=\"selected\"");
                         } else {
-                            $tpl2->assign("{selected}", "");
+                            $tpl2->opt->assign("{selected}", "");
                         }
                         $tpl2->opt->reassign();
                     }
