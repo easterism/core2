@@ -851,5 +851,7 @@ var listx = {
     fixHead: function (id) {
         $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'});
         $('#' + id + ' table').css('table-layout', 'auto');
+        $('#' + id + ' .searchContainer form').css('max-height', '400px');
+        $('#' + id + ' .searchContainer form').css('overflow', 'auto');
     }
 };

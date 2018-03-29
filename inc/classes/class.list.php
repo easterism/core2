@@ -1148,8 +1148,6 @@ class listTable extends initList {
                 <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');
-                        $('#list{$this->resource} .searchContainer form').css('max-height', '400px');
-                        $('#list{$this->resource} .searchContainer form').css('overflow', 'auto');                                    
                     });
                 </script>";
             }
