@@ -861,10 +861,10 @@ var listx = {
         var search_height = $("#filter" + resource).height();
         //Отлавливаем изменение размера браузера, сворачивание/разворачивание меню, открытие/закрытие поиска
         setInterval (function () {
-            current_body_height = $("body").height();
-            current_body_width = $("body").width();
-            current_menu_wrapper_width = $('#menu-wrapper').width();
-            current_search_height = $("#filter" + resource).height();
+            var current_body_height = $("body").height();
+            var current_body_width = $("body").width();
+            var current_menu_wrapper_width = $('#menu-wrapper').width();
+            var current_search_height = $("#filter" + resource).height();
             if (current_body_height != body_height || current_body_width != body_width || current_menu_wrapper_width != menu_wrapper_width || current_search_height != search_height){
                 $('#' + id + ' table').floatThead('reflow');
                 body_height = current_body_height;
