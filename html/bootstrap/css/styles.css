@@ -1094,6 +1094,8 @@ label.control-label {font-weight: 700}
 .modal-control .modal-control-button {height: 34px}
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
+.ctrl-tp-controls > * ,
+.ctrl-tpr-controls > * ,
 .ctrl-dp-controls > * {
     float: left
 }
@@ -1116,6 +1118,14 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-minute,
 .ctrl-dtp-clear,
 .ctrl-dtp-trigger,
+.ctrl-tp-hour,
+.ctrl-tp-minute,
+.ctrl-tp-clear,
+.ctrl-tp-trigger,
+.ctrl-tpr-hour,
+.ctrl-tpr-minute,
+.ctrl-tpr-clear,
+.ctrl-tpr-trigger,
 .ctrl-dp-day,
 .ctrl-dp-month,
 .ctrl-dp-year,
@@ -1131,6 +1141,12 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-month,
 .ctrl-dtp-minute,
 .ctrl-dtp-hour,
+.ctrl-tp-minute,
+.ctrl-tp-hour,
+.ctrl-tpr-from-minute,
+.ctrl-tpr-from-hour,
+.ctrl-tpr-to-minute,
+.ctrl-tpr-to-hour,
 .ctrl-dp-day,
 .ctrl-dp-month {
     width: 40px;
@@ -1152,6 +1168,12 @@ label.control-label {font-weight: 700}
 .ctrl-dtp-minute:focus,
 .ctrl-dtp-hour:focus,
 .ctrl-dtp-year:focus,
+.ctrl-tpr-from-minute:focus,
+.ctrl-tpr-from-hour:focus,
+.ctrl-tpr-to-minute:focus,
+.ctrl-tpr-to-hour:focus,
+.ctrl-tp-minute:focus,
+.ctrl-tp-hour:focus,
 .ctrl-dp-day:focus,
 .ctrl-dp-month:focus,
 .ctrl-dp-year:focus {
@@ -1163,6 +1185,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger,
 .ctrl-dtp-clear,
 .ctrl-dtp-trigger,
+.ctrl-tpr-clear,
+.ctrl-tpr-trigger,
+.ctrl-tp-clear,
+.ctrl-tp-trigger,
 .ctrl-dp-clear,
 .ctrl-dp-trigger {
     border: 1px solid #ccc;
@@ -1183,6 +1209,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger:hover,
 .ctrl-dtp-clear:hover,
 .ctrl-dtp-trigger:hover,
+.ctrl-tpr-clear:hover,
+.ctrl-tpr-trigger:hover,
+.ctrl-tp-clear:hover,
+.ctrl-tp-trigger:hover,
 .ctrl-dp-clear:hover,
 .ctrl-dp-trigger:hover {
     color: #333;
@@ -1193,6 +1223,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr-trigger:active,
 .ctrl-dtp-clear:active,
 .ctrl-dtp-trigger:active,
+.ctrl-tpr-clear:active,
+.ctrl-tpr-trigger:active,
+.ctrl-tp-clear:active,
+.ctrl-tp-trigger:active,
 .ctrl-dp-clear:active,
 .ctrl-dp-trigger:active {
     background-image: none;
@@ -1202,6 +1236,8 @@ label.control-label {font-weight: 700}
 }
 .ctrl-dpr-container,
 .ctrl-dtp-container,
+.ctrl-tpr-container,
+.ctrl-tp-container,
 .ctrl-dp-container {
     position: absolute;
     display: none;
@@ -1238,6 +1274,10 @@ label.control-label {font-weight: 700}
 .ctrl-dpr input[type=number]::-webkit-inner-spin-button,
 .ctrl-dtp input[type=number]::-webkit-outer-spin-button,
 .ctrl-dtp input[type=number]::-webkit-inner-spin-button,
+.ctrl-tpr input[type=number]::-webkit-outer-spin-button,
+.ctrl-tpr input[type=number]::-webkit-inner-spin-button,
+.ctrl-tp input[type=number]::-webkit-outer-spin-button,
+.ctrl-tp input[type=number]::-webkit-inner-spin-button,
 .ctrl-dp input[type=number]::-webkit-outer-spin-button,
 .ctrl-dp input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -1245,6 +1285,8 @@ label.control-label {font-weight: 700}
 }
 .ctrl-dpr input[type=number],
 .ctrl-dtp input[type=number],
+.ctrl-tpr input[type=number],
+.ctrl-tp input[type=number],
 .ctrl-dp input[type=number] {-moz-appearance:textfield}
 div[id^=fileupload-main_] .table {
     margin: 0;
@@ -1431,135 +1473,157 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .modal-body > .core-panel:last-child,
 .core-panel-body > .core-panel:last-child {margin-bottom: 0}
 
-.core-panel > .core-panel-body > .core-panel-tabs-bottom,
-.core-panel > .core-panel-body > .core-panel-tabs-right,
-.core-panel > .core-panel-body > .core-panel-tabs-left {border-bottom: 0}
-.core-panel > .core-panel-body > .core-panel-tabs-bottom {
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-tabs-left  > .core-panel-body > .core-panel-tabs {border-bottom: 0}
+.core-panel.core-panel-tabs-bottom  > .core-panel-body > .core-panel-tabs {
     border-top: 1px solid #ddd;
     margin-top: 20px;
     margin-bottom: 0;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li {
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li {
     margin-top: -1px;
     margin-bottom: 0;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a {
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li > a {
     -webkit-border-radius: 0 0 4px 4px;
     -moz-border-radius: 0 0 4px 4px;
     border-radius: 0 0 4px 4px;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a:hover,
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li > a:focus {
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li > a:hover,
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li > a:focus {
     border-top-color: #ddd;
     border-bottom-color: #fff;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a,
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-tabs-bottom > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
-.core-panel > .core-panel-body > .core-panel-tabs-left > li,
-.core-panel > .core-panel-body > .core-panel-tabs-right > li {float: none}
-.core-panel > .core-panel-body > .core-panel-tabs-left > li > a,
-.core-panel > .core-panel-body > .core-panel-tabs-right > li > a {
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li {float: none}
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li > a,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li > a {
     min-width: 74px;
     margin-right: 0;
     margin-bottom: 3px;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-left {
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs {
     float: left;
     margin-right: 19px;
     border-right: 1px solid #ddd;
+    width: 210px;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-left > li > a {
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-content {
+    margin-left: 209px;
+    padding-left: 20px;
+    border-left: 1px solid #ddd;
+}
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li > a {
     margin-right: -1px;
     -webkit-border-radius: 4px 0 0 4px;
     -moz-border-radius: 4px 0 0 4px;
     border-radius: 4px 0 0 4px;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a,
-.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-tabs-left li.active > a:focus {
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs li.active > a,
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs li.active > a:hover,
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs li.active > a:focus {
     border-color: #ddd #fff #ddd #ddd;
     border-right-color: #ffffff;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-right {
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs {
     float: right;
     margin-left: 19px;
     border-left: 1px solid #ddd;
+    width: 210px;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-right > li > a {
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-content {
+    margin-right: 209px;
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li > a {
     margin-left: -1px;
     -webkit-border-radius: 0 4px 4px 0;
     -moz-border-radius: 0 4px 4px 0;
     border-radius: 0 4px 4px 0;
 }
-.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a,
-.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-tabs-right li.active > a:focus {
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li.active > a:focus {
     border-color: #ddd #ddd #ddd #fff;
 }
-.core-panel > .core-panel-body > .core-panel-pills-bottom,
-.core-panel > .core-panel-body > .core-panel-pills-right,
-.core-panel > .core-panel-body > .core-panel-pills-left {border-bottom: 0}
-.core-panel > .core-panel-body > .core-panel-pills-bottom {
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-pills-left  > .core-panel-body > .core-panel-tabs{border-bottom: 0}
+.core-panel.core-panel-pills-bottom  > .core-panel-body > .core-panel-tabs{
     margin-top: 20px;
     margin-bottom: 0;
 }
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li {
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li {
     margin-top: -1px;
     margin-bottom: 0;
 }
-.core-panel > .core-panel-body > .core-panel-pills-left > li,
-.core-panel > .core-panel-body > .core-panel-pills-right > li {float: none}
-.core-panel > .core-panel-body > .core-panel-pills-left > li > a,
-.core-panel > .core-panel-body > .core-panel-pills-right > li > a {
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li {float: none}
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li > a,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li > a {
     min-width: 74px;
     margin-right: 0;
     margin-bottom: 3px;
 }
-.core-panel > .core-panel-body > .core-panel-pills-left {
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs {
     float: left;
     margin-right: 19px;
+    width: 210px;
 }
-.core-panel > .core-panel-body > .core-panel-pills-top > li,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li,
-.core-panel > .core-panel-body > .core-panel-pills-right > li,
-.core-panel > .core-panel-body > .core-panel-pills-left > li {
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-content {
+    margin-left: 209px;
+    padding-left: 20px;
+}
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li {
     margin-bottom: 5px;
 }
-.core-panel > .core-panel-body > .core-panel-pills-top,
-.core-panel > .core-panel-body > .core-panel-pills-bottom,
-.core-panel > .core-panel-body > .core-panel-pills-right,
-.core-panel > .core-panel-body > .core-panel-pills-left {border-width: 0}
-.core-panel > .core-panel-body > .core-panel-pills-top > li > a,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li > a,
-.core-panel > .core-panel-body > .core-panel-pills-right > li > a,
-.core-panel > .core-panel-body > .core-panel-pills-left > li > a {
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs {border-width: 0}
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li > a,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li > a,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li > a,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li > a {
     margin-right: -1px;
     border: 0;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
-.core-panel > .core-panel-body > .core-panel-pills-right {
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs {
     float: right;
     margin-left: 19px;
+    width: 210px;
 }
-.core-panel > .core-panel-body > .core-panel-pills-top > li,
-.core-panel > .core-panel-body > .core-panel-pills-left > li,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li,
-.core-panel > .core-panel-body > .core-panel-pills-right > li {margin-right: 4px}
-.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a,
-.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-pills-top > li.active > a:focus,
-.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a,
-.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-pills-left > li.active > a:focus,
-.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a,
-.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-pills-right > li.active > a:focus,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a:hover,
-.core-panel > .core-panel-body > .core-panel-pills-bottom > li.active > a:focus {
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-content {
+    margin-right: 209px;
+    padding-right: 20px;
+}
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li {margin-right: 4px}
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-pills-top > .core-panel-body > .core-panel-tabs > li.active > a:focus,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-pills-left > .core-panel-body > .core-panel-tabs > li.active > a:focus,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-pills-right > .core-panel-body > .core-panel-tabs > li.active > a:focus,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li.active > a,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li.active > a:hover,
+.core-panel.core-panel-pills-bottom > .core-panel-body > .core-panel-tabs > li.active > a:focus {
     color: #fff;
     background-color: #428bca;
     border-width: 0;

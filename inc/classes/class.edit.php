@@ -689,7 +689,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>";
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>" : '';
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
@@ -1343,13 +1343,12 @@ $controlGroups[$cellId]['html'][$key] .= "
 					$html .= '<div class="accordion">';
 					$ingroup = false;
 					foreach ($value['html'] as $key => $control) {
-
 						foreach ($value['group'] as $group) {
 							if ($group['key'] == $key) {
 								if ($ingroup) {
 									$html .= '</div>';
 								}
-								$html .= '<h3><a href="#">' . $group['name'] . '</a></h3><div>';
+								$html .= '<h3><a href="javascript:void(false);">' . $group['name'] . '</a></h3>' . ($group['collapsed'] ? '<div class="hide">' : '<div>');
 								$ingroup = true;
 								break;
 							}
@@ -1370,7 +1369,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 				// if any GROUPS exists enable switcher
 				$this->HTML .= '<script>
 					  $(".accordion h3").click(function() {
-							$(this).next().toggle();
+							$(this).next().toggleClass(\'hide\');
 							return false;
 						});
 					  </script>';

@@ -162,23 +162,23 @@ class Panel {
             $this->active_tab = $tab['id'];
         }
 
+        switch ($this->type) {
+            case self::TYPE_TABS :  $type_name = 'tabs'; break;
+            case self::TYPE_PILLS : $type_name = 'pills'; break;
+            default : throw new Exception('Invalid type'); break;
+        }
+        $tpl->assign('[TYPE]', $type_name);
+
+        switch ($this->position) {
+            case self::POSITION_TOP :    $position_name = 'top'; break;
+            case self::POSITION_LEFT :   $position_name = 'left'; break;
+            case self::POSITION_RIGHT :  $position_name = 'right'; break;
+            case self::POSITION_BOTTOM : $position_name = 'bottom'; break;
+            default : throw new Exception('Invalid position'); break;
+        }
+        $tpl->assign('[POSITION]', $position_name);
+
         if ( ! empty($this->tabs)) {
-            switch ($this->type) {
-                case self::TYPE_TABS :  $type_name = 'tabs'; break;
-                case self::TYPE_PILLS : $type_name = 'pills'; break;
-                default : throw new Exception('Invalid type'); break;
-            }
-            $tpl->tabs->assign('[TYPE]', $type_name);
-
-            switch ($this->position) {
-                case self::POSITION_TOP :    $position_name = 'top'; break;
-                case self::POSITION_LEFT :   $position_name = 'left'; break;
-                case self::POSITION_RIGHT :  $position_name = 'right'; break;
-                case self::POSITION_BOTTOM : $position_name = 'bottom'; break;
-                default : throw new Exception('Invalid position'); break;
-            }
-            $tpl->tabs->assign('[POSITION]', $position_name);
-
             foreach ($this->tabs as $tab) {
 
                 if ($tab['disabled']) {

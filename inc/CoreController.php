@@ -147,7 +147,7 @@ class CoreController extends Common {
     /**
 	 * Авторизация пользователя через форму
 	 *
-     * @return void
+     * @return bool
      */
     public function action_login ($post) {
 
@@ -156,8 +156,7 @@ class CoreController extends Common {
 		$tokenNamespace = new SessionContainer('Token');
 		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
-            header("Location: index.php");
-			return;
+            return false;
 		}
 		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
@@ -166,16 +165,14 @@ class CoreController extends Common {
 		else {
 			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
 				$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
-                header("Location: index.php");
-				return;
+                return false;
 			}
 			try {
 				$db = Zend_Db::factory($this->config->database);
 				$db->getConnection();
 			} catch (Exception $e) {
 				$errorNamespace->ERROR = $this->catchLoginException($e);
-                header("Location: index.php");
-				return;
+                return false;
 			}
 			$authLDAP = false;
             $login = trim($post['login']);
@@ -183,8 +180,7 @@ class CoreController extends Common {
 
             if (empty($this->config->ldap->active) && (!ctype_print($passw) || strlen($passw) < 30)) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
-                header("Location: index.php");
-                return;
+                return false;
             }
 			if ($login !== 'root') {
 				//ldap
@@ -301,12 +297,7 @@ class CoreController extends Common {
 			}			
 			$this->processError($errorNamespace, $blockNamespace);
 		}
-		$url = "index.php";
-		if (!empty($_SERVER['QUERY_STRING'])) {
-			$url .= $sign . $_SERVER['QUERY_STRING'];
-		}
-        header("Location: $url");
-		return;
+		return true;
 	}
 
     /**

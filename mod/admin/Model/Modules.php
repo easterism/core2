@@ -30,6 +30,20 @@ class Modules extends Zend_Db_Table_Abstract {
 		return $this->fetchRow($sel->limit(1));
 	}
 
+    /**
+     * Получаем идентификаторы всех активных модулей
+     *
+     * @return array
+     */
+    public function getIds() {
+        $sel = $this->select()->from($this->_name, ['m_id', 'module_id'])->where("visible='Y'");
+        $res = $this->fetchAll($sel);
+        $data = [];
+        foreach ($res as $val) {
+            $data[$val->m_id] = $val->module_id;
+        }
+        return $data;
+    }
 
     /**
      * получаем список активных модулей

@@ -1,5 +1,6 @@
 <?
 require_once 'Acl.php';
+require_once 'Emitter.php';
 
 
 /**
@@ -163,6 +164,11 @@ class Common extends \Core2\Acl {
 						throw new Exception("Модуль \"{$module}\" сломан. Не найден файл контроллера.");
 					}
 
+                    $autoload_file = $location . "/vendor/autoload.php";
+                    if (file_exists($autoload_file)) {
+                        require_once($autoload_file);
+                    }
+
 					require_once($controller_file);
 
 					if (!class_exists($cl)) {
@@ -294,6 +300,18 @@ class Common extends \Core2\Acl {
 		$src_mod = $this->getModuleSrc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
+
+    /**
+     * Порождает событие для модулей, реализующих интерфейс Subscribe
+     *
+     * @param $event_name
+     * @param array $data
+     */
+	protected function emit($event_name, $data = []) {
+	    $em = new \Core2\Emitter($this, $this->module);
+        $em->addEvent($event_name, $data);
+        return $em->emit();
+    }
 }
 
 

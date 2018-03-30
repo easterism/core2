@@ -120,7 +120,7 @@ class FileUploader extends \Core2\Db {
         }
         $res = $this->db->fetchAll($SQL, $arr);
 
-        $Image = new \Image();
+        $Image = new Image();
         foreach ($res as $key => $value) {
             $type2 = explode("/", $value['type']);
             $type2 = $type2[1];
@@ -230,7 +230,8 @@ class FileUploader extends \Core2\Db {
         // Remove path information and dots around the filename, to prevent uploading
         // into different directories or replacing hidden system files.
         // Also remove control characters and spaces (\x00..\x20) around the filename:
-        $file->name = trim(end(explode('/',stripslashes($name))), ".\x00..\x20");
+        $explode_name = explode('/',stripslashes($name));
+        $file->name = trim(end($explode_name), ".\x00..\x20");
         $file->size = intval($size);
         $file->type = $type;
         $error = $this->has_error($uploaded_file, $file, $error);

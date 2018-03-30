@@ -1,6 +1,6 @@
 <?
-require_once("class.ini.php");
-
+require_once('class.ini.php');
+require_once('Templater3.php');
 
 /**
  * Class listTable
@@ -504,6 +504,7 @@ class listTable extends initList {
     /**
      * Create grid HTML
      * @return string
+     * @throws Exception
      */
     public function makeTable() {
         
@@ -578,7 +579,7 @@ class listTable extends initList {
                 $temp = explode("_", $value['type']);
                 $value['type'] = $temp[0];
 
-                $tpl2 = new Templater('core2/html/' . THEME . "/list/search_{$value['type']}.tpl");
+                $tpl2 = new Templater3('core2/html/' . THEME . "/list/search_{$value['type']}.tpl");
                 $tpl2->assign("{OUT}", $value['out']);
                 $tpl2->assign("{NAME}", "search[$this->main_table_id][$key]");
 
@@ -593,10 +594,10 @@ class listTable extends initList {
                 }
 
                 if ($value['type'] == 'text') {
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'number') {
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'date') {
                     $tpl_date = new Templater2(DOC_ROOT . 'core2/html/' . THEME . "/list/search_date.tpl");
@@ -611,30 +612,28 @@ class listTable extends initList {
                 }
                 elseif ($value['type'] == 'checkbox' || $value['type'] == 'checkbox2') {
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $tpl2->touchBlock('checkbox');
                     foreach ($temp as $j => $row) {
                         $k = current($row);
                         $v = end($row);
 
-                        $tpl2->assign("{0}", "[$j]");
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", $k);
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->checkbox->assign("{0}", "[$j]");
+                        $tpl2->checkbox->assign("{VALUE}", $k);
+                        $tpl2->checkbox->assign("{LABEL}", $v);
                         if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->assign("{checked}", " checked=\"checked\"");
+                            $tpl2->checkbox->assign("{checked}", " checked=\"checked\"");
                         } else {
-                            $tpl2->assign("{checked}", "");
+                            $tpl2->checkbox->assign("{checked}", "");
                         }
-                        $tpl2->reassignBlock('checkbox');
+                        $tpl2->checkbox->reassign();
                     }
                     $sqlSearchCount++;
                     // input нужен для того, чтобы обрабатывать пустые checkbox
                     // пустые чекбоксы не постятся вообще
-                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
+                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
                 }
                 elseif ($value['type'] == 'radio') {
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $tpl2->touchBlock('radio');
                     foreach ($temp as $row) {
                         $k = current($row);
                         $v = end($row);
@@ -642,32 +641,46 @@ class listTable extends initList {
                             $v = $v['value'];
                         }
 
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->radio->assign("{LABEL}", $v);
                         if ($row[0] === $next) {
-                            $tpl2->assign("{VALUE}", $k . "\" checked=\"checked");
+                            $tpl2->radio->assign("{VALUE}", $k . "\" checked=\"checked");
                         } else {
-                            $tpl2->assign("{VALUE}", $k);
+                            $tpl2->radio->assign("{VALUE}", $k);
                         }
-                        $tpl2->reassignBlock('radio');
+                        $tpl2->radio->reassign();
                     }
                     $sqlSearchCount++;
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'list') {
-                    $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $opt = array('' => 'Все');
-                    foreach ($temp as $row) {
-                        $k = current($row);
-                        $v = end($row);
-                        if (is_array($v) && isset($v['id']) && isset($v['value'])) {
-                            $k = $v['id'];
-                            $v = $v['value'];
+                    $options_raw = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
+                    $options     = array('' => 'Все');
+
+                    foreach ($options_raw as $option_key => $option_value) {
+                        if (is_array($option_value)) {
+                            if (count($option_value) == 2) {
+                                $k = current($option_value);
+                                $v = end($option_value);
+                                if (is_array($v) && isset($v['id']) && isset($v['value'])) {
+                                    $k = $v['id'];
+                                    $v = $v['value'];
+                                }
+                                $options[$k] = $v;
+
+                            } elseif (count($option_value) == 3) {
+                                $k  = current($option_value);
+                                $v  = next($option_value);
+                                $gr = end($option_value);
+                                $options[$gr][$k] = $v;
+                            }
+                        } else {
+                            $options[$option_key] = $option_value;
                         }
-                        $opt[$k] = $v;
                     }
                     $sqlSearchCount++;
-                    $tpl2->fillDropDown('{ID}', $opt, $next);
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->parse());
+
+                    $tpl2->fillDropDown('{ID}', $options, $next);
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'multilist') {
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
@@ -675,20 +688,20 @@ class listTable extends initList {
                         $k = current($row);
                         $v = end($row);
                         $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->assign("{VALUE}", $k);
-                        $tpl2->assign("{LABEL}", $v);
+                        $tpl2->opt->assign("{VALUE}", $k);
+                        $tpl2->opt->assign("{LABEL}", $v);
 
                         if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->assign("{selected}", " selected=\"selected\"");
+                            $tpl2->opt->assign("{selected}", " selected=\"selected\"");
                         } else {
-                            $tpl2->assign("{selected}", "");
+                            $tpl2->opt->assign("{selected}", "");
                         }
-                        $tpl2->reassignBlock('opt');
+                        $tpl2->opt->reassign();
                     }
                     $sqlSearchCount++;
                     // input нужен для того, чтобы обрабатывать пустые checkbox
                     // пустые чекбоксы не постятся вообще
-                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->parse());
+                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
                 }
 
                 if (!empty($this->sessData['search'])) {
@@ -1148,6 +1161,8 @@ class listTable extends initList {
                 <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');
+                        $('.searchContainer form').css('max-height', '400px');
+                        $('.searchContainer form').css('overflow', 'auto');
                     });
                 </script>";
             }
