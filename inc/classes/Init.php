@@ -539,7 +539,13 @@
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
-                $core->action_login($_POST);
+                $url = "index.php";
+                if ($core->action_login($_POST)) {
+                    if (!empty($_SERVER['QUERY_STRING'])) {
+                        $url .= "#" . $_SERVER['QUERY_STRING'];
+                    }
+                }
+                header("Location: $url");
                 return '';
             }
             $tpl = new Templater2();
@@ -658,7 +664,7 @@
             $xajax = new xajax();
             //$xajax->configure("debug", true);
             //$xajax->configure('javascript URI', 'core2/ext/xajax_0.5_minimal/');
-            $xajax->configure('javascript URI', 'core2/vendor/xajax/xajax');
+            $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
             //$xajax->registerFunction('post');
             $xajax->processRequest();

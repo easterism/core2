@@ -15,7 +15,7 @@ interface Subscribe {
      * @param $module_id - идентификатор модуля, инициировавшего событие
      * @param $event - код события
      * @param $data - данные события
-     * @return void,mixed
+     * @return mixed
      */
     public function listen($module_id, $event, $data);
 }
