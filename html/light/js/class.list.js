@@ -849,6 +849,6 @@ var listx = {
      * @param id
      */
     fixHead: function (id) {
-        $('#' + id).floatThead({scrollingTop: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
+        $('#' + id + ' table').floatThead({top: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
     }
 };
