@@ -855,22 +855,31 @@ var listx = {
         $('#' + id + ' .searchContainer form').css('max-height', '400px');
         $('#' + id + ' .searchContainer form').css('overflow', 'auto');
 
-        var body_height = $("body").height();
-        var body_width = $("body").width();
-        var menu_wrapper_width = $('#menu-wrapper').width();
-        var search_height = $("#filter" + resource).height();
+        var body_height = 0;
+        var body_width = 0;
+        var menu_wrapper_width = 0;
+        var search_height = 0;
+        var core_panel_height = 0;
+
         //Отлавливаем изменение размера браузера, сворачивание/разворачивание меню, открытие/закрытие поиска
         setInterval (function () {
             var current_body_height = $("body").height();
             var current_body_width = $("body").width();
             var current_menu_wrapper_width = $('#menu-wrapper').width();
             var current_search_height = $("#filter" + resource).height();
-            if (current_body_height != body_height || current_body_width != body_width || current_menu_wrapper_width != menu_wrapper_width || current_search_height != search_height){
+            var current_core_panel_height = $(".core-panel-content").height();
+            if (current_body_height != body_height
+                || current_body_width != body_width
+                || current_menu_wrapper_width != menu_wrapper_width
+                || current_search_height != search_height
+                || current_core_panel_height != core_panel_height
+            ){
                 $('#' + id + ' table').floatThead('reflow');
                 body_height = current_body_height;
                 body_width = current_body_width;
                 menu_wrapper_width = current_menu_wrapper_width;
                 search_height = current_search_height;
+                core_panel_height = current_core_panel_height;
             }
         }, 500);
     }
