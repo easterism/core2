@@ -849,6 +849,7 @@ var listx = {
      * @param id
      */
     fixHead: function (id) {
+        $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'})
         var resource = id.match(/^list(.*)$/i)[1];
         $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'});
         $('#' + id + ' table').css('table-layout', 'auto');
