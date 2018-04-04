@@ -68,13 +68,18 @@ function changeSub(obj, path) {
 	}
 }
 
+/**
+ * Переключение модуля
+ * @param obj
+ * @param to
+ * @param actionSelect
+ */
 function changeRoot(obj, to, actionSelect) {
-	if ( ! obj) return;
 
     $('#menu-wrapper .module-submodules').empty();
     $('#menu-submodules').hide();
 
-	var parent = obj.parentNode;
+	var parent = $('#menu-modules')[0];
 	for (var i = 0; i < parent.childNodes.length; i++) {
 		if (parent.childNodes[i].nodeName === 'LI') {
             parent.childNodes[i].className = 'menu-module';
