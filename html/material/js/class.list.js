@@ -868,7 +868,8 @@ var listx = {
             var menu_wrapper_width = $('#menu-wrapper').width();
             var search_height = $('#filter' + resource).height();
             var search_column_height = $('#filterColumn' + resource).height();
-            var list_top = $('#' + id).position().top;
+            var top = $('#' + id).position();
+            var list_top = top ? top.top : 0;
             //Отлавливаем изменение размера браузера, сворачивание/разворачивание меню, открытие/закрытие поиска и делаем 'reflow'
             setInterval(function () {
                 var current_body_height = $('body').height();
@@ -876,7 +877,8 @@ var listx = {
                 var current_menu_wrapper_width = $('#menu-wrapper').width();
                 var current_search_height = $('#filter' + resource).height();
                 var current_search_column_height = $('#filterColumn' + resource).height();
-                var current_list_top = $('#' + id).position().top;
+                var top = $('#' + id).position();
+                var current_list_top = top ? top.top : 0;
                 $('#' + id + ' table').css('table-layout', 'auto');
                 if (current_body_height != body_height
                     || current_body_width != body_width
