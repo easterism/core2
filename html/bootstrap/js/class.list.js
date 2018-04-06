@@ -583,6 +583,10 @@ var listx = {
      * @param id
      */
     showFilter : function(id) {
+        var filter = $("#filterColumn" + id);
+        if (filter.is(":visible")) {
+            this.toggle(filter);
+        }
         var f = $("#filter" + id);
         this.toggle(f);
         f.find("form")[0].elements[0].focus();
@@ -608,6 +612,10 @@ var listx = {
      * @param id
      */
     columnFilter : function(id) {
+        var filter = $("#filter" + id);
+        if (filter.is(":visible")) {
+            this.toggle(filter);
+        }
         var f = $("#filterColumn" + id);
         this.toggle(f);
     },
