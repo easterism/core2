@@ -583,6 +583,10 @@ var listx = {
      * @param id
      */
     showFilter : function(id) {
+        var filter = $("#filterColumn" + id);
+        if (filter.is(":visible")) {
+            this.toggle(filter);
+        }
         var f = $("#filter" + id);
         this.toggle(f);
         f.find("form")[0].elements[0].focus();
@@ -608,6 +612,10 @@ var listx = {
      * @param id
      */
     columnFilter : function(id) {
+        var filter = $("#filter" + id);
+        if (filter.is(":visible")) {
+            this.toggle(filter);
+        }
         var f = $("#filterColumn" + id);
         this.toggle(f);
     },
@@ -849,6 +857,47 @@ var listx = {
      * @param id
      */
     fixHead: function (id) {
-        $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'})
+
+        setTimeout(function () {
+            var resource = id.match(/^list(.*)$/i)[1];
+            $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'});
+            $('#' + id + ' .searchContainer form').css('max-height', '400px');
+            $('#' + id + ' .searchContainer form').css('overflow', 'auto');
+
+            var body_height = $('body').height();
+            var body_width = $('body').width();
+            var menu_wrapper_width = $('#menu-wrapper').width();
+            var search_height = $('#filter' + resource).height();
+            var search_column_height = $('#filterColumn' + resource).height();
+            var top = $('#' + id).position();
+            var list_top = top ? top.top : 0;
+            //Отлавливаем изменение размера браузера, сворачивание/разворачивание меню, открытие/закрытие поиска и делаем 'reflow'
+            setInterval(function () {
+                var current_body_height = $('body').height();
+                var current_body_width = $('body').width();
+                var current_menu_wrapper_width = $('#menu-wrapper').width();
+                var current_search_height = $('#filter' + resource).height();
+                var current_search_column_height = $('#filterColumn' + resource).height();
+                var top = $('#' + id).position();
+                var current_list_top = top ? top.top : 0;
+                $('#' + id + ' table').css('table-layout', 'auto');
+                if (current_body_height != body_height
+                    || current_body_width != body_width
+                    || current_menu_wrapper_width != menu_wrapper_width
+                    || current_search_height != search_height
+                    || current_search_column_height != search_column_height
+                    || current_list_top != list_top
+                ){
+                    $('#' + id + ' table').floatThead('reflow');
+                    body_height = current_body_height;
+                    body_width = current_body_width;
+                    menu_wrapper_width = current_menu_wrapper_width;
+                    search_height = current_search_height;
+                    search_column_height = current_search_column_height;
+                    list_top = current_list_top;
+                }
+            }, 500);
+        }, 500);
+
     }
 };
