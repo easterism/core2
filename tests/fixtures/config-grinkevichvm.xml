@@ -3,8 +3,8 @@
     <php>
         <var name="DB_HOST" value="ais-core" />
         <var name="DB_NAME" value="" />
-        <var name="DB_USER" value="shabuninil" />
-        <var name="DB_PASSWD" value="" />
+        <var name="DB_USER" value="grinkevichvm" />
+        <var name="DB_PASSWD" value="grinkevichvm" />
 
         <var name="MAIL_SERVER" value="192.168.0.50" />
         <var name="MAIL_PORT" value="25" />
