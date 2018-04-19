@@ -25,7 +25,7 @@ class Db {
 	private $_s        = array();
 	private $_settings = array();
 	private $_locations = array();
-
+    private $schemaName     = 'public';
 
 	/**
 	 * Db constructor.
@@ -144,11 +144,15 @@ class Db {
      */
     protected function establishConnection(\Zend_Config $database) {
 		try {
-			$db = \Zend_Db::factory($database);
+            $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
-			$db->getConnection();
 			\Zend_Registry::getInstance()->set('db', $db);
-			if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+			if ($database->adapter === 'Pdo_Mysql') {
+			    if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+            }
+            elseif ($database->adapter === 'Pdo_Pgsql') {
+                $db->query("SET search_path TO $this->schemaName");
+            }
             return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
@@ -156,6 +160,35 @@ class Db {
             Error::catchZendException($e);
         }
 	}
+
+    /**
+     * получаем соединение с базой данных
+     *
+     * @param \Zend_Config $database
+     * @return \Zend_Db_Adapter_Abstract
+     * @throws \Zend_Db_Exception
+     */
+	protected function getConnection(\Zend_Config $database) {
+        if ($database->adapter === 'Pdo_Mysql') {
+            $this->schemaName = $database->params->dbname;
+        }
+        elseif ($database->adapter === 'Pdo_Pgsql') {
+            $this->schemaName = $database->schema;
+        }
+        $db = \Zend_Db::factory($database);
+        $db->getConnection();
+        return $db;
+    }
+
+    /**
+     * получаем имя схемы базы данных
+     * для Mysql это тожесамое что имя базы данных
+     *
+     * @return string
+     */
+    protected function getDbSchema() {
+	    return $this->schemaName;
+    }
 
 
 	/**
@@ -169,7 +202,7 @@ class Db {
 	 *
 	 * @return \Zend_Db_Adapter_Abstract|bool
 	 */
-	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql') {
+	public function newConnector($dbname, $username, $password, $host = 'localhost', $charset = 'utf8', $adapter = 'Pdo_Mysql', $adapterNamespace = 'Core_Db_Adapter') {
 	    $host = explode(":", $host);
 		$temp = array(
 			'host'     => $host[0],
@@ -178,7 +211,7 @@ class Db {
 			'password' => $password,
 			'dbname'   => $dbname,
 			'charset'  => $charset,
-            'adapterNamespace' => 'Core_Db_Adapter'
+            'adapterNamespace' => $adapterNamespace
 		);
 		try {
 			$db = \Zend_Db::factory($adapter, $temp);
