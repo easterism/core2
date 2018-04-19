@@ -399,6 +399,19 @@ class Tool {
      * @param bool   $chachable
      */
     public static function printJs($src, $chachable = false) {
+
+        if (strpos($src, '?')) {
+            $explode_src = explode('?', $src, 2);
+            $src        .= file_exists(DOC_ROOT . $explode_src[0])
+                ? '&_=' . crc32(md5_file(DOC_ROOT . $explode_src[0]))
+                : '';
+        } else {
+            $src .= file_exists(DOC_ROOT . $src)
+                ? '?_=' . crc32(md5_file(DOC_ROOT . $src))
+                : '';
+        }
+
+
         if ($chachable) {
             //помещаем скрипт в head
             echo "<script type=\"text/javascript\">jsToHead('$src')</script>";

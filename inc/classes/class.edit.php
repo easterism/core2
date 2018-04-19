@@ -1348,7 +1348,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 								if ($ingroup) {
 									$html .= '</div>';
 								}
-								$html .= '<h3><a href="#">' . $group['name'] . '</a></h3>' . ($group['collapsed'] ? '<div style="display: none;">' : '<div>');
+								$html .= '<h3><a href="javascript:void(false);">' . $group['name'] . '</a></h3>' . ($group['collapsed'] ? '<div class="hide">' : '<div>');
 								$ingroup = true;
 								break;
 							}
@@ -1369,7 +1369,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 				// if any GROUPS exists enable switcher
 				$this->HTML .= '<script>
 					  $(".accordion h3").click(function() {
-							$(this).next().toggle();
+							$(this).next().toggleClass(\'hide\');
 							return false;
 						});
 					  </script>';
