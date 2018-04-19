@@ -164,11 +164,18 @@ class Common extends \Core2\Acl {
 						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.", $module)));
 					}
 
+                    $autoload = $location . "/vendor/autoload.php";
+                    if (file_exists($autoload)) {
+                        require_once $autoload;
+                    }
+
 					require_once($controller_file);
 
 					if (!class_exists($cl)) {
 						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера.", $module)));
 					}
+
+
 
 					$v         = $this->{$k} = new $cl();
 					$v->module = $module;
