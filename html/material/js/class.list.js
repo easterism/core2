@@ -857,6 +857,7 @@ var listx = {
      * @param id
      */
     fixHead: function (id) {
+
         setTimeout(function () {
             var resource = id.match(/^list(.*)$/i)[1];
             $('#' + id + ' table').floatThead({top: 50, zIndex: 1, headerCellSelector: 'tr.headerText>td:visible'});
@@ -897,5 +898,6 @@ var listx = {
                 }
             }, 500);
         }, 500);
+
     }
 };
