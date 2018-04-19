@@ -19,16 +19,16 @@ $tab->beginContainer($this->translate->tr("Роли и доступ"));
 			$edit->addControl($this->translate->tr("Позиция в иерархии:"), "TEXT", "maxlength=\"3\" size=\"2\"", "", "", true);
 			$SQL = "SELECT * 
 					  FROM (
-						(SELECT m_id, m_name, module_id, m.seq, m.access_add
+						(SELECT m_id, m_name, module_id, CAST(m.seq AS CHAR), m.access_add
 						  FROM core_modules AS m
 						  WHERE visible='Y')
 						UNION ALL 
-						(SELECT `sm_id` AS m_id,
+						(SELECT sm_id AS m_id,
 								 CONCAT(m_name, ' / ', sm_name) AS m_name,
 								 CONCAT(m.module_id, '-', s.sm_key) AS module_id,
 								 CONCAT(m.seq, '-', s.seq) AS seq,
 								 s.access_add
-							FROM `core_submodules` AS s
+							FROM core_submodules AS s
 								 INNER JOIN core_modules AS m ON m.m_id = s.m_id AND m.visible='Y'
 							WHERE sm_id > 0
 							AND s.visible='Y')
@@ -94,7 +94,7 @@ $tab->beginContainer($this->translate->tr("Роли и доступ"));
 		$list->addColumn($this->translate->tr("Иерархия"), "1%", "TEXT");
 		$list->addColumn("", "1%", "STATUS");
 		
-		$list->paintCondition	= "'TCOL_05' == 'N'";
+		$list->paintCondition	= "'TCOL_04' == 'N'";
 		$list->paintColor		= "ffffee";
 		
 		$list->addURL 			= $app . "&edit=0";
