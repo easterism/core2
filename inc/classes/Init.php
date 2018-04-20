@@ -36,8 +36,7 @@
         'database' => array(
             'adapter' => 'Pdo_Mysql',
             'params' => array(
-                'charset' => 'utf8',
-                'adapterNamespace' => 'Core_Db_Adapter'
+                'charset' => 'utf8'
             ),
             'isDefaultTableAdapter' => true,
             'profiler' => array(
@@ -97,8 +96,16 @@
         $config->cache = DOC_ROOT . trim($config->cache, "/");
     }
 
-    //подключаем собственный адаптер базы данных
-    require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+    //проверяем настройки для базы данных
+    if ($config->database->adapter === 'Pdo_Mysql') {
+        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
+        //подключаем собственный адаптер базы данных
+        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
+        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
+        $config->database->schema = $config->database->params->dbname;
+        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+    }
 
     //конфиг стал только для чтения
     $config->setReadOnly();
@@ -744,7 +751,7 @@
             $modtpl = $tpl2->getBlock('submodules');
             $html2 = "";
             foreach ($mods as $data) {
-                if ( ! empty($data['sm_key']) && $data['is_public'] == 'Y') {
+                if ( ! empty($data['sm_key']) && $data['is_public'] === 'Y') {
                     $url = "index.php?module=" . $data['module_id'] . "&action=" . $data['sm_key'];
                     $html2 .= str_replace(array('[MODULE_ID]', '[SUBMODULE_ID]', '[SUBMODULE_NAME]', '[SUBMODULE_URL]'),
                                           array($data['module_id'], $data['sm_key'], $data['sm_name'], $url),

@@ -231,18 +231,10 @@ class listTable extends initList {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $is = $this->db->fetchAll("EXPLAIN " . $this->table);
+            $is = $this->db->fetchCol("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ? AND table_name = ?", [$this->getDbSchema(), $this->table]);
             $noauthor = true;
-            foreach ($is as $value) {
-                //проверака наличия поля автора
-                if ($value['Field'] == 'author') {
-                    $noauthor = false;
-                }
-                //проверка наличия поля для последовательности
-                if ($value['Field'] == 'seq') {
-                    $this->is_seq = true;
-                }
-            }
+            if (in_array('author', $is)) $noauthor = false;
+            if (in_array('seq', $is)) $this->is_seq = true;
 
             if ($this->checkAcl($this->resource, 'list_owner') && !$this->checkAcl($this->resource, 'list_all')) {
                 if ($noauthor) {
@@ -416,10 +408,11 @@ class listTable extends initList {
             }
             $res = $this->db->fetchAll($this->SQL, $questions);
         } else {
-            if ($this->config->database->adapter == 'Pdo_Mysql') {
+            if ($this->config->database->adapter === 'Pdo_Mysql') {
                 $res = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
                 $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
-            } elseif ($this->config->database->adapter == 'pdo_pgsql') {
+            } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
+                $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
                 $res = $this->db->fetchAll($this->SQL, $questions);
                 $this->recordCount = $this->db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
             }
@@ -1161,8 +1154,6 @@ class listTable extends initList {
                 <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');
-                        $('.searchContainer form').css('max-height', '400px');
-                        $('.searchContainer form').css('overflow', 'auto');
                     });
                 </script>";
             }
