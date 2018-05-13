@@ -21,11 +21,11 @@ class Db {
 		'automatic_serialization' => true
 	);
 	protected $backendOptions = array();
-	protected $backend = 'File';
-	private $_s        = array();
-	private $_settings = array();
-	private $_locations = array();
-    private $schemaName     = 'public';
+	protected $backend        = 'File';
+	private $_s               = array();
+	private $_settings        = array();
+	private $_locations       = array();
+    private $schemaName       = 'public';
 
 	/**
 	 * Db constructor.
@@ -187,7 +187,12 @@ class Db {
      * @return string
      */
     protected function getDbSchema() {
-	    return $this->schemaName;
+        if ($this->config->database->adapter === 'Pdo_Mysql') {
+            return $this->config->database->params->dbname;
+        }
+        elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
+            return $this->config->database->schema;
+        }
     }
 
 
