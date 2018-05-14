@@ -58,7 +58,11 @@ class Log {
             $this->log = new Logger($name);
         }
     }
-
+    /**
+     * Обработчик метода не доступного через экземпляр
+     * @param string    $name       Имя метода
+     * @param array     $arguments  Параметры метода
+     */
     public function __call($name, $arguments)
     {
         if ($name == 'slack') {
@@ -194,6 +198,10 @@ class Log {
         }
     }
 
+    /**
+     * Установка обработчика
+     * @param int $level уровень журналирования
+     */
     private function setHandler($level) {
         while ($this->log->getHandlers()) {
             $this->log->popHandler();
