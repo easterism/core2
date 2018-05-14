@@ -29,6 +29,11 @@ class Error {
 		die;
 	}
 
+	/**
+	 * Определение Xajax
+	 * 
+	 * @return bool
+	 */
 	protected static function isXajax() {
 		$isXajax = false;
 		if (!empty($_POST['xjxr'])) {
@@ -131,6 +136,11 @@ class Error {
 		return null;
 	}
 
+	/**
+	 * Обработчик исключений zend
+	 * 
+	 * @param $exception
+	 */
 	public static function catchZendException($exception) {
 		$message = $exception->getMessage();
 		$code = $exception->getCode();
@@ -160,6 +170,12 @@ class Error {
 		return self::Exception(json_encode($out), $code);
 	}
 
+	/**
+	 * Обработчик исключений Xajax
+	 * 
+	 * @param $e
+	 * @param $res
+	 */
 	public static function catchXajax(\Exception $e, \xajaxResponse $res) {
 		$res->alert($e->getMessage());
 		return $res;
