@@ -55,6 +55,7 @@ class Db {
 				$db = $this->establishConnection($this->config->database);
 			} else {
 				$db = $reg->get('db');
+                $this->schemaName = $reg->get('dbschema');
 			}
 			return $db;
 		}
@@ -117,8 +118,8 @@ class Db {
                     throw new \Exception($this->translate->tr('Модель не найдена.'));
                 }
 				require_once($location . "/Model/$model.php");
-				$v            = new $model();
-				$this->_s[$k] = $v;
+                $v            = new $model();
+                $this->_s[$k] = $v;
 			}
 			return $v;
 		}
@@ -175,6 +176,7 @@ class Db {
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
         }
+        \Zend_Registry::getInstance()->set('dbschema', $this->schemaName);
         $db = \Zend_Db::factory($database);
         $db->getConnection();
         return $db;
