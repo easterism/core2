@@ -62,6 +62,7 @@ class Log {
      * Обработчик метода не доступного через экземпляр
      * @param string    $name       Имя метода
      * @param array     $arguments  Параметры метода
+     * @return object|null
      */
     public function __call($name, $arguments)
     {
