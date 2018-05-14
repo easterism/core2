@@ -184,17 +184,12 @@ class Db {
 
     /**
      * получаем имя схемы базы данных
-     * для Mysql это тожесамое что имя базы данных
+     * для Mysql это тоже самое что имя базы данных
      *
      * @return string
      */
     protected function getDbSchema() {
-        if ($this->config->database->adapter === 'Pdo_Mysql') {
-            return $this->config->database->params->dbname;
-        }
-        elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
-            return $this->config->database->schema;
-        }
+        return $this->schemaName;
     }
 
 
