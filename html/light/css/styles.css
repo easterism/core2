@@ -260,6 +260,16 @@ PRELOADERS
     0%   { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+@-moz-document url-prefix() {
+    select {
+        padding-right: 20px;
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gULDDIP/Gyo3AAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAACHSURBVAjXTcqxDUIhEIDhOxQq4iU3AQMwgnEKQ8sGbsIkavHKV0BD5ybvOiSvoMJGE//yy48xxltr7QR/EdH7KCJnEbkCAH59jjGeiogexpjtdxtjNiK6K+99tdZWAJgAMK211XtfDznnvZQCvfeL1np3zqWU0ksh4gwhrMy8MPMSQlgRcX4A1VAuZnreqDUAAAAASUVORK5CYII=") !important;
+        background-repeat: no-repeat;
+        background-position: calc(100% - 7px) 50%;
+        -moz-appearance: none;
+        appearance: none;
+    }
+}
 
 /*
 LIST class table
