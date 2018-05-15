@@ -21,11 +21,11 @@ class Db {
 		'automatic_serialization' => true
 	);
 	protected $backendOptions = array();
-	protected $backend = 'File';
-	private $_s        = array();
-	private $_settings = array();
-	private $_locations = array();
-    private $schemaName     = 'public';
+	protected $backend        = 'File';
+	private $_s               = array();
+	private $_settings        = array();
+	private $_locations       = array();
+    private $schemaName       = 'public';
 
 	/**
 	 * Db constructor.
@@ -184,12 +184,12 @@ class Db {
 
     /**
      * получаем имя схемы базы данных
-     * для Mysql это тожесамое что имя базы данных
+     * для Mysql это тоже самое что имя базы данных
      *
      * @return string
      */
     protected function getDbSchema() {
-	    return $this->schemaName;
+        return $this->schemaName;
     }
 
 
