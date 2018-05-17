@@ -11,7 +11,7 @@
             <div id="home-button">
                 <a href="index.php#module=admin&action=welcome" title="<!--SYSTEM_NAME-->" class="site-name"
                    onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');">
-                    <span><!--SYSTEM_NAME--></span>
+                    <span><i class="fa fa-home"></i> <!--SYSTEM_NAME--></span>
                     <i class="fa fa-home"></i>
                 </a>
             </div>
