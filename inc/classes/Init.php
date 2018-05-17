@@ -662,6 +662,7 @@
         /**
          * Create the top menu
          * @return mixed|string
+         * @throws Exception
          */
         private function getMenu() {
             if ($this->auth->MOBILE) { //если core2m
@@ -1068,6 +1069,7 @@
         /**
          * Список доступных модулей для core2m
          * @return string
+         * @throws Exception
          */
         private function getMenuMobile() {
             header('Content-type: application/json; charset="utf-8"');

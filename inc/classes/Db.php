@@ -536,12 +536,13 @@ class Db {
 	}
 
 
-	/**
-	 * Возврат абсолютного пути до директории в которой находится модуль
-	 *
-	 * @param string $module_id
-	 * @return mixed
-	 */
+    /**
+     * Возврат абсолютного пути до директории в которой находится модуль
+     *
+     * @param string $module_id
+     * @return mixed
+     * @throws \Exception
+     */
 	final public function getModuleLocation($module_id) {
 		return DOC_ROOT . $this->getModuleLoc($module_id);
 	}
@@ -562,11 +563,12 @@ class Db {
 	}
 
 
-	/**
-	 * Получение абсолютного адреса папки модуля
-	 * @param  string $module_id
-	 * @return string
-	 */
+    /**
+     * Получение абсолютного адреса папки модуля
+     * @param  string $module_id
+     * @return string
+     * @throws \Exception
+     */
 	final public function getModuleSrc($module_id) {
 		$loc = $this->getModuleLoc($module_id);
 		return DOC_PATH . $loc;
