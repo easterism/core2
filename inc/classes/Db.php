@@ -600,7 +600,7 @@ class Db {
 						}
 					}
 				} else {
-					throw new \Exception($this->translate->tr("Модуль не существует"), 404);
+					throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
 				}
 			}
 			$this->cache->save($loc, $module_id);

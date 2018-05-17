@@ -459,7 +459,7 @@
                     if (method_exists($core, $action)) {
                         return $core->$action();
                     } else {
-                        throw new Exception($this->translate->tr("Субмодуль не существует"));
+                        throw new Exception($this->translate->tr("Субмодуль не существует") . ": " . $action);
                     }
 
                 } else {
@@ -650,11 +650,11 @@
         private function requireController($location, $modController) {
             $controller_path = $location . "/" . $modController . ".php";
             if (!file_exists($controller_path)) {
-                throw new Exception($this->translate->tr("Модуль не существует"), 404);
+                throw new Exception($this->translate->tr("Модуль не существует") . ": " . $location, 404);
             }
             require_once $controller_path; // подлючаем контроллер
             if (!class_exists($modController)) {
-                throw new Exception($this->translate->tr("Модуль сломан"), 500);
+                throw new Exception($this->translate->tr("Модуль сломан") . ": " . $location, 500);
             }
         }
 
