@@ -21,11 +21,11 @@ class Db {
 		'automatic_serialization' => true
 	);
 	protected $backendOptions = array();
-	protected $backend = 'File';
-	private $_s        = array();
-	private $_settings = array();
-	private $_locations = array();
-    private $schemaName     = 'public';
+	protected $backend        = 'File';
+	private $_s               = array();
+	private $_settings        = array();
+	private $_locations       = array();
+    private $schemaName       = 'public';
 
 	/**
 	 * Db constructor.
@@ -55,6 +55,7 @@ class Db {
 				$db = $this->establishConnection($this->config->database);
 			} else {
 				$db = $reg->get('db');
+                $this->schemaName = $reg->get('dbschema');
 			}
 			return $db;
 		}
@@ -117,8 +118,8 @@ class Db {
                     throw new \Exception($this->translate->tr('Модель не найдена.'));
                 }
 				require_once($location . "/Model/$model.php");
-				$v            = new $model();
-				$this->_s[$k] = $v;
+                $v            = new $model();
+                $this->_s[$k] = $v;
 			}
 			return $v;
 		}
@@ -175,6 +176,7 @@ class Db {
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
         }
+        \Zend_Registry::getInstance()->set('dbschema', $this->schemaName);
         $db = \Zend_Db::factory($database);
         $db->getConnection();
         return $db;
@@ -182,12 +184,12 @@ class Db {
 
     /**
      * получаем имя схемы базы данных
-     * для Mysql это тожесамое что имя базы данных
+     * для Mysql это тоже самое что имя базы данных
      *
      * @return string
      */
     protected function getDbSchema() {
-	    return $this->schemaName;
+        return $this->schemaName;
     }
 
 
