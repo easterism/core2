@@ -28,7 +28,12 @@ class Tree extends initTree {
 	function createFromSQL($parent = 0) {
 		return $this->createArray($parent);
 	}
-	
+
+	/**
+	 * @param int $parent
+	 * @param array $temp
+	 * @return array
+	 */
 	function createArray($parent = 0, $temp = array()) {
 		if (strpos($this->SQL, "[PARENT]") === false) {
 			$noparent = 1;
@@ -63,7 +68,10 @@ class Tree extends initTree {
 		}
 		return $temp;
 	}
-	
+	/**
+	 * @param array $add
+	 * @param array $new
+	 */
 	function updateArray($add, $new = array()) {
 		foreach ($add as $value) {
 			if (count($value) > 1) {
