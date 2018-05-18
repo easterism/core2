@@ -168,8 +168,7 @@ class CoreController extends Common {
                 return false;
 			}
 			try {
-				$db = Zend_Db::factory($this->config->database);
-				$db->getConnection();
+			    $db = $this->getConnection($this->config->database);
 			} catch (Exception $e) {
 				$errorNamespace->ERROR = $this->catchLoginException($e);
                 return false;
