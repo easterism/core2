@@ -161,7 +161,7 @@ class Common extends \Core2\Acl {
 					$controller_file = $location . '/' . $cl . '.php';
 
 					if (!file_exists($controller_file)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.", $module)));
+						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера."), $module));
 					}
 
                     $autoload_file = $location . "/vendor/autoload.php";
@@ -172,7 +172,7 @@ class Common extends \Core2\Acl {
 					require_once($controller_file);
 
 					if (!class_exists($cl)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера.", $module)));
+						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
 					}
 
 
@@ -181,7 +181,7 @@ class Common extends \Core2\Acl {
 					$v->module = $module;
 
 				} else {
-					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден", $module)));
+					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
 				}
 			}
 
@@ -192,7 +192,7 @@ class Common extends \Core2\Acl {
                 $location = $this->getModuleLocation($this->module);
                 $plugin_file = "{$location}/Plugins/{$plugin}.php";
                 if (!file_exists($plugin_file)) {
-                    throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден.", $plugin)));
+                    throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден."), $plugin));
                 }
                 require_once("CommonPlugin.php");
                 require_once($plugin_file);

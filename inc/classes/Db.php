@@ -276,9 +276,9 @@ class Db {
                 $row->is_expired_sw = $expired;
                 $row->save();
             }
-		}
-        $auth->getManager()->destroy();
-	}
+            $auth->getManager()->destroy();
+        }
+    }
 
 
 	/**
@@ -288,7 +288,7 @@ class Db {
 	 */
 	public function logActivity($exclude = array()) {
 		$auth = \Zend_Registry::get('auth');
-		if ($auth->ID && $auth->ID > 0) {
+		if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
 			}
