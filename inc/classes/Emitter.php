@@ -15,16 +15,26 @@ class Emitter
     private $events = [];
     private $that;
 
+    /**
+     * Emitter constructor
+     * @param Common $that
+     * @param int $module_id
+     */
     public function __construct(\Common $that, $module_id)
     {
         $this->module = $module_id;
         $this->that = $that;
     }
-
+    /**
+     * @param string $event_name
+     * @param array $data 
+     */
     public function addEvent($event_name, $data = []) {
         if (!array_key_exists($event_name, $this->events)) $this->events[$event_name] = $data;
     }
-
+    /**
+     * @return array
+     */
     public function emit() {
         $mods = $this->that->modAdmin->dataModules->getIds();
         $auth = \Zend_Registry::get('auth');
