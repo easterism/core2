@@ -389,6 +389,7 @@ var load = function (url, data, id, callback) {
 			url = '?module=admin&action=welcome';
 		}
 		if (url === '?module=admin&action=welcome') {
+            $('#home-button > a').addClass('home-select');
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
