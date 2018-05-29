@@ -20,7 +20,7 @@
     "zf1/zend-registry": "~1.12",
     "zf1/zend-config": "~1.12",
     "zendframework/zend-session": "2.8.*",
-    "zendframework/zend-cache": "2.7.2",
+    "zendframework/zend-cache": "2.8.*",
     "zf1/zend-db": "~1.12",
     "zf1/zend-cache": "~1.12",
     "zf1/zend-acl": "~1.12",
