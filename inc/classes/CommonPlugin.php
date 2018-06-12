@@ -5,15 +5,24 @@ class CommonPlugin extends \Core2\Acl {
 
     private $_p = array();
     protected $module = '';
-
+	
+	/**
+     * CommonPlugin constructor.
+     */
 	public function __construct() {
 		parent::__construct();
 	}
-
+	/**
+	 * @param string $k
+	 * @return bool
+	 */
 	public function __isset($k) {
 		return isset($this->_p[$k]);
 	}
 
+	/**
+	 * @param string $mod
+	 */
     final public function setModule($mod)
     {
         $this->module = $mod;
@@ -59,6 +68,11 @@ class CommonPlugin extends \Core2\Acl {
 		return $v;
 	}
 
+	/**
+	 * @param string $k
+	 * @param mixed $v
+	 * @return $this
+	 */
 	public function __set($k, $v) {
 		$this->_p[$k] = $v;
 		return $this;

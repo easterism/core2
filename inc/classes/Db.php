@@ -276,9 +276,9 @@ class Db {
                 $row->is_expired_sw = $expired;
                 $row->save();
             }
-		}
-        $auth->getManager()->destroy();
-	}
+            $auth->getManager()->destroy();
+        }
+    }
 
 
 	/**
@@ -288,7 +288,7 @@ class Db {
 	 */
 	public function logActivity($exclude = array()) {
 		$auth = \Zend_Registry::get('auth');
-		if ($auth->ID && $auth->ID > 0) {
+		if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
 			}
@@ -538,12 +538,13 @@ class Db {
 	}
 
 
-	/**
-	 * Возврат абсолютного пути до директории в которой находится модуль
-	 *
-	 * @param string $module_id
-	 * @return mixed
-	 */
+    /**
+     * Возврат абсолютного пути до директории в которой находится модуль
+     *
+     * @param string $module_id
+     * @return mixed
+     * @throws \Exception
+     */
 	final public function getModuleLocation($module_id) {
 		return DOC_ROOT . $this->getModuleLoc($module_id);
 	}
@@ -564,11 +565,12 @@ class Db {
 	}
 
 
-	/**
-	 * Получение абсолютного адреса папки модуля
-	 * @param  string $module_id
-	 * @return string
-	 */
+    /**
+     * Получение абсолютного адреса папки модуля
+     * @param  string $module_id
+     * @return string
+     * @throws \Exception
+     */
 	final public function getModuleSrc($module_id) {
 		$loc = $this->getModuleLoc($module_id);
 		return DOC_PATH . $loc;
@@ -602,7 +604,7 @@ class Db {
 						}
 					}
 				} else {
-					throw new \Exception($this->translate->tr("Модуль не существует"), 404);
+					throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
 				}
 			}
 			$this->cache->save($loc, $module_id);
