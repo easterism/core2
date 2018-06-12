@@ -62,7 +62,7 @@ a {color: #337AB7}
             transition: all 0.3s ease-in-out;
 }
 #home-button > a {
-    padding-left: 13px;
+    padding-left: 17px;
     padding-right: 10px;
     white-space: nowrap;
     color: #ffffff;
@@ -78,11 +78,12 @@ a {color: #337AB7}
     text-align: left;
     direction: ltr;
 }
+#main #home-button > a.home-select,
 #main #home-button > a:hover {
     background-color: #4C626D;
     outline: none;
     border-left: 3px solid #2196F3;
-    padding-left: 10px;
+    padding-left: 14px;
 }
 #home-button > a > i {
     display: none;

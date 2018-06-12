@@ -96,7 +96,11 @@ function changeRoot(obj, to, actionSelect) {
 					} else {
 						$(parent.childNodes[i]).find('>a').removeClass('index-select');
 					}
-                }
+                    $('#home-button > a').removeClass('home-select');
+
+                } else {
+                    $('#home-button > a').addClass('home-select');
+				}
 
                 var issetSubmodules = false;
 				var sub 			= document.getElementById('menu-submodules');
