@@ -820,10 +820,13 @@ class editTable extends initEdit {
 									$temp[] = array($k, $v);
 								}
 							} else {
-								$data = $this->db->fetchAll($this->replaceTCOL(isset($arr[0]) ? $arr[0] : '', $this->selectSQL[$select]));
-								foreach ($data as $values) {
-									$temp[] = array(current($values), end($values));
-								}
+							    $sql = $this->replaceTCOL(isset($arr[0]) ? $arr[0] : '');
+							    if ($sql) {
+                                    $data = $this->db->fetchAll($sql, $this->selectSQL[$select]);
+                                    foreach ($data as $values) {
+                                        $temp[] = array(current($values), end($values));
+                                    }
+                                }
 							}
 							$temp1 = is_array($value['default']) ? $value['default'] : explode(",", $value['default']);
 							if ($this->readOnly) {
