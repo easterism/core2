@@ -190,7 +190,7 @@ class Acl extends Db {
 						}
 					}
 				}
-				if ($data['access_default']) {
+				if ( ! empty($data) && $data['access_default']) {
 					$access = unserialize(base64_decode($data['access_default']));
 					foreach ($access as $type => $f) {
 						$acl->allow($auth->ROLE, $data['module_id'], $type);

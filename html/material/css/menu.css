@@ -312,7 +312,9 @@ a {color: #337AB7}
     right: 15px;
 }
 #menu-modules .menu-module-selected > a i,
-#menu-modules .menu-module > a i {
+#menu-modules .menu-module > a i,
+#menu-modules .menu-module > a b,
+#menu-modules .menu-module > a span {
     min-width: 18px;
 }
 
@@ -339,7 +341,7 @@ a {color: #337AB7}
     #main.s-toggle .menu-module a i {color: #fff}
     #main.s-toggle #menu-submodules {left: 50px}
     #main.s-toggle #home-button > a span {display: none;}
-    #main.s-toggle #home-button > a i {display: inline;padding-left: 4px;}
+    #main.s-toggle #home-button > a i {display: inline;}
 
     #main.s-toggle .menu-module a > .module-title,
     #main.s-toggle .menu-module-selected a > .module-title {
