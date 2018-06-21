@@ -53,30 +53,18 @@
 						</div>
 						<ul class="dropdown-menu dropdown-menu-right dropdown-user">
 							<li class="dropdown-profile profile">
-								<a href="index.php#module=profile">
-									<i class="fa fa-user"></i>
-									Профиль
-								</a>
+								<a href="index.php#module=profile"></a>
 							</li>
 							<li class="dropdown-profile messages">
-								<a href="index.php#module=profile&action=messages">
-									<i class="fa fa-envelope-o"></i>
-									Сообщения
-								</a>
+								<a href="index.php#module=profile&action=messages"></a>
 							</li>
 							<li class="dropdown-profile divider"></li>
 							<li class="dropdown-billing">
-								<a href="index.php#module=billing">
-									<i class="fa fa-credit-card"></i>
-									Ваш баланс
-								</a>
+								<a href="index.php#module=billing"></a>
 							</li>
 							<li class="dropdown-billing divider"></li>
 							<li class="dropdown-settings">
-								<a href="index.php#module=settings">
-									<i class="fa fa-cogs"></i>
-									Настройки
-								</a>
+								<a href="index.php#module=settings"></a>
 							</li>
 							<li class="dropdown-settings divider"></li>
 							<li>

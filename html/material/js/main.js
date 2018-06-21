@@ -540,6 +540,9 @@ $(document).ready(function() {
             );
         }
         if ($('#module-profile')[0]) {
+            var title = $('#module-profile .module-title').html();
+            $('.dropdown-profile.profile > a').html(title);
+
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
             if ($('#submodule-profile-messages')[0]) {
@@ -547,9 +550,13 @@ $(document).ready(function() {
             }
         }
         if ($('#module-settings')[0]) {
+            var title = $('#module-settings .module-title').html();
+            $('.dropdown-settings > a').html(title);
             $('.dropdown-settings').addClass('show');
         }
         if ($('#module-billing')[0]) {
+        	var title = $('#module-billing .module-title').html();
+            $('.dropdown-billing > a').html(title);
             $('.dropdown-billing').addClass('show');
         }
     });

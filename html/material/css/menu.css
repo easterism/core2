@@ -312,7 +312,9 @@ a {color: #337AB7}
     right: 15px;
 }
 #menu-modules .menu-module-selected > a i,
-#menu-modules .menu-module > a i {
+#menu-modules .menu-module > a i,
+#menu-modules .menu-module > a b,
+#menu-modules .menu-module > a span {
     min-width: 18px;
 }
 
