@@ -56,7 +56,10 @@
 								<a href="index.php#module=profile"></a>
 							</li>
 							<li class="dropdown-profile messages">
-								<a href="index.php#module=profile&action=messages"></a>
+								<a href="index.php#module=profile&action=messages">
+									<i class="fa fa-envelope-o"></i>
+									Сообщения
+								</a>
 							</li>
 							<li class="dropdown-profile divider"></li>
 							<li class="dropdown-billing">
