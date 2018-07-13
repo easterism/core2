@@ -359,13 +359,12 @@ var loadPDF = function (url) {
 
     $("#main_body > .pdf-main-panel").css({
         'height'      : ($("body").height() - ($("#menuContainer").height()) - 41),
-        'margin-top'  : (($("#menuContainer").height()) + ($(".pdf-tool-panel").height()) - 55),
+        'margin-top'  : ($(".pdf-tool-panel").height()),
     });
-
-    $("body").css("overflow", "hidden");
 
 	$("#pdfiframe").load( function() {
 		preloader.hide();
+        $("body").css("overflow", "hidden");
         $('.pdf-tool-panel, .pdf-main-panel').removeClass('hide');
         $(window).hashchange( function() {
             $("body").css("overflow", "auto");
