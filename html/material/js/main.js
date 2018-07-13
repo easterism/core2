@@ -503,7 +503,7 @@ var loadPDF = function (url) {
 	);
 
     $("#main_body > .pdf-main-panel").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) + 15),
+        'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
         'top'         : '90px',
         'margin-left' : '-30px',
         'position'    : 'absolute'
@@ -527,7 +527,7 @@ function removePDF() {
 
 function resize() {
 	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
-    $("iframe").css('height', $("#rootContainer").height() - ($("#menu-container").height() + 35));
+    $("#main_body > .pdf-main-panel").css('height', ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15));
 }
 
 $(function(){
