@@ -335,6 +335,8 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
+    $("body").css("overflow", "auto");
+
 	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
@@ -495,18 +497,33 @@ var load = function (url, data, id, callback) {
 
 var loadPDF = function (url) {
 	preloader.show();
-	$("#main_body").html('<iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
-    $("#main_body > iframe").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height())),
-        'top'         : '50px',
+	$("#main_body").prepend(
+		'<div class="pdf-tool-panel hidden"><button class="btn btn-sm btn-default" onclick="removePDF();">Закрыть</button></div>' +
+		'<div class="pdf-main-panel hidden"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>'
+	);
+
+    $("#main_body > .pdf-main-panel").css({
+        'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) + 15),
+        'top'         : '90px',
         'margin-left' : '-30px',
         'position'    : 'absolute'
     });
+
+    $("body").css("overflow", "hidden");
+
 	$("#core-iframe").load( function() {
 		preloader.hide();
+		$('.pdf-tool-panel, .pdf-main-panel').removeClass('hidden');
+        $(window).hashchange( function() {
+            $("body").css("overflow", "auto");
+        });
 	});
-
 };
+
+function removePDF() {
+    $('.pdf-tool-panel, .pdf-main-panel').remove();
+    $('body').css('overflow', 'auto');
+}
 
 function resize() {
 	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
