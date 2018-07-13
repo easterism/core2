@@ -25,3 +25,6 @@
 [submodule "mod/cron/v3.0.2"]
 	path = mod/cron/v3.0.2
 	url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/profile/v1.12.0"]
+	path = mod/profile/v1.12.0
+	url = git@git.rdo.belhard.com:core2/modules/profile.git
