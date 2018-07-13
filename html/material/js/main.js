@@ -504,15 +504,11 @@ var loadPDF = function (url) {
 
     $("#main_body > .pdf-main-panel").css({
         'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
-        'top'         : '90px',
-        'margin-left' : '-30px',
-        'position'    : 'absolute'
     });
-
-    $("body").css("overflow", "hidden");
 
 	$("#core-iframe").load( function() {
 		preloader.hide();
+        $("body").css("overflow", "hidden");
 		$('.pdf-tool-panel, .pdf-main-panel').removeClass('hidden');
         $(window).hashchange( function() {
             $("body").css("overflow", "auto");
