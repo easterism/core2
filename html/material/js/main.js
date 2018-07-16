@@ -503,7 +503,12 @@ var loadPDF = function (url) {
 	);
 
     $("#main_body > .pdf-main-panel").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'margin-top': ($(document).scrollTop()),
+    });
+
+    $("#main_body > .pdf-tool-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
     });
 
 	$("#core-iframe").load( function() {
@@ -522,8 +527,14 @@ function removePDF() {
 }
 
 function resize() {
-	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
-    $("#main_body > .pdf-main-panel").css('height', ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15));
+    $("#main_body > .pdf-main-panel").css({
+        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'margin-top': ($(document).scrollTop()),
+    });
+
+    $("#main_body > .pdf-tool-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
+    });
 }
 
 $(function(){
