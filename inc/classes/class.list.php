@@ -900,7 +900,7 @@ class listTable extends initList {
                     if (is_array($needsum)) {
                         if (in_array($sql_key, $this->addSum)) {
                             $needsum["_" . $sql_key] = isset($needsum["_" . $sql_key])
-                                ? $needsum["_" . $sql_key] + $sql_value
+                                ? ( ! empty($needsum["_" . $sql_key]) ? $needsum["_" . $sql_key] : 0) + ( ! empty($sql_value) ? $sql_value : 0)
                                 : $sql_value;
                         }
                     }
