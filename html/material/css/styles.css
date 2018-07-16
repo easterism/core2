@@ -1689,4 +1689,6 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     position: absolute;
     z-index: 10;
     width: 100%;
+    top: 90px;
+    margin-left: -30px;
 }
