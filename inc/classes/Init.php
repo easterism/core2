@@ -639,7 +639,7 @@
 
         /**
          * Проверка наличия и целостности файла контроллера
-         * 
+         *
          * @param $location - путь до файла
          * @param $modController - название файла контроллера
          *
@@ -1051,7 +1051,7 @@
                     $location        = $this->getModuleLocation($module); //определяем местоположение модуля
                     $modController   = "Mod" . ucfirst(strtolower($module)) . "Controller";
                     $this->requireController($location, $modController);
-                    $modController = new $modController();
+                    $modController  = new $modController();
                     if ($modController instanceof File) {
                         $res = $modController->action_filehandler($context, $table, $id);
                         if ($res) {
