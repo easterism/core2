@@ -471,7 +471,7 @@ class CoreController extends Common {
         if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
         if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
         $ids        = explode(",", $params['id']);
-		$sessData = $sess->$resource;
+		$sessData   = $sess->$resource;
         $deleteKey  = $sessData['deleteKey'];
         if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
         list($table, $refid) = explode(".", $deleteKey);
