@@ -391,6 +391,7 @@ var load = function (url, data, id, callback) {
 			url = '?module=admin&action=welcome';
 		}
 		if (url === '?module=admin&action=welcome') {
+            $('#home-button > a').addClass('home-select');
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
@@ -503,7 +504,12 @@ var loadPDF = function (url) {
 	);
 
     $("#main_body > .pdf-main-panel").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'margin-top': ($(document).scrollTop()),
+    });
+
+    $("#main_body > .pdf-tool-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
     });
 
 	$("#core-iframe").load( function() {
@@ -522,8 +528,14 @@ function removePDF() {
 }
 
 function resize() {
-	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
-    $("#main_body > .pdf-main-panel").css('height', ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15));
+    $("#main_body > .pdf-main-panel").css({
+        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
+        'margin-top': ($(document).scrollTop()),
+    });
+
+    $("#main_body > .pdf-tool-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
+    });
 }
 
 $(function(){
@@ -552,6 +564,9 @@ $(document).ready(function() {
             );
         }
         if ($('#module-profile')[0]) {
+            var title = $('#module-profile .module-title').html();
+            $('.dropdown-profile.profile > a').html(title);
+
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
             if ($('#submodule-profile-messages')[0]) {
@@ -559,9 +574,13 @@ $(document).ready(function() {
             }
         }
         if ($('#module-settings')[0]) {
+            var title = $('#module-settings .module-title').html();
+            $('.dropdown-settings > a').html(title);
             $('.dropdown-settings').addClass('show');
         }
         if ($('#module-billing')[0]) {
+        	var title = $('#module-billing .module-title').html();
+            $('.dropdown-billing > a').html(title);
             $('.dropdown-billing').addClass('show');
         }
     });

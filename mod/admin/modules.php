@@ -45,6 +45,8 @@ $tab->beginContainer($this->translate->tr("Модули"));
             ", $refid);
 
 
+            $dep_list = array();
+
 			if ($refid > 0) {
 				$module           = $this->dataModules->find($refid)->current();
 				$mod_dependencies = $module->dependencies;
@@ -69,7 +71,7 @@ $tab->beginContainer($this->translate->tr("Модули"));
 					$availableModules[] = $variable['module_id'];
 				}
 				
-				$dep_list = array();
+
 				$dep      = array_merge($dep, $mod_list);
 				foreach ($dep as $variable) {
                     // FIXME иногда переменной m_name нету у тех модулей которые имеют зависимости
