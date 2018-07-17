@@ -2,6 +2,8 @@
 require_once('class.ini.php');
 require_once('Templater3.php');
 
+use Zend\Session\Container as SessionContainer;
+
 /**
  * Class listTable
  */
@@ -161,7 +163,7 @@ class listTable extends initList {
     public function getData() {
 
         // CHECK FOR SEARCH
-        $ss = new Zend_Session_Namespace('Search');
+        $ss = new SessionContainer('Search');
         $ssi = $this->main_table_id;
         if (empty($ss->$ssi)) {
             $ss->$ssi = array();
@@ -1214,7 +1216,7 @@ class listTable extends initList {
      * @param string $value
      */
     private function setSessData($key, $value) {
-        $sess_form       = new Zend_Session_Namespace('List');
+        $sess_form       = new SessionContainer('List');
         $ssi             = $this->resource;
         $tmp             = ! empty($sess_form->$ssi) ? $sess_form->$ssi : array();
         $tmp[$key]       = $value;
