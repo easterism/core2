@@ -499,23 +499,26 @@ var load = function (url, data, id, callback) {
 var loadPDF = function (url) {
 	preloader.show();
 	$("#main_body").prepend(
-		'<div class="pdf-tool-panel hidden"><button class="btn btn-sm btn-default" onclick="removePDF();">Закрыть</button></div>' +
-		'<div class="pdf-main-panel hidden"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>'
+	    '<div class="pdf-panel hidden">' +
+		'<div class="pdf-tool-panel"><button class="btn btn-sm btn-default" onclick="removePDF();">Закрыть</button></div>' +
+		'<div class="pdf-main-panel"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+        '</div>'
+
 	);
 
-    $("#main_body > .pdf-main-panel").css({
-        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
-        'margin-top': ($(document).scrollTop()),
-    });
-
-    $("#main_body > .pdf-tool-panel").css({
-        'margin-top': (-30 + $(document).scrollTop()),
-    });
-
 	$("#core-iframe").load( function() {
-		preloader.hide();
         $("body").css("overflow", "hidden");
-		$('.pdf-tool-panel, .pdf-main-panel').removeClass('hidden');
+
+        $("#main_body > .pdf-panel").css({
+            'margin-top': (-30 + $(document).scrollTop()),
+        });
+
+        $("#main_body .pdf-main-panel").css({
+            'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+        });
+
+		preloader.hide();
+		$('.pdf-panel').removeClass('hidden');
         $(window).hashchange( function() {
             $("body").css("overflow", "auto");
         });
@@ -523,18 +526,17 @@ var loadPDF = function (url) {
 };
 
 function removePDF() {
-    $('.pdf-tool-panel, .pdf-main-panel').remove();
+    $('.pdf-panel').remove();
     $('body').css('overflow', 'auto');
 }
 
 function resize() {
-    $("#main_body > .pdf-main-panel").css({
-        'height': ($("body").height() - ($("#navbar-top").height()) - ($(".pdf-tool-panel").height()) - 15),
-        'margin-top': ($(document).scrollTop()),
+    $("#main_body > .pdf-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
     });
 
-    $("#main_body > .pdf-tool-panel").css({
-        'margin-top': (-30 + $(document).scrollTop()),
+    $("#main_body .pdf-main-panel").css({
+        'height': ($("body").height() - ($("#navbar-top").height()) - 40),
     });
 }
 
