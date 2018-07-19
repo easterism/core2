@@ -2,6 +2,8 @@
 require_once('class.ini.php');
 require_once('Templater3.php');
 
+use Zend\Session\Container as SessionContainer;
+
 /**
  * Class listTable
  */
@@ -161,7 +163,7 @@ class listTable extends initList {
     public function getData() {
 
         // CHECK FOR SEARCH
-        $ss = new Zend_Session_Namespace('Search');
+        $ss = new SessionContainer('Search');
         $ssi = $this->main_table_id;
         if (empty($ss->$ssi)) {
             $ss->$ssi = array();
@@ -274,19 +276,26 @@ class listTable extends initList {
                                 } catch (Exception $e) {
                                     $this->error = $e->getMessage();
                                 }
-                                if ($search_value[0] && !$search_value[1]) {
-                                    $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') >= ?";
-                                    $questions[] = $search_value[0];
+                                if (strpos($next['field'], "ADD_SEARCH1") === false && strpos($next['field'], "ADD_SEARCH2") === false) {
+                                    if ($search_value[0] && !$search_value[1]) {
+                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') >= ?";
+                                        $questions[] = $search_value[0];
+                                    }
+                                    if (!$search_value[0] && $search_value[1]) {
+                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') <= ?";
+                                        $questions[] = $search_value[1];
+                                    }
+                                    if ($search_value[0] && $search_value[1]) {
+                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') BETWEEN ? AND ?";
+                                        $questions[] = $search_value[0];
+                                        $questions[] = $search_value[1];
+                                    }
+                                } else {
+                                    $replace = str_replace("ADD_SEARCH1", $search_value[0], $next['field']);
+                                    $replace = str_replace("ADD_SEARCH2", $search_value[1], $replace);
+                                    $search .= " AND " . $replace;
                                 }
-                                if (!$search_value[0] && $search_value[1]) {
-                                    $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') <= ?";
-                                    $questions[] = $search_value[1];
-                                }
-                                if ($search_value[0] && $search_value[1]) {
-                                    $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') BETWEEN ? AND ?";
-                                    $questions[] = $search_value[0];
-                                    $questions[] = $search_value[1];
-                                }
+
                             }
                             elseif ($search_value) {
                                 if ($next['type'] == 'list' || $next['type'] == 'select') {
@@ -362,8 +371,8 @@ class listTable extends initList {
             $this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
             $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
         }        
-        
-        $this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);        
+
+        $this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);
         $order = isset($tmp['order']) ? $tmp['order'] : '';
         if (isset($this->table_column[$this->main_table_id]) && is_array($this->table_column[$this->main_table_id])) {
             foreach ($this->table_column[$this->main_table_id] as $seq => $columns) {
@@ -1207,7 +1216,7 @@ class listTable extends initList {
      * @param string $value
      */
     private function setSessData($key, $value) {
-        $sess_form       = new Zend_Session_Namespace('List');
+        $sess_form       = new SessionContainer('List');
         $ssi             = $this->resource;
         $tmp             = ! empty($sess_form->$ssi) ? $sess_form->$ssi : array();
         $tmp[$key]       = $value;

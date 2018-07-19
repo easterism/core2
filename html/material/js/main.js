@@ -335,6 +335,8 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
+    $("body").css("overflow", "auto");
+
 	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
@@ -389,6 +391,7 @@ var load = function (url, data, id, callback) {
 			url = '?module=admin&action=welcome';
 		}
 		if (url === '?module=admin&action=welcome') {
+            $('#home-button > a').addClass('home-select');
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
@@ -495,22 +498,46 @@ var load = function (url, data, id, callback) {
 
 var loadPDF = function (url) {
 	preloader.show();
-	$("#main_body").html('<iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe>');
-    $("#main_body > iframe").css({
-        'height'      : ($("body").height() - ($("#navbar-top").height())),
-        'top'         : '50px',
-        'margin-left' : '-30px',
-        'position'    : 'absolute'
-    });
-	$("#core-iframe").load( function() {
-		preloader.hide();
-	});
+	$("#main_body").prepend(
+	    '<div class="pdf-panel hidden">' +
+		'<div class="pdf-tool-panel"><button class="btn btn-sm btn-default" onclick="removePDF();">Закрыть</button></div>' +
+		'<div class="pdf-main-panel"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+        '</div>'
 
+	);
+
+	$("#core-iframe").load( function() {
+        $("body").css("overflow", "hidden");
+
+        $("#main_body > .pdf-panel").css({
+            'margin-top': (-30 + $(document).scrollTop()),
+        });
+
+        $("#main_body .pdf-main-panel").css({
+            'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+        });
+
+		preloader.hide();
+		$('.pdf-panel').removeClass('hidden');
+        $(window).hashchange( function() {
+            $("body").css("overflow", "auto");
+        });
+	});
 };
 
+function removePDF() {
+    $('.pdf-panel').remove();
+    $('body').css('overflow', 'auto');
+}
+
 function resize() {
-	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
-    $("iframe").css('height', $("#rootContainer").height() - ($("#menu-container").height() + 35));
+    $("#main_body > .pdf-panel").css({
+        'margin-top': (-30 + $(document).scrollTop()),
+    });
+
+    $("#main_body .pdf-main-panel").css({
+        'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+    });
 }
 
 $(function(){
@@ -539,6 +566,9 @@ $(document).ready(function() {
             );
         }
         if ($('#module-profile')[0]) {
+            var title = $('#module-profile .module-title').html();
+            $('.dropdown-profile.profile > a').html(title);
+
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
             if ($('#submodule-profile-messages')[0]) {
@@ -546,9 +576,13 @@ $(document).ready(function() {
             }
         }
         if ($('#module-settings')[0]) {
+            var title = $('#module-settings .module-title').html();
+            $('.dropdown-settings > a').html(title);
             $('.dropdown-settings').addClass('show');
         }
         if ($('#module-billing')[0]) {
+        	var title = $('#module-billing .module-title').html();
+            $('.dropdown-billing > a').html(title);
             $('.dropdown-billing').addClass('show');
         }
     });

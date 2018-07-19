@@ -1250,3 +1250,29 @@ table td.homeTD {
 .ctrl-dtp input[type=number],
 .ctrl-dp input[type=number] {-moz-appearance:textfield}
 .clearfix {clear: both}
+
+
+.pdf-panel {
+	position: absolute;
+	width: 100%;
+	z-index: 10;
+	margin-left: -7px;
+	margin-right: 7px;
+}
+
+.pdf-tool-panel {
+	height: 40px;
+	background-color: #9e9e9e;
+}
+
+.pdf-main-panel {
+
+}
+
+.pdf-tool-panel button {
+	margin-top: 7px;
+	float: right;
+	margin-right: 15px;
+	padding: 3px 8px;
+	height: 25px;
+}

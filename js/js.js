@@ -247,6 +247,9 @@ var load = function (url, data, id, callback) {
 	}
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
+
+    $("body").css("overflow", "auto");
+
 	if (!data && h != url && url.indexOf('&__') < 0) {
 		document.location.hash = url;
 	} else {
@@ -349,18 +352,45 @@ var load = function (url, data, id, callback) {
 
 var loadPDF = function (url) {
 	preloader.show();
-    $("#main_body").height($("body").height() - ($("#menuContainer").height() + 15));
-	$("#main_body").html('<iframe id="pdfiframe" frameborder="0" width="100%" height="100%"></iframe>');
-	$("#pdfiframe").attr('src', url);
-	$("#pdfiframe").load( function() {
-		preloader.hide();
-	});
+    $("#main_body").prepend(
+        '<div class="pdf-panel hide">' +
+        '<div class="pdf-tool-panel"><button class="btn buttonSmall" onclick="removePDF();">Закрыть</button></div>' +
+        '<div class="pdf-main-panel"><iframe id="pdfiframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+		'</div>'
+    );
 
+	$("#pdfiframe").load( function() {
+        $("body").css("overflow", "hidden");
+
+        $("#main_body > .pdf-panel").css({
+            'margin-top'  : $(document).scrollTop() - 5
+        });
+
+        $("#main_body .pdf-main-panel").css({
+            'height'      : ($("body").height() - ($("#menuContainer").height()) - 41),
+        });
+
+		preloader.hide();
+        $('.pdf-panel').removeClass('hide');
+        $(window).hashchange( function() {
+            $("body").css("overflow", "auto");
+        });
+	});
+}
+
+function removePDF() {
+    $('.pdf-panel').remove();
+    $('body').css('overflow', 'auto');
 }
 
 function resize() {
-	$("#mainContainer").css('padding-top', $("#menuContainer").height() + 5);
-    $("#main_body").height($("#rootContainer").height() - ($("#menuContainer").height() + 15));
+    $("#main_body > .pdf-panel").css({
+        'margin-top'  : $(document).scrollTop() - 5
+    });
+
+    $("#main_body .pdf-main-panel").css({
+        'height'      : ($("body").height() - ($("#menuContainer").height()) - 41),
+    });
 }
 
 $(function(){

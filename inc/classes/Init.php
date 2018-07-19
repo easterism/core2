@@ -488,10 +488,7 @@
                         } else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                         }
-                        $autoload = $location . "/vendor/autoload.php";
-                        if (file_exists($autoload)) {
-                            require_once $autoload;
-                        }
+
                         $this->requireController($location, $modController);
                         $modController = new $modController();
                         $action = "action_" . $action;
@@ -642,6 +639,7 @@
 
         /**
          * Проверка наличия и целостности файла контроллера
+         *
          * @param $location - путь до файла
          * @param $modController - название файла контроллера
          *
@@ -651,6 +649,10 @@
             $controller_path = $location . "/" . $modController . ".php";
             if (!file_exists($controller_path)) {
                 throw new Exception($this->translate->tr("Модуль не существует") . ": " . $location, 404);
+            }
+            $autoload = $location . "/vendor/autoload.php";
+            if (file_exists($autoload)) { //подключаем автозагрузку если есть
+                require_once $autoload;
             }
             require_once $controller_path; // подлючаем контроллер
             if (!class_exists($modController)) {
@@ -1049,7 +1051,7 @@
                     $location        = $this->getModuleLocation($module); //определяем местоположение модуля
                     $modController   = "Mod" . ucfirst(strtolower($module)) . "Controller";
                     $this->requireController($location, $modController);
-                    $modController = new $modController();
+                    $modController  = new $modController();
                     if ($modController instanceof File) {
                         $res = $modController->action_filehandler($context, $table, $id);
                         if ($res) {
