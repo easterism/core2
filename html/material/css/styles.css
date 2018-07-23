@@ -1664,6 +1664,93 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: #428bca;
     border-width: 0;
 }
+
+.core-panel.core-panel-steps-top .core-panel-tabs {
+    border-width: 0;
+    margin-left: 3px;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li > a {
+    color: #757575;
+    background: #fff;
+    border: 1px solid #ddd;
+    margin-left: -3px;
+    border-radius: 0;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(:first-child) > a {
+    padding-left: 25px;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li.active > a {
+    color: #fff;
+    background-color: #3498db;
+    border-color: #3498db;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li.disabled > a {
+    color: #757575 !important;
+    background-color: #F5F5F5;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(.disabled) > a:hover {
+    color: #fff;
+    background-color: #3498db;
+    border-color: #3498db;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(:last-child) > a:after {
+    content: " ";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 10px solid white;
+    position: absolute;
+    top: 50%;
+    margin-top: -20px;
+    left: 100%;
+    z-index: 3;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(:last-child) > a:before {
+    content: " ";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 10px solid rgb(173, 173, 173);
+    position: absolute;
+    top: 50%;
+    margin-top: -20px;
+    margin-left: 1px;
+    left: 100%;
+    z-index: 3;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(:last-child) > a:after {
+    border-left: 10px solid #fff;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(:last-child) > a:before {
+    border-left: 10px solid #ccc;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li.disabled:not(:last-child) > a:after {
+    border-left: 10px solid #F5F5F5;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li.disabled:not(:last-child) > a:before {
+    border-left: 10px solid #ccc;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li.active:not(:last-child) > a:after,
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:not(.disabled):not(:last-child) > a:hover:after {
+    border-left-color:#3498db;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:first-child > a {
+    padding-left: 15px;
+    -moz-border-radius: 4px 0 0 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px 0 0 4px;
+}
+.core-panel.core-panel-steps-top > .core-panel-body > .core-panel-tabs > li:last-child > a {
+    padding-right: 15px;
+    -moz-border-radius: 0 4px 4px 0;
+    -webkit-border-radius: 0;
+    border-radius: 0 4px 4px 0;
+}
+
 ::-webkit-input-placeholder {color:#aaa;}
 ::-moz-placeholder          {color:#aaa;}/* Firefox 19+ */
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */

@@ -15,6 +15,7 @@ class Panel {
 
     const TYPE_TABS  = 10;
     const TYPE_PILLS = 20;
+    const TYPE_STEPS = 30;
 
     protected $active_tab     = '';
     protected $title          = '';
@@ -68,7 +69,8 @@ class Panel {
     public function setTypeTabs($type) {
         $types = array(
             self::TYPE_TABS,
-            self::TYPE_PILLS
+            self::TYPE_PILLS,
+            self::TYPE_STEPS
         );
         if (in_array($type, $types)) {
             $this->type = $type;
@@ -111,6 +113,15 @@ class Panel {
      */
     public function setContent($content) {
         $this->content = $content;
+    }
+
+
+    /**
+     * Установка активного таба по умолчанию
+     * @param string $tab_id
+     */
+    public function setDefaultTab($tab_id) {
+        $this->active_tab = $tab_id;
     }
 
 
@@ -165,6 +176,7 @@ class Panel {
         switch ($this->type) {
             case self::TYPE_TABS :  $type_name = 'tabs'; break;
             case self::TYPE_PILLS : $type_name = 'pills'; break;
+            case self::TYPE_STEPS : $type_name = 'steps'; break;
             default : throw new Exception('Invalid type'); break;
         }
         $tpl->assign('[TYPE]', $type_name);
