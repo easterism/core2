@@ -121,7 +121,9 @@ class Panel {
      * @param string $tab_id
      */
     public function setDefaultTab($tab_id) {
-        $this->active_tab = $tab_id;
+        if ( ! isset($_GET[$this->resource])) {
+            $this->active_tab = $tab_id;
+        }
     }
 
 
