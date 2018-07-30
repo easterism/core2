@@ -232,9 +232,9 @@ class InstallModule extends \Common {
         $is_writeable = is_writeable("{$prefix}mod") || is_writeable("{$pathToMod}");
         if ($is_writeable && (!file_exists("{$pathToMod}") || !file_exists($pathToVer))) {
             if (!file_exists("{$pathToMod}")) {
-                mkdir("{$pathToMod}");
+                mkdir("{$pathToMod}", null, true);
             }
-            mkdir($pathToVer);
+            mkdir($pathToVer, null, true);
         }
         if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
             $this->is_visible = "N";
@@ -278,7 +278,7 @@ class InstallModule extends \Common {
      */
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
-            if (!mkdir($destinationFolder)) {
+            if (!mkdir($destinationFolder, null, true)) {
                 throw new \Exception($this->translate->tr("Не могу создать директорию для разархивирования") . " ('{$destinationFolder}').");
             }
         }
@@ -953,7 +953,7 @@ class InstallModule extends \Common {
         if (file_exists($dirTo)) {
             $dirhash    = $this->extractHashForFiles($dirTo);
             $etalonHash = unserialize($this->mData['files_hash']);
-            $dirToArr = explode("/", $dirTo);
+            $dirToArr = explode("/", str_replace('\\', '/', $dirTo));
             if (strtolower($this->mInfo['install']['module_system']) == 'n') {
                 $w = 3;
             } else {
@@ -973,7 +973,7 @@ class InstallModule extends \Common {
                 $pathTo = $dirTo . DIRECTORY_SEPARATOR . $value;
                 if (is_dir($path)) {
                     if (!is_dir($pathTo)) {
-                        mkdir($pathTo);
+                        mkdir($pathTo, null, true);
                     }
                     $this->justCopyFiles($path, $pathTo);
                 } else {
@@ -1787,9 +1787,9 @@ class InstallModule extends \Common {
                 $is_writeable = is_writeable("{$prefix}mod") || is_writeable($pathToMod);
                 if ($is_writeable && (!file_exists($pathToMod) || !file_exists($pathToVer))) {
                     if (!file_exists($pathToMod)) {
-                        mkdir($pathToMod);
+                        mkdir($pathToMod, null, true);
                     }
-                    mkdir($pathToVer);
+                    mkdir($pathToVer, null, true);
                 }
                 if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
                     $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Перезапись файлов прервана"), $this->translate->tr("Папка закрыта для записи"), "danger");
@@ -2278,7 +2278,7 @@ class InstallModule extends \Common {
         if (file_exists($dirTo)) {
             $dirhash    = $this->extractHashForFiles($dirTo);
             $etalonHash = unserialize($this->mData['files_hash']);
-            $dirToArr = explode("/", $dirTo);
+            $dirToArr = explode("/", str_replace('\\', '/', $dirTo));
             if (strtolower($this->mInfo['install']['module_system']) == 'n') {
                 $w = 3;
             } else {
