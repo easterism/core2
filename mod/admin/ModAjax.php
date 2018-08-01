@@ -894,7 +894,7 @@ class ModAjax extends ajaxFunc {
                 //получаем хэш для файлов модуля
                 $files_hash = $inst->extractHashForFiles($destinationFolder);
                 if (empty($files_hash)) {
-                    throw new Exception($this->translate->tr("Не удалось получить хэшь файлов модуля"));
+                    throw new Exception($this->translate->tr("Не удалось получить хэш файлов модуля"));
                 }
                 $this->deleteDir($destinationFolder);
 
