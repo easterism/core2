@@ -153,6 +153,13 @@ var control_datepicker_range = {
         if (year_to !== '' && month_to !== '' && day_to !== '') {
             date_to = year_to + '-' + month_to + '-' + day_to;
         }
+
+        if (date_to) {
+            var date_to_class = new Date(date_to);
+            var new_date_to = date_to_class.setDate(date_to_class.getDate() + 1);
+            date_to = $.datepicker.formatDate("yy-mm-dd", new Date(new_date_to));
+        }
+
         $('.ctrl-dpr-to-value', wrapper).val(date_to);
 
         control_datepicker_range.callbackChange(date_from, date_to, wrapper);
@@ -170,6 +177,12 @@ var control_datepicker_range = {
 
         var split_from = $input_from.val().split(' ');
         var split_to   = $input_to.val().split(' ');
+
+        if (split_to[0]) {
+            var date_to_class = new Date(split_to[0]);
+            var new_date_to = date_to_class.setDate(date_to_class.getDate() - 1);
+            split_to[0] = $.datepicker.formatDate("yy-mm-dd", new Date(new_date_to));
+        }
 
         var date_from = split_from[0].split('-');
         var date_to   = split_to[0].split('-');
