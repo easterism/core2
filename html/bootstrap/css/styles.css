@@ -1316,6 +1316,8 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     color: #337ab7;
     border-radius: 0;
     border: 0;
+    height: 20px;
+    line-height: 14px;
 }
 .template-upload .name,
 .template-download .name {
@@ -1327,7 +1329,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 }
 .template-download .name a,
 .template-download .size span {
-    line-height: 34px;
+    line-height: 21px;
 }
 .template-download .btn.delete:focus,
 .template-download .delete:hover {
