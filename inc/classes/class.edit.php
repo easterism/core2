@@ -1098,6 +1098,8 @@ class editTable extends initEdit {
                                                     <span class="preview">
                                                         {% if (file.thumbnail_url) { %}
                                                             <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
+                                                        {% } else { %}
+                                                            <i class="fa fa-file-text-o"></i>
                                                         {% } %}
                                                     </span>
                                                 </td>
