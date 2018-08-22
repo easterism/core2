@@ -509,12 +509,14 @@ var loadPDF = function (url) {
 	$("#core-iframe").load( function() {
         $("body").css("overflow", "hidden");
 
-        $("#main_body > .pdf-panel").css({
-            'margin-top': (-30 + $(document).scrollTop()),
-        });
+        setTimeout(function () {
+            $("#main_body > .pdf-panel").css({
+                'margin-top': $(document).scrollTop() - 30
+            });
+        }, 100);
 
         $("#main_body .pdf-main-panel").css({
-            'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+            'height': ($("body").height() - ($("#navbar-top").height()) - 40)
         });
 
 		preloader.hide();
@@ -532,11 +534,11 @@ function removePDF() {
 
 function resize() {
     $("#main_body > .pdf-panel").css({
-        'margin-top': (-30 + $(document).scrollTop()),
+        'margin-top': $(document).scrollTop() - 30
     });
 
     $("#main_body .pdf-main-panel").css({
-        'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+        'height': ($("body").height() - ($("#navbar-top").height()) - 40)
     });
 }
 
