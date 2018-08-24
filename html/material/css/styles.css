@@ -1325,6 +1325,15 @@ div[id^=fileupload-main_] .table {
 .fileupload-progress {
     display: none;
 }
+.fileupload-file-readonly {
+    padding-bottom: 13px;
+    border-bottom: 1px solid #ddd;
+}
+.fileupload-file-readonly:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+    padding-top: 8px;
+}
 div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     border-top: 0;
 }

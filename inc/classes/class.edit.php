@@ -970,13 +970,13 @@ class editTable extends initEdit {
 									foreach ($files as $file) {
 									    if (in_array($file['type'], array('image/jpeg', 'image/png', 'image/gif'))) {
                                             $controlGroups[$cellId]['html'][$key] .=
-                                                "<div>" .
+                                                "<div class=\"fileupload-file-readonly\">" .
                                                     "<a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">" .
                                                         "<img class=\"img-rounded\" src=\"index.php?module={$module}&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
                                                     "</a>" .
                                                 "</div>";
                                         } else {
-                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
+                                            $controlGroups[$cellId]['html'][$key] .= "<div class=\"fileupload-file-readonly\"><i class=\"fa fa-file-text-o\"></i> <a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
                                         }
 									}
 								} else {
