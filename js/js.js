@@ -69,12 +69,17 @@ function goHome() {
 
 function logout() {
 	if (confirm('Вы уверены, что хотите выйти?')) {
+        preloader.show();
+
 		$.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
 			.done(function (n) {
-				window.location='index.php';
+                preloader.hide();
+				window.location = 'index.php';
+
 			}).fail(function (a,b,t){
+				preloader.hide();
 				alert("Произошла ошибка: " + a.statusText);
-		});
+			});
 	}
 }
 
