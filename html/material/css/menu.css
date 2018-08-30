@@ -4,7 +4,7 @@ a {color: #337AB7}
     width: 100%;
 }
 #main-content {
-    position: relative;
+    /*position: relative;*/
     background-color: #e6e6e6;
     -webkit-transition: width 0.3s ease-in-out;
        -moz-transition: width 0.3s ease-in-out;
@@ -116,7 +116,7 @@ a {color: #337AB7}
 }
 #user-section {
     padding: 0 10px;
-    margin-right: 0px;
+    margin-right: 0;
 }
 #user-section .nav-item a {
     height: 50px;
@@ -320,13 +320,73 @@ a {color: #337AB7}
 }
 
 /* Mobile */
-@media(max-width:768px) {
-    #main #main-content {margin-left: 0;}
-    #main #menu-container {margin-left: -240px;}
+@media(max-width:767px) {
+    #main #main-content {
+        margin-left: 0;
+        position: absolute;
+    }
+    #main #menu-container {
+        position: fixed;
+        margin-left: -240px;
+    }
     #main #navbar-top {left: 0}
-    #main.s-toggle #main-content {margin-left: 0;}
-    #main.s-toggle #menu-container {margin-left: 0;}
-    #main.s-toggle #navbar-top {left: 240px}
+    #main.s-toggle #main-content {
+        margin-left: 0;
+        overflow: hidden;
+    }
+    #main #mainContainer {
+        overflow: auto;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 30px 30px 30px;
+    }
+    #main #mainContainer #main_body {
+        width: -moz-min-content;
+        width: min-content;
+        min-width: 100%;
+    }
+    #main.s-toggle #menu-wrapper {
+        margin-left: 240px;
+    }
+    #main .swipe-area {
+        z-index: 1;
+    }
+    #main.s-toggle .swipe-area {
+        left: 240px;
+        background-color: rgba(0, 0, 0, 0.5);
+        width: 100%;
+        position: fixed;
+        z-index: 5000;
+    }
+    #main.s-toggle #navbar-top {
+        left: 240px;
+    }
+    #main-content > .navbar-default {
+         min-width: 100%;
+         position: absolute;
+    }
+    table.editTable > tr > td,
+    table.editTable > tbody > tr > td {
+        display: block;
+        text-align: left
+    }
+    table.editTable > tr > td:nth-child(2),
+    table.editTable > tbody > tr > td:nth-child(2) {
+        margin-bottom: 15px;
+    }
+    .buttons-container .buttons-offset {
+        width: 0 !important;
+    }
+    body.modal-open .modal {
+        overflow: auto;
+    }
+    body.modal-open .modal-content {
+        width: min-content;
+        min-width: 100%;
+    }
 }
 /* Desktop */
 @media(min-width:768px) {

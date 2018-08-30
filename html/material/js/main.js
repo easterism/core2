@@ -342,6 +342,11 @@ var load = function (url, data, id, callback) {
 
     $("body").css("overflow", "");
 
+    if ($(window).width() < 768) {
+        $('#main').removeClass('s-toggle');
+        $('#menu-wrapper .module-submodules').hide();
+    }
+
 	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
             locData.callback = callback;
@@ -658,8 +663,8 @@ $(document).ready(function() {
 
     if ($.cookie('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
-        $('#main').toggleClass('s-toggle');
         if ($(window).width() >= 768) {
+            $('#main').toggleClass('s-toggle');
         	$('#menu-wrapper .module-submodules').hide();
 		}
     }
@@ -687,7 +692,7 @@ $(document).ready(function() {
     $(".swipe-area").swipe({
         swipeStatus: function(event, phase, direction, distance, duration, fingers) {
             var width = $(window).width();
-            if (phase === "move" && ((width <= 768 && direction === "right") || (width > 768 && direction === "left"))) {
+            if (phase === "move" && ((width < 768 && direction === "right") || (width >= 768 && direction === "left"))) {
                 $("#main").addClass("s-toggle");
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').hide();
@@ -695,7 +700,7 @@ $(document).ready(function() {
                 $.cookie('sidebar_collapse', 1);
                 return false;
             }
-            if (phase === "move" && ((width <= 768 && direction === "left") || (width > 768 && direction === "right"))) {
+            if (phase === "move" && ((width < 768 && direction === "left") || (width >= 768 && direction === "right"))) {
                 $("#main").removeClass("s-toggle");
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').show();

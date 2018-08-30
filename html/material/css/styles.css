@@ -18,6 +18,7 @@ body {
 #mainContainer {
     padding: 80px 30px 30px;
 	height: auto;
+    overflow: auto;
 }
 #main_body {
 	height: auto;
@@ -194,23 +195,31 @@ TOP MENU
 	padding-right:5px;
 }
 .navbar-header .module-title {
-    padding: 8px 15px 5px 65px;
+    padding: 8px 15px 5px 15px;
     font-size: 15px;
     line-height: 15px;
     color: #666;
+    position: absolute;
+    left: 50px;
 }
 .navbar-header .module-action {
-    padding-left: 65px;
+    padding-left: 15px;
     font-size: 12px;
     color: #666;
+    position: absolute;
+    top: 28px;
+    left: 50px;
 }
 .swipe-area {
-    height: 100%;
-    left: 0;
+    height: calc(100% - 50px);
     position: absolute;
-    top: 0;
+    top: 50px;
     width: 30px;
     z-index: 0;
+    -webkit-transition: background-color 0.3s linear;
+       -moz-transition: background-color 0.3s linear;
+         -o-transition: background-color 0.3s linear;
+            transition: background-color 0.3s linear;
 }
 
 /*
@@ -450,6 +459,12 @@ LIST class search container
     padding-right: 10px;
     font-weight: 600;
     padding-top: 8px;
+}
+/* Mobile */
+@media(max-width:767px) {
+    .searchContainer .searchRow div.ctrl-dpr {
+        min-width: 360px;
+    }
 }
 .showFilterIcon {
 	cursor:pointer;
@@ -1119,6 +1134,7 @@ label.control-label {font-weight: 700}
 .bg-white {background-color: #fff}
 .form-control.modal-control-title {width: 235px}
 .modal-control .modal-control-button {height: 34px}
+.modal-control .input-group {min-width: 350px}
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
 .ctrl-tp-controls > * ,
