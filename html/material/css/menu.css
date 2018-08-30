@@ -20,7 +20,7 @@ a {color: #337AB7}
             box-sizing: border-box;
 }
 #main-content #sidebar-toggle {
-    background-color: #607D8B;
+    background-color: #3e5a70;
     color: #FFFFFF;
     display: block;
     float: left;
@@ -37,10 +37,10 @@ a {color: #337AB7}
     color: #FFFFFF;
     padding-bottom: 40px;
     -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -ms-box-sizing: border-box;
-    -o-box-sizing: border-box;
-    box-sizing: border-box;
+       -moz-box-sizing: border-box;
+        -ms-box-sizing: border-box;
+         -o-box-sizing: border-box;
+            box-sizing: border-box;
     -webkit-transition: all 0.3s ease-in-out;
        -moz-transition: all 0.3s ease-in-out;
          -o-transition: all 0.3s ease-in-out;
@@ -53,8 +53,8 @@ a {color: #337AB7}
     bottom: 0;
     width: 240px;
     overflow: auto;
-    background-color: #607D8B;
-    box-shadow: inset -1px 0 3px 0 #666;
+    background-color: #3e5a70;
+    box-shadow: inset -1px 0 3px 0 #444;
     direction: rtl;
     -webkit-transition: all 0.3s ease-in-out;
        -moz-transition: all 0.3s ease-in-out;
@@ -80,7 +80,7 @@ a {color: #337AB7}
 }
 #main #home-button > a.home-select,
 #main #home-button > a:hover {
-    background-color: #4C626D;
+    background-color: #2e475b;
     outline: none;
     border-left: 3px solid #2196F3;
     padding-left: 14px;
@@ -147,7 +147,7 @@ a {color: #337AB7}
 }
 #menu-modules .menu-module a,
 #menu-modules .menu-module-selected a {
-    color: #fff;
+    color: #dae5eb;
     position: relative;
     display: block;
     padding: 10px 16px 10px 17px;
@@ -166,9 +166,10 @@ a {color: #337AB7}
 #menu-modules .menu-module:hover a,
 #menu-modules .menu-module a:hover,
 #menu-modules .menu-module a:focus,
+#menu-modules .menu-module.module-hover a,
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
-    background-color: #546E7A;
+    background-color: #26465b;
     padding-left: 14px;
     outline: none;
 }
@@ -179,12 +180,17 @@ a {color: #337AB7}
 #menu-modules .menu-module.module-hover a,
 #menu-modules .menu-module > a:hover,
 #menu-modules .menu-module-selected > a.index-select,
-#menu-modules .menu-module-selected > a:hover,
 #menu-modules .module-submodules > a:hover {
-    background-color: #4C626D;
+    background-color: #26465b;
+}
+
+#menu-modules .menu-module-selected.module-isset-submodules > a.index-select,
+#menu-modules .menu-module-selected > a:hover,
+#menu-modules .menu-module-selected > .module-submodules > a:hover {
+    background-color: #1e384a;
 }
 #menu-modules a.module-submodules-selected {
-    background-color: #4C626D;
+    background-color: #1e384a;
 }
 #menu-submodules {
     margin: 0;
@@ -201,7 +207,7 @@ a {color: #337AB7}
     display: none;
     min-width: 160px;
     width: auto;
-    background-color: #607D8B;
+    background-color: #3e5a70;
     padding: 7px 0 7px 0;
     z-index: 999;
 }
@@ -211,7 +217,7 @@ a {color: #337AB7}
     display: block;
     min-width: 160px;
     width: auto;
-    background-color: #607D8B;
+    background-color: #3e5a70;
     z-index: 999;
 }
 #menu-submodules .menu-submodule a,
@@ -230,7 +236,7 @@ a {color: #337AB7}
 #menu-submodules .submenu-module-title:hover a,
 #menu-submodules .submenu-module-title.selected a,
 #menu-submodules .menu-submodule-selected a {
-    background-color: #4C626D;
+    background-color: #2e475b;
 }
 #menu-submodules .submenu-module-title a {
     font-weight: bold;

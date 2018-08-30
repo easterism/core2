@@ -123,12 +123,14 @@ function changeRoot(obj, to, actionSelect) {
 				}
 
 				if (issetSubmodules) {
+                    $(parent.childNodes[i]).addClass('module-isset-submodules');
                     $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-right');
                     if ($(window).width() < 768 || ! $('.s-toggle')[0]) {
                         $(parent.childNodes[i]).find('.module-submodules').show()
                     }
 				} else {
-					$(parent.childNodes[i]).find('.module-submodules').hide()
+					$(parent.childNodes[i]).removeClass('module-isset-submodules');
+					$(parent.childNodes[i]).find('.module-submodules').hide();
 				}
 			}
 		}
