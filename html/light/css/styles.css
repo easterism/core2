@@ -434,6 +434,16 @@ LIST class search container
     font-weight: 600;
     padding-top: 8px;
 }
+/* Mobile */
+@media(max-width:767px) {
+    .searchContainer .searchRow div.ctrl-dpr {
+        min-width: 360px;
+    }
+    .password-control .password-repeat {
+        display: block;
+        clear: both;
+    }
+}
 .showFilterIcon {
     cursor:pointer;
     height: 16px;
@@ -624,6 +634,22 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox2 input[type=checkbox],
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
+}
+
+/* Mobile */
+@media(max-width:767px) {
+    table.editTable > tr > td,
+    table.editTable > tbody > tr > td {
+        display: block;
+        text-align: left
+    }
+    table.editTable > tr > td:nth-child(2),
+    table.editTable > tbody > tr > td:nth-child(2) {
+        margin-bottom: 15px;
+    }
+    .buttons-container .buttons-offset {
+        width: 0 !important;
+    }
 }
 /*
 TAB class table
@@ -1379,6 +1405,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .password-repeat {
     line-height: 34px;
     padding: 0 5px;
+}
+.password-control .pass-2-container {
+    display: inline-block;
+    min-width: 313px;
 }
 .password-control.no-change .pass-2 {
     -webkit-border-radius: 4px;
