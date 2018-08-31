@@ -71,7 +71,9 @@
 </div>
 <div id="preloader" style="display:none">
 	<div class="lock-screen"></div>
-	<div class="block"></div>
+	<div class="block">
+		<div class="spinner-icon"></div>
+		<div class="">Загрузка...</div></div>
 </div>
 <div id="mainContainer">
 	<div id="main_body"></div>

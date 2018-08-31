@@ -69,12 +69,17 @@ function goHome() {
 
 function logout() {
 	if (confirm('Вы уверены, что хотите выйти?')) {
+        preloader.show();
+
 		$.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
 			.done(function (n) {
-				window.location='index.php';
+                preloader.hide();
+				window.location = 'index.php';
+
 			}).fail(function (a,b,t){
+				preloader.hide();
 				alert("Произошла ошибка: " + a.statusText);
-		});
+			});
 	}
 }
 
@@ -248,7 +253,7 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-    $("body").css("overflow", "auto");
+    $("body").css("overflow", "");
 
 	if (!data && h != url && url.indexOf('&__') < 0) {
 		document.location.hash = url;
@@ -373,14 +378,14 @@ var loadPDF = function (url) {
 		preloader.hide();
         $('.pdf-panel').removeClass('hide');
         $(window).hashchange( function() {
-            $("body").css("overflow", "auto");
+            $("body").css("overflow", "");
         });
 	});
 }
 
 function removePDF() {
     $('.pdf-panel').remove();
-    $('body').css('overflow', 'auto');
+    $('body').css('overflow', '');
 }
 
 function resize() {

@@ -435,7 +435,9 @@ class Db {
 			$temp2 = explode(":::", $res['custom_field']);
 			foreach ($temp2 as $fields) {
 				$fields = explode("::", $fields);
-				$temp[$fields[0]] = $fields[1];
+				if (isset($fields[0]) && isset($fields[1])) {
+                    $temp[$fields[0]] = $fields[1];
+                }
 			}
 			$res['custom_field'] = $temp;
 		}

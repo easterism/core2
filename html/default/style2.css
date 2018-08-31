@@ -859,6 +859,10 @@ table td.homeTD {
 	padding: 1px 6px;
 	float: left;
 }
+.password-control .pass-2-container {
+	display: inline-block;
+	min-width: 255px;
+}
 
 .core-panel {
     border-collapse: collapse;
