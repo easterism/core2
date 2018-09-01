@@ -1397,7 +1397,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
         -ms-border-top-left-radius: 0;
          -o-border-top-left-radius: 0;
             border-top-left-radius: 0;
-    float: right;
+    float: left;
     margin-left: -2px;
     outline: none;
 }
@@ -1405,6 +1405,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     float: left;
 }
 .password-control .pass-2 {
+    float: left;
     -webkit-border-bottom-right-radius: 0;
        -moz-border-bottom-right-radius: 0;
         -ms-border-bottom-right-radius: 0;
