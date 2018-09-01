@@ -1792,12 +1792,19 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */
 :-ms-input-placeholder      {color:#aaa;}
 
-
+.pdf-open {
+    overflow: hidden;
+}
 .pdf-panel {
-    position: absolute;
+    position: fixed;
     z-index: 10;
-    margin: -30px 0 0 -30px;
-    width: 100%;
+    right: 0;
+    margin-top: -30px;
+    left: 240px;
+    -webkit-transition: left 0.3s ease-in-out;
+       -moz-transition: left 0.3s ease-in-out;
+         -o-transition: left 0.3s ease-in-out;
+            transition: left 0.3s ease-in-out;
 }
 .pdf-tool-panel {
     height: 40px;
