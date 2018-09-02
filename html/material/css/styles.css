@@ -465,9 +465,10 @@ LIST class search container
     .searchContainer .searchRow div.ctrl-dpr {
         min-width: 360px;
     }
-    .password-control .password-repeat {
+    .password-control span.password-repeat {
         display: block;
         clear: both;
+        float: none;
     }
 }
 .showFilterIcon {
@@ -1420,6 +1421,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .password-repeat {
     line-height: 34px;
     padding: 0 5px;
+    float: left;
 }
 .password-control .pass-2-container {
     display: inline-block;
