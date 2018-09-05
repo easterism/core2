@@ -465,9 +465,10 @@ LIST class search container
     .searchContainer .searchRow div.ctrl-dpr {
         min-width: 360px;
     }
-    .password-control .password-repeat {
+    .password-control span.password-repeat {
         display: block;
         clear: both;
+        float: none;
     }
 }
 .showFilterIcon {
@@ -1397,7 +1398,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
         -ms-border-top-left-radius: 0;
          -o-border-top-left-radius: 0;
             border-top-left-radius: 0;
-    float: right;
+    float: left;
     margin-left: -2px;
     outline: none;
 }
@@ -1405,6 +1406,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     float: left;
 }
 .password-control .pass-2 {
+    float: left;
     -webkit-border-bottom-right-radius: 0;
        -moz-border-bottom-right-radius: 0;
         -ms-border-bottom-right-radius: 0;
@@ -1419,6 +1421,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .password-repeat {
     line-height: 34px;
     padding: 0 5px;
+    float: left;
 }
 .password-control .pass-2-container {
     display: inline-block;
@@ -1791,12 +1794,19 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */
 :-ms-input-placeholder      {color:#aaa;}
 
-
+.pdf-open {
+    overflow: hidden;
+}
 .pdf-panel {
-    position: absolute;
+    position: fixed;
     z-index: 10;
-    margin: -30px 0 0 -30px;
-    width: 100%;
+    right: 0;
+    margin-top: -30px;
+    left: 240px;
+    -webkit-transition: left 0.3s ease-in-out;
+       -moz-transition: left 0.3s ease-in-out;
+         -o-transition: left 0.3s ease-in-out;
+            transition: left 0.3s ease-in-out;
 }
 .pdf-tool-panel {
     height: 40px;
