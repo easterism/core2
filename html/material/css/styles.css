@@ -18,7 +18,6 @@ body {
 #mainContainer {
     padding: 80px 30px 30px;
 	height: auto;
-    overflow: auto;
 }
 #main_body {
 	height: auto;
@@ -1821,6 +1820,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 }
 .pdf-main-panel {
     overflow: hidden;
+    background-color: #e5e5e5;
 }
 .pdf-tool-panel button {
     float: right;
