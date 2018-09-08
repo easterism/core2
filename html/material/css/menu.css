@@ -4,7 +4,7 @@ a {color: #337AB7}
     width: 100%;
 }
 #main-content {
-    /*position: relative;*/
+    position: relative;
     background-color: #e6e6e6;
     -webkit-transition: width 0.3s ease-in-out;
        -moz-transition: width 0.3s ease-in-out;
@@ -386,6 +386,7 @@ a {color: #337AB7}
     .buttons-container .buttons-offset {
         width: 0 !important;
     }
+    .pdf-open #main .pdf-panel {left: 0}
     body.modal-open .modal {
         overflow: auto;
     }
@@ -426,6 +427,9 @@ a {color: #337AB7}
         font-weight: 600;
         margin-left: 2px;
     }
+
+    .pdf-open #main.s-toggle .pdf-panel {left: 50px}
+
     .navbar-top-links .dropdown-messages,
     .navbar-top-links .dropdown-tasks,
     .navbar-top-links .dropdown-alerts {margin-left: auto;}
