@@ -294,8 +294,16 @@ var edit = {
             $('#' + this.key + '-title').val(title);
             this.hide();
         }
+    },
+
+    /**
+     * @param toggleObject
+     */
+    toggleGroup(toggleObject) {
+        $(toggleObject).parent().next().slideToggle('fast');
     }
-}
+};
+
 
 /**
  * @param id

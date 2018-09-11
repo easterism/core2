@@ -630,6 +630,16 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
 }
+.core-group-head {
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-align: right;
+    padding-right: 10px;
+}
+.core-group-head a {
+    text-decoration: none;
+    border-bottom: 1px dashed #4677b6;
+}
 /*
 TAB class table
 */

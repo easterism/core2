@@ -469,6 +469,15 @@ table.editTable td {
     text-align: center;
     text-decoration: none !important;
 }
+.core-group-head {
+	margin-bottom: 20px;
+	text-align: right;
+	padding-right: 3px;
+}
+.core-group-head a {
+	text-decoration: none;
+	border-bottom: 1px dashed #4677b6;
+}
 
 /*
 TAB class table
