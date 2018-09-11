@@ -459,17 +459,6 @@ LIST class search container
     font-weight: 600;
     padding-top: 8px;
 }
-/* Mobile */
-@media(max-width:767px) {
-    .searchContainer .searchRow div.ctrl-dpr {
-        min-width: 360px;
-    }
-    .password-control span.password-repeat {
-        display: block;
-        clear: both;
-        float: none;
-    }
-}
 .showFilterIcon {
 	cursor:pointer;
 	height: 16px;
@@ -1837,4 +1826,20 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     margin-right: 15px;
     padding: 3px 8px;
     height: 25px;
+}
+
+/* Mobile */
+@media(max-width:767px) {
+    .searchContainer .searchRow div.ctrl-dpr {
+        min-width: 360px;
+    }
+    .password-control span.password-repeat {
+        display: block;
+        clear: both;
+        float: none;
+    }
+    .core-group-head {
+        text-align: left;
+        width: 100%!important;
+    }
 }
