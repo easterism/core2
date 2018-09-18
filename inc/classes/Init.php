@@ -404,8 +404,6 @@
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
-                if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
-
                 // LOG USER ACTIVITY
                 $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
                 $this->logActivity($logExclude);
@@ -418,6 +416,8 @@
                 // SETUP ACL
                 $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();
+
+                if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
             }
             else {
                 // GET LOGIN PAGE
@@ -1129,13 +1129,13 @@
         private function checkBilling() {
 
             // НЕ проверять если это запрос на выход из системы
-            if ( ! empty($_GET['module']) &&
-                 ! empty($_GET['action']) &&
-                $_GET['module'] == 'admin' &&
-                $_GET['action'] == 'exit'
-            ) {
-                return '';
+            if ( ! empty($_GET['module']) && $_GET['module'] == 'admin' && $_SERVER['REQUEST_METHOD'] == 'PUT') {
+                parse_str(file_get_contents("php://input"), $put_vars);
+                if ( ! empty($put_vars['exit'])) {
+                    return '';
+                }
             }
+
 
             // НЕ проверять если это запрос на выполнение платежной операции
             if ( ! empty($_GET['module']) &&
@@ -1143,6 +1143,7 @@
                  ! empty($_POST['type_operation']) &&
                 $_GET['module'] == 'billing'
             ) {
+                $this->acl->allow($this->auth->ROLE, 'billing');
                 return '';
             }
 

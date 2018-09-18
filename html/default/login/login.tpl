@@ -8,7 +8,7 @@
 	<input name="action" type="hidden" />
 	<table>
 		<tr>
-			<td align="right">_tr("Логин:")</td>
+			<td align="right">_tr("Логин или email:")</td>
 			<td align="left"><input id="login" name="login" type="text" value="[ERROR_LOGIN]"/></td>
 		</tr>
 		<tr>

@@ -683,7 +683,7 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"password-control {$change_class}\">";
 								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-1\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
 								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">повторите</span> ";
-								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}";
+								$controlGroups[$cellId]['html'][$key] .= "<div class=\"pass-2-container\"><input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}</div>";
 								$controlGroups[$cellId]['html'][$key] .= "</div>";
 							}
 						}
@@ -970,13 +970,13 @@ class editTable extends initEdit {
 									foreach ($files as $file) {
 									    if (in_array($file['type'], array('image/jpeg', 'image/png', 'image/gif'))) {
                                             $controlGroups[$cellId]['html'][$key] .=
-                                                "<div>" .
+                                                "<div class=\"fileupload-file-readonly\">" .
                                                     "<a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">" .
                                                         "<img class=\"img-rounded\" src=\"index.php?module={$module}&filehandler={$this->table}&thumbid={$file['id']}\" alt=\"{$file['filename']}\">" .
                                                     "</a>" .
                                                 "</div>";
                                         } else {
-                                            $controlGroups[$cellId]['html'][$key] .= "<div><a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
+                                            $controlGroups[$cellId]['html'][$key] .= "<div class=\"fileupload-file-readonly\"><i class=\"fa fa-file-text-o\"></i> <a href=\"index.php?module={$module}&fileid={$file['id']}&filehandler={$this->table}\">{$file['filename']}</a></div>";
                                         }
 									}
 								} else {
@@ -1098,6 +1098,8 @@ class editTable extends initEdit {
                                                     <span class="preview">
                                                         {% if (file.thumbnail_url) { %}
                                                             <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
+                                                        {% } else { %}
+                                                            <i class="fa fa-file-text-o"></i>
                                                         {% } %}
                                                     </span>
                                                 </td>

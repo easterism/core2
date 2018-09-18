@@ -123,12 +123,14 @@ function changeRoot(obj, to, actionSelect) {
 				}
 
 				if (issetSubmodules) {
+                    $(parent.childNodes[i]).addClass('module-isset-submodules');
                     $(parent.childNodes[i]).find('.nav-second-level-toggle').removeClass('fa-angle-right');
                     if ($(window).width() < 768 || ! $('.s-toggle')[0]) {
                         $(parent.childNodes[i]).find('.module-submodules').show()
                     }
 				} else {
-					$(parent.childNodes[i]).find('.module-submodules').hide()
+					$(parent.childNodes[i]).removeClass('module-isset-submodules');
+					$(parent.childNodes[i]).find('.module-submodules').hide();
 				}
 			}
 		}
@@ -173,10 +175,15 @@ function logout() {
         cancelButtonText: "Нет"
     }).then(
         function(result) {
+        	preloader.show();
+
             $.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
 				.done(function (n) {
-					window.location='index.php';
+                    preloader.hide();
+					window.location = 'index.php';
+
 				}).fail(function (a,b,t){
+                	preloader.hide();
 					alert("Произошла ошибка: " + a.statusText);
 				});
         }, function(dismiss) {}
@@ -335,7 +342,12 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-    $("body").css("overflow", "auto");
+    $("body").removeClass("pdf-open");
+
+    if ($(window).width() < 768) {
+        $('#main').removeClass('s-toggle');
+        $('#menu-wrapper .module-submodules').hide();
+    }
 
 	if ( ! data && h !== url && url.indexOf('&__') < 0) {
         if (typeof callback === 'function') {
@@ -507,36 +519,32 @@ var loadPDF = function (url) {
 	);
 
 	$("#core-iframe").load( function() {
-        $("body").css("overflow", "hidden");
-
-        $("#main_body > .pdf-panel").css({
-            'margin-top': (-30 + $(document).scrollTop()),
-        });
+        $("body").addClass("pdf-open");
 
         $("#main_body .pdf-main-panel").css({
-            'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+            'height': ($("body").height() - ($("#navbar-top").height()) - 40)
         });
 
 		preloader.hide();
 		$('.pdf-panel').removeClass('hidden');
         $(window).hashchange( function() {
-            $("body").css("overflow", "auto");
+            $("body").removeClass("pdf-open");
         });
 	});
 };
 
 function removePDF() {
     $('.pdf-panel').remove();
-    $('body').css('overflow', 'auto');
+    $('body').removeClass('pdf-open');
 }
 
 function resize() {
     $("#main_body > .pdf-panel").css({
-        'margin-top': (-30 + $(document).scrollTop()),
+        'margin-top': $(document).scrollTop() - 30
     });
 
     $("#main_body .pdf-main-panel").css({
-        'height': ($("body").height() - ($("#navbar-top").height()) - 40),
+        'height': ($("body").height() - ($("#navbar-top").height()) - 40)
     });
 }
 
@@ -651,8 +659,8 @@ $(document).ready(function() {
 
     if ($.cookie('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
-        $('#main').toggleClass('s-toggle');
         if ($(window).width() >= 768) {
+            $('#main').toggleClass('s-toggle');
         	$('#menu-wrapper .module-submodules').hide();
 		}
     }
@@ -680,7 +688,7 @@ $(document).ready(function() {
     $(".swipe-area").swipe({
         swipeStatus: function(event, phase, direction, distance, duration, fingers) {
             var width = $(window).width();
-            if (phase === "move" && ((width <= 768 && direction === "right") || (width > 768 && direction === "left"))) {
+            if (phase === "move" && ((width < 768 && direction === "right") || (width >= 768 && direction === "left"))) {
                 $("#main").addClass("s-toggle");
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').hide();
@@ -688,7 +696,7 @@ $(document).ready(function() {
                 $.cookie('sidebar_collapse', 1);
                 return false;
             }
-            if (phase === "move" && ((width <= 768 && direction === "left") || (width > 768 && direction === "right"))) {
+            if (phase === "move" && ((width < 768 && direction === "left") || (width >= 768 && direction === "right"))) {
                 $("#main").removeClass("s-toggle");
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').show();
