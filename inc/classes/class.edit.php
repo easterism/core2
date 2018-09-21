@@ -1338,14 +1338,12 @@ $controlGroups[$cellId]['html'][$key] .= "
 
 			//echo "<PRE>";print_r($controlGroups);echo"</PRE>";die();
 			$fromReplace = array();
-			$toReplace = array();
-			$groupAction = false;
+			$toReplace   = array();
 			foreach ($controlGroups as $cellId => $value) {
 				$fromReplace[] = "[$cellId]";
-				$html = '';
+				$html          = '';
 				if (!empty($value['group'])) {
-					$groupAction = true;
-					$html .= '<div class="accordion">';
+					$html   .= '<div>';
 					$ingroup = false;
 					foreach ($value['html'] as $key => $control) {
 						foreach ($value['group'] as $group) {
@@ -1353,7 +1351,12 @@ $controlGroups[$cellId]['html'][$key] .= "
 								if ($ingroup) {
 									$html .= '</div>';
 								}
-								$html .= '<h3><a href="javascript:void(false);">' . $group['name'] . '</a></h3>' . ($group['collapsed'] ? '<div class="hide">' : '<div>');
+
+                                $styles_head = $this->firstColWidth ? "width:{$this->firstColWidth};\"" : "width:190px";
+                                $styles_body = $group['collapsed'] ? 'display:none' : '';
+
+                                $html .= "<h3 class=\"core-group-head\" style=\"{$styles_head}\"><a href=\"javascript:void(0);\" onclick=\"edit.toggleGroup(this);\">{$group['name']}</a></h3>";
+								$html .= "<div class=\"core-group-body\" style=\"{$styles_body}\">";
 								$ingroup = true;
 								break;
 							}
@@ -1370,15 +1373,6 @@ $controlGroups[$cellId]['html'][$key] .= "
 			}
 
 			$this->HTML .= str_replace($fromReplace, $toReplace, $this->template);
-			if ($groupAction) {
-				// if any GROUPS exists enable switcher
-				$this->HTML .= '<script>
-					  $(".accordion h3").click(function() {
-							$(this).next().toggleClass(\'hide\');
-							return false;
-						});
-					  </script>';
-			}
 		}
 		//buttons area
 		$this->HTML .= "<div class=\"buttons-container\">";

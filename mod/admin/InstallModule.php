@@ -232,9 +232,9 @@ class InstallModule extends \Common {
         $is_writeable = is_writeable("{$prefix}mod") || is_writeable("{$pathToMod}");
         if ($is_writeable && (!file_exists("{$pathToMod}") || !file_exists($pathToVer))) {
             if (!file_exists("{$pathToMod}")) {
-                mkdir("{$pathToMod}", null, true);
+                mkdir("{$pathToMod}", '0777', true);
             }
-            mkdir($pathToVer, null, true);
+            mkdir($pathToVer, '0777', true);
         }
         if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
             $this->is_visible = "N";
@@ -278,7 +278,7 @@ class InstallModule extends \Common {
      */
     private function autoDestination($destinationFolder) {
         if (!is_dir($destinationFolder)) {
-            if (!mkdir($destinationFolder, null, true)) {
+            if (!mkdir($destinationFolder, '0777', true)) {
                 throw new \Exception($this->translate->tr("Не могу создать директорию для разархивирования") . " ('{$destinationFolder}').");
             }
         }
@@ -973,7 +973,7 @@ class InstallModule extends \Common {
                 $pathTo = $dirTo . DIRECTORY_SEPARATOR . $value;
                 if (is_dir($path)) {
                     if (!is_dir($pathTo)) {
-                        mkdir($pathTo, null, true);
+                        mkdir($pathTo, '0777', true);
                     }
                     $this->justCopyFiles($path, $pathTo);
                 } else {
@@ -1787,9 +1787,9 @@ class InstallModule extends \Common {
                 $is_writeable = is_writeable("{$prefix}mod") || is_writeable($pathToMod);
                 if ($is_writeable && (!file_exists($pathToMod) || !file_exists($pathToVer))) {
                     if (!file_exists($pathToMod)) {
-                        mkdir($pathToMod, null, true);
+                        mkdir($pathToMod, '0777', true);
                     }
-                    mkdir($pathToVer, null, true);
+                    mkdir($pathToVer, '0777', true);
                 }
                 if (!$is_writeable || (file_exists($pathToVer) && !is_writeable($pathToVer))) {
                     $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Перезапись файлов прервана"), $this->translate->tr("Папка закрыта для записи"), "danger");

@@ -18,7 +18,6 @@ body {
 #mainContainer {
     padding: 80px 30px 30px;
 	height: auto;
-    overflow: auto;
 }
 #main_body {
 	height: auto;
@@ -245,7 +244,8 @@ PRELOADERS
     cursor: wait;
 }
 #preloader > .block {
-    width: 140px;
+    min-width: 140px;
+    max-width: 200px;
     padding: 8px 15px;
     background: #ffffff;
     -webkit-border-radius: 4px;
@@ -274,6 +274,9 @@ PRELOADERS
     margin-right: 13px;
     -webkit-animation: preloader-spinner 400ms linear infinite;
             animation: preloader-spinner 400ms linear infinite;
+}
+#preloader > .block .spinner-text {
+    display: inline-block;
 }
 
 @-webkit-keyframes preloader-spinner {
@@ -459,17 +462,6 @@ LIST class search container
     padding-right: 10px;
     font-weight: 600;
     padding-top: 8px;
-}
-/* Mobile */
-@media(max-width:767px) {
-    .searchContainer .searchRow div.ctrl-dpr {
-        min-width: 360px;
-    }
-    .password-control span.password-repeat {
-        display: block;
-        clear: both;
-        float: none;
-    }
 }
 .showFilterIcon {
 	cursor:pointer;
@@ -661,6 +653,16 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox2 input[type=checkbox],
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
+}
+.core-group-head {
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-align: right;
+    padding-right: 10px;
+}
+.core-group-head a {
+    text-decoration: none;
+    border-bottom: 1px dashed #4677b6;
 }
 /*
 TAB class table
@@ -1821,10 +1823,27 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 }
 .pdf-main-panel {
     overflow: hidden;
+    background-color: #e5e5e5;
 }
 .pdf-tool-panel button {
     float: right;
     margin-right: 15px;
     padding: 3px 8px;
     height: 25px;
+}
+
+/* Mobile */
+@media(max-width:767px) {
+    .searchContainer .searchRow div.ctrl-dpr {
+        min-width: 360px;
+    }
+    .password-control span.password-repeat {
+        display: block;
+        clear: both;
+        float: none;
+    }
+    .core-group-head {
+        text-align: left;
+        width: 100%!important;
+    }
 }
