@@ -2,7 +2,7 @@
     <div class="lock-screen"></div>
     <div class="block">
         <div class="spinner-icon"></div>
-        <div class="">Загрузка...</div>
+        <div class="spinner-text">Загрузка...</div>
     </div>
 </div>
 <table id="main" width="100%"><tbody><tr>

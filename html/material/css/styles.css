@@ -244,7 +244,8 @@ PRELOADERS
     cursor: wait;
 }
 #preloader > .block {
-    width: 140px;
+    min-width: 140px;
+    max-width: 200px;
     padding: 8px 15px;
     background: #ffffff;
     -webkit-border-radius: 4px;
@@ -273,6 +274,9 @@ PRELOADERS
     margin-right: 13px;
     -webkit-animation: preloader-spinner 400ms linear infinite;
             animation: preloader-spinner 400ms linear infinite;
+}
+#preloader > .block .spinner-text {
+    display: inline-block;
 }
 
 @-webkit-keyframes preloader-spinner {
