@@ -4,7 +4,7 @@
 <html>
 <head>
 	<title>{system_name}</title>
-	<link href="core2/html/default/style2.css" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/style2.css?_=3" type="text/css" rel="stylesheet"/>
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
@@ -23,7 +23,7 @@
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=2"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/js.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
