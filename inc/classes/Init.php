@@ -3,7 +3,7 @@
 
     // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
     define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . "/");
-    define("DOC_PATH", substr(DOC_ROOT, strlen($_SERVER['DOCUMENT_ROOT'])) ? : '/');
+    define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
     $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
     if (!file_exists($conf_file)) {
@@ -192,9 +192,9 @@
          * @var \Core2\Acl
          */
         protected $acl;
-        private $is_cli = false;
-        private $is_rest = array();
-        private $is_soap = array();
+        protected $is_cli = false;
+        protected $is_rest = array();
+        protected $is_soap = array();
 
 
         /**
