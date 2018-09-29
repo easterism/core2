@@ -771,6 +771,24 @@
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\" language=\"javascript\">var coreTheme='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
             $html = str_replace("<!--modules-->",    $html,  $tpl->parse());
             $html = str_replace("<!--submodules-->", $html2, $html);
+
+            //publish conf.ini system.css
+            //publish conf.ini system.js
+            if (isset($this->config->system->js)) {
+                $system_js = "";
+                if (is_object($this->config->system->js)) {
+
+                    foreach ($this->config->system->js as $src) {
+                        if (file_exists($src))
+                            $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+                    }
+                } else {
+                    if (file_exists($src))
+                        $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+                }
+                $html = str_replace("<!--system_js-->", $system_js, $html);
+            }
+
             return $html;
         }
 
