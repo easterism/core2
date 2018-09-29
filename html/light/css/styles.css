@@ -434,16 +434,6 @@ LIST class search container
     font-weight: 600;
     padding-top: 8px;
 }
-/* Mobile */
-@media(max-width:767px) {
-    .searchContainer .searchRow div.ctrl-dpr {
-        min-width: 360px;
-    }
-    .password-control .password-repeat {
-        display: block;
-        clear: both;
-    }
-}
 .showFilterIcon {
     cursor:pointer;
     height: 16px;
@@ -634,6 +624,16 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox2 input[type=checkbox],
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
+}
+.core-group-head {
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-align: right;
+    padding-right: 10px;
+}
+.core-group-head a {
+    text-decoration: none;
+    border-bottom: 1px dashed #4677b6;
 }
 
 /* Mobile */
@@ -1689,3 +1689,19 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 ::-moz-placeholder          {color:#aaa;}/* Firefox 19+ */
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */
 :-ms-input-placeholder      {color:#aaa;}
+
+
+/* Mobile */
+@media(max-width:767px) {
+    .searchContainer .searchRow div.ctrl-dpr {
+        min-width: 360px;
+    }
+    .password-control .password-repeat {
+        display: block;
+        clear: both;
+    }
+    .core-group-head {
+        text-align: left;
+        width: 100%!important;
+    }
+}

@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="core2/html/bootstrap/css/bootstrap.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/material-design-iconic-font.min.css" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/bootstrap/css/menu.css" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/bootstrap/css/styles.css?_=3" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/menu.css?_=2" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/styles.css?_=5" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
@@ -39,9 +39,9 @@
     <![endif]-->
 
     <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.list.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.edit.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/class.edit.js?_=2"></script>
     <script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/main.js"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/bootstrap/js/main.js?_=2"></script>
 	<!--xajax-->
 </head>
 <body>
