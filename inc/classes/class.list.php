@@ -240,9 +240,9 @@ class listTable extends initList {
 
             if ($this->checkAcl($this->resource, 'list_owner') && !$this->checkAcl($this->resource, 'list_all')) {
                 if ($noauthor) {
-                    throw new Exception("Данные не содержат признака автора!");
+                    throw new \Exception("Данные не содержат признака автора!");
                 } else {
-                    $auth     = Zend_Registry::get('auth');
+                    $auth     = \Zend_Registry::get('auth');
                     $questions[] = $auth->NAME;
                     $search = " AND author=?";
                 }
@@ -384,10 +384,10 @@ class listTable extends initList {
         }
         if (!$this->extOrder && !$this->customSearchHasVal) {
             if ($order) {
-                $orderField     = $order + 1;
-                $tempSQL = $this->SQL;
-                $check = explode("ORDER BY", $tempSQL);
-                $lastPart = end($check);
+                $orderField = $order + 1;
+                $tempSQL    = $this->SQL;
+                $check      = explode("ORDER BY", $tempSQL);
+                $lastPart   = end($check);
                 if (count($check) > 1 && !empty($lastPart) && strpos($lastPart, 'FROM ') === false) {
                     $tempSQL = "";
                     $co = count($check);
@@ -527,7 +527,7 @@ class listTable extends initList {
         }
         $this->HTML .= $tpl->parse();
 
-        $tplRoot = new Templater2('core2/html/' . THEME . "/list/list.tpl");
+        $tplRoot = new Templater2('core2/html/' . THEME . "/list/list.html");
         $tplRoot->assign('[ID]', "list{$this->resource}");
         $serviceHeadHTML = "";
         $sqlSearchCount = 0;

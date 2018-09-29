@@ -443,16 +443,15 @@ var listx = {
 	initSort : function(id, tbl) {
 		$("#list" + id + " > tbody").sortable({ opacity:0.6,
 			distance:5,
+            axis: "y",
 			start:function (event, ui) {
 				ui.helper.click(function (event) {
 					event.stopImmediatePropagation();
 					event.stopPropagation();
 					return false;
 				});
-
 			},
 			update : function (event, ui) {
-
 				var src = ui.item[0].parentNode.childNodes;
 				var so = new Array();
 				if (src) {
@@ -470,13 +469,20 @@ var listx = {
 						}
 					}
 				}
-				$.post("index.php?module=admin&action=seq",
-					{data : so, tbl : tbl},
+
+                $.post("index.php?module=admin&action=seq",
+					{data : so, tbl : tbl, id : ui.item[0].parentNode.parentNode.id},
 					function (data, textStatus) {
 						if (textStatus != 'success') {
 							alert(textStatus);
-						} else {
-							if (data && data.error) alert(data.error);
+                            $(ui.item[0].parentNode).sortable( "cancel" );
+                            return false;
+                        } else {
+                            if (data && data.error) {
+                            	alert(data.error);
+                                $(ui.item[0].parentNode).sortable( "cancel" );
+                                return false;
+                            }
 						}
 					},
 					"json"
