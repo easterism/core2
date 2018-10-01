@@ -541,7 +541,7 @@ class CoreController extends Common {
 		$this->db->beginTransaction();
 		try {
             $ss = new SessionContainer('Search');
-            $tbl_id = "main_" . substr($_POST['id'], 4);
+            $tbl_id = "main_" . $_POST['id'];
             $tmp = $ss->$tbl_id;
             if ($tmp && !empty($tmp['order'])) {
                 throw new \Exception($this->translate->tr("Ошибка! Сначала переключитесь на сортировку по умолчанию."));

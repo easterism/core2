@@ -811,9 +811,9 @@ var listx = {
                             var el = src[k].childNodes[0];
                             if (el && el.nodeName === "TD") {
                                 if (typeof el.getAttribute === "function") {
-                                    var id = el.getAttribute("title");
-                                    if (id) {
-                                        so.push(id);
+                                    var title = el.getAttribute("title");
+                                    if (title) {
+                                        so.push(title);
                                     }
                                 }
                             }
@@ -821,13 +821,16 @@ var listx = {
                     }
                 }
                 $.post("index.php?module=admin&action=seq",
-                    {data : so, tbl : tbl},
+                    {data : so, tbl : tbl, id : id},
                     function (data, textStatus) {
                         if (textStatus !== 'success') {
-                            alert(textStatus);
+                            $(ui.item[0].parentNode).sortable( "cancel" );
+                            return false;
                         } else {
                             if (data && data.error) {
                                 swal(data.error, '', 'error').catch(swal.noop);
+                                $(ui.item[0].parentNode).sortable( "cancel" );
+                                return false;
                             }
                         }
                     },
