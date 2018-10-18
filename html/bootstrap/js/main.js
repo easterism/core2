@@ -425,7 +425,13 @@ var load = function (url, data, id, callback) {
                     if (!a.status) swal("Превышено время ожидания ответа. Проверьте соединение с Интернет.", '', 'error').catch(swal.noop);
                     else if (a.status === 500) swal("Во время обработки вашего запроса произошла ошибка.", '', 'error').catch(swal.noop);
                     else if (a.status === 404) swal("Запрашиваемый ресурс не найден.", '', 'error').catch(swal.noop);
-                    else if (a.status === 403) swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+                    else if (a.status === 403) {
+                        if (current_module !== load_module || current_action !== load_action) {
+                            location.reload();
+                        } else {
+                            swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
+                        }
+                    }
                     else swal("Произошла ошибка: " + a.statusText, '', 'error').catch(swal.noop);
                 }
 			});
