@@ -5,7 +5,6 @@
 	<noscript>
 		<input name="js_disabled" type="hidden" value="1"/>
 	</noscript>
-	<input name="action" type="hidden" />
 	<table>
 		<tr>
 			<td align="right">_tr("Логин или email:")</td>
