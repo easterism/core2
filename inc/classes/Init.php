@@ -2,7 +2,7 @@
     header('Content-Type: text/html; charset=utf-8');
 
     // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-    define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . "/");
+    define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
     define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
     $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
@@ -145,13 +145,13 @@
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        if ($config->session->phpSaveHandler && $config->session->phpSaveHandler == 'memcache') {
+        if ($config->session->saveHandler && $config->session->saveHandler === 'memcache') {
             $cache = StorageFactory::factory(array(
                 'adapter' => array(
                     'name' => 'memcached',
                     'options' => array(
-                        'servers' => array("host" => $config->session->savePath)
-                    ),
+                        'server' => $config->session->savePath
+                    )
                 )
             ));
             $sess_manager->setSaveHandler(new Cache($cache));
@@ -978,7 +978,7 @@
                 unset($temp2[key($temp2)]);
                 $api = true;
             } //TODO do it for SOAP
-            
+
             $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
 
             $co = count($temp2);
