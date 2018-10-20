@@ -276,7 +276,7 @@ class Common extends \Core2\Acl {
 	 * @param string $href   CSS filename
 	 */
 	protected function printCssModule($module, $href) {
-        $src_mod = $this->getModuleSrc($module);
+        $src_mod = $this->getModuleLoc($module);
         Tool::printCss($src_mod . $href);
 	}
 
@@ -299,7 +299,7 @@ class Common extends \Core2\Acl {
 	 * @param bool   $chachable
 	 */
 	protected function printJsModule($module, $src, $chachable = false) {
-		$src_mod = $this->getModuleSrc($module);
+		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
 
