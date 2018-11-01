@@ -421,7 +421,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
+                if (!empty($_POST['xjxr']) && array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
                 return $this->getLogin();
