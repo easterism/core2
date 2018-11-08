@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="core2/html/bootstrap/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/bootstrap/css/menu.css?_=2" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/bootstrap/css/styles.css?_=5" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/bootstrap/css/styles.css?_=6" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/bootstrap/css/jquery.ui.theme.css" type="text/css"/>

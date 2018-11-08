@@ -477,6 +477,7 @@ table.editTable td {
 .core-group-head a {
 	text-decoration: none;
 	border-bottom: 1px dashed #4677b6;
+	white-space: nowrap;
 }
 
 /*
