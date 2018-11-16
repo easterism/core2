@@ -153,20 +153,14 @@ class CoreController extends Common {
 
 		$errorNamespace = new SessionContainer('Error');
 		$blockNamespace = new SessionContainer('Block');
-		$tokenNamespace = new SessionContainer('Token');
 		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
             return false;
 		}
-		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
-			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
-				$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
-                return false;
-			}
 			try {
 			    $db = $this->getConnection($this->config->database);
 			} catch (Exception $e) {
@@ -288,7 +282,6 @@ class CoreController extends Common {
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
-					$sign = '#';
 				}
 			} else {
 				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");
@@ -499,9 +492,9 @@ class CoreController extends Common {
                 }
                 if ($authorOnly) {
                     if ($noauthor) {
-                        throw new Exception($this->translate->tr("Данные не содержат признака автора!"));
+                        throw new \Exception($this->translate->tr("Данные не содержат признака автора!"));
                     } else {
-                        $auth = Zend_Registry::get('auth');
+                        $auth = \Zend_Registry::get('auth');
                     }
                 }
                 if ($nodelete) {
@@ -524,10 +517,10 @@ class CoreController extends Common {
                 $this->db->commit();
             } catch (Exception $e) {
                 $this->db->rollback();
-                throw new Exception($e->getMessage(), 13);
+                throw new \Exception($e->getMessage(), 13);
             }
         } else {
-            throw new Exception(911, 13);
+            throw new \Exception(911, 13);
         }
         return true;
     }
@@ -537,8 +530,15 @@ class CoreController extends Common {
 	 * Обновление последовательности записей
 	 */
 	public function action_seq () {
+        if (empty($_POST['id'])) return '{}';
 		$this->db->beginTransaction();
 		try {
+            $ss = new SessionContainer('Search');
+            $tbl_id = "main_" . $_POST['id'];
+            $tmp = $ss->$tbl_id;
+            if ($tmp && !empty($tmp['order'])) {
+                throw new \Exception($this->translate->tr("Ошибка! Сначала переключитесь на сортировку по умолчанию."));
+            }
 			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
 			$tbl = $arr[0];
 			$res = $this->db->fetchPairs("SELECT id, seq FROM `$tbl` WHERE id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC");

@@ -7,7 +7,6 @@
     <!-- BEGIN error -->
         <p class="error">[ERROR_MSG]</p>
     <!-- END error -->
-    <input name="action" type="hidden" />
     <label for="input-login" class="sr-only">Логин или email</label>
     <input type="text" name="login" id="input-login" class="form-control" placeholder="Логин или email" required autofocus value="[ERROR_LOGIN]">
     <label for="gfhjkm" class="sr-only">Пароль</label>

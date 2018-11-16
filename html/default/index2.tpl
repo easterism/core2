@@ -13,6 +13,7 @@
 	<link rel="stylesheet" href="core2/html/default/style2.css?_=3" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
+	<!--system_css-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
@@ -54,5 +55,6 @@
 <div id="rootContainer">
 <!--index-->
 </div>
+<!--system_js-->
 </body>
 </html>

@@ -2,8 +2,8 @@
     header('Content-Type: text/html; charset=utf-8');
 
     // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-    define("DOC_ROOT", dirname($_SERVER['SCRIPT_FILENAME']) . "/");
-    define("DOC_PATH", substr(DOC_ROOT, strlen($_SERVER['DOCUMENT_ROOT'])) ? : '/');
+    define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+    define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
     $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
     if (!file_exists($conf_file)) {
@@ -145,13 +145,13 @@
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        if ($config->session->phpSaveHandler && $config->session->phpSaveHandler == 'memcache') {
+        if ($config->session->saveHandler && $config->session->saveHandler === 'memcache') {
             $cache = StorageFactory::factory(array(
                 'adapter' => array(
                     'name' => 'memcached',
                     'options' => array(
-                        'servers' => array("host" => $config->session->savePath)
-                    ),
+                        'server' => $config->session->savePath
+                    )
                 )
             ));
             $sess_manager->setSaveHandler(new Cache($cache));
@@ -192,9 +192,9 @@
          * @var \Core2\Acl
          */
         protected $acl;
-        private $is_cli = false;
-        private $is_rest = array();
-        private $is_soap = array();
+        protected $is_cli = false;
+        protected $is_rest = array();
+        protected $is_soap = array();
 
 
         /**
@@ -421,7 +421,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
+                if (!empty($_POST['xjxr']) && array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
                 return $this->getLogin();
@@ -539,7 +539,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['action'])) {
+            if (isset($_POST['login'])) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -583,11 +583,6 @@
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
-            $u = crypt(uniqid(), microtime());
-            $tokenNamespace = new SessionContainer('Token');
-            $tokenNamespace->TOKEN = $u;
-            $tokenNamespace->setExpirationHops(1);
-            $tpl2->assign('name="action"', 'name="action" value="' . $u . '"');
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
@@ -771,6 +766,24 @@
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\" language=\"javascript\">var coreTheme='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
             $html = str_replace("<!--modules-->",    $html,  $tpl->parse());
             $html = str_replace("<!--submodules-->", $html2, $html);
+
+            //publish conf.ini system.css
+            //publish conf.ini system.js
+            if (isset($this->config->system->js)) {
+                $system_js = "";
+                if (is_object($this->config->system->js)) {
+
+                    foreach ($this->config->system->js as $src) {
+                        if (file_exists($src))
+                            $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+                    }
+                } else {
+                    if (file_exists($src))
+                        $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+                }
+                $html = str_replace("<!--system_js-->", $system_js, $html);
+            }
+
             return $html;
         }
 
@@ -960,7 +973,7 @@
                 unset($temp2[key($temp2)]);
                 $api = true;
             } //TODO do it for SOAP
-            
+
             $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
 
             $co = count($temp2);
