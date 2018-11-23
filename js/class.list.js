@@ -63,6 +63,9 @@ function dateInt(evt) {
 
 
 var listx = {
+	getDomId: function(id) {
+		return "list" + id;
+	},
 	look: function (id) {
 		$('#' + id).toggle();
 	},
@@ -119,7 +122,7 @@ var listx = {
 		var container = '';
 		var p = '_page_' + id + '=' + o.value;
 		if (isAjax)	{
-			container = document.getElementById("list" + id).parentNode;
+			container = document.getElementById(listx.getDomId(id)).parentNode;
 			if (listx.loc[id].indexOf('&__') < 0) {
 				if (container.id) {
 					location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
@@ -135,7 +138,7 @@ var listx = {
 		var o = $('#pagin_' + id).find('input');
 		var p = '_page_' + id + '=' + o.val();
 		if (isAjax)	{
-			container = document.getElementById("list" + id).parentNode;
+			container = document.getElementById(listx.getDomId(id)).parentNode;
 			if (listx.loc[id].indexOf('&__') < 0) {
 				if (container.id) {
 					location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(listx.loc[id] + "&" + p));
@@ -150,7 +153,7 @@ var listx = {
 	},
 	countSw: function(obj, id, isAjax) {
 		var container = '';
-		if (isAjax)	container = document.getElementById("list" + id).parentNode;
+		if (isAjax)	container = document.getElementById(listx.getDomId(id)).parentNode;
 		var post = {};
 		post['count_' + id] = obj.value;
 		load(listx.loc[id], post, container);
@@ -266,7 +269,7 @@ var listx = {
 					preloader.show();
 					$("#main_" + id + "_error").hide();
 					var container = '';
-					if (isAjax) var container = document.getElementById("list" + id).parentNode;
+					if (isAjax) var container = document.getElementById(listx.getDomId(id)).parentNode;
 					if (listx.loc[id]) {
 						$.ajax({
 							method: "DELETE",
@@ -387,7 +390,7 @@ var listx = {
 
 		if (listx.loc[id]) {
 			if (isAjax) {
-				container = document.getElementById("list" + id).parentNode;
+				container = document.getElementById(listx.getDomId(id)).parentNode;
 				load(listx.loc[id] + '&__filter=1', post, container);
 			} else {
 				load(listx.loc[id], post, container);
@@ -400,7 +403,7 @@ var listx = {
 		var container = '';
 		if (listx.loc[id]) {
 			if (isAjax) {
-				container = document.getElementById("list" + id).parentNode;
+				container = document.getElementById(listx.getDomId(id)).parentNode;
 				load(listx.loc[id] + '&__clear=1', post, container);
 			} else {
 				load(listx.loc[id], post, container);
@@ -419,7 +422,7 @@ var listx = {
 
 		if (listx.loc[id]) {
 			if (isAjax) {
-				container = document.getElementById("list" + id).parentNode;
+				container = document.getElementById(listx.getDomId(id)).parentNode;
 				load(listx.loc[id] + '&__search=1', post, container);
 			} else {
 				load(listx.loc[id], post, container);
@@ -433,7 +436,7 @@ var listx = {
 		post['orderField_main_' + id] = data;
 		if (listx.loc[id]) {
 			if (isAjax) {
-				container = document.getElementById("list" + id).parentNode;
+				container = document.getElementById(listx.getDomId(id)).parentNode;
 				load(listx.loc[id] + '&__order=1', post, container);
 			} else {
 				load(listx.loc[id], post, container);
@@ -441,18 +444,17 @@ var listx = {
 		}
 	},
 	initSort : function(id, tbl) {
-		$("#list" + id + " > tbody").sortable({ opacity:0.6,
+		$("#" + listx.getDomId(id) + " > tbody").sortable({ opacity:0.6,
 			distance:5,
+            axis: "y",
 			start:function (event, ui) {
 				ui.helper.click(function (event) {
 					event.stopImmediatePropagation();
 					event.stopPropagation();
 					return false;
 				});
-
 			},
 			update : function (event, ui) {
-
 				var src = ui.item[0].parentNode.childNodes;
 				var so = new Array();
 				if (src) {
@@ -461,29 +463,35 @@ var listx = {
 							var el = src[k].childNodes[0]
 							if (el && el.nodeName == "TD") {
 								if (typeof el.getAttribute == "function") {
-									var id = el.getAttribute("title");
-									if (id) {
-										so.push(id);
+									var title = el.getAttribute("title");
+									if (title) {
+										so.push(title);
 									}
 								}
 							}
 						}
 					}
 				}
-				$.post("index.php?module=admin&action=seq",
-					{data : so, tbl : tbl},
+                $.post("index.php?module=admin&action=seq",
+					{data : so, tbl : tbl, id : id},
 					function (data, textStatus) {
 						if (textStatus != 'success') {
 							alert(textStatus);
-						} else {
-							if (data && data.error) alert(data.error);
+                            $(ui.item[0].parentNode).sortable( "cancel" );
+                            return false;
+                        } else {
+                            if (data && data.error) {
+                            	alert(data.error);
+                                $(ui.item[0].parentNode).sortable( "cancel" );
+                                return false;
+                            }
 						}
 					},
 					"json"
 				);
 			}
 		});
-		$("#list" + id + " tbody").disableSelection();
+		$("#" + listx.getDomId(id) + " tbody").disableSelection();
 	},
 	fixHead: function (id) {
 		$('#' + id).floatThead({top: 55, zIndex: 200, headerCellSelector: 'tr.headerText>td:visible'})
