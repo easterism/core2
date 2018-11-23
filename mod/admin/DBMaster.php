@@ -188,7 +188,7 @@ class DBMaster {
 			while (list($k, $v) = each($a_cur_columns)) {
 				if(!isset($a_ini_tables[$key]['COLUMNS'][$k])) {
 					
-					$a_result['WARNING'][$op_pos] = "Таблица <b>$key</b> имеет столбец <b>$k</b>, которого нету в эталонной таблице.";
+					$a_result['WARNING'][$op_pos] = "Таблица <b>$key</b> имеет столбец <b>$k</b>, которого нет в эталонной таблице.";
 					//$a_result['SQL'][$op_pos] = $this->alterTableAddColumn($key, $k, $v);
 					// TODO: -- SQL for table creation
 					$op_pos++;
