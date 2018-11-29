@@ -355,6 +355,7 @@
          */
         public function dispatch() {
 
+
             if ($this->is_cli || PHP_SAPI === 'cli') {
                 return $this->cli();
             }
@@ -401,7 +402,6 @@
 
             // Парсим маршрут
             $route = $this->routeParse();
-
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 // LOG USER ACTIVITY

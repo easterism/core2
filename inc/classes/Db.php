@@ -1,7 +1,7 @@
 <?
 namespace Core2;
 
-use Zend\Session\Container as SessionContainer;
+use Zend\Cache\StorageFactory;
 
 /**
  * Class Db
@@ -21,7 +21,6 @@ class Db {
 		'automatic_serialization' => true
 	);
 	protected $backendOptions = array();
-	protected $backend        = 'File';
 	private $_s               = array();
 	private $_settings        = array();
 	private $_locations       = array();
@@ -63,10 +62,17 @@ class Db {
 		if ($k == 'cache') {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
-				$v = \Zend_Cache::factory('Core',
-					$this->backend,
-					$this->frontendOptions,
-					array('cache_dir' => $this->config->cache));
+                $core_config = $reg->get('core_config');
+                $options = $core_config->cache->options ? $core_config->cache->options->toArray() : [];
+                if (isset($options['cache_dir'])) $options['cache_dir'] = $this->config->cache;
+				$v = StorageFactory::factory(array(
+                    'adapter' => array(
+                        'name' => $core_config->cache->adapter,
+                        'options' => $options,
+                        'plugins' => ['serializer']
+                    )
+                ));
+                $v->addPlugin(StorageFactory::pluginFactory('serializer'));
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
@@ -234,7 +240,7 @@ class Db {
 	 * @return array
 	 */
 	public function getModuleName($resId) {
-		if ( ! ($this->cache->test($resId . '_name'))) {
+		if ( ! ($this->cache->hasItem($resId . '_name'))) {
 			$data = explode("_", $resId);
 			if ( ! empty($data[1])) {
 				$res = $this->db->fetchRow("
@@ -253,7 +259,7 @@ class Db {
                 ", $resId);
 				$res = array($res['m_name']);
 			}
-			$this->cache->save($res, $resId . '_name');
+			$this->cache->setItem($resId . '_name', $res);
 		} else {
 			$res = $this->cache->load($resId . '_name');
 		}
@@ -462,11 +468,12 @@ class Db {
 	 */
 	final public function isModuleActive($module_id) {
 		$key = "is_active_" . $this->config->database->params->dbname . "_" . $module_id;
-		if (!($this->cache->test($key))) {
+		if (!($this->cache->hasItem($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
-			$this->cache->save($is, $key, array('is_active_core_modules'));
+			$this->cache->setItem($key, $is);
+            $this->cache->setTags($key, array('is_active_core_modules'));
 		} else {
-			$is = $this->cache->load($key);
+			$is = $this->cache->getItem($key);
 		}
 		return $is;
 	}
@@ -505,7 +512,7 @@ class Db {
 		if (empty($id[1])) {
 			return false;
 		}
-		if (!($this->cache->test($key))) {
+		if (!($this->cache->hasItem($key))) {
 			$mods = $this->db->fetchRow("SELECT m.m_id, m_name, sm_path, m.module_id, is_system, sm.m_id AS sm_id
 											 FROM core_modules AS m
 												  LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
@@ -514,9 +521,10 @@ class Db {
 											  AND sm_key = ?
 											  ORDER BY sm.seq",
 				$id);
-			$this->cache->save($mods, $key, array('is_active_core_modules'));
+			$this->cache->setItem($key, $mods);
+            $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
-			$mods = $this->cache->load($key);
+			$mods = $this->cache->getItem($key);
 		}
 		return $mods;
 	}
@@ -530,11 +538,12 @@ class Db {
 	final public function isModuleInstalled($module_id) {
 		$module_id = trim(strtolower($module_id));
 		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
-		if (!($this->cache->test($key))) {
+		if (!($this->cache->hasItem($key))) {
 			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
-			$this->cache->save($is, $key, array('is_active_core_modules'));
+			$this->cache->setItem($key, $is);
+            $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
-			$is = $this->cache->load($key);
+			$is = $this->cache->getItem($key);
 		}
 		return $is;
 	}
@@ -591,7 +600,7 @@ class Db {
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
 		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
-		if (!($this->cache->test($module_id))) {
+		if (!($this->cache->hasItem($module_id))) {
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
 			} else {
@@ -609,9 +618,9 @@ class Db {
 					throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
 				}
 			}
-			$this->cache->save($loc, $module_id);
+			$this->cache->setItem($module_id, $loc);
 		} else {
-			$loc = $this->cache->load($module_id);
+			$loc = $this->cache->getItem($module_id);
 		}
 		$this->_locations[$module_id] = $loc;
 		return $loc;
@@ -643,7 +652,7 @@ class Db {
 	 */
 	final private function getAllSettings() {
 		$key = "all_settings_" . $this->config->database->params->dbname;
-		if (!($this->cache->test($key))) {
+		if (!($this->cache->hasItem($key))) {
 			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
 			$is = array();
 			foreach ($res as $item) {
@@ -653,9 +662,9 @@ class Db {
 					'is_personal_sw' => $item['is_personal_sw']
 				);
 			}
-			$this->cache->save($is, $key);
+			$this->cache->setItem($key, $is);
 		} else {
-			$is = $this->cache->load($key);
+			$is = $this->cache->getItem($key);
 		}
 		$this->_settings = $is;
 	}
