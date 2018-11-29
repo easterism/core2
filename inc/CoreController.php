@@ -153,20 +153,14 @@ class CoreController extends Common {
 
 		$errorNamespace = new SessionContainer('Error');
 		$blockNamespace = new SessionContainer('Block');
-		$tokenNamespace = new SessionContainer('Token');
 		if (!empty($post['js_disabled'])) {
 			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
             return false;
 		}
-		$sign = '?';
 		if (!empty($blockNamespace->blocked)) {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
-			if (empty($tokenNamespace->TOKEN) || $tokenNamespace->TOKEN !== $post['action']) {
-				$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
-                return false;
-			}
 			try {
 			    $db = $this->getConnection($this->config->database);
 			} catch (Exception $e) {
@@ -288,7 +282,6 @@ class CoreController extends Common {
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
-					$sign = '#';
 				}
 			} else {
 				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");

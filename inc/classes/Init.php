@@ -421,7 +421,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
+                if (!empty($_POST['xjxr']) && array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
                 return $this->getLogin();
@@ -539,7 +539,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['action'])) {
+            if (isset($_POST['login'])) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -583,11 +583,6 @@
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
-            $u = crypt(uniqid(), microtime());
-            $tokenNamespace = new SessionContainer('Token');
-            $tokenNamespace->TOKEN = $u;
-            $tokenNamespace->setExpirationHops(1);
-            $tpl2->assign('name="action"', 'name="action" value="' . $u . '"');
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
