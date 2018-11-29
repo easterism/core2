@@ -261,7 +261,7 @@ class Db {
 			}
 			$this->cache->setItem($resId . '_name', $res);
 		} else {
-			$res = $this->cache->load($resId . '_name');
+			$res = $this->cache->getItem($resId . '_name');
 		}
 		return $res;
 	}

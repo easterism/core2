@@ -10,7 +10,7 @@ require_once 'Acl.php';
 class CommonApi extends \Core2\Acl {
 
     /**
-     * @var StdClass|Zend_Session_Namespace
+     * @var StdClass|SessionContainer
      */
 	protected $auth;
 
