@@ -14,15 +14,7 @@ use Zend\Cache\StorageFactory;
  */
 class Db {
 
-    /**
-     * @var \Zend_Config_Ini
-     */
-	protected $config;
-	protected $frontendOptions = array(
-		'lifetime'                => 40000,
-		'automatic_serialization' => true
-	);
-	protected $backendOptions = array();
+    protected $config;
 	private $_s               = array();
 	private $_settings        = array();
 	private $_locations       = array();

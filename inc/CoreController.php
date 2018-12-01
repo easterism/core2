@@ -437,10 +437,7 @@ class CoreController extends Common {
 			$this->db->update($table_name, array($is_active => $status), $where);
 			//очистка кеша активности по всем записям таблицы
 			// используется для core_modules
-			$this->cache->clean(
-					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-					array("is_active_" . $table_name)
-			);
+			$this->cache->clearByTags(["is_active_" . $table_name]);
 
 			echo json_encode(array('status' => "ok"));
 		} catch (Exception $e) {
