@@ -463,15 +463,8 @@ class Db {
 	 * @return string
 	 */
 	final public function isModuleActive($module_id) {
-		$key = "is_active_" . $this->config->database->params->dbname . "_" . $module_id;
-		if (!($this->cache->hasItem($key))) {
-			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ? AND visible='Y'", $module_id);
-			$this->cache->setItem($key, $is);
-            $this->cache->setTags($key, array('is_active_core_modules'));
-		} else {
-			$is = $this->cache->getItem($key);
-		}
-		return $is;
+        $is = $this->isModuleInstalled($module_id);
+        return $is['visible'] === 'Y' ? true : false;
 	}
 
 
@@ -533,14 +526,19 @@ class Db {
 	 */
 	final public function isModuleInstalled($module_id) {
 		$module_id = trim(strtolower($module_id));
-		$key = "is_installed_" . $this->config->database->params->dbname . "_" . $module_id;
+		$key = "is_installed_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
-			$is = $this->db->fetchOne("SELECT 1 FROM core_modules WHERE module_id = ?", $module_id);
+			$res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules", $module_id);
+            $is = [];
+            foreach ($res as $item) {
+                $is[$item['module_id']] = $item;
+			}
 			$this->cache->setItem($key, $is);
-            $this->cache->setTags($key, ['is_active_core_modules']);
+            $this->cache->setTags($key, array('is_active_core_modules'));
 		} else {
 			$is = $this->cache->getItem($key);
 		}
+        $is = isset($is[$module_id]) ? $is[$module_id] : 0;
 		return $is;
 	}
 
@@ -596,27 +594,28 @@ class Db {
 		$module_id = trim(strtolower($module_id));
 		if (!$module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
 		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
-		if (!($this->cache->hasItem($module_id))) {
+		$module = $this->isModuleInstalled($module_id);
+		if (!$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
+
+		if (!isset($module['location'])) {
+            $key = "is_installed_" . $this->config->database->params->dbname;
 			if ($module_id == 'admin') {
 				$loc = "core2/mod/admin";
 			} else {
-				$m = $this->db->fetchRow("SELECT is_system, version FROM core_modules WHERE module_id = ?", $module_id);
-				if ($m) {
-					if ($m['is_system'] == "Y") {
-						$loc = "core2/mod/{$module_id}/v{$m['version']}";
-					} else {
-						$loc = "mod/{$module_id}/v{$m['version']}";
-						if (!is_dir(DOC_ROOT . $loc)) {
-							$loc = "mod/{$module_id}";
-						}
-					}
-				} else {
-					throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
-				}
+                if ($module['is_system'] === "Y") {
+                    $loc = "core2/mod/{$module_id}/v{$module['version']}";
+                } else {
+                    $loc = "mod/{$module_id}/v{$module['version']}";
+                    if (!is_dir(DOC_ROOT . $loc)) {
+                        $loc = "mod/{$module_id}";
+                    }
+                }
 			}
-			$this->cache->setItem($module_id, $loc);
+			$fromCache = $this->cache->getItem($key);
+            $fromCache[$module_id]['location'] = $loc;
+			$this->cache->setItem($key, $fromCache);
 		} else {
-			$loc = $this->cache->getItem($module_id);
+			$loc = $module['location'];
 		}
 		$this->_locations[$module_id] = $loc;
 		return $loc;
