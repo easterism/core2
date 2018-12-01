@@ -527,14 +527,14 @@ class Db {
 	final public function isModuleInstalled($module_id) {
 		$module_id = trim(strtolower($module_id));
 		$key = "is_installed_" . $this->config->database->params->dbname;
-		if (!($this->cache->hasItem($key))) {
-			$res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules", $module_id);
+		if (!$this->cache->hasItem($key)) {
+			$res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules");
             $is = [];
             foreach ($res as $item) {
                 $is[$item['module_id']] = $item;
 			}
 			$this->cache->setItem($key, $is);
-            $this->cache->setTags($key, array('is_active_core_modules'));
+            $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
 			$is = $this->cache->getItem($key);
 		}
@@ -595,13 +595,13 @@ class Db {
 		if (!$module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
 		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
 		$module = $this->isModuleInstalled($module_id);
-		if (!$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
 
 		if (!isset($module['location'])) {
             $key = "is_installed_" . $this->config->database->params->dbname;
-			if ($module_id == 'admin') {
+			if ($module_id === 'admin') {
 				$loc = "core2/mod/admin";
 			} else {
+                if (!$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
                 if ($module['is_system'] === "Y") {
                     $loc = "core2/mod/{$module_id}/v{$module['version']}";
                 } else {
@@ -614,6 +614,7 @@ class Db {
 			$fromCache = $this->cache->getItem($key);
             $fromCache[$module_id]['location'] = $loc;
 			$this->cache->setItem($key, $fromCache);
+            $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
 			$loc = $module['location'];
 		}

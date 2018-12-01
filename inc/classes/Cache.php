@@ -36,7 +36,7 @@ class Cache
      */
     public function __call($name, $arguments)
     {
-        call_user_func_array(array($this->adapter, $name), $arguments);
+        return call_user_func_array(array($this->adapter, $name), $arguments);
     }
 
     public function test($key) {
