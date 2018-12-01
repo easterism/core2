@@ -1,7 +1,9 @@
 <?
 namespace Core2;
 
+require_once "Cache.php";
 use Zend\Cache\StorageFactory;
+
 
 /**
  * Class Db
@@ -65,14 +67,16 @@ class Db {
                 $core_config = $reg->get('core_config');
                 $options = $core_config->cache->options ? $core_config->cache->options->toArray() : [];
                 if (isset($options['cache_dir'])) $options['cache_dir'] = $this->config->cache;
-				$v = StorageFactory::factory(array(
+                $options['namespace'] = "Core2";
+				$sf = StorageFactory::factory(array(
                     'adapter' => array(
                         'name' => $core_config->cache->adapter,
                         'options' => $options,
                         'plugins' => ['serializer']
                     )
                 ));
-                $v->addPlugin(StorageFactory::pluginFactory('serializer'));
+                $sf->addPlugin(StorageFactory::pluginFactory('serializer'));
+                $v = new Cache($sf);
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
