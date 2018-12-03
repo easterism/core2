@@ -242,12 +242,11 @@
             }
 
             $this->auth 	= new SessionContainer('Auth');
-            if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
+            if (!($this->auth->init)) { //регенерация сессии для предотвращения угона
                 $this->auth->getManager()->regenerateId();
-                $this->auth->initialized = true;
+                $this->auth->init = true;
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
-
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
