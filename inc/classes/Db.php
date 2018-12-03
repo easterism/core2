@@ -271,12 +271,14 @@ class Db {
 	 */
 	public function closeSession($expired = 'N') {
 		$auth = \Zend_Registry::get('auth');
-		if ($auth && $auth->ID && $auth->ID > 0 && $auth->LIVEID) {
-			$row = $this->dataSession->find($auth->LIVEID)->current();
-			if ($row) {
-                $row->logout_time = new \Zend_Db_Expr('NOW()');
-                $row->is_expired_sw = $expired;
-                $row->save();
+		if ($auth && $auth->ID) {
+		    if ($auth->LIVEID) {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                if ($row) {
+                    $row->logout_time = new \Zend_Db_Expr('NOW()');
+                    $row->is_expired_sw = $expired;
+                    $row->save();
+                }
             }
             $auth->getManager()->destroy();
         }
