@@ -161,6 +161,11 @@ class CoreController extends Common {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
+            $authNamespace = Zend_Registry::get('auth');
+            if (empty($this->auth->TOKEN) || $this->auth->TOKEN !== $post['action'] || $this->auth->TOKEN !== md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT'])) {
+                $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
+                return false;
+            }
 			try {
 			    $db = $this->getConnection($this->config->database);
 			} catch (Exception $e) {
@@ -256,7 +261,7 @@ class CoreController extends Common {
 					//$errorNamespace->setExpirationHops(1, 'ERROR');
 				} else {
 
-					$authNamespace = Zend_Registry::get('auth');
+
 					$authNamespace->accept_answer 		= true;
 					$sLife = $db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND code='session_lifetime' LIMIT 1");
 					if ($sLife) {

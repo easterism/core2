@@ -278,8 +278,8 @@ class Db {
                 $row->is_expired_sw = $expired;
                 $row->save();
             }
-            $auth->getManager()->destroy();
         }
+        $auth->getManager()->destroy();
     }
 
 
