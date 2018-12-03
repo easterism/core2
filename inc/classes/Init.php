@@ -245,6 +245,7 @@
             if (!($this->auth->init)) { //регенерация сессии для предотвращения угона
                 $this->auth->getManager()->regenerateId();
                 $this->auth->init = true;
+                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
@@ -401,6 +402,7 @@
 
             // Парсим маршрут
             $route = $this->routeParse();
+
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 // LOG USER ACTIVITY
@@ -420,7 +422,7 @@
             }
             else {
                 // GET LOGIN PAGE
-                if (!empty($_POST['xjxr']) && array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
+                if (!empty($_POST['xjxr']) || array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     throw new Exception('expired');
                 }
                 return $this->getLogin();
@@ -538,7 +540,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['login'])) {
+            if (isset($_POST['action'])) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -553,13 +555,13 @@
             }
             $tpl = new Templater2();
             if (Tool::isMobileBrowser()) {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.tpl");
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
             } else {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.tpl");
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
             }
 
             $tpl->assign('{system_name}', $this->getSystemName());
-            $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.tpl");
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.html");
 
             $errorNamespace = new SessionContainer('Error');
             $blockNamespace = new SessionContainer('Block');
@@ -582,6 +584,7 @@
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
+            $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }

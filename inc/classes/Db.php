@@ -280,8 +280,8 @@ class Db {
                     $row->save();
                 }
             }
-            $auth->getManager()->destroy();
         }
+        $auth->getManager()->destroy();
     }
 
 
