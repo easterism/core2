@@ -45,10 +45,10 @@
 	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js?_=2"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=2"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js?_=4"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js?_=5"></script>
     <!--[if IE]>
     <link rel="shortcut icon" href="favicon.ico">
     <![endif]-->
