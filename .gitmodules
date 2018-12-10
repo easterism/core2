@@ -25,3 +25,6 @@
 [submodule "mod/webservice/v1.11.0"]
 	path = mod/webservice/v1.11.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v1.10.1"]
+	path = mod/webservice/v1.10.1
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
