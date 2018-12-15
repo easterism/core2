@@ -4,6 +4,8 @@ namespace Core2;
 require_once DOC_ROOT . "/core2/inc/classes/Common.php";
 require_once DOC_ROOT . "/core2/inc/classes/class.list.php";
 
+use Zend\Session\Container as SessionContainer;
+
 /**
  * Class InstallModule
  */
@@ -674,10 +676,14 @@ class InstallModule extends \Common {
                 if ((string)$index != "comment") {
                     if (is_object($value) || is_array($value)) {
                         $value = self::xmlParse($value, $arrSkipIndices); // recursive call
+                        if (is_array($value) && isset($value[0]) && !$value[0]) {
+                            $value = array();
+                        }
                     }
                     if (in_array($index, $arrSkipIndices)) {
                         continue;
                     }
+                    if (is_scalar($value)) $value = trim($value);
                     $arrData[$index] = $value;
                 }
             }
@@ -1482,7 +1488,7 @@ class InstallModule extends \Common {
             $list->getData();
 
             //ПОИСК
-            $ss = new \Zend_Session_Namespace('Search');
+            $ss = new SessionContainer('Search');
             $ssi = 'main_' . $list_id;
             $ss = $ss->$ssi;
             $search = array();
@@ -1552,13 +1558,14 @@ class InstallModule extends \Common {
                 }
             }
             $tmp = array();
-            foreach ($copy_list as $key=>$val) {
+            foreach ($copy_list as $key => $val) {
                 $mVersion = $val['version'];
                 $mId = $val['install_info']['install']['module_id'];
                 $mName = $val['name'];
 
                 //зависимости модуля
                 $Inf = !empty($val['install_info']['install']['dependent_modules']) ? $val['install_info']['install']['dependent_modules'] : array();
+                if (isset($Inf[0])) unset($Inf[0]);
                 $deps = array();
                 if (
                     !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
