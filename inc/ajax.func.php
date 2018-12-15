@@ -4,6 +4,11 @@ require_once __DIR__ .'/classes/Common.php';
 require_once __DIR__ .'/classes/Image.php';
 
 use Zend\Session\Container as SessionContainer;
+use Zend\Validator\EmailAddress as ValidateEmailAddress;
+use Zend\Validator\Hostname as ValidateHostname;
+use Zend\I18n\Validator\IsFloat;
+use Zend\I18n\Validator\IsInt;
+
 
 
 /**
@@ -154,7 +159,7 @@ class ajaxFunc extends Common {
 		}
 		
 		if (count($email)) {
-			$validator = new Zend_Validate_EmailAddress();
+			$validator = new ValidateEmailAddress();
 			foreach ($email as $field) {
                 if ( ! $validator->isValid($control[$field]) &&
                      ! preg_match('/^((([0-9A-Za-z]{1}[-0-9A-z\.]{1,}[0-9A-Za-z]{1})|([0-9А-Яа-я]{1}[-0-9А-я\.]{1,}[0-9А-Яа-я]{1}))@([-0-9A-Za-zА-Яа-я]{1,}\.){1,2}[-A-Za-zрфбел]{2,})$/u', $control[$field])
@@ -169,7 +174,7 @@ class ajaxFunc extends Common {
 		}
 		
 		if (count($float)) {
-			$validator = new Zend_Validate_Float();
+			$validator = new IsFloat();
 			foreach ($float as $field) {
 				if (!$validator->isValid($control[$field])) {
 				    foreach ($validator->getMessages() as $message) {
@@ -209,7 +214,7 @@ class ajaxFunc extends Common {
 		}*/
 		
 		if (count($int)) {
-			$validator = new Zend_Validate_Int();
+			$validator = new IsInt();
 			foreach ($int as $field) {
 				if (!$validator->isValid($control[$field])) {
 				    foreach ($validator->getMessages() as $message) {
@@ -228,17 +233,17 @@ class ajaxFunc extends Common {
 		// }
 		
 		if (count($host)) {
-			$validator = new Zend_Validate_Hostname();
-			$validator->setMessage('Недопустимый тип данных, значение должно быть строкой', Zend_Validate_Hostname::INVALID);
-			$validator->setMessage("Значение '%value%' выглядит как IP-адрес, но IP-адреса не разрешены", Zend_Validate_Hostname::IP_ADDRESS_NOT_ALLOWED);
-			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но оно не дожно быть из списка доменов верхнего уровня", Zend_Validate_Hostname::UNKNOWN_TLD);
-			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но знак '-' находится в недопустимом месте", Zend_Validate_Hostname::INVALID_DASH);
-			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но оно не соответствует шаблону для доменных имен верхнего уровня '%tld%'", Zend_Validate_Hostname::INVALID_HOSTNAME_SCHEMA);
-			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но не удаётся извлечь домен верхнего уровня", Zend_Validate_Hostname::UNDECIPHERABLE_TLD);
-			$validator->setMessage("Значение '%value%' не соответствует ожидаемой структуре для DNS имени хоста", Zend_Validate_Hostname::INVALID_HOSTNAME);
-			$validator->setMessage("Значение '%value%' является недопустимым локальным сетевым адресом", Zend_Validate_Hostname::INVALID_LOCAL_NAME);
-			$validator->setMessage("Значение '%value%' выглядит как локальный сетевой адрес, но локальные сетевые адреса не разрешены", Zend_Validate_Hostname::LOCAL_NAME_NOT_ALLOWED);
-			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но указанное значение не может быть преобразованно в допустимый для DNS набор символов", Zend_Validate_Hostname::CANNOT_DECODE_PUNYCODE);
+			$validator = new ValidateHostname();
+			$validator->setMessage('Недопустимый тип данных, значение должно быть строкой', ValidateHostname::INVALID);
+			$validator->setMessage("Значение '%value%' выглядит как IP-адрес, но IP-адреса не разрешены", ValidateHostname::IP_ADDRESS_NOT_ALLOWED);
+			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но оно не дожно быть из списка доменов верхнего уровня", ValidateHostname::UNKNOWN_TLD);
+			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но знак '-' находится в недопустимом месте", ValidateHostname::INVALID_DASH);
+			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но оно не соответствует шаблону для доменных имен верхнего уровня '%tld%'", ValidateHostname::INVALID_HOSTNAME_SCHEMA);
+			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но не удаётся извлечь домен верхнего уровня", ValidateHostname::UNDECIPHERABLE_TLD);
+			$validator->setMessage("Значение '%value%' не соответствует ожидаемой структуре для DNS имени хоста", ValidateHostname::INVALID_HOSTNAME);
+			$validator->setMessage("Значение '%value%' является недопустимым локальным сетевым адресом", ValidateHostname::INVALID_LOCAL_NAME);
+			$validator->setMessage("Значение '%value%' выглядит как локальный сетевой адрес, но локальные сетевые адреса не разрешены", ValidateHostname::LOCAL_NAME_NOT_ALLOWED);
+			$validator->setMessage("Значение '%value%' выглядит как DNS имя хоста, но указанное значение не может быть преобразованно в допустимый для DNS набор символов", ValidateHostname::CANNOT_DECODE_PUNYCODE);
 			
 			foreach ($host as $field) {
 				if (!$validator->isValid($control[$field])) {
