@@ -1,9 +1,2 @@
-files:
-  - source: /**/*.php
-    ignore:
-      - /ext
-      - /tests
-      - /translations
-    translation: /translations/%locale%/%file_name%
-  - source: /html/**/*.html
-    translation: /translation/%two_letters_code%/%file_name%
+&ref_files
+files: []
