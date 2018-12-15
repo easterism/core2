@@ -8,11 +8,14 @@ namespace Core2;
  * @package    Сlasses
  * @subpackage I18n
  */
+use Zend\I18n\Translator\Translator;
+
 class I18n
 {
 
     private $translate;
     private $locale;
+    private $domain;
 
 
     /**
@@ -37,6 +40,7 @@ class I18n
                 $this->setup(array(
                         'adapter' => $config->translate->adapter,
                         'content' => DOC_ROOT . $content,
+                        'domain' => 'core2',
                         'locale'  => $lng
                 ));
             } catch (\Zend_Translate_Exception $e) {
@@ -55,7 +59,9 @@ class I18n
 	public function setup($config)
 	{
         if ($config['locale'] == 'ru') return;
-        $this->translate = new \Zend_Translate($config);
+        $this->translate = new Translator();
+        $this->setLocale($config['locale']);
+        $this->translate->addTranslationFile($config['adapter'], $config['content'], $config['domain'], $config['locale']);
 	}
 
     /**
@@ -89,8 +95,9 @@ class I18n
      * Добавление переводов для модулей
      * @param $location
      */
-    public function setupExtra($location) {
+    public function setupExtra($location, $domain) {
         $ini = $location . "/conf.ini";
+
         if ($this->translate && is_dir($location . "/translations") && file_exists($ini)) {
             $temp = parse_ini_file($ini, true);
             $goit = false;
@@ -107,7 +114,6 @@ class I18n
                 $config = new \Zend_Config_Ini($location . "/conf.ini", 'production');
             }
             if (isset($config->translate) && $config->translate->on) {
-
                 $lng = $this->getLocale();
                 if ($config->translate->adapter == 'gettext') {
                     $content = $location . "/translations/$lng.mo";
@@ -115,19 +121,7 @@ class I18n
                     Error::Exception("Адаптер перевода модуля не поддерживается");
                 }
                 try {
-                    $translate_second = new \Zend_Translate(
-                            array(
-                                    'adapter' => $config->translate->adapter,
-                                    'content' => $content,
-                                    'locale'  => $lng
-                            )
-                    );
-                    $this->translate->addTranslation(
-                            array(
-                                    'content' => $translate_second,
-                                    'locale'  => $lng
-                            )
-                    );
+                    $this->translate->addTranslationFile($config->translate->adapter, $content, $domain, $config['locale']);
                     unset($translate_second);
                 } catch (\Zend_Translate_Exception $e) {
                     Error::Exception($e->getMessage());
@@ -145,11 +139,11 @@ class I18n
 	 * @param   string $categ Категория к которой относится строка(необязательный параметр)
 	 * @return  string        Переведеная строка (если перевод не найден, возращает $str)
 	 */
-	public function tr($str, $categ = "")
+	public function tr($str, $domain = "core2")
 	{
         if (!$this->translate) {
             return $str;
         }
-		return $this->translate->_($str);
+		return $this->translate->translate($str, $domain, $this->locale);
 	}
 }

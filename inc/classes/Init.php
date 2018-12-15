@@ -481,7 +481,7 @@
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
                         if ($this->translate->isSetup()) {
-                            $this->translate->setupExtra($location);
+                            $this->translate->setupExtra($location, $module);
                         }
 
                         if ($this->auth->MOBILE) {
