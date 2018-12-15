@@ -1,0 +1,7 @@
+files:
+  - source: /
+    ignore:
+      - /ext
+      - /tests
+      - /translations
+    translation: /translations/%locale%/%file_name%
