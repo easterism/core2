@@ -242,12 +242,6 @@
             }
 
             $this->auth 	= new SessionContainer('Auth');
-            if (!($this->auth->init)) { //регенерация сессии для предотвращения угона
-                $this->auth->getManager()->regenerateId();
-                $this->auth->init = true;
-                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
-            }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
@@ -265,7 +259,10 @@
                     $this->closeSession('Y');
                 }
                 Zend_Registry::set('auth', $this->auth);
+            } else {
+                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
         }
 
 
