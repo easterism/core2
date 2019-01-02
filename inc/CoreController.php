@@ -287,6 +287,10 @@ class CoreController extends Common {
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
+                    if (!($authNamespace->init)) { //регенерация сессии для предотвращения угона
+                        $authNamespace->getManager()->regenerateId();
+                        $authNamespace->init = true;
+                    }
 				}
 			} else {
 				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");
