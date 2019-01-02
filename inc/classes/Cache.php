@@ -44,7 +44,9 @@ class Cache
     }
 
     public function load($key) {
-        return $this->adapter->getItem($key);
+        $data = $this->adapter->getItem($key);
+        if (!$data) $data = false; //совместимость с проверкой от zf1
+        return $data;
     }
 
     public function save($data, $key, $tags = []) {
