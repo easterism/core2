@@ -248,6 +248,11 @@ var control_datetimepicker = {
             }
             return false;
         });
+        $('.ctrl-dtp-day, .ctrl-dtp-month, .ctrl-dtp-year', wrapper).focus(function () {
+            $('.ctrl-dtp-container', wrapper).show('fast');
+            return false;
+        });
+
 
         /**
          * Очистка даты
@@ -381,7 +386,11 @@ $(document).ready(function(){
      */
     $(document).click(function(e) {
         var target = $(e.target);
-        if ($(target).parents('.ctrl-dtp-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length) {
+        if ($(target).parents('.ctrl-dtp-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length ||
+            $(target).hasClass('ctrl-dtp-day') ||
+            $(target).hasClass('ctrl-dtp-month') ||
+            $(target).hasClass('ctrl-dtp-year')
+        ) {
             return false;
 
         } else if ($('.ctrl-dtp-container').is(':visible')) {
