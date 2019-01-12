@@ -6,14 +6,21 @@ body {
     font-family: 'Work Sans', Arial, Helvetica, sans-serif;
     min-height: 100%;
     background: #ededed;
+    background: -moz-linear-gradient(45deg, rgba(32,70,93,1) 0%, rgba(95,119,124,1) 100%);
+    background: -webkit-gradient(linear, left bottom, right top, color-stop(0%, rgba(32,70,93,1)), color-stop(100%, rgba(95,119,124,1)));
+    background: -webkit-linear-gradient(45deg, rgba(32,70,93,1) 0%, rgba(95,119,124,1) 100%);
+    background: -o-linear-gradient(45deg, rgba(32,70,93,1) 0%, rgba(95,119,124,1) 100%);
+    background: -ms-linear-gradient(45deg, rgba(32,70,93,1) 0%, rgba(95,119,124,1) 100%);
+    background: linear-gradient(45deg, rgba(32,70,93,1) 0%, rgba(95,119,124,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#5f777c', endColorstr='#20465d',GradientType=1 );
     color: #777;
 }
 .login-form {
     width: 320px;
     padding: 40px 30px;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
     margin: auto;
     position: absolute;
     left: 0;
@@ -21,8 +28,8 @@ body {
     top: 15%;
     border: 0;
     background-color: #fff;
-    -webkit-box-shadow: 0 0 10px rgba(0,0,0,.15);
-    box-shadow:  0 0 10px rgba(0,0,0,0.15);
+    -webkit-box-shadow: 0 0 50px rgba(0,0,0,0.2);
+    box-shadow: 0 0 50px rgba(0,0,0,0.2);
 }
 .log-btn {
     font-size: 16px;
