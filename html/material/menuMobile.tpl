@@ -44,7 +44,7 @@
 					<div class="module-action"></div>
 				</div>
 				<ul id="user-section" class="nav navbar-top-links navbar-right">
-					<li class="pull-left dropdown">
+					<li class="nav navbar-nav nav-profile dropdown">
 						<div class="dropdown-toggle" data-toggle="dropdown">
 							<div class="avatar-container">
 								<img src="[GRAVATAR_URL]?&s=28&d=mm" alt=""/>
@@ -53,21 +53,25 @@
 						</div>
 						<ul class="dropdown-menu dropdown-menu-right dropdown-user">
 							<li class="dropdown-profile profile">
-								<a href="index.php#module=profile"></a>
+								<a href="index.php#module=profile"
+								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');"></a>
 							</li>
 							<li class="dropdown-profile messages">
-								<a href="index.php#module=profile&action=messages">
+								<a href="index.php#module=profile&action=messages"
+								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">
 									<i class="fa fa-envelope-o"></i>
 									Сообщения
 								</a>
 							</li>
 							<li class="dropdown-profile divider"></li>
 							<li class="dropdown-billing">
-								<a href="index.php#module=billing"></a>
+								<a href="index.php#module=billing"
+								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=billing');"></a>
 							</li>
 							<li class="dropdown-billing divider"></li>
 							<li class="dropdown-settings">
-								<a href="index.php#module=settings"></a>
+								<a href="index.php#module=settings"
+								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=settings');"></a>
 							</li>
 							<li class="dropdown-settings divider"></li>
 							<li>

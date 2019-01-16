@@ -412,13 +412,30 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected, ' +
-			  '#module-settings.menu-module-selected, ' +
-              '#module-billing.menu-module-selected')[0]
-        ) {
-            $('#user-section').addClass('active');
+        if ($('#module-profile.menu-module-selected')[0] &&
+			! $('#submodule-profile-messages.menu-submodule-selected')[0]
+		) {
+            $('#user-section .nav-profile, #user-section .dropdown-profile').addClass('active');
         } else {
-            $('#user-section').removeClass('active');
+            $('#user-section .nav-profile, #user-section .dropdown-profile').removeClass('active');
+        }
+
+        if ($('#module-settings.menu-module-selected')[0]) {
+			$('#user-section .nav-settings').addClass('active');
+        } else {
+			$('#user-section .nav-settings').removeClass('active');
+        }
+
+        if ($('#submodule-profile-messages.menu-submodule-selected')[0]) {
+			$('#user-section .nav-messages').addClass('active');
+        } else {
+			$('#user-section .nav-messages').removeClass('active');
+        }
+
+        if ($('#module-billing.menu-module-selected')[0]) {
+			$('#user-section .nav-billing').addClass('active');
+        } else {
+			$('#user-section .nav-billing').removeClass('active');
         }
 
 		if (!callback) {
@@ -577,31 +594,40 @@ $(document).ready(function() {
         if ( ! jQuery.support.leadingWhitespace || (document.all && ! document.querySelector)) {
             $("#mainContainer").prepend(
                 "<h2>" +
-                "<span style=\"color:red\">Внимание!</span> " +
-                "Вы пользуетесь устаревшей версией браузера. " +
-                "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
+					"<span style=\"color:red\">Внимание!</span> " +
+					"Вы пользуетесь устаревшей версией браузера. " +
+					"Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
                 "</h2>"
             );
         }
         if ($('#module-profile')[0]) {
-            var title = $('#module-profile .module-title').html();
+            let title = $('#module-profile .module-title').html();
             $('.dropdown-profile.profile > a').html(title);
-
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
-            if ($('#submodule-profile-messages')[0]) {
-                $('.dropdown-profile.messages').addClass('show');
-            }
         }
-        if ($('#module-settings')[0]) {
-            var title = $('#module-settings .module-title').html();
-            $('.dropdown-settings > a').html(title);
-            $('.dropdown-settings').addClass('show');
+		if ($('#submodule-profile-messages.menu-submodule-selected')[0]) {
+			$('#user-section .nav-messages').addClass('show');
+		}
+        if ($('#module-settings.menu-module-selected')[0]) {
+            $('#user-section .nav-settings').addClass('show');
         }
-        if ($('#module-billing')[0]) {
-        	var title = $('#module-billing .module-title').html();
-            $('.dropdown-billing > a').html(title);
-            $('.dropdown-billing').addClass('show');
+        if ($('#module-billing.menu-module-selected')[0]) {
+            $('#user-section .nav-billing').addClass('show');
+        }
+
+		if ($('#submodule-profile-messages')[0]) {
+			$('.dropdown-profile.messages').addClass('show');
+		}
+		if ($('#module-settings')[0]) {
+			let title = $('#module-settings .module-title').html();
+			$('.dropdown-settings > a').html(title);
+			$('.dropdown-settings').addClass('show');
+		}
+		if ($('#module-billing')[0]) {
+			let title = $('#module-billing .module-title').html();
+			$('.dropdown-billing > a').html(title);
+			$('.dropdown-billing').addClass('show');
         }
     });
 
