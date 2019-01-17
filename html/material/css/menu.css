@@ -286,9 +286,9 @@ a {color: #337AB7}
     float: left;
 }
 .dropdown-profile,
-.nav-settings,
-.nav-billing,
-.nav-messages,
+.nav > li.nav-settings,
+.nav > li.nav-billing,
+.nav > li.nav-messages,
 #module-settings,
 #module-profile,
 #module-billing,
