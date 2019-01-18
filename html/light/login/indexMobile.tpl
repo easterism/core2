@@ -20,7 +20,7 @@
     <link rel="icon" type="image/png" href="favicon.png"/>
 
     <link href="core2/html/light/css/bootstrap.min.css" rel="stylesheet">
-    <link href="core2/html/light/css/login.css?_=2" type="text/css" rel="stylesheet" />
+    <link href="core2/html/light/css/login.css?_=3" type="text/css" rel="stylesheet" />
 
     <script type="text/javascript" src="core2/js/md5.js"></script>
 

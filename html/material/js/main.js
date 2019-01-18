@@ -606,28 +606,21 @@ $(document).ready(function() {
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
         }
-		if ($('#submodule-profile-messages.menu-submodule-selected')[0]) {
+		if ($('#submodule-profile-messages')[0]) {
 			$('#user-section .nav-messages').addClass('show');
+            $('.dropdown-profile.messages').addClass('show');
 		}
-        if ($('#module-settings.menu-module-selected')[0]) {
+        if ($('#module-settings')[0]) {
+            let title = $('#module-settings .module-title').html();
+            $('.dropdown-settings > a').html(title);
+            $('.dropdown-settings').addClass('show');
             $('#user-section .nav-settings').addClass('show');
         }
-        if ($('#module-billing.menu-module-selected')[0]) {
+        if ($('#module-billing')[0]) {
+            let title = $('#module-billing .module-title').html();
+            $('.dropdown-billing > a').html(title);
+            $('.dropdown-billing').addClass('show');
             $('#user-section .nav-billing').addClass('show');
-        }
-
-		if ($('#submodule-profile-messages')[0]) {
-			$('.dropdown-profile.messages').addClass('show');
-		}
-		if ($('#module-settings')[0]) {
-			let title = $('#module-settings .module-title').html();
-			$('.dropdown-settings > a').html(title);
-			$('.dropdown-settings').addClass('show');
-		}
-		if ($('#module-billing')[0]) {
-			let title = $('#module-billing .module-title').html();
-			$('.dropdown-billing > a').html(title);
-			$('.dropdown-billing').addClass('show');
         }
     });
 
