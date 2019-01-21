@@ -263,41 +263,52 @@ a {color: #337AB7}
             user-select: none;
     background-image: none;
     border: 1px solid transparent;
-    border-radius: 4px;
     height: 50px;
 }
 #user-section .dropdown-toggle .fa-user {margin-right: 10px}
 #user-section .dropdown-toggle .fa-caret {margin-left: 5px}
 #user-section .dropdown-menu > li > a {color: #463265}
 #user-section .dropdown-menu i {margin-right: 5px}
-#user-section.active .dropdown-menu > li.active > a,
-#user-section.active {
+
+#user-section > .nav-profile > div.dropdown-toggle:focus,
+#user-section > .nav-profile > div.dropdown-toggle:hover {
+    background-color: #F0F0F0;
+}
+#user-section .active .dropdown-menu > li.active > a,
+#user-section .active {
     background-color: #F0F0F0;
     color: #463265;
 }
-.dropdown-settings,
+#user-section > .nav {
+    height: 50px;
+    line-height: 30px;
+    margin: 0;
+    float: left;
+}
 .dropdown-profile,
-.dropdown-billing,
+.nav > li.nav-settings,
+.nav > li.nav-billing,
+.nav > li.nav-messages,
 #module-settings,
 #module-profile,
 #module-billing,
 #submodule-profile-messages {
     display: none;
 }
-.dropdown-settings.show,
 .dropdown-profile.show {display: list-item}
-#msgCount {
+#user-section #msgCount {
     background-color: #FF4C80;
-    position: relative;
-    left: -5px;
-    padding: 3px 0px;
-    width: 19px;
-    height: 19px;
+    position: absolute;
+    right: 5px;
+    padding: 3px 0;
+    min-width: 15px;
+    height: 15px;
     text-align: center;
     margin-right: 1px;
     float: left;
+    font-size: 10px;
 }
-.avatar-container {
+#user-section .avatar-container {
     width: 28px;
     display: inline-block;
     height: 28px;
@@ -308,7 +319,7 @@ a {color: #337AB7}
     border-radius: 20px;
     position: relative;
 }
-.avatar-container img {
+#user-section .avatar-container img {
     margin-top: -1px;
     margin-left: -1px;
 }
@@ -394,6 +405,14 @@ a {color: #337AB7}
         width: min-content;
         min-width: 100%;
     }
+    .nav > li.nav-settings > a,
+    .nav > li.nav-billing > a,
+    .nav > li.nav-messages > a {
+        padding: 10px 8px;
+    }
+    .nav-settings.show,
+    .nav-billing.show,
+    .nav-messages.show {display: list-item}
 }
 /* Desktop */
 @media(min-width:768px) {

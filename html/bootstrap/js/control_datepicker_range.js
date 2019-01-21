@@ -314,6 +314,10 @@ var control_datepicker_range = {
             }
             return false;
         });
+        $('.ctrl-dpr-from-day, .ctrl-dpr-to-day, .ctrl-dpr-from-month, .ctrl-dpr-to-month, .ctrl-dpr-from-year, .ctrl-dpr-to-year', wrapper).focus(function () {
+            $('.ctrl-dpr-container', wrapper).show('fast');
+            return false;
+        });
 
         /**
          * Очистка даты
@@ -473,7 +477,14 @@ $(document).ready(function(){
      */
     $(document).click(function(e) {
         var target = $(e.target);
-        if ($(target).parents('.ctrl-dpr-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length) {
+        if ($(target).parents('.ctrl-dpr-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length ||
+            $(target).hasClass('ctrl-dpr-from-day') ||
+            $(target).hasClass('ctrl-dpr-to-day') ||
+            $(target).hasClass('ctrl-dpr-from-month') ||
+            $(target).hasClass('ctrl-dpr-to-month') ||
+            $(target).hasClass('ctrl-dpr-from-year') ||
+            $(target).hasClass('ctrl-dpr-to-year')
+        ) {
             return false;
 
         } else if ($('.ctrl-dpr-container').is(':visible')) {

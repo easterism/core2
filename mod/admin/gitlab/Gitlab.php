@@ -63,7 +63,7 @@ class Gitlab extends \Common
             echo $item['name'];
             echo "<ul>";
             foreach ($item['tags'] as $tag) {
-                echo "<li><a href=\"javascript:gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
+                echo "<li><a href=\"javascript:void(0);\" onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
                 {$tag['author_name']} ({$tag['author_email']})
                 </li>";
             }
