@@ -115,6 +115,22 @@ class File extends \Common {
 
         header("Content-type: {$res2['type']}");
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
+
+
+        if ( ! empty($res2['hash'])) {
+            $etagHeader = (isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : false);
+
+            header("Etag: {$res2['hash']}");
+            header('Cache-Control: public');
+
+            //check if page has changed. If not, send 304 and exit
+            if ($etagHeader == $res2['hash']) {
+                header("HTTP/1.1 304 Not Modified");
+                return '';
+            }
+        }
+
+
         //Если задан размер тамбнейла или если тамбнейла нет в базе
         if (!empty($_GET['size']) || !$res2['thumb']) {
             $image = new Image();
