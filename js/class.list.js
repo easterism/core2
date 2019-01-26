@@ -473,7 +473,7 @@ var listx = {
 					}
 				}
                 $.post("index.php?module=admin&action=seq",
-					{data : so, tbl : tbl, id : id},
+					{"data" : so, "tbl" : tbl, "id" : id},
 					function (data, textStatus) {
 						if (textStatus != 'success') {
 							alert(textStatus);
