@@ -937,7 +937,7 @@ class ModAjax extends ajaxFunc {
                 }
             }
             else {
-                throw new Exception($this->translate->tr("Неверный тип архива"));
+                throw new Exception(sprintf($this->translate->tr("Неверный тип архива %s"), $file_type));
             }
 
             $this->done($data);

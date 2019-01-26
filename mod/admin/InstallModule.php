@@ -1066,7 +1066,7 @@ class InstallModule extends \Common {
 
         $compare = array();
 
-        foreach ($dirhash as $name=>$cont) {
+        foreach ($dirhash as $name => $cont) {
             if ($cont['type'] == 'file') {
                 if (isset($dbhash[$name]) && $dirhash[$name]['type'] == $dbhash[$name]['type']) {
                     if ($dirhash[$name]['cont'] != $dbhash[$name]['cont']) {
@@ -1211,7 +1211,14 @@ class InstallModule extends \Common {
         $this->extractZip($this->tempDir);
 
         //проверяем не изменились ли файлы
-        $compare = $this->compareFilesHash($this->extractHashForFiles($this->tempDir), unserialize($this->mData['files_hash']), false);
+        $tmpDirContent = $this->extractHashForFiles($this->tempDir); //содержимое директории с файлами модуля
+        if (count($tmpDirContent) == 1) { //скорее всего в директории еще директория с файлами модуля
+            $this->tempDir .= "/" . key($tmpDirContent); 
+            $tmpDirContent = current($tmpDirContent);
+            $tmpDirContent = $tmpDirContent['cont'];
+        }
+
+        $compare = $this->compareFilesHash($tmpDirContent, unserialize($this->mData['files_hash']), false);
         if (!empty($compare)) {
             throw new \Exception($this->translate->tr("Хэши файлов модуля не совпадают с эталоном! Установка прервана."));
         }
