@@ -76,7 +76,7 @@
 							</li>
 							<li class="dropdown-settings divider"></li>
 							<li>
-								<a href="javascript:logout()">
+								<a href="javascript:void(0);" onclick="logout()">
 									<i class="fa fa-power-off"></i>
 									Выход
 								</a>

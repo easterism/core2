@@ -464,23 +464,27 @@ $(document).ready(function() {
 
 var currentCategory = "";
 $.ui.autocomplete.prototype._renderItem = function( ul, item){
-  var term = this.term.split(' ').join('|');
-	var t = item.label;
+	let term = this.term.split(' ').join('|');
+	let t 	 = item.label;
+
 	if (term) {
-		term = term.replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-		var re = new RegExp("(" + term + ")", "gi") ;
-		t = t.replace(re,"<b>$1</b>");
+		term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
+
+		let re = new RegExp("(" + term + ")", "gi");
+		t = t.replace(re, "<b>$1</b>");
 	}
-	if (currentCategory && !item.category) {
+
+	if (currentCategory && ! item.category) {
 		item.category = '--';
 	}
-	if (item.category && item.category != currentCategory) {
+
+	if (item.category && item.category !== currentCategory) {
 		ul.append("<li class='ui-autocomplete-category'>" + item.category + "</li>");
 		currentCategory = item.category;
 	}
 
-  return $( "<li></li>" )
-     .data( "item.autocomplete", item )
-     .append( "<a>" + t + "</a>" )
-     .appendTo( ul );
+	return $("<li></li>")
+		.data("item.autocomplete", item)
+		.append("<a>" + t + "</a>")
+		.appendTo(ul);
 };

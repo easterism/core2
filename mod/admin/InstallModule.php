@@ -1213,7 +1213,7 @@ class InstallModule extends \Common {
         //проверяем не изменились ли файлы
         $tmpDirContent = $this->extractHashForFiles($this->tempDir); //содержимое директории с файлами модуля
         if (count($tmpDirContent) == 1) { //скорее всего в директории еще директория с файлами модуля
-            $this->tempDir .= "/" . key($tmpDirContent); 
+            $this->tempDir .= "/" . key($tmpDirContent);
             $tmpDirContent = current($tmpDirContent);
             $tmpDirContent = $tmpDirContent['cont'];
         }
