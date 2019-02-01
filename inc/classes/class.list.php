@@ -233,18 +233,28 @@ class listTable extends initList {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $is = $this->db->fetchCol("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ? AND table_name = ?", [$this->getDbSchema(), $this->table]);
-            $noauthor = true;
-            if (in_array('author', $is)) $noauthor = false;
+            $is = $this->db->fetchCol("
+                SELECT column_name 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE table_schema = ? 
+                  AND table_name = ?
+            ", [
+                $this->getDbSchema(),
+                $this->table
+            ]);
+
             if (in_array('seq', $is)) $this->is_seq = true;
 
-            if ($this->checkAcl($this->resource, 'list_owner') && !$this->checkAcl($this->resource, 'list_all')) {
-                if ($noauthor) {
+            if (in_array('author', $is) &&
+                $this->checkAcl($this->resource, 'list_owner') &&
+                ! $this->checkAcl($this->resource, 'list_all')
+            ) {
+                if ( ! in_array('author', $is)) {
                     throw new \Exception("Данные не содержат признака автора!");
                 } else {
-                    $auth     = \Zend_Registry::get('auth');
+                    $auth        = \Zend_Registry::get('auth');
                     $questions[] = $auth->NAME;
-                    $search = " AND author=?";
+                    $search      = " AND author = ?";
                 }
             }
         }
