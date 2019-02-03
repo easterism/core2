@@ -40,7 +40,6 @@ class Emitter
         $auth = \Zend_Registry::get('auth');
         $out = [];
         foreach ($mods as $id => $mod) {
-            if ($mod === $this->module) continue;
             if ($auth->MOBILE) {
                 $modController = "Mobile" . ucfirst($mod) . "Controller";
             } else {
