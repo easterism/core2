@@ -543,10 +543,7 @@ class InstallModule extends \Common {
             $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули добавлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
-        $this->cache->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-            array('is_active_core_modules')
-        );
+        $this->cache->clearByTags(['is_active_core_modules']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
         $this->installFile();
@@ -743,10 +740,7 @@ class InstallModule extends \Common {
             $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули обновлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
-        $this->cache->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-            array('is_active_core_modules')
-        );
+        $this->cache->clearByTags(['is_active_core_modules']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
         $this->migrateFile();
@@ -1720,10 +1714,7 @@ class InstallModule extends \Common {
                     $this->addNotice($this->translate->tr("Регистрация модуля"), $this->translate->tr("Удаление сведений о модуле"), $this->translate->tr("Выполнено"), "info");
 
                     //чистим кэш
-                    $this->cache->clean(
-                        \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-                        array('is_active_core_modules')
-                    );
+                    $this->cache->clearByTags(['is_active_core_modules']);
                     $this->cache->remove($this->mInfo['install']['module_id']);
 
                     //удаляем файлы
