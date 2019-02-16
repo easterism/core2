@@ -541,7 +541,7 @@ class Tool {
         }
         $curl = self::$_curl;
         curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 7000);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, 1000);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         if ($headers) {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
