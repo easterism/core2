@@ -755,20 +755,20 @@ class ModAjax extends ajaxFunc {
                 $gl = new \Core2\Gitlab();
                 $fn = $gl->getZip($name[0], $name[1]);
                 if ($e = $gl->getError()) {
-                    throw new Exception($e);
+                    throw new \Exception($e);
                 }
             } else {
                 if (empty($data['control']['files|name'])) {
-                    throw new Exception("Файл не выбран");
+                    throw new \Exception("Файл не выбран");
                 }
                 $f = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if (!file_exists($fn)) {
-                    throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
+                    throw new \Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
                 }
                 $size = filesize($fn);
                 if ($size !== (int)$f[1]) {
-                    throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
+                    throw new \Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
                 }
             }
 

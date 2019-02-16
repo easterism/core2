@@ -80,9 +80,11 @@ class Gitlab extends \Common
      */
     public function getZip($group, $tag) {
         $host = $this->moduleConfig->gitlab->host;
-        $answer = \Tool::doCurlRequest("https://{$host}/{$group}/repository/archive.zip?ref={$tag}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+        $group = urlencode($group);
+        $answer = \Tool::doCurlRequest("https://{$host}/api/v4/projects/{$group}/repository/archive.zip?ref={$tag}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+        //echo "<PRE>";print_r("https://{$host}/api/v4/projects/{$group}/repository/archive.zip?ref={$tag}");echo "</PRE>";die;
         $zip = '';
-        if ($answer['http_code'] == 200) {
+        if ($answer['http_code'] === 200) {
             $zip = new \ZipArchive();
             $upload_dir 	    = $this->config->temp . '/' . SessionContainer::getDefaultManager()->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
