@@ -31,7 +31,8 @@
     "zf1/zend-auth": "~1.12",
     "belhard/xajax": "dev-master",
     "components/jquery": "2.1.4",
-    "monolog/monolog": "1.23.*"
+    "monolog/monolog": "1.23.*",
+    "guzzlehttp/guzzle": "~6.3"
   },
   "scripts": {
     "xajax-cmd": [
