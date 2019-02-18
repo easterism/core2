@@ -22,7 +22,7 @@ class Panel {
     protected $description    = '';
     protected $content        = '';
     protected $resource       = '';
-    protected $tabs           = array();
+    protected $tabs           = [];
     protected $theme_src      = '';
     protected $theme_location = '';
     protected $position       = self::POSITION_TOP;
@@ -33,8 +33,8 @@ class Panel {
      * Panel constructor.
      * @param string $resource
      */
-    public function __construct($resource) {
-        $this->resource = $resource;
+    public function __construct($resource = '') {
+        $this->resource = $resource ?: crc32(time() . rand(0, 10000));
         if (isset($_GET[$this->resource])) {
             $this->active_tab = $_GET[$this->resource];
         }
@@ -47,12 +47,12 @@ class Panel {
      * @throws Exception
      */
     public function setPosition($position) {
-        $positions = array(
+        $positions = [
             self::POSITION_TOP,
             self::POSITION_LEFT,
             self::POSITION_RIGHT,
             self::POSITION_BOTTOM
-        );
+        ];
         if (in_array($position, $positions)) {
             $this->position = $position;
         } else {
@@ -67,11 +67,11 @@ class Panel {
      * @throws Exception
      */
     public function setTypeTabs($type) {
-        $types = array(
+        $types = [
             self::TYPE_TABS,
             self::TYPE_PILLS,
             self::TYPE_STEPS
-        );
+        ];
         if (in_array($type, $types)) {
             $this->type = $type;
         } else {
@@ -98,12 +98,12 @@ class Panel {
      * @param bool   $disabled
      */
     public function addTab($title, $id, $url, $disabled = false) {
-        $this->tabs[] = array(
+        $this->tabs[] = [
             'title'    => $title,
             'id'       => $id,
             'url'      => str_replace('?', '#', $url),
             'disabled' => $disabled
-        );
+        ];
     }
 
 
