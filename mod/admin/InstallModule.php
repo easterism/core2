@@ -732,10 +732,28 @@ class InstallModule extends \Common {
         $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
-        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ?", $m_id);
+        $submodules_exists = $this->dataSubModules->fetchFields(['sm_id', 'sm_name', 'sm_key'], "m_id=?", [$m_id]);
+        //
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
-                $this->db->insert('core_submodules', $subval);
+                $ex = 0;
+                foreach ($submodules_exists as $val) {
+                    if ($subval['sm_key'] == $val->sm_key) {
+                        $ex = 1;
+                        continue;
+                    }
+                }
+                if (!$ex) $this->db->insert('core_submodules', $subval);
+            }
+            foreach ($submodules_exists as $val) {
+                $notex = $val->sm_id;
+                foreach ($subModules as $subval) {
+                    if ($subval['sm_key'] == $val->sm_key) {
+                        $notex = 0;
+                        continue;
+                    }
+                }
+                if ($notex) $this->db->query("DELETE FROM `core_submodules` WHERE sm_id = ?", $notex);
             }
             $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули обновлены"), $this->translate->tr("Успешно"), "info");
         }
