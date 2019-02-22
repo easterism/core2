@@ -142,20 +142,35 @@
 
 	//сохраняем параметры сессии
     if ($config->session) {
+        $sessHandler = '';
+        if ($config->session->saveHandler) {
+            $options = ['namespace' => 'phpsess'];
+            if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
+            if ($config->session->savePath) $options['server'] = $config->session->savePath;
+
+            if ($config->session->saveHandler === 'memcache') {
+                $cache = StorageFactory::factory(array(
+                    'adapter' => array(
+                        'name' => 'memcached',
+                        'options' => $options
+                    )
+                ));
+                $sessHandler = new Cache($cache);
+            }
+            elseif ($config->session->saveHandler === 'redis') {
+                $cache = StorageFactory::factory([
+                    'adapter' => [
+                        'name'    => 'redis',
+                        'options' => $options
+                    ]
+                ]);
+                $sessHandler = new Cache($cache);
+            }
+        }
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        if ($config->session->saveHandler && $config->session->saveHandler === 'memcache') {
-            $cache = StorageFactory::factory(array(
-                'adapter' => array(
-                    'name' => 'memcached',
-                    'options' => array(
-                        'server' => $config->session->savePath
-                    )
-                )
-            ));
-            $sess_manager->setSaveHandler(new Cache($cache));
-        }
+        $sess_manager->setSaveHandler($sessHandler);
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -263,6 +278,7 @@
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+            //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
 
@@ -352,7 +368,6 @@
          */
         public function dispatch() {
 
-
             if ($this->is_cli || PHP_SAPI === 'cli') {
                 return $this->cli();
             }
@@ -428,7 +443,6 @@
                         return '';
                     }
                 }
-
                 return $this->getLogin();
             }
 
