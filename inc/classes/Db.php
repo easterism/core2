@@ -15,6 +15,7 @@ use Zend\Cache\StorageFactory;
 class Db {
 
     protected $config;
+    private $core_config;
 	private $_s               = array();
 	private $_settings        = array();
 	private $_locations       = array();
@@ -45,6 +46,7 @@ class Db {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
+				if (!$this->core_config) $this->core_config = $reg->get('core_config');
 				$db = $this->establishConnection($this->config->database);
 			} else {
 				$db = $reg->get('db');
@@ -56,13 +58,13 @@ class Db {
 		if ($k == 'cache') {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
-                $core_config = $reg->get('core_config');
-                $options = $core_config->cache->options ? $core_config->cache->options->toArray() : [];
+                if (!$this->core_config) $this->core_config = $reg->get('core_config');
+                $options = $this->core_config->cache->options ? $this->core_config->cache->options->toArray() : [];
                 if (isset($options['cache_dir'])) $options['cache_dir'] = $this->config->cache;
                 $options['namespace'] = "Core2";
 				$sf = StorageFactory::factory(array(
                     'adapter' => array(
-                        'name' => $core_config->cache->adapter,
+                        'name' => $this->core_config->cache->adapter,
                         'options' => $options,
                         'plugins' => ['serializer']
                     )
@@ -152,6 +154,11 @@ class Db {
 			\Zend_Registry::getInstance()->set('db', $db);
 			if ($database->adapter === 'Pdo_Mysql') {
 			    if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+                //set profiler
+                if ($this->core_config->profile && $this->core_config->profile->on) {
+                    $db->query("set profiling=1");
+                    $db->query("set profiling_history_size = 100");
+                }
             }
             elseif ($database->adapter === 'Pdo_Pgsql') {
                 $db->query("SET search_path TO $this->schemaName");

@@ -512,7 +512,9 @@
                         $modController = new $modController();
                         $action = "action_" . $action;
                         if (method_exists($modController, $action)) {
-                            return $modController->$action();
+                            $out = $modController->$action();
+
+                            return $out;
                         } else {
                             throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
@@ -522,7 +524,6 @@
                     }
                 }
             }
-
             return '';
         }
 
@@ -1203,6 +1204,16 @@
             }
 
             return '';
+        }
+
+        public function __destruct() {
+            if ($this->config->system->profile && $this->config->system->profile->on) {
+                $log = new \Core2\Log('profile');
+                if ($log->getWriter()) {
+                    $log->info('query----------------------->', [$_SERVER['QUERY_STRING']]);
+                    $log->info('sql', $this->db->fetchAll("show profiles"));
+                }
+            }
         }
     }
 
