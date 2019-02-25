@@ -170,7 +170,7 @@
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        $sess_manager->setSaveHandler($sessHandler);
+        if ($sessHandler) $sess_manager->setSaveHandler($sessHandler);
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
