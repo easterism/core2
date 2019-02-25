@@ -274,16 +274,33 @@
          * @todo прогнать через роутер
          */
         private function detectWebService() {
+
             if ($this->is_rest || $this->is_soap) {
                 return;
             }
-            if (!isset($_SERVER['REQUEST_URI'])) return;
-            $matches = array();
+
+            if ( ! isset($_SERVER['REQUEST_URI'])) {
+                return;
+            }
+
+
+            $matches = [];
+
+            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
+                return;
+            }
+            // DEPRECATED
             if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
                 $this->is_rest = $matches;
                 return;
             }
+            // DEPRECATED
             if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = $matches;
+                return;
+            }
+            if (preg_match('~^soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)/(?<action>wsdl\.xml|service\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
                 $this->is_soap = $matches;
                 return;
             }
@@ -363,38 +380,62 @@
 
             // Веб-сервис (REST)
             if ($matches = $this->is_rest) {
-
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
 
                 require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
-
                 $route = $this->routeParse();
-                $method = ucfirst($route['action']);
-                foreach ($route['params'] as $param => $value) {
-                    $method .= ucfirst($param) . ucfirst($value);
-                }
+
                 $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchRest($route['module'], $method); //TODO сделать через DI
+
+                if ($this->getModuleVersion('webservice') >= '2.0.0' && ! empty($matches['version'])) {
+                    $version = $matches['version'];
+                    $method  = '';
+
+                    $action_explode = explode('/', $matches['action']);
+                    foreach ($action_explode as $action_part) {
+                        $method .= ucfirst($action_part);
+                    }
+
+                    $method  = lcfirst($method);
+
+                } else {
+                    $version = '';
+                    $method  = ucfirst($route['action']);
+                    foreach ($route['params'] as $param => $value) {
+                        $method .= ucfirst($param) . ucfirst($value);
+                    }
+                }
+
+                return $webservice_controller->dispatchRest($route['module'], $method, $version); //TODO сделать через DI
             }
 
             // Веб-сервис (SOAP)
             if ($matches = $this->is_soap) {
                 $this->setContext('webservice');
-
                 $this->checkWebservice();
 
-                if (isset($matches[2]) && $matches[2]) {
-                    $service_request_action = 'wsdl';
-                    $module_name = strtolower($matches[2]);
+                $webservice_controller = new ModWebserviceController();
+
+                if ($this->getModuleVersion('webservice') >= '2.0.0' && ! empty($matches['version'])) {
+                    $version     = $matches['version'];
+                    $action      = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
+                    $module_name = $matches['module'];
+
                 } else {
-                    $service_request_action = 'server';
-                    $module_name = strtolower($matches[3]);
+                    $version = '';
+
+                    if (isset($matches[2]) && $matches[2]) {
+                        $action      = 'wsdl';
+                        $module_name = strtolower($matches[2]);
+                    } else {
+                        $action      = 'server';
+                        $module_name = strtolower($matches[3]);
+                    }
                 }
 
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchSoap($module_name, $service_request_action);
+                return $webservice_controller->dispatchSoap($module_name, $action, $version);
             }
 
 
@@ -981,7 +1022,13 @@
                 $api = true;
             } //TODO do it for SOAP
 
-            $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
+            $route = array(
+                'module'  => '',
+                'action'  => 'index',
+                'version' => '',
+                'params'  => array(),
+                'query'   => $_SERVER['QUERY_STRING']
+            );
 
             $co = count($temp2);
             if ($co) {
