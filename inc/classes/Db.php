@@ -60,11 +60,20 @@ class Db {
 			if (!$reg->isRegistered($k)) {
                 if (!$this->core_config) $this->core_config = $reg->get('core_config');
                 $options = $this->core_config->cache->options ? $this->core_config->cache->options->toArray() : [];
-                if (isset($options['cache_dir'])) $options['cache_dir'] = $this->config->cache;
+                $adapter = !empty($this->core_config->cache->adapter) ? $this->core_config->cache->adapter : 'Filesystem';
+                if (isset($this->config->cache->adapter)) {
+                    $adapter = $this->config->cache->adapter;
+                    $options = $this->config->cache->options;
+                }
+                else {
+                    if ($adapter == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                        $options['cache_dir'] = $this->config->cache;
+                    }
+                }
                 $options['namespace'] = "Core2";
 				$sf = StorageFactory::factory(array(
                     'adapter' => array(
-                        'name' => $this->core_config->cache->adapter,
+                        'name' => $adapter,
                         'options' => $options,
                         'plugins' => ['serializer']
                     )

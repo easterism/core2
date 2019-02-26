@@ -28,7 +28,6 @@
     $config = array(
         'system' => array('name' => 'CORE'),
         'include_path' => '',
-        'cache' => 'cache',
         'temp' => getenv('TMP'),
         'debug' => array('on' => false),
         'session' => array('cookie_httponly' => true,
