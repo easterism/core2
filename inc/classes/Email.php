@@ -3,6 +3,8 @@ namespace Core2;
 
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
+use Zend\Mail;
+use Zend\Mail\Transport;
 
 /**
  * Class Email
@@ -377,29 +379,14 @@ class Email {
      */
     private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
 
-        $cnf = \Zend_Registry::get('config');
-        $configSmtp = array();
-        if (!empty($cnf->mail->port)) {
-            $configSmtp['port'] = $cnf->mail->port;
-        }
-        if (!empty($cnf->mail->auth)) {
-            $configSmtp['auth'] = $cnf->mail->auth;
-        }
-        if (!empty($cnf->mail->username)) {
-            $configSmtp['username'] = $cnf->mail->username;
-        }
-        if (!empty($cnf->mail->password)) {
-            $configSmtp['password'] = $cnf->mail->password;
-        }
-        if (!empty($cnf->mail->ssl)) {
-            $configSmtp['ssl'] = $cnf->mail->ssl;
-        }
 
-        $mail = new \Zend_Mail('utf-8');
+
+        $mail = new Mail\Message();
+        $mail->setEncoding('UTF-8');
         if (is_array($from)) {
-            $mail->setFrom($from[0], $from[1]);
+            $mail->addFrom($from[0], $from[1]);
         } else {
-            $mail->setFrom($from);
+            $mail->addFrom($from);
         }
         if (is_array($to)) {
             $mail->addTo($to[0], $to[1]);
@@ -411,22 +398,45 @@ class Email {
         if (!empty($bcc)) $mail->addBcc($bcc);
 
         $mail->setSubject($subj);
-        $mail->setBodyHtml($body);
-
 
         if ( ! empty($files)) {
             foreach ($files as $file) {
-                $at = $mail->createAttachment($file['content']);
-                $at->type     = $file['mimetype'];
-                $at->filename = $file['name'];
+                //$at = $mail->createAttachment($file['content']);
+                //$at->type     = $file['mimetype'];
+                //$at->filename = $file['name'];
+                //TODO https://docs.zendframework.com/zend-mail/message/attachments/
             }
         }
 
-        $tr = null;
-        if (!empty($cnf->mail->server)) {
-            $tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
-        }
+        $mail->setBody($body);
 
-        return $mail->send($tr);
+        $transport = new Transport\Sendmail();
+
+        $cnf = \Zend_Registry::get('config');
+        if (!empty($cnf->mail->server)) {
+            //$tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
+
+            $configSmtp = array();
+            if (!empty($cnf->mail->port)) {
+                $configSmtp['port'] = $cnf->mail->port;
+            }
+            if (!empty($cnf->mail->auth)) {
+                $configSmtp['auth'] = $cnf->mail->auth;
+            }
+            if (!empty($cnf->mail->username)) {
+                $configSmtp['username'] = $cnf->mail->username;
+            }
+            if (!empty($cnf->mail->password)) {
+                $configSmtp['password'] = $cnf->mail->password;
+            }
+            if (!empty($cnf->mail->ssl)) {
+                $configSmtp['ssl'] = $cnf->mail->ssl;
+            }
+            $transport = new Transport\Smtp();
+            $options   = new Transport\SmtpOptions($configSmtp);
+            $transport->setOptions($options);
+        }
+        return $transport->send($mail);
+
     }
 } 
