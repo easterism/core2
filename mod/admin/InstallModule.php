@@ -4,6 +4,11 @@ namespace Core2;
 require_once DOC_ROOT . "/core2/inc/classes/Common.php";
 require_once DOC_ROOT . "/core2/inc/classes/class.list.php";
 
+use Zend\Session\Container as SessionContainer;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
+
 /**
  * Class InstallModule
  */
@@ -112,6 +117,8 @@ class InstallModule extends \Common {
      * @var \Zend_Db_Adapter_Abstract
      */
     private $db;
+
+    private $repos = [];
 
 
     /**
@@ -536,10 +543,7 @@ class InstallModule extends \Common {
             $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули добавлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
-        $this->cache->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-            array('is_active_core_modules')
-        );
+        $this->cache->clearByTags(['is_active_core_modules']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
         $this->installFile();
@@ -674,10 +678,14 @@ class InstallModule extends \Common {
                 if ((string)$index != "comment") {
                     if (is_object($value) || is_array($value)) {
                         $value = self::xmlParse($value, $arrSkipIndices); // recursive call
+                        if (is_array($value) && isset($value[0]) && !$value[0]) {
+                            $value = array();
+                        }
                     }
                     if (in_array($index, $arrSkipIndices)) {
                         continue;
                     }
+                    if (is_scalar($value)) $value = trim($value);
                     $arrData[$index] = $value;
                 }
             }
@@ -724,18 +732,33 @@ class InstallModule extends \Common {
         $this->db->update('core_modules', $arrForUpgrade, $where);
         //обновляем субмодули модуля
         $m_id = $this->db->fetchOne("SELECT `m_id` FROM `core_modules` WHERE `module_id`=?", $this->mInfo['install']['module_id']);
-        $this->db->query("DELETE FROM `core_submodules` WHERE m_id = ?", $m_id);
+        $submodules_exists = $this->dataSubModules->fetchFields(['sm_id', 'sm_name', 'sm_key'], "m_id=?", [$m_id]);
+        //
         if ($subModules = $this->getSubModules($m_id)) {
             foreach ($subModules as $subval) {
-                $this->db->insert('core_submodules', $subval);
+                $ex = 0;
+                foreach ($submodules_exists as $val) {
+                    if ($subval['sm_key'] == $val->sm_key) {
+                        $ex = 1;
+                        continue;
+                    }
+                }
+                if (!$ex) $this->db->insert('core_submodules', $subval);
+            }
+            foreach ($submodules_exists as $val) {
+                $notex = $val->sm_id;
+                foreach ($subModules as $subval) {
+                    if ($subval['sm_key'] == $val->sm_key) {
+                        $notex = 0;
+                        continue;
+                    }
+                }
+                if ($notex) $this->db->query("DELETE FROM `core_submodules` WHERE sm_id = ?", $notex);
             }
             $this->addNotice($this->translate->tr("Субмодули"), $this->translate->tr("Субмодули обновлены"), $this->translate->tr("Успешно"), "info");
         }
         //перезаписываем путь к файлам модуля
-        $this->cache->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-            array('is_active_core_modules')
-        );
+        $this->cache->clearByTags(['is_active_core_modules']);
         $this->cache->remove($this->mInfo['install']['module_id']);
         //подключаем *.php если задан
         $this->migrateFile();
@@ -1060,7 +1083,7 @@ class InstallModule extends \Common {
 
         $compare = array();
 
-        foreach ($dirhash as $name=>$cont) {
+        foreach ($dirhash as $name => $cont) {
             if ($cont['type'] == 'file') {
                 if (isset($dbhash[$name]) && $dirhash[$name]['type'] == $dbhash[$name]['type']) {
                     if ($dirhash[$name]['cont'] != $dbhash[$name]['cont']) {
@@ -1205,7 +1228,14 @@ class InstallModule extends \Common {
         $this->extractZip($this->tempDir);
 
         //проверяем не изменились ли файлы
-        $compare = $this->compareFilesHash($this->extractHashForFiles($this->tempDir), unserialize($this->mData['files_hash']), false);
+        $tmpDirContent = $this->extractHashForFiles($this->tempDir); //содержимое директории с файлами модуля
+        if (count($tmpDirContent) == 1) { //скорее всего в директории еще директория с файлами модуля
+            $this->tempDir .= "/" . key($tmpDirContent);
+            $tmpDirContent = current($tmpDirContent);
+            $tmpDirContent = $tmpDirContent['cont'];
+        }
+
+        $compare = $this->compareFilesHash($tmpDirContent, unserialize($this->mData['files_hash']), false);
         if (!empty($compare)) {
             throw new \Exception($this->translate->tr("Хэши файлов модуля не совпадают с эталоном! Установка прервана."));
         }
@@ -1291,7 +1321,6 @@ class InstallModule extends \Common {
             $out = $this->doCurlRequestToRepo($repo_url, $m_id);
 
             //подготовка к установке модуля
-            $out = json_decode($out['answer']);
             $data       = base64_decode($out->data);
             $files_hash = base64_decode($out->files_hash);
             if (!empty($data) && empty($out->massage)){//если есть данные и пустые сообщения устанавливаем модуль
@@ -1333,31 +1362,38 @@ class InstallModule extends \Common {
      * @throws  \Exception
      */
     private function doCurlRequestToRepo($repo_url, $request) {
+        $repo_url   = explode("/", $repo_url);
+        $request_uri = array_pop($repo_url);
+        $repo_url   = implode("/", $repo_url) . "/";
+        if (!isset($this->repos[$repo_url])) {
+            $this->repos[$repo_url] = new Client(['base_uri' => $repo_url]);
+        }
+        $client     = $this->repos[$repo_url];
         //готовим ссылку для запроса модуля из репозитория
         $key = base64_encode(serialize(array(
             "server"    => strtolower(str_replace(array('http://','index.php'), array('',''), $_SERVER['HTTP_REFERER'])),
             "request"   => $request
         )));
 
-        $repo_url = trim($repo_url);
-        $url = "{$repo_url}&key={$key}";
-        $curl = \Tool::doCurlRequest($url);
-        //если чет пошло не так
-        if (empty($curl['http_code']) || $curl['http_code'] != 200) {
-            if (!empty($curl['error'])) {
-                throw new \Exception("CURL - {$curl['error']}");
-            } else {
-                if (isset($curl['answer'])) {
-                    $out = json_decode($curl['answer']);
-                    $message = isset($out->message) ? $out->message : '';
-                } else {
-                    $message = '';
+        $query = "{$request_uri}&key={$key}";
+        try {
+            $response = $client->get($query);
+            $code = $response->getStatusCode();
+            if ($code === 200) {
+                $body = $response->getBody()->getContents();
+                if ($response->getHeader('Content-Type')[0] !== 'application/json') {
+                    throw new \Exception("Не верный формат ответа");
                 }
-
-                throw new \Exception("Ответ репозитория - {$message}");
+                return json_decode($body);
             }
+        } catch (RequestException $e) {
+            $msg = Psr7\str($e->getRequest());
+            if ($e->hasResponse()) {
+                $msg = Psr7\str($e->getResponse());
+            }
+            throw new \Exception($msg);
         }
-        return $curl;
+
     }
 
 
@@ -1381,7 +1417,6 @@ class InstallModule extends \Common {
         //запрашиваем список модулей из репозитория
         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
         //достаём список модулей
-        $out = json_decode($out['answer']);
         return ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
     }
 
@@ -1482,7 +1517,7 @@ class InstallModule extends \Common {
             $list->getData();
 
             //ПОИСК
-            $ss = new \Zend_Session_Namespace('Search');
+            $ss = new SessionContainer('Search');
             $ssi = 'main_' . $list_id;
             $ss = $ss->$ssi;
             $search = array();
@@ -1552,13 +1587,14 @@ class InstallModule extends \Common {
                 }
             }
             $tmp = array();
-            foreach ($copy_list as $key=>$val) {
+            foreach ($copy_list as $key => $val) {
                 $mVersion = $val['version'];
                 $mId = $val['install_info']['install']['module_id'];
                 $mName = $val['name'];
 
                 //зависимости модуля
                 $Inf = !empty($val['install_info']['install']['dependent_modules']) ? $val['install_info']['install']['dependent_modules'] : array();
+                if (isset($Inf[0])) unset($Inf[0]);
                 $deps = array();
                 if (
                     !empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name']) //новая версия
@@ -1696,10 +1732,7 @@ class InstallModule extends \Common {
                     $this->addNotice($this->translate->tr("Регистрация модуля"), $this->translate->tr("Удаление сведений о модуле"), $this->translate->tr("Выполнено"), "info");
 
                     //чистим кэш
-                    $this->cache->clean(
-                        \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-                        array('is_active_core_modules')
-                    );
+                    $this->cache->clearByTags(['is_active_core_modules']);
                     $this->cache->remove($this->mInfo['install']['module_id']);
 
                     //удаляем файлы
@@ -1759,7 +1792,6 @@ class InstallModule extends \Common {
                 } elseif ($m['location'] == 'repo') {
                     //запрашиваем нужный модуль
                     $out = $this->doCurlRequestToRepo($m['location_url'], $m['location_id']);
-                    $out        = json_decode($out['answer']);
                     $data       = base64_decode($out->data);
                     $files_hash = base64_decode($out->files_hash);
                 }
@@ -1877,7 +1909,6 @@ class InstallModule extends \Common {
                     if (!empty($repo_url) && substr_count($repo_url, "repo?apikey=") != 0) {
                         //запрашиваем список модулей из репозитория
                         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
-                        $out = json_decode($out['answer']);
                         //достаём список модулей и ищем нужный
                         $repo_list = ! empty($out->data) ? unserialize(base64_decode($out->data)) : [];
                         foreach ($repo_list as $m_id => $i) {
@@ -1954,7 +1985,6 @@ class InstallModule extends \Common {
                 } elseif ($update['location'] == 'repo') {
                     //запрашиваем нужный модуль
                     $out = $this->doCurlRequestToRepo($update['location_url'], $update['location_id']);
-                    $out        = json_decode($out['answer']);
                     $data       = base64_decode($out->data);
                     $files_hash = base64_decode($out->files_hash);
                 }

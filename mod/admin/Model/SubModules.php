@@ -27,4 +27,14 @@ class SubModules extends Zend_Db_Table_Abstract {
 		}
 		return $this->fetchRow($sel->limit(1));
 	}
+
+    public function fetchFields($fields, $expr, $var = array()) {
+        $sel = $this->select()->from($this->_name, $fields);
+        if ($var) {
+            $sel->where($expr, $var);
+        } else {
+            $sel->where($expr);
+        }
+        return $this->fetchAll($sel);
+    }
 }

@@ -1,5 +1,6 @@
 <?
 require_once("class.ini.php");
+use Zend\Session\Container as SessionContainer;
 
 $counter = 0;
 
@@ -42,7 +43,7 @@ class editTable extends initEdit {
 		}
 
 
-		$this->sess_form = new Zend_Session_Namespace('Form');
+		$this->sess_form = new SessionContainer('Form');
         $this->sess_form->{$this->main_table_id} = array();
     }
 

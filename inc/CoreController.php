@@ -161,6 +161,11 @@ class CoreController extends Common {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
+            $authNamespace = Zend_Registry::get('auth');
+            if (empty($this->auth->TOKEN) || $this->auth->TOKEN !== $post['action'] || $this->auth->TOKEN !== md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT'])) {
+                $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
+                return false;
+            }
 			try {
 			    $db = $this->getConnection($this->config->database);
 			} catch (Exception $e) {
@@ -256,7 +261,7 @@ class CoreController extends Common {
 					//$errorNamespace->setExpirationHops(1, 'ERROR');
 				} else {
 
-					$authNamespace = Zend_Registry::get('auth');
+
 					$authNamespace->accept_answer 		= true;
 					$sLife = $db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND code='session_lifetime' LIMIT 1");
 					if ($sLife) {
@@ -282,6 +287,10 @@ class CoreController extends Common {
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
 					}
 					$authNamespace->LDAP = $res['LDAP'];
+                    if (!($authNamespace->init)) { //регенерация сессии для предотвращения угона
+                        $authNamespace->getManager()->regenerateId();
+                        $authNamespace->init = true;
+                    }
 				}
 			} else {
 				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");
@@ -437,10 +446,7 @@ class CoreController extends Common {
 			$this->db->update($table_name, array($is_active => $status), $where);
 			//очистка кеша активности по всем записям таблицы
 			// используется для core_modules
-			$this->cache->clean(
-					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-					array("is_active_" . $table_name)
-			);
+			$this->cache->clearByTags(["is_active_" . $table_name]);
 
 			echo json_encode(array('status' => "ok"));
 		} catch (Exception $e) {
