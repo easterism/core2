@@ -6,14 +6,30 @@ body {
     font-family: 'Work Sans', Arial, Helvetica, sans-serif;
     min-height: 100%;
     background: #ededed;
+    background: radial-gradient(0% 100%, rgba(104,128,138,.4) 10%, rgba(138,114,76,0) 40%),
+                linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+                linear-gradient(135deg, #20465d 0%,#4a232b 100%);
+    background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%, rgba(138,114,76,0) 40%),
+                linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+                linear-gradient(135deg, #20465d 0%,#4a232b 100%);
+    background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%, rgba(138,114,76,0) 40%),
+                linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+                linear-gradient(135deg, #20465d 0%,#4a232b 100%);
+    background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%, rgba(138,114,76,0) 40%),
+                linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+                linear-gradient(135deg, #20465d 0%,#4a232b 100%);
+    background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%, rgba(138,114,76,0) 40%),
+                linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+                linear-gradient(135deg, #20465d 0%,#4a232b 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );
     color: #777;
 }
 .login-form {
     width: 320px;
     padding: 40px 30px;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
     margin: auto;
     position: absolute;
     left: 0;
@@ -21,8 +37,8 @@ body {
     top: 15%;
     border: 0;
     background-color: #fff;
-    -webkit-box-shadow: 0 0 10px rgba(0,0,0,.15);
-    box-shadow:  0 0 10px rgba(0,0,0,0.15);
+    -webkit-box-shadow: 0 0 50px rgba(0,0,0,0.2);
+    box-shadow: 0 0 50px rgba(0,0,0,0.2);
 }
 .log-btn {
     font-size: 16px;

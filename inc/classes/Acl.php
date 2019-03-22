@@ -46,7 +46,7 @@ class Acl extends Db {
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
 
-		if (!($this->cache->test($key))) {
+		if (!($this->cache->hasItem($key))) {
 			$acl = new \Zend_Acl();
 			$SQL = "SELECT *
 					  FROM (
@@ -197,14 +197,19 @@ class Acl extends Db {
 					}
 				}
 			}
-			$this->cache->save($acl, $key, array("role" . $auth->ROLEID));
-			$this->cache->save($resources, $key . 'availRes', array("role" . $auth->ROLEID));
-			$this->cache->save($resources2, $key . 'availSubRes', array("role" . $auth->ROLEID));
+			$this->cache->setItem($key, $acl);
+			$this->cache->setItem($key . 'availRes', $resources);
+			$this->cache->setItem($key . 'availSubRes', $resources2);
+
+			$this->cache->setTags($key, array("role" . $auth->ROLEID));
+			$this->cache->setTags($key . 'availRes', array("role" . $auth->ROLEID));
+			$this->cache->setTags($key . 'availSubRes', array("role" . $auth->ROLEID));
+
 		}
 		else {
-			$acl = $this->cache->load($key);
-			$resources = $this->cache->load($key . 'availRes');
-			$resources2 = $this->cache->load($key . 'availSubRes');
+			$acl = $this->cache->getItem($key);
+			$resources = $this->cache->getItem($key . 'availRes');
+			$resources2 = $this->cache->getItem($key . 'availSubRes');
 		}
 		//echo "<PRE>";print_r($acl);echo "</PRE>";die;
 		$registry->set('acl', $acl);

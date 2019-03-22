@@ -663,6 +663,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .core-group-head a {
     text-decoration: none;
     border-bottom: 1px dashed #4677b6;
+    white-space: nowrap;
 }
 /*
 TAB class table
@@ -1407,6 +1408,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .pass-1 {
     float: left;
 }
+.password-control .pass-2-container .reqField,
 .password-control .pass-2 {
     float: left;
     -webkit-border-bottom-right-radius: 0;
@@ -1435,6 +1437,11 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
         -ms-border-radius: 4px;
          -o-border-radius: 4px;
             border-radius: 4px;
+}
+.password-control .pass-1[disabled],
+.password-control .pass-2[disabled],
+.password-control .reqField[disabled] {
+    background-color: #EEEEEE;
 }
 .core-panel {
     margin-bottom: 20px;

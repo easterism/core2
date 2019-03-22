@@ -2,6 +2,9 @@
 namespace Core2;
 
 use Zend\Session\Container as SessionContainer;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Created by PhpStorm.
@@ -12,9 +15,24 @@ use Zend\Session\Container as SessionContainer;
 class Gitlab extends \Common
 {
     private $error;
+    private $client;
     private $api_version = 'v4';
     private $per_page = '80';
     private $projects = array();
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $host   = $this->moduleConfig->gitlab->host;
+        $token  = $this->moduleConfig->gitlab->token;
+        $this->client = new Client(['base_uri' => "https://$host/api/{$this->api_version}/",
+                                    'headers' => [
+                                        'Accept'     => 'application/json',
+                                        'PRIVATE-TOKEN' => $token
+                                    ]
+                                ]);
+    }
 
     /**
      * Получаем список всех релизов из Gitlab
@@ -38,9 +56,13 @@ class Gitlab extends \Common
             if ($filter_group) {
                 if (!in_array($repo->namespace->full_path, $filter_group)) continue;
             }
-            $tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
-            if ($tags && $tags['answer']) {
-                $tags = json_decode($tags['answer']);
+            //$tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
+            try {
+                $response = $this->client->request('GET', "projects/{$repo->id}/repository/tags");
+                $code = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+                $tags = json_decode($body);
+
                 if ($tags) {
                     if (!isset($arch[$repo->id])) $arch[$repo->id] = array('name' => $repo->path_with_namespace, 'tags' => array());
                     foreach ($tags as $tag) {
@@ -53,9 +75,15 @@ class Gitlab extends \Common
                         );
                     }
                 }
-            }
-            else {
-                $this->printError($tags);
+            } catch (RequestException $e) {
+                //$msg = Psr7\str($e->getRequest());
+                if ($e->hasResponse()) {
+                    //$msg = Psr7\str($e->getResponse());
+                    $msg = json_decode($e->getResponse()->getBody());
+                    $this->error =  $msg->error;
+                }
+            } catch (\Exception $e) {
+                $this->error =  $e->getMessage();
             }
         }
         //echo "<pre>";print_r($arch);echo "</pre>";die;
@@ -63,7 +91,7 @@ class Gitlab extends \Common
             echo $item['name'];
             echo "<ul>";
             foreach ($item['tags'] as $tag) {
-                echo "<li><a href=\"javascript:gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
+                echo "<li><a href=\"javascript:void(0);\" onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
                 {$tag['author_name']} ({$tag['author_email']})
                 </li>";
             }
@@ -79,15 +107,20 @@ class Gitlab extends \Common
      * @return string $zip
      */
     public function getZip($group, $tag) {
-        $host = $this->moduleConfig->gitlab->host;
-        $answer = \Tool::doCurlRequest("https://{$host}/{$group}/repository/archive.zip?ref={$tag}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+        $group = urlencode($group);
+        //$answer = \Tool::doCurlRequest("https://{$host}/api/v4/projects/{$group}/repository/archive.zip?ref={$tag}", array(), array("PRIVATE-TOKEN:{$this->moduleConfig->gitlab->token}"));
+
         $zip = '';
-        if ($answer['http_code'] == 200) {
+        try {
+            $response = $this->client->request('GET', "projects/{$group}/repository/archive.zip?sha={$tag}");
+            $code = $response->getStatusCode();
+            $body = $response->getBody()->getContents();
+
             $zip = new \ZipArchive();
             $upload_dir 	    = $this->config->temp . '/' . SessionContainer::getDefaultManager()->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
             $fn                 = tempnam($upload_dir, "gitlabzip");
-            file_put_contents($fn, $answer['answer']);
+            file_put_contents($fn, $body);
 
             if ($zip->open($fn) === true){
                 $zip->extractTo($destinationFolder);
@@ -121,9 +154,15 @@ class Gitlab extends \Common
                 $this->error = $this->translate->tr("Не удалось создать подготовить файл для установки");
                 return;
             }
-            $answer['answer'];
-        } else {
-            $this->error = $answer['error'];
+        } catch (RequestException $e) {
+            //$msg = Psr7\str($e->getRequest());
+            if ($e->hasResponse()) {
+                //$msg = Psr7\str($e->getResponse());
+                $msg = json_decode($e->getResponse()->getBody());
+                $this->error = $msg->error;
+            }
+        } catch (\Exception $e) {
+            $this->error = $e->getMessage();
         }
         return $zip;
     }
@@ -160,18 +199,23 @@ class Gitlab extends \Common
      * @param int $page
      */
     private function getProjects($page = 1) {
-        $host   = $this->moduleConfig->gitlab->host;
-        $token  = $this->moduleConfig->gitlab->token;
-        $data   = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects?page=$page&per_page={$this->per_page}", array(), array("PRIVATE-TOKEN:$token"));
-        if ($data['http_code'] == 200) {
-            $data = json_decode($data['answer']);
+        try {
+            $response = $this->client->request('GET', "projects?page=$page&per_page={$this->per_page}");
+            $code = $response->getStatusCode();
+            $data = json_decode($response->getBody()->getContents());
             if ($data) {
                 $this->projects = array_merge($this->projects, $data); //сохраняем результат
                 $this->getProjects($page + 1);
             }
-        }
-        else {
-            $this->printError($data);
+        } catch (RequestException $e) {
+            //$msg = Psr7\str($e->getRequest());
+            if ($e->hasResponse()) {
+                //$msg = Psr7\str($e->getResponse());
+                $msg = json_decode($e->getResponse()->getBody());
+                $this->error =  $msg->error;
+            }
+        } catch (\Exception $e) {
+            $this->error =  $e->getMessage();
         }
     }
 

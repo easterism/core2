@@ -33,7 +33,15 @@ class Log {
             $this->log = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
             $this->config = \Zend_Registry::getInstance()->get('core_config');
 
-            if ($name === 'webhook') {
+            if ($name === 'profile') {
+                if (isset($this->config->profile->mysql)) {
+                    $stream = new StreamHandler($this->config->profile->mysql);
+                    $this->log->pushHandler($stream);
+                    $this->writer = 'file';
+                } else {
+                    return new \stdClass();
+                }
+            } elseif ($name === 'webhook') {
                 if (isset($this->config->log) &&
                     isset($this->config->log->webhook))
                 {
@@ -197,6 +205,10 @@ class Log {
                 $this->writer = 'syslog';
             }
         }
+    }
+
+    public function getWriter() {
+        return $this->writer;
     }
 
     /**

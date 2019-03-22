@@ -55,7 +55,7 @@ class Audit extends \Common {
             if ($a_result && count($a_result['COM']) > 0) {
                 reset($a_result['COM']);
                 while (list($key, $val) = each($a_result['COM'])) {
-                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
+                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:void(0);\" onclick=\"load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
                 }
                 echo "<input class=\"auditButton\" type=\"button\" value=\"Исправить все\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
                 if ( ! empty($a_result['WARNING'])) {

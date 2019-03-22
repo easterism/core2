@@ -202,6 +202,11 @@ if (typeof control_datepicker === 'undefined') {
                 }
                 return false;
             });
+            $('.ctrl-dp-day, .ctrl-dp-month, .ctrl-dp-year', wrapper).focus(function () {
+                $('.ctrl-dp-container', wrapper).show('fast');
+                return false;
+            });
+
 
             /**
              * Очистка даты
@@ -328,7 +333,11 @@ if (typeof control_datepicker === 'undefined') {
          */
         $(document).click(function (e) {
             var target = $(e.target);
-            if ($(target).parents('.ctrl-dp-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length) {
+            if ($(target).parents('.ctrl-dp-container, .ui-datepicker-group, .ui-datepicker-next, .ui-datepicker-prev').length ||
+                $(target).hasClass('ctrl-dp-day') ||
+                $(target).hasClass('ctrl-dp-month') ||
+                $(target).hasClass('ctrl-dp-year')
+            ) {
                 return false;
 
             } else if ($('.ctrl-dp-container').is(':visible')) {

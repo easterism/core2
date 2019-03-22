@@ -17,7 +17,7 @@
     use Zend\Cache\StorageFactory;
     use Zend\Session\Config\SessionConfig;
     use Zend\Session\SessionManager;
-    use Zend\Session\SaveHandler\Cache;
+    use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
     use Zend\Session\Container as SessionContainer;
 
     $conf_file = DOC_ROOT . "conf.ini";
@@ -28,7 +28,6 @@
     $config = array(
         'system' => array('name' => 'CORE'),
         'include_path' => '',
-        'cache' => 'cache',
         'temp' => getenv('TMP'),
         'debug' => array('on' => false),
         'session' => array('cookie_httponly' => true,
@@ -142,20 +141,35 @@
 
 	//сохраняем параметры сессии
     if ($config->session) {
+        $sessHandler = '';
+        if ($config->session->saveHandler) {
+            $options = ['namespace' => 'phpsess'];
+            if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
+            if ($config->session->savePath) $options['server'] = $config->session->savePath;
+
+            if ($config->session->saveHandler === 'memcache') {
+                $cache = StorageFactory::factory(array(
+                    'adapter' => array(
+                        'name' => 'memcached',
+                        'options' => $options
+                    )
+                ));
+                $sessHandler = new SessionHandlerCache($cache);
+            }
+            elseif ($config->session->saveHandler === 'redis') {
+                $cache = StorageFactory::factory([
+                    'adapter' => [
+                        'name'    => 'redis',
+                        'options' => $options
+                    ]
+                ]);
+                $sessHandler = new SessionHandlerCache($cache);
+            }
+        }
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        if ($config->session->saveHandler && $config->session->saveHandler === 'memcache') {
-            $cache = StorageFactory::factory(array(
-                'adapter' => array(
-                    'name' => 'memcached',
-                    'options' => array(
-                        'server' => $config->session->savePath
-                    )
-                )
-            ));
-            $sess_manager->setSaveHandler(new Cache($cache));
-        }
+        if ($sessHandler) $sess_manager->setSaveHandler($sessHandler);
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -242,12 +256,6 @@
             }
 
             $this->auth 	= new SessionContainer('Auth');
-            if (!isset($this->auth->initialized)) { //регенерация сессии для предотвращения угона
-                $this->auth->getManager()->regenerateId();
-                $this->auth->initialized = true;
-            }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
-
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
@@ -265,7 +273,11 @@
                     $this->closeSession('Y');
                 }
                 Zend_Registry::set('auth', $this->auth);
+            } else {
+                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+            //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
 
@@ -421,8 +433,14 @@
             }
             else {
                 // GET LOGIN PAGE
-                if (!empty($_POST['xjxr']) && array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
-                    throw new Exception('expired');
+                if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
+                    if ( ! empty($_POST['xjxr'])) {
+                        throw new Exception('expired');
+                    }
+                    if ( ! empty($_GET['module'])) {
+                        http_response_code(403);
+                        return '';
+                    }
                 }
                 return $this->getLogin();
             }
@@ -480,7 +498,7 @@
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
                         if ($this->translate->isSetup()) {
-                            $this->translate->setupExtra($location);
+                            $this->translate->setupExtra($location, $module);
                         }
 
                         if ($this->auth->MOBILE) {
@@ -493,7 +511,9 @@
                         $modController = new $modController();
                         $action = "action_" . $action;
                         if (method_exists($modController, $action)) {
-                            return $modController->$action();
+                            $out = $modController->$action();
+
+                            return $out;
                         } else {
                             throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
@@ -503,7 +523,6 @@
                     }
                 }
             }
-
             return '';
         }
 
@@ -539,7 +558,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['login'])) {
+            if (isset($_POST['action'])) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -554,13 +573,13 @@
             }
             $tpl = new Templater2();
             if (Tool::isMobileBrowser()) {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.tpl");
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
             } else {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.tpl");
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
             }
 
             $tpl->assign('{system_name}', $this->getSystemName());
-            $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.tpl");
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.html");
 
             $errorNamespace = new SessionContainer('Error');
             $blockNamespace = new SessionContainer('Block');
@@ -583,6 +602,7 @@
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
+            $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
@@ -1183,6 +1203,16 @@
             }
 
             return '';
+        }
+
+        public function __destruct() {
+            if ($this->config->system->profile && $this->config->system->profile->on) {
+                $log = new \Core2\Log('profile');
+                if ($log->getWriter()) {
+                    $log->info('query----------------------->', [$_SERVER['QUERY_STRING']]);
+                    $log->info('sql', $this->db->fetchAll("show profiles"));
+                }
+            }
         }
     }
 

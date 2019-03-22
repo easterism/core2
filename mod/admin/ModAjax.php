@@ -148,11 +148,8 @@ class ModAjax extends ajaxFunc {
 		if (!$refId) {
 			//TODO add the new module tab
 		} else {
-			$this->cache->remove($module_id);
-			$this->cache->clean(
-					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-					array('is_active_core_modules')
-			);
+			$this->cache->removeItem($module_id);
+			$this->cache->clearByTags(['is_active_core_modules']);
 			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
 		}
 		$this->done($data);
@@ -208,8 +205,8 @@ class ModAjax extends ajaxFunc {
             if ( ! $sm) {
                 $this->error[] = "- " . $this->translate->tr("Ошибка определения субмодуля");
             } else {
-                $this->cache->remove($sm['module_id'] . "_" . $sm['sm_key']);
-                $this->cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG, ['is_active_core_modules']);
+                $this->cache->removeItem($sm['module_id'] . "_" . $sm['sm_key']);
+                $this->cache->clearByTags(['is_active_core_modules']);
                 unset($data['control']['sm_key']);
             }
             unset($data['control']['m_id']);
@@ -602,10 +599,7 @@ class ModAjax extends ajaxFunc {
 			return $this->response;
 		}
 		if ($refid) {
-			$this->cache->clean(
-				Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-				array('role' . $refid)
-			);
+			$this->cache->clearByTags(array('role' . $refid));
 		}
 		
 		$this->done($data);
@@ -633,7 +627,7 @@ class ModAjax extends ajaxFunc {
 				);
 			}
 			$this->db->commit();
-			$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
+			$this->cache->removeItem("all_settings_" . $this->config->database->params->dbname);
 			$this->done($data);
 		} catch (Exception $e) {			
 			$this->db->rollback();
@@ -671,7 +665,7 @@ class ModAjax extends ajaxFunc {
 		if ( ! $last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
-		$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
+		$this->cache->removeItem("all_settings_" . $this->config->database->params->dbname);
 		$this->done($data);
 		return $this->response;
     }
@@ -698,7 +692,7 @@ class ModAjax extends ajaxFunc {
 		if (!$last_insert_id = $this->saveData($data)) {
 			return $this->response;
 		}
-		$this->cache->remove("all_settings_" . $this->config->database->params->dbname);
+		$this->cache->removeItem("all_settings_" . $this->config->database->params->dbname);
 		$this->done($data);
 		return $this->response;
     }
@@ -761,20 +755,20 @@ class ModAjax extends ajaxFunc {
                 $gl = new \Core2\Gitlab();
                 $fn = $gl->getZip($name[0], $name[1]);
                 if ($e = $gl->getError()) {
-                    throw new Exception($e);
+                    throw new \Exception($e);
                 }
             } else {
                 if (empty($data['control']['files|name'])) {
-                    throw new Exception("Файл не выбран");
+                    throw new \Exception("Файл не выбран");
                 }
                 $f = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if (!file_exists($fn)) {
-                    throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
+                    throw new \Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
                 }
                 $size = filesize($fn);
                 if ($size !== (int)$f[1]) {
-                    throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
+                    throw new \Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
                 }
             }
 
@@ -798,7 +792,7 @@ class ModAjax extends ajaxFunc {
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
                     //пробуем вариант, когда в архиве единственная директория
-                    $cdir = scandir($destinationFolder);
+                    $cdir   = scandir($destinationFolder);
                     $path   = $destinationFolder;
                     foreach ($cdir as $key => $value) {
                         if (!in_array($value, array(".", ".."))) {
@@ -943,7 +937,7 @@ class ModAjax extends ajaxFunc {
                 }
             }
             else {
-                throw new Exception($this->translate->tr("Неверный тип архива"));
+                throw new Exception(sprintf($this->translate->tr("Неверный тип архива %s"), $file_type));
             }
 
             $this->done($data);

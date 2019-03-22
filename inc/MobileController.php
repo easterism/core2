@@ -121,10 +121,7 @@ class MobileController extends Common {
 			$this->db->update($table_name, array($is_active => $status), $where);
 			//очистка кеша активности по всем записям таблицы
 			// используется для core_modules
-			$this->cache->clean(
-					Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
-					array("is_active_" . $table_name)
-			);
+			$this->cache->clearByTags(["is_active_" . $table_name]);
 
 			echo json_encode(array('status' => "ok"));
 		} catch (Exception $e) {
@@ -134,7 +131,7 @@ class MobileController extends Common {
 
     public function action_delete(Array $params)
     {
-        $sess       = new Zend_Session_Namespace('List');
+        $sess       = new SessionContainer('List');
         $resource   = $params['res'];
         if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
         if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
@@ -632,7 +629,7 @@ class MobileController extends Common {
 		}
 		if ($_POST['class_id'] == 'main_user') {
 			$data = $_POST;
-			$sess_form = new Zend_Session_Namespace('Form');
+			$sess_form = new SessionContainer('Form');
 			$orderFields = $sess_form->main_user;
 
 			$firstname = $data['control']['firstname'];
@@ -703,7 +700,7 @@ class MobileController extends Common {
 				$this->db->commit();				
 	     	} catch (Exception $e) {
 	     		$this->db->rollback();				
-				$errorNamespace = new Zend_Session_Namespace('Error');
+				$errorNamespace = new SessionContainer('Error');
 				$errorNamespace->ERROR =  $e->getMessage();				
 				$errorNamespace->setExpirationHops(1);
 			}			
