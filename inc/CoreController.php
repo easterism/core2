@@ -70,17 +70,45 @@ class CoreController extends Common {
      * @return void
      */
 	public function action_index() {
+
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
             parse_str(file_get_contents("php://input"), $put_vars);
-            if (!empty($put_vars['exit'])) {
+            if ( ! empty($put_vars['exit'])) {
                 $this->closeSession();
                 return;
             }
         }
-        if (!$this->auth->ADMIN) throw new Exception(911);
+
+        if ( ! $this->auth->ADMIN) throw new Exception(911);
+
+
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    case 'clear_cache':
+                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                            throw new Exception('Некорректный запрос');
+                        }
+
+                        $this->cache->clearByNamespace(\Core2\Cache::NS);
+
+                        return json_encode(['status' => 'success']);
+                        break;
+                }
+            } catch (Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage()
+                ]);
+            }
+        }
+
 
         $tab = new tabs('mod');
         $tab->beginContainer($this->_("События аудита"));
+
+        $this->printJsModule('admin', '/js/admin.index.js');
+
         try {
             $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
@@ -94,11 +122,18 @@ class CoreController extends Common {
             ) {
 				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->_("Не задан администратор базы данных"));
             }
+
         } catch (Exception $e) {
 			Alert::memory()->danger($e->getMessage(), $this->_("Ошибка"));
         }
 
         echo Alert::get();
+
+
+        // Кнопка очистки кэша
+        $btn_title = $this->_('Очистить кэш');
+        echo "<input class=\"button\" type=\"button\" value=\"{$btn_title}\" onclick=\"AdminIndex.clearCache()\"/>";
+
         $tab->endContainer();
 	}
 
