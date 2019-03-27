@@ -792,7 +792,7 @@ class ModAjax extends ajaxFunc {
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
                     //пробуем вариант, когда в архиве единственная директория
-                    $cdir = scandir($destinationFolder);
+                    $cdir   = scandir($destinationFolder);
                     $path   = $destinationFolder;
                     foreach ($cdir as $key => $value) {
                         if (!in_array($value, array(".", ".."))) {

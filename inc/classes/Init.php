@@ -16,7 +16,7 @@
     use Zend\Cache\StorageFactory;
     use Zend\Session\Config\SessionConfig;
     use Zend\Session\SessionManager;
-    use Zend\Session\SaveHandler\Cache;
+    use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
     use Zend\Session\Container as SessionContainer;
 
     $conf_file = DOC_ROOT . "conf.ini";
@@ -28,7 +28,6 @@
     $config = array(
         'system' => array('name' => 'CORE'),
         'include_path' => '',
-        'cache' => 'cache',
         'temp' => getenv('TMP'),
         'debug' => array('on' => false),
         'session' => array('cookie_httponly' => true,
@@ -155,7 +154,7 @@
                         'options' => $options
                     )
                 ));
-                $sessHandler = new Cache($cache);
+                $sessHandler = new SessionHandlerCache($cache);
             }
             elseif ($config->session->saveHandler === 'redis') {
                 $cache = StorageFactory::factory([
@@ -164,7 +163,7 @@
                         'options' => $options
                     ]
                 ]);
-                $sessHandler = new Cache($cache);
+                $sessHandler = new SessionHandlerCache($cache);
             }
         }
         $sess_config = new SessionConfig();
