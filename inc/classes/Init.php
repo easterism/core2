@@ -1252,12 +1252,46 @@
             return '';
         }
 
+
+        /**
+         *
+         */
         public function __destruct() {
+
             if ($this->config->system->profile && $this->config->system->profile->on) {
                 $log = new \Core2\Log('profile');
+
                 if ($log->getWriter()) {
-                    $log->info('query----------------------->', [$_SERVER['QUERY_STRING']]);
-                    $log->info('sql', $this->db->fetchAll("show profiles"));
+                    $sql_queries = $this->db->fetchAll("show profiles");
+                    $total_time  = 0;
+                    $max_slow    = [];
+
+                    if ( ! empty($sql_queries)) {
+                        foreach ($sql_queries as $k => $sql_query) {
+
+                            if ( ! empty($sql_query['Duration'])) {
+                                $total_time += $sql_query['Duration'];
+
+                                if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
+                                    $max_slow = $sql_query;
+                                }
+                            }
+                        }
+                    }
+
+                    $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
+                    $query_string   = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+
+                    if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
+                        $function_log = 'warning';
+                    } else {
+                        $function_log = 'info';
+                    }
+
+
+                    $log->{$function_log}('request', [$request_method, round($total_time, 5), count($sql_queries), $query_string]);
+                    $log->{$function_log}('  | max slow', $max_slow);
+                    $log->{$function_log}('  | queries ', $sql_queries);
                 }
             }
         }

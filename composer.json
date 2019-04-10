@@ -35,11 +35,8 @@
     "guzzlehttp/guzzle": "~6.3"
   },
   "scripts": {
-    "xajax-cmd": [
-      "mkdir -p -m 0777 vendor/belhard/xajax/xajax_js/deferred"
-    ],
     "post-update-cmd": [
-      "@xajax-cmd"
+      "mkdir -m 0777 -p vendor/belhard/xajax/xajax_js/deferred"
     ]
   }
 }
