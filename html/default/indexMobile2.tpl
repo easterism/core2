@@ -16,7 +16,6 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>

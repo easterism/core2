@@ -1316,9 +1316,6 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printJs("core2/js/bootstrap.modal.min.js", true);
                     Tool::printCss("core2/html/" . THEME . "/css/bootstrap.modal.min.css");
                 }
-                if (isset($this->scripts['editor'])) {
-                    Tool::printJs("core2/ext/tinymce/tinymce.min.js", true);
-                }
                 if (isset($this->scripts['upload'])) {
                     Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload.css");
                     Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload-ui.css");
