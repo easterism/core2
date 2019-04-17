@@ -255,7 +255,7 @@
                 return;
             }
 
-            $this->auth 	= new SessionContainer('Auth');
+            $this->auth = new SessionContainer('auth');
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {

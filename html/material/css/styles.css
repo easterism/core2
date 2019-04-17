@@ -1821,7 +1821,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     padding: 5px 0 0;
 }
 .core-tabs > .core-tabs-body {
-    padding-top: 35px;
+    padding-top: 26px;
 }
 .core-tabs > .core-tabs-body .tab-content > .tab-pane,
 .core-tabs > .core-tabs-body .pill-content > .pill-pane {display: none}
