@@ -91,7 +91,7 @@ function changeRoot(obj, to, actionSelect) {
 
                 var module_id = parent.childNodes[i].id;
 				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
-					if ( ! actionSelect) {
+					if ( ! actionSelect || actionSelect === 'index') {
 						$(parent.childNodes[i]).find('>a').addClass('index-select');
 					} else {
 						$(parent.childNodes[i]).find('>a').removeClass('index-select');
