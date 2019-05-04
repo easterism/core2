@@ -24,6 +24,7 @@ class editTable extends initEdit {
 	private $isSaved 				= false;
 	private $scripts		        = array();
 	private $sess_form		        = '';
+	private $uniq_class_id		    = '';
 
 
     /**
@@ -35,6 +36,8 @@ class editTable extends initEdit {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->template 		= '<div id="' . $this->main_table_id . '_default">[default]</div>';
+		$this->uniq_class_id   	= crc32($name . microtime());
+
 		global $counter;
 		$counter = 0;
 		$this->acl = new stdClass();
@@ -44,7 +47,7 @@ class editTable extends initEdit {
 
 
 		$this->sess_form = new SessionContainer('Form');
-        $this->sess_form->{$this->main_table_id} = array();
+        $this->sess_form->{$this->uniq_class_id} = array();
     }
 
 
@@ -165,9 +168,9 @@ class editTable extends initEdit {
 	 */
 	public function setSessFormField($id, $value)
 	{
-        $ssi = $this->sess_form->{$this->main_table_id};
+        $ssi = $this->sess_form->{$this->uniq_class_id};
         $ssi[$id] = $value;
-        $this->sess_form->{$this->main_table_id} = $ssi;
+        $this->sess_form->{$this->uniq_class_id} = $ssi;
 	}
 
 	/**
@@ -309,12 +312,13 @@ class editTable extends initEdit {
 
 
 			$this->HTML .= "<form id=\"{$this->main_table_id}_mainform\" method=\"POST\" action=\"[_ACTION_]\" enctype=\"multipart/form-data\" onsubmit=\"$onsubmit\">";
-			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"$this->main_table_id\"/>";
-			$order_fields['resId']    = $this->resource;
-			$order_fields['back']     = $this->back;
-			$order_fields['refid']    = $refid;
-			$order_fields['table']    = $this->table;
-			$order_fields['keyField'] = $keyfield;
+			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"{$this->uniq_class_id}\"/>";
+			$order_fields['resId']       = $this->resource;
+			$order_fields['mainTableId'] = $this->main_table_id;
+			$order_fields['back']        = $this->back;
+			$order_fields['refid']       = $refid;
+			$order_fields['table']       = $this->table;
+			$order_fields['keyField']    = $keyfield;
 
 			$this->setSessForm($order_fields);
 

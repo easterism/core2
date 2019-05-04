@@ -68,11 +68,10 @@ class ajaxFunc extends Common {
      */
 	protected function ajaxValidate($data, $fields) {
 
-		$class_id = $data['class_id'];
-		$order_fields = $this->getSessForm($class_id);
+		$order_fields = $this->getSessForm($data['class_id']);
 
 		$control  = $data['control']; //данные полей формы
-		$script   = "for(var i = 0; i < document.getElementById('{$class_id}_mainform').elements.length; i++){document.getElementById('{$class_id}_mainform').elements[i].classList.remove('reqField')};";
+		$script   = "for(var i = 0; i < document.getElementById('{$order_fields['mainTableId']}_mainform').elements.length; i++){document.getElementById('{$order_fields['mainTableId']}_mainform').elements[i].classList.remove('reqField')};";
 		$req      = array();
 		$email    = array();
 		$date     = array();
@@ -86,13 +85,13 @@ class ajaxFunc extends Common {
 			if (!is_array($val)) {
 				$control[$field] = trim($val);
 				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
-					$script .= "document.getElementById('" . $class_id . $field . "2').className='reqField';";
+					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "2').className='reqField';";
 					$this->error[] = "- {$this->translate->tr('Пароль не совпадает.')}<br/>";
 				}
 				else if (isset($control[$field . "%tru"]) && $val > $control[$field . "%tru"]) {
-					$script .= "document.getElementById('" . $class_id . $field . "%tru_day').className='reqField';";
-					$script .= "document.getElementById('" . $class_id . $field . "%tru_month').className='reqField';";
-					$script .= "document.getElementById('" . $class_id . $field . "%tru_year').className='reqField';";
+					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "%tru_day').className='reqField';";
+					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "%tru_month').className='reqField';";
+					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "%tru_year').className='reqField';";
 					$this->error[] = "- {$this->translate->tr('Дата начала больше даты окончания.')}<br/>";
 				}
 				else if (substr($field, 0, 6) == 'files|' && $val) {
@@ -147,13 +146,13 @@ class ajaxFunc extends Common {
 				}
 				
 				if (in_array("md5", $params)) {
-					$script .= "document.getElementById('" . $class_id . $field . "').value = '" . $control[$field] . "';";
+					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').value = '" . $control[$field] . "';";
 				}
 			}
 		}
 		if (count($req)) {
 			foreach ($req as $val) {
-				$script .= "document.getElementById('" . $class_id . $val . "').classList.add('reqField');";
+				$script .= "document.getElementById('" . $order_fields['mainTableId'] . $val . "').classList.add('reqField');";
 			}
 			$this->error[] = "- {$this->translate->tr('Пожалуйста, заполните обязательные поля.')}<br/>";
 		}
@@ -168,7 +167,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -180,7 +179,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -193,7 +192,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').className='reqField';";
 				}
 			}
 		}
@@ -202,12 +201,12 @@ class ajaxFunc extends Common {
 			foreach ($datetime as $field) {
 				if ( ! preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(|:{1}\d{2}))$/', $control[$field])) {
                     $this->error[] = "- Неверный формат даты";
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').className='reqField';";
 				} else {
                     list($year, $month, $day) = sscanf($control[$field], '%d-%d-%d');
                     if ( ! checkdate($month, $day, $year)) {
                         $this->error[] = "- Некорректная дата";
-                        $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+                        $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').className='reqField';";
                     }
                 }
 			}
@@ -220,7 +219,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').classList.add('reqField');";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').classList.add('reqField');";
 				}
 			}
 		}
@@ -250,7 +249,7 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $class_id . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').className='reqField';";
 				}
 			}
 		}
@@ -272,10 +271,10 @@ class ajaxFunc extends Common {
 	 * @param array $data
 	 */
 	protected function displayError($data) {
-		$class_id = $data['class_id'];
-    	$this->response->assign($class_id . "_error", "innerHTML", '<a name="' . $class_id . '_error"> </a>' . implode("<br/>", $this->error));
-		$this->response->assign($class_id . "_error", "style.display", 'block');
-		$this->response->script("toAnchor('{$class_id}_error')");
+        $order_fields = $this->getSessForm($data['class_id']);
+    	$this->response->assign($order_fields['mainTableId'] . "_error", "innerHTML", '<a name="' . $order_fields['mainTableId'] . '_error"> </a>' . implode("<br/>", $this->error));
+		$this->response->assign($order_fields['mainTableId'] . "_error", "style.display", 'block');
+		$this->response->script("toAnchor('{$order_fields['mainTableId']}_error')");
     }
 
 
@@ -504,12 +503,12 @@ class ajaxFunc extends Common {
 			$this->displayError($data);
 			return;
 		}
-		if ( ! empty($data['class_id'])) {
-			$this->response->assign($data['class_id'] . "_error", "style.display", 'none');
-		}
-		$order_fields = $this->getSessForm($data['class_id']);
-		if ( ! empty($order_fields['back'])) {
-			$this->response->script($this->script . "load('{$order_fields['back']}');");
+        $order_fields = $this->getSessForm($data['class_id']);
+        if ( ! empty($data['class_id'])) {
+            $this->response->assign($order_fields['mainTableId'] . "_error", "style.display", 'none');
+        }
+        if ( ! empty($order_fields['back'])) {
+			$this->response->script($this->script . "setTimeout(function () {load('{$order_fields['back']}')}, 0);");
 		}
 	}
 
