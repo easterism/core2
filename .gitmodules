@@ -1,9 +1,6 @@
 [submodule "ext/jQuery/plugins/jQuery-File-Upload"]
 	path = ext/jQuery/plugins/jQuery-File-Upload
 	url = git@github.com:blueimp/jQuery-File-Upload.git
-[submodule "ext/jQuery/plugins/floatThead"]
-	path = ext/jQuery/plugins/floatThead
-	url = git@github.com:mkoryak/floatThead.git
 [submodule "ext/jQuery/plugins/simplemodal"]
 	path = ext/jQuery/plugins/simplemodal
 	url = git@github.com:ericmmartin/simplemodal.git
