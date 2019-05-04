@@ -382,7 +382,7 @@ class listTable extends initList {
             $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
         }        
 
-        $this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);
+        $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $search, $this->SQL);
         $order = isset($tmp['order']) ? $tmp['order'] : '';
         if (isset($this->table_column[$this->main_table_id]) && is_array($this->table_column[$this->main_table_id])) {
             foreach ($this->table_column[$this->main_table_id] as $seq => $columns) {
