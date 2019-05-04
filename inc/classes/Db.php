@@ -286,7 +286,7 @@ class Db {
 	 * @param string $expired
 	 */
 	public function closeSession($expired = 'N') {
-		$auth = \Zend_Registry::get('auth');
+		$auth = new \Zend\Session\Container('auth');
 		if ($auth && $auth->ID) {
 		    if ($auth->LIVEID) {
                 $row = $this->dataSession->find($auth->LIVEID)->current();
@@ -307,7 +307,7 @@ class Db {
 	 * @throws \Exception
 	 */
 	public function logActivity($exclude = array()) {
-		$auth = \Zend_Registry::get('auth');
+		$auth = new \Zend\Session\Container('auth');
 		if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
 			if ($exclude) {
 				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;

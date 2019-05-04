@@ -91,7 +91,7 @@ function changeRoot(obj, to, actionSelect) {
 
                 var module_id = parent.childNodes[i].id;
 				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
-					if ( ! actionSelect) {
+					if ( ! actionSelect || actionSelect === 'index') {
 						$(parent.childNodes[i]).find('>a').addClass('index-select');
 					} else {
 						$(parent.childNodes[i]).find('>a').removeClass('index-select');
@@ -686,7 +686,7 @@ $(document).ready(function() {
         $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").removeClass('module-hover');
     });
 
-    if ($.cookie('sidebar_collapse')) {
+    if (localStorage.getItem('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
         if ($(window).width() >= 768) {
             $('#main').toggleClass('s-toggle');
@@ -707,10 +707,10 @@ $(document).ready(function() {
 			}
 		}
 
-		if ($.cookie('sidebar_collapse')) {
-            $.cookie('sidebar_collapse', '');
+		if (localStorage.getItem('sidebar_collapse')) {
+			localStorage.setItem('sidebar_collapse', '');
 		} else {
-            $.cookie('sidebar_collapse', 1);
+			localStorage.setItem('sidebar_collapse', 1);
 		}
     });
 
@@ -722,7 +722,7 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').hide();
                 }
-                $.cookie('sidebar_collapse', 1);
+				localStorage.setItem('sidebar_collapse', 1);
                 return false;
             }
             if (phase === "move" && ((width < 768 && direction === "left") || (width >= 768 && direction === "right"))) {
@@ -730,7 +730,7 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').show();
                 }
-                $.cookie('sidebar_collapse', '');
+				localStorage.setItem('sidebar_collapse', '');
                 return false;
             }
         }
