@@ -10,7 +10,6 @@
         \Core2\Error::Exception("Composer autoload is missing.");
     }
 
-
     require_once($conf_file);
     require_once("Error.php");
 
@@ -25,6 +24,7 @@
     if (!file_exists($conf_file)) {
         \Core2\Error::Exception("conf.ini is missing.");
     }
+//\Sentry\init(['dsn' => 'https://1b4190b83c4c4eff96c2f17f252fb053@sentry.io/1408676' ]);
     $config = array(
         'system' => array('name' => 'CORE'),
         'include_path' => '',
