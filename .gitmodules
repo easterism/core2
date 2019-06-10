@@ -25,3 +25,9 @@
 [submodule "mod/billing/v1.8.0"]
 	path = mod/billing/v1.8.0
 	url = git@git.rdo.belhard.com:core2/modules/billing.git
+[submodule "mod/queue/v1.5.0"]
+	path = mod/queue/v1.5.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/webservice/v2.1.0"]
+	path = mod/webservice/v2.1.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
