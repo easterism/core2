@@ -336,7 +336,6 @@
             }
 
             if ($token) {
-
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
@@ -533,11 +532,15 @@
 
                 } else {
                     if ($action == 'index') {
-                        if (!$this->acl->checkAcl($module, 'access')) {
+                        $_GET['action'] = "index";
+
+                        if ( ! $this->isModuleActive($module)) {
+                            throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
+                        }
+
+                        if ( ! $this->acl->checkAcl($module, 'access')) {
                             throw new Exception(911);
                         }
-                        $_GET['action'] = "index";
-                        if (!$this->isModuleActive($module)) throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
@@ -653,7 +656,9 @@
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
-            $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
+            if ( ! empty($this->auth->TOKEN)) {
+                $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
+            }
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
@@ -1164,41 +1169,53 @@
          * @throws Exception
          */
         private function getMenuMobile() {
+
             header('Content-type: application/json; charset="utf-8"');
-            $mods   = $this->getModuleList();
-            $modsList = array();
+
+            $mods     = $this->getModuleList();
+            $modsList = [];
+
             foreach ($mods as $data) {
                 if ($data['is_public'] == 'Y') {
-                    $modsList[$data['m_id']] = array(
+                    $modsList[$data['m_id']] = [
                         'module_id'  => $data['module_id'],
                         'm_name'     => strip_tags($data['m_name']),
                         'm_id'       => $data['m_id'],
-                        'submodules' => array()
-                    );
+                        'submodules' => []
+                    ];
                 }
             }
             foreach ($mods as $data) {
                 if ( ! empty($data['sm_id']) && $data['is_public'] == 'Y') {
-                    $modsList[$data['m_id']]['submodules'][] = array(
+                    $modsList[$data['m_id']]['submodules'][] = [
                         'sm_id'   => $data['sm_id'],
                         'sm_key'  => $data['sm_key'],
                         'sm_name' => strip_tags($data['sm_name'])
-                    );
+                    ];
                 }
             }
+
             //проверяем наличие контроллера для core2m в модулях
             foreach ($modsList as $k => $data) {
-                $location = $this->getModuleLocation($data['module_id']);
+                $location      = $this->getModuleLocation($data['module_id']);
                 $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
-                if (!file_exists($location . "/$modController.php")) {
+                if ( ! file_exists($location . "/$modController.php")) {
                     unset($modsList[$k]);
                 }
             }
-            $modsList = array('system_name' => strip_tags($this->getSystemName()),
-                              'login'       => $this->auth->NAME,
-                              'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
-                              'modules'     => $modsList);
-            return json_encode($modsList);
+            $data = [
+                'system_name' => strip_tags($this->getSystemName()),
+                'id'          => $this->auth->ID,
+                'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
+                'login'       => $this->auth->NAME,
+                'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'modules'     => $modsList
+            ];
+
+            return json_encode([
+                'status' => 'success',
+                'data'   => $data,
+            ]);
         }
 
 

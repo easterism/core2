@@ -7,10 +7,12 @@ use Zend\Cache\StorageFactory;
 
 /**
  * Class Db
- * @property \Zend_Db_Adapter_Abstract $db
- * @property \Zend_Cache_Core          $cache
- * @property \Core2\I18n               $translate
- * @property Log               $log
+ * @property \Zend_Db_Adapter_Abstract                   $db
+ * @property \Zend\Cache\Storage\Adapter\AbstractAdapter $cache
+ * @property \Core2\I18n                                 $translate
+ * @property Log                                         $log
+ * @property \CoreController                             $modAdmin
+ * @property \Session                                    $dataSession
  */
 class Db {
 
@@ -543,21 +545,26 @@ class Db {
 	 * @return string
 	 */
 	final public function isModuleInstalled($module_id) {
-		$module_id = trim(strtolower($module_id));
-		$key = "is_installed_" . $this->config->database->params->dbname;
-		if (!$this->cache->hasItem($key)) {
-			$res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules");
-            $is = [];
+
+        $module_id = trim(strtolower($module_id));
+        $key       = "is_installed_" . $this->config->database->params->dbname;
+
+        if ( ! $this->cache->hasItem($key)) {
+            $res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules");
+            $is  = [];
             foreach ($res as $item) {
                 $is[$item['module_id']] = $item;
-			}
-			$this->cache->setItem($key, $is);
+            }
+            $this->cache->setItem($key, $is);
             $this->cache->setTags($key, ['is_active_core_modules']);
-		} else {
-			$is = $this->cache->getItem($key);
-		}
+
+        } else {
+            $is = $this->cache->getItem($key);
+        }
+
         $is = isset($is[$module_id]) ? $is[$module_id] : 0;
-		return $is;
+
+        return $is;
 	}
 
 
@@ -609,35 +616,39 @@ class Db {
 	 * @throws \Exception
 	 */
 	final public function getModuleLoc($module_id) {
-		$module_id = trim(strtolower($module_id));
-		if (!$module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
-		if (!empty($this->_locations[$module_id])) return $this->_locations[$module_id];
-		$module = $this->isModuleInstalled($module_id);
 
-		if (!isset($module['location'])) {
+        $module_id = trim(strtolower($module_id));
+        if ( ! $module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
+        if ( ! empty($this->_locations[$module_id])) return $this->_locations[$module_id];
+        $module = $this->isModuleInstalled($module_id);
+
+        if ( ! isset($module['location'])) {
             $key = "is_installed_" . $this->config->database->params->dbname;
-			if ($module_id === 'admin') {
-				$loc = "core2/mod/admin";
-			} else {
-                if (!$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
+
+            if ($module_id === 'admin') {
+                $loc = "core2/mod/admin";
+            } else {
+                if ( ! $module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
                 if ($module['is_system'] === "Y") {
                     $loc = "core2/mod/{$module_id}/v{$module['version']}";
                 } else {
                     $loc = "mod/{$module_id}/v{$module['version']}";
-                    if (!is_dir(DOC_ROOT . $loc)) {
+                    if ( ! is_dir(DOC_ROOT . $loc)) {
                         $loc = "mod/{$module_id}";
                     }
                 }
-			}
-			$fromCache = $this->cache->getItem($key);
+            }
+            $fromCache                         = $this->cache->getItem($key);
             $fromCache[$module_id]['location'] = $loc;
-			$this->cache->setItem($key, $fromCache);
+            $this->cache->setItem($key, $fromCache);
             $this->cache->setTags($key, ['is_active_core_modules']);
-		} else {
-			$loc = $module['location'];
-		}
-		$this->_locations[$module_id] = $loc;
-		return $loc;
+
+        } else {
+            $loc = $module['location'];
+        }
+
+        $this->_locations[$module_id] = $loc;
+        return $loc;
 	}
 
 
