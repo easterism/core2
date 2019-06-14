@@ -351,15 +351,22 @@
          * Проверка на наличие и работоспособности модуля Webservice
          */
         private function checkWebservice() {
+
             if ( ! $this->isModuleActive('webservice')) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_not_active',
+                    'error_message' => $this->translate->tr('Модуль Webservice не активен')
+                ], 503);
             }
 
             $location = $this->getModuleLocation('webservice');
             $webservice_controller_path =  $location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_not_isset',
+                    'error_message' => $this->translate->tr('Модуль Webservice не существует')
+                ], 500);
             }
 
             $autoload = $location . "/vendor/autoload.php";
@@ -370,7 +377,10 @@
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_broken',
+                    'error_message' => $this->translate->tr('Модуль Webservice сломан')
+                ], 500);
             }
             Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }

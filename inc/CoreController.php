@@ -740,9 +740,13 @@ class CoreController extends Common {
 				}
 				echo '{}';
 			} catch (Exception $e) {
-                \Core2\Error::catchJsonException(array('error' => array($e->getMessage())), 503);
-			}
-			return;
+                \Core2\Error::catchJsonException([
+                    'error_code'    => $e->getCode(),
+                    'error_message' => $e->getMessage()
+                ], 500);
+            }
+
+            return;
 		}
 		if (file_exists('mod/home/welcome.php')) {
 			require_once 'mod/home/welcome.php';

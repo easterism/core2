@@ -153,6 +153,7 @@ class Error {
      * @return string|void
      */
 	public static function catchJsonException($out, $code = 0) {
+
 		if ($code == 400) {
 			header("HTTP/1.1 400 Bad Request");
 
@@ -164,11 +165,17 @@ class Error {
 
 		} elseif ($code == 503) {
 			header("HTTP/1.1 503 Service Unavailable");
-
 		}
+
+
 		header('Content-type: application/json; charset="utf-8"');
-		return self::Exception(json_encode($out), $code);
+
+		$error_data = ['status' => 'error'];
+        $error_data += $out;
+
+		return self::Exception(json_encode($error_data), $code);
 	}
+
 
 	/**
 	 * Обработчик исключений Xajax
