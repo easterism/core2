@@ -573,7 +573,6 @@
                         }
                     } else {
                         return "<script>loadPDF('{$mods['sm_path']}')</script>";
-                        //header("Location: " . $mods['sm_path']);
                     }
                 }
             }
