@@ -927,17 +927,17 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= $out;
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
-								$gr = "";
+								$group = "";
 								foreach ($temp as $row) {
 									if ((!isset($row[2]) || !$row[2]) && !is_array($row[1])) {
 										$temp2 = explode(":::", $row[1]);
 										$row[2] = isset($temp2[1]) ? $temp2[1] : '';
 										$row[1] = $temp2[0];
 									}
-									if (isset($row[2]) && $row[2] && $gr != $row[2]) {
-										if ($gr) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
+									if (isset($row[2]) && $row[2] && $group != $row[2]) {
+										if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
 										$controlGroups[$cellId]['html'][$key] .= "<optgroup label=\"{$row[2]}\">";
-										$gr = $row[2];
+										$group = $row[2];
 									}
 									$selected = "";
 									$real_value = explode('"', $row[0]);
@@ -951,12 +951,70 @@ class editTable extends initEdit {
 									}
 									$controlGroups[$cellId]['html'][$key] .= '<option value="' . $row[0] . '" ' . $selected . '>' . $row[1] . '</option>';
 								}
-								if ($gr) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
+								if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
 								$controlGroups[$cellId]['html'][$key] .= "</select>";
 							}
 							$select++;
-						}
-						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
+
+						} elseif ($value['type'] == 'multilist2') {
+                            $options = [];
+
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    if ( ! is_array($v)) {
+                                        $options[$k] = $v;
+                                    }
+                                }
+                            } else {
+                                if (isset($arr[0])) {
+                                    $sql = $this->replaceTCOL($arr[0], $this->selectSQL[$select]);
+                                } else {
+                                    $sql = $this->selectSQL[$select];
+                                }
+                                $options = $this->db->fetchPairs($sql);
+                            }
+
+                            if ( ! is_array($value['default'])) {
+                                $value['default'] = explode(",", $value['default']);
+                            }
+
+                            if ($this->readOnly) {
+                                $options_out = [];
+                                foreach ($options as $option_id => $option_title) {
+                                    if (in_array($option_id, $value['default'])) {
+                                        $options_out[] = $option_title;
+                                        break;
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= implode(', ', $options_out);
+
+                            } else {
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist2.html');
+                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[ATTRIBUTES]', str_replace(['"', "'"], ['!::', '!:'], $attrs));
+                                $tpl->assign('[OPTIONS]',    json_encode($options));
+
+
+                                foreach ($value['default'] as $option_id) {
+                                    if (isset($options[$option_id])) {
+                                        $tpl->item->fillDropDown('[ID]', $options, $option_id);
+
+                                        $tpl->item->assign('[ATTRIBUTES]', $attrs);
+                                        $tpl->item->assign('[FIELD]',      $field);
+                                        $tpl->item->assign('[ID]',         crc32(microtime() . $option_id));
+                                        $tpl->item->reassign();
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+
+                        } elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("
