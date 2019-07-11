@@ -306,7 +306,81 @@ var edit = {
      */
     toggleGroup(toggleObject) {
         $(toggleObject).parent().next().slideToggle('fast');
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	multilist2: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param field
+		 * @param attributes
+		 * @param themePath
+		 */
+		addItem: function (fieldId, field, attributes, themePath) {
+
+			let tpl =
+				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
+				'<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
+				'<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
+				'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
+				'</div>';
+
+			let options = [];
+
+			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
+				$.each(edit.multilist2.data[fieldId], function (id, title) {
+					options.push('<option value="' + id + '">' + title + '</option>');
+				});
+			}
+
+
+			attributes = attributes.replace(/\!\:\:/g, '"');
+			attributes = attributes.replace(/\!\:/g, "'");
+
+			let id = this.keygen();
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELD\]/g,      field);
+			tpl = tpl.replace(/\[ATTRIBUTES\]/g, attributes);
+			tpl = tpl.replace(/\[OPTIONS\]/g,    options.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#multilist2-' + fieldId + ' .multilist2-items').append(tpl);
+			$('#multilist2-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	}
 };
 
 
