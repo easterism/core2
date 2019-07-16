@@ -1022,7 +1022,7 @@ class editTable extends initEdit {
                                 throw new Exception('Некорректно заполнены настройки формы');
                             }
 
-                            $json_string = stripslashes(html_entity_decode($value['default']));
+                            $json_string = html_entity_decode($value['default']);
                             $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
 
                             if ($this->readOnly) {
