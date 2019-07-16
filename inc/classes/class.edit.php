@@ -189,9 +189,12 @@ class editTable extends initEdit {
 		return;
 	}
 
-	/**
-	 * @return mixed
-	 */
+
+    /**
+     * @throws Zend_Db_Adapter_Exception
+     * @throws Zend_Exception
+     * @throws Exception
+     */
 	public function makeTable() {
 		if (!$this->isSaved) {
 			$this->save('save.php');
@@ -1013,6 +1016,123 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }
                             $select++;
+
+						} elseif ($value['type'] == 'dataset') {
+                            if (empty($value['in']) || ! is_string($value['default'])) {
+                                throw new Exception('Некорректно заполнены настройки формы');
+                            }
+
+                            $json_string = stripslashes(html_entity_decode($value['default']));
+                            $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+
+                            if ($this->readOnly) {
+                                if ( ! empty($datasets)) {
+                                    require_once 'Templater3.php';
+                                    $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
+
+                                    foreach ($value['in'] as $item_field) {
+                                        $tpl->title->assign('[TITLE]', $item_field['title']);
+                                        $tpl->title->reassign();
+                                    }
+
+                                    $num = 1;
+                                    foreach ($datasets as $dataset) {
+
+                                        foreach ($value['in'] as $item_field) {
+                                            $field_value = '';
+
+                                            if ( ! empty($dataset)) {
+                                                if (isset($dataset[$item_field['code']])) {
+                                                    $field_value = is_string($dataset[$item_field['code']])
+                                                        ? $dataset[$item_field['code']]
+                                                        : '';
+                                                }
+                                            }
+
+
+                                            $tpl->item->field_readonly->assign('[VALUE]', $field_value);
+                                            $tpl->item->field_readonly->reassign();
+                                        }
+
+                                        $tpl->item->assign('[ID]', $fieldId . '-' . $num);
+                                        $tpl->item->reassign();
+                                        $num++;
+                                    }
+
+
+                                    $controlGroups[$cellId]['html'][$key] .= $tpl;
+                                }
+
+                            } else {
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
+                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[OPTIONS]',    json_encode($value['in']));
+
+                                $tpl->touchBlock('delete_col');
+                                $tpl->touchBlock('edit_controls');
+
+                                foreach ($value['in'] as $item_field) {
+                                    $tpl->title->assign('[TITLE]', $item_field['title']);
+                                    $tpl->title->reassign();
+                                }
+
+
+                                if ( ! empty($datasets)) {
+                                    $num = 1;
+                                    foreach ($datasets as $dataset) {
+
+                                        foreach ($value['in'] as $item_field) {
+                                            $field_value = '';
+
+                                            if ( ! empty($dataset)) {
+                                                if (isset($dataset[$item_field['code']])) {
+                                                    $field_value = is_string($dataset[$item_field['code']])
+                                                        ? $dataset[$item_field['code']]
+                                                        : '';
+                                                }
+                                            }
+
+                                            $field_attributes = ! empty($item_field['attributes'])
+                                                ? $item_field['attributes']
+                                                : '';
+
+                                            $tpl->item->field->assign('[FIELD]',      $field);
+                                            $tpl->item->field->assign('[NUM]',        $num);
+                                            $tpl->item->field->assign('[CODE]',       $item_field['code']);
+                                            $tpl->item->field->assign('[VALUE]',      $field_value);
+                                            $tpl->item->field->assign('[ATTRIBUTES]', $field_attributes);
+                                            $tpl->item->field->reassign();
+                                        }
+
+                                        $tpl->item->touchBlock('delete');
+                                        $tpl->item->assign('[ID]', $fieldId . '-' . $num);
+                                        $tpl->item->reassign();
+                                        $num++;
+                                    }
+
+                                } else {
+                                    foreach ($value['in'] as $item_field) {
+                                        $field_attributes  = ! empty($item_field['attributes'])
+                                            ? $item_field['attributes']
+                                            : '';
+
+                                        $tpl->item->field->assign('[FIELD]',      $field);
+                                        $tpl->item->field->assign('[NUM]',        1);
+                                        $tpl->item->field->assign('[CODE]',       $item_field['code']);
+                                        $tpl->item->field->assign('[VALUE]',      '');
+                                        $tpl->item->field->assign('[ATTRIBUTES]', $field_attributes);
+                                        $tpl->item->field->reassign();
+                                    }
+
+                                    $tpl->item->touchBlock('delete');
+                                    $tpl->item->assign('[ID]', $fieldId . '-1');
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
 
                         } elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');

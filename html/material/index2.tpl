@@ -22,7 +22,7 @@
 	<link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=5" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=7" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=8" type="text/css"/>
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
@@ -46,7 +46,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=2"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=3"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js?_=6"></script>
     <!--[if IE]>

@@ -375,6 +375,89 @@ var edit = {
 
 			return 'A' + v1 + v2 + v3 + v4;
 		}
+	},
+
+
+	/**
+	 *
+	 */
+	fieldDataset: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param fieldName
+		 * @param themePath
+		 */
+		addItem: function (fieldId, fieldName, themePath) {
+
+			let tpl =
+				'<tr class="field-dataset-item" id="field-dataset-item-[ID]" style="display: none">' +
+				'[FIELDS] ' +
+				'<td><img src="[THEME_PATH]/img/delete.png" alt="X" class="field-dataset-delete"' +
+				'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
+				'</tr>';
+
+			let tplField = '<td>' +
+				'<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+				'</td>';
+
+			let fields = [];
+			let key    = this.keygen();
+
+			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
+				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
+					let tplFieldCustom = tplField;
+
+					if (field['code']) {
+						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
+						tplFieldCustom = tplFieldCustom.replace(/\[NUM\]/g,        key);
+						tplFieldCustom = tplFieldCustom.replace(/\[CODE\]/g,       field['code']);
+						tplFieldCustom = tplFieldCustom.replace(/\[VALUE\]/g,      '');
+						tplFieldCustom = tplFieldCustom.replace(/\[ATTRIBUTES\]/g, field['attributes'] || '');
+
+						fields.push(tplFieldCustom);
+					}
+				});
+			}
+
+
+			let id = fieldId + '-' + key;
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELDS\]/g,     fields.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#field-dataset-' + fieldId + ' .field-dataset-items').append(tpl);
+			$('#field-dataset-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
 	}
 };
 
