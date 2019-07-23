@@ -704,7 +704,12 @@ class editTable extends initEdit {
 						}
 						elseif (strpos($value['type'], 'fck') === 0) {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= "<div style=\"border:1px solid silver;width:100%;height:300px;overflow:auto\">" . htmlspecialchars_decode($value['default']) . "</div>";
+                                $field_content = htmlspecialchars_decode($value['default']);
+
+                                if ( ! empty($field_content) && strlen($field_content) > 0) {
+                                    $controlGroups[$cellId]['html'][$key] .= "<div style=\"border:1px solid silver;width:100%;max-height:700px;overflow:auto;padding: 4px;\">{$field_content}</div>";
+                                }
+
                             } else {
                                 $this->scripts['editor'] = 'fck';
                                 $params = explode("_", $value['type']);
