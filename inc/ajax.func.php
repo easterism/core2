@@ -362,6 +362,12 @@ class ajaxFunc extends Common {
                     if (isset($order_fields[$field_id.'|maxHeight'])) {
                         $fileFlag[$field_id]['max_height'] = $order_fields[$field_id.'|maxHeight'];
                     }
+                    if (isset($order_fields[$field_id.'|check_width'])) {
+                        $fileFlag[$field_id]['check_width'] = $order_fields[$field_id.'|check_width'];
+                    }
+                    if (isset($order_fields[$field_id.'|check_height'])) {
+                        $fileFlag[$field_id]['check_height'] = $order_fields[$field_id.'|check_height'];
+                    }
 					continue;
 				}
 
@@ -540,12 +546,12 @@ class ajaxFunc extends Common {
                 $file_path = $upload_dir . '/' . $file[0];
 
                 if ( ! file_exists($file_path)) {
-                    throw new Exception(sprintf($this->translate->tr("Файл %s не найден"), $file[0]));
+                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
                 }
 
                 $size = filesize($file_path);
                 if ($size !== (int)$file[1]) {
-                    throw new Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
                 }
                 $content = file_get_contents($file_path);
                 $hash    = md5_file($file_path);
@@ -555,6 +561,44 @@ class ajaxFunc extends Common {
 
                 if (file_exists($file_path_thumb)) {
                     $thumb_content = file_get_contents($file_path_thumb);
+                }
+
+
+                if (( ! empty($file_control['check_width']) || ! empty($file_control['check_height'])) &&
+                    strpos($file[2], 'image/') === 0
+                ) {
+                    $image_info = getimagesize($file_path);
+
+
+                    if ( ! empty($file_control['check_width']) && ! empty($file_control['check_height'])) {
+                        throw new Exception(sprintf(
+                            $this->_("Размер изображения <b>\"%s\"</b> %sx%s, а должен быть %sx%s"),
+                            $file[0],
+                            $image_info[0],
+                            $image_info[1],
+                            $file_control['check_width'],
+                            $file_control['check_height']
+                        ));
+
+                    } else {
+                        if ( ! empty($file_control['check_width']) && $file_control['check_width'] != $image_info[0]) {
+                            throw new Exception(sprintf(
+                                $this->_("Высота изображения <b>\"%s\"</b> %spx, а должна быть %spx"),
+                                $file[0],
+                                $image_info[0],
+                                $file_control['check_width']
+                            ));
+                        }
+
+                        if ( ! empty($file_control['check_height']) && $file_control['check_height'] != $image_info[1]) {
+                            throw new Exception(sprintf(
+                                $this->_("Ширина изображения <b>\"%s\"</b> %spx, а должна быть %spx"),
+                                $file[0],
+                                $image_info[1],
+                                $file_control['check_height']
+                            ));
+                        }
+                    }
                 }
 
 

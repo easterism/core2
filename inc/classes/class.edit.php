@@ -1195,6 +1195,12 @@ class editTable extends initEdit {
 									if ( ! empty($value['in']['maxHeight']) && is_numeric($value['in']['maxHeight'])) {
 										$this->setSessFormField($field . '|maxHeight', $value['in']['maxHeight']);
 									}
+                                    if ( ! empty($value['in']['check_width']) && is_numeric($value['in']['check_width'])) {
+                                        $this->setSessFormField($field . '|check_width', $value['in']['check_width']);
+                                    }
+									if ( ! empty($value['in']['check_height']) && is_numeric($value['in']['check_height'])) {
+										$this->setSessFormField($field . '|check_height', $value['in']['check_height']);
+									}
 									if ( ! empty($value['in']['maxFileSize'])) {
 										$options['maxFileSize'] = $value['in']['maxFileSize'];
 									}
