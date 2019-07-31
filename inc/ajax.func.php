@@ -571,14 +571,16 @@ class ajaxFunc extends Common {
 
 
                     if ( ! empty($file_control['check_width']) && ! empty($file_control['check_height'])) {
-                        throw new Exception(sprintf(
-                            $this->_("Размер изображения <b>\"%s\"</b> %sx%s, а должен быть %sx%s"),
-                            $file[0],
-                            $image_info[0],
-                            $image_info[1],
-                            $file_control['check_width'],
-                            $file_control['check_height']
-                        ));
+                        if ($file_control['check_width'] != $image_info[0] && $file_control['check_height'] != $image_info[1]) {
+                            throw new Exception(sprintf(
+                                $this->_("Размер изображения <b>\"%s\"</b> %sx%s, а должен быть %sx%s"),
+                                $file[0],
+                                $image_info[0],
+                                $image_info[1],
+                                $file_control['check_width'],
+                                $file_control['check_height']
+                            ));
+                        }
 
                     } else {
                         if ( ! empty($file_control['check_width']) && $file_control['check_width'] != $image_info[0]) {
