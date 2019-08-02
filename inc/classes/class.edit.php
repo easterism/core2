@@ -923,15 +923,31 @@ class editTable extends initEdit {
 								$value['default'] = explode(",", $value['default']);
 							}
 							if ($this->readOnly) {
-								$out = '';
-								foreach ($temp as $row) {
-									$real_value = explode('"', $row[0]);
-									$real_value = $real_value[0];
-									if (in_array($real_value, $value['default'])) {
-										$out = $row[1];
-										break;
-									}
-								}
+                                if ($value['type'] == 'multilist') {
+                                    $out_array = [];
+                                    foreach ($temp as $row) {
+                                        $real_value = explode('"', $row[0]);
+                                        $real_value = $real_value[0];
+                                        if (in_array($real_value, $value['default'])) {
+                                            $out_array[] = $row[1];
+                                        }
+                                    }
+
+                                    $out = implode(', ', $out_array);
+
+                                } else {
+                                    $out = '';
+                                    foreach ($temp as $row) {
+                                        $real_value = explode('"', $row[0]);
+                                        $real_value = $real_value[0];
+                                        if (in_array($real_value, $value['default'])) {
+                                            $out = $row[1];
+                                            break;
+                                        }
+                                    }
+                                }
+
+
 								$controlGroups[$cellId]['html'][$key] .= $out;
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
