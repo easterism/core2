@@ -37,6 +37,9 @@
             'params' => array(
                 'charset' => 'utf8'
             ),
+            'driver_options' => [
+                \PDO::ATTR_TIMEOUT => 3
+            ],
             'isDefaultTableAdapter' => true,
             'profiler' => array(
                 'enabled' => false,
@@ -374,7 +377,7 @@
             $this->detectWebService();
 
             // Веб-сервис (REST)
-            if ($matches = $this->is_rest) {
+            if ($matches = $this->is_rest) { //url like /api/*
 
                 $this->setContext('webservice');
 
