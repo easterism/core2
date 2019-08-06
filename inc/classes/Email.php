@@ -184,10 +184,14 @@ class Email {
     public function send($immediately = false) {
 
         try {
-            $db = new Db();
+            $db     = new Db();
+            $config = \Zend_Registry::get('config');
+
+            if (isset($config->mail) && isset($config->mail->force_from)) {
+                $this->mail_data['from'] = $config->mail->force_from;
+            }
 
             if (empty($this->mail_data['from'])) {
-                $config = \Zend_Registry::get('config');
                 $server = isset($config->system) && isset($config->system->host)
                     ? $config->system->host
                     : $_SERVER['SERVER_NAME'];
@@ -425,16 +429,16 @@ class Email {
                 $configSmtp['port'] = $cnf->mail->port;
             }
             if (!empty($cnf->mail->auth)) {
-                $configSmtp['auth'] = $cnf->mail->auth;
+                $configSmtp['connection_class'] = $cnf->mail->auth;
             }
             if (!empty($cnf->mail->username)) {
-                $configSmtp['username'] = $cnf->mail->username;
+                $configSmtp['connection_config']['username'] = $cnf->mail->username;
             }
             if (!empty($cnf->mail->password)) {
-                $configSmtp['password'] = $cnf->mail->password;
+                $configSmtp['connection_config']['password'] = $cnf->mail->password;
             }
             if (!empty($cnf->mail->ssl)) {
-                $configSmtp['ssl'] = $cnf->mail->ssl;
+                $configSmtp['connection_config']['ssl'] = $cnf->mail->ssl;
             }
             $transport = new Transport\Smtp();
             $options   = new Transport\SmtpOptions($configSmtp);
