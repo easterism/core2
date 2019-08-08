@@ -1601,6 +1601,13 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
 .core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li,
 .core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li {float: none}
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li.panel-divider,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li.panel-divider {
+    border-top: 1px solid #ececec;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
 .core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li > a,
 .core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li > a {
     min-width: 74px;

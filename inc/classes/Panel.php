@@ -19,6 +19,7 @@ class Panel {
 
     protected $active_tab     = '';
     protected $title          = '';
+    protected $tabs_width     = 0;
     protected $description    = '';
     protected $content        = '';
     protected $resource       = '';
@@ -81,6 +82,21 @@ class Panel {
 
 
     /**
+     * Установка ширины для табов
+     * @param int $width
+     * @throws Exception
+     */
+    public function setWidthTabs($width) {
+
+        if ($width < 10) {
+            throw new Exception('Invalid width');
+        }
+
+        $this->tabs_width = (int)$width;
+    }
+
+
+    /**
      * @param string $title
      * @param string $description
      */
@@ -95,14 +111,30 @@ class Panel {
      * @param string $title
      * @param string $id
      * @param string $url
-     * @param bool   $disabled
+     * @param array  $options
      */
-    public function addTab($title, $id, $url, $disabled = false) {
+    public function addTab($title, $id, $url, $options = []) {
+
+        // DEPRECATED
+        $options['disabled'] = $options === true;
+
         $this->tabs[] = [
-            'title'    => $title,
-            'id'       => $id,
-            'url'      => str_replace('?', '#', $url),
-            'disabled' => $disabled
+            'type'    => 'tab',
+            'title'   => $title,
+            'id'      => $id,
+            'url'     => str_replace('?', '#', $url),
+            'options' => $options
+        ];
+    }
+
+
+    /**
+     * Добавление разделителя
+     */
+    public function addDivider() {
+
+        $this->tabs[] = [
+            'type' => 'divider'
         ];
     }
 
@@ -156,7 +188,21 @@ class Panel {
 
         if ($this->position == self::POSITION_BOTTOM) {
             $tpl->content_top->assign('[CONTENT]', $this->content);
+
         } else {
+            $styles = "";
+
+            if ($this->tabs_width) {
+                $margin_width = $this->tabs_width - 1;
+
+                switch ($this->position) {
+                    case self::POSITION_LEFT:  $styles = "style=\"margin-left:{$margin_width}px\""; break;
+                    case self::POSITION_RIGHT: $styles = "style=\"margin-right:{$margin_width}px\""; break;
+                    default: $styles = "";
+                }
+            }
+
+            $tpl->content_bottom->assign('[STYLES]',  $styles);
             $tpl->content_bottom->assign('[CONTENT]', $this->content);
         }
 
@@ -193,21 +239,33 @@ class Panel {
         $tpl->assign('[POSITION]', $position_name);
 
         if ( ! empty($this->tabs)) {
+            $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
+
             foreach ($this->tabs as $tab) {
 
-                if ($tab['disabled']) {
-                    $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
-                    $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
+                if ($tab['type'] == 'tab') {
+                    if ($tab['options']['disabled']) {
+                        $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
+                        $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
+
+                    } else {
+                        $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
+                        $class = $this->active_tab == $tab['id'] ? 'active' : '';
+
+                        $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
+                        $tpl->tabs->elements->tab->assign('[CLASS]', $class);
+                        $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
+                        $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                    }
 
                 } else {
-                    $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
-                    $class = $this->active_tab == $tab['id'] ? 'active' : '';
-
-                    $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
-                    $tpl->tabs->elements->tab->assign('[CLASS]', $class);
-                    $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
-                    $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                    if (in_array($this->position, [self::POSITION_RIGHT, self::POSITION_LEFT]) &&
+                        $this->type == self::TYPE_TABS
+                    ) {
+                        $tpl->tabs->elements->touchBlock('divider');
+                    }
                 }
+
                 $tpl->tabs->elements->reassign();
             }
         }
