@@ -115,15 +115,19 @@ class Panel {
      */
     public function addTab($title, $id, $url, $options = []) {
 
+        $tab_options = is_array($options) ? $options : [];
+
         // DEPRECATED
-        $options['disabled'] = $options === true;
+        if ($options === true) {
+            $tab_options['disabled'] = true;
+        }
 
         $this->tabs[] = [
             'type'    => 'tab',
             'title'   => $title,
             'id'      => $id,
             'url'     => str_replace('?', '#', $url),
-            'options' => $options
+            'options' => $tab_options
         ];
     }
 
@@ -244,7 +248,7 @@ class Panel {
             foreach ($this->tabs as $tab) {
 
                 if ($tab['type'] == 'tab') {
-                    if ($tab['options']['disabled']) {
+                    if (isset($tab['options']['disabled']) && $tab['options']['disabled']) {
                         $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
                         $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
 
