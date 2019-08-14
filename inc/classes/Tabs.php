@@ -57,7 +57,7 @@ class Tabs {
         if (in_array($position, $positions)) {
             $this->position = $position;
         } else {
-            throw new Exception('Invalid position');
+            throw new \Exception('Invalid position');
         }
     }
 
@@ -76,7 +76,7 @@ class Tabs {
         if (in_array($type, $types)) {
             $this->type = $type;
         } else {
-            throw new Exception('Invalid type');
+            throw new \Exception('Invalid type');
         }
     }
 
@@ -180,7 +180,7 @@ class Tabs {
             case self::TYPE_TABS :  $type_name = 'tabs'; break;
             case self::TYPE_PILLS : $type_name = 'pills'; break;
             case self::TYPE_STEPS : $type_name = 'steps'; break;
-            default : throw new Exception('Invalid type'); break;
+            default : throw new \Exception('Invalid type'); break;
         }
         $tpl->assign('[TYPE]', $type_name);
 
@@ -189,7 +189,7 @@ class Tabs {
             case self::POSITION_LEFT :   $position_name = 'left'; break;
             case self::POSITION_RIGHT :  $position_name = 'right'; break;
             case self::POSITION_BOTTOM : $position_name = 'bottom'; break;
-            default : throw new Exception('Invalid position'); break;
+            default : throw new \Exception('Invalid position'); break;
         }
         $tpl->assign('[POSITION]', $position_name);
 
