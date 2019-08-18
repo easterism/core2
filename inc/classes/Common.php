@@ -342,7 +342,7 @@ class Common extends \Core2\Acl {
             if ($data instanceof Exception) {
                 $data_msg .= $data->getMessage() . "<br>";
                 $data_msg .= '<b>' . $data->getFile() . ': ' . $data->getLine() . "</b><br><br>";
-                $data_msg .= $data->getTraceAsString();
+                $data_msg .= '<pre>' . $data->getTraceAsString() . '</pre>';
 
             } else {
                 $data_msg = '<pre>' . print_r($data, true) . '</pre>';
@@ -354,7 +354,7 @@ class Common extends \Core2\Acl {
         $body = "
             Ошибка в системе <a href=\"{$protocol}://{$cabinet_host}\">{$cabinet_host}</a><br><br>
             
-            <small style=\"color:#777\">{$error_date}</small>
+            <small style=\"color:#777\">{$error_date}</small><br>
             <b>{$message}</b><br><br>        
             
             {$data_msg}
