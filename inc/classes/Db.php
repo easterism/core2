@@ -8,7 +8,7 @@ use Zend\Cache\StorageFactory;
 /**
  * Class Db
  * @property \Zend_Db_Adapter_Abstract                   $db
- * @property \Zend\Cache\Storage\Adapter\AbstractAdapter $cache
+ * @property Cache $cache
  * @property \Core2\I18n                                 $translate
  * @property Log                                         $log
  * @property \CoreController                             $modAdmin
