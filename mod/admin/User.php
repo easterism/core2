@@ -69,7 +69,7 @@ class User extends \Common
 							FROM core_users AS u
 								 LEFT JOIN core_users_profile AS up ON up.user_id = u.u_id
 								 LEFT JOIN core_roles AS r ON r.id = u.role_id
-							WHERE u_id > 0 ADD_SEARCH
+							WHERE u_id > 0 /*ADD_SEARCH*/
 						   ORDER BY u.date_added DESC";
         $list->addColumn($this->translate->tr("Логин"), 			   "100", "TEXT");
         $list->addColumn($this->translate->tr("Имя"),   			   "", "TEXT");

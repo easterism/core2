@@ -255,7 +255,7 @@ $tab->beginContainer($title);
 					   (SELECT COUNT(1) FROM core_enum WHERE parent_id = e.id) AS co,
 					   is_active_sw
 				FROM core_enum AS e
-				WHERE parent_id IS NULL ADD_SEARCH
+				WHERE parent_id IS NULL /*ADD_SEARCH*/
 				ORDER BY `name`
 			";
 			$list->addColumn($this->translate->tr("Идентификатор"), 	   "120", "TEXT");
