@@ -1362,6 +1362,7 @@ class InstallModule extends \Common {
      * @throws  \Exception
      */
     private function doCurlRequestToRepo($repo_url, $request) {
+        //echo "<PRE>";print_r($request);echo "</PRE>";//die;
         $repo_url   = explode("/", $repo_url);
         $request_uri = array_pop($repo_url);
         $repo_url   = implode("/", $repo_url) . "/";
@@ -1884,7 +1885,7 @@ class InstallModule extends \Common {
      * @return array
      * @throws \Exception
      */
-    public function getInfoAllAvailMods () {
+    private function getInfoAllAvailMods () {
         $list = array();
         //берем из доступных модулей
         $mods       = $this->db->fetchAll("SELECT id, install_info FROM core_available_modules");

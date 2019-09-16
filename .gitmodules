@@ -28,3 +28,6 @@
 [submodule "mod/profile/v2.0.0"]
 	path = mod/profile/v2.0.0
 	url = git@git.rdo.belhard.com:core2/modules/profile.git
+[submodule "mod/billing/v1.7.0"]
+	path = mod/billing/v1.7.0
+	url = git@git.rdo.belhard.com:core2/modules/billing.git

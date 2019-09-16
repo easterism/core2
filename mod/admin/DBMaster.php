@@ -423,9 +423,10 @@ class DBMaster {
 		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
 
         while (list($key, $val) = each($rows)) {
-            $a_reffers[$val['table_name']][$val['referenced_table_name']] = 1;
-            $a_ref_cols[$val['table_name']][$val['constraint_name']] = $val;
-            $a_comments[$val['table_name']] = $val['table_comment'];
+            $table_name = $val['table_name'];
+            $a_reffers[$table_name][$val['referenced_table_name']] = 1;
+            $a_ref_cols[$table_name][$val['constraint_name']] = $val;
+            $a_comments[$table_name] = isset($val['table_comment']) ? $val['table_comment'] : '';
         }
 
 		// --- SORTING TABLE
