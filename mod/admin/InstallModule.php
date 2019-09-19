@@ -2051,12 +2051,14 @@ class InstallModule extends \Common {
     /**
      * получаем полный список зависимых модулей(включая вложенные) в нужном порядке установки
      */
-    public function getDependedModList($mods, $level = 0) {
+    private function getDependedModList($mods, $level = 0) {
         //формируем список зависимых модулей
+
         $list = array();
         foreach ($mods as $m) {
             $deps = $this->searchDependedMods($m);
             //если этот модуль имеет свои зависимости
+            if ($level > 5) $deps = [];
             if (!empty($deps)) {
                 $tmp = $this->getDependedModList($deps, $level + 1);
                 foreach ($tmp as $m_id => $m_info) {
@@ -2082,7 +2084,6 @@ class InstallModule extends \Common {
                     }
                 }
             }
-
 
             //добавляем модуль в зависимости
             if (empty($list[$m['module_id']])) {
@@ -2255,6 +2256,7 @@ class InstallModule extends \Common {
     public function getNeedToInstallDependedModList(array $mods) {
         //получаем развернутый список зависимостей включая вложенные, и все в нужном порядке установки
         $mods = $this->getDependedModList($mods);
+        //echo "<PRE>";print_r($mods);echo "</PRE>";//die;
         //ищем модули которые необходимо установить и отдаем HTML список
         $deps = array();
         foreach ($mods as $dep_value) {
@@ -2290,7 +2292,6 @@ class InstallModule extends \Common {
                 $deps[] = "<b style=\"color: red;\">{$dep_value['module_name']} {$dep_value['version']}</b>";
             }
         }
-
         return $deps;
     }
 

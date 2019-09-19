@@ -10,10 +10,12 @@ require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/User.php";
 require_once DOC_ROOT . "core2/mod/admin/Settings.php";
+require_once DOC_ROOT . "core2/mod/admin/Modules.php";
 
 use Zend\Session\Container as SessionContainer;
 use Core2\User as User;
 use Core2\Settings as Settings;
+use Core2\Modules as Modules;
 use Core2\InstallModule as Install;
 
 
@@ -448,8 +450,8 @@ class CoreController extends Common {
             return;
         }
 
-		$app = "index.php?module={$this->module}&action=modules";
-		require_once $this->path . 'modules.php';
+        $mods = new Modules();
+        $mods->dispatch();
 	}
 
 
