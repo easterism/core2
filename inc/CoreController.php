@@ -90,7 +90,7 @@ class CoreController extends Common {
                             throw new Exception('Некорректный запрос');
                         }
 
-                        $this->cache->clearByNamespace(\Core2\Cache::NS);
+                        $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
 
                         return json_encode(['status' => 'success']);
                         break;

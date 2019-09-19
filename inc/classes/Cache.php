@@ -39,28 +39,48 @@ class Cache
         return call_user_func_array(array($this->adapter, $name), $arguments);
     }
 
+    /**
+     * @param $key
+     * @return mixed
+     */
     public function test($key) {
         return $this->adapter->hasItem($key);
     }
 
+    /**
+     * @param $key
+     * @return bool
+     */
     public function load($key) {
         $data = $this->adapter->getItem($key);
         if (!$data) $data = false; //совместимость с проверкой от zf1
         return $data;
     }
 
+    /**
+     * @param $data
+     * @param $key
+     * @param array $tags
+     */
     public function save($data, $key, $tags = []) {
         $this->adapter->setItem($key, $data);
         if ($tags) $this->adapter->setTags($key, $tags);
     }
 
-    public function clean($mode, $tags = []) {
+    /**
+     * @param $mode
+     * @param array $tags
+     */
+    public function clean($mode = '', $tags = []) {
         if ($tags) $this->adapter->clearByTags($tags);
         else {
             $this->adapter->clearByNamespace(self::NS);
         }
     }
 
+    /**
+     * @param $key
+     */
     public function remove($key) {
         if (is_array($key)) $this->adapter->removeItems($key);
         else $this->adapter->removeItem($key);
