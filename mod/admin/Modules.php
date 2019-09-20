@@ -18,7 +18,7 @@ use Zend\Session\Container as SessionContainer;
 
 
 /**
- * Class User
+ * Class Modules
  * @package Core2
  */
 class Modules extends \Common
