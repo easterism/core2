@@ -1363,9 +1363,9 @@ class InstallModule extends \Common {
      */
     private function doCurlRequestToRepo($repo_url, $request) {
         //echo "<PRE>";print_r($request);echo "</PRE>";//die;
-        $repo_url   = explode("/", $repo_url);
-        $request_uri = array_pop($repo_url);
-        $repo_url   = implode("/", $repo_url) . "/";
+        $repo_url       = explode("/", $repo_url);
+        $request_uri    = array_pop($repo_url);
+        $repo_url       = implode("/", $repo_url) . "/";
         if (!isset($this->repos[$repo_url])) {
             $this->repos[$repo_url] = new Client(['base_uri' => $repo_url]);
         }
@@ -2058,7 +2058,7 @@ class InstallModule extends \Common {
         foreach ($mods as $m) {
             $deps = $this->searchDependedMods($m);
             //если этот модуль имеет свои зависимости
-            if ($level > 5) $deps = [];
+            if ($level > 10) $deps = []; //избегаем бесконечной рекурсии при перекрестных зависимостях
             if (!empty($deps)) {
                 $tmp = $this->getDependedModList($deps, $level + 1);
                 foreach ($tmp as $m_id => $m_info) {

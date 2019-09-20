@@ -36,7 +36,7 @@ class Modules extends \Common
 
 
     /**
-     * таблица с юзерами
+     * таблица с модулями
      */
     public function table() {
 
