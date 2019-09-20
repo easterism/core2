@@ -398,6 +398,7 @@ class Email {
         if (!empty($bcc)) $mail->addBcc($bcc);
 
         $mail->setSubject($subj);
+        $mail->getHeaders()->addHeaderLine('Content-Type', 'text/html; charset=utf-8');
 
         if ( ! empty($files)) {
             foreach ($files as $file) {
