@@ -379,12 +379,10 @@ class Email {
      */
     private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
 
-
-
         $mail = new Mail\Message();
         $mail->setEncoding('UTF-8');
         if (is_array($from)) {
-            $mail->addFrom($from[0], $from[1]);
+            $mail->addFrom([$from[1] => $from[0]]);
         } else {
             $mail->addFrom($from);
         }

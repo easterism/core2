@@ -731,7 +731,7 @@ class CoreController extends Common {
                         $email->cc($cc);
                     }
 
-                    $email->to($to)
+                    $result = $email->to($to)
                         ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
                         ->body($supportFormMessage)
                         ->send();
