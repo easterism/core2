@@ -396,7 +396,7 @@ class Email {
         if (!empty($bcc)) $mail->addBcc($bcc);
 
         $mail->setSubject($subj);
-        $mail->getHeaders()->addHeaderLine('Content-Type', 'text/html; charset=utf-8');
+        $mail->getHeaders()->addHeaderLine('Content-Type', 'text/html');
 
         if ( ! empty($files)) {
             foreach ($files as $file) {
@@ -415,7 +415,10 @@ class Email {
         if (!empty($cnf->mail->server)) {
             //$tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
 
-            $configSmtp = array();
+            $configSmtp = array(
+                'host' => $cnf->mail->server
+            );
+
             if (!empty($cnf->mail->port)) {
                 $configSmtp['port'] = $cnf->mail->port;
             }
@@ -435,7 +438,9 @@ class Email {
             $options   = new Transport\SmtpOptions($configSmtp);
             $transport->setOptions($options);
         }
-        return $transport->send($mail);
 
+        $transport->send($mail);
+
+        return true;
     }
 } 
