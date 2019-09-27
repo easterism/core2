@@ -96,7 +96,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 							FROM core_session AS s
 								 JOIN core_users AS u ON u.u_id = s.user_id
 							WHERE logout_time IS NULL
-							  AND (NOW() - last_activity > $sLife)=0 ADD_SEARCH
+							  AND (NOW() - last_activity > $sLife)=0 /*ADD_SEARCH*/
 						   ORDER BY login_time DESC";
 
 			$list->addColumn($this->translate->tr("Сессия"),                     "",   "TEXT");

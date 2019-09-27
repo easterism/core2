@@ -247,7 +247,6 @@ class Common extends \Core2\Acl {
 
 	
 	/**
-	 * 
 	 * Check if $r in available request. If no, unset request key
 	 * @param array $r - key->value array
 	 */
@@ -274,6 +273,7 @@ class Common extends \Core2\Acl {
 	 * Print link to CSS file
      * @param string $module module name
 	 * @param string $href   CSS filename
+     * @throws \Exception
 	 */
 	protected function printCssModule($module, $href) {
         $src_mod = $this->getModuleLoc($module);
@@ -297,22 +297,77 @@ class Common extends \Core2\Acl {
 	 * @param string $module    module name
 	 * @param string $src       JS filename
 	 * @param bool   $chachable
+     * @throws \Exception
 	 */
 	protected function printJsModule($module, $src, $chachable = false) {
 		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
 
+
     /**
      * Порождает событие для модулей, реализующих интерфейс Subscribe
-     *
-     * @param $event_name
+     * @param       $event_name
      * @param array $data
+     * @return array
      */
 	protected function emit($event_name, $data = []) {
 	    $em = new \Core2\Emitter($this, $this->module);
         $em->addEvent($event_name, $data);
         return $em->emit();
+    }
+
+
+    /**
+     * @param string          $message
+     * @param array|Exception $data
+     * @return bool
+     */
+    protected function sendErrorMessage($message, $data = []) {
+
+        $admin_email = $this->getSetting('admin_email');
+
+        if (empty($admin_email)) {
+            return false;
+        }
+
+        $cabinet_name = ! empty($this->config->system) ? $this->config->system->name : 'Без названия';
+        $cabinet_host = ! empty($this->config->system) ? $this->config->system->host : '';
+        $protocol     = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+
+
+        $data_msg = '';
+
+        if ($data) {
+            if ($data instanceof Exception) {
+                $data_msg .= $data->getMessage() . "<br>";
+                $data_msg .= '<b>' . $data->getFile() . ': ' . $data->getLine() . "</b><br><br>";
+                $data_msg .= '<pre>' . $data->getTraceAsString() . '</pre>';
+
+            } else {
+                $data_msg = '<pre>' . print_r($data, true) . '</pre>';
+            }
+        }
+
+        $error_date = date('d.m.Y H:i:s');
+
+        $body = "
+            Ошибка в системе <a href=\"{$protocol}://{$cabinet_host}\">{$cabinet_host}</a><br><br>
+            
+            <small style=\"color:#777\">{$error_date}</small><br>
+            <b>{$message}</b><br><br>        
+            
+            {$data_msg}
+        ";
+
+
+        $this->modAdmin->createEmail()
+            ->to($admin_email)
+            ->subject($cabinet_name . ': Ошибка')
+            ->body($body)
+            ->send(true);
+
+        return true;
     }
 }
 

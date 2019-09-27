@@ -196,8 +196,8 @@ class File extends \Common {
         $image = new Image();
 
         $base_urn = $action == 'index'
-            ? "index.php?module=$module&filehandler=$table"
-            : "index.php?module=$module&action=$action&filehandler=$table";
+            ? "index.php?module=$module"
+            : "index.php?module=$module&action=$action";
 
         foreach ($res as $key => $value) {
             $type2 = explode("/", $value['type']);
