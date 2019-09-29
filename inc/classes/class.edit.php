@@ -534,6 +534,48 @@ class editTable extends initEdit {
 
 							}
 						}
+						elseif ($value['type'] == 'color') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'];
+
+                            } else {
+                                $this->scripts['color'] = true;
+
+                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/color.html');
+                                $tpl = str_replace('[FIELD_ID]',   $fieldId, $tpl);
+                                $tpl = str_replace('[FIELD]',      $field, $tpl);
+                                $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
+                                $tpl = str_replace('[ATTRIBUTES]', $value['in'], $tpl);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'combobox') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'];
+
+                            } else {
+                                $this->scripts['color'] = true;
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[VALUE]',      $value['default']);
+                                $tpl->assign('[ATTRIBUTES]', $value['in']);
+
+                                if (is_array($this->selectSQL[$select]) && $this->selectSQL[$select]) {
+                                    foreach ($this->selectSQL[$select] as $combobox_value) {
+                                        $tpl->items->assign('[TITLE]', $combobox_value);
+                                        $tpl->items->reassign();
+                                    }
+                                }
+
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+                        }
 						elseif ($value['type'] == 'date2') {
                             if ($this->readOnly) {
 								if ($value['default']) {
@@ -1520,6 +1562,10 @@ $controlGroups[$cellId]['html'][$key] .= "
                 }
                 if (isset($this->scripts['datetime2'])) {
                     Tool::printJs("core2/js/control_datetimepicker.js", true);
+                }
+                if (isset($this->scripts['color'])) {
+                    Tool::printCss("core2/html/" . THEME . "/css/bootstrap-colorpicker.min.css");
+                    Tool::printJs("core2/html/" . THEME . "/js/bootstrap-colorpicker.min.js", true);
                 }
                 if (isset($this->scripts['modal2'])) {
                     Tool::printJs("core2/js/bootstrap.modal.min.js", true);
