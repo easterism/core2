@@ -336,16 +336,27 @@ var edit = {
 
 			let tpl =
 				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
-				'<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
-				'<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
-				'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
+				    '<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
+				    '<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
+				         'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
 				'</div>';
 
 			let options = [];
 
 			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
 				$.each(edit.multilist2.data[fieldId], function (id, title) {
-					options.push('<option value="' + id + '">' + title + '</option>');
+					if (typeof title === 'object') {
+						options.push('<optgroup label="' + id + '">');
+
+						$.each(title, function (grp_id, grp_title) {
+							options.push('<option value="' + grp_id + '">' + grp_title + '</option>');
+						});
+
+						options.push('</optgroup>');
+
+					} else {
+						options.push('<option value="' + id + '">' + title + '</option>');
+					}
 				});
 			}
 

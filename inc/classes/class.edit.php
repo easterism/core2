@@ -1023,14 +1023,9 @@ class editTable extends initEdit {
 							$select++;
 
 						} elseif ($value['type'] == 'multilist2') {
-                            $options = [];
-
                             if (is_array($this->selectSQL[$select])) {
-                                foreach ($this->selectSQL[$select] as $k => $v) {
-                                    if ( ! is_array($v)) {
-                                        $options[$k] = $v;
-                                    }
-                                }
+                                $options = $this->selectSQL[$select];
+
                             } else {
                                 if (isset($arr[0])) {
                                     $sql = $this->replaceTCOL($arr[0], $this->selectSQL[$select]);
@@ -1046,10 +1041,16 @@ class editTable extends initEdit {
 
                             if ($this->readOnly) {
                                 $options_out = [];
-                                foreach ($options as $option_id => $option_title) {
-                                    if (in_array($option_id, $value['default'])) {
-                                        $options_out[] = $option_title;
-                                        break;
+                                foreach ($options as $options_key => $options_value) {
+                                    if (is_array($options_value)) {
+                                        foreach ($options_value as $options_value_id => $options_value_title) {
+                                            if (in_array($options_value_id, $value['default'])) {
+                                                $options_out[] = $options_value_title;
+                                            }
+                                        }
+
+                                    } elseif (is_scalar($options_value) && in_array($options_key, $value['default'])) {
+                                        $options_out[] = $options_value;
                                     }
                                 }
 
@@ -1066,14 +1067,29 @@ class editTable extends initEdit {
 
 
                                 foreach ($value['default'] as $option_id) {
-                                    if (isset($options[$option_id])) {
-                                        $tpl->item->fillDropDown('[ID]', $options, $option_id);
+                                    $isset_option = false;
+                                    foreach ($options as $options_key => $options_value) {
+                                        if (is_array($options_value) && isset($options_value[$option_id])) {
+                                            $isset_option = true;
+                                            break;
 
-                                        $tpl->item->assign('[ATTRIBUTES]', $attrs);
-                                        $tpl->item->assign('[FIELD]',      $field);
-                                        $tpl->item->assign('[ID]',         crc32(microtime() . $option_id));
-                                        $tpl->item->reassign();
+                                        } elseif (is_scalar($options_value) && $options_key == $option_id) {
+                                            $isset_option = true;
+                                            break;
+                                        }
                                     }
+
+                                    if ( ! $isset_option) {
+                                        continue;
+                                    }
+
+
+                                    $tpl->item->fillDropDown('[ID]', $options, $option_id);
+
+                                    $tpl->item->assign('[ATTRIBUTES]', $attrs);
+                                    $tpl->item->assign('[FIELD]',      $field);
+                                    $tpl->item->assign('[ID]',         crc32(microtime() . $option_id));
+                                    $tpl->item->reassign();
                                 }
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
