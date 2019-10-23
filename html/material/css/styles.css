@@ -1955,6 +1955,13 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
 .core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li,
 .core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li {float: none}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li.tabs-divider,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li.tabs-divider {
+    border-top: 1px solid #ececec;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
 .core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li > a,
 .core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li > a {
     min-width: 74px;
