@@ -650,16 +650,20 @@ class editTable extends initEdit {
                                     case 'normal': default: $size = '';    break;
                                 }
 
+                                $url = strpos(trim($options['url']), 'function') !== false
+                                    ? $options['url']
+                                    : "'{$options['url']}'";
+
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal2.html');
                                 $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
                                 $tpl->assign('[TITLE]',     $options['title']);
                                 $tpl->assign('[TEXT]',      $options['text']);
                                 $tpl->assign('[VALUE]',     $options['value']);
-                                $tpl->assign('[URL]',       $options['url']);
+                                $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       crc32(uniqid('', true)));
+                                $tpl->assign('[KEY]',       crc32(microtime(true)));
 
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');

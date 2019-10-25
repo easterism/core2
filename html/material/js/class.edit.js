@@ -279,7 +279,11 @@ var edit = {
                 '</div>'
             );
 
-            $body_container.load(url);
+            if (typeof url === 'function') {
+				$body_container.load(url());
+			} else {
+				$body_container.load(url);
+			}
 
 
             $('#' + this.key + '-modal').modal('show');

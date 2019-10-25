@@ -91,7 +91,7 @@ var edit = {
 					ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-100px'});
 				}, 5);
 			}
-		}
+		};
 		if (this.ev[cal]) {
 			opt['beforeShowDay'] = function (day) {
 				var s = "";
@@ -144,7 +144,7 @@ var edit = {
                         ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-180px'});
                     }, 5);
                 }
-            }
+            };
             if (this.ev[cal]) {
                 opt['beforeShowDay'] = function (day) {
                     var s = "";
@@ -240,25 +240,27 @@ var edit = {
 		document.getElementById(id).value = '';
 		document.getElementById(id + '_text').value = '';
 	},
-	maskMe: function(id) {
-		//$('#' + id).maskMoney({
-		//	allowZero: true,
-		//	thousands: ' ',
-		//	defaultZero: false,
-		//	allowNegative: true,
-		//	precision: 0
-		//});
-		//$('#' + id).maskMoney('mask');
+	maskMe: function(id, options) {
+        //options = $.extend({
+        //    allowZero: true,
+        //    thousands: ' ',
+        //    defaultZero: false,
+        //    allowNegative: true,
+        //    precision: 2
+        //}, options);
 
-		var options = $.extend({
-			numeral: true,
-			numeralDecimalMark: '.',
-			delimiter: ' ',
-			numeralDecimalScale: 2
-		}, options);
+        //$('#' + id).maskMoney(options);
+        //$('#' + id).maskMoney('mask');
+
+        var options = $.extend({
+            numeral: true,
+            numeralDecimalMark: '.',
+            delimiter: ' ',
+            numeralDecimalScale: 2
+        }, options);
 
 		new Cleave('#' + id, options);
-	},
+    },
     modal2: {
         key: '',
 
@@ -274,7 +276,11 @@ var edit = {
                 '</div>'
             );
 
-            $body_container.load(url);
+            if (typeof url === 'function') {
+				$body_container.load(url());
+			} else {
+				$body_container.load(url);
+			}
 
 
             $('#' + this.key + '-modal').modal('show');
@@ -331,16 +337,27 @@ var edit = {
 
 			let tpl =
 				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
-				'<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
-				'<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
-				'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
+				    '<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
+				    '<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
+				         'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
 				'</div>';
 
 			let options = [];
 
 			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
 				$.each(edit.multilist2.data[fieldId], function (id, title) {
-					options.push('<option value="' + id + '">' + title + '</option>');
+					if (typeof title === 'object') {
+						options.push('<optgroup label="' + id + '">');
+
+						$.each(title, function (grp_id, grp_title) {
+							options.push('<option value="' + grp_id + '">' + grp_title + '</option>');
+						});
+
+						options.push('</optgroup>');
+
+					} else {
+						options.push('<option value="' + id + '">' + title + '</option>');
+					}
 				});
 			}
 
@@ -406,12 +423,12 @@ var edit = {
 				'<tr class="field-dataset-item" id="field-dataset-item-[ID]" style="display: none">' +
 				'[FIELDS] ' +
 				'<td><img src="[THEME_PATH]/img/delete.png" alt="X" class="field-dataset-delete"' +
-				'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
+						 'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
 				'</tr>';
 
 			let tplField = '<td>' +
-				'<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
-				'</td>';
+						       '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+						   '</td>';
 
 			let fields = [];
 			let key    = this.keygen();
