@@ -374,6 +374,12 @@ var edit = {
 			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
 
 			$('#multilist2-' + fieldId + ' .multilist2-items').append(tpl);
+
+			$('#multilist2-item-' + id + ' select').select2({
+				language: 'ru',
+				theme: 'bootstrap',
+			});
+
 			$('#multilist2-item-' + id).show('fast');
 		},
 

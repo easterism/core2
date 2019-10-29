@@ -1061,6 +1061,8 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= implode(', ', $options_out);
 
                             } else {
+                                $this->scripts['multiselect2'] = true;
+
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist2.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
@@ -1586,6 +1588,11 @@ $controlGroups[$cellId]['html'][$key] .= "
                 if (isset($this->scripts['color'])) {
                     Tool::printCss("core2/html/" . THEME . "/css/bootstrap-colorpicker.min.css");
                     Tool::printJs("core2/html/" . THEME . "/js/bootstrap-colorpicker.min.js", true);
+                }
+                if (isset($this->scripts['multiselect2'])) {
+                    Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
+                    Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
+                    Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
                 }
                 if (isset($this->scripts['modal2'])) {
                     Tool::printJs("core2/js/bootstrap.modal.min.js", true);

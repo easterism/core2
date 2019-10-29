@@ -14,5 +14,12 @@
 
     <script>
         edit.multilist2.data['[FIELD_ID]'] = [OPTIONS];
+
+        $('#multilist2-[FIELD_ID] select').each(function () {
+            $(this).select2({
+                language: 'ru',
+                theme: 'bootstrap',
+            });
+        });
     </script>
 </div>
