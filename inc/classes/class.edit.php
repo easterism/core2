@@ -173,16 +173,26 @@ class editTable extends initEdit {
         $this->sess_form->{$this->uniq_class_id} = $ssi;
 	}
 
-	/**
-	 * @return mixed
-	 */
-	public function showTable() {
+
+    /**
+     * @param array $options
+     * @throws Zend_Db_Adapter_Exception
+     * @throws Zend_Exception
+     */
+	public function showTable($options = []) {
+
 		if ($this->acl->read_all || $this->acl->read_owner) {
-			$this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
-			$this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
+		    $this->HTML .= '<div id="' . $this->main_table_id . '_error" class="error" ' . ($this->error ? 'style="display:block"' : '') . '>' . $this->error . '</div>';
+
+		    if ( ! isset($options['scroll_to_form']) || $options['scroll_to_form']) {
+                $this->HTML .= "<script>toAnchor('{$this->main_table_id}_mainform')</script>";
+            }
+
             $this->makeTable();
             $this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
+
             echo $this->HTML;
+
 		} else {
 			$this->noAccess();
 		}
