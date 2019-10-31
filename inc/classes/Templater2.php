@@ -14,6 +14,7 @@ class Templater2 {
 	private $embrace = array('', '');
 	private $_p = array();
     private $plugins = array();
+    private $in_assign = false;
 
 	function __construct($tpl = '') { 
 		if ($tpl) $this->loadTemplate($tpl);
@@ -177,7 +178,9 @@ class Templater2 {
 		}
 		if ($this->vars) {
 			$html = str_replace(array_keys($this->vars), $this->vars, $html);
-		}
+		} else {
+		    if ($this->in_assign) $html = ''; //Очищаем html, если для него не задано ниодной переменной
+        }
 		if ($this->loopHTML) {
 			$html = implode('', $this->loopHTML) . $html;
 		}
@@ -267,6 +270,7 @@ class Templater2 {
 				$this->vars[$this->embrace[0] . $var . $this->embrace[1]] = $value;
 			}
 		}
+		$this->in_assign = true;
 	}
 
 	private function clear() {
@@ -304,5 +308,12 @@ class Templater2 {
 		$this->blocks[$block]['GET'] = true;
 		return $html;
 	}
+
+    /**
+     * synonym parse()
+     */
+	public function render() {
+        return $this->parse();
+    }
 
 }
