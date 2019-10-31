@@ -464,13 +464,13 @@ $(document).ready(function() {
 
 var currentCategory = "";
 $.ui.autocomplete.prototype._renderItem = function( ul, item){
-	let term = this.term.split(' ').join('|');
-	let t 	 = item.label;
+	var term = this.term.split(' ').join('|');
+	var t 	 = item.label;
 
 	if (term) {
 		term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
 
-		let re = new RegExp("(" + term + ")", "gi");
+		var re = new RegExp("(" + term + ")", "gi");
 		t = t.replace(re, "<b>$1</b>");
 	}
 

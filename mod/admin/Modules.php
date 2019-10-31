@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../inc/classes/Common.php';
 require_once __DIR__ . '/../../inc/classes/class.list.php';
 require_once __DIR__ . '/../../inc/classes/class.edit.php';
 require_once __DIR__ . '/../../inc/classes/class.tab.php';
+require_once __DIR__ . '/../../inc/classes/Templater2.php';
 require_once 'InstallModule.php';
 
 use Zend\Session\Container as SessionContainer;
@@ -185,7 +186,7 @@ class Modules extends \Common
                 $checked = 'checked="checked"';
                 $disabled = 'disabled="disabled"';
 
-                $tpl = new Templater();
+                $tpl = new \Templater2();
                 $tpl->loadTemplate('core2/mod/admin/html/access_default.tpl');
                 $tpl->assign(array(
                     '{preff}' => '',
@@ -283,7 +284,7 @@ class Modules extends \Common
                             }
                         }
                     }
-                    $tpl = new Templater();
+                    $tpl = new \Templater2();
                     $tpl->loadTemplate('core2/mod/admin/html/access_default.tpl');
                     $tpl->assign(array(
                         '{preff}' => 'sub',
@@ -420,7 +421,7 @@ class Modules extends \Common
 						    FROM core_available_modules
 						   WHERE id = 0";
                 if ($_GET['add_mod'] < 0) {
-                    Tool::printJs("core2/mod/admin/gitlab/gl.js", true);
+                    \Tool::printJs("core2/mod/admin/gitlab/gl.js", true);
                     $edit->addControl("GitLab релиз", "MODAL", array(
                         'disabled' => 'disabled',
                         'size' => '40',
