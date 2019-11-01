@@ -656,7 +656,7 @@ class Tool {
      * @param $string
      * @return string
      */
-    private static function getInTranslit($string)
+    public static function getInTranslit($string)
     {
         $replace = array(
             "'" => "",

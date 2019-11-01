@@ -10,7 +10,6 @@
         \Core2\Error::Exception("Composer autoload is missing.");
     }
 
-
     require_once($conf_file);
     require_once("Error.php");
 
@@ -37,6 +36,9 @@
             'params' => array(
                 'charset' => 'utf8'
             ),
+            'driver_options' => [
+                \PDO::ATTR_TIMEOUT => 3
+            ],
             'isDefaultTableAdapter' => true,
             'profiler' => array(
                 'enabled' => false,
@@ -255,7 +257,7 @@
                 return;
             }
 
-            $this->auth = new SessionContainer('auth');
+            $this->auth 	= new SessionContainer('Auth');
             if (!empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {

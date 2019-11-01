@@ -260,7 +260,7 @@ $tab->beginContainer($title);
 			";
 			$list->addColumn($this->translate->tr("Идентификатор"), 	   "120", "TEXT");
 			$list->addColumn($this->translate->tr("Название справочника"), "",    "TEXT");
-			$list->addColumn($this->translate->tr("Дополпительные поля"),  "165", "TEXT");
+			$list->addColumn($this->translate->tr("Дополнительные поля"),  "165", "TEXT");
 			$list->addColumn($this->translate->tr("Значений"), 			   "90",  "NUMBER");
 			$list->addColumn("", 										   "1%",  "STATUS_INLINE", 'core_enum.is_active_sw');
 			

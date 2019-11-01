@@ -1,4 +1,4 @@
-<?
+<?php
 
 require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
@@ -11,11 +11,14 @@ require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/User.php";
 require_once DOC_ROOT . "core2/mod/admin/Settings.php";
+require_once DOC_ROOT . "core2/mod/admin/Modules.php";
+require_once DOC_ROOT . "core2/mod/admin/Roles.php";
 
 use Zend\Session\Container as SessionContainer;
+use Core2\Modules as Modules;
+use Core2\Roles as Roles;
 use Core2\User as User;
 use Core2\Settings as Settings;
-use Core2\InstallModule as Install;
 
 /**
  * Class CoreController
@@ -88,8 +91,8 @@ class MobileController extends Common {
 	public function action_modules() {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
-		$app = "index.php?module={$this->module}&action=modules&loc=core";
-		require_once $this->path . 'modules.php';
+        $mods = new Modules();
+        $mods->dispatch();
 	}
 
 
@@ -508,9 +511,9 @@ class MobileController extends Common {
 	 */
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=roles&loc=core";
-		$this->printCss($this->path . "role.css");
-		require_once $this->path . 'roles.php';
+        $this->printCss($this->path . "role.css");
+        $roles = new Roles();
+        $roles->dispatch();
 	}
 
 
