@@ -252,29 +252,26 @@ class Db {
 	 * @return array
 	 */
 	public function getModuleName($resId) {
-		if ( ! ($this->cache->hasItem($resId . '_name'))) {
-			$data = explode("_", $resId);
-			if ( ! empty($data[1])) {
-				$res = $this->db->fetchRow("
+		if ( ! ($this->cache->hasItem('module_name'))) {
+			$res = $this->db->fetchAll("
                     SELECT m.m_name,
-                           sm.sm_name
+                           sm.sm_name,
+                           m.module_id, 
+                           sm.sm_key
                     FROM core_modules AS m
-                        INNER JOIN core_submodules AS sm ON sm.m_id = m.m_id
-                    WHERE CONCAT(m.module_id, '_', sm.sm_key) = ?
-                ", $resId);
-				$res = array($res['m_name'], $res['sm_name']);
-			} else {
-				$res = $this->db->fetchRow("
-                    SELECT m.m_name
-                    FROM core_modules AS m
-                    WHERE m.module_id = ?
-                ", $resId);
-				$res = array($res['m_name']);
-			}
-			$this->cache->setItem($resId . '_name', $res);
+                        LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id");
+            $data = [];
+            foreach ($res as $re) {
+                $data[$re['module_id']] = [$re['m_name']];
+            }
+            foreach ($res as $re) {
+                if ($re['sm_key']) $data[$re['module_id'] . "_" . $re['sm_key']] = [$re['m_name'], $re['sm_name']];
+            }
+            $this->cache->setItem('module_name', $data);
 		} else {
-			$res = $this->cache->getItem($resId . '_name');
+            $data = $this->cache->getItem('module_name');
 		}
+		$res = isset($data[$resId]) ? $data[$resId] : [];
 		return $res;
 	}
 
