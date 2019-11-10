@@ -37,29 +37,26 @@ $tab->beginContainer($this->translate->tr("Роли и доступ"));
 			$res = $this->db->fetchAll($SQL);
 			
 			$html = '<table>';
-			
-			$tpl = new Templater2("core2/mod/admin/html/role_access.tpl");
-			
-			$access = $tpl->parse();
-			$tplRAAdd = file_get_contents("core2/mod/admin/html/role_access_add.tpl");
+
+			require_once DOC_ROOT . '/core2/inc/classes/Templater3.php';
+			$tpl = new Templater3("core2/mod/admin/html/role_access.tpl");
+
 			foreach ($res as $value) {
-				$accessAddHTML = '';
 				if ($value['access_add']) {
 					$accessAddData = @unserialize(base64_decode($value['access_add']));
 					if ($accessAddData) {
 						foreach ($accessAddData as $keyAD => $valueAD) {
 							if ($keyAD) {
-								$tpl->setTemplate($tplRAAdd);
-								$tpl->assign('NAME_ACTION', $keyAD);
-								$tpl->assign('TYPE_ID', ($keyAD));
-								$tpl->assign('MODULE_ID', $value['module_id']);
-								$accessAddHTML .= $tpl->parse();
+								$tpl->custom->assign('NAME_ACTION', $keyAD);
+                                $tpl->custom->assign('MODULE_ID',   $value['module_id']);
+                                $tpl->custom->assign('TYPE_ID',     ($keyAD));
+                                $tpl->custom->reassign();
 							}
 						}
 					}
 				}
 				$html .= '<tr><td class="roleModules">' . $value['m_name'] . '</td>'.
-							'<td>' . str_replace("MODULE_ID", $value['module_id'], $access) . $accessAddHTML . '</td>'.
+							'<td>' . str_replace("MODULE_ID", $value['module_id'], $tpl->render()) . '</td>'.
 							'</tr>';
 			
 			}
