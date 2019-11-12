@@ -23,7 +23,7 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/cleave.min.js"></script>
@@ -34,7 +34,7 @@
     <script type="text/javascript" language="javascript" src="core2/html/light/js/snarl.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>
-    <script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
+    <script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
     <![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.list.js?_=2"></script>

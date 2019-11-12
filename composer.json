@@ -17,22 +17,26 @@
   "prefer-stable": true,
   "require": {
     "php": ">=5.6.0",
-    "zf1/zend-registry": "~1.12",
-    "zf1/zend-config": "~1.12",
     "zendframework/zend-session": "2.8.*",
     "zendframework/zend-cache": "2.8.*",
     "zendframework/zend-serializer": "2.9.*",
     "zendframework/zend-validator": "2.10.*",
     "zendframework/zend-mail": "2.10.*",
     "zendframework/zend-i18n": "2.9.*",
+    "zf1/zend-registry": "~1.12",
+    "zf1/zend-config": "~1.12",
     "zf1/zend-db": "~1.12",
     "zf1/zend-acl": "~1.12",
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
     "belhard/xajax": "dev-master",
+    "belhard/floatthead": "dev-master",
+    "belhard/simplemodal": "dev-master",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*",
-    "guzzlehttp/guzzle": "~6.3"
+    "guzzlehttp/guzzle": "~6.3",
+    "blueimp/jquery-file-upload": "10.*",
+    "firephp/firephp-core": "*"
   },
   "scripts": {
     "post-update-cmd": [

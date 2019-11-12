@@ -161,7 +161,6 @@ class Tool {
      * @param $text
      */
     public static function fb($text) {
-		require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/FirePHP.class.php');
 		$firephp = FirePHP::getInstance(true);
 		try {
 			$firephp->fb($text);

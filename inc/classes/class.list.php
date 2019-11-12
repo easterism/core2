@@ -1208,8 +1208,7 @@ class listTable extends initList {
             echo $this->HTML;
             if ($this->fixHead) {
                 echo "
-                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead.min.js\"></script>
-                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead-slim.min.js\"></script>
+                <script type=\"text/javascript\" src=\"core2/vendor/belhard/floatthead/dist/jquery.floatThead.min.js\"></script>
                 <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');
