@@ -164,7 +164,14 @@ class Db {
 			\Zend_Db_Table::setDefaultAdapter($db);
 			\Zend_Registry::getInstance()->set('db', $db);
 			if ($database->adapter === 'Pdo_Mysql') {
-			    if ($this->config->system->timezone) $db->query("SET time_zone = '{$this->config->system->timezone}'");
+			    if ($this->config->system->timezone) {
+			        $db->query("SET time_zone = '{$this->config->system->timezone}'");
+                }
+
+			    if ($database->sql_mode) {
+			        $db->query("SET SESSION sql_mode = ?", $database->sql_mode);
+                }
+
                 //set profiler
                 if ($this->config->system->profile && $this->config->system->profile->on) {
                     $db->query("set profiling=1");

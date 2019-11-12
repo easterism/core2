@@ -954,31 +954,31 @@ class editTable extends initEdit {
 							$select++;
 						}
 						elseif ($value['type'] == 'select' || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
-							$temp = array();
+                            $temp = [];
 
-							if (is_array($this->selectSQL[$select])) {
-								foreach ($this->selectSQL[$select] as $k => $v) {
-									if (is_array($v)) {
-										$temp[] = array_values($v);
-									} else {
-										$temp[] = array($k, $v);
-									}
-								}
-							} else {
-								if (isset($arr[0])) {
-									$sql = $this->replaceTCOL($arr[0], $this->selectSQL[$select]);
-								} else {
-									$sql = $this->selectSQL[$select];
-								}
-								$data = $this->db->fetchAll($sql);
-								foreach ($data as $values) {
-									$temp[] = array_values($values);
-								}
-							}
-							if (!is_array($value['default'])) {
-								$value['default'] = explode(",", $value['default']);
-							}
-							if ($this->readOnly) {
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    if (is_array($v)) {
+                                        $temp[] = array_values($v);
+                                    } else {
+                                        $temp[] = [$k, $v];
+                                    }
+                                }
+                            } else {
+                                if (isset($arr[0])) {
+                                    $sql = $this->replaceTCOL($arr[0], $this->selectSQL[$select]);
+                                } else {
+                                    $sql = $this->selectSQL[$select];
+                                }
+                                $data = $this->db->fetchAll($sql);
+                                foreach ($data as $values) {
+                                    $temp[] = array_values($values);
+                                }
+                            }
+                            if ( ! is_array($value['default'])) {
+                                $value['default'] = explode(",", $value['default']);
+                            }
+                            if ($this->readOnly) {
                                 if ($value['type'] == 'multilist') {
                                     $out_array = [];
                                     foreach ($temp as $row) {
@@ -1004,39 +1004,132 @@ class editTable extends initEdit {
                                 }
 
 
-								$controlGroups[$cellId]['html'][$key] .= $out;
-							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
-								$group = "";
-								foreach ($temp as $row) {
-									if ((!isset($row[2]) || !$row[2]) && !is_array($row[1])) {
-										$temp2 = explode(":::", $row[1]);
-										$row[2] = isset($temp2[1]) ? $temp2[1] : '';
-										$row[1] = $temp2[0];
-									}
-									if (isset($row[2]) && $row[2] && $group != $row[2]) {
-										if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
-										$controlGroups[$cellId]['html'][$key] .= "<optgroup label=\"{$row[2]}\">";
-										$group = $row[2];
-									}
-									$selected = "";
-									$real_value = explode('"', $row[0]);
-									$real_value = $real_value[0];
-									if (in_array($real_value, $value['default'])) {
-										$selected = 'selected="selected"';
-									}
+                                $controlGroups[$cellId]['html'][$key] .= $out;
+                            } else {
+                                $controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
+                                $group                                = "";
+                                foreach ($temp as $row) {
+                                    if (( ! isset($row[2]) || ! $row[2]) && ! is_array($row[1])) {
+                                        $temp2  = explode(":::", $row[1]);
+                                        $row[2] = isset($temp2[1]) ? $temp2[1] : '';
+                                        $row[1] = $temp2[0];
+                                    }
+                                    if (isset($row[2]) && $row[2] && $group != $row[2]) {
+                                        if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
+                                        $controlGroups[$cellId]['html'][$key] .= "<optgroup label=\"{$row[2]}\">";
+                                        $group                                = $row[2];
+                                    }
+                                    $selected   = "";
+                                    $real_value = explode('"', $row[0]);
+                                    $real_value = $real_value[0];
+                                    if (in_array($real_value, $value['default'])) {
+                                        $selected = 'selected="selected"';
+                                    }
 
-									if (is_array($row[1])) {
-										$row[1] = $row[1]['value'];
-									}
-									$controlGroups[$cellId]['html'][$key] .= '<option value="' . $row[0] . '" ' . $selected . '>' . $row[1] . '</option>';
-								}
-								if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
-								$controlGroups[$cellId]['html'][$key] .= "</select>";
-							}
-							$select++;
+                                    if (is_array($row[1])) {
+                                        $row[1] = $row[1]['value'];
+                                    }
+                                    $controlGroups[$cellId]['html'][$key] .= '<option value="' . $row[0] . '" ' . $selected . '>' . $row[1] . '</option>';
+                                }
+                                if ($group) $controlGroups[$cellId]['html'][$key] .= "</optgroup>";
+                                $controlGroups[$cellId]['html'][$key] .= "</select>";
+                            }
+                            $select++;
 
-						} elseif ($value['type'] == 'multilist2') {
+                        } elseif ($value['type'] == 'select2') {
+                            $options = [];
+
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    if (is_array($v)) {
+                                        $options_group = array_values($v);
+
+                                        if (isset($options_group[2])) {
+                                            $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                        }
+                                    } else {
+                                        $options[$k] = $v;
+                                    }
+                                }
+                            }
+
+                            if ($this->readOnly) {
+                                $out = '';
+                                foreach ($options as $row) {
+                                    $real_value = explode('"', $row[0]);
+                                    $real_value = $real_value[0];
+                                    if (in_array($real_value, $value['default'])) {
+                                        $out = $row[1];
+                                        break;
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $out;
+
+                            } else {
+                                $this->scripts['select2'] = true;
+
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/select2.html');
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[ATTRIBUTES]', $attrs);
+
+                                $tpl->fillDropDown('[FIELD_ID]', $options, $value['default']);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+
+
+                        } elseif ($value['type'] == 'multiselect2') {
+                            $options = [];
+
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    if (is_array($v)) {
+                                        $options_group = array_values($v);
+
+                                        if (isset($options_group[2])) {
+                                            $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                        }
+                                    } else {
+                                        $options[$k] = $v;
+                                    }
+                                }
+                            }
+
+                            if ($this->readOnly) {
+                                $out = '';
+                                foreach ($options as $row) {
+                                    $real_value = explode('"', $row[0]);
+                                    $real_value = $real_value[0];
+                                    if (in_array($real_value, $value['default'])) {
+                                        $out = $row[1];
+                                        break;
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $out;
+
+                            } else {
+                                $this->scripts['select2'] = true;
+
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multiselect2.html');
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[ATTRIBUTES]', $attrs);
+
+                                $tpl->fillDropDown('[FIELD_ID]', $options, $value['default']);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+
+                        } elseif ($value['type'] == 'multilist2') {
                             if (is_array($this->selectSQL[$select])) {
                                 $options = $this->selectSQL[$select];
 
@@ -1599,10 +1692,11 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printCss("core2/html/" . THEME . "/css/bootstrap-colorpicker.min.css");
                     Tool::printJs("core2/html/" . THEME . "/js/bootstrap-colorpicker.min.js", true);
                 }
-                if (isset($this->scripts['multiselect2'])) {
+                if (isset($this->scripts['multiselect2']) || isset($this->scripts['select2']) ) {
                     Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
                     Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
                     Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
+                    Tool::printJs("core2/html/" . THEME . "/js/select2.ru.min.js", true);
                 }
                 if (isset($this->scripts['modal2'])) {
                     Tool::printJs("core2/js/bootstrap.modal.min.js", true);
