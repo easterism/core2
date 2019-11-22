@@ -289,11 +289,18 @@ a {color: #337AB7}
 .nav > li.nav-settings,
 .nav > li.nav-billing,
 .nav > li.nav-messages,
+.nav > li.nav-feedback,
 #module-settings,
 #module-profile,
 #module-billing,
 #submodule-profile-messages {
     display: none;
+}
+.nav-feedback .feedback-container textarea {
+    min-width: 240px;
+    max-width: 240px;
+    min-height: 100px;
+    max-height: 250px;
 }
 .dropdown-profile.show {display: list-item}
 #user-section #msgCount {
@@ -410,12 +417,14 @@ a {color: #337AB7}
     }
     .nav > li.nav-settings > a,
     .nav > li.nav-billing > a,
-    .nav > li.nav-messages > a {
+    .nav > li.nav-messages > a,
+    .nav > li.nav-feedback > a {
         padding: 10px 8px;
     }
     .nav-settings.show,
     .nav-billing.show,
-    .nav-messages.show {display: list-item}
+    .nav-messages.show ,
+    .nav-feedback.show {display: list-item}
 }
 /* Desktop */
 @media(min-width:768px) {

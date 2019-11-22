@@ -40,7 +40,48 @@ var main_menu = {
                 $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
             }
         });
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	sendFeedback: function () {
+
+		let $textarea      = $('#user-section .nav-feedback textarea');
+		let moduleTitle    = $('.navbar-header .module-title').text();
+		let submoduleTitle = $('.navbar-header .module-action').text();
+
+		preloader.show();
+		$.ajax({
+			method: 'POST',
+			url: 'index.php?module=admin',
+			data: {
+				"message" : $textarea.val(),
+				"location_href" : location.href,
+				"location_module" : moduleTitle,
+				"location_submodule" : submoduleTitle
+			},
+			dataType: 'json'
+		}).done(function (data) {
+			preloader.hide();
+
+			if (data.status !== 'success') {
+				let message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
+				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
+
+			} else {
+				$('#user-section .nav-feedback a').popover('hide');
+				$textarea.val('');
+				swal("Отправлено", "Если в этом есть необходимость, то мы свяжется в вами.", 'success').catch(swal.noop);
+			}
+
+		}).fail(function (error) {
+			preloader.hide();
+
+			swal("Ошибка отправки сообщения", 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+		});
+	}
 };
 
 
@@ -608,6 +649,7 @@ $(document).ready(function() {
         }
 		if ($('#submodule-profile-messages')[0]) {
 			$('#user-section .nav-messages').addClass('show');
+			$('#user-section .nav-feedback').addClass('show');
             $('.dropdown-profile.messages').addClass('show');
 		}
         if ($('#module-settings')[0]) {
@@ -735,6 +777,21 @@ $(document).ready(function() {
             }
         }
     });
+
+    let tplFeedback =
+		"<div class=\"feedback-container\">" +
+			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
+			"<button class=\"btn btn-info pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
+			"<div class=\"clearfix\"></div>" +
+		"</div>";
+
+	$('#user-section .nav-feedback a').popover({
+		"placement" : "bottom",
+		"trigger" : "manual",
+		"title" : "Обратная связь",
+		"html" : true,
+		"content" : tplFeedback
+	});
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
