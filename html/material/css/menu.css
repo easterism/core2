@@ -286,6 +286,8 @@ a {color: #337AB7}
     float: left;
 }
 .dropdown-profile,
+.dropdown-billing,
+.dropdown-settings,
 .nav > li.nav-settings,
 .nav > li.nav-billing,
 .nav > li.nav-messages,
@@ -302,6 +304,8 @@ a {color: #337AB7}
     min-height: 100px;
     max-height: 250px;
 }
+.dropdown-billing.show,
+.dropdown-settings.show,
 .dropdown-profile.show {display: list-item}
 #user-section #msgCount {
     background-color: #FF4C80;
