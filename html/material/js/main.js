@@ -55,7 +55,7 @@ var main_menu = {
 		preloader.show();
 		$.ajax({
 			method: 'POST',
-			url: 'index.php?module=admin',
+			url: 'index.php?module=profile&action=messages&data=send_feedback',
 			data: {
 				"message" : $textarea.val(),
 				"location_href" : location.href,
@@ -73,7 +73,7 @@ var main_menu = {
 			} else {
 				$('#user-section .nav-feedback a').popover('hide');
 				$textarea.val('');
-				swal("Отправлено", "Если в этом есть необходимость, то мы свяжется в вами.", 'success').catch(swal.noop);
+				swal("Сообщение отправлено", "", 'success').catch(swal.noop);
 			}
 
 		}).fail(function (error) {
