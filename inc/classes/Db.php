@@ -173,7 +173,7 @@ class Db {
                 }
 
                 //set profiler
-                if ($this->config->system->profile && $this->config->system->profile->on) {
+                if ($this->core_config->profile && $this->core_config->profile->on) {
                     $db->query("set profiling=1");
                     $db->query("set profiling_history_size = 100");
                 }

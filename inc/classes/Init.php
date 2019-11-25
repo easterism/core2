@@ -412,24 +412,15 @@
 
                 $webservice_controller = new ModWebserviceController();
 
-                if ($this->getModuleVersion('webservice') >= '2.0.0' && ! empty($matches['version'])) {
-                    $version = $matches['version'];
-                    $method  = '';
+                $version = $matches['version'];
+                $method  = '';
 
-                    $action_explode = explode('/', $matches['action']);
-                    foreach ($action_explode as $action_part) {
-                        $method .= ucfirst($action_part);
-                    }
-
-                    $method  = lcfirst($method);
-
-                } else {
-                    $version = '';
-                    $method  = ucfirst($route['action']);
-                    foreach ($route['params'] as $param => $value) {
-                        $method .= ucfirst($param) . ucfirst($value);
-                    }
+                $action_explode = explode('/', $matches['action']);
+                foreach ($action_explode as $action_part) {
+                    $method .= ucfirst($action_part);
                 }
+
+                $method = lcfirst($method);
 
                 return $webservice_controller->dispatchRest($route['module'], $method, $version); //TODO сделать через DI
             }
@@ -441,22 +432,9 @@
 
                 $webservice_controller = new ModWebserviceController();
 
-                if ($this->getModuleVersion('webservice') >= '2.0.0' && ! empty($matches['version'])) {
-                    $version     = $matches['version'];
-                    $action      = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
-                    $module_name = $matches['module'];
-
-                } else {
-                    $version = '';
-
-                    if (isset($matches[2]) && $matches[2]) {
-                        $action      = 'wsdl';
-                        $module_name = strtolower($matches[2]);
-                    } else {
-                        $action      = 'server';
-                        $module_name = strtolower($matches[3]);
-                    }
-                }
+                $version     = $matches['version'];
+                $action      = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
+                $module_name = $matches['module'];
 
                 return $webservice_controller->dispatchSoap($module_name, $action, $version);
             }
