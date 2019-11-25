@@ -75,7 +75,8 @@ class Gitlab extends \Common
                         );
                     }
                 }
-            } catch (RequestException $e) {
+            }
+            catch (RequestException $e) {
                 //$msg = Psr7\str($e->getRequest());
                 if ($e->hasResponse()) {
                     //$msg = Psr7\str($e->getResponse());

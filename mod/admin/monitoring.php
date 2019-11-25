@@ -252,9 +252,6 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 
 		if (isset($_GET['edit'])) {
 
-			ini_set('memory_limit', '512M');
-			ini_set("max_execution_time", "0");
-
 			$tempFile = $this->config->temp . "/test.txt";
 			$zipFile = $zipFolder . "/" . date("d_m_YvH-i-s") . ".zip";
 

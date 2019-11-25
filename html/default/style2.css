@@ -1145,6 +1145,273 @@ table td.homeTD {
 	font-weight: normal;
 }
 
+.core-tabs {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+}
+.core-tabs.core-tabs-default {border-color: #cbcbcb}
+
+.core-tabs > .core-tabs-heading {
+    padding: 5px;
+    font-weight: bold;
+    height: 18px;
+    font-size: 13px;
+    overflow: hidden;
+}
+.core-tabs > .core-tabs-heading > .core-tabs-subtitle {
+	color: #757575;
+	font-size: 14px;
+	font-weight: normal;
+	overflow: hidden;
+	padding: 5px 0 0;
+}
+
+.core-tabs > .core-tabs-body {
+	padding: 5px;
+}
+
+.core-tabs > .core-tabs-body .tab-content > .tab-pane,
+.core-tabs > .core-tabs-body .pill-content > .pill-pane {display: none}
+
+.core-tabs > .core-tabs-body .tab-content > .active,
+.core-tabs > .core-tabs-body .pill-content > .active {display: block}
+
+.core-tabs > .core-tabs-body > .core-tabs-tabs {
+    padding-left: 13px;
+    margin-bottom: 15px;
+    margin-top: -4px;
+    list-style: none;
+	border-top: 1px solid #ccc;
+}
+.core-tabs > .core-tabs-body > .core-tabs-tabs:after,
+.core-tabs > .core-tabs-body > .core-tabs-tabs:before {
+	display: table;
+	content: " ";
+	clear: both;
+}
+.core-tabs > .core-tabs-body > .core-tabs-tabs > li {
+	position: relative;
+	display: block;
+	float: left;
+	margin-top: -1px;
+	margin-bottom: -1px;
+}
+
+.core-tabs > .core-tabs-body > .core-tabs-tabs > li > a {
+    display: inline-block;
+    padding: 3px 7px 3px 7px;
+    font-weight: normal;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    background: transparent url(img/list_header_repeat.png) repeat-x;
+    border-right: 1px solid #CCCCCC;
+    border-bottom: 1px solid #CCCCCC;
+    border-left: 1px solid #CCCCCC;
+    -moz-border-radius-bottomleft: 4px;
+    -moz-border-radius-bottomright: 4px;
+    height: 15px;
+    color: #1d1d1d;
+    text-decoration: none;
+}
+.core-tabs > .core-tabs-body > .core-tabs-tabs > .active > a,
+.core-tabs > .core-tabs-body > .core-tabs-tabs > .active > a:hover,
+.core-tabs > .core-tabs-body > .core-tabs-tabs > .active > a:focus {border-color: transparent #ddd #ddd #ddd}
+
+.core-tabs > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs > .core-tabs-body > .core-tabs-tabs > li.active > a:focus {
+    padding: 3px 7px 3px 7px;
+    height: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    background: none;
+    background-color: #FFFFFF;
+    border-right: 1px solid #CCCCCC;
+    border-bottom: 2px solid #d80043;
+    border-left: 1px solid #CCCCCC;
+}
+.core-tabs > .core-tabs-body > .core-tabs-tabs li.disabled > a {
+	color: #a0a0a0 !important;
+	text-decoration: none;
+	cursor: not-allowed;
+	background-color: transparent;
+}
+#main_body > .core-tabs:last-child {margin-bottom: 0}
+
+
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-tabs-left  > .core-tabs-body > .core-tabs-tabs {border-bottom: 0}
+.core-tabs.core-tabs-tabs-bottom  > .core-tabs-body > .core-tabs-tabs {
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li {
+    margin-top: -1px;
+    margin-bottom: 0;
+}
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li > a {
+    -webkit-border-radius: 0 0 4px 4px;
+    -moz-border-radius: 0 0 4px 4px;
+    border-radius: 0 0 4px 4px;
+}
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li > a:hover,
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li > a:focus {
+    border-top-color: #ddd;
+    border-bottom-color: #fff;
+}
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-tabs-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li {float: none}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li > a,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li > a {
+    min-width: 74px;
+    margin-right: 0;
+    margin-bottom: 3px;
+}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs {
+    float: left;
+    margin-right: 19px;
+    border-right: 1px solid #ddd;
+    width: 210px;
+}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-content {
+    margin-left: 209px;
+    padding-left: 20px;
+    border-left: 1px solid #ddd;
+}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs > li > a {
+    margin-right: -1px;
+    -webkit-border-radius: 4px 0 0 4px;
+    -moz-border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 4px;
+}
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs li.active > a,
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs li.active > a:hover,
+.core-tabs.core-tabs-tabs-left > .core-tabs-body > .core-tabs-tabs li.active > a:focus {
+    border-color: #ddd #fff #ddd #ddd;
+    border-right-color: #ffffff;
+}
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs {
+    float: right;
+    margin-left: 19px;
+    border-left: 1px solid #ddd;
+    width: 210px;
+}
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-content {
+    margin-right: 209px;
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li > a {
+    margin-left: -1px;
+    -webkit-border-radius: 0 4px 4px 0;
+    -moz-border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 4px 0;
+}
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-tabs-right > .core-tabs-body > .core-tabs-tabs > li.active > a:focus {
+    border-color: #ddd #ddd #ddd #fff;
+}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-left  > .core-tabs-body > .core-tabs-tabs {
+	padding-left: 5px;
+}
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-left  > .core-tabs-body > .core-tabs-tabs {border-bottom: 0}
+.core-tabs.core-tabs-pills-bottom  > .core-tabs-body > .core-tabs-tabs {
+	margin-top: 20px;
+	margin-bottom: 0;
+}
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li {
+    margin-top: -1px;
+    margin-bottom: 0;
+}
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li {float: none}
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li > a,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li > a {
+    min-width: 74px;
+    margin-right: 0;
+    margin-bottom: 3px;
+}
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs {
+    float: left;
+    margin-right: 19px;
+    width: 210px;
+}
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-content {
+    margin-left: 209px;
+    padding-left: 20px;
+}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li {
+    margin-bottom: 5px;
+}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs,
+.core-tabs.core-tabs-pills-left  > .core-tabs-body > .core-tabs-tabs {
+	border-width: 0;
+	margin-top: 5px;
+}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li > a,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li > a,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li > a,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li > a {
+	margin-right: -1px;
+	border: 1px solid silver;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs {
+    float: right;
+    margin-left: 19px;
+    width: 210px;
+}
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-content {
+    margin-right: 209px;
+    padding-right: 20px;
+}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li {margin-right: 4px}
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-pills-top > .core-tabs-body > .core-tabs-tabs > li.active > a:focus,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-pills-left > .core-tabs-body > .core-tabs-tabs > li.active > a:focus,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-pills-right > .core-tabs-body > .core-tabs-tabs > li.active > a:focus,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a:hover,
+.core-tabs.core-tabs-pills-bottom > .core-tabs-body > .core-tabs-tabs > li.active > a:focus {
+	color: darkgreen;
+	background-color: #bbf7c0;
+	border-width: 1px;
+	border-color: silver #257331 #257331 silver;
+	height: 15px;
+	font-weight: normal;
+}
+
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
 .ctrl-dp-controls > * {
@@ -1267,9 +1534,9 @@ table td.homeTD {
 
 
 .pdf-panel {
-	position: absolute;
+	position: fixed;
 	width: 100%;
-	z-index: 10;
+	z-index: 400;
 	margin-left: -7px;
 	margin-right: 7px;
 }

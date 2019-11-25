@@ -1,4 +1,4 @@
-<?
+<?php
 
 require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
@@ -10,10 +10,14 @@ require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/User.php";
 require_once DOC_ROOT . "core2/mod/admin/Settings.php";
+require_once DOC_ROOT . "core2/mod/admin/Modules.php";
+require_once DOC_ROOT . "core2/mod/admin/Roles.php";
 
 use Zend\Session\Container as SessionContainer;
 use Core2\User as User;
 use Core2\Settings as Settings;
+use Core2\Modules as Modules;
+use Core2\Roles as Roles;
 use Core2\InstallModule as Install;
 
 
@@ -70,17 +74,45 @@ class CoreController extends Common {
      * @return void
      */
 	public function action_index() {
+
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
             parse_str(file_get_contents("php://input"), $put_vars);
-            if (!empty($put_vars['exit'])) {
+            if ( ! empty($put_vars['exit'])) {
                 $this->closeSession();
                 return;
             }
         }
-        if (!$this->auth->ADMIN) throw new Exception(911);
+
+        if ( ! $this->auth->ADMIN) throw new Exception(911);
+
+
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    case 'clear_cache':
+                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                            throw new Exception('Некорректный запрос');
+                        }
+
+                        $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
+
+                        return json_encode(['status' => 'success']);
+                        break;
+                }
+            } catch (Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage()
+                ]);
+            }
+        }
+
 
         $tab = new tabs('mod');
         $tab->beginContainer($this->_("События аудита"));
+
+        $this->printJsModule('admin', '/js/admin.index.js');
+
         try {
             $changedMods = $this->checkModulesChanges();
             if (empty($changedMods)) {
@@ -94,11 +126,18 @@ class CoreController extends Common {
             ) {
 				Alert::memory()->warning("Задайте параметр 'database.admin.username' в conf.ini модуля 'admin'", $this->_("Не задан администратор базы данных"));
             }
+
         } catch (Exception $e) {
 			Alert::memory()->danger($e->getMessage(), $this->_("Ошибка"));
         }
 
         echo Alert::get();
+
+
+        // Кнопка очистки кэша
+        $btn_title = $this->_('Очистить кэш');
+        echo "<input class=\"button\" type=\"button\" value=\"{$btn_title}\" onclick=\"AdminIndex.clearCache()\"/>";
+
         $tab->endContainer();
 	}
 
@@ -413,8 +452,8 @@ class CoreController extends Common {
             return;
         }
 
-		$app = "index.php?module={$this->module}&action=modules";
-		require_once $this->path . 'modules.php';
+        $mods = new Modules();
+        $mods->dispatch();
 	}
 
 
@@ -694,7 +733,7 @@ class CoreController extends Common {
                         $email->cc($cc);
                     }
 
-                    $email->to($to)
+                    $result = $email->to($to)
                         ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
                         ->body($supportFormMessage)
                         ->send();
@@ -866,9 +905,9 @@ class CoreController extends Common {
 	 */
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$app = "index.php?module=admin&action=roles";
 		$this->printCss($this->path . "role.css");
-		require_once $this->path . 'roles.php';
+        $roles = new Roles();
+        $roles->dispatch();
 	}
 
 

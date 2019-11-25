@@ -17,8 +17,9 @@ class Error {
 	public static function Exception($msg, $code = 0) {
 		$isXajax = self::isXajax();
 		if ($isXajax) {
-			header('Content-type: text/xml; charset="utf-8"');
-			echo '<?xml version="1.0" encoding="utf-8" ?><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
+			header('Content-type: application/json; charset="utf-8"');
+			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
+			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
 			if ($code == 13) {//ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
