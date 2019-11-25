@@ -346,19 +346,26 @@ class InstallModule extends \Common {
      * @throws \Exception
      */
     private function checkNecMods() {
+
         //проверка зависимости от версии ядра
-        if (isset($this->mInfo['install']['required_core'])) { //значит модуль зависит от версии ядра
-            if (!$required_core = $this->mInfo['install']['required_core']) {
-                throw new \Exception($this->translate->tr("Не удалось определить требуемую версию ядра"));
+        if (isset($this->mInfo['install']['required_core'])) {
+            if ( ! $required_core = $this->mInfo['install']['required_core']) {
+                throw new \Exception($this->_("Не удалось определить требуемую версию ядра"));
+
             } else {
                 $config = \Zend_Registry::getInstance()->get('core_config');
-                if (!$config->version) {
-                    throw new \Exception($this->translate->tr("Не задана версия ядра"));
+
+                if ( ! $config->version) {
+                    throw new \Exception($this->_("Не задана версия ядра"));
+
                 } else {
-                    if ($config->version < $required_core) throw new \Exception(sprintf($this->translate->tr("Требуется ядро %s"), "v$required_core"));
+                    if (version_compare($config->version, $required_core, '<')) {
+                        throw new \Exception(sprintf($this->_("Требуется ядро %s"), "v$required_core"));
+                    }
                 }
             }
         }
+
         $Inf = empty($this->mInfo['install']['dependent_modules']) ? array() : $this->mInfo['install']['dependent_modules'];
         if (!empty($Inf['m']['module_name']) || !empty($Inf['m'][0]['module_name'])) {
             $depend = array();
