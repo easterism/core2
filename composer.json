@@ -28,7 +28,7 @@
     "zf1/zend-acl": "~1.12",
     "zf1/zend-ldap": "~1.12",
     "zf1/zend-auth": "~1.12",
-    "belhard/zend-db": "~1.12",
+    "belhard/zend-db": "dev-master",
     "belhard/xajax": "dev-master",
     "belhard/floatthead": "dev-master",
     "belhard/simplemodal": "dev-master",
