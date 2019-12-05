@@ -267,7 +267,25 @@ var edit = {
     modal2: {
         key: '',
 
+		options: [],
+
+
+		/**
+		 * @param theme_src
+		 * @param key
+		 * @param url
+		 * @return {boolean}
+		 */
         load: function(theme_src, key, url) {
+
+			if (typeof url === 'function') {
+				url = url();
+			}
+
+        	if ( ! url) {
+        		return false;
+			}
+
             this.key            = key;
             var modal_container = $('#' + this.key + '-modal').appendTo('#main_body');
             var $body_container = $('.modal-dialog>.modal-content>.modal-body', modal_container);
@@ -279,30 +297,53 @@ var edit = {
                 '</div>'
             );
 
-            if (typeof url === 'function') {
-				$body_container.load(url());
-			} else {
-				$body_container.load(url);
-			}
-
+			$body_container.load(url);
 
             $('#' + this.key + '-modal').modal('show');
+
+
+			if (this.options[key] && typeof this.options[key].onHidden === 'function') {
+				$('#' + this.key + '-modal').on('hidden.bs.modal', this.options[key].onHidden);
+			}
         },
 
+
+		/**
+		 * @param key
+		 */
         clear: function(key) {
+
             $('#' + key).val('');
             $('#' + key + '-title').val('');
+
+
+			if (this.options[key] && typeof this.options[key].onClear === 'function') {
+				this.options[key].onClear();
+			}
         },
 
+
+		/**
+		 *
+		 */
         hide: function() {
             $('#' + this.key + '-modal').modal('hide');
         },
 
+
+		/**
+		 * @param value
+		 * @param title
+		 */
         choose: function(value, title) {
             $('#' + this.key).val(value);
             $('#' + this.key + '-title').val(title);
             this.hide();
-        }
+
+			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
+				this.options[this.key].onChoose(value, title);
+			}
+		}
     },
 
     /**

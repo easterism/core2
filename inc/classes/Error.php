@@ -49,7 +49,8 @@ class Error {
 	 * @param \Exception $exception
 	 */
 	public static function catchException(\Exception $exception) {
-        $cnf     = self::getConfig();
+
+	    $cnf     = self::getConfig();
         $message = $exception->getMessage();
         $code    = $exception->getCode();
 
@@ -63,26 +64,34 @@ class Error {
                 $f = fopen($cnf->log->path, 'a');
                 fwrite($f, $str . chr(10) . chr(13));
                 fclose($f);
+
             } else {
                 $text = sprintf('Нет доступа на запись в файл %s.', $cnf->log->path);
                 self::Exception($text, $code);
             }
         }
-        if ($code == 503) {
+
+
+		if ($code == 503) {
             self::Exception($message, $code);
         }
+
+
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
+
 		} elseif ($message == '404') {
             header("HTTP/1.1 404 Page not found");
 			self::Exception('Нет такой страницы', $code);
+
 		} elseif ($message == 'expired') {
             setcookie($cnf->session->name, false);
 			header("HTTP/1.1 403 Forbidden");
 			die();
 		}
-		//Zend_Registry::get('logger')->log(__METHOD__ . " " . $str, Zend_Log::ERR);
+
+
 		if ($cnf && $cnf->debug && $cnf->debug->on) {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
@@ -91,6 +100,7 @@ class Error {
 			} else {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
+
 		} else {
 			if (substr($message, 0, 8) == 'SQLSTATE') {
 			    $message = 'Ошибка базы данных';
@@ -99,6 +109,7 @@ class Error {
             self::Exception($message, $code);
 		}
 	}
+
 
 	/**
      * Обработчик исключений адаптера базы данных

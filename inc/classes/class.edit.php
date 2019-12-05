@@ -647,12 +647,15 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['modal2'] = true;
 
-                                $options = array();
-                                $options['size']  = isset($value['in']['size'])  ? $value['in']['size']  : '';
-                                $options['title'] = isset($value['in']['title']) ? $value['in']['title'] : '';
-                                $options['text']  = isset($value['in']['text'])  ? htmlspecialchars($value['in']['text']) : '';
-                                $options['value'] = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
-                                $options['url']   = isset($value['in']['url'])   ? $value['in']['url']   : '';
+                                $options             = [];
+                                $options['size']     = isset($value['in']['size']) ? $value['in']['size'] : '';
+                                $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
+                                $options['text']     = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
+                                $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
+                                $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
+                                $options['onHidden'] = isset($value['in']['onHidden']) ? $value['in']['onHidden'] : '';
+                                $options['onClear']  = isset($value['in']['onClear']) ? $value['in']['onClear'] : '';
+                                $options['onChoose'] = isset($value['in']['onChoose']) ? $value['in']['onChoose'] : '';
 
                                 switch ($options['size']) {
                                     case 'small': $size = 'modal-sm'; break;
@@ -674,6 +677,25 @@ class editTable extends initEdit {
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
                                 $tpl->assign('[KEY]',       crc32(microtime(true)));
+
+
+                                $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
+                                    ? trim($options['onHidden'])
+                                    : "''";
+                                $tpl->assign('[ON_HIDDEN]', $on_hidden);
+
+
+                                $on_clear = ! empty($options['onClear']) && strpos(trim($options['onClear']), 'function') !== false
+                                    ? trim($options['onClear'])
+                                    : "''";
+                                $tpl->assign('[ON_CLEAR]', $on_clear);
+
+
+                                $on_choose = ! empty($options['onChoose']) && strpos(trim($options['onChoose']), 'function') !== false
+                                    ? trim($options['onChoose'])
+                                    : "''";
+                                $tpl->assign('[ON_CHOOSE]', $on_choose);
+
 
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');

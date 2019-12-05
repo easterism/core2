@@ -40,7 +40,7 @@
     <![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js?_=2"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=5"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=6"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js?_=7"></script>
     <!--[if IE]>
