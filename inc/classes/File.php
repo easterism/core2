@@ -210,7 +210,7 @@ class File extends \Common {
                 if (!$image->checkGD()) {
                     throw new \Exception("GD not installed", 500);
                 }
-                $file->thumbnail_url = "{$base_urn}&thumbid=" . $value['id'];
+                $file->thumbnail_url = "{$base_urn}&filehandler=$table&thumbid=" . $value['id'];
             }
             else {
                 //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";

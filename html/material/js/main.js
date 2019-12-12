@@ -607,10 +607,6 @@ function removePDF() {
 }
 
 function resize() {
-    $("#main_body > .pdf-panel").css({
-        'margin-top': $(document).scrollTop() - 30
-    });
-
     $("#main_body .pdf-main-panel").css({
         'height': ($("body").height() - ($("#navbar-top").height()) - 40)
     });
