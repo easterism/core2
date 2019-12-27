@@ -36,28 +36,39 @@ class Common extends \Core2\Acl {
      * Common constructor.
      */
 	public function __construct() {
-        $child = get_class($this);
-        $child = strpos($child, "Controller") ? substr($child, 3, -10) : '';
+
+        $child_class_name = get_class($this);
+
+        if ($child_class_name == 'CoreController') {
+            $child_class_name = 'admin';
+        } else {
+            $child_class_name = strpos($child_class_name, "Controller") ? substr($child_class_name, 3, -10) : '';
+        }
+
 		parent::__construct();
-        $reg = Zend_Registry::getInstance();
+        $reg     = Zend_Registry::getInstance();
 		$context = $reg->get('context');
-        if ($child) {
-            $this->module = strtolower($child);
+
+        if ($child_class_name) {
+            $this->module = strtolower($child_class_name);
             if (!$reg->isRegistered('invoker')) {
                 $reg->set('invoker', $this->module);
             }
+
+        } else {
+			$this->module = ! empty($context[0]) ? $context[0] : '';
         }
-		else {
-			$this->module = !empty($context[0]) ? $context[0] : '';
-		}
+
         $this->path      = 'mod/' . $this->module . '/';
         $this->auth      = $reg->get('auth');
         $this->resId     = $this->module;
 		$this->actionURL = "?module=" . $this->module;
-		if (!empty($context[1]) && $context[1] !== 'index') {
-			$this->resId .= '_' . $context[1];
+
+		if ( ! empty($context[1]) && $context[1] !== 'index') {
+			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
+
 		$this->config = $reg->get('config');
 	}
 
