@@ -18,7 +18,7 @@
 
             <input type="submit" class="button" value="Показать"/>
             <a id="download-log" title="Скачать"
-               href="index.php?module=admin&action=monitoring&loc=core&tab_e_monitoring=3&download=1"
+               href="index.php?module=admin&action=monitoring&loc=core&tab_admin_monitoring=3&download=1"
                ><img src="core2/mod/admin/img/download.png"></a>
         </div>
         <div class="clearfix"></div>
