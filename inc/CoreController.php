@@ -23,12 +23,13 @@ use Core2\InstallModule as Install;
 
 /**
  * Class CoreController
- * @property Users        $dataUsers
- * @property Enum         $dataEnum
- * @property Modules      $dataModules
- * @property Roles        $dataRoles
- * @property SubModules   $dataSubModules
- * @property UsersProfile $dataUsersProfile
+ * @property Users         $dataUsers
+ * @property Enum          $dataEnum
+ * @property Modules       $dataModules
+ * @property Roles         $dataRoles
+ * @property SubModules    $dataSubModules
+ * @property UsersProfile  $dataUsersProfile
+ * @property ModProfileApi $apiProfile
  */
 class CoreController extends Common {
 
@@ -717,12 +718,12 @@ class CoreController extends Common {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение.'));
                     }
 
-					$supportFormMessage = "<pre>{$supportFormMessage}</pre>";
-					$supportFormMessage .= '<hr/><small>';
-					$supportFormMessage .= '<b>Хост:</b> ' . $_SERVER['HTTP_HOST'];
-					$supportFormMessage .= '<br/><b>Модуль:</b> ' . $supportFormModule;
-					$supportFormMessage .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
-					$supportFormMessage .= '</small>';
+					$html = "<pre>{$supportFormMessage}</pre>";
+					$html .= '<hr/><small>';
+					$html .= '<b>Хост:</b> ' . $_SERVER['HTTP_HOST'];
+					$html .= '<br/><b>Модуль:</b> ' . $supportFormModule;
+					$html .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
+					$html .= '</small>';
 
                     $email = $this->createEmail();
 
@@ -735,12 +736,16 @@ class CoreController extends Common {
 
                     $result = $email->to($to)
                         ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
-                        ->body($supportFormMessage)
+                        ->body($html)
                         ->send();
 
                     if (isset($result['error'])) {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение'));
                     }
+
+                    $this->apiProfile->sendFeedback($supportFormMessage, [
+                        'location_module' => $supportFormModule,
+                    ]);
 				}
 				echo '{}';
 			} catch (Exception $e) {
