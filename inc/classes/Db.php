@@ -288,78 +288,93 @@ class Db {
 	}
 
 
-
-
-
-	/**
-	 * @param string $expired
-	 */
+    /**
+     * @param string $expired
+     * @throws \Zend_Db_Table_Exception
+     */
 	public function closeSession($expired = 'N') {
-		$auth = new \Zend\Session\Container('auth');
-		if ($auth && $auth->ID) {
-		    if ($auth->LIVEID) {
-                $row = $this->dataSession->find($auth->LIVEID)->current();
-                if ($row) {
-                    $row->logout_time = new \Zend_Db_Expr('NOW()');
-                    $row->is_expired_sw = $expired;
-                    $row->save();
-                }
+
+		$auth = new \Zend\Session\Container('Auth');
+
+		if ($auth && $auth->ID && $auth->LIVEID) {
+            $row = $this->dataSession->find($auth->LIVEID)->current();
+
+            if ($row) {
+                $row->logout_time = new \Zend_Db_Expr('NOW()');
+                $row->is_expired_sw = $expired;
+                $row->save();
             }
         }
-        $auth->getManager()->destroy();
+
+		$auth->getManager()->destroy();
     }
 
 
 	/**
-	 * логирование активности простых пользователей
+	 * Логирование активности простых пользователей
 	 * @param array $exclude исключения адресов
 	 * @throws \Exception
 	 */
 	public function logActivity($exclude = array()) {
-		$auth = new \Zend\Session\Container('auth');
-		if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
-			if ($exclude) {
-				if (in_array($_SERVER['QUERY_STRING'], $exclude)) return;
-			}
-			$arr = array();
-			if (!empty($_POST)) $arr['POST'] = $_POST;
-			if (!empty($_GET)) $arr['GET'] = $_GET;
-            $data = array(
+
+        $auth = new \Zend\Session\Container('Auth');
+
+        if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+            if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {
+                return;
+            }
+
+            $arr = [];
+            if ( ! empty($_POST)) {
+                $arr['POST'] = $_POST;
+            }
+
+            if ( ! empty($_GET)) {
+                $arr['GET'] = $_GET;
+            }
+
+            $data = [
                 'ip'             => $_SERVER['REMOTE_ADDR'],
                 'sid'            => $auth->getManager()->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
                 'user_id'        => $auth->ID
-            );
+            ];
 
-			if (isset($this->config->log) && $this->config->log &&
-				isset($this->config->log->system->writer) && $this->config->log->system->writer == 'file'
-			) {
-				if (!$this->config->log->system->file) {
-					throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
-				}
-				$log = new Log('access');
-				$log->access($auth->NAME);
-			} else {
+            if (isset($this->config->log) &&
+                $this->config->log &&
+                isset($this->config->log->system->writer) &&
+                $this->config->log->system->writer == 'file'
+            ) {
+                if ( ! $this->config->log->system->file) {
+                    throw new \Exception($this->_('Не задан файл журнала запросов'));
+                }
+
+                $log = new Log('access');
+                $log->access($auth->NAME);
+
+            } else {
                 if ($arr) {
                     $data['action'] = serialize($arr);
                 }
-				$this->db->insert('core_log', $data);
-			}
-			// обновление записи о последней активности
+                $this->db->insert('core_log', $data);
+            }
+
+            // обновление записи о последней активности
             if ($auth->LIVEID) {
                 $row = $this->dataSession->find($auth->LIVEID)->current();
+
                 if ($row) {
                     $row->last_activity = new \Zend_Db_Expr('NOW()');
                     $row->save();
                 }
             }
-		}
-	}
+        }
+    }
 
 
-	/**
+    /**
 	 * @param string $code
 	 * @return string
 	 */
