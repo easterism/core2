@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="core2/html/light/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/menu.css?_=3" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=12" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=14" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
@@ -29,7 +29,7 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/QueryString.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/cleave.min.js"></script>
@@ -40,13 +40,13 @@
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/control_datepicker_range.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
-	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.8.0/js/cors/jquery.xdr-transport.js"></script>
+	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=2"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=4"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=3"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=4"></script>
     <!--[if IE]>
     <link rel="shortcut icon" href="favicon.ico">
     <![endif]-->

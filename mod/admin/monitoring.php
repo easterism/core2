@@ -96,7 +96,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 							FROM core_session AS s
 								 JOIN core_users AS u ON u.u_id = s.user_id
 							WHERE logout_time IS NULL
-							  AND (NOW() - last_activity > $sLife)=0 ADD_SEARCH
+							  AND (NOW() - last_activity > $sLife)=0 /*ADD_SEARCH*/
 						   ORDER BY login_time DESC";
 
 			$list->addColumn($this->translate->tr("Сессия"),                     "",   "TEXT");
@@ -314,10 +314,11 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		
 		
 		$list = new listTable($this->resId . 'archive');
+		$list->noCheckboxes = "yes";
 		$list->SQL = "SELECT 1";
 		$list->addColumn("Имя файла", "", "TEXT");
 		$list->addColumn("Дата создания архива", "", "DATETIME");
-		$list->addColumn("Загрузить", "5%", "BLOCK");
+		$list->addColumn("Загрузить", "90", "BLOCK");
 		$data = $list->getData();
 
 		$dir = opendir($zipFolder);
@@ -335,7 +336,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 				if (!is_dir($zipFolder . "/" . $file))
 				{					
 					
-					$file_create = stat($zipFolder."/".$zipFile); 
+					$file_create = stat($zipFolder."/".$file);
 					$dataForList[$i][] = $i;
 					$dataForList[$i][] = $file;						
 					$dataForList[$i][] = date("Y-m-d H:i:s", filectime($zipFolder . "/" . $file));
@@ -346,8 +347,8 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		
 		closedir($dir);
 		$list->data = $dataForList;
-		$list->classText['ADD'] = $this->translate->tr("Сформировать архив");
-		$list->addURL 			= $app . "&tab_admin_monitoring=4&edit=0"; 		
+		// $list->classText['ADD'] = $this->translate->tr("Сформировать архив");
+		// $list->addURL 			= $app . "&tab_admin_monitoring=4&edit=0";
 		$list->showTable();
 		
 	

@@ -325,6 +325,5 @@ function mceSetup(id, opt) {
     for (k in opt) {
         options[k] = opt[k];
     }
-    tinymce.remove();
 	tinymce.init(options);
 }

@@ -9,7 +9,7 @@
         </button>
         <!-- END clear -->
         <input type="button" class="modal-control-button btn btn-default last" value="Выбрать"
-               onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', '[URL]')">
+               onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', [URL])">
         <div class="clearfix"></div>
     </div>
     <div class="modal fade" id="[KEY]-modal" tabindex='-1' style="display: none">
@@ -23,4 +23,11 @@
             </div>
         </div>
     </div>
+    <script>
+        edit.modal2.options['[KEY]'] = {
+            'onHidden': [ON_HIDDEN],
+            'onClear': [ON_CLEAR],
+            'onChoose': [ON_CHOOSE]
+        };
+    </script>
 </div>
