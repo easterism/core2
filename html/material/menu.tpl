@@ -57,6 +57,11 @@
                         <i class="fa fa-gears"></i>
                     </a>
                 </li>
+                <li class="nav navbar-nav nav-feedback">
+                    <a href="#" onclick="$(this).popover('toggle');return false;" title="Обратная связь">
+                        <i class="fa fa-comment-o"></i>
+                    </a>
+                </li>
                 <li class="nav navbar-nav nav-messages">
                     <a href="index.php#module=profile&action=messages" title="Сообщения"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">

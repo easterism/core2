@@ -40,30 +40,42 @@ class Enum extends Zend_Db_Table_Abstract {
 	}
 
     public function getEnum($global_id) {
-	    if (!isset($this->_enum[$global_id])) {
-            $res = $this->_db->fetchAll("SELECT e2.id, e2.name, e2.custom_field, e2.is_default_sw, CASE e.is_active_sw WHEN 'N' THEN 'N' ELSE e2.is_active_sw END AS is_active_sw
-									FROM core_enum AS e
-									INNER JOIN core_enum AS e2 ON e.id=e2.parent_id
-									WHERE e.global_id=?
-									ORDER BY e2.seq", $global_id);
-            $data = array();
+
+        if ( ! isset($this->_enum[$global_id])) {
+            $res  = $this->_db->fetchAll("
+                SELECT e2.id, 
+                       e2.name, 
+                       e2.custom_field, 
+                       e2.is_default_sw, 
+                       CASE e.is_active_sw 
+                           WHEN 'N' THEN 'N' 
+                           ELSE e2.is_active_sw 
+                       END AS is_active_sw
+				FROM core_enum AS e
+				    INNER JOIN core_enum AS e2 ON e.id = e2.parent_id
+				WHERE e.global_id = ?
+				ORDER BY e2.seq
+            ", $global_id);
+
+            $data = [];
             foreach ($res as $value) {
-                $data[$value['id']] = array(
-                    'value' => $value['name'],
-                    'is_default' => ($value['is_default_sw'] == 'Y' ? true : false),
+                $data[$value['id']]           = [
+                    'value'        => $value['name'],
+                    'is_default'   => ($value['is_default_sw'] == 'Y' ? true : false),
                     'is_active_sw' => $value['is_active_sw']
-                );
-                $data[$value['id']]['custom'] = array();
+                ];
+                $data[$value['id']]['custom'] = [];
                 if ($value['custom_field']) {
                     $temp = explode(":::", $value['custom_field']);
                     foreach ($temp as $val) {
-                        $temp2 = explode("::", $val);
+                        $temp2                                   = explode("::", $val);
                         $data[$value['id']]['custom'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
                     }
                 }
             }
             $this->_enum[$global_id] = $data;
         }
+
         return $this->_enum[$global_id];
     }
 }

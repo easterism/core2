@@ -21,14 +21,14 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery.ui.touch-punch.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/ext/QueryString/QueryString.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/QueryString.js"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
-	<script src="core2/ext/jQuery/plugins/jQuery-File-Upload-9.9.3/js/cors/jquery.xdr-transport.js"></script>
+	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>

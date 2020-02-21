@@ -636,6 +636,24 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
     border-bottom: 1px dashed #4677b6;
     white-space: nowrap;
 }
+.multilist2-items > .multilist2-item {
+    margin-bottom: 8px;
+}
+.multilist2-items > .multilist2-item > .multilist2-delete {
+    padding: 5px;
+    cursor: pointer;
+}
+.field-dataset-items .field-dataset-item > td {
+    padding-bottom: 8px;
+    padding-right: 4px;
+}
+.field-dataset-items .field-dataset-item > td .field-dataset-delete {
+    padding: 5px;
+    cursor: pointer;
+}
+.field-dataset-items > thead > tr > th {
+    padding-right: 10px;
+}
 
 /* Mobile */
 @media(max-width:767px) {
@@ -1566,6 +1584,13 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel.core-panel-tabs-bottom > .core-panel-body > .core-panel-tabs > li.active > a:focus {border-color: #fff #ddd #ddd #ddd}
 .core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li,
 .core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li {float: none}
+.core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li.panel-divider,
+.core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li.panel-divider {
+    border-top: 1px solid #ececec;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
 .core-panel.core-panel-tabs-left > .core-panel-body > .core-panel-tabs > li > a,
 .core-panel.core-panel-tabs-right > .core-panel-body > .core-panel-tabs > li > a {
     min-width: 74px;
@@ -1718,7 +1743,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     padding: 5px 0 0;
 }
 .core-tabs > .core-tabs-body {
-    padding-top: 35px;
+    padding-top: 26px;
 }
 .core-tabs > .core-tabs-body .tab-content > .tab-pane,
 .core-tabs > .core-tabs-body .pill-content > .pill-pane {display: none}

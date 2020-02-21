@@ -16,7 +16,7 @@
         <!-- END content_top -->
 
         <!-- BEGIN tabs -->
-        <ul class="core-panel-tabs">
+        <ul class="core-panel-tabs" [STYLES]>
             <!-- BEGIN elements -->
                 <!-- BEGIN tab -->
                 <li id="panel-[RESOURCE]-[ID]" class="[CLASS]"><a href="[URL]" onclick="if (event.button === 0 && ! event.ctrlKey) load('[URL]');">[TITLE]</a></li>
@@ -24,12 +24,15 @@
                 <!-- BEGIN tab_disabled -->
                 <li id="panel-[RESOURCE]-[ID]" class="disabled"><a href="javascript:void(0);">[TITLE]</a></li>
                 <!-- END tab_disabled -->
+                <!-- BEGIN divider -->
+                <li class="panel-divider"></li>
+                <!-- END divider -->
             <!-- END elements -->
         </ul>
         <!-- END tabs -->
 
         <!-- BEGIN content_bottom -->
-        <div class="core-panel-content">
+        <div class="core-panel-content" [STYLES]>
             [CONTENT]
         </div>
         <div class="clearfix"></div>

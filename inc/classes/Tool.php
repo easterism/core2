@@ -161,7 +161,6 @@ class Tool {
      * @param $text
      */
     public static function fb($text) {
-		require_once(DOC_ROOT . 'core2/ext/FirePHPCore-0.3.2/lib/FirePHPCore/FirePHP.class.php');
 		$firephp = FirePHP::getInstance(true);
 		try {
 			$firephp->fb($text);
@@ -273,14 +272,22 @@ class Tool {
 	 *
 	 * @param int   $number Число которое нужно просклонять
 	 * @param array $titles Массив слов для склонения
+	 * @param bool  $only_text Возвращать только текст
      *
 	 * @return string
 	 */
-	public static function declNum($number, $titles) {
+	public static function declNum($number, $titles, $only_text = false) {
 
 		$cases = array(2, 0, 1, 1, 1, 2);
 		$num = abs($number);
-		return $number . " " . $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]];
+
+		$text = $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]];
+
+		if ($only_text) {
+            return $text;
+        } else {
+            return $number . " " . $text;
+        }
 	}
 
 

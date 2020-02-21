@@ -1,4 +1,4 @@
-<select id="{ID}" name="{NAME}[]" multiple="multiple">
+<select id="{ID}" name="{NAME}[]" multiple="multiple" {ATTR}>
     <!-- BEGIN opt -->
     <option value="{VALUE}" {selected}>{LABEL}</option>
     <!-- END opt -->

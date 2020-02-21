@@ -267,7 +267,25 @@ var edit = {
     modal2: {
         key: '',
 
+		options: [],
+
+
+		/**
+		 * @param theme_src
+		 * @param key
+		 * @param url
+		 * @return {boolean}
+		 */
         load: function(theme_src, key, url) {
+
+			if (typeof url === 'function') {
+				url = url();
+			}
+
+        	if ( ! url) {
+        		return false;
+			}
+
             this.key            = key;
             var modal_container = $('#' + this.key + '-modal').appendTo('#main_body');
             var $body_container = $('.modal-dialog>.modal-content>.modal-body', modal_container);
@@ -279,26 +297,53 @@ var edit = {
                 '</div>'
             );
 
-            $body_container.load(url);
-
+			$body_container.load(url);
 
             $('#' + this.key + '-modal').modal('show');
+
+
+			if (this.options[key] && typeof this.options[key].onHidden === 'function') {
+				$('#' + this.key + '-modal').on('hidden.bs.modal', this.options[key].onHidden);
+			}
         },
 
+
+		/**
+		 * @param key
+		 */
         clear: function(key) {
+
             $('#' + key).val('');
             $('#' + key + '-title').val('');
+
+
+			if (this.options[key] && typeof this.options[key].onClear === 'function') {
+				this.options[key].onClear();
+			}
         },
 
+
+		/**
+		 *
+		 */
         hide: function() {
             $('#' + this.key + '-modal').modal('hide');
         },
 
+
+		/**
+		 * @param value
+		 * @param title
+		 */
         choose: function(value, title) {
             $('#' + this.key).val(value);
             $('#' + this.key + '-title').val(title);
             this.hide();
-        }
+
+			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
+				this.options[this.key].onChoose(value, title);
+			}
+		}
     },
 
     /**
@@ -306,7 +351,181 @@ var edit = {
      */
     toggleGroup(toggleObject) {
         $(toggleObject).parent().next().slideToggle('fast');
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	multilist2: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param field
+		 * @param attributes
+		 * @param themePath
+		 */
+		addItem: function (fieldId, field, attributes, themePath) {
+
+			let tpl =
+				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
+				    '<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
+				    '<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
+				         'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
+				'</div>';
+
+			let options = [];
+
+			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
+				$.each(edit.multilist2.data[fieldId], function (id, title) {
+					if (typeof title === 'object') {
+						options.push('<optgroup label="' + id + '">');
+
+						$.each(title, function (grp_id, grp_title) {
+							options.push('<option value="' + grp_id + '">' + grp_title + '</option>');
+						});
+
+						options.push('</optgroup>');
+
+					} else {
+						options.push('<option value="' + id + '">' + title + '</option>');
+					}
+				});
+			}
+
+
+			attributes = attributes.replace(/\!\:\:/g, '"');
+			attributes = attributes.replace(/\!\:/g, "'");
+
+			let id = this.keygen();
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELD\]/g,      field);
+			tpl = tpl.replace(/\[ATTRIBUTES\]/g, attributes);
+			tpl = tpl.replace(/\[OPTIONS\]/g,    options.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#multilist2-' + fieldId + ' .multilist2-items').append(tpl);
+
+			$('#multilist2-item-' + id + ' select').select2({
+				language: 'ru',
+				theme: 'bootstrap',
+			});
+
+			$('#multilist2-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	},
+
+
+	/**
+	 *
+	 */
+	fieldDataset: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param fieldName
+		 * @param themePath
+		 */
+		addItem: function (fieldId, fieldName, themePath) {
+
+			let tpl =
+				'<tr class="field-dataset-item" id="field-dataset-item-[ID]" style="display: none">' +
+				'[FIELDS] ' +
+				'<td><img src="[THEME_PATH]/img/delete.png" alt="X" class="field-dataset-delete"' +
+						 'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
+				'</tr>';
+
+			let tplField = '<td>' +
+						       '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+						   '</td>';
+
+			let fields = [];
+			let key    = this.keygen();
+
+			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
+				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
+					let tplFieldCustom = tplField;
+
+					if (field['code']) {
+						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
+						tplFieldCustom = tplFieldCustom.replace(/\[NUM\]/g,        key);
+						tplFieldCustom = tplFieldCustom.replace(/\[CODE\]/g,       field['code']);
+						tplFieldCustom = tplFieldCustom.replace(/\[VALUE\]/g,      '');
+						tplFieldCustom = tplFieldCustom.replace(/\[ATTRIBUTES\]/g, field['attributes'] || '');
+
+						fields.push(tplFieldCustom);
+					}
+				});
+			}
+
+
+			let id = fieldId + '-' + key;
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELDS\]/g,     fields.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#field-dataset-' + fieldId + ' .field-dataset-items').append(tpl);
+			$('#field-dataset-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	}
 };
 
 
@@ -338,6 +557,5 @@ function mceSetup(id, opt) {
     for (k in opt) {
         options[k] = opt[k];
     }
-    tinymce.remove();
 	tinymce.init(options);
 }

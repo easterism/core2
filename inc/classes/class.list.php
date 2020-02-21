@@ -233,18 +233,28 @@ class listTable extends initList {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $is = $this->db->fetchCol("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ? AND table_name = ?", [$this->getDbSchema(), $this->table]);
-            $noauthor = true;
-            if (in_array('author', $is)) $noauthor = false;
+            $is = $this->db->fetchCol("
+                SELECT column_name 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE table_schema = ? 
+                  AND table_name = ?
+            ", [
+                $this->getDbSchema(),
+                $this->table
+            ]);
+
             if (in_array('seq', $is)) $this->is_seq = true;
 
-            if ($this->checkAcl($this->resource, 'list_owner') && !$this->checkAcl($this->resource, 'list_all')) {
-                if ($noauthor) {
+            if (in_array('author', $is) &&
+                $this->checkAcl($this->resource, 'list_owner') &&
+                ! $this->checkAcl($this->resource, 'list_all')
+            ) {
+                if ( ! in_array('author', $is)) {
                     throw new \Exception("Данные не содержат признака автора!");
                 } else {
-                    $auth     = \Zend_Registry::get('auth');
+                    $auth        = \Zend_Registry::get('auth');
                     $questions[] = $auth->NAME;
-                    $search = " AND author=?";
+                    $search      = " AND author = ?";
                 }
             }
         }
@@ -287,6 +297,37 @@ class listTable extends initList {
                                     }
                                     if ($search_value[0] && $search_value[1]) {
                                         $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') BETWEEN ? AND ?";
+                                        $questions[] = $search_value[0];
+                                        $questions[] = $search_value[1];
+                                    }
+                                } else {
+                                    $replace = str_replace("ADD_SEARCH1", $search_value[0], $next['field']);
+                                    $replace = str_replace("ADD_SEARCH2", $search_value[1], $replace);
+                                    $search .= " AND " . $replace;
+                                }
+
+                            } elseif ($next['type'] == 'number') {
+                                try {
+                                    if ( ! empty($search_value[0]) && ! is_numeric($search_value[0])) {
+                                        throw new Exception($this->_('Некорректно указан параметр числового поиска'));
+                                    }
+                                    if ( ! empty($search_value[1]) && ! is_numeric($search_value[1])) {
+                                        throw new Exception($this->_('Некорректно указан параметр числового поиска'));
+                                    }
+                                } catch (Exception $e) {
+                                    $this->error = $e->getMessage();
+                                }
+                                if (strpos($next['field'], "ADD_SEARCH1") === false && strpos($next['field'], "ADD_SEARCH2") === false) {
+                                    if ($search_value[0] && ! $search_value[1]) {
+                                        $search .= " AND {$next['field']} >= ?";
+                                        $questions[] = $search_value[0];
+                                    }
+                                    if ( ! $search_value[0] && $search_value[1]) {
+                                        $search .= " AND {$next['field']} <= ?";
+                                        $questions[] = $search_value[1];
+                                    }
+                                    if ($search_value[0] && $search_value[1]) {
+                                        $search .= " AND {$next['field']} BETWEEN ? AND ?";
                                         $questions[] = $search_value[0];
                                         $questions[] = $search_value[1];
                                     }
@@ -372,7 +413,7 @@ class listTable extends initList {
             $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
         }        
 
-        $this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);
+        $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $search, $this->SQL);
         $order = isset($tmp['order']) ? $tmp['order'] : '';
         if (isset($this->table_column[$this->main_table_id]) && is_array($this->table_column[$this->main_table_id])) {
             foreach ($this->table_column[$this->main_table_id] as $seq => $columns) {
@@ -599,7 +640,14 @@ class listTable extends initList {
                     $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'number') {
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
+                    $tpl_date = new Templater2(DOC_ROOT . 'core2/html/' . THEME . "/list/search_number.tpl");
+                    $tpl_date->assign('[ID]',         $searchFieldId);
+                    $tpl_date->assign('[NAME]',       "search[{$this->main_table_id}][$key][]");
+                    $tpl_date->assign('[VALUE_FROM]', ! empty($next[0]) ? $next[0] : '');
+                    $tpl_date->assign('[VALUE_TO]',   ! empty($next[1]) ? $next[1] : '');
+                    $tpl_date->assign("[OUT]",        $value['out']);
+
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl_date->parse());
                 }
                 elseif ($value['type'] == 'date') {
                     $tpl_date = new Templater2(DOC_ROOT . 'core2/html/' . THEME . "/list/search_date.tpl");
@@ -685,6 +733,8 @@ class listTable extends initList {
                     $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'multilist') {
+                    $tpl2->assign("{ATTR}", $value['in']);
+
                     $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
                     foreach ($temp as $row) {
                         $k = current($row);
@@ -1158,8 +1208,7 @@ class listTable extends initList {
             echo $this->HTML;
             if ($this->fixHead) {
                 echo "
-                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead.min.js\"></script>
-                <script type=\"text/javascript\" language=\"javascript\" src=\"core2/ext/jQuery/plugins/floatThead/dist/jquery.floatThead-slim.min.js\"></script>
+                <script type=\"text/javascript\" src=\"core2/vendor/belhard/floatthead/dist/jquery.floatThead.min.js\"></script>
                 <script>
                     $(function(){
                         listx.fixHead('list{$this->resource}');

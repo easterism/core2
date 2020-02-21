@@ -5,6 +5,8 @@ require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
 use Zend\Mail;
 use Zend\Mail\Transport;
+use Zend\Mime\Mime;
+use Zend\Mime\Part as MimePart;
 
 /**
  * Class Email
@@ -265,7 +267,7 @@ class Email {
                     $zend_db->commit();
 
                     if ($immediately) {
-                        $is_send = $this->zend_send(
+                        $is_send = $this->zendSend(
                             $this->mail_data['from'],
                             $this->mail_data['to'],
                             $this->mail_data['subject'],
@@ -280,8 +282,7 @@ class Email {
                         }
                     }
 
-                }
-                else {
+                } else {
                     $location = $db->getModuleLocation('queue');
                     require_once $location . '/ModQueueController.php';
 
@@ -294,7 +295,7 @@ class Email {
                     $queue->createMail($this->mail_data);
 
                     if ($immediately) {
-                        $is_send = $this->zend_send(
+                        $is_send = $this->zendSend(
                             $this->mail_data['from'],
                             $this->mail_data['to'],
                             $this->mail_data['subject'],
@@ -312,7 +313,7 @@ class Email {
 
             }
             else {
-                $is_send = $this->zend_send(
+                $is_send = $this->zendSend(
                     $this->mail_data['from'],
                     $this->mail_data['to'],
                     $this->mail_data['subject'],
@@ -343,7 +344,7 @@ class Email {
     public function sendImmediately() {
 
         try {
-            $is_send = $this->zend_send(
+            $is_send = $this->zendSend(
                 $this->mail_data['from'],
                 $this->mail_data['to'],
                 $this->mail_data['subject'],
@@ -377,17 +378,36 @@ class Email {
      * @param array $files
      *
      * @return bool Успешна или нет отправка
+     * @throws \Zend_Exception
      */
-    private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
+    private function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
+
+        $config = \Zend_Registry::get('config');
 
         $message = new Mail\Message();
         $message->setEncoding('UTF-8');
-        if (is_array($from)) {
-            if (!empty($from[1])) $from = [$from[1] => $from[0]];
-            else $from = $from[0];
+
+        $reply_from = '';
+
+        if (isset($config->mail) && isset($config->mail->force_from)) {
+            $from_explode = explode('<', $config->mail->force_from);
+            $reply_from   = $from;
+
+            if ( ! empty($from_explode[1])) {
+                $from = [
+                    trim($from_explode[1], '<> '),
+                    trim($from_explode[0])
+                ];
+            } else {
+                $from = $config->mail->force_from;
+            }
         }
 
-        $message->addFrom($from);
+        if (is_array($from)) {
+            $message->addFrom($from[0], $from[1]);
+        } else {
+            $message->addFrom($from);
+        }
 
         if (is_array($to)) {
             $message->addTo($to[0], $to[1]);
@@ -414,35 +434,43 @@ class Email {
 
         $transport = new Transport\Sendmail();
 
-        $cnf = \Zend_Registry::get('config');
-        if (!empty($cnf->mail->server)) {
-            //$tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
+        if ( ! empty($config->mail->server)) {
+            $config_smtp = [
+                'host' => $config->mail->server
+            ];
 
-            $configSmtp = array(
-                'host' => $cnf->mail->server
-            );
-
-            if (!empty($cnf->mail->port)) {
-                $configSmtp['port'] = $cnf->mail->port;
-            }
-            if (!empty($cnf->mail->auth)) {
-                $configSmtp['connection_class'] = $cnf->mail->auth;
-                if (!empty($cnf->mail->username)) {
-                    $configSmtp['connection_config']['username'] = $cnf->mail->username;
-                }
-                if (!empty($cnf->mail->password)) {
-                    $configSmtp['connection_config']['password'] = $cnf->mail->password;
-                }
-                if (!empty($cnf->mail->ssl)) {
-                    $configSmtp['connection_config']['ssl'] = $cnf->mail->ssl;
-                }
-
-                $message->setFrom($cnf->mail->username);
-                $message->setReplyTo($from);
+            if ( ! empty($config->mail->port)) {
+                $config_smtp['port'] = $config->mail->port;
             }
 
+            if ( ! empty($config->mail->auth)) {
+                $config_smtp['connection_class'] = $config->mail->auth;
+
+                if ( ! empty($config->mail->username)) {
+                    $config_smtp['connection_config']['username'] = $config->mail->username;
+                }
+                if ( ! empty($config->mail->password)) {
+                    $config_smtp['connection_config']['password'] = $config->mail->password;
+                }
+                if ( ! empty($config->mail->ssl)) {
+                    $config_smtp['connection_config']['ssl'] = $config->mail->ssl;
+                }
+
+                $message->setFrom($config->mail->username);
+
+
+                if ($reply_from) {
+                    if (is_array($reply_from)) {
+                        $message->setReplyTo($reply_from[0], $reply_from[1]);
+                    } else {
+                        $message->setReplyTo($reply_from);
+                    }
+                }
+            }
+
+
+            $options   = new Transport\SmtpOptions($config_smtp);
             $transport = new Transport\Smtp();
-            $options   = new Transport\SmtpOptions($configSmtp);
             $transport->setOptions($options);
         }
 

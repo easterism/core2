@@ -7,6 +7,6 @@
 	<option value="5">флаг</option>
 	<option value="6">значения</option>
 </select>
-<select id="yyy" style="display:none" value="" name="enum[]"></select>
+<select id="yyy" style="display:none;width: 200px;" value="" name="enum[]"></select>
 <input type="text" class="input" name="list[]" style="display:none"/>
 <br/>

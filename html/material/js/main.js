@@ -40,7 +40,48 @@ var main_menu = {
                 $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
             }
         });
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	sendFeedback: function () {
+
+		let $textarea      = $('#user-section .nav-feedback textarea');
+		let moduleTitle    = $('.navbar-header .module-title').text();
+		let submoduleTitle = $('.navbar-header .module-action').text();
+
+		preloader.show();
+		$.ajax({
+			method: 'POST',
+			url: 'index.php?module=profile&action=messages&data=send_feedback',
+			data: {
+				"message" : $textarea.val(),
+				"location_href" : location.href,
+				"location_module" : moduleTitle,
+				"location_submodule" : submoduleTitle
+			},
+			dataType: 'json'
+		}).done(function (data) {
+			preloader.hide();
+
+			if (data.status !== 'success') {
+				let message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
+				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
+
+			} else {
+				$('#user-section .nav-feedback a').popover('hide');
+				$textarea.val('');
+				swal("Сообщение отправлено", "", 'success').catch(swal.noop);
+			}
+
+		}).fail(function (error) {
+			preloader.hide();
+
+			swal("Ошибка отправки сообщения", 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+		});
+	}
 };
 
 
@@ -91,7 +132,7 @@ function changeRoot(obj, to, actionSelect) {
 
                 var module_id = parent.childNodes[i].id;
 				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
-					if ( ! actionSelect) {
+					if ( ! actionSelect || actionSelect === 'index') {
 						$(parent.childNodes[i]).find('>a').addClass('index-select');
 					} else {
 						$(parent.childNodes[i]).find('>a').removeClass('index-select');
@@ -566,10 +607,6 @@ function removePDF() {
 }
 
 function resize() {
-    $("#main_body > .pdf-panel").css({
-        'margin-top': $(document).scrollTop() - 30
-    });
-
     $("#main_body .pdf-main-panel").css({
         'height': ($("body").height() - ($("#navbar-top").height()) - 40)
     });
@@ -608,6 +645,7 @@ $(document).ready(function() {
         }
 		if ($('#submodule-profile-messages')[0]) {
 			$('#user-section .nav-messages').addClass('show');
+			$('#user-section .nav-feedback').addClass('show');
             $('.dropdown-profile.messages').addClass('show');
 		}
         if ($('#module-settings')[0]) {
@@ -686,7 +724,7 @@ $(document).ready(function() {
         $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").removeClass('module-hover');
     });
 
-    if ($.cookie('sidebar_collapse')) {
+    if (localStorage.getItem('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
         if ($(window).width() >= 768) {
             $('#main').toggleClass('s-toggle');
@@ -707,10 +745,10 @@ $(document).ready(function() {
 			}
 		}
 
-		if ($.cookie('sidebar_collapse')) {
-            $.cookie('sidebar_collapse', '');
+		if (localStorage.getItem('sidebar_collapse')) {
+			localStorage.setItem('sidebar_collapse', '');
 		} else {
-            $.cookie('sidebar_collapse', 1);
+			localStorage.setItem('sidebar_collapse', 1);
 		}
     });
 
@@ -722,7 +760,7 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').hide();
                 }
-                $.cookie('sidebar_collapse', 1);
+				localStorage.setItem('sidebar_collapse', 1);
                 return false;
             }
             if (phase === "move" && ((width < 768 && direction === "left") || (width >= 768 && direction === "right"))) {
@@ -730,11 +768,26 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').show();
                 }
-                $.cookie('sidebar_collapse', '');
+				localStorage.setItem('sidebar_collapse', '');
                 return false;
             }
         }
     });
+
+    let tplFeedback =
+		"<div class=\"feedback-container\">" +
+			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
+			"<button class=\"btn btn-info pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
+			"<div class=\"clearfix\"></div>" +
+		"</div>";
+
+	$('#user-section .nav-feedback a').popover({
+		"placement" : "bottom",
+		"trigger" : "manual",
+		"title" : "Обратная связь",
+		"html" : true,
+		"content" : tplFeedback
+	});
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();

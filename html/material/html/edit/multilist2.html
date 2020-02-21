@@ -1,0 +1,25 @@
+<div class="multilist2-container" id="multilist2-[FIELD_ID]">
+    <div class="multilist2-items">
+
+        <!-- BEGIN item -->
+        <div class="multilist2-item" id="multilist2-item-[ID]">
+            <select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]></select>
+            <img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"
+                 onclick="edit.multilist2.deleteItem($('#multilist2-item-[ID]'))">
+        </div>
+        <!-- END item -->
+    </div>
+
+    <a class="btn btn-link" href="#" onclick="edit.multilist2.addItem('[FIELD_ID]', '[FIELD]', '[ATTRIBUTES]', '[THEME_PATH]'); return false">Добавить</a>
+
+    <script>
+        edit.multilist2.data['[FIELD_ID]'] = [OPTIONS];
+
+        $('#multilist2-[FIELD_ID] select').each(function () {
+            $(this).select2({
+                language: 'ru',
+                theme: 'bootstrap',
+            });
+        });
+    </script>
+</div>

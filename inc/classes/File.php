@@ -115,6 +115,22 @@ class File extends \Common {
 
         header("Content-type: {$res2['type']}");
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
+
+
+        if ( ! empty($res2['hash'])) {
+            $etagHeader = (isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : false);
+
+            header("Etag: {$res2['hash']}");
+            header('Cache-Control: public');
+
+            //check if page has changed. If not, send 304 and exit
+            if ($etagHeader == $res2['hash']) {
+                header("HTTP/1.1 304 Not Modified");
+                return '';
+            }
+        }
+
+
         //Если задан размер тамбнейла или если тамбнейла нет в базе
         if (!empty($_GET['size']) || !$res2['thumb']) {
             $image = new Image();
@@ -180,8 +196,8 @@ class File extends \Common {
         $image = new Image();
 
         $base_urn = $action == 'index'
-            ? "index.php?module=$module&filehandler=$table"
-            : "index.php?module=$module&action=$action&filehandler=$table";
+            ? "index.php?module=$module"
+            : "index.php?module=$module&action=$action";
 
         foreach ($res as $key => $value) {
             $type2 = explode("/", $value['type']);
@@ -194,7 +210,7 @@ class File extends \Common {
                 if (!$image->checkGD()) {
                     throw new \Exception("GD not installed", 500);
                 }
-                $file->thumbnail_url = "{$base_urn}&thumbid=" . $value['id'];
+                $file->thumbnail_url = "{$base_urn}&filehandler=$table&thumbid=" . $value['id'];
             }
             else {
                 //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
