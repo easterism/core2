@@ -200,7 +200,7 @@ class CoreController extends Common {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
-            $authNamespace = Zend_Registry::get('auth');
+            $authNamespace = new SessionContainer('Auth');
             if (empty($this->auth->TOKEN) || $this->auth->TOKEN !== $post['action'] || $this->auth->TOKEN !== md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT'])) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
                 return false;
@@ -539,7 +539,7 @@ class CoreController extends Common {
                     if ($noauthor) {
                         throw new \Exception($this->translate->tr("Данные не содержат признака автора!"));
                     } else {
-                        $auth = \Zend_Registry::get('auth');
+                        $auth = new SessionContainer('Auth');
                     }
                 }
                 if ($nodelete) {

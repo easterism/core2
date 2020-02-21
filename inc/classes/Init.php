@@ -242,19 +242,19 @@
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return; //выходим, если авторизация состоялась
             }
 
             $this->detectWebService();
             $this->auth = new StdClass();
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return;
             }
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth);  //DEPRECATED
                 return;
             }
 
@@ -276,10 +276,11 @@
                     $this->closeSession('Y');
                 }
                 Zend_Registry::set('auth', $this->auth);
-            } else {
+            }
+            else {
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
             //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
@@ -561,7 +562,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['action'])) {
+            if (isset($_POST['action']) && !$this->auth->ID) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -1209,10 +1210,10 @@
         }
 
         public function __destruct() {
-            if ($this->config->system->profile && $this->config->system->profile->on) {
+            if ($this->core_config && $this->core_config->profile && $this->core_config->profile->on) {
                 $log = new \Core2\Log('profile');
                 if ($log->getWriter()) {
-                    $log->info('query----------------------->', [$_SERVER['QUERY_STRING']]);
+                    $log->info($_SERVER['REQUEST_METHOD'] . '----------------------->', [$_SERVER['QUERY_STRING']]);
                     $log->info('sql', $this->db->fetchAll("show profiles"));
                 }
             }
@@ -1268,7 +1269,8 @@
                 throw new Exception($translate->tr("Метод не найден"), 60);
             }
 
-        } else {
+        }
+        else {
             if (empty($params['action']) || $params['action'] == 'index') {
                 if ( ! $acl->checkAcl($params['module'], 'access')) {
                     throw new Exception(911);
