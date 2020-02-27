@@ -2065,7 +2065,7 @@ class InstallModule extends \Common {
         foreach ($mods as $m) {
             $deps = $this->searchDependedMods($m);
             //если этот модуль имеет свои зависимости
-            if ($level > 10) $deps = []; //избегаем бесконечной рекурсии при перекрестных зависимостях
+            if ($level > 7) $deps = []; //избегаем бесконечной рекурсии при перекрестных зависимостях
             if (!empty($deps)) {
                 $tmp = $this->getDependedModList($deps, $level + 1);
                 foreach ($tmp as $m_id => $m_info) {

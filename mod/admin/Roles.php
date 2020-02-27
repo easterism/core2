@@ -41,7 +41,7 @@ class Roles extends \Common {
                 $edit->addControl($this->translate->tr("Позиция в иерархии:"), "NUMBER", "maxlength=\"3\" size=\"2\"", "", "", true);
                 $SQL = "SELECT * 
 					  FROM (
-						(SELECT m_id, m_name, module_id, CAST(m.seq AS CHAR), m.access_add
+						(SELECT m_id, m_name, module_id, CAST(m.seq AS CHAR) AS seq, m.access_add
 						  FROM core_modules AS m
 						  WHERE visible='Y')
 						UNION ALL 
@@ -55,7 +55,7 @@ class Roles extends \Common {
 							WHERE sm_id > 0
 							AND s.visible='Y')
 					   ) AS a
-					   ORDER BY 4";
+					   ORDER BY seq + 0";
                 $res = $this->db->fetchAll($SQL);
 
                 $html = '<table>';

@@ -1076,17 +1076,21 @@ class editTable extends initEdit {
                             }
 
                             if ($this->readOnly) {
-                                $out = '';
-                                foreach ($options as $row) {
-                                    $real_value = explode('"', $row[0]);
-                                    $real_value = $real_value[0];
-                                    if (in_array($real_value, $value['default'])) {
-                                        $out = $row[1];
+                                $options_out = '';
+                                foreach ($options as $options_key => $options_value) {
+                                    if (is_array($options_value)) {
+                                        if (isset($options_value[$value['default']])) {
+                                            $options_out = $options_value[$value['default']];
+                                            break;
+                                        }
+
+                                    } elseif (is_scalar($options_value) && $options_key == $value['default']) {
+                                        $options_out = $options_value;
                                         break;
                                     }
                                 }
 
-                                $controlGroups[$cellId]['html'][$key] .= $out;
+                                $controlGroups[$cellId]['html'][$key] .= $options_out;
 
                             } else {
                                 $this->scripts['select2'] = true;
@@ -1122,18 +1126,27 @@ class editTable extends initEdit {
                                 }
                             }
 
+
+                            if ( ! is_array($value['default'])) {
+                                $value['default'] = explode(",", $value['default']);
+                            }
+
                             if ($this->readOnly) {
-                                $out = '';
-                                foreach ($options as $row) {
-                                    $real_value = explode('"', $row[0]);
-                                    $real_value = $real_value[0];
-                                    if (in_array($real_value, $value['default'])) {
-                                        $out = $row[1];
-                                        break;
+                                $options_out = [];
+                                foreach ($options as $options_key => $options_value) {
+                                    if (is_array($options_value)) {
+                                        foreach ($options_value as $options_value_id => $options_value_title) {
+                                            if (in_array($options_value_id, $value['default'])) {
+                                                $options_out[] = $options_value_title;
+                                            }
+                                        }
+
+                                    } elseif (is_scalar($options_value) && in_array($options_key, $value['default'])) {
+                                        $options_out[] = $options_value;
                                     }
                                 }
 
-                                $controlGroups[$cellId]['html'][$key] .= $out;
+                                $controlGroups[$cellId]['html'][$key] .= implode(', ', $options_out);
 
                             } else {
                                 $this->scripts['select2'] = true;

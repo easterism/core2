@@ -360,16 +360,12 @@ var loadPDF = function (url) {
     $("#main_body").prepend(
         '<div class="pdf-panel hide">' +
         '<div class="pdf-tool-panel"><button class="btn buttonSmall" onclick="removePDF();">Закрыть</button></div>' +
-        '<div class="pdf-main-panel"><iframe id="pdfiframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+        '<div class="pdf-main-panel"><iframe id="pdfiframe" style="background-color: white;" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
 		'</div>'
     );
 
 	$("#pdfiframe").load( function() {
         $("body").css("overflow", "hidden");
-
-        $("#main_body > .pdf-panel").css({
-            'margin-top'  : $(document).scrollTop() - 5
-        });
 
         $("#main_body .pdf-main-panel").css({
             'height'      : ($("body").height() - ($("#menuContainer").height()) - 41),
