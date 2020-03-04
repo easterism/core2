@@ -305,7 +305,7 @@ var edit = {
     /**
      * @param toggleObject
      */
-    toggleGroup(toggleObject) {
+    toggleGroup: function(toggleObject) {
         $(toggleObject).parent().next().slideToggle('fast');
     },
 
