@@ -160,19 +160,28 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 			$list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
 			$list->addSearch("IP",                         "ip",            "TEXT");
 
-			$list->SQL = "SELECT DISTINCT user_id,
-								 u.u_login,
-								 last_activity, 
-								 COALESCE(ip, 'не определен') AS ip
-							FROM `core_session` AS s
-								 JOIN core_users AS u ON u.u_id=user_id
-							WHERE NOT EXISTS (SELECT 1 FROM core_session WHERE user_id=s.user_id AND last_activity > s.last_activity)
-							ADD_SEARCH
-							ORDER BY last_activity DESC";
+			$list->SQL = "
+                SELECT u_id,
+					   u.u_login,
+					   (SELECT last_activity
+                        FROM core_session
+                        WHERE u.u_id = user_id
+                        ORDER BY last_activity DESC
+                        LIMIT 1) AS last_activity, 
+					   
+                       COALESCE((SELECT ip
+                                 FROM core_session
+                                 WHERE u.u_id = user_id
+                                 ORDER BY last_activity DESC
+                                 LIMIT 1), 'не определен') AS ip
+				FROM core_users AS u
+				WHERE 1=1 /*ADD_SEARCH*/
+				ORDER BY last_activity DESC
+            ";
 
 			$list->addColumn($this->translate->tr("Пользователь"),               "", "TEXT");
 			$list->addColumn($this->translate->tr("Время последней активности"), "", "DATETIME");
-			$list->addColumn("IP",                         "1%", "TEXT");
+			$list->addColumn("IP",                                               "1", "TEXT");
 
 			$list->editURL 		= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
 			$list->noCheckboxes = 'yes';
