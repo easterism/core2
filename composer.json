@@ -36,7 +36,8 @@
     "monolog/monolog": "1.23.*",
     "guzzlehttp/guzzle": "~6.3",
     "blueimp/jquery-file-upload": "10.*",
-    "firephp/firephp-core": "*"
+    "firephp/firephp-core": "*",
+    "phpseclib/phpseclib": "~2.0"
   },
   "scripts": {
     "post-update-cmd": [

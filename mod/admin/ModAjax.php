@@ -494,6 +494,86 @@ class ModAjax extends ajaxFunc {
         $file_certificate = $data['control']['files|certificate'];
         unset($data['control']['files|certificate']);
 
+
+        $authNamespace = Zend_Registry::get('auth');
+
+        $dataForSave = [
+            'visible'         => $data['control']['visible'],
+            'email'           => $data['control']['email'] ? $data['control']['email'] : null,
+            'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
+            'is_admin_sw'     => $data['control']['is_admin_sw'],
+            'is_email_wrong'  => $data['control']['is_email_wrong'],
+            'is_pass_changed' => $data['control']['is_pass_changed'],
+            'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : null
+        ];
+
+
+        if ( ! empty($file_certificate)) {
+            $sid        = SessionContainer::getDefaultManager()->getId();
+            $upload_dir = $this->config->temp . '/' . $sid;
+
+            $file      = explode("###", $file_certificate);
+            $file_path = $upload_dir . '/' . $file[0];
+
+            if ( ! file_exists($file_path)) {
+                throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
+            }
+
+            $size = filesize($file_path);
+            if ($size !== (int)$file[1]) {
+                throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+            }
+            $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
+
+        } elseif ( ! empty($data['control']['certificate_ta'])) {
+            $dataForSave['certificate'] = $data['control']['certificate_ta'];
+        }
+
+        unset($data['control']['certificate_ta']);
+
+
+        // Получение данных из сертификата
+        if (isset($data['certificate_parse']) && $data['certificate_parse'] == 'Y') {
+            $x509 = new \phpseclib\File\X509();
+            $x509->loadX509($dataForSave['certificate']);
+
+            $subject = $x509->getSubjectDN();
+
+            if ( ! empty($subject) && ! empty($subject['rdnSequence'])) {
+                foreach ($subject['rdnSequence'] as $items) {
+
+                    if ( ! empty($items[0]) && ! empty($items[0]['type'])) {
+                        $value = current($items[0]['value']);
+
+                        switch ($items[0]['type']) {
+                            case 'pkcs-9-at-emailAddress':
+                                if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                                    $dataForSave['email'] = $value;
+                                }
+                                break;
+
+                            case 'id-at-surname':
+                                $data['control']['lastname'] = ! empty($value) ? $value : $data['control']['lastname'];
+                                break;
+
+                            case 'id-at-name':
+                                $value_explode = explode(' ', $value, 2);
+
+                                $data['control']['firstname']  = ! empty($value_explode[0])
+                                    ? $value_explode[0]
+                                    : $data['control']['firstname'];
+
+                                $data['control']['middlename'] = ! empty($value_explode[1])
+                                    ? $value_explode[1]
+                                    : $data['control']['middlename'];
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+
         if ($this->ajaxValidate($data, $fields)) {
             return $this->response;
         }
@@ -502,7 +582,6 @@ class ModAjax extends ajaxFunc {
         $this->db->beginTransaction();
 
         try {
-            $authNamespace = Zend_Registry::get('auth');
             $send_info_sw  = false;
 
             if ($data['control']['email'] &&
@@ -511,41 +590,6 @@ class ModAjax extends ajaxFunc {
             ) {
                 $send_info_sw = true;
             }
-
-            $dataForSave = [
-                'visible'         => $data['control']['visible'],
-                'email'           => $data['control']['email'] ? $data['control']['email'] : null,
-                'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
-                'is_admin_sw'     => $data['control']['is_admin_sw'],
-                'is_email_wrong'  => $data['control']['is_email_wrong'],
-                'is_pass_changed' => $data['control']['is_pass_changed'],
-                'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : null
-            ];
-
-
-            if ( ! empty($file_certificate)) {
-                $sid        = SessionContainer::getDefaultManager()->getId();
-                $upload_dir = $this->config->temp . '/' . $sid;
-
-                $file      = explode("###", $file_certificate);
-                $file_path = $upload_dir . '/' . $file[0];
-
-                if ( ! file_exists($file_path)) {
-                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
-                }
-
-                $size = filesize($file_path);
-                if ($size !== (int)$file[1]) {
-                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
-                }
-                $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
-
-            } elseif ( ! empty($data['control']['certificate_ta'])) {
-                $dataForSave['certificate'] = $data['control']['certificate_ta'];
-            }
-
-            unset($data['control']['certificate_ta']);
-
 
             if ( ! empty($data['control']['u_pass'])) {
                 $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
