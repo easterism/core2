@@ -175,9 +175,6 @@ class User extends \Common {
             $certificate = htmlspecialchars($this->_user->certificate);
         }
 
-        $html_certificate = '<br/><textarea style="min-width:385px;max-width:385px;min-height: 150px" name="control[certificate_ta]">' . ($certificate) . '</textarea>';
-
-
 
         if ( ! $this->_user->u_id) {
             $edit->addControl("Логин:", "TEXT", "maxlength=\"60\" style=\"width:385px\"", "", "", true);
@@ -193,7 +190,7 @@ class User extends \Common {
             $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
         }
 
-        $edit->addControl($this->_("Сертификат:"),                                 "XFILE_AUTO",  "", $html_certificate, "");
+        $edit->addControl($this->_("Сертификат:"),                                 "XFILE_AUTO",  "", $this->editCert($certificate), "");
         $edit->addControl($this->_("Неверный email:"),                             "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
         $edit->addControl($this->_("Предупреждение о смене пароля:"),              "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
         $edit->addControl($this->_("Администратор безопасности (полный доступ):"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
@@ -236,5 +233,24 @@ class User extends \Common {
         } else {
             return $this->table();
         }
+    }
+
+
+    /**
+     * @param $cert
+     * @return string
+     */
+    private function editCert($cert) {
+
+        $html = "
+            <br/>
+            <textarea style=\"min-width:385px;max-width:385px;min-height: 150px\" name=\"control[certificate_ta]\">{$cert}</textarea>
+            <br>
+            <label class=\"text-muted\">
+                <input type=\"checkbox\" name=\"certificate_parse\" value=\"Y\"> Использовать ФИО и email из сертификата
+            </label>
+        ";
+
+        return $html;
     }
 }
