@@ -44,9 +44,9 @@ class Modules extends \Common
         $this->printJs("core2/mod/admin/mod.js");
 
         $tab = new \tabs('mod');
-        $tab->addTab($this->translate->tr("Установленные модули"), $this->app, 170);
-        $tab->addTab($this->translate->tr("Доступные модули"),	 $this->app, 130);
-        $tab->beginContainer($this->translate->tr("Модули"));
+        $tab->addTab($this->_("Установленные модули"), $this->app, 170);
+        $tab->addTab($this->_("Доступные модули"),	 $this->app, 130);
+        $tab->beginContainer($this->_("Модули"));
 
 //$sid = session_id();
         if ($tab->activeTab == 1) {
@@ -150,23 +150,23 @@ class Modules extends \Common
 							 WHERE m_id = '$refid'";
                 $edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
                 if ($refid > 0) {
-                    $edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
+                    $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
                 } else {
-                    $edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", " " . $this->translate->tr("маленикие латинские буквы или цифры"), "", true);
+                    $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", " " . $this->_("маленикие латинские буквы или цифры"), "", true);
                 }
                 $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-                $edit->addControl($this->translate->tr("Системный:"), "RADIO", "", "", "N");
+                $edit->addControl($this->_("Системный:"), "RADIO", "", "", "N");
                 $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-                $edit->addControl($this->translate->tr("Отображаемый:"), "RADIO", "", "", "N");
+                $edit->addControl($this->_("Отображаемый:"), "RADIO", "", "", "N");
                 $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-                $edit->addControl($this->translate->tr("Есть главная страница:"), "RADIO", "", "", "Y");
+                $edit->addControl($this->_("Есть главная страница:"), "RADIO", "", "", "Y");
                 $edit->selectSQL[] = $dep_list;
-                $edit->addControl($this->translate->tr("Зависит от модулей:"), "CHECKBOX", "", "", $selected_dep);
+                $edit->addControl($this->_("Зависит от модулей:"), "MULTISELECT2", "style=\"width:317px\"", "", $selected_dep);
                 $seq = '';
                 if ($refid == 0) {
                     $seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_modules LIMIT 1");
                 }
-                $edit->addControl($this->translate->tr("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq);
+                $edit->addControl($this->_("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq);
                 $access_default 	= array();
                 $custom_access 		= '';
                 if ($refid > 0) {
@@ -210,12 +210,12 @@ class Modules extends \Common
                     '{delete_all_disabled}' => (!empty($access_default['delete_all']) ? $disabled : ''),
                 ));
                 $access = $tpl->parse();
-                $edit->addControl($this->translate->tr("Доступ по умолчанию:"), "CUSTOM", $access);
+                $edit->addControl($this->_("Доступ по умолчанию:"), "CUSTOM", $access);
 
                 //CUSTOM ACCESS
                 $rules = '<div id="xxx">' . $custom_access . '</div>';
                 $rules .= '<div><span id="new_attr" class="newRulesModule" onclick="modules.newRule(\'xxx\')">Новое правило</span></div>';
-                $edit->addControl($this->translate->tr("Дополнительные правила доступа:"), "CUSTOM", $rules);
+                $edit->addControl($this->_("Дополнительные правила доступа:"), "CUSTOM", $rules);
                 $edit->addButtonSwitch('visible', 	$this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $refid));
                 /*if ($is_visible) {
                     if (count($list_name_modules) > 0) {
@@ -231,7 +231,7 @@ class Modules extends \Common
 
 
                 $edit->back = $this->app;
-                $edit->addButton($this->translate->tr("Отмена"), "load('$this->app')");
+                $edit->addButton($this->_("Отмена"), "load('$this->app')");
                 $edit->save("xajax_saveModule(xajax.getFormValues(this.id))");
                 $edit->showTable();
 
@@ -239,7 +239,7 @@ class Modules extends \Common
                 // Субмодули
                 //---------------------------
                 $tab = new \tabs("submods");
-                $tab->beginContainer($this->translate->tr('Субмодули'));
+                $tab->beginContainer($this->_('Субмодули'));
                 if (isset($_GET['editsub']) && $_GET['editsub'] != '') {
                     $edit = new \editTable('submod');
                     $edit->SQL  = "SELECT  sm_id,
@@ -254,20 +254,20 @@ class Modules extends \Common
 								   AND sm_id = '" . $_GET['editsub'] . "'";
                     $res = $this->db->fetchRow($edit->SQL);
 
-                    $edit->addControl($this->translate->tr("Субмодуль:"), "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
+                    $edit->addControl($this->_("Субмодуль:"), "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
 
                     if ($_GET['editsub'] > 0) {
-                        $edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
+                        $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
                     } else {
-                        $edit->addControl($this->translate->tr("Идентификатор:"), "TEXT", "maxlength=\"20\"", $this->translate->tr(" маленикие латинские буквы или цифры"), "", true);
+                        $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", $this->_(" маленикие латинские буквы или цифры"), "", true);
                     }
-                    $edit->addControl($this->translate->tr("Адрес внешнего ресурса:"), "TEXT");
+                    $edit->addControl($this->_("Адрес внешнего ресурса:"), "TEXT");
                     $seq = '1';
                     if (empty($_GET['editsub'])) {
                         $seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_submodules WHERE m_id = ? LIMIT 1", $refid);
                         if (!$seq) $seq = '1';
                     }
-                    $edit->addControl($this->translate->tr("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq, true);
+                    $edit->addControl($this->_("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq, true);
 
                     $access_default 	= array();
                     $custom_access 		= '';
@@ -309,17 +309,17 @@ class Modules extends \Common
                     ));
 
                     $access = $tpl->parse();
-                    $edit->addControl($this->translate->tr("Доступ по умолчанию:"), "CUSTOM", $access);
+                    $edit->addControl($this->_("Доступ по умолчанию:"), "CUSTOM", $access);
 
                     $rules = '<div id="xxxsub">' . $custom_access . '</div>';
                     $rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="modules.newRule(\'xxxsub\')">Новое правило</span></div>';
-                    $edit->addControl($this->translate->tr("Дополнительные правила доступа:"), "CUSTOM", $rules);
+                    $edit->addControl($this->_("Дополнительные правила доступа:"), "CUSTOM", $rules);
 
                     $edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_submodules WHERE visible = 'Y' AND sm_id=? LIMIT 1", $_GET['editsub']));
 
                     if (!$_GET['editsub']) $edit->setSessFormField('m_id', $refid);
                     $edit->back = $this->app . "&edit=" . $refid;
-                    $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$refid}')");
+                    $edit->addButton($this->_("Отменить"), "load('{$this->app}&edit={$refid}')");
                     $edit->save("xajax_saveModuleSub(xajax.getFormValues(this.id))");
 
                     $edit->showTable();
@@ -335,9 +335,9 @@ class Modules extends \Common
 							FROM core_submodules
 							WHERE m_id = '$refid'
 						   ORDER BY seq, sm_name";
-                $list->addColumn($this->translate->tr("Субмодуль"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Путь"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Позиция"), "", "TEXT");
+                $list->addColumn($this->_("Субмодуль"), "", "TEXT");
+                $list->addColumn($this->_("Путь"), "", "TEXT");
+                $list->addColumn($this->_("Позиция"), "", "TEXT");
                 $list->addColumn("", "1%", "STATUS_INLINE", "core_submodules.visible");
 
                 $list->paintCondition	= "'TCOL_05' == 'N'";
@@ -366,23 +366,35 @@ class Modules extends \Common
 							FROM core_modules
 							WHERE m_id > 0
 						   ORDER BY seq";
-                $list->addColumn($this->translate->tr("Модуль"), "", "HTML");
-                $list->addColumn($this->translate->tr("Идентификатор"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Версия"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Системный"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Отображаемый"), "", "TEXT");
-                $list->addColumn($this->translate->tr("Позиция"), "1%", "TEXT");
-                $list->addColumn($this->translate->tr("Действие"), "70px", "BLOCK", "align=\"center\"");
-                $list->addColumn("", "1%", "STATUS_INLINE", "core_modules.visible");
+                $list->addColumn($this->_("Модуль"),        "250", "HTML");
+                $list->addColumn($this->_("Идентификатор"), "150", "TEXT");
+                $list->addColumn($this->_("Версия"),        "",    "TEXT");
+                $list->addColumn($this->_("Системный"),     "100", "TEXT");
+                $list->addColumn($this->_("Отображаемый"),  "120", "TEXT");
+                $list->addColumn($this->_("Позиция"),       "80",  "TEXT");
+                $list->addColumn($this->_("Действие"),      "70",  "BLOCK", "", "", false);
+                $list->addColumn("",                        "1",   "STATUS_INLINE", "core_modules.visible");
 
-                $data = $list->getData();
-                $mods = array();
-                foreach ($data as $key => $val) {
-                    $mods[$val[2]] = $val[0];
-                    $data[$key][7] = "<div style=\"display: inline-block;\" onclick=\"modules.uninstallModule('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
-				                  <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . strip_tags($val[1]) . "', '".$val[3]."', '".$val[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>";
+                $list->getData();
+                $mods = [];
+                foreach ($list->data as $key => $row) {
+                    // Системный
+                    $list->data[$key][4] = $row[4] == 'Y'
+                        ? '<span class="text-info">да</span>'
+                        : '<span class="text-success">нет</span>';
+
+                    // Отображаемый
+                    $list->data[$key][5] = $row[5] == 'Y'
+                        ? '<span class="text-info">да</span>'
+                        : '<span class="text-warning">нет</span>';
+
+                    // Действие
+                    $mods[$row[2]] = $row[0];
+                    $list->data[$key][7] = "
+                        <div style=\"display: inline-block;\" onclick=\"modules.uninstallModule('" . strip_tags($row[1]) . "', '".$row[3]."', '".$row[0]."');\"><img src=\"core2/html/".THEME."/img/box_uninstall.png\" border=\"0\" title=\"Разинсталировать\" /></div>
+                        <div style=\"display: inline-block;\" onclick=\"modules.refreshFiles('" . strip_tags($row[1]) . "', '".$row[3]."', '".$row[2]."');\"><img src=\"core2/html/".THEME."/img/page_refresh.png\" border=\"0\" title=\"Перезаписать файлы\" /></div>
+                    ";
                 }
-                $list->data = $data;
                 $list->paintCondition	= "'TCOL_07' == 'N'";
                 $list->paintColor		= "ffffee";
 
@@ -451,7 +463,7 @@ class Modules extends \Common
                     $edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
                 }
 
-                $edit->classText['SAVE'] = $this->translate->tr("Загрузить");
+                $edit->classText['SAVE'] = $this->_("Загрузить");
                 $edit->back              = $this->app . "&tab_mod=" . $tab->activeTab;
                 $edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
                 $edit->showTable();
@@ -465,7 +477,7 @@ class Modules extends \Common
                 $res = $this->db->fetchRow("SELECT name, version, readme, install_info
                                         FROM core_available_modules
                                         WHERE id=?", $avail_id);
-                $title = "<h2><b>" . $this->translate->tr("Инструкция по установке модуля") . "</b></h2>";
+                $title = "<h2><b>" . $this->_("Инструкция по установке модуля") . "</b></h2>";
                 $content = $res['readme'];
                 $inf = unserialize($res['install_info']);
 
@@ -482,7 +494,7 @@ class Modules extends \Common
                 ));
 
                 if (empty($content)) {
-                    $content = $title . "<br>" . $this->translate->tr("Информация по установке отсутствует");
+                    $content = $title . "<br>" . $this->_("Информация по установке отсутствует");
                 } else {
                     $content = $title . $content;
                 }
@@ -498,8 +510,8 @@ class Modules extends \Common
                     $edit->readOnly = true;
                 }
 
-                $edit->addButton($this->translate->tr("Отмена"), "load('$this->app&tab_mod=2')");
-                $edit->addButtonCustom('<input class="button" type="button" value="' . $this->translate->tr("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $avail_id . '\')">');
+                $edit->addButton($this->_("Отмена"), "load('$this->app&tab_mod=2')");
+                $edit->addButtonCustom('<input class="button" type="button" value="' . $this->_("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $avail_id . '\')">');
                 $edit->showTable();
 
                 die;
@@ -525,19 +537,19 @@ class Modules extends \Common
             //список доступных модулей
             $list = new \listTable('mod_available');
 
-            $list->addSearch($this->translate->tr("Имя модуля"),      '`name`',  	'TEXT');
-            $list->addSearch($this->translate->tr("Идентификатор"),	'module_id','TEXT');
+            $list->addSearch($this->_("Имя модуля"),      '`name`',  	'TEXT');
+            $list->addSearch($this->_("Идентификатор"),	'module_id','TEXT');
 
             $list->SQL = "SELECT 1";
 //        $list->extOrder = true;
-            $list->addColumn($this->translate->tr("Имя модуля"), "200px", "TEXT", "", "", "");
-            $list->addColumn($this->translate->tr("Идентификатор"), "200px", "TEXT", "", "", "");
-            $list->addColumn($this->translate->tr("Описание"), "", "TEXT", "", "", "");
-            $list->addColumn($this->translate->tr("Зависимости"), "200px", "BLOCK", "", "", "");
-            $list->addColumn($this->translate->tr("Версия"), "150px", "BLOCK", "", "", "");
-            $list->addColumn($this->translate->tr("Автор"), "150px", "TEXT", "", "", "");
-            $list->addColumn($this->translate->tr("Системный"), "50px", "TEXT", "", "", "");
-            $list->addColumn($this->translate->tr("Действие"), "66", "BLOCK", 'align=center', "", "");
+            $list->addColumn($this->_("Имя модуля"), "200px", "TEXT", "", "", "");
+            $list->addColumn($this->_("Идентификатор"), "200px", "TEXT", "", "", "");
+            $list->addColumn($this->_("Описание"), "", "TEXT", "", "", "");
+            $list->addColumn($this->_("Зависимости"), "200px", "BLOCK", "", "", "");
+            $list->addColumn($this->_("Версия"), "150px", "BLOCK", "", "", "");
+            $list->addColumn($this->_("Автор"), "150px", "TEXT", "", "", "");
+            $list->addColumn($this->_("Системный"), "50px", "TEXT", "", "", "");
+            $list->addColumn($this->_("Действие"), "66", "BLOCK", 'align=center', "", "");
             $list->getData();
             //поиск
             $where_search = '';
@@ -586,12 +598,12 @@ class Modules extends \Common
             $_GET['_page_mod_available'] = !empty($_GET['_page_mod_available']) ? (int)$_GET['_page_mod_available'] : 0;
 
             $install = new InstallModule();
-            foreach ($copy_list as $val) {
-                $arr[0] = $val['id'];
-                $arr[1] = ($val['module_group'] ? "/" . $val['module_group'] : '') . $val['name'];
-                $arr[2] = $val['module_id'];
-                $arr[3] = $val['descr'];
-                $mData = unserialize(htmlspecialchars_decode($val['install_info']));
+            foreach ($copy_list as $row) {
+                $arr[0] = $row['id'];
+                $arr[1] = ($row['module_group'] ? "/" . $row['module_group'] : '') . $row['name'];
+                $arr[2] = $row['module_id'];
+                $arr[3] = $row['descr'];
+                $mData = unserialize(htmlspecialchars_decode($row['install_info']));
                 $arr[4] = '';
                 //зависимости модулей
                 $Inf = !empty($mData['install']['dependent_modules']) ? $mData['install']['dependent_modules'] : array();
@@ -617,44 +629,44 @@ class Modules extends \Common
                     //проверяем в соответствии с условиямив се ли нужные модули установлены
                     $deps = $install->getNeedToInstallDependedModList($Inf['m']);
                 } elseif (!empty($Inf)) {
-                    $deps[] = "<span style=\"color: red;\">" . $this->translate->tr("Неверный install.xml") . "</span>";
+                    $deps[] = "<span style=\"color: red;\">" . $this->_("Неверный install.xml") . "</span>";
                 }
                 $arr[4] = implode("<br>", $deps);
 
-                $arr[5] = $val['version'];
+                $arr[5] = $row['version'];
                 $arr[6] = isset($mData['install']['author']) ? $mData['install']['author'] : '';
                 $arr[7] = isset($mData['install']['module_system']) && $mData['install']['module_system'] == 'Y' ? "Да" : "Нет";
 
                 //кнопка установки
                 $arr[8] = "";
-                if (!empty($allMods[$val['module_id']]) && $val['version'] <= $allMods[$val['module_id']]) {
+                if (!empty($allMods[$row['module_id']]) && $row['version'] <= $allMods[$row['module_id']]) {
 //				$arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Уже установлен\" border=\"0\"/>";
                 } elseif (!empty($deps)) {
 //				$arr[8] = "<img onclick=\"alert('Сначала установите модули: " . implode(", ", $needToInstall) . "')\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
                     $arr[8] = "<img src=\"core2/html/".THEME."/img/box_out_disable.png\" title=\"Требуется установка дополнительных модулей\" border=\"0\"/>";
                 } else {
-                    $arr[8] = "<img  onclick=\"installModule('{$val['name']}', 'v{$val['version']}', '{$val['id']}', {$_GET['_page_mod_available']});\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
+                    $arr[8] = "<img  onclick=\"installModule('{$row['name']}', 'v{$row['version']}', '{$row['id']}', {$_GET['_page_mod_available']});\" src=\"core2/html/".THEME."/img/box_out.png\" border=\"0\" title=\"Установить\"/>";
                 }
-                $arr[8] .= "<img onclick=\"modules.download('{$val['name']}', 'v{$val['version']}', '{$val['id']}');\" src=\"core2/html/".THEME."/img/disk.png\" border=\"0\" title=\"скачать архив\"/>";
+                $arr[8] .= "<img onclick=\"modules.download('{$row['name']}', 'v{$row['version']}', '{$row['id']}');\" src=\"core2/html/".THEME."/img/disk.png\" border=\"0\" title=\"скачать архив\"/>";
 
-                $tmp[$val['module_id']][$val['version']] = $arr;
+                $tmp[$row['module_id']][$row['version']] = $arr;
             }
             //смотрим есть-ли разные версии одного мода
             //если есть, показываем последнюю, осатльные в спойлер
             $copy_list = array();
-            foreach ($tmp as $module_id => $val) {
-                krsort($val, SORT_NATURAL);
-                $max_ver = key($val);
-                $copy_list[$module_id] = $val[$max_ver];
-                unset($val[$max_ver]);
-                if (!empty($val)) {
-                    $copy_list[$module_id][5] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">" . $this->translate->tr("Предыдущие версии") . "</a><br>";
+            foreach ($tmp as $module_id => $row) {
+                krsort($row, SORT_NATURAL);
+                $max_ver = key($row);
+                $copy_list[$module_id] = $row[$max_ver];
+                unset($row[$max_ver]);
+                if (!empty($row)) {
+                    $copy_list[$module_id][5] .= " <a href=\"\" onclick=\"$('.mod_available_{$module_id}').toggle(); return false;\">" . $this->_("Предыдущие версии") . "</a><br>";
                     $copy_list[$module_id][5] .= "<table width=\"100%\" class=\"mod_available_{$module_id}\" style=\"display: none;\"><tbody>";
-                    foreach ($val as $version => $val) {
+                    foreach ($row as $version => $row) {
                         $copy_list[$module_id][5] .= "
                         <tr>
                             <td style=\"border: 0px; padding: 0px;\">{$version}</td>
-                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$val[8]}</td>
+                            <td style=\"border: 0px; text-align: right; padding: 0px;\">{$row[8]}</td>
                         </tr>
                     ";
                     }
@@ -675,10 +687,10 @@ class Modules extends \Common
             $list->setRecordCount(count($copy_list));
             $i = 0;
             $tmp = array();
-            foreach ($copy_list as $val) {
+            foreach ($copy_list as $row) {
                 $i++;
                 if ($i > $from && $i <= $to) {
-                    $tmp[] = $val;
+                    $tmp[] = $row;
                 }
             }
             if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
@@ -702,7 +714,7 @@ class Modules extends \Common
                 $this->db->insert('core_settings', array(
                     'code'           => 'repo',
                     'type'           => 'text',
-                    'system_name'    => $this->translate->tr('Адреса репозиториев для загрузки модулей'),
+                    'system_name'    => $this->_('Адреса репозиториев для загрузки модулей'),
                     'value'    		 => '',
                     'visible'        => 'Y',
                     'is_custom_sw'   => 'Y',
@@ -721,7 +733,7 @@ class Modules extends \Common
 				<span>
 					Создайте дополнительный параметр 'repo', содержащий репозиториев, разделенных ';'  (адреса вида https://REPOSITORY.COM/api/webservice?reg_apikey=YOUR_KEY)
 					<br>
-					<a href=\"#module=admin&action=settings&edit={$s_id}\">" . $this->translate->tr("Указать адреса репозиториев") . "</a>
+					<a href=\"#module=admin&action=settings&edit={$s_id}\">" . $this->_("Указать адреса репозиториев") . "</a>
 				</span>
 			</div>";
 
