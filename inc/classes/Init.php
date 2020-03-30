@@ -190,7 +190,8 @@
 	require_once 'Db.php';
 	require_once 'Common.php';
 	require_once 'Templater.php'; //DEPRECATED
-	require_once 'Templater2.php';
+	require_once 'Templater2.php'; //DEPRECATED
+	require_once 'Templater3.php';
 
 
 	/**
