@@ -275,7 +275,7 @@ a {color: #337AB7}
     background-color: #F0F0F0;
 }
 #user-section .active .dropdown-menu > li.active > a,
-#user-section .active {
+#user-section .active > a {
     background-color: #F0F0F0;
     color: #463265;
 }
@@ -284,6 +284,13 @@ a {color: #337AB7}
     line-height: 30px;
     margin: 0;
     float: left;
+}
+#user-section .dropdown-user-login {
+    font-size: 14px;
+    color: #2e2e2e;
+    line-height: 20px;
+    padding: 0 20px;
+    white-space: nowrap;
 }
 .dropdown-profile,
 .dropdown-billing,
