@@ -79,6 +79,11 @@ class User extends \Common {
                    CONCAT_WS(' ' ,up.lastname, up.firstname, up.middlename),
                    email,
                    r.name,
+                   (SELECT DATE_FORMAT(login_time, '%Y-%m-%d %H:%i')
+                    FROM core_session
+                    WHERE u.u_id = user_id
+                    ORDER BY login_time DESC
+                    LIMIT 1) AS last_login,
                    u.date_added,
                    CASE u.`is_pass_changed` WHEN 'N' THEN 'Да' END AS is_pass_changed,
                    CASE u.`is_email_wrong` WHEN 'Y' THEN 'Да' END AS is_email_wrong,
@@ -91,17 +96,18 @@ class User extends \Common {
             ORDER BY u.date_added DESC
         ";
 
-        $list->addColumn($this->_("Логин"),                "100", "TEXT");
-        $list->addColumn($this->_("Имя"),                  "",    "TEXT");
-        $list->addColumn("Email",                          "155", "TEXT");
-        $list->addColumn($this->_("Роль"),                 "130", "TEXT");
-        $list->addColumn($this->_("Дата регистрации"),     "135", "DATE");
-        $list->addColumn($this->_("Нужно сменить пароль"), "165", "TEXT");
-        $list->addColumn($this->_("Неверный email"),       "125", "TEXT");
-        $list->addColumn($this->_("Админ"),                "1",   "TEXT");
-        $list->addColumn("",                               "1",   "STATUS_INLINE", "core_users.visible");
+        $list->addColumn($this->_("Логин"),                 "100", "TEXT");
+        $list->addColumn($this->_("Имя"),                   "",    "TEXT");
+        $list->addColumn("Email",                           "155", "TEXT");
+        $list->addColumn($this->_("Роль"),                  "130", "TEXT");
+        $list->addColumn($this->_("Дата последнего входа"), "120", "DATETIME");
+        $list->addColumn($this->_("Дата регистрации"),      "135", "DATE");
+        $list->addColumn($this->_("Нужно сменить пароль"),  "120", "TEXT");
+        $list->addColumn($this->_("Неверный email"),        "125", "TEXT");
+        $list->addColumn($this->_("Админ"),                 "1",   "TEXT");
+        $list->addColumn("",                                "1",   "STATUS_INLINE", "core_users.visible");
 
-        $list->paintCondition = "'TCOL_09' == 'N'";
+        $list->paintCondition = "'TCOL_10' == 'N'";
         $list->paintColor     = "fafafa";
         $list->fontColor      = "silver";
 
