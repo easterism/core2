@@ -1533,7 +1533,8 @@ table td.homeTD {
 .clearfix {clear: both}
 
 
-.pdf-panel {
+.pdf-panel,
+.ext-panel {
 	position: fixed;
 	width: 100%;
 	z-index: 400;

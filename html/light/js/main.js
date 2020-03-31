@@ -466,7 +466,10 @@ var loadExt = function (url) {
 		$("body").addClass("ext-open");
 
 		$("#main_body .ext-main-panel").css({
-			'height': $("body").height() - $("#navbar-top").height()
+			'height': $("body").height() - $("#menu-wrapper").height() + 5
+		});
+		$("#main_body .ext-panel").css({
+			'top': $('#menu-wrapper').height()
 		});
 
 		preloader.hide();
@@ -479,11 +482,16 @@ var loadExt = function (url) {
 
 
 function resize() {
-    $("iframe").css('height', $("#rootContainer").height() - ($("#menu-container").height() + 35));
+    $("#main_body > iframe").css('height', $("#rootContainer").height() - ($("#menu-container").height() + 35));
 
-	$("#main_body .ext-main-panel").css({
-		'height': $("body").height() - $("#navbar-top").height()
-	});
+    if ($("#main_body .ext-panel")[0]) {
+		$("#main_body .ext-main-panel").css({
+			'height': $("body").height() - $("#menu-wrapper").height() + 5
+		});
+		$("#main_body .ext-panel").css({
+			'top': $('#menu-wrapper').height()
+		});
+	}
 }
 
 $(function(){
