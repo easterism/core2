@@ -449,9 +449,41 @@ var loadPDF = function (url) {
 
 };
 
+
+/**
+ * @param url
+ */
+var loadExt = function (url) {
+	preloader.show();
+	$("#main_body").prepend(
+		'<div class="ext-panel hidden">' +
+		'<div class="ext-main-panel"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+		'</div>'
+
+	);
+
+	$("#core-iframe").load( function() {
+		$("body").addClass("ext-open");
+
+		$("#main_body .ext-main-panel").css({
+			'height': $("body").height() - $("#navbar-top").height()
+		});
+
+		preloader.hide();
+		$('.ext-panel').removeClass('hidden');
+		$(window).hashchange( function() {
+			$("body").removeClass("ext-open");
+		});
+	});
+};
+
+
 function resize() {
-	//$("#mainContainer").css('padding-top', $("#menu-container").height() + 5);
     $("iframe").css('height', $("#rootContainer").height() - ($("#menu-container").height() + 35));
+
+	$("#main_body .ext-main-panel").css({
+		'height': $("body").height() - $("#navbar-top").height()
+	});
 }
 
 $(function(){

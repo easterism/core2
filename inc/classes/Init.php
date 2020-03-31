@@ -449,7 +449,7 @@
                             throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
                     } else {
-                        return "<script>loadPDF('{$mods['sm_path']}')</script>";
+                        return "<script>loadExt('{$mods['sm_path']}')</script>";
                     }
                 }
             }

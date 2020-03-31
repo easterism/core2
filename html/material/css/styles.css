@@ -2182,10 +2182,12 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */
 :-ms-input-placeholder      {color:#aaa;}
 
+.ext-open,
 .pdf-open {
     overflow: hidden;
 }
-.pdf-panel {
+.pdf-panel,
+.ext-panel {
     position: fixed;
     z-index: 10;
     right: 0;
@@ -2207,7 +2209,8 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .pdf-tool-panel .btn-default:hover {
     border-color: #e6e6e6;
 }
-.pdf-main-panel {
+.pdf-main-panel,
+.ext-main-panel {
     overflow: hidden;
     background-color: #e5e5e5;
 }
