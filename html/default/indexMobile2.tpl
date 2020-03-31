@@ -10,6 +10,8 @@
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
 
+	<!--system_css-->
+
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
@@ -34,5 +36,6 @@
 <div id="rootContainer">
 <!--index-->
 </div>
+<!--system_js-->
 </body>
 </html>

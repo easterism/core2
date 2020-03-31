@@ -24,6 +24,8 @@
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=6" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=11" type="text/css"/>
 
+	<!--system_css-->
+
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
@@ -62,5 +64,6 @@
 <div id="rootContainer">
 <!--index-->
 </div>
+<!--system_js-->
 </body>
 </html>

@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 
+    <!--system_css-->
+
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
@@ -56,5 +58,6 @@
 <div id="rootContainer">
 <!--index-->
 </div>
+<!--system_js-->
 </body>
 </html>
