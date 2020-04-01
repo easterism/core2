@@ -335,14 +335,14 @@ var edit = {
 		 */
 		addItem: function (fieldId, field, attributes, themePath) {
 
-			let tpl =
+			var tpl =
 				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
 				    '<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
 				    '<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
 				         'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
 				'</div>';
 
-			let options = [];
+			var options = [];
 
 			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
 				$.each(edit.multilist2.data[fieldId], function (id, title) {
@@ -365,7 +365,7 @@ var edit = {
 			attributes = attributes.replace(/\!\:\:/g, '"');
 			attributes = attributes.replace(/\!\:/g, "'");
 
-			let id = this.keygen();
+			var id = this.keygen();
 
 			tpl = tpl.replace(/\[ID\]/g, 		 id);
 			tpl = tpl.replace(/\[FIELD\]/g,      field);
@@ -425,23 +425,23 @@ var edit = {
 		 */
 		addItem: function (fieldId, fieldName, themePath) {
 
-			let tpl =
+			var tpl =
 				'<tr class="field-dataset-item" id="field-dataset-item-[ID]" style="display: none">' +
 				'[FIELDS] ' +
 				'<td><img src="[THEME_PATH]/img/delete.png" alt="X" class="field-dataset-delete"' +
 						 'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
 				'</tr>';
 
-			let tplField = '<td>' +
+			var tplField = '<td>' +
 						       '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
 						   '</td>';
 
-			let fields = [];
-			let key    = this.keygen();
+			var fields = [];
+			var key    = this.keygen();
 
 			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
 				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
-					let tplFieldCustom = tplField;
+					var tplFieldCustom = tplField;
 
 					if (field['code']) {
 						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
@@ -456,7 +456,7 @@ var edit = {
 			}
 
 
-			let id = fieldId + '-' + key;
+			var id = fieldId + '-' + key;
 
 			tpl = tpl.replace(/\[ID\]/g, 		 id);
 			tpl = tpl.replace(/\[FIELDS\]/g,     fields.join(''));

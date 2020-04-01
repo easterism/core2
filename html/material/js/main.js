@@ -48,9 +48,9 @@ var main_menu = {
 	 */
 	sendFeedback: function () {
 
-		let $textarea      = $('#user-section .nav-feedback textarea');
-		let moduleTitle    = $('.navbar-header .module-title').text();
-		let submoduleTitle = $('.navbar-header .module-action').text();
+		var $textarea      = $('#user-section .nav-feedback textarea');
+		var moduleTitle    = $('.navbar-header .module-title').text();
+		var submoduleTitle = $('.navbar-header .module-action').text();
 
 		preloader.show();
 		$.ajax({
@@ -67,7 +67,7 @@ var main_menu = {
 			preloader.hide();
 
 			if (data.status !== 'success') {
-				let message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
+				var message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
 				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
 
 			} else {
@@ -716,7 +716,7 @@ $(document).ready(function() {
             );
         }
         if ($('#module-profile')[0]) {
-            let title = $('#module-profile .module-title').html();
+            var title = $('#module-profile .module-title').html();
             $('.dropdown-profile.profile > a').html(title);
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
@@ -727,13 +727,13 @@ $(document).ready(function() {
             $('.dropdown-profile.messages').addClass('show');
 		}
         if ($('#module-settings')[0]) {
-            let title = $('#module-settings .module-title').html();
+            var title = $('#module-settings .module-title').html();
             $('.dropdown-settings > a').html(title);
             $('.dropdown-settings').addClass('show');
             $('#user-section .nav-settings').addClass('show');
         }
         if ($('#module-billing')[0]) {
-            let title = $('#module-billing .module-title').html();
+            var title = $('#module-billing .module-title').html();
             $('.dropdown-billing > a').html(title);
             $('.dropdown-billing').addClass('show');
             $('#user-section .nav-billing').addClass('show');
@@ -852,7 +852,7 @@ $(document).ready(function() {
         }
     });
 
-    let tplFeedback =
+    var tplFeedback =
 		"<div class=\"feedback-container\">" +
 			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
 			"<button class=\"btn btn-info pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
@@ -990,13 +990,13 @@ $(document).ready(function() {
 
 var currentCategory = "";
 $.ui.autocomplete.prototype._renderItem = function( ul, item){
-	let term = this.term.split(' ').join('|');
-	let t 	 = item.label;
+	var term = this.term.split(' ').join('|');
+	var t 	 = item.label;
 
 	if (term) {
 		term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
 
-		let re = new RegExp("(" + term + ")", "gi");
+		var re = new RegExp("(" + term + ")", "gi");
 		t = t.replace(re, "<b>$1</b>");
 	}
 
