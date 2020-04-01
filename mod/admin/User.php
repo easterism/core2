@@ -69,15 +69,22 @@ class User extends \Common {
 
         $list = new \listTable('user');
 
-        $list->addSearch($this->_("Логин"),   "u.u_login", "TEXT");
-        $list->addSearch($this->_("Фамилия"), "up.lastname", "TEXT");
-        $list->addSearch($this->_("Имя"),     "up.firstname", "TEXT");
+        $search_roles = $this->db->fetchPairs("
+            SELECT id,
+                   name
+            FROM core_roles
+        ");
+
+        $list->addSearch($this->_("Логин"), "u.u_login", "TEXT");
+        $list->addSearch($this->_("ФИО"),   "CONCAT_WS(' ', up.lastname, up.firstname, up.middlename)", "TEXT");
+        $list->addSearch("Email",           "u.email", "TEXT");
+        $list->addSearch($this->_("Роль"),  "r.id", "LIST"); $list->sqlSearch[] = $search_roles;
 
         $list->SQL = "
             SELECT u_id,
                    u_login,
-                   CONCAT_WS(' ' ,up.lastname, up.firstname, up.middlename),
-                   email,
+                   CONCAT_WS(' ', up.lastname, up.firstname, up.middlename),
+                   u.email,
                    r.name,
                    (SELECT DATE_FORMAT(login_time, '%Y-%m-%d %H:%i')
                     FROM core_session
@@ -97,7 +104,7 @@ class User extends \Common {
         ";
 
         $list->addColumn($this->_("Логин"),                 "100", "TEXT");
-        $list->addColumn($this->_("Имя"),                   "",    "TEXT");
+        $list->addColumn($this->_("ФИО"),                   "",    "TEXT");
         $list->addColumn("Email",                           "155", "TEXT");
         $list->addColumn($this->_("Роль"),                  "130", "TEXT");
         $list->addColumn($this->_("Дата последнего входа"), "120", "DATETIME");
