@@ -15,6 +15,11 @@
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/sweetalert2.min.css?_=2" type="text/css"/>
+
+    <!--[if lte IE 10]>
+    <link rel="stylesheet" href="core2/html/material/css/sweetalert2-ie.min.css" type="text/css"/>
+    <![endif]-->
+
     <link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 
@@ -32,7 +37,12 @@
     <script type="text/javascript" language="javascript" src="core2/html/material/js/cleave.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js?_=2"></script>
+
+    <!--[if lte IE 10]>
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js?_=2"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/control_datepicker_range.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/material/js/snarl.min.js"></script>

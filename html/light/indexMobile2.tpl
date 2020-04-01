@@ -15,6 +15,11 @@
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
+
+    <!--[if lte IE 10]>
+    <link rel="stylesheet" href="core2/html/light/css/sweetalert2-ie.min.css" type="text/css"/>
+    <![endif]-->
+
     <link rel="stylesheet" href="core2/html/light/css/animate.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/snarl.min.css" type="text/css"/>
 
@@ -31,6 +36,11 @@
     <script type="text/javascript" language="javascript" src="core2/html/light/js/cleave.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/sweetalert2.min.js"></script>
+
+    <!--[if lte IE 10]>
+    <script type="text/javascript" language="javascript" src="core2/html/light/js/sweetalert2-ie.min.js"></script>
+    <![endif]-->
+
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/bootstrap.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/control_datepicker_range.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/snarl.min.js"></script>
