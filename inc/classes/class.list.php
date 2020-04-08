@@ -373,6 +373,9 @@ class listTable extends initList {
                                         }
                                     }
                                 } else {
+                                    $search_value = trim($search_value);
+                                    $search_value = preg_replace('~[\s]{2,}~', ' ', $search_value);
+
                                     if (strpos($next['field'], "ADD_SEARCH") === false) {
                                         $search .= " AND " . $next['field']." LIKE ?";
                                         $questions[] = "%" . $search_value . "%";
