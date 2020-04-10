@@ -372,6 +372,19 @@ class listTable extends initList {
                                             }
                                         }
                                     }
+
+                                } elseif ($next['type'] == 'text_strict') {
+                                    $search_value = trim($search_value);
+                                    $search_value = preg_replace('~[\s]{2,}~', ' ', $search_value);
+
+                                    if (strpos($next['field'], "ADD_SEARCH") === false) {
+                                        $search .= " AND " . $next['field']." LIKE ?";
+                                        $questions[] = $search_value;
+                                    } else {
+                                        $search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
+                                    }
+
+
                                 } else {
                                     $search_value = trim($search_value);
                                     $search_value = preg_replace('~[\s]{2,}~', ' ', $search_value);
@@ -639,7 +652,7 @@ class listTable extends initList {
                     $tpl2->assign("{VALUE}", is_string($value['value']) ? htmlspecialchars($value['value']) : $value['value']);
                 }
 
-                if ($value['type'] == 'text') {
+                if ($value['type'] == 'text' || $value['type'] == 'text_strict') {
                     $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
                 elseif ($value['type'] == 'number') {
