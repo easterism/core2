@@ -28,3 +28,6 @@
 [submodule "mod\\queue\\v2.0.0"]
 	path = mod\\queue\\v2.0.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod\\queue\\v1.6.0"]
+	path = mod\\queue\\v1.6.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
