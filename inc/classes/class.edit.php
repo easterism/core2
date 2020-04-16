@@ -4,6 +4,11 @@ use Zend\Session\Container as SessionContainer;
 
 $counter = 0;
 
+
+/**
+ * Class editTable
+ * @property Core2\Acl $acl
+ */
 class editTable extends initEdit {
 	public $selectSQL				= array();
 	public $buttons					= array();
@@ -556,6 +561,25 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[FIELD]',      $field, $tpl);
                                 $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
                                 $tpl = str_replace('[ATTRIBUTES]', $value['in'], $tpl);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'switch') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+
+                            } else {
+                                $class = isset($value['in']['class']) && is_array($value['in']['class'])
+                                    ? $value['in']['class']
+                                    : 'primary';
+
+                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
+                                $tpl = str_replace('[FIELD_ID]',      $fieldId, $tpl);
+                                $tpl = str_replace('[FIELD]',         $field, $tpl);
+                                $tpl = str_replace('[CHECKED]',       $value['default'] == 'Y' ? 'checked="checked"' : '', $tpl);
+                                $tpl = str_replace('[CHECKED_CLASS]', $value['default'] == 'Y' ? 'checked' : '', $tpl);
+                                $tpl = str_replace('[CLASS]',         $class, $tpl);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
