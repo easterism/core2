@@ -546,12 +546,6 @@ class ModAjax extends ajaxFunc {
                         $value = current($items[0]['value']);
 
                         switch ($items[0]['type']) {
-                            case 'pkcs-9-at-emailAddress':
-                                if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                                    $dataForSave['email'] = $value;
-                                }
-                                break;
-
                             case 'id-at-surname':
                                 $data['control']['lastname'] = ! empty($value) ? $value : $data['control']['lastname'];
                                 break;

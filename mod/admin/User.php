@@ -203,7 +203,9 @@ class User extends \Common {
             $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
         }
 
-        $edit->addControl($this->_("Сертификат:"),                                 "XFILE_AUTO",  "", $this->editCert($certificate), "");
+        $cert_desc = '<br><small class="text-muted">x509</small>';
+
+        $edit->addControl($this->_("Сертификат:") . $cert_desc,                    "XFILE_AUTO",  "", $this->editCert($certificate), "");
         $edit->addControl($this->_("Неверный email:"),                             "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
         $edit->addControl($this->_("Предупреждение о смене пароля:"),              "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
         $edit->addControl($this->_("Администратор безопасности (полный доступ):"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
@@ -260,7 +262,7 @@ class User extends \Common {
             <textarea style=\"min-width:385px;max-width:385px;min-height: 150px\" name=\"control[certificate_ta]\">{$cert}</textarea>
             <br>
             <label class=\"text-muted\">
-                <input type=\"checkbox\" name=\"certificate_parse\" value=\"Y\"> Использовать ФИО и email из сертификата
+                <input type=\"checkbox\" name=\"certificate_parse\" value=\"Y\"> Использовать ФИО из сертификата
             </label>
         ";
 
