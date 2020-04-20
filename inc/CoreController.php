@@ -323,7 +323,7 @@ class CoreController extends Common implements File {
 						$authNamespace->LN 		= $res['lastname'];
 						$authNamespace->FN 		= $res['firstname'];
 						$authNamespace->MN 		= $res['middlename'];
-						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
+						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y';
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
 						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : 0;
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
