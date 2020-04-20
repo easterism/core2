@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="core2/html/light/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/menu.css?_=3" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=14" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=15" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
@@ -56,7 +56,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=4"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=5"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=4"></script>
     <!--[if IE]>

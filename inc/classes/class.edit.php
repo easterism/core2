@@ -570,16 +570,18 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
 
                             } else {
-                                $class = isset($value['in']['class']) && is_array($value['in']['class'])
-                                    ? $value['in']['class']
-                                    : 'primary';
+                                $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
+                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
-                                $tpl = str_replace('[FIELD_ID]',      $fieldId, $tpl);
-                                $tpl = str_replace('[FIELD]',         $field, $tpl);
-                                $tpl = str_replace('[CHECKED]',       $value['default'] == 'Y' ? 'checked="checked"' : '', $tpl);
-                                $tpl = str_replace('[CHECKED_CLASS]', $value['default'] == 'Y' ? 'checked' : '', $tpl);
-                                $tpl = str_replace('[CLASS]',         $class, $tpl);
+                                $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
+                                $tpl = str_replace('[FIELD]',     $field, $tpl);
+                                $tpl = str_replace('[CHECKED_Y]', $value['default'] == $value_y ? 'checked="checked"' : '', $tpl);
+                                $tpl = str_replace('[CHECKED_N]', $value['default'] == $value_n ? 'checked="checked"' : '', $tpl);
+                                $tpl = str_replace('[COLOR]',     $color, $tpl);
+                                $tpl = str_replace('[VALUE_Y]',   $value_y, $tpl);
+                                $tpl = str_replace('[VALUE_N]',   $value_n, $tpl);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
