@@ -163,12 +163,28 @@ class User extends \Common {
             $about_email = $this->_("Отправить информацию об изменении на email");
         }
 
+        $core_config            = \Zend_Registry::getInstance()->get('core_config');
+        $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
+        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+
+
         if ($this->auth->LDAP) {
             unset($fields[7]);
+            unset($fields[8]);
+            unset($fields[10]);
+
+        } else {
+            if ( ! $is_auth_pass_on) {
+                unset($fields[7]);
+                unset($fields[10]);
+            }
+            if ( ! $is_auth_certificate_on) {
+                unset($fields[8]);
+            }
         }
 
         $edit->SQL = $this->db->quoteInto("
-                SELECT " . implode("," . chr(10), $fields) . "
+                SELECT " . implode(",\n", $fields) . "
                 FROM core_users
                    LEFT JOIN core_users_profile AS p ON p.user_id = u_id
                 WHERE `u_id` = ?
@@ -200,14 +216,22 @@ class User extends \Common {
         $edit->addControl($this->_("Отчество:"), "TEXT", "maxlength=\"20\" style=\"width:385px\"", "", "");
 
         if ( ! $this->auth->LDAP) {
-            $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
+            if ( ! $this->auth->LDAP && $is_auth_pass_on) {
+                $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
+            }
+
+            if ($is_auth_certificate_on) {
+                $cert_desc = '<br><small class="text-muted">x509</small>';
+                $edit->addControl($this->_("Сертификат:") . $cert_desc, "XFILE_AUTO", "", $this->editCert($certificate), "");
+            }
         }
 
-        $cert_desc = '<br><small class="text-muted">x509</small>';
-
-        $edit->addControl($this->_("Сертификат:") . $cert_desc,                    "XFILE_AUTO",  "", $this->editCert($certificate), "");
         $edit->addControl($this->_("Неверный email:"),                             "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
-        $edit->addControl($this->_("Предупреждение о смене пароля:"),              "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
+
+        if ( ! $this->auth->LDAP && $is_auth_pass_on) {
+            $edit->addControl($this->_("Предупреждение о смене пароля:"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
+        }
+
         $edit->addControl($this->_("Администратор безопасности (полный доступ):"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
         $edit->addControl($about_email,                                            "CHECKBOX", "", "", "0"); $edit->selectSQL[] = ['Y' => ''];
 
@@ -259,7 +283,7 @@ class User extends \Common {
 
         $html = "
             <br/>
-            <textarea style=\"min-width:385px;max-width:385px;min-height: 150px\" name=\"control[certificate_ta]\">{$cert}</textarea>
+            <textarea style=\"min-width:385px;max-width:385px;min-height: 150px\" name=\"control[certificate_ta]\" placeholder=\"Формат base64\">{$cert}</textarea>
             <br>
             <label class=\"text-muted\">
                 <input type=\"checkbox\" name=\"certificate_parse\" value=\"Y\"> Использовать ФИО из сертификата

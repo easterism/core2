@@ -462,12 +462,18 @@ class ModAjax extends ajaxFunc {
     }
 
 
-	/**
-	 * Сохранение учетной записи пользователя
-	 * @param array $data
-	 * @return xajaxResponse
-	 */
+    /**
+     * Сохранение учетной записи пользователя
+     * @param array $data
+     * @return xajaxResponse
+     * @throws Zend_Exception
+     */
 	public function saveUser($data) {
+
+        $core_config            = \Zend_Registry::getInstance()->get('core_config');
+        $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
+        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+        $is_auth_ldap_on        = $this->config->ldap && $this->config->ldap->active;
 
         $refid  = $this->getSessFormField($data['class_id'], 'refid');
         $fields = [
@@ -480,19 +486,20 @@ class ModAjax extends ajaxFunc {
             'is_pass_changed' => 'req'
         ];
 
+        if ($is_auth_ldap_on || ! $is_auth_pass_on) {
+            unset($fields['is_pass_changed']);
+        }
+
         if ( ! $refid) {
             $fields['u_login'] = 'req';
         }
-        if ( ! $refid && empty($this->config->ldap->active)) {
+        if ( ! $refid && ! $is_auth_ldap_on && $is_auth_pass_on) {
             $fields['u_pass'] = 'req';
         }
 
         $data['control']['firstname']  = trim(strip_tags($data['control']['firstname']));
         $data['control']['lastname']   = trim(strip_tags($data['control']['lastname']));
         $data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
-
-        $file_certificate = $data['control']['files|certificate'];
-        unset($data['control']['files|certificate']);
 
 
         $authNamespace = Zend_Registry::get('auth');
@@ -503,70 +510,76 @@ class ModAjax extends ajaxFunc {
             'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
             'is_admin_sw'     => $data['control']['is_admin_sw'],
             'is_email_wrong'  => $data['control']['is_email_wrong'],
-            'is_pass_changed' => $data['control']['is_pass_changed'],
             'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : null
         ];
 
-
-        if ( ! empty($file_certificate)) {
-            $sid        = SessionContainer::getDefaultManager()->getId();
-            $upload_dir = $this->config->temp . '/' . $sid;
-
-            $file      = explode("###", $file_certificate);
-            $file_path = $upload_dir . '/' . $file[0];
-
-            if ( ! file_exists($file_path)) {
-                throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
-            }
-
-            $size = filesize($file_path);
-            if ($size !== (int)$file[1]) {
-                throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
-            }
-            $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
-
-        } elseif ( ! empty($data['control']['certificate_ta'])) {
-            $dataForSave['certificate'] = $data['control']['certificate_ta'];
+        if ( ! $is_auth_ldap_on && $is_auth_pass_on) {
+            $dataForSave['is_pass_changed'] = $data['control']['is_pass_changed'];
         }
 
-        unset($data['control']['certificate_ta']);
+        if ( ! $is_auth_ldap_on && $is_auth_certificate_on) {
+            $file_certificate = $data['control']['files|certificate'];
+            unset($data['control']['files|certificate']);
+
+            if ( ! empty($file_certificate)) {
+                $sid        = SessionContainer::getDefaultManager()->getId();
+                $upload_dir = $this->config->temp . '/' . $sid;
+
+                $file      = explode("###", $file_certificate);
+                $file_path = $upload_dir . '/' . $file[0];
+
+                if ( ! file_exists($file_path)) {
+                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
+                }
+
+                $size = filesize($file_path);
+                if ($size !== (int)$file[1]) {
+                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+                }
+                $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
+
+            } elseif ( ! empty($data['control']['certificate_ta'])) {
+                $dataForSave['certificate'] = $data['control']['certificate_ta'];
+            }
+
+            unset($data['control']['certificate_ta']);
 
 
-        // Получение данных из сертификата
-        if (isset($data['certificate_parse']) && $data['certificate_parse'] == 'Y') {
-            $x509 = new \phpseclib\File\X509();
-            $x509->loadX509($dataForSave['certificate']);
+            // Получение данных из сертификата
+            if (isset($data['certificate_parse']) && $data['certificate_parse'] == 'Y') {
+                $x509 = new \phpseclib\File\X509();
+                $x509->loadX509($dataForSave['certificate']);
 
-            $subject = $x509->getSubjectDN();
+                $subject = $x509->getSubjectDN();
 
-            if ( ! empty($subject) && ! empty($subject['rdnSequence'])) {
-                foreach ($subject['rdnSequence'] as $items) {
+                if ( ! empty($subject) && ! empty($subject['rdnSequence'])) {
+                    foreach ($subject['rdnSequence'] as $items) {
 
-                    if ( ! empty($items[0]) && ! empty($items[0]['type'])) {
-                        $value = current($items[0]['value']);
+                        if ( ! empty($items[0]) && ! empty($items[0]['type'])) {
+                            $value = current($items[0]['value']);
 
-                        switch ($items[0]['type']) {
-                            case 'id-at-surname':
-                                $data['control']['lastname'] = ! empty($value) ? $value : $data['control']['lastname'];
-                                break;
+                            switch ($items[0]['type']) {
+                                case 'id-at-surname':
+                                    $data['control']['lastname'] = ! empty($value) ? $value : $data['control']['lastname'];
+                                    break;
 
-                            case 'id-at-name':
-                                $value_explode = explode(' ', $value, 2);
+                                case 'id-at-name':
+                                    $value_explode = explode(' ', $value, 2);
 
-                                $data['control']['firstname']  = ! empty($value_explode[0])
-                                    ? $value_explode[0]
-                                    : $data['control']['firstname'];
+                                    $data['control']['firstname']  = ! empty($value_explode[0])
+                                        ? $value_explode[0]
+                                        : $data['control']['firstname'];
 
-                                $data['control']['middlename'] = ! empty($value_explode[1])
-                                    ? $value_explode[1]
-                                    : $data['control']['middlename'];
-                                break;
+                                    $data['control']['middlename'] = ! empty($value_explode[1])
+                                        ? $value_explode[1]
+                                        : $data['control']['middlename'];
+                                    break;
+                            }
                         }
                     }
                 }
             }
         }
-
 
         if ($this->ajaxValidate($data, $fields)) {
             return $this->response;
@@ -585,7 +598,7 @@ class ModAjax extends ajaxFunc {
                 $send_info_sw = true;
             }
 
-            if ( ! empty($data['control']['u_pass'])) {
+            if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
                 $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
             }
 
