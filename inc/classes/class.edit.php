@@ -1769,6 +1769,7 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printJs("core2/js/tmpl.min.js", true);
                     Tool::printJs("core2/js/load-image.min.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload.js", true);
+                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.iframe-transport.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-process.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-image.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-audio.js", true);
