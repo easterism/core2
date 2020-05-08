@@ -10,6 +10,11 @@
       "name": "misterEaster",
       "email": "easter.by@gmail.com",
       "role": "Developer"
+    },
+    {
+      "name": "Shabunin Igor",
+      "email": "shabuninil24@gmail.com",
+      "role": "Developer"
     }
   ],
   "minimum-stability": "dev",
