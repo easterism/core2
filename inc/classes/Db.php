@@ -44,6 +44,11 @@ class Db {
 	 * @throws \Exception
 	 */
 	public function __get($k) {
+		if ($k == 'core_config') {
+            $reg = \Zend_Registry::getInstance();
+            $this->core_config = $reg->get('core_config');
+            return $this->core_config;
+        }
 		if ($k == 'db') {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
@@ -173,7 +178,7 @@ class Db {
                 }
 
                 //set profiler
-                if ($this->core_config->profile && $this->core_config->profile->on) {
+                if ($this->core_config && $this->core_config->profile && $this->core_config->profile->on) {
                     $db->query("set profiling=1");
                     $db->query("set profiling_history_size = 100");
                 }
@@ -712,4 +717,5 @@ class Db {
 		}
 		$this->_settings = $is;
 	}
+
 }

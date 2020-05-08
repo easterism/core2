@@ -672,4 +672,5 @@ class ajaxFunc extends Common {
         }
         return $this->orderFields;
     }
+
 }

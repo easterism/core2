@@ -242,19 +242,19 @@
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return; //выходим, если авторизация состоялась
             }
 
             $this->detectWebService();
             $this->auth = new StdClass();
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return;
             }
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth);  //DEPRECATED
                 return;
             }
 
@@ -279,7 +279,7 @@
             } else {
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
             //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
@@ -376,7 +376,7 @@
             if (
                 empty($_GET['module']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
-                    trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
+                trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
                 return $this->getMenu();
             } else {
@@ -508,7 +508,7 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['action'])) {
+            if (isset($_POST['action']) && !$this->auth->ID) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
