@@ -29,7 +29,7 @@
 	<script type="text/javascript" language="javascript" src="core2/js/js.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta name="author" content="easter.by@gmail.com"/>
-	<link rel="icon" type="image/png" href="favicon.png" />
+	<link rel="icon" type="image/png" href="[FAVICON_PNG]"/>
 	<!--xajax-->
 </head>
 <body>

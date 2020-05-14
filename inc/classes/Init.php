@@ -549,13 +549,22 @@
             if (empty($config->ldap->active) || !$config->ldap->active) {
                 $tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
             }
+
             $logo = $this->getSystemLogo();
+
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
             if ( ! empty($this->auth->TOKEN)) {
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
+
+
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('[FAVICON_PNG]', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('[FAVICON_ICO]', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
@@ -691,6 +700,31 @@
 
 
         /**
+         * Получение favicon системы из conf.ini
+         * @return array
+         */
+        private function getSystemFavicon() {
+
+            $favicon_png = $this->config->system->favicon_png;
+            $favicon_ico = $this->config->system->favicon_ico;
+
+            $favicon_png = $favicon_png && is_file($favicon_png)
+                ? $favicon_png
+                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
+
+            $favicon_ico = $favicon_ico && is_file($favicon_ico)
+                ? $favicon_ico
+                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
+
+
+            return [
+                'png' => $favicon_png,
+                'ico' => $favicon_ico,
+            ];
+        }
+
+
+        /**
          * Проверка удаления с последующей переадресацией
          * Если запрос на удаление корректен, всегда должно возвращать true
          *
@@ -790,6 +824,12 @@
             $tpl_menu = new Templater3($tpl_file_menu);
 
             $tpl->assign('{system_name}', $this->getSystemName());
+
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('[FAVICON_PNG]', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('[FAVICON_ICO]', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
 
             $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
@@ -1510,8 +1550,7 @@
                 throw new Exception($translate->tr("Метод не найден"), 60);
             }
 
-        }
-        else {
+        } else {
             if (empty($params['action']) || $params['action'] == 'index') {
                 if ( ! $acl->checkAcl($params['module'], 'access')) {
                     throw new Exception(911);

@@ -53,10 +53,8 @@
     <script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=5"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=4"></script>
-    <!--[if IE]>
-    <link rel="shortcut icon" href="favicon.ico">
-    <![endif]-->
-    <link rel="icon" type="image/png" href="favicon.png">
+
+    <link rel="icon" type="image/png" href="[FAVICON_PNG]"/>
 	<!--[if lte IE 7]>
 	<style type="text/css">.iefix {display: inline-block;width: 0;overflow: hidden;}</style>
 	<![endif]-->
