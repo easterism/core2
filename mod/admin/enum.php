@@ -232,17 +232,19 @@ $tab->beginContainer($title);
                             }
                         }
 
-                        $i = 2;
-                        foreach ($fields as $field) {
-                            switch ($field['type']) {
-                                case '5':
-                                    $list->data[$key][$i] = $list->data[$key][$i] == 'Y'
-                                        ? 'Да'
-                                        : ($list->data[$key][$i] == 'N' ? 'Нет' : '');
-                                    break;
-                            }
+                        if ( ! empty($fields)) {
+                            $i = 2;
+                            foreach ($fields as $field) {
+                                switch ($field['type']) {
+                                    case '5':
+                                        $list->data[$key][$i] = $list->data[$key][$i] == 'Y'
+                                            ? 'Да'
+                                            : ($list->data[$key][$i] == 'N' ? 'Нет' : '');
+                                        break;
+                                }
 
-                            $i++;
+                                $i++;
+                            }
                         }
                     }
 
