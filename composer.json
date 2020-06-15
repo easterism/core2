@@ -39,7 +39,7 @@
     "belhard/simplemodal": "dev-master",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*",
-    "guzzlehttp/guzzle": "~6.3",
+    "guzzlehttp/guzzle": "6.5.0",
     "blueimp/jquery-file-upload": "10.*",
     "firephp/firephp-core": "*",
     "phpseclib/phpseclib": "~2.0"
