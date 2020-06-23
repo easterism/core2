@@ -703,24 +703,21 @@
          * Получение favicon системы из conf.ini
          * @return array
          */
-        private function getSystemFavicon() {
+        private function assignSystemFavicon(&$tpl) {
 
             $favicon_png = $this->config->system->favicon_png;
             $favicon_ico = $this->config->system->favicon_ico;
 
-            $favicon_png = $favicon_png && is_file($favicon_png)
-                ? $favicon_png
-                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
+            if (!is_file($favicon_png)) {
+                $favicon_png = is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png';
+            }
+            if (!is_file($favicon_ico)) {
+                $favicon_ico = is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico';
+            }
 
-            $favicon_ico = $favicon_ico && is_file($favicon_ico)
-                ? $favicon_ico
-                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
+            $tpl->assign('favicon.png', $favicon_png);
+            $tpl->assign('favicon.ico', $favicon_ico);
 
-
-            return [
-                'png' => $favicon_png,
-                'ico' => $favicon_ico,
-            ];
         }
 
 
@@ -825,11 +822,7 @@
 
             $tpl->assign('{system_name}', $this->getSystemName());
 
-            $favicon = $this->getSystemFavicon();
-
-            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
-            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
-
+            $this->assignSystemFavicon($tpl);
 
             $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
