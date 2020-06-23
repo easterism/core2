@@ -1,33 +1,33 @@
-[submodule "ext/jQuery/plugins/jQuery-File-Upload"]
-	path = ext/jQuery/plugins/jQuery-File-Upload
-	url = git@github.com:blueimp/jQuery-File-Upload.git
-[submodule "ext/jQuery/plugins/floatThead"]
-	path = ext/jQuery/plugins/floatThead
-	url = git@github.com:mkoryak/floatThead.git
-[submodule "ext/jQuery/plugins/simplemodal"]
-	path = ext/jQuery/plugins/simplemodal
-	url = git@github.com:ericmmartin/simplemodal.git
 [submodule "mod/repo/v1.4.1"]
 	path = mod/repo/v1.4.1
 	url = git@git.rdo.belhard.com:core2/modules/repo.git
 [submodule "mod/queue/v1.4.0"]
 	path = mod/queue/v1.4.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
-[submodule "mod/cron/v3.0.2"]
-	path = mod/cron/v3.0.2
-	url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/queue/v1.5.0"]
+	path = mod/queue/v1.5.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/queue/v1.6.0"]
+	path = mod/queue/v1.6.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/billing/v1.8.0"]
+	path = mod/billing/v1.8.0
+	url = git@git.rdo.belhard.com:core2/modules/billing.git
 [submodule "mod/profile/v1.12.0"]
 	path = mod/profile/v1.12.0
 	url = git@git.rdo.belhard.com:core2/modules/profile.git
-[submodule "mod/billing/v1.8.0"]
-	path = mod/billing/v1.8.0
-    url = git@git.rdo.belhard.com:core2/modules/billing.git
-[submodule "mod/webservice/v1.11.0"]
-	path = mod/webservice/v1.11.0
-	url = git@git.rdo.belhard.com:core2/modules/webservice.git
 [submodule "mod/profile/v2.0.0"]
 	path = mod/profile/v2.0.0
 	url = git@git.rdo.belhard.com:core2/modules/profile.git
-[submodule "mod/billing/v1.7.0"]
-	path = mod/billing/v1.7.0
-	url = git@git.rdo.belhard.com:core2/modules/billing.git
+[submodule "mod/cron/v3.0.2"]
+	path = mod/cron/v3.0.2
+	url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/webservice/v2.0.0"]
+	path = mod/webservice/v2.0.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v2.1.0"]
+	path = mod/webservice/v2.1.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/metrics/v1.0.0"]
+	path = mod/metrics/v1.0.0
+	url = git@git.rdo.belhard.com:core2/modules/metrics.git

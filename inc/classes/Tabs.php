@@ -57,7 +57,7 @@ class Tabs {
         if (in_array($position, $positions)) {
             $this->position = $position;
         } else {
-            throw new Exception('Invalid position');
+            throw new \Exception('Invalid position');
         }
     }
 
@@ -76,7 +76,7 @@ class Tabs {
         if (in_array($type, $types)) {
             $this->type = $type;
         } else {
-            throw new Exception('Invalid type');
+            throw new \Exception('Invalid type');
         }
     }
 
@@ -96,14 +96,34 @@ class Tabs {
      * @param string $title
      * @param string $id
      * @param string $url
-     * @param bool   $disabled
+     * @param array  $options
      */
-    public function addTab($title, $id, $url, $disabled = false) {
+    public function addTab($title, $id, $url, $options = []) {
+
+        $tab_options = is_array($options) ? $options : [];
+
+        // DEPRECATED
+        if ($options === true) {
+            $tab_options['disabled'] = true;
+        }
+
         $this->tabs[] = [
-            'title'    => $title,
-            'id'       => $id,
-            'url'      => str_replace('?', '#', $url),
-            'disabled' => $disabled
+            'type'    => 'tab',
+            'title'   => $title,
+            'id'      => $id,
+            'url'     => str_replace('?', '#', $url),
+            'options' => $tab_options
+        ];
+    }
+
+
+    /**
+     * Добавление разделителя
+     */
+    public function addDivider() {
+
+        $this->tabs[] = [
+            'type' => 'divider'
         ];
     }
 
@@ -180,7 +200,7 @@ class Tabs {
             case self::TYPE_TABS :  $type_name = 'tabs'; break;
             case self::TYPE_PILLS : $type_name = 'pills'; break;
             case self::TYPE_STEPS : $type_name = 'steps'; break;
-            default : throw new Exception('Invalid type'); break;
+            default : throw new \Exception('Invalid type'); break;
         }
         $tpl->assign('[TYPE]', $type_name);
 
@@ -189,26 +209,36 @@ class Tabs {
             case self::POSITION_LEFT :   $position_name = 'left'; break;
             case self::POSITION_RIGHT :  $position_name = 'right'; break;
             case self::POSITION_BOTTOM : $position_name = 'bottom'; break;
-            default : throw new Exception('Invalid position'); break;
+            default : throw new \Exception('Invalid position'); break;
         }
         $tpl->assign('[POSITION]', $position_name);
 
         if ( ! empty($this->tabs)) {
             foreach ($this->tabs as $tab) {
 
-                if ($tab['disabled']) {
-                    $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
-                    $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
+                if ($tab['type'] == 'tab') {
+                    if (isset($tab['options']['disabled']) && $tab['options']['disabled']) {
+                        $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
+                        $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
+
+                    } else {
+                        $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
+                        $class = $this->active_tab == $tab['id'] ? 'active' : '';
+
+                        $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
+                        $tpl->tabs->elements->tab->assign('[CLASS]', $class);
+                        $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
+                        $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                    }
 
                 } else {
-                    $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
-                    $class = $this->active_tab == $tab['id'] ? 'active' : '';
-
-                    $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
-                    $tpl->tabs->elements->tab->assign('[CLASS]', $class);
-                    $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
-                    $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                    if (in_array($this->position, [self::POSITION_RIGHT, self::POSITION_LEFT]) &&
+                        $this->type == self::TYPE_TABS
+                    ) {
+                        $tpl->tabs->elements->touchBlock('divider');
+                    }
                 }
+
                 $tpl->tabs->elements->reassign();
             }
         }

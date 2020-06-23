@@ -1,10 +1,15 @@
 <?php
 
+use Zend\Session\Container as SessionContainer;
+
+
 require_once("core2/inc/ajax.func.php");
 
 
 /**
  * Class ModAjax
+ * @property UsersProfile $dataUsersProfile
+ * @property Users        $dataUsers
  */
 class ModAjax extends ajaxFunc {
 
@@ -38,7 +43,7 @@ class ModAjax extends ajaxFunc {
 		if ( ! $refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
 			if (count($arr)) {
-				$this->error[] = "- " . $this->translate->tr('Идентификатор может состоять только из цифр или маленьких латинских букв');
+				$this->error[] = "- " . $this->_('Идентификатор может состоять только из цифр или маленьких латинских букв');
 				$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
 			}
 			$curent_status = '';
@@ -52,7 +57,7 @@ class ModAjax extends ajaxFunc {
 			foreach ($data['addRules'] as $rules) {
 				preg_match("/[^0-9A-Za-zА-Яа-яЁё\s]/u", $rules, $res);
 				if (count($res)) {
-					$this->error[] = "- " . $this->translate->tr("Идентификатор дополнительного правила доступа может состоять только из цифр и букв");
+					$this->error[] = "- " . $this->_("Идентификатор дополнительного правила доступа может состоять только из цифр и букв");
 					break;
 				}
 			}
@@ -84,7 +89,7 @@ class ModAjax extends ajaxFunc {
 					}						  
 				}
 				if (count($modules) > 0) {
-					$this->error[] = $this->translate->tr("Для активации модуля необходимо активировать модули:") . implode(",", $modules);
+					$this->error[] = $this->_("Для активации модуля необходимо активировать модули:") . implode(",", $modules);
 				}
 			}
 			if ($new_status == "N" && $refId) {
@@ -106,7 +111,7 @@ class ModAjax extends ajaxFunc {
 					}				 
 				}
 				if (count($list_id_modules) > 0) {
-					$this->error[] = $this->translate->tr("Для деактивации модуля необходимо деактивировать модули:") . implode(",", $list_name_modules);
+					$this->error[] = $this->_("Для деактивации модуля необходимо деактивировать модули:") . implode(",", $list_name_modules);
 				}								
 			}
 		}	
@@ -182,13 +187,13 @@ class ModAjax extends ajaxFunc {
         if ( ! $refId) {
             preg_match("/[^a-z|0-9]/", $data['control']['sm_key'], $arr);
             if (count($arr)) {
-                $this->error[] = "- " . $this->translate->tr("Идентификатор может состоять только из цифр или маленьких латинских букв");
+                $this->error[] = "- " . $this->_("Идентификатор может состоять только из цифр или маленьких латинских букв");
                 $this->response->script("document.getElementById('" . $data['class_id'] . "sm_key').className='reqField';");
             }
 
             $m_id = (int)$this->getSessFormField($data['class_id'], 'm_id');
             if ( ! $m_id) {
-                $this->error[] = "- " . $this->translate->tr("Не найден идентификатор модуля");
+                $this->error[] = "- " . $this->_("Не найден идентификатор модуля");
             }
 
             $data['control']['m_id'] = $m_id;
@@ -203,7 +208,7 @@ class ModAjax extends ajaxFunc {
             ", $refId);
 
             if ( ! $sm) {
-                $this->error[] = "- " . $this->translate->tr("Ошибка определения субмодуля");
+                $this->error[] = "- " . $this->_("Ошибка определения субмодуля");
             } else {
                 $this->cache->removeItem($sm['module_id'] . "_" . $sm['sm_key']);
                 $this->cache->clearByTags(['is_active_core_modules']);
@@ -278,7 +283,7 @@ class ModAjax extends ajaxFunc {
                 ));
 
                 if ($is_duplicate_enum) {
-                    throw new Exception($this->translate->tr('Указанный идентификатор справочника уже существует.'));
+                    throw new Exception($this->_('Указанный идентификатор справочника уже существует.'));
                 }
 			}
 
@@ -346,7 +351,7 @@ class ModAjax extends ajaxFunc {
             ));
 
             if ($is_duplicate_enum_value) {
-                throw new Exception($this->translate->tr('Указанное значение уже существует в данном справочнике.'));
+                throw new Exception($this->_('Указанное значение уже существует в данном справочнике.'));
             }
 
         } catch (Exception $e) {
@@ -457,15 +462,21 @@ class ModAjax extends ajaxFunc {
     }
 
 
-	/**
-	 * Сохранение учетной записи пользователя
-	 * @param array $data
-	 * @return xajaxResponse
-	 */
+    /**
+     * Сохранение учетной записи пользователя
+     * @param array $data
+     * @return xajaxResponse
+     * @throws Zend_Exception
+     */
 	public function saveUser($data) {
 
+        $core_config            = \Zend_Registry::getInstance()->get('core_config');
+        $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
+        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+        $is_auth_ldap_on        = $this->config->ldap && $this->config->ldap->active;
+
         $refid  = $this->getSessFormField($data['class_id'], 'refid');
-        $fields = array(
+        $fields = [
             'email'           => 'email',
             'role_id'         => 'req',
             'visible'         => 'req',
@@ -473,60 +484,140 @@ class ModAjax extends ajaxFunc {
             'is_admin_sw'     => 'req',
             'is_email_wrong'  => 'req',
             'is_pass_changed' => 'req'
-        );
+        ];
+
+        if ($is_auth_ldap_on || ! $is_auth_pass_on) {
+            unset($fields['is_pass_changed']);
+        }
 
         if ( ! $refid) {
             $fields['u_login'] = 'req';
         }
-        if ( ! $refid && empty($this->config->ldap->active)) {
+        if ( ! $refid && ! $is_auth_ldap_on && $is_auth_pass_on) {
             $fields['u_pass'] = 'req';
         }
-		$data['control']['firstname']  = trim(strip_tags($data['control']['firstname']));
-		$data['control']['lastname']   = trim(strip_tags($data['control']['lastname']));
-		$data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
 
-		if ($this->ajaxValidate($data, $fields)) {
-			return $this->response;
-		}
-		$this->db->beginTransaction();
-		try {
-			$authNamespace = Zend_Registry::get('auth');
-			$send_info_sw = false;
-		    if ($data['control']['email'] && !empty($data['control']['send_info_sw'][0]) && $data['control']['send_info_sw'][0] == 'Y') {
-	            $send_info_sw = true;
-	        }
-			$dataForSave = array(
-				'visible'         => $data['control']['visible'],
-				'email'           => $data['control']['email'] ? $data['control']['email'] : NULL,
-				'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
-				'is_admin_sw'     => $data['control']['is_admin_sw'],
-				'is_email_wrong'  => $data['control']['is_email_wrong'],
-				'is_pass_changed' => $data['control']['is_pass_changed'],
-				'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : NULL
-			);
-			if (!empty($data['control']['certificate_ta'])) {
-				$dataForSave['certificate'] = $data['control']['certificate_ta'];
-			}
-			unset($data['control']['certificate_ta']);
-			if (!empty($data['control']['u_pass'])) {
-				$dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
-			}
-			if ($refid == 0) {
-                $update = false;
+        $data['control']['firstname']  = trim(strip_tags($data['control']['firstname']));
+        $data['control']['lastname']   = trim(strip_tags($data['control']['lastname']));
+        $data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
+
+
+        $authNamespace = Zend_Registry::get('auth');
+
+        $dataForSave = [
+            'visible'         => $data['control']['visible'],
+            'email'           => $data['control']['email'] ? $data['control']['email'] : null,
+            'lastuser'        => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL'),
+            'is_admin_sw'     => $data['control']['is_admin_sw'],
+            'is_email_wrong'  => $data['control']['is_email_wrong'],
+            'role_id'         => $data['control']['role_id'] ? $data['control']['role_id'] : null
+        ];
+
+        if ( ! $is_auth_ldap_on && $is_auth_pass_on) {
+            $dataForSave['is_pass_changed'] = $data['control']['is_pass_changed'];
+        }
+
+        if ( ! $is_auth_ldap_on && $is_auth_certificate_on) {
+            $file_certificate = $data['control']['files|certificate'];
+            unset($data['control']['files|certificate']);
+
+            if ( ! empty($file_certificate)) {
+                $sid        = SessionContainer::getDefaultManager()->getId();
+                $upload_dir = $this->config->temp . '/' . $sid;
+
+                $file      = explode("###", $file_certificate);
+                $file_path = $upload_dir . '/' . $file[0];
+
+                if ( ! file_exists($file_path)) {
+                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
+                }
+
+                $size = filesize($file_path);
+                if ($size !== (int)$file[1]) {
+                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+                }
+                $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
+
+            } elseif ( ! empty($data['control']['certificate_ta'])) {
+                $dataForSave['certificate'] = $data['control']['certificate_ta'];
+            }
+
+            unset($data['control']['certificate_ta']);
+
+
+            // Получение данных из сертификата
+            if (isset($data['certificate_parse']) && $data['certificate_parse'] == 'Y') {
+                $x509 = new \phpseclib\File\X509();
+                $x509->loadX509($dataForSave['certificate']);
+
+                $subject = $x509->getSubjectDN();
+
+                if ( ! empty($subject) && ! empty($subject['rdnSequence'])) {
+                    foreach ($subject['rdnSequence'] as $items) {
+
+                        if ( ! empty($items[0]) && ! empty($items[0]['type'])) {
+                            $value = current($items[0]['value']);
+
+                            switch ($items[0]['type']) {
+                                case 'id-at-surname':
+                                    $data['control']['lastname'] = ! empty($value) ? $value : $data['control']['lastname'];
+                                    break;
+
+                                case 'id-at-name':
+                                    $value_explode = explode(' ', $value, 2);
+
+                                    $data['control']['firstname']  = ! empty($value_explode[0])
+                                        ? $value_explode[0]
+                                        : $data['control']['firstname'];
+
+                                    $data['control']['middlename'] = ! empty($value_explode[1])
+                                        ? $value_explode[1]
+                                        : $data['control']['middlename'];
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($this->ajaxValidate($data, $fields)) {
+            return $this->response;
+        }
+
+
+        $this->db->beginTransaction();
+
+        try {
+            $send_info_sw  = false;
+
+            if ($data['control']['email'] &&
+                ! empty($data['control']['send_info_sw'][0]) &&
+                $data['control']['send_info_sw'][0] == 'Y'
+            ) {
+                $send_info_sw = true;
+            }
+
+            if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
+                $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
+            }
+
+            if ($refid == 0) {
+                $update                     = false;
                 $data['control']['u_login'] = trim(strip_tags($data['control']['u_login']));
 
-				$dataForSave['u_login']     = $data['control']['u_login'];
-				$dataForSave['date_added']  = new \Zend_Db_Expr('NOW()');
+                $dataForSave['u_login']    = $data['control']['u_login'];
+                $dataForSave['date_added'] = new \Zend_Db_Expr('NOW()');
 
-				$this->checkUniqueLogin(0, $dataForSave['u_login']);
-				if ($data['control']['email']) {
+                $this->checkUniqueLogin(0, $dataForSave['u_login']);
+                if ($data['control']['email']) {
                     $this->checkUniqueEmail(0, $dataForSave['email']);
                 }
 
-				$this->db->insert('core_users', $dataForSave);
-				$refid = $this->db->lastInsertId('core_users');
+                $this->db->insert('core_users', $dataForSave);
+                $refid = $this->db->lastInsertId('core_users');
 
-				$who   = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
+                $who = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
                 $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
                     ->to("easter.by@gmail.com")
@@ -536,50 +627,59 @@ class ModAjax extends ajaxFunc {
                             Login: {$dataForSave['u_login']}<br>
                             ФИО: {$data['control']['lastname']} {$data['control']['firstname']} {$data['control']['middlename']}")
                     ->send();
-			} else {
-				if ($dataForSave['email']) {
+
+            } else {
+                if ($dataForSave['email']) {
                     $this->checkUniqueEmail($refid, $dataForSave['email']);
                 }
 
                 $update = true;
-				$where = $this->db->quoteInto('u_id = ?', $refid);
-				$this->db->update('core_users', $dataForSave, $where);
-			}
+                $where  = $this->db->quoteInto('u_id = ?', $refid);
+                $this->db->update('core_users', $dataForSave, $where);
+            }
 
-			if ($refid) {
-				$row = $this->dataUsersProfile->fetchRow($this->dataUsersProfile->select()->where("user_id=?", $refid)->limit(1));
-                $save = array(
+            if ($refid) {
+                $save = [
                     'lastname'   => $data['control']['lastname'],
                     'firstname'  => $data['control']['firstname'],
                     'middlename' => $data['control']['middlename'],
                     'lastuser'   => $authNamespace->ID > 0 ? $authNamespace->ID : new \Zend_Db_Expr('NULL')
-                );
-				if (!$row) {
-					$row = $this->dataUsersProfile->createRow();
-					$save['user_id'] = $refid;
-				} else {
-                    $data['control']['u_login'] = $this->dataUsers->fetchRow($this->dataUsers->select()->where("u_id=?", $refid)->limit(1))->u_login;
-                }
-				$row->setFromArray($save);
-				$row->save();
-			}
-			if ($send_info_sw) {
-				$this->sendUserInformation($data['control'], $update);
-			}
+                ];
 
-			$this->db->commit();
-			$this->done($data);
+                $row  = $this->dataUsersProfile->fetchRow(
+                    $this->dataUsersProfile->select()->where("user_id = ?", $refid)->limit(1)
+                );
+
+                if ( ! $row) {
+                    $row = $this->dataUsersProfile->createRow();
+                    $save['user_id'] = $refid;
+                } else {
+                    $data['control']['u_login'] = $this->dataUsers->fetchRow(
+                        $this->dataUsers->select()->where("u_id = ?", $refid)->limit(1)
+                    )->u_login;
+                }
+
+                $row->setFromArray($save);
+                $row->save();
+            }
+            if ($send_info_sw) {
+                $this->sendUserInformation($data['control'], $update);
+            }
+
+            $this->db->commit();
+
         } catch (Exception $e) {
             $this->db->rollback();
-			$this->error[] =  $e->getMessage();
-			$this->displayError($data);
-		}
-		return $this->response;
-	}
+            $this->error[] = $e->getMessage();
+        }
+
+        $this->done($data);
+        return $this->response;
+    }
 
 
-	/**
-	 * Сохранение роли пользователя
+    /**
+     * Сохранение роли пользователя
 	 * @param array $data
 	 * @return xajaxResponse
 	 */
@@ -699,58 +799,21 @@ class ModAjax extends ajaxFunc {
 
 
     /**
-     * Отправка уведомления о создании или обновлении пользователя
-     * @param array $dataNewUser
-     * @param int $isUpdate
-     * @throws Exception
-     * @return void
-     */
-    private function sendUserInformation($dataNewUser, $isUpdate = 0) {
-
-        $body  = "";
-        $crlf = "<br>";
-        $protocol = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') ||
-                    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
-        $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>." . $crlf;
-		if ($isUpdate) {
-			$body .= "Ваш профиль на портале <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">{$protocol}://{$_SERVER["SERVER_NAME"]}</a> был обновлен." . $crlf;
-		} else {
-        	$body .= "Вы зарегистрированы на портале {$_SERVER["SERVER_NAME"]}{$crlf}
-        	Для входа введите в строке адреса: {$_SERVER["SERVER_NAME"]}{$crlf}
-        	Или перейдите по ссылке <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
-		}
-        $body .= $crlf . "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
-        if (isset($dataNewUser['u_pass'])) $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
-
-        $result = $this->modAdmin->createEmail()
-            ->from('noreply@' . $_SERVER["SERVER_NAME"])
-            ->to($dataNewUser['email'])
-            ->subject('Информация о регистрации на портале ' . $_SERVER["SERVER_NAME"])
-            ->body($body)
-            ->send();
-        if ( ! $result) {
-            throw new Exception($this->translate->tr('Не удалось отправить сообщение пользователю'));
-        }
-	}
-
-
-    /**
      * Сохраняет загруженные модули для последующего использования
      * @param array $data
      * @return xajaxResponse
      */
     public function saveAvailModule($data) {
-        //echo "<pre>";print_r($data);echo "</pre>";//die;
 
         try {
             $sid 			= $this->auth->getManager()->getId();
             $upload_dir 	= $this->config->temp . '/' . $sid;
 
             if (isset($data['control']['name']) && $this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
-                if (!$this->moduleConfig->gitlab->token) throw new Exception($this->translate->tr("Не удалось получить токен."));
+                if (!$this->moduleConfig->gitlab->token) throw new Exception($this->_("Не удалось получить токен."));
                 $name = explode("|", $data['control']['name']);
-                if (!$name[0]) throw new Exception($this->translate->tr("Не удалось получить группу репозитория."));
-                if (!$name[1]) throw new Exception($this->translate->tr("Не удалось получить версию релиза."));
+                if (!$name[0]) throw new Exception($this->_("Не удалось получить группу репозитория."));
+                if (!$name[1]) throw new Exception($this->_("Не удалось получить версию релиза."));
                 require_once('gitlab/Gitlab.php');
                 $gl = new \Core2\Gitlab();
                 $fn = $gl->getZip($name[0], $name[1]);
@@ -764,11 +827,11 @@ class ModAjax extends ajaxFunc {
                 $f = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if (!file_exists($fn)) {
-                    throw new \Exception(sprintf($this->translate->tr("Файл %s не найден"), $f[0]));
+                    throw new \Exception(sprintf($this->_("Файл %s не найден"), $f[0]));
                 }
                 $size = filesize($fn);
                 if ($size !== (int)$f[1]) {
-                    throw new \Exception(sprintf($this->translate->tr("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
+                    throw new \Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
                 }
             }
 
@@ -787,7 +850,7 @@ class ModAjax extends ajaxFunc {
                     }
                     $zip->close();
                 } else {
-                    throw new Exception($this->translate->tr("Ошибка архива"));
+                    throw new Exception($this->_("Ошибка архива"));
                 }
 
                 if (!is_file($destinationFolder . "/install/install.xml")) {
@@ -805,7 +868,7 @@ class ModAjax extends ajaxFunc {
                     if (is_file($path . "/install/install.xml")) {
                         $destinationFolder = $path;
                     } else {
-                        throw new Exception($this->translate->tr("install.xml не найден."));
+                        throw new Exception($this->_("install.xml не найден."));
                     }
                 }
                 if (is_file($destinationFolder . "/readme.txt")) {
@@ -825,8 +888,8 @@ class ModAjax extends ajaxFunc {
                 $errors    = array();
                 $filesList = $inst->getFilesList($destinationFolder);
 
-				//для проверки ошибок в файлах пхп
-				$php_path = $this->getPHPPath();
+                //для проверки ошибок в файлах пхп
+                $php_path = $this->getPHPPath();
                 foreach ($filesList as $path) {
                     $fName = substr($path, strripos($path, '/') + 1);
                     //проверка файлов php
@@ -888,7 +951,7 @@ class ModAjax extends ajaxFunc {
                 //получаем хэш для файлов модуля
                 $files_hash = $inst->extractHashForFiles($destinationFolder);
                 if (empty($files_hash)) {
-                    throw new Exception($this->translate->tr("Не удалось получить хэш файлов модуля"));
+                    throw new Exception($this->_("Не удалось получить хэш файлов модуля"));
                 }
                 $this->deleteDir($destinationFolder);
 
@@ -937,7 +1000,7 @@ class ModAjax extends ajaxFunc {
                 }
             }
             else {
-                throw new Exception(sprintf($this->translate->tr("Неверный тип архива %s"), $file_type));
+                throw new Exception(sprintf($this->_("Неверный тип архива %s"), $file_type));
             }
 
             $this->done($data);
@@ -949,6 +1012,52 @@ class ModAjax extends ajaxFunc {
 
         return $this->response;
     }
+
+
+    /**
+     * Отправка уведомления о создании или обновлении пользователя
+     * @param array $dataNewUser
+     * @param int $isUpdate
+     * @throws Exception
+     * @return void
+     */
+    private function sendUserInformation($dataNewUser, $isUpdate = 0) {
+
+        $body     = "";
+        $crlf     = "<br>";
+        $protocol = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') ||
+                    (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') 
+            ? 'https' 
+            : 'http';
+        
+        $body .= "Уважаемый(ая) <b>{$dataNewUser['lastname']} {$dataNewUser['firstname']}</b>." . $crlf;
+		
+        if ($isUpdate) {
+			$body .= "Ваш профиль на портале <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">{$protocol}://{$_SERVER["SERVER_NAME"]}</a> был обновлен." . $crlf;
+			
+		} else {
+        	$body .= "Вы зарегистрированы на портале {$_SERVER["SERVER_NAME"]}{$crlf}
+        	Для входа введите в строке адреса: {$_SERVER["SERVER_NAME"]}{$crlf}
+        	Или перейдите по ссылке <a href=\"{$protocol}://{$_SERVER["SERVER_NAME"]}\">http://{$_SERVER["SERVER_NAME"]}</a>" . $crlf;
+		}
+        
+        $body .= $crlf . "Ваш логин: <b>{$dataNewUser['u_login']}</b>" . $crlf;
+        
+        if (isset($dataNewUser['u_pass'])) {
+            $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
+        }
+
+        $result = $this->modAdmin->createEmail()
+            ->from('noreply@' . $_SERVER["SERVER_NAME"])
+            ->to($dataNewUser['email'])
+            ->subject('Информация о регистрации на портале ' . $_SERVER["SERVER_NAME"])
+            ->body($body)
+            ->send();
+        
+        if ( ! $result) {
+            throw new Exception($this->_('Не удалось отправить сообщение пользователю'));
+        }
+	}
 
 
 
@@ -992,7 +1101,7 @@ class ModAjax extends ajaxFunc {
 		));
 
 		if ($isset_login) {
-			throw new Exception($this->translate->tr("Пользователь с таким логином уже существует."));
+			throw new Exception($this->_("Пользователь с таким логином уже существует."));
 		}
 	}
 
@@ -1017,7 +1126,7 @@ class ModAjax extends ajaxFunc {
 		));
 
 		if ($isset_email) {
-			throw new Exception($this->translate->tr("Пользователь с таким email уже существует."));
+			throw new Exception($this->_("Пользователь с таким email уже существует."));
 		}
 	}
 

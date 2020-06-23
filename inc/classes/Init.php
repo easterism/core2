@@ -24,7 +24,6 @@
     if (!file_exists($conf_file)) {
         \Core2\Error::Exception("conf.ini is missing.");
     }
-//\Sentry\init(['dsn' => 'https://1b4190b83c4c4eff96c2f17f252fb053@sentry.io/1408676' ]);
     $config = array(
         'system' => array('name' => 'CORE'),
         'include_path' => '',
@@ -191,7 +190,8 @@
 	require_once 'Db.php';
 	require_once 'Common.php';
 	require_once 'Templater.php'; //DEPRECATED
-	require_once 'Templater2.php';
+	require_once 'Templater2.php'; //DEPRECATED
+	require_once 'Templater3.php';
 
 
 	/**
@@ -242,19 +242,19 @@
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return; //выходим, если авторизация состоялась
             }
 
             $this->detectWebService();
             $this->auth = new StdClass();
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return;
             }
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
-                Zend_Registry::set('auth', $this->auth);
+                Zend_Registry::set('auth', $this->auth);  //DEPRECATED
                 return;
             }
 
@@ -276,89 +276,12 @@
                     $this->closeSession('Y');
                 }
                 Zend_Registry::set('auth', $this->auth);
-            } else {
+            }
+            else {
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре
+            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
             //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
-        }
-
-
-        /**
-         * Направлен ли запрос к вебсервису
-         * @todo прогнать через роутер
-         */
-        private function detectWebService() {
-            if ($this->is_rest || $this->is_soap) {
-                return;
-            }
-            if (!isset($_SERVER['REQUEST_URI'])) return;
-            $matches = array();
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
-                return;
-            }
-            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = $matches;
-                return;
-            }
-        }
-
-
-        /**
-         * Проверка наличия токена в запросе
-         * Только для запросов с авторизацией по токену!
-         *
-         * @return StdClass|void
-         */
-        private function checkToken() {
-            $token = '';
-            if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) return;
-                $token = $_SERVER['HTTP_AUTHORIZATION'];
-            }
-            else if (!empty($_SERVER['HTTP_CORE2M'])) {
-                $token = $_SERVER['HTTP_CORE2M'];
-            }
-
-            if ($token) {
-
-                $this->setContext('webservice');
-
-                $this->checkWebservice();
-
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchWebToken($token);
-            }
-        }
-
-
-        /**
-         * Проверка на наличие и работоспособности модуля Webservice
-         */
-        private function checkWebservice() {
-            if ( ! $this->isModuleActive('webservice')) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не активен')), 503);
-            }
-
-            $location = $this->getModuleLocation('webservice');
-            $webservice_controller_path =  $location . '/ModWebserviceController.php';
-
-            if ( ! file_exists($webservice_controller_path)) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice не существует')), 500);
-            }
-
-            $autoload = $location . "/vendor/autoload.php";
-            if (file_exists($autoload)) {
-                require_once $autoload;
-            }
-
-            require_once($webservice_controller_path);
-
-            if ( ! class_exists('ModWebserviceController')) {
-                \Core2\Error::catchJsonException(array('message' => $this->translate->tr('Модуль Webservice сломан')), 500);
-            }
-            Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
 
@@ -377,39 +300,41 @@
             $this->detectWebService();
 
             // Веб-сервис (REST)
-            if ($matches = $this->is_rest) { //url like /api/*
-
+            if ($matches = $this->is_rest) {
                 $this->setContext('webservice');
 
                 $this->checkWebservice();
 
                 require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
-
                 $route = $this->routeParse();
-                $method = ucfirst($route['action']);
-                foreach ($route['params'] as $param => $value) {
-                    $method .= ucfirst($param) . ucfirst($value);
-                }
+
                 $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchRest($route['module'], $method); //TODO сделать через DI
+
+                $version = $matches['version'];
+                $method  = '';
+
+                $action_explode = explode('/', $matches['action']);
+                foreach ($action_explode as $action_part) {
+                    $method .= ucfirst($action_part);
+                }
+
+                $method = lcfirst($method);
+
+                return $webservice_controller->dispatchRest($route['module'], $method, $version); //TODO сделать через DI
             }
 
             // Веб-сервис (SOAP)
             if ($matches = $this->is_soap) {
                 $this->setContext('webservice');
-
                 $this->checkWebservice();
 
-                if (isset($matches[2]) && $matches[2]) {
-                    $service_request_action = 'wsdl';
-                    $module_name = strtolower($matches[2]);
-                } else {
-                    $service_request_action = 'server';
-                    $module_name = strtolower($matches[3]);
-                }
-
                 $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchSoap($module_name, $service_request_action);
+
+                $version     = $matches['version'];
+                $action      = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
+                $module_name = $matches['module'];
+
+                return $webservice_controller->dispatchSoap($module_name, $action, $version);
             }
 
 
@@ -485,11 +410,15 @@
 
                 } else {
                     if ($action == 'index') {
-                        if (!$this->acl->checkAcl($module, 'access')) {
+                        $_GET['action'] = "index";
+
+                        if ( ! $this->isModuleActive($module)) {
+                            throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
+                        }
+
+                        if ( ! $this->acl->checkAcl($module, 'access')) {
                             throw new Exception(911);
                         }
-                        $_GET['action'] = "index";
-                        if (!$this->isModuleActive($module)) throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
@@ -521,8 +450,7 @@
                             throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
                     } else {
-                        return "<script>loadPDF('{$mods['sm_path']}')</script>";
-                        //header("Location: " . $mods['sm_path']);
+                        return "<script>loadExt('{$mods['sm_path']}')</script>";
                     }
                 }
             }
@@ -531,26 +459,45 @@
 
 
         /**
-         * Получение названия системы из conf.ini
-         * @return mixed
+         *
          */
-        private function getSystemName() {
-            $res = $this->config->system->name;
-            return $res;
-        }
+        public function __destruct() {
+
+            if ($this->config->system->profile && $this->config->system->profile->on) {
+                $log = new \Core2\Log('profile');
+
+                if ($log->getWriter()) {
+                    $sql_queries = $this->db->fetchAll("show profiles");
+                    $total_time  = 0;
+                    $max_slow    = [];
+
+                    if ( ! empty($sql_queries)) {
+                        foreach ($sql_queries as $k => $sql_query) {
+
+                            if ( ! empty($sql_query['Duration'])) {
+                                $total_time += $sql_query['Duration'];
+
+                                if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
+                                    $max_slow = $sql_query;
+                                }
+                            }
+                        }
+                    }
+
+                    $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
+                    $query_string   = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+
+                    if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
+                        $function_log = 'warning';
+                    } else {
+                        $function_log = 'info';
+                    }
 
 
-        /**
-         * Получение логотипа системы из conf.ini
-         * или установка логотипа по умолчанию
-         * @return string
-         */
-        private function getSystemLogo() {
-            $res = $this->config->system->logo;
-            if (!empty($res) && is_file($res)) {
-                return $res;
-            } else {
-                return 'core2/html/' . THEME . '/img/logo.gif';
+                    $log->{$function_log}('request', [$request_method, round($total_time, 5), count($sql_queries), $query_string]);
+                    $log->{$function_log}('  | max slow', $max_slow);
+                    $log->{$function_log}('  | queries ', $sql_queries);
+                }
             }
         }
 
@@ -558,10 +505,11 @@
         /**
          * Форма входа в систему
          * @return string
+         * @throws Zend_Exception
          */
         protected function getLogin() {
 
-            if (isset($_POST['action'])) {
+            if (isset($_POST['action']) && !$this->auth->ID) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
@@ -601,13 +549,178 @@
             if (empty($config->ldap->active) || !$config->ldap->active) {
                 $tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
             }
+
             $logo = $this->getSystemLogo();
+
             if (is_file($logo)) {
                 $tpl2->logo->assign('{logo}', $logo);
             }
-            $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
+            if ( ! empty($this->auth->TOKEN)) {
+                $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
+            }
+
+
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
+        }
+
+
+        /**
+         * Направлен ли запрос к вебсервису
+         * @todo прогнать через роутер
+         */
+        private function detectWebService() {
+
+            if ($this->is_rest || $this->is_soap) {
+                return;
+            }
+
+            if ( ! isset($_SERVER['REQUEST_URI'])) {
+                return;
+            }
+
+
+            $matches = [];
+
+            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
+                return;
+            }
+            // DEPRECATED
+            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
+                return;
+            }
+            // DEPRECATED
+            if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = $matches;
+                return;
+            }
+            if (preg_match('~^soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)/(?<action>wsdl\.xml|service\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+                $this->is_soap = $matches;
+                return;
+            }
+        }
+
+
+        /**
+         * Проверка наличия токена в запросе
+         * Только для запросов с авторизацией по токену!
+         *
+         * @return StdClass|void
+         */
+        private function checkToken() {
+            $token = '';
+            if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) return;
+                $token = $_SERVER['HTTP_AUTHORIZATION'];
+            }
+            else if (!empty($_SERVER['HTTP_CORE2M'])) {
+                $token = $_SERVER['HTTP_CORE2M'];
+            }
+
+            if ($token) {
+                $this->setContext('webservice');
+
+                $this->checkWebservice();
+
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchWebToken($token);
+            }
+        }
+
+
+        /**
+         * Проверка на наличие и работоспособности модуля Webservice
+         */
+        private function checkWebservice() {
+
+            if ( ! $this->isModuleActive('webservice')) {
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_not_active',
+                    'error_message' => $this->translate->tr('Модуль Webservice не активен')
+                ], 503);
+            }
+
+            $location = $this->getModuleLocation('webservice');
+            $webservice_controller_path =  $location . '/ModWebserviceController.php';
+
+            if ( ! file_exists($webservice_controller_path)) {
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_not_isset',
+                    'error_message' => $this->translate->tr('Модуль Webservice не существует')
+                ], 500);
+            }
+
+            $autoload = $location . "/vendor/autoload.php";
+            if (file_exists($autoload)) {
+                require_once $autoload;
+            }
+
+            require_once($webservice_controller_path);
+
+            if ( ! class_exists('ModWebserviceController')) {
+                \Core2\Error::catchJsonException([
+                    'error_code'    => 'webservice_broken',
+                    'error_message' => $this->translate->tr('Модуль Webservice сломан')
+                ], 500);
+            }
+            Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
+        }
+
+
+        /**
+         * Получение названия системы из conf.ini
+         * @return mixed
+         */
+        private function getSystemName() {
+            $res = $this->config->system->name;
+            return $res;
+        }
+
+
+        /**
+         * Получение логотипа системы из conf.ini
+         * или установка логотипа по умолчанию
+         * @return string
+         */
+        private function getSystemLogo() {
+            $res = $this->config->system->logo;
+            if (!empty($res) && is_file($res)) {
+                return $res;
+            } else {
+                return 'core2/html/' . THEME . '/img/logo.gif';
+            }
+        }
+
+
+        /**
+         * Получение favicon системы из conf.ini
+         * @return array
+         */
+        private function getSystemFavicon() {
+
+            $favicon_png = $this->config->system->favicon_png;
+            $favicon_ico = $this->config->system->favicon_ico;
+
+            $favicon_png = $favicon_png && is_file($favicon_png)
+                ? $favicon_png
+                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
+
+            $favicon_ico = $favicon_ico && is_file($favicon_ico)
+                ? $favicon_ico
+                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
+
+
+            return [
+                'png' => $favicon_png,
+                'ico' => $favicon_ico,
+            ];
         }
 
 
@@ -685,126 +798,287 @@
          * @throws Exception
          */
         private function getMenu() {
-            if ($this->auth->MOBILE) { //если core2m
+
+            //если core2m
+            if ($this->auth->MOBILE) {
                 return $this->getMenuMobile();
             }
-            //require_once("core2/ext/xajax_0.5_minimal/xajax_core/xajax.inc.php");
+
             $xajax = new xajax();
-            //$xajax->configure("debug", true);
-            //$xajax->configure('javascript URI', 'core2/ext/xajax_0.5_minimal/');
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-            //$xajax->registerFunction('post');
             $xajax->processRequest();
 
-            $mods   = $this->getModuleList();
-            $tpl    = new Templater2();
+
+
             if (Tool::isMobileBrowser()) {
-                $tpl->loadTemplate("core2/html/" . THEME . "/indexMobile2.tpl");
-                $tpl2 = new Templater2("core2/html/" . THEME . "/menuMobile.tpl");
+                $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";
+                $tpl_file_menu = "core2/html/" . THEME . "/menuMobile.tpl";
             } else {
-                $tpl->loadTemplate("core2/html/" . THEME . "/index2.tpl");
-                $tpl2 = new Templater2("core2/html/" . THEME . "/menu.tpl");
+                $tpl_file      = "core2/html/" . THEME . "/index2.tpl";
+                $tpl_file_menu = "core2/html/" . THEME . "/menu.tpl";
             }
+
+
+            $tpl      = new Templater3($tpl_file);
+            $tpl_menu = new Templater3($tpl_file_menu);
+
             $tpl->assign('{system_name}', $this->getSystemName());
 
-            $tpl2->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
-            $tpl2->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
-            $tpl2->assign('<!--CURRENT_USER_FN-->',    htmlspecialchars($this->auth->FN));
-            $tpl2->assign('<!--CURRENT_USER_LN-->',    htmlspecialchars($this->auth->LN));
-            $tpl2->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
 
 
-            $modtpl = $tpl2->getBlock('modules');
-            $html   = "";
-            $js     = array();
-            foreach ($mods as $data) {
-                if (!empty($data['sm_key'])) continue;
-                $module_id = $data['module_id'];
+            $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
+            $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
+            $tpl_menu->assign('<!--CURRENT_USER_FN-->',    htmlspecialchars($this->auth->FN));
+            $tpl_menu->assign('<!--CURRENT_USER_LN-->',    htmlspecialchars($this->auth->LN));
+            $tpl_menu->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
 
-                if ($data['is_public'] == 'Y') {
-                    if ($data['isset_home_page'] == 'N') {
+
+            $modules_js     = [];
+            $modules_css    = [];
+            $navigate_items = [];
+            $modules        = $this->getModuleList();
+
+            foreach ($modules as $module) {
+                if ( ! empty($module['sm_key'])) {
+                    continue;
+                }
+
+                $module_id = $module['module_id'];
+
+                if ($module['is_public'] == 'Y') {
+                    if ($module['isset_home_page'] == 'N') {
                         $first_action = 'index';
-                        foreach ($mods as $mod) {
-                            if ( ! empty($mod['sm_id']) && $data['m_id'] == $mod['m_id']) {
+
+                        foreach ($modules as $mod) {
+                            if ( ! empty($mod['sm_id']) && $module['m_id'] == $mod['m_id']) {
                                 $first_action = $mod['sm_key'];
                                 break;
                             }
                         }
+
                         $url           = "index.php?module={$module_id}&action={$first_action}";
                         $module_action = "&action={$first_action}";
+
                     } else {
                         $url           = "index.php?module=" . $module_id;
                         $module_action = '';
                     }
 
-                    $html .= str_replace(
-                        array('[MODULE_ID]', '[MODULE_NAME]', '[MODULE_ACTION]', '[MODULE_URL]'),
-                        array($module_id, $data['m_name'], $module_action, $url),
-                        $modtpl
-                    );
+                    $tpl_menu->modules->assign('[MODULE_ID]',     $module_id);
+                    $tpl_menu->modules->assign('[MODULE_NAME]',   $module['m_name']);
+                    $tpl_menu->modules->assign('[MODULE_ACTION]', $module_action);
+                    $tpl_menu->modules->assign('[MODULE_URL]',    $url);
+                    $tpl_menu->modules->reassign();
                 }
 
-                if ($module_id == 'admin') continue;
+                if ($module_id == 'admin') {
+                    continue;
+                }
+
                 $location      = $this->getModuleLocation($module_id); //получение расположения модуля
                 $modController = "Mod" . ucfirst($module_id) . "Controller";
                 $file_path     = $location . "/" . $modController . ".php";
+
                 if (file_exists($file_path)) {
                     ob_start();
                     $autoload = $location . "/vendor/autoload.php";
+
                     if (file_exists($autoload)) {
                         require_once $autoload;
                     }
+
                     require_once $file_path;
-                    if (class_exists($modController)) { // подключаем класс модуля
+
+                    // подключаем класс модуля
+                    if (class_exists($modController)) {
                         $this->setContext($module_id);
                         $modController = new $modController();
-                        if (method_exists($modController, 'topJs')) {
-                            if ($modEvent = $modController->topJs()) {
-                                $js = array_merge($js, $modEvent);
-                            }
+
+                        if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
+                            $module_js = $modController->topJs()
+                        ) {
+                            $modules_js = array_merge($modules_js, $module_js);
+                        }
+
+                        if ($modController instanceof TopCss &&
+                            $module_css = $modController->topCss()
+                        ) {
+                            $modules_css = array_merge($modules_css, $module_css);
+                        }
+
+                        if (THEME !== 'default' &&
+                            ! Tool::isMobileBrowser() &&
+                            $modController instanceof Navigation &&
+                            $module_navigation_items = $modController->getNavigationItems()
+                        ) {
+                            $navigate_items[$module_id] = $module_navigation_items;
                         }
                     }
                     ob_clean();
                 }
             }
 
-            $modtpl = $tpl2->getBlock('submodules');
-            $html2 = "";
-            foreach ($mods as $data) {
-                if ( ! empty($data['sm_key']) && $data['is_public'] === 'Y') {
-                    $url = "index.php?module=" . $data['module_id'] . "&action=" . $data['sm_key'];
-                    $html2 .= str_replace(array('[MODULE_ID]', '[SUBMODULE_ID]', '[SUBMODULE_NAME]', '[SUBMODULE_URL]'),
-                                          array($data['module_id'], $data['sm_key'], $data['sm_name'], $url),
-                                          $modtpl);
-                }
-            }
-            $tpl->assign('<!--index-->', $tpl2->parse());
-            $out = '';
-            if ($js) {
-                foreach ($js as $src) {
-                    $out .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
-                }
-            }
-            $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\" language=\"javascript\">var coreTheme='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
-            $html = str_replace("<!--modules-->",    $html,  $tpl->parse());
-            $html = str_replace("<!--submodules-->", $html2, $html);
+            foreach ($modules as $module) {
+                if ( ! empty($module['sm_key']) && $module['is_public'] === 'Y') {
+                    $url = "index.php?module=" . $module['module_id'] . "&action=" . $module['sm_key'];
 
-            //publish conf.ini system.css
-            //publish conf.ini system.js
+                    $tpl_menu->submodules->assign('[MODULE_ID]',      $module['module_id']);
+                    $tpl_menu->submodules->assign('[SUBMODULE_ID]',   $module['sm_key']);
+                    $tpl_menu->submodules->assign('[SUBMODULE_NAME]', $module['sm_name']);
+                    $tpl_menu->submodules->assign('[SUBMODULE_URL]',  $url);
+                    $tpl_menu->submodules->reassign();
+                }
+            }
+
+            if ( ! empty($navigate_items)) {
+                foreach ($navigate_items as $module_name => $items) {
+                    if ( ! empty($items)) {
+                        foreach ($items as $item) {
+                            $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
+                            $tpl_menu->navigate_item->assign('[HTML]',        $this->renderNavigateItem($item));
+                            $tpl_menu->navigate_item->reassign();
+                        }
+                    }
+                }
+            }
+
+
+            $tpl->assign('<!--index-->', $tpl_menu->render());
+            $out = '';
+
+            if ( ! empty($modules_css)) {
+                foreach ($modules_css as $src) {
+                    $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
+                }
+            }
+
+            if ( ! empty($modules_js)) {
+                foreach ($modules_js as $src) {
+                    $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                }
+            }
+
+            $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
+
+
+
+
+
             if (isset($this->config->system->js)) {
                 $system_js = "";
-                if (is_object($this->config->system->js)) {
 
+                if (is_object($this->config->system->js)) {
                     foreach ($this->config->system->js as $src) {
-                        if (file_exists($src))
-                            $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+                        if (file_exists($src)) {
+                            $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                        }
                     }
-                } else {
-                    if (file_exists($src))
-                        $system_js .= '<script type="text/javascript" language="javascript" src="' . $src . '"></script>';
+
+                } elseif (file_exists($src)) {
+                    $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
-                $html = str_replace("<!--system_js-->", $system_js, $html);
+
+                $tpl->assign("<!--system_js-->", $system_js);
+            }
+
+
+            if (isset($this->config->system->css)) {
+                $system_css = "";
+
+                if (is_object($this->config->system->css)) {
+                    foreach ($this->config->system->css as $src) {
+                        if (file_exists($src)) {
+                            $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
+                        }
+                    }
+
+                } elseif (file_exists($src)) {
+                    $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
+                }
+
+                $tpl->assign("<!--system_css-->", $system_css);
+            }
+
+            return $tpl->render();
+        }
+
+
+        /**
+         * @param $navigate_item
+         * @return string
+         * @throws Exception
+         */
+        private function renderNavigateItem($navigate_item) {
+
+            if (empty($navigate_item['type'])) {
+                return '';
+            }
+
+            $html = '';
+            switch ($navigate_item['type']) {
+                case 'link':
+                    $link = ! empty($navigate_item['link'])
+                        ? $navigate_item['link']
+                        : '#';
+                    $on_click = ! empty($navigate_item['onclick'])
+                        ? $navigate_item['onclick']
+                        : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
+
+                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.link.html');
+                    $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
+                    $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
+                    $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
+                    $tpl->assign('[ID]',      ! empty($navigate_item['id']) ? $navigate_item['id'] : '');
+                    $tpl->assign('[LINK]',    $link);
+                    $tpl->assign('[ONCLICK]', $on_click);
+                    $html = $tpl->render();
+                    break;
+
+                case 'list':
+                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.list.html');
+                    $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
+                    $tpl->assign('[ICON]',  ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
+
+                    if ( ! empty($navigate_item['list'])) {
+                        foreach ($navigate_item['list'] as $list_item) {
+
+                            switch ($list_item['type']) {
+                                case 'link':
+                                    $link = ! empty($list_item['link'])
+                                        ? $list_item['link']
+                                        : '#';
+                                    $on_click = ! empty($list_item['onclick'])
+                                        ? $list_item['onclick']
+                                        : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
+
+                                    $tpl->item->link->assign('[TITLE]',   ! empty($list_item['title']) ? $list_item['title'] : '');
+                                    $tpl->item->link->assign('[ICON]',    ! empty($list_item['icon']) ? $list_item['icon'] : '');
+                                    $tpl->item->link->assign('[CLASS]',   ! empty($list_item['class']) ? $list_item['class'] : '');
+                                    $tpl->item->link->assign('[ID]',      ! empty($list_item['id']) ? $list_item['id'] : '');
+                                    $tpl->item->link->assign('[LINK]',    $link);
+                                    $tpl->item->link->assign('[ONCLICK]', $on_click);
+                                    break;
+
+                                case 'divider':
+                                    $tpl->item->touchBlock('divider');
+                                    break;
+
+                                case 'header':
+                                    $tpl->item->header->assign('[TITLE]', ! empty($list_item['title']) ? $list_item['title'] : '');
+                                    break;
+                            }
+
+                            $tpl->item->reassign();
+                        }
+                    }
+
+                    $html = $tpl->render();
+                    break;
             }
 
             return $html;
@@ -997,7 +1271,13 @@
                 $api = true;
             } //TODO do it for SOAP
 
-            $route = array('module' => '', 'action' => 'index', 'params' => array(), 'query' => $_SERVER['QUERY_STRING']);
+            $route = array(
+                'module'  => '',
+                'action'  => 'index',
+                'version' => '',
+                'params'  => array(),
+                'query'   => $_SERVER['QUERY_STRING']
+            );
 
             $co = count($temp2);
             if ($co) {
@@ -1110,41 +1390,53 @@
          * @throws Exception
          */
         private function getMenuMobile() {
+
             header('Content-type: application/json; charset="utf-8"');
-            $mods   = $this->getModuleList();
-            $modsList = array();
+
+            $mods     = $this->getModuleList();
+            $modsList = [];
+
             foreach ($mods as $data) {
                 if ($data['is_public'] == 'Y') {
-                    $modsList[$data['m_id']] = array(
+                    $modsList[$data['m_id']] = [
                         'module_id'  => $data['module_id'],
                         'm_name'     => strip_tags($data['m_name']),
                         'm_id'       => $data['m_id'],
-                        'submodules' => array()
-                    );
+                        'submodules' => []
+                    ];
                 }
             }
             foreach ($mods as $data) {
                 if ( ! empty($data['sm_id']) && $data['is_public'] == 'Y') {
-                    $modsList[$data['m_id']]['submodules'][] = array(
+                    $modsList[$data['m_id']]['submodules'][] = [
                         'sm_id'   => $data['sm_id'],
                         'sm_key'  => $data['sm_key'],
                         'sm_name' => strip_tags($data['sm_name'])
-                    );
+                    ];
                 }
             }
+
             //проверяем наличие контроллера для core2m в модулях
             foreach ($modsList as $k => $data) {
-                $location = $this->getModuleLocation($data['module_id']);
+                $location      = $this->getModuleLocation($data['module_id']);
                 $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
-                if (!file_exists($location . "/$modController.php")) {
+                if ( ! file_exists($location . "/$modController.php")) {
                     unset($modsList[$k]);
                 }
             }
-            $modsList = array('system_name' => strip_tags($this->getSystemName()),
-                              'login'       => $this->auth->NAME,
-                              'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
-                              'modules'     => $modsList);
-            return json_encode($modsList);
+            $data = [
+                'system_name' => strip_tags($this->getSystemName()),
+                'id'          => $this->auth->ID,
+                'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
+                'login'       => $this->auth->NAME,
+                'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'modules'     => $modsList
+            ];
+
+            return json_encode([
+                'status' => 'success',
+                'data'   => $data,
+            ]);
         }
 
 
@@ -1206,16 +1498,6 @@
             }
 
             return '';
-        }
-
-        public function __destruct() {
-            if ($this->config->system->profile && $this->config->system->profile->on) {
-                $log = new \Core2\Log('profile');
-                if ($log->getWriter()) {
-                    $log->info('query----------------------->', [$_SERVER['QUERY_STRING']]);
-                    $log->info('sql', $this->db->fetchAll("show profiles"));
-                }
-            }
         }
     }
 

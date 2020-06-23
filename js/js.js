@@ -384,16 +384,49 @@ function removePDF() {
     $('body').css('overflow', '');
 }
 
+
+/**
+ * @param url
+ */
+var loadExt = function (url) {
+	preloader.show();
+	$("#main_body").prepend(
+		'<div class="ext-panel hidden">' +
+		'<div class="ext-main-panel"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+		'</div>'
+
+	);
+
+	$("#core-iframe").load( function() {
+		$("body").css("overflow", "hidden");
+
+		$("#main_body .ext-main-panel").css({
+			'height': $("body").height() - $("#menuContainer").height() + 5
+		});
+
+		preloader.hide();
+		$('.ext-panel').removeClass('hidden');
+		$(window).hashchange( function() {
+			$("body").removeClass("ext-open");
+		});
+	});
+};
+
+
 function resize() {
-    $("#mainContainer").css('padding-top', $("#menuContainer").height() + 5);
-    $("#main_body").height($("#rootContainer").height() - ($("#menuContainer").height() + 15));
-    $("#main_body > .pdf-panel").css({
+	$("#mainContainer").css('padding-top', $("#menuContainer").height() + 5);
+	$("#main_body").height($("#rootContainer").height() - ($("#menuContainer").height() + 15));
+
+	$("#main_body > .pdf-panel").css({
         'margin-top'  : $(document).scrollTop() - 5
     });
 
     $("#main_body .pdf-main-panel").css({
         'height'      : ($("body").height() - ($("#menuContainer").height()) - 41),
     });
+	$("#main_body .ext-main-panel").css({
+		'height': $("body").height() - $("#menuContainer").height()
+	});
 }
 
 $(function(){

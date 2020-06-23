@@ -6,6 +6,8 @@ require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 
+require_once 'Interfaces/File.php';
+
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
 require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/User.php";
@@ -23,14 +25,15 @@ use Core2\InstallModule as Install;
 
 /**
  * Class CoreController
- * @property Users        $dataUsers
- * @property Enum         $dataEnum
- * @property Modules      $dataModules
- * @property Roles        $dataRoles
- * @property SubModules   $dataSubModules
- * @property UsersProfile $dataUsersProfile
+ * @property Users         $dataUsers
+ * @property Enum          $dataEnum
+ * @property Modules       $dataModules
+ * @property Roles         $dataRoles
+ * @property SubModules    $dataSubModules
+ * @property UsersProfile  $dataUsersProfile
+ * @property ModProfileApi $apiProfile
  */
-class CoreController extends Common {
+class CoreController extends Common implements File {
 
 	const RP = '8c1733d4cd0841199aa02ec9362be324';
 	protected $tpl = '';
@@ -200,7 +203,7 @@ class CoreController extends Common {
 			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
 		}
 		else {
-            $authNamespace = Zend_Registry::get('auth');
+            $authNamespace = new SessionContainer('Auth');
             if (empty($this->auth->TOKEN) || $this->auth->TOKEN !== $post['action'] || $this->auth->TOKEN !== md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT'])) {
                 $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
                 return false;
@@ -320,7 +323,7 @@ class CoreController extends Common {
 						$authNamespace->LN 		= $res['lastname'];
 						$authNamespace->FN 		= $res['firstname'];
 						$authNamespace->MN 		= $res['middlename'];
-						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y' ? true : false;
+						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y';
 						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
 						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : 0;
                         $authNamespace->LIVEID  = $this->storeSession($authNamespace);
@@ -539,7 +542,7 @@ class CoreController extends Common {
                     if ($noauthor) {
                         throw new \Exception($this->translate->tr("Данные не содержат признака автора!"));
                     } else {
-                        $auth = \Zend_Registry::get('auth');
+                        $auth = new SessionContainer('Auth');
                     }
                 }
                 if ($nodelete) {
@@ -605,28 +608,31 @@ class CoreController extends Common {
 
 	/**
      * Субмодуль Пользователи
-     *
 	 * @throws Exception
      * @return void
 	 */
 	public function action_users () {
-		if (!$this->auth->ADMIN) throw new Exception(911);
-		//require_once 'core2/mod/ModAjax.php';
+
+	    if ( ! $this->auth->ADMIN) {
+		    throw new Exception(911);
+        }
+
+
 		$user = new User();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
+
         if (isset($_GET['edit']) && $_GET['edit'] === '0') {
             $user->create();
             $title = $this->translate->tr("Создание нового пользователя");
-        }
-        else if (!empty($_GET['edit'])) {
+
+        } elseif ( ! empty($_GET['edit'])) {
             $user->get($_GET['edit']);
             $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
         }
+
         $tab->beginContainer($title);
-        if ($tab->activeTab == 1) {
-            $user->dispatch();
-        }
+        echo $user->dispatch();
         $tab->endContainer();
 	}
 
@@ -717,12 +723,12 @@ class CoreController extends Common {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение.'));
                     }
 
-					$supportFormMessage = "<pre>{$supportFormMessage}</pre>";
-					$supportFormMessage .= '<hr/><small>';
-					$supportFormMessage .= '<b>Хост:</b> ' . $_SERVER['HTTP_HOST'];
-					$supportFormMessage .= '<br/><b>Модуль:</b> ' . $supportFormModule;
-					$supportFormMessage .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
-					$supportFormMessage .= '</small>';
+					$html = "<pre>{$supportFormMessage}</pre>";
+					$html .= '<hr/><small>';
+					$html .= '<b>Хост:</b> ' . $_SERVER['HTTP_HOST'];
+					$html .= '<br/><b>Модуль:</b> ' . $supportFormModule;
+					$html .= '<br/><b>Пользователь:</b> ' . $dataUser['lastname'] . ' ' . $dataUser['firstname'] . ' ' . $dataUser['middlename'] . ' (Логин: ' . $dataUser['u_login'] . ')';
+					$html .= '</small>';
 
                     $email = $this->createEmail();
 
@@ -735,23 +741,48 @@ class CoreController extends Common {
 
                     $result = $email->to($to)
                         ->subject("Запрос обратной связи от {$_SERVER['HTTP_HOST']} (модуль $supportFormModule).")
-                        ->body($supportFormMessage)
+                        ->body($html)
                         ->send();
 
                     if (isset($result['error'])) {
                         throw new Exception($this->translate->tr('Не удалось отправить сообщение'));
                     }
+
+                    $this->apiProfile->sendFeedback($supportFormMessage, [
+                        'location_module' => $supportFormModule,
+                    ]);
 				}
 				echo '{}';
 			} catch (Exception $e) {
-                \Core2\Error::catchJsonException(array('error' => array($e->getMessage())), 503);
-			}
-			return;
+                \Core2\Error::catchJsonException([
+                    'error_code'    => $e->getCode(),
+                    'error_message' => $e->getMessage()
+                ], 500);
+            }
+
+            return;
 		}
 		if (file_exists('mod/home/welcome.php')) {
 			require_once 'mod/home/welcome.php';
 		}
 	}
+
+
+    /**
+     * Перехват запросов на отображение файла
+     * @param $context - контекст отображения (fileid, thumbid, tfile)
+     * @param $table - имя таблицы, с которой связан файл
+     * @param $id - id файла
+     * @return bool
+     */
+    public function action_filehandler($context, $table, $id) {
+
+        // Используется для случая когда не нужно получать список уже загруженных файлов
+        if ($table == 'core_users') {
+            echo json_encode([]);
+            return true;
+        }
+    }
 
 
 	/**

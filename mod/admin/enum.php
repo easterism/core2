@@ -1,15 +1,18 @@
-<?
+<?php
 
 $tab = new tabs('enum'); 
 
 $title = "Справочники";
+
 if (isset($_GET['edit']) && $_GET['edit'] == '0') {
 	$title = "Создание нового справочника";
 }
+
 if ( ! empty($_GET['edit'])) {
 	$name = $this->dataEnum->find($_GET['edit'])->current()->name;
 	$title = "Редактирование справочника";
 }
+
 $tab->beginContainer($title);
 	if ($tab->activeTab == 1) {
 		$this->printJs("core2/mod/admin/mod.js");
@@ -180,7 +183,6 @@ $tab->beginContainer($title);
 				$list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
 
 				$list->addColumn($this->translate->tr("Значение"),     "",    "TEXT");
-				$list->addColumn($this->translate->tr("По умолчанию"), "120", "TEXT");
 
 				$fields_sql = '';
 				if (is_array($fields) && count($fields)) {
@@ -195,18 +197,19 @@ $tab->beginContainer($title);
 			
 				$list->SQL = $this->db->quoteInto("
 					SELECT id,
-						   name,
-						   CASE is_default_sw WHEN 'Y' THEN 'Да' ELSE 'Нет' END AS is_default_sw, $fields_sql
+						   name, {$fields_sql}
+						   CASE is_default_sw WHEN 'Y' THEN 'Да' ELSE 'Нет' END AS is_default_sw,
 						   seq,
 						   is_active_sw,
 						   custom_field
 					FROM core_enum
-				    WHERE parent_id = ? ADD_SEARCH
+				    WHERE parent_id = ? /*ADD_SEARCH*/
 				    ORDER BY seq, name
 				", $_GET['edit']);
 
-				$list->addColumn($this->translate->tr("Очередность"), "105", "TEXT");
-				$list->addColumn("", 								  "1%",  "STATUS_INLINE", 'core_enum.is_active_sw');
+                $list->addColumn($this->translate->tr("По умолчанию"), "120", "TEXT");
+				$list->addColumn($this->translate->tr("Очередность"),  "105", "TEXT");
+				$list->addColumn("", 								   "1%",  "STATUS_INLINE", 'core_enum.is_active_sw');
 
 				$list->paintCondition	= "'TCOL_03' == 'N'";
 				$list->paintColor		= "ffffee";
@@ -217,19 +220,37 @@ $tab->beginContainer($title);
 
 				$list->getData();
 				foreach ($list->data as $key => $row) {
-					$name_val = explode(":::", end($row));
-                    if ( ! empty($name_val)) {
-                        foreach ($name_val as $v) {
-                            if (strpos($v, '::') !== false) {
-                                $temp = explode("::", $v);
+
+                    $fields_values = explode(":::", end($row));
+                    if ( ! empty($fields_values)) {
+                        foreach ($fields_values as $fields_value) {
+                            if (strpos($fields_value, '::') !== false) {
+                                $temp = explode("::", $fields_value);
                                 if (($k = array_search('id_' . $temp[0], $row))) {
                                     $list->data[$key][$k] = $temp[1];
                                 }
                             }
                         }
-					}
+
+                        if ( ! empty($fields)) {
+                            $i = 2;
+                            foreach ($fields as $field) {
+                                switch ($field['type']) {
+                                    case '5':
+                                        $list->data[$key][$i] = $list->data[$key][$i] == 'Y'
+                                            ? 'Да'
+                                            : ($list->data[$key][$i] == 'N' ? 'Нет' : '');
+                                        break;
+                                }
+
+                                $i++;
+                            }
+                        }
+                    }
+
+
                     // очищает незаполненые поля
-                    for ($i = 3; $i < count($row) - 3; $i++) {
+                    for ($i = 2; $i < count($row) - 2; $i++) {
                         if ( ! empty($list->data[$key][$i]) && strpos($list->data[$key][$i], 'id_') === 0) {
                             $list->data[$key][$i] = '';
                         }
@@ -252,7 +273,7 @@ $tab->beginContainer($title);
 					   (SELECT COUNT(1) FROM core_enum WHERE parent_id = e.id) AS co,
 					   is_active_sw
 				FROM core_enum AS e
-				WHERE parent_id IS NULL ADD_SEARCH
+				WHERE parent_id IS NULL /*ADD_SEARCH*/
 				ORDER BY `name`
 			";
 			$list->addColumn($this->translate->tr("Идентификатор"), 	   "120", "TEXT");

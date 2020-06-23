@@ -294,7 +294,25 @@ var edit = {
      */
     toggleGroup: function (toggleObject) {
         $(toggleObject).parent().next().slideToggle('fast');
-    }
+    },
+
+
+	/**
+	 * @param container
+	 */
+	switchToggle: function (container) {
+
+		var isActiveControl = $(container).find(':checked').hasClass('core-switch-active');
+
+		if (isActiveControl) {
+			$(container).find('.core-switch-active').prop('checked', false);
+			$(container).find('.core-switch-inactive').prop('checked', true);
+
+		} else {
+			$(container).find('.core-switch-active').prop('checked', true);
+			$(container).find('.core-switch-inactive').prop('checked', false);
+		}
+	}
 };
 
 
@@ -325,6 +343,5 @@ function mceSetup(id, opt) {
     for (k in opt) {
         options[k] = opt[k];
     }
-    tinymce.remove();
 	tinymce.init(options);
 }

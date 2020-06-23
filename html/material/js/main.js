@@ -40,10 +40,55 @@ var main_menu = {
                 $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
             }
         });
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	sendFeedback: function () {
+
+		var $textarea      = $('#user-section .nav-feedback textarea');
+		var moduleTitle    = $('.navbar-header .module-title').text();
+		var submoduleTitle = $('.navbar-header .module-action').text();
+
+		preloader.show();
+		$.ajax({
+			method: 'POST',
+			url: 'index.php?module=profile&action=messages&data=send_feedback',
+			data: {
+				"message" : $textarea.val(),
+				"location_href" : location.href,
+				"location_module" : moduleTitle,
+				"location_submodule" : submoduleTitle
+			},
+			dataType: 'json'
+		}).done(function (data) {
+			preloader.hide();
+
+			if (data.status !== 'success') {
+				var message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
+				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
+
+			} else {
+				$('#user-section .nav-feedback a').popover('hide');
+				$textarea.val('');
+				swal("Сообщение отправлено", "", 'success').catch(swal.noop);
+			}
+
+		}).fail(function (error) {
+			preloader.hide();
+
+			swal("Ошибка отправки сообщения", 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+		});
+	}
 };
 
 
+/**
+ * @param obj
+ * @param path
+ */
 function changeSub(obj, path) {
 	if (!obj) return;
 
@@ -68,6 +113,7 @@ function changeSub(obj, path) {
 	}
 }
 
+
 /**
  * Переключение модуля
  * @param obj
@@ -91,7 +137,7 @@ function changeRoot(obj, to, actionSelect) {
 
                 var module_id = parent.childNodes[i].id;
 				if (module_id !== 'module-admin' || (module_id === 'module-admin' && actionSelect !== 'welcome')) {
-					if ( ! actionSelect) {
+					if ( ! actionSelect || actionSelect === 'index') {
 						$(parent.childNodes[i]).find('>a').addClass('index-select');
 					} else {
 						$(parent.childNodes[i]).find('>a').removeClass('index-select');
@@ -138,6 +184,10 @@ function changeRoot(obj, to, actionSelect) {
 	if (to) load(to);
 }
 
+
+/**
+ * @returns {{width: *, height: *}}
+ */
 function viewport() {
     var e = window,
 		a = 'inner';
@@ -148,6 +198,11 @@ function viewport() {
     return { width : e[ a+'Width' ] , height : e[ a+'Height' ] }
 }
 
+
+/**
+ * @param evt
+ * @returns {boolean}
+ */
 function checkInt(evt) {
 	var keycode;
 	if (evt.keyCode) keycode = evt.keyCode;
@@ -159,12 +214,20 @@ function checkInt(evt) {
 	return false;
 }
 
+
+/**
+ *
+ */
 function goHome() {
 	$('.menu-module-selected').addClass('menu-module');
 	$('.menu-module_selected').removeClass('menu-module-selected');
 	load('index.php?module=admin&action=welcome');
 }
 
+
+/**
+ *
+ */
 function logout() {
     swal({
         title: 'Вы уверены, что хотите выйти?',
@@ -190,6 +253,10 @@ function logout() {
     );
 }
 
+
+/**
+ * @param src
+ */
 function jsToHead(src) {
 	var s = $('head').children();
 	var h = '';
@@ -210,6 +277,7 @@ function jsToHead(src) {
 	s.src = src;
 	$('head').append(s);
 }
+
 
 /**
  * @param {string} id
@@ -333,6 +401,13 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
 	}
 });
 
+
+/**
+ * @param url
+ * @param data
+ * @param id
+ * @param callback
+ */
 var load = function (url, data, id, callback) {
 	preloader.show();
 	if (!id) id = '#main_body';
@@ -346,7 +421,8 @@ var load = function (url, data, id, callback) {
 	var h = preloader.prepare(location.hash.substr(1));
 	url = preloader.prepare(url);
 
-    $("body").removeClass("pdf-open");
+    $("body").removeClass("pdf-open")
+		.removeClass("ext-open");
 
     if ($(window).width() < 768) {
         $('#main').removeClass('s-toggle');
@@ -535,6 +611,10 @@ var load = function (url, data, id, callback) {
 	}
 };
 
+
+/**
+ * @param url
+ */
 var loadPDF = function (url) {
 	preloader.show();
 	$("#main_body").prepend(
@@ -560,18 +640,53 @@ var loadPDF = function (url) {
 	});
 };
 
+
+/**
+ *
+ */
 function removePDF() {
-    $('.pdf-panel').remove();
-    $('body').removeClass('pdf-open');
+	$('.pdf-panel').remove();
+	$('body').removeClass('pdf-open');
 }
 
-function resize() {
-    $("#main_body > .pdf-panel").css({
-        'margin-top': $(document).scrollTop() - 30
-    });
 
+/**
+ * @param url
+ */
+var loadExt = function (url) {
+	preloader.show();
+	$("#main_body").prepend(
+	    '<div class="ext-panel hidden">' +
+			'<div class="ext-main-panel"><iframe id="core-iframe" frameborder="0" width="100%" height="100%" src="' + url + '"></iframe></div>' +
+        '</div>'
+
+	);
+
+	$("#core-iframe").load( function() {
+        $("body").addClass("ext-open");
+
+        $("#main_body .ext-main-panel").css({
+            'height': $("body").height() - $("#navbar-top").height()
+        });
+
+		preloader.hide();
+		$('.ext-panel').removeClass('hidden');
+        $(window).hashchange( function() {
+            $("body").removeClass("ext-open");
+        });
+	});
+};
+
+
+/**
+ *
+ */
+function resize() {
     $("#main_body .pdf-main-panel").css({
         'height': ($("body").height() - ($("#navbar-top").height()) - 40)
+    });
+    $("#main_body .ext-main-panel").css({
+        'height': $("body").height() - $("#navbar-top").height()
     });
 }
 
@@ -601,23 +716,24 @@ $(document).ready(function() {
             );
         }
         if ($('#module-profile')[0]) {
-            let title = $('#module-profile .module-title').html();
+            var title = $('#module-profile .module-title').html();
             $('.dropdown-profile.profile > a').html(title);
             $('.dropdown-profile.profile').addClass('show');
             $('.dropdown-profile.divider').addClass('show');
         }
 		if ($('#submodule-profile-messages')[0]) {
 			$('#user-section .nav-messages').addClass('show');
+			$('#user-section .nav-feedback').addClass('show');
             $('.dropdown-profile.messages').addClass('show');
 		}
         if ($('#module-settings')[0]) {
-            let title = $('#module-settings .module-title').html();
+            var title = $('#module-settings .module-title').html();
             $('.dropdown-settings > a').html(title);
             $('.dropdown-settings').addClass('show');
             $('#user-section .nav-settings').addClass('show');
         }
         if ($('#module-billing')[0]) {
-            let title = $('#module-billing .module-title').html();
+            var title = $('#module-billing .module-title').html();
             $('.dropdown-billing > a').html(title);
             $('.dropdown-billing').addClass('show');
             $('#user-section .nav-billing').addClass('show');
@@ -686,7 +802,7 @@ $(document).ready(function() {
         $("#menu-modules > .menu-module, #menu-modules > .menu-module-selected").removeClass('module-hover');
     });
 
-    if ($.cookie('sidebar_collapse')) {
+    if (localStorage.getItem('sidebar_collapse')) {
         $('#main-content, #menu-container, #menu-wrapper, #navbar-top').css('transition', "none");
         if ($(window).width() >= 768) {
             $('#main').toggleClass('s-toggle');
@@ -707,10 +823,10 @@ $(document).ready(function() {
 			}
 		}
 
-		if ($.cookie('sidebar_collapse')) {
-            $.cookie('sidebar_collapse', '');
+		if (localStorage.getItem('sidebar_collapse')) {
+			localStorage.setItem('sidebar_collapse', '');
 		} else {
-            $.cookie('sidebar_collapse', 1);
+			localStorage.setItem('sidebar_collapse', 1);
 		}
     });
 
@@ -722,7 +838,7 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').hide();
                 }
-                $.cookie('sidebar_collapse', 1);
+				localStorage.setItem('sidebar_collapse', 1);
                 return false;
             }
             if (phase === "move" && ((width < 768 && direction === "left") || (width >= 768 && direction === "right"))) {
@@ -730,11 +846,26 @@ $(document).ready(function() {
                 if (width >= 768) {
                     $('#menu-wrapper .module-submodules').show();
                 }
-                $.cookie('sidebar_collapse', '');
+				localStorage.setItem('sidebar_collapse', '');
                 return false;
             }
         }
     });
+
+    var tplFeedback =
+		"<div class=\"feedback-container\">" +
+			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
+			"<button class=\"btn btn-info pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
+			"<div class=\"clearfix\"></div>" +
+		"</div>";
+
+	$('#user-section .nav-feedback a').popover({
+		"placement" : "bottom",
+		"trigger" : "manual",
+		"title" : "Обратная связь",
+		"html" : true,
+		"content" : tplFeedback
+	});
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
@@ -859,13 +990,13 @@ $(document).ready(function() {
 
 var currentCategory = "";
 $.ui.autocomplete.prototype._renderItem = function( ul, item){
-	let term = this.term.split(' ').join('|');
-	let t 	 = item.label;
+	var term = this.term.split(' ').join('|');
+	var t 	 = item.label;
 
 	if (term) {
 		term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
 
-		let re = new RegExp("(" + term + ")", "gi");
+		var re = new RegExp("(" + term + ")", "gi");
 		t = t.replace(re, "<b>$1</b>");
 	}
 

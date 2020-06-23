@@ -91,7 +91,7 @@ var edit = {
 					ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-100px'});
 				}, 5);
 			}
-		}
+		};
 		if (this.ev[cal]) {
 			opt['beforeShowDay'] = function (day) {
 				var s = "";
@@ -144,7 +144,7 @@ var edit = {
                         ui.dpDiv.css({ 'margin-top': '20px', 'margin-left': '-180px'});
                     }, 5);
                 }
-            }
+            };
             if (this.ev[cal]) {
                 opt['beforeShowDay'] = function (day) {
                     var s = "";
@@ -240,25 +240,27 @@ var edit = {
 		document.getElementById(id).value = '';
 		document.getElementById(id + '_text').value = '';
 	},
-	maskMe: function(id) {
-		//$('#' + id).maskMoney({
-		//	allowZero: true,
-		//	thousands: ' ',
-		//	defaultZero: false,
-		//	allowNegative: true,
-		//	precision: 0
-		//});
-		//$('#' + id).maskMoney('mask');
+	maskMe: function(id, options) {
+        //options = $.extend({
+        //    allowZero: true,
+        //    thousands: ' ',
+        //    defaultZero: false,
+        //    allowNegative: true,
+        //    precision: 2
+        //}, options);
 
-		var options = $.extend({
-			numeral: true,
-			numeralDecimalMark: '.',
-			delimiter: ' ',
-			numeralDecimalScale: 2
-		}, options);
+        //$('#' + id).maskMoney(options);
+        //$('#' + id).maskMoney('mask');
+
+        var options = $.extend({
+            numeral: true,
+            numeralDecimalMark: '.',
+            delimiter: ' ',
+            numeralDecimalScale: 2
+        }, options);
 
 		new Cleave('#' + id, options);
-	},
+    },
     modal2: {
         key: '',
 
@@ -274,7 +276,11 @@ var edit = {
                 '</div>'
             );
 
-            $body_container.load(url);
+            if (typeof url === 'function') {
+				$body_container.load(url());
+			} else {
+				$body_container.load(url);
+			}
 
 
             $('#' + this.key + '-modal').modal('show');
@@ -299,9 +305,201 @@ var edit = {
     /**
      * @param toggleObject
      */
-    toggleGroup(toggleObject) {
+    toggleGroup: function(toggleObject) {
         $(toggleObject).parent().next().slideToggle('fast');
-    }
+    },
+
+
+	/**
+	 *
+	 */
+	multilist2: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param field
+		 * @param attributes
+		 * @param themePath
+		 */
+		addItem: function (fieldId, field, attributes, themePath) {
+
+			var tpl =
+				'<div class="multilist2-item" id="multilist2-item-[ID]" style="display: none">' +
+				    '<select id="[ID]" name="control[[FIELD]][]" [ATTRIBUTES]>[OPTIONS]</select> ' +
+				    '<img src="[THEME_PATH]/img/delete.png" alt="X" class="multilist2-delete"' +
+				         'onclick="edit.multilist2.deleteItem($(\'#multilist2-item-[ID]\'))">' +
+				'</div>';
+
+			var options = [];
+
+			if (typeof edit.multilist2.data[fieldId] !== "undefined") {
+				$.each(edit.multilist2.data[fieldId], function (id, title) {
+					if (typeof title === 'object') {
+						options.push('<optgroup label="' + id + '">');
+
+						$.each(title, function (grp_id, grp_title) {
+							options.push('<option value="' + grp_id + '">' + grp_title + '</option>');
+						});
+
+						options.push('</optgroup>');
+
+					} else {
+						options.push('<option value="' + id + '">' + title + '</option>');
+					}
+				});
+			}
+
+
+			attributes = attributes.replace(/\!\:\:/g, '"');
+			attributes = attributes.replace(/\!\:/g, "'");
+
+			var id = this.keygen();
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELD\]/g,      field);
+			tpl = tpl.replace(/\[ATTRIBUTES\]/g, attributes);
+			tpl = tpl.replace(/\[OPTIONS\]/g,    options.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#multilist2-' + fieldId + ' .multilist2-items').append(tpl);
+
+			$('#multilist2-item-' + id + ' select').select2({
+				language: 'ru',
+				theme: 'bootstrap',
+			});
+
+			$('#multilist2-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	},
+
+
+	/**
+	 *
+	 */
+	fieldDataset: {
+
+		data: {},
+
+		/**
+		 * @param itemContainer
+		 */
+		deleteItem: function (itemContainer) {
+			$(itemContainer).hide('fast', function () {
+				$(this).remove();
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param fieldName
+		 * @param themePath
+		 */
+		addItem: function (fieldId, fieldName, themePath) {
+
+			var tpl =
+				'<tr class="field-dataset-item" id="field-dataset-item-[ID]" style="display: none">' +
+				'[FIELDS] ' +
+				'<td><img src="[THEME_PATH]/img/delete.png" alt="X" class="field-dataset-delete"' +
+						 'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
+				'</tr>';
+
+			var tplField = '<td>' +
+						       '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+						   '</td>';
+
+			var fields = [];
+			var key    = this.keygen();
+
+			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
+				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
+					var tplFieldCustom = tplField;
+
+					if (field['code']) {
+						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
+						tplFieldCustom = tplFieldCustom.replace(/\[NUM\]/g,        key);
+						tplFieldCustom = tplFieldCustom.replace(/\[CODE\]/g,       field['code']);
+						tplFieldCustom = tplFieldCustom.replace(/\[VALUE\]/g,      '');
+						tplFieldCustom = tplFieldCustom.replace(/\[ATTRIBUTES\]/g, field['attributes'] || '');
+
+						fields.push(tplFieldCustom);
+					}
+				});
+			}
+
+
+			var id = fieldId + '-' + key;
+
+			tpl = tpl.replace(/\[ID\]/g, 		 id);
+			tpl = tpl.replace(/\[FIELDS\]/g,     fields.join(''));
+			tpl = tpl.replace(/\[THEME_PATH\]/g, themePath);
+
+			$('#field-dataset-' + fieldId + ' .field-dataset-items').append(tpl);
+			$('#field-dataset-item-' + id).show('fast');
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	},
+
+
+	/**
+	 * @param container
+	 */
+	switchToggle: function (container) {
+
+		var isActiveControl = $(container).find(':checked').hasClass('core-switch-active');
+
+		if (isActiveControl) {
+			$(container).find('.core-switch-active').prop('checked', false);
+			$(container).find('.core-switch-inactive').prop('checked', true);
+
+		} else {
+			$(container).find('.core-switch-active').prop('checked', true);
+			$(container).find('.core-switch-inactive').prop('checked', false);
+		}
+	}
 };
 
 
@@ -333,6 +531,5 @@ function mceSetup(id, opt) {
     for (k in opt) {
         options[k] = opt[k];
     }
-    tinymce.remove();
 	tinymce.init(options);
 }

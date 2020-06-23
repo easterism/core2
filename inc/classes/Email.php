@@ -1,17 +1,20 @@
-<?
+<?php
 namespace Core2;
 
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
 use Zend\Mail;
 use Zend\Mail\Transport;
+use Zend\Mime\Message as MimeMessage;
+use Zend\Mime\Mime;
+use Zend\Mime\Part as MimePart;
 
 /**
  * Class Email
  */
 class Email {
 
-    protected $mail_data = array(
+    protected $mail_data = [
         'from'       => '',
         'to'         => '',
         'subject'    => '',
@@ -19,28 +22,26 @@ class Email {
         'cc'         => '',
         'bcc'        => '',
         'importance' => 'NORMAL',
-        'files'      => array()
-    );
+        'files'      => []
+    ];
 
 
     /**
      * Добавление файла к письму
-     *
      * @param string $content
      * @param string $name
-     * @param string $mimetype
+     * @param string $mime_type
      * @param int $size
-     *
      * @return $this
      */
-    public function attacheFile($content, $name, $mimetype, $size) {
+    public function attacheFile($content, $name, $mime_type, $size) {
 
-        $this->mail_data['files'][] = array(
-            'content'   => $content,
-            'name'      => $name,
-            'mimetype'  => $mimetype,
-            'size'      => $size
-        );
+        $this->mail_data['files'][] = [
+            'content'  => $content,
+            'name'     => $name,
+            'mimetype' => $mime_type,
+            'size'     => $size
+        ];
 
         return $this;
     }
@@ -195,41 +196,37 @@ class Email {
                     ? $config->system->name
                     : $server;
 
-                $this->mail_data['from'] = array(
-                    'noreply@' . (substr_count($server, ".") > 0 ? $server : $server . '.com'),
-                    $server_name
-                );
-
-            } elseif (is_string($this->mail_data['from'])) {
-                $from = explode('<', $this->mail_data['from']);
-                if ( ! empty($from[1])) {
-                    $this->mail_data['from'] = array(
-                        trim($from[1], '<> '),
-                        trim($from[0])
-                    );
-                }
+                $this->mail_data['from'] = "$server_name <noreply@{$server}>";
             }
-
-            if (is_string($this->mail_data['to'])) {
-                $to = explode('<', $this->mail_data['to']);
-                if ( ! empty($to[1])) {
-                    $this->mail_data['to'] = array(
-                        trim($to[1], '<> '),
-                        trim($to[0])
-                    );
-                }
-            }
-
 
             if ($db->isModuleActive('queue')) {
-                $version = $db->getModuleVersion('queue');
+                $version  = $db->getModuleVersion('queue');
+                $location = $db->getModuleLocation('queue');
+                require_once $location . '/ModQueueController.php';
 
                 if (version_compare($version, '1.2.0', '<')) {
                     // DEPRECATED
-                    $location = $db->getModuleLocation('queue');
-                    require_once $location . '/ModQueueController.php';
-
                     $queue = new \modQueueController();
+
+                    if (is_string($this->mail_data['from'])) {
+                        $from = explode('<', $this->mail_data['from']);
+                        if ( ! empty($from[1])) {
+                            $this->mail_data['from'] = [
+                                trim($from[1], '<> '),
+                                trim($from[0])
+                            ];
+                        }
+                    }
+
+                    if (is_string($this->mail_data['to'])) {
+                        $to = explode('<', $this->mail_data['to']);
+                        if ( ! empty($to[1])) {
+                            $this->mail_data['to'] = [
+                                trim($to[1], '<> '),
+                                trim($to[0])
+                            ];
+                        }
+                    }
 
                     $this->mail_data['date_send'] = $immediately
                         ? new \Zend_Db_Expr('NOW()')
@@ -265,7 +262,7 @@ class Email {
                     $zend_db->commit();
 
                     if ($immediately) {
-                        $is_send = $this->zend_send(
+                        $is_send = $this->zendSend(
                             $this->mail_data['from'],
                             $this->mail_data['to'],
                             $this->mail_data['subject'],
@@ -280,11 +277,7 @@ class Email {
                         }
                     }
 
-                }
-                else {
-                    $location = $db->getModuleLocation('queue');
-                    require_once $location . '/ModQueueController.php';
-
+                } elseif (version_compare($version, '1.5.0', '<=')) {
                     $queue = new \modQueueController();
 
                     $this->mail_data['date_send'] = $immediately
@@ -294,7 +287,7 @@ class Email {
                     $queue->createMail($this->mail_data);
 
                     if ($immediately) {
-                        $is_send = $this->zend_send(
+                        $is_send = $this->zendSend(
                             $this->mail_data['from'],
                             $this->mail_data['to'],
                             $this->mail_data['subject'],
@@ -308,11 +301,15 @@ class Email {
                             throw new \Exception('Не удалось отправить сообщение');
                         }
                     }
+
+                } else {
+                    $queue = new \modQueueController();
+                    $queue->createMail($this->mail_data, $immediately);
                 }
 
             }
             else {
-                $is_send = $this->zend_send(
+                $is_send = $this->zendSend(
                     $this->mail_data['from'],
                     $this->mail_data['to'],
                     $this->mail_data['subject'],
@@ -327,10 +324,10 @@ class Email {
                 }
             }
 
-            return array('ok' => true);
+            return ['ok' => true];
 
         } catch (\Exception $e) {
-            return array('error' => $e->getMessage());
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -339,11 +336,12 @@ class Email {
      * DEPRECATED
      * Отправка мгновенного сообщения
      * @return array Массив с содержимым (ok => true) или (error => текст ошибки)
+     * @deprecated
      */
     public function sendImmediately() {
 
         try {
-            $is_send = $this->zend_send(
+            $is_send = $this->zendSend(
                 $this->mail_data['from'],
                 $this->mail_data['to'],
                 $this->mail_data['subject'],
@@ -357,7 +355,7 @@ class Email {
                 throw new \Exception('Не удалось отправить сообщение');
             }
 
-            return array('ok' => true);
+            return ['ok' => true];
 
         } catch (\Exception $e) {
             return array('error' => $e->getMessage());
@@ -369,7 +367,7 @@ class Email {
      * Отправка письма
      *
      * @param string $from
-     * @param array|string $to
+     * @param string $to
      * @param string $subj
      * @param string $body
      * @param string $cc
@@ -377,72 +375,178 @@ class Email {
      * @param array $files
      *
      * @return bool Успешна или нет отправка
+     * @throws \Zend_Exception
      */
-    private function zend_send($from, $to, $subj, $body, $cc = '', $bcc = '', $files = array()) {
+    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = []) {
+
+        $config = \Zend_Registry::get('config');
 
         $message = new Mail\Message();
         $message->setEncoding('UTF-8');
+
+        // DEPRECATED
         if (is_array($from)) {
-            if (!empty($from[1])) $from = [$from[1] => $from[0]];
-            else $from = $from[0];
+            $from = "{$from[1]} <{$from[0]}>";
         }
 
-        $message->addFrom($from);
+        // DEPRECATED
+        if (is_array($to)) {
+            $to = "{$to[1]} <{$to[0]}>";
+        }
 
+        if ($config->mail && $config->mail->force_from) {
+            $reply_from            = $from;
+            $reply_email           = trim($reply_from);
+            $reply_name            = '';
+            $reply_address_explode = explode('<', $reply_from);
+
+            if ( ! empty($reply_address_explode[1])) {
+                $reply_email = trim($reply_address_explode[1], '> ');
+                $reply_name  = trim($reply_address_explode[0]);
+            }
+
+            $message->setReplyTo($reply_email, $reply_name);
+            $from = $config->mail->force_from;
+        }
+
+        $from_email           = trim($from);
+        $from_name            = '';
+        $from_address_explode = explode('<', $from);
+
+        if ( ! empty($from_address_explode[1])) {
+            $from_email = trim($from_address_explode[1], '> ');
+            $from_name  = trim($from_address_explode[0]);
+        }
+        $message->setFrom($from_email, $from_name);
+
+
+
+
+        // TO
         if (is_array($to)) {
             $message->addTo($to[0], $to[1]);
+
         } else {
-            $message->addTo($to);
+            $to_addresses_explode = explode(',', $to);
+            foreach ($to_addresses_explode as $to_address) {
+                if (empty(trim($to_address))) {
+                    continue;
+                }
+
+                $to_email           = trim($to_address);
+                $to_name            = '';
+                $to_address_explode = explode('<', $to_address);
+
+                if ( ! empty($to_address_explode[1])) {
+                    $to_email = trim($to_address_explode[1], '> ');
+                    $to_name  = trim($to_address_explode[0]);
+                }
+
+                $message->addTo($to_email, $to_name);
+            }
         }
 
-        if (!empty($cc)) $message->addCc($cc);
-        if (!empty($bcc)) $message->addBcc($bcc);
+        // CC
+        if ( ! empty($cc)) {
+            $cc_addresses_explode = explode(',', $cc);
+            foreach ($cc_addresses_explode as $cc_address) {
+                if (empty(trim($cc_address))) {
+                    continue;
+                }
+
+                $cc_email           = trim($cc_address);
+                $cc_name            = '';
+                $cc_address_explode = explode('<', $cc_address);
+
+                if ( ! empty($cc_address_explode[1])) {
+                    $cc_email = trim($cc_address_explode[1], '> ');
+                    $cc_name  = trim($cc_address_explode[0]);
+                }
+
+                $message->addCc($cc_email, $cc_name);
+            }
+        }
+
+
+        // BCC
+        if ( ! empty($bcc)) {
+            $bcc_addresses_explode = explode(',', $bcc);
+            foreach ($bcc_addresses_explode as $bcc_address) {
+                if (empty(trim($bcc_address))) {
+                    continue;
+                }
+
+                $bcc_email           = trim($bcc_address);
+                $bcc_name            = '';
+                $bcc_address_explode = explode('<', $bcc_address);
+
+                if ( ! empty($bcc_address_explode[1])) {
+                    $bcc_email = trim($bcc_address_explode[1], '> ');
+                    $bcc_name  = trim($bcc_address_explode[0]);
+                }
+
+                $message->addBcc($bcc_email, $bcc_name);
+            }
+        }
 
         $message->setSubject($subj);
-        $message->getHeaders()->addHeaderLine('Content-Type', 'text/html; charset="utf-8"');
+        $message->getHeaders()->addHeaderLine('Content-Type', 'multipart/related');
+
+        $parts = [];
+
+        $html = new MimePart($body);
+        $html->type     = Mime::TYPE_HTML;
+        $html->charset  = 'utf-8';
+        $html->encoding = Mime::ENCODING_QUOTEDPRINTABLE;
+
+        $parts[] = $html;
 
         if ( ! empty($files)) {
             foreach ($files as $file) {
-                //$at = $mail->createAttachment($file['content']);
-                //$at->type     = $file['mimetype'];
-                //$at->filename = $file['name'];
-                //TODO https://docs.zendframework.com/zend-mail/message/attachments/
+
+                $attach_file              = new MimePart($file['content']);
+                $attach_file->type        = $file['mimetype'];
+                $attach_file->filename    = $file['name'];
+                $attach_file->disposition = Mime::DISPOSITION_ATTACHMENT;
+                $attach_file->encoding    = Mime::ENCODING_BASE64;
+
+                $parts[] = $attach_file;
             }
         }
+
+        $body = new MimeMessage();
+        $body->setParts($parts);
 
         $message->setBody($body);
 
         $transport = new Transport\Sendmail();
 
-        $cnf = \Zend_Registry::get('config');
-        if (!empty($cnf->mail->server)) {
-            //$tr = new \Zend_Mail_Transport_Smtp($cnf->mail->server, $configSmtp);
+        if ( ! empty($config->mail->server)) {
+            $config_smtp = [
+                'host' => $config->mail->server
+            ];
 
-            $configSmtp = array(
-                'host' => $cnf->mail->server
-            );
-
-            if (!empty($cnf->mail->port)) {
-                $configSmtp['port'] = $cnf->mail->port;
-            }
-            if (!empty($cnf->mail->auth)) {
-                $configSmtp['connection_class'] = $cnf->mail->auth;
-                if (!empty($cnf->mail->username)) {
-                    $configSmtp['connection_config']['username'] = $cnf->mail->username;
-                }
-                if (!empty($cnf->mail->password)) {
-                    $configSmtp['connection_config']['password'] = $cnf->mail->password;
-                }
-                if (!empty($cnf->mail->ssl)) {
-                    $configSmtp['connection_config']['ssl'] = $cnf->mail->ssl;
-                }
-
-                $message->setFrom($cnf->mail->username);
-                $message->setReplyTo($from);
+            if ( ! empty($config->mail->port)) {
+                $config_smtp['port'] = $config->mail->port;
             }
 
+            if ( ! empty($config->mail->auth)) {
+                $config_smtp['connection_class'] = $config->mail->auth;
+
+                if ( ! empty($config->mail->username)) {
+                    $config_smtp['connection_config']['username'] = $config->mail->username;
+                }
+                if ( ! empty($config->mail->password)) {
+                    $config_smtp['connection_config']['password'] = $config->mail->password;
+                }
+                if ( ! empty($config->mail->ssl)) {
+                    $config_smtp['connection_config']['ssl'] = $config->mail->ssl;
+                }
+            }
+
+
+            $options   = new Transport\SmtpOptions($config_smtp);
             $transport = new Transport\Smtp();
-            $options   = new Transport\SmtpOptions($configSmtp);
             $transport->setOptions($options);
         }
 

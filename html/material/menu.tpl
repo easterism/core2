@@ -45,6 +45,10 @@
                 <div class="module-action"></div>
             </div>
             <ul id="user-section" class="nav navbar-top-links navbar-right">
+                <!-- BEGIN navigate_item -->
+                <li class="nav navbar-nav nav-[MODULE_NAME]">[HTML]</li>
+                <!-- END navigate_item -->
+
                 <li class="nav navbar-nav nav-billing">
                     <a href="index.php#module=billing" title="Оплаты"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=billing');">
@@ -55,6 +59,11 @@
                     <a href="index.php#module=settings" title="Настройки"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=settings');">
                         <i class="fa fa-gears"></i>
+                    </a>
+                </li>
+                <li class="nav navbar-nav nav-feedback">
+                    <a href="#" onclick="$(this).popover('toggle');return false;" title="Обратная связь">
+                        <i class="fa fa-comment-o"></i>
                     </a>
                 </li>
                 <li class="nav navbar-nav nav-messages">
@@ -68,18 +77,26 @@
                         <div class="avatar-container">
                             <img src="[GRAVATAR_URL]?&s=28&d=mm" alt=""/>
                         </div>
-                        <!--CURRENT_USER_FN--> <!--CURRENT_USER_LN-->
                         <i class="fa fa-caret-down"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-right dropdown-user">
+                        <li class="dropdown-user-login">
+                            <b><!--CURRENT_USER_FN--> <!--CURRENT_USER_LN--></b><br>
+                            <!--CURRENT_USER_LOGIN-->
+                        </li>
+                        <li class="divider"></li>
+
                         <li class="dropdown-profile profile">
                             <a href="index.php#module=profile"
-                               onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');"></a>
+                               onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');">
+                                <i class="fa fa-user fa-fw"></i> Профиль
+                            </a>
                         </li>
+
                         <li class="dropdown-profile divider"></li>
                         <li>
                             <a href="javascript:void(0);" onclick="logout()">
-                                <i class="fa fa-power-off"></i>
+                                <i class="fa fa-power-off fa-fw"></i>
                                 Выход
                             </a>
                         </li>

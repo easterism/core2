@@ -11,6 +11,10 @@
             <a id="heme-button" href="index.php#module=admin&action=welcome" title="<!--SYSTEM_NAME-->" class="site-name"
                onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=admin&action=welcome');"><!--SYSTEM_NAME--></a>
             <ul id="user-section" class="nav navbar-top-links navbar-right">
+                <!-- BEGIN navigate_item -->
+                <li class="nav navbar-nav nav-[MODULE_NAME]">[HTML]</li>
+                <!-- END navigate_item -->
+
                 <li class="dropdown">
                     <div class="dropdown-toggle" data-toggle="dropdown">
                         <div class="avatar-container">
@@ -19,6 +23,12 @@
                         <i class="fa fa-caret-down"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-right dropdown-user">
+                        <li class="dropdown-user-login">
+                            <b><!--CURRENT_USER_FN--> <!--CURRENT_USER_LN--></b><br>
+                            <!--CURRENT_USER_LOGIN-->
+                        </li>
+                        <li class="divider"></li>
+
                         <li class="dropdown-profile profile">
                             <a href="index.php#module=profile">
                                 <i class="fa fa-user"></i>
