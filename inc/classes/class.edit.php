@@ -37,6 +37,7 @@ class editTable extends initEdit {
      * @param string $name
      */
 	public function __construct($name) {
+
 		parent::__construct();
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;

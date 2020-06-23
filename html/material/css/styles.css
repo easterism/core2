@@ -1559,6 +1559,9 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
          -o-border-top-right-radius: 3px;
             border-top-right-radius: 3px;
 }
+.core-panel > .core-panel-heading .btn {
+    margin-top: -4px;
+}
 .core-panel > .core-panel-heading > .core-panel-subtitle {
     color: #757575;
     font-size: 14px;
