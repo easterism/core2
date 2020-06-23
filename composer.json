@@ -10,6 +10,11 @@
       "name": "misterEaster",
       "email": "easter.by@gmail.com",
       "role": "Developer"
+    },
+    {
+      "name": "Shabunin Igor",
+      "email": "shabuninil24@gmail.com",
+      "role": "Developer"
     }
   ],
   "minimum-stability": "dev",
@@ -34,9 +39,10 @@
     "belhard/simplemodal": "dev-master",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.23.*",
-    "guzzlehttp/guzzle": "~6.3",
+    "guzzlehttp/guzzle": "6.5.0",
     "blueimp/jquery-file-upload": "10.*",
-    "firephp/firephp-core": "*"
+    "firephp/firephp-core": "*",
+    "phpseclib/phpseclib": "~2.0"
   },
   "scripts": {
     "post-update-cmd": [

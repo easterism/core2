@@ -10,20 +10,18 @@ require_once __DIR__ . '/../../inc/classes/class.tab.php';
  * Class Roles
  * @package Core2
  */
-class Roles extends \Common
-{
+class Roles extends \Common {
+
     private $app = "index.php?module=admin&action=roles";
     private $_role;
 
-    /**
-     * User constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
+    /**
+     * @throws \Zend_Db_Adapter_Exception
+     * @throws \Zend_Exception
+     */
     private function table() {
+
         $tab = new \tabs('roles');
 //$tab->addTab("Доступ по умолчанию",			$app, 130);
         $tab->beginContainer($this->translate->tr("Роли и доступ"));
@@ -134,6 +132,7 @@ class Roles extends \Common
         $tab->endContainer();
     }
 
+
     /**
      * вывод
      */
@@ -145,6 +144,3 @@ class Roles extends \Common
         }
     }
 }
-
-
-

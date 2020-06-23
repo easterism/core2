@@ -69,16 +69,28 @@ class User extends \Common {
 
         $list = new \listTable('user');
 
-        $list->addSearch($this->_("Логин"),   "u.u_login", "TEXT");
-        $list->addSearch($this->_("Фамилия"), "up.lastname", "TEXT");
-        $list->addSearch($this->_("Имя"),     "up.firstname", "TEXT");
+        $search_roles = $this->db->fetchPairs("
+            SELECT id,
+                   name
+            FROM core_roles
+        ");
+
+        $list->addSearch($this->_("Логин"), "u.u_login", "TEXT");
+        $list->addSearch($this->_("ФИО"),   "CONCAT_WS(' ', up.lastname, up.firstname, up.middlename)", "TEXT");
+        $list->addSearch("Email",           "u.email", "TEXT");
+        $list->addSearch($this->_("Роль"),  "r.id", "LIST"); $list->sqlSearch[] = $search_roles;
 
         $list->SQL = "
             SELECT u_id,
                    u_login,
-                   CONCAT_WS(' ' ,up.lastname, up.firstname, up.middlename),
-                   email,
+                   CONCAT_WS(' ', up.lastname, up.firstname, up.middlename),
+                   u.email,
                    r.name,
+                   (SELECT DATE_FORMAT(login_time, '%Y-%m-%d %H:%i')
+                    FROM core_session
+                    WHERE u.u_id = user_id
+                    ORDER BY login_time DESC
+                    LIMIT 1) AS last_login,
                    u.date_added,
                    CASE u.`is_pass_changed` WHEN 'N' THEN 'Да' END AS is_pass_changed,
                    CASE u.`is_email_wrong` WHEN 'Y' THEN 'Да' END AS is_email_wrong,
@@ -91,17 +103,18 @@ class User extends \Common {
             ORDER BY u.date_added DESC
         ";
 
-        $list->addColumn($this->_("Логин"),                "100", "TEXT");
-        $list->addColumn($this->_("Имя"),                  "",    "TEXT");
-        $list->addColumn("Email",                          "155", "TEXT");
-        $list->addColumn($this->_("Роль"),                 "130", "TEXT");
-        $list->addColumn($this->_("Дата регистрации"),     "135", "DATE");
-        $list->addColumn($this->_("Нужно сменить пароль"), "165", "TEXT");
-        $list->addColumn($this->_("Неверный email"),       "125", "TEXT");
-        $list->addColumn($this->_("Админ"),                "1",   "TEXT");
-        $list->addColumn("",                               "1",   "STATUS_INLINE", "core_users.visible");
+        $list->addColumn($this->_("Логин"),                 "100", "TEXT");
+        $list->addColumn($this->_("ФИО"),                   "",    "TEXT");
+        $list->addColumn("Email",                           "155", "TEXT");
+        $list->addColumn($this->_("Роль"),                  "130", "TEXT");
+        $list->addColumn($this->_("Дата последнего входа"), "120", "DATETIME");
+        $list->addColumn($this->_("Дата регистрации"),      "135", "DATE");
+        $list->addColumn($this->_("Нужно сменить пароль"),  "120", "TEXT");
+        $list->addColumn($this->_("Неверный email"),        "125", "TEXT");
+        $list->addColumn($this->_("Админ"),                 "1",   "TEXT");
+        $list->addColumn("",                                "1",   "STATUS_INLINE", "core_users.visible");
 
-        $list->paintCondition = "'TCOL_09' == 'N'";
+        $list->paintCondition = "'TCOL_10' == 'N'";
         $list->paintColor     = "fafafa";
         $list->fontColor      = "silver";
 
@@ -150,12 +163,28 @@ class User extends \Common {
             $about_email = $this->_("Отправить информацию об изменении на email");
         }
 
+        $core_config            = \Zend_Registry::getInstance()->get('core_config');
+        $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
+        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+
+
         if ($this->auth->LDAP) {
             unset($fields[7]);
+            unset($fields[8]);
+            unset($fields[10]);
+
+        } else {
+            if ( ! $is_auth_pass_on) {
+                unset($fields[7]);
+                unset($fields[10]);
+            }
+            if ( ! $is_auth_certificate_on) {
+                unset($fields[8]);
+            }
         }
 
         $edit->SQL = $this->db->quoteInto("
-                SELECT " . implode("," . chr(10), $fields) . "
+                SELECT " . implode(",\n", $fields) . "
                 FROM core_users
                    LEFT JOIN core_users_profile AS p ON p.user_id = u_id
                 WHERE `u_id` = ?
@@ -175,9 +204,6 @@ class User extends \Common {
             $certificate = htmlspecialchars($this->_user->certificate);
         }
 
-        $html_certificate = '<br/><textarea style="min-width:385px;max-width:385px;min-height: 150px" name="control[certificate_ta]">' . ($certificate) . '</textarea>';
-
-
 
         if ( ! $this->_user->u_id) {
             $edit->addControl("Логин:", "TEXT", "maxlength=\"60\" style=\"width:385px\"", "", "", true);
@@ -190,12 +216,22 @@ class User extends \Common {
         $edit->addControl($this->_("Отчество:"), "TEXT", "maxlength=\"20\" style=\"width:385px\"", "", "");
 
         if ( ! $this->auth->LDAP) {
-            $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
+            if ( ! $this->auth->LDAP && $is_auth_pass_on) {
+                $edit->addControl($this->_("Пароль:"), "PASSWORD", "", "", "", true);
+            }
+
+            if ($is_auth_certificate_on) {
+                $cert_desc = '<br><small class="text-muted">x509</small>';
+                $edit->addControl($this->_("Сертификат:") . $cert_desc, "XFILE_AUTO", "", $this->editCert($certificate), "");
+            }
         }
 
-        $edit->addControl($this->_("Сертификат:"),                                 "XFILE_AUTO",  "", $html_certificate, "");
         $edit->addControl($this->_("Неверный email:"),                             "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
-        $edit->addControl($this->_("Предупреждение о смене пароля:"),              "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
+
+        if ( ! $this->auth->LDAP && $is_auth_pass_on) {
+            $edit->addControl($this->_("Предупреждение о смене пароля:"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['N' => 'да', 'Y' => 'нет'];
+        }
+
         $edit->addControl($this->_("Администратор безопасности (полный доступ):"), "RADIO", "", "", "N", true); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
         $edit->addControl($about_email,                                            "CHECKBOX", "", "", "0"); $edit->selectSQL[] = ['Y' => ''];
 
@@ -236,5 +272,24 @@ class User extends \Common {
         } else {
             return $this->table();
         }
+    }
+
+
+    /**
+     * @param $cert
+     * @return string
+     */
+    private function editCert($cert) {
+
+        $html = "
+            <br/>
+            <textarea style=\"min-width:385px;max-width:385px;min-height: 150px\" name=\"control[certificate_ta]\" placeholder=\"Формат base64\">{$cert}</textarea>
+            <br>
+            <label class=\"text-muted\">
+                <input type=\"checkbox\" name=\"certificate_parse\" value=\"Y\"> Использовать ФИО из сертификата
+            </label>
+        ";
+
+        return $html;
     }
 }

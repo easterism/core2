@@ -518,16 +518,17 @@ class InstallModule extends \Common {
         //копирование файлов
         $this->copyModFiles();
         //инфа о модуле
-        $arrForInsert['module_id']  = $this->mInfo['install']['module_id'];
-        $arrForInsert['m_name']     = $this->mInfo['install']['module_name'];
-        $arrForInsert['lastuser']   = $this->lastUser;
-        $arrForInsert['is_system']  = $this->mInfo['install']['module_system'];
-        $arrForInsert['is_public']  = $this->mInfo['install']['module_public'];
-        $arrForInsert['seq']        = $this->db->fetchOne("SELECT MAX(`seq`) FROM `core_modules`") + 5;
-        $arrForInsert['uninstall']  = $this->getUninstallSQL();
-        $arrForInsert['version']    = $this->mInfo['install']['version'];
-        $arrForInsert['files_hash'] = $this->mData['files_hash'];
-        $arrForInsert['visible']    = $this->is_visible == "N" ? "N" : "Y";
+        $arrForInsert['module_id']       = $this->mInfo['install']['module_id'];
+        $arrForInsert['m_name']          = $this->mInfo['install']['module_name'];
+        $arrForInsert['lastuser']        = $this->lastUser;
+        $arrForInsert['is_system']       = $this->mInfo['install']['module_system'];
+        $arrForInsert['is_public']       = $this->mInfo['install']['module_public'];
+        $arrForInsert['isset_home_page'] = isset($this->mInfo['install']['isset_home_page']) ? $this->mInfo['install']['isset_home_page'] : 'Y';
+        $arrForInsert['seq']             = (int)$this->db->fetchOne("SELECT MAX(`seq`) FROM `core_modules`") + 5;
+        $arrForInsert['uninstall']       = $this->getUninstallSQL();
+        $arrForInsert['version']         = $this->mInfo['install']['version'];
+        $arrForInsert['files_hash']      = $this->mData['files_hash'];
+        $arrForInsert['visible']         = $this->is_visible == "N" ? "N" : "Y";
 
         //обработка прав доступа
         if ($access = $this->getAccess()) {
@@ -722,13 +723,14 @@ class InstallModule extends \Common {
         $this->copyModFiles();
         //инфа о модуле
         //$arrForUpgrade['m_name']        = $this->mInfo['install']['module_name'];
-        $arrForUpgrade['lastuser']      = $this->lastUser;
-        $arrForUpgrade['is_system']     = $this->mInfo['install']['module_system'];
-        $arrForUpgrade['is_public']     = $this->mInfo['install']['module_public'];
-        $arrForUpgrade['uninstall']     = $this->getUninstallSQL();
-        $arrForUpgrade['version']       = $this->mInfo['install']['version'];
-        $arrForUpgrade['files_hash']    = $this->mData['files_hash'];
-        $arrForUpgrade['visible']       = $this->is_visible == "N" ? "N" : "Y";
+        $arrForUpgrade['lastuser']        = $this->lastUser;
+        $arrForUpgrade['is_system']       = $this->mInfo['install']['module_system'];
+        $arrForUpgrade['is_public']       = $this->mInfo['install']['module_public'];
+        $arrForUpgrade['isset_home_page'] = isset($this->mInfo['install']['isset_home_page']) ? $this->mInfo['install']['isset_home_page'] : 'Y';
+        $arrForUpgrade['uninstall']       = $this->getUninstallSQL();
+        $arrForUpgrade['version']         = $this->mInfo['install']['version'];
+        $arrForUpgrade['files_hash']      = $this->mData['files_hash'];
+        $arrForUpgrade['visible']         = $this->is_visible == "N" ? "N" : "Y";
         //обрабатываем доступ
         if ($access = $this->getAccess()) {
             $arrForUpgrade['access_default'] = $access['access_default'];

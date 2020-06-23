@@ -266,6 +266,13 @@ a {color: #337AB7}
     background-color: #42A5F5;
     color: #463265;
 }
+#user-section .dropdown-user-login {
+    font-size: 14px;
+    color: #2e2e2e;
+    line-height: 20px;
+    padding: 0 20px;
+    white-space: nowrap;
+}
 .dropdown-settings,
 .dropdown-profile,
 .dropdown-billing,

@@ -275,7 +275,7 @@ a {color: #337AB7}
     background-color: #F0F0F0;
 }
 #user-section .active .dropdown-menu > li.active > a,
-#user-section .active {
+#user-section .active > a {
     background-color: #F0F0F0;
     color: #463265;
 }
@@ -284,6 +284,13 @@ a {color: #337AB7}
     line-height: 30px;
     margin: 0;
     float: left;
+}
+#user-section .dropdown-user-login {
+    font-size: 14px;
+    color: #2e2e2e;
+    line-height: 20px;
+    padding: 0 20px;
+    white-space: nowrap;
 }
 .dropdown-profile,
 .dropdown-billing,
@@ -411,6 +418,7 @@ a {color: #337AB7}
     .buttons-container .buttons-offset {
         width: 0 !important;
     }
+    .ext-open #main .ext-panel,
     .pdf-open #main .pdf-panel {left: 0}
     body.modal-open .modal {
         overflow: auto;
@@ -463,6 +471,7 @@ a {color: #337AB7}
         margin-left: 2px;
     }
 
+    .ext-open #main.s-toggle .ext-panel,
     .pdf-open #main.s-toggle .pdf-panel {left: 50px}
 
     .navbar-top-links .dropdown-messages,

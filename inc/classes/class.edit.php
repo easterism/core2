@@ -4,6 +4,11 @@ use Zend\Session\Container as SessionContainer;
 
 $counter = 0;
 
+
+/**
+ * Class editTable
+ * @property Core2\Acl $acl
+ */
 class editTable extends initEdit {
 	public $selectSQL				= array();
 	public $buttons					= array();
@@ -32,6 +37,7 @@ class editTable extends initEdit {
      * @param string $name
      */
 	public function __construct($name) {
+
 		parent::__construct();
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
@@ -556,6 +562,27 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[FIELD]',      $field, $tpl);
                                 $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
                                 $tpl = str_replace('[ATTRIBUTES]', $value['in'], $tpl);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'switch') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+
+                            } else {
+                                $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
+                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
+                                $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
+                                $tpl = str_replace('[FIELD]',     $field, $tpl);
+                                $tpl = str_replace('[CHECKED_Y]', $value['default'] == $value_y ? 'checked="checked"' : '', $tpl);
+                                $tpl = str_replace('[CHECKED_N]', $value['default'] == $value_n ? 'checked="checked"' : '', $tpl);
+                                $tpl = str_replace('[COLOR]',     $color, $tpl);
+                                $tpl = str_replace('[VALUE_Y]',   $value_y, $tpl);
+                                $tpl = str_replace('[VALUE_N]',   $value_n, $tpl);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
@@ -1743,6 +1770,7 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printJs("core2/js/tmpl.min.js", true);
                     Tool::printJs("core2/js/load-image.min.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload.js", true);
+                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.iframe-transport.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-process.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-image.js", true);
                     Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-audio.js", true);

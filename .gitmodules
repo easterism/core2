@@ -4,6 +4,15 @@
 [submodule "mod/queue/v1.4.0"]
 	path = mod/queue/v1.4.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/queue/v1.5.0"]
+	path = mod/queue/v1.5.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/queue/v1.6.0"]
+	path = mod/queue/v1.6.0
+	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/billing/v1.8.0"]
+	path = mod/billing/v1.8.0
+	url = git@git.rdo.belhard.com:core2/modules/billing.git
 [submodule "mod/profile/v1.12.0"]
 	path = mod/profile/v1.12.0
 	url = git@git.rdo.belhard.com:core2/modules/profile.git
@@ -16,12 +25,9 @@
 [submodule "mod/webservice/v2.0.0"]
 	path = mod/webservice/v2.0.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
-[submodule "mod/billing/v1.8.0"]
-	path = mod/billing/v1.8.0
-	url = git@git.rdo.belhard.com:core2/modules/billing.git
-[submodule "mod/queue/v1.5.0"]
-	path = mod/queue/v1.5.0
-	url = git@git.rdo.belhard.com:core2/modules/queue.git
 [submodule "mod/webservice/v2.1.0"]
 	path = mod/webservice/v2.1.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/metrics/v1.0.0"]
+	path = mod/metrics/v1.0.0
+	url = git@git.rdo.belhard.com:core2/modules/metrics.git

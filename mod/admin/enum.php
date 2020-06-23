@@ -220,17 +220,35 @@ $tab->beginContainer($title);
 
 				$list->getData();
 				foreach ($list->data as $key => $row) {
-					$name_val = explode(":::", end($row));
-                    if ( ! empty($name_val)) {
-                        foreach ($name_val as $v) {
-                            if (strpos($v, '::') !== false) {
-                                $temp = explode("::", $v);
+
+                    $fields_values = explode(":::", end($row));
+                    if ( ! empty($fields_values)) {
+                        foreach ($fields_values as $fields_value) {
+                            if (strpos($fields_value, '::') !== false) {
+                                $temp = explode("::", $fields_value);
                                 if (($k = array_search('id_' . $temp[0], $row))) {
                                     $list->data[$key][$k] = $temp[1];
                                 }
                             }
                         }
-					}
+
+                        if ( ! empty($fields)) {
+                            $i = 2;
+                            foreach ($fields as $field) {
+                                switch ($field['type']) {
+                                    case '5':
+                                        $list->data[$key][$i] = $list->data[$key][$i] == 'Y'
+                                            ? 'Да'
+                                            : ($list->data[$key][$i] == 'N' ? 'Нет' : '');
+                                        break;
+                                }
+
+                                $i++;
+                            }
+                        }
+                    }
+
+
                     // очищает незаполненые поля
                     for ($i = 2; $i < count($row) - 2; $i++) {
                         if ( ! empty($list->data[$key][$i]) && strpos($list->data[$key][$i], 'id_') === 0) {

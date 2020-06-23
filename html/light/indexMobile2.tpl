@@ -9,14 +9,21 @@
     <link rel="stylesheet" href="core2/html/light/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/menu.css?_=3" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=7" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=8" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
+
+    <!--[if lte IE 10]>
+    <link rel="stylesheet" href="core2/html/light/css/sweetalert2-ie.min.css" type="text/css"/>
+    <![endif]-->
+
     <link rel="stylesheet" href="core2/html/light/css/animate.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/snarl.min.css" type="text/css"/>
+
+    <!--system_css-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
     <script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
@@ -29,6 +36,11 @@
     <script type="text/javascript" language="javascript" src="core2/html/light/js/cleave.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/sweetalert2.min.js"></script>
+
+    <!--[if lte IE 10]>
+    <script type="text/javascript" language="javascript" src="core2/html/light/js/sweetalert2-ie.min.js"></script>
+    <![endif]-->
+
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/bootstrap.min.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/control_datepicker_range.js"></script>
     <script type="text/javascript" language="javascript" src="core2/html/light/js/snarl.min.js"></script>
@@ -38,13 +50,11 @@
     <![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-    <script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=4"></script>
+    <script type="text/javascript" language="javascript" src="core2/html/light/js/class.edit.js?_=5"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=4"></script>
-    <!--[if IE]>
-    <link rel="shortcut icon" href="favicon.ico">
-    <![endif]-->
-    <link rel="icon" type="image/png" href="favicon.png">
+
+    <link rel="icon" type="image/png" href="[FAVICON_PNG]"/>
 	<!--[if lte IE 7]>
 	<style type="text/css">.iefix {display: inline-block;width: 0;overflow: hidden;}</style>
 	<![endif]-->
@@ -54,5 +64,6 @@
 <div id="rootContainer">
 <!--index-->
 </div>
+<!--system_js-->
 </body>
 </html>

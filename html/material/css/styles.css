@@ -654,6 +654,57 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .edit-checkbox input[type=checkbox] {
     margin-right: 5px;
 }
+.core-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    float:right;
+}
+.core-switch input {display:none;}
+.core-switch .core-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .15s;
+    transition: .15s;
+    border-radius: 34px;
+}
+.core-slider:before {
+    border-radius: 50%;
+}
+
+.core-switch .core-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .15s;
+    transition: .15s;
+}
+.core-switch.color-default input.core-switch-active:checked ~ .core-slider { background-color: #444;}
+.core-switch.color-primary input.core-switch-active:checked ~ .core-slider { background-color: #2196F3;}
+.core-switch.color-success input.core-switch-active:checked ~ .core-slider { background-color: #8bc34a;}
+.core-switch.color-info input.core-switch-active:checked ~ .core-slider { background-color: #3de0f5;}
+.core-switch.color-warning input.core-switch-active:checked ~ .core-slider { background-color: #FFC107;}
+.core-switch.color-danger input.core-switch-active:checked ~ .core-slider { background-color: #f44336;}
+.core-switch input:focus ~ .core-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+.core-switch input.core-switch-active:checked ~ .core-slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+}
+
+
 .core-group-head {
     font-size: 18px;
     margin-bottom: 30px;
@@ -1508,6 +1559,9 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
          -o-border-top-right-radius: 3px;
             border-top-right-radius: 3px;
 }
+.core-panel > .core-panel-heading .btn {
+    margin-top: -4px;
+}
 .core-panel > .core-panel-heading > .core-panel-subtitle {
     color: #757575;
     font-size: 14px;
@@ -2182,10 +2236,12 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-moz-placeholder           {color:#aaa;}/* Firefox 18- */
 :-ms-input-placeholder      {color:#aaa;}
 
+.ext-open,
 .pdf-open {
     overflow: hidden;
 }
-.pdf-panel {
+.pdf-panel,
+.ext-panel {
     position: fixed;
     z-index: 10;
     right: 0;
@@ -2207,7 +2263,8 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .pdf-tool-panel .btn-default:hover {
     border-color: #e6e6e6;
 }
-.pdf-main-panel {
+.pdf-main-panel,
+.ext-main-panel {
     overflow: hidden;
     background-color: #e5e5e5;
 }
