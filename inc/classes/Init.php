@@ -562,8 +562,8 @@
 
             $favicon = $this->getSystemFavicon();
 
-            $tpl->assign('[FAVICON_PNG]', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
-            $tpl->assign('[FAVICON_ICO]', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
 
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
@@ -827,8 +827,8 @@
 
             $favicon = $this->getSystemFavicon();
 
-            $tpl->assign('[FAVICON_PNG]', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
-            $tpl->assign('[FAVICON_ICO]', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
 
 
             $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());

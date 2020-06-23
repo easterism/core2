@@ -60,9 +60,9 @@
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/light/js/main.js?_=4"></script>
     <!--[if IE]>
-    <link rel="shortcut icon" type="image/x-icon" href="[FAVICON_ICO]"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
     <![endif]-->
-	<link rel="icon" type="image/png" href="[FAVICON_PNG]"/>
+	<link rel="icon" type="image/png" href="favicon.png"/>
 	<!--[if lte IE 7]>
 	<style type="text/css">.iefix {display: inline-block;width: 0;overflow: hidden;}</style>
 	<![endif]-->
