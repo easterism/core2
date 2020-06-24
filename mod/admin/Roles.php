@@ -80,7 +80,8 @@ class Roles extends \Common {
                             }
                         }
                     }
-                    $html .= '<tr><td class="roleModules">' . $value['m_name'] . '</td>'.
+
+                    $html .= '<tr><td class="roleModules" id="' . $value['module_id'] . '"><span class="roleModulesClick">' . $value['m_name'] . '</span></td>'.
                         '<td>' . str_replace("MODULE_ID", $value['module_id'], $access) . $accessAddHTML . '</td>'.
                         '</tr>';
 

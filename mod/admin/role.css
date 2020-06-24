@@ -16,3 +16,6 @@
 .modRoles {
 	height:20px;
 }
+.roleModules span {
+	cursor: pointer;
+}
