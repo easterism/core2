@@ -517,6 +517,8 @@ class InstallModule extends \Common {
         $this->installSql();
         //копирование файлов
         $this->copyModFiles();
+        //удовлетворяем зависимости модуля
+        $this->resolveDependencies(true);
         //инфа о модуле
         $arrForInsert['module_id']       = $this->mInfo['install']['module_id'];
         $arrForInsert['m_name']          = $this->mInfo['install']['module_name'];
@@ -721,6 +723,8 @@ class InstallModule extends \Common {
         $this->migrateSql();
         //копируем файлы из архива
         $this->copyModFiles();
+        //удовлетворяем зависимости модуля
+        $this->resolveDependencies();
         //инфа о модуле
         //$arrForUpgrade['m_name']        = $this->mInfo['install']['module_name'];
         $arrForUpgrade['lastuser']        = $this->lastUser;
@@ -2527,6 +2531,34 @@ class InstallModule extends \Common {
             }
         }
         return $files;
+    }
+
+    /**
+     * Установка зависимостей composer
+     * @param bool $install
+     * @throws \Exception
+     */
+    private function resolveDependencies($install = false) {
+        //return;
+        //is composer.json exists
+        if (file_exists($this->installPath . DIRECTORY_SEPARATOR . "composer.json")) {
+            chdir($this->installPath);
+            $output = "";
+            $return_var = "";
+            $msg = "";
+            exec("composer update 2>&1", $output, $return_var);
+            foreach ($output as $k => $item) {
+                $item = trim($item);
+                if ($item == '[RuntimeException]') {
+                    //$msg = $output[$k + 1];
+                    $notice = $this->translate->tr("Не удалось провести установку. Попробуйте установить зависимости вручную.");
+                    $this->addNotice($this->translate->tr("Файлы модуля"), $this->translate->tr("Проверка зависимостей: "), $notice, "danger");
+                }
+            }
+            if ($msg) {
+                throw new \Exception($msg);
+            }
+        }
     }
 
 }
