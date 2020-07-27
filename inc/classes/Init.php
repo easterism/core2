@@ -13,11 +13,11 @@
     require_once($conf_file);
     require_once("Error.php");
 
-    use Zend\Cache\StorageFactory;
-    use Zend\Session\Config\SessionConfig;
-    use Zend\Session\SessionManager;
-    use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
-    use Zend\Session\Container as SessionContainer;
+    use Laminas\Cache\StorageFactory;
+    use Laminas\Session\Config\SessionConfig;
+    use Laminas\Session\SessionManager;
+    use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
+    use Laminas\Session\Container as SessionContainer;
 
     $conf_file = DOC_ROOT . "conf.ini";
 
