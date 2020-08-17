@@ -26,6 +26,7 @@ class Panel {
     protected $tabs           = [];
     protected $theme_src      = '';
     protected $theme_location = '';
+    protected $back_url       = '';
     protected $position       = self::POSITION_TOP;
     protected $type           = self::TYPE_TABS;
 
@@ -97,12 +98,14 @@ class Panel {
 
 
     /**
-     * @param string $title
+     * @param        $title
      * @param string $description
+     * @param string $back_url
      */
-    public function setTitle($title, $description = '') {
+    public function setTitle($title, $description = '', $back_url = '') {
         $this->title       = $title;
         $this->description = $description;
+        $this->back_url    = str_replace('?', '#', $back_url);
     }
 
 
@@ -212,6 +215,10 @@ class Panel {
 
 
         if ( ! empty($this->title)) {
+            if ( ! empty($this->back_url)) {
+                $tpl->title->back_url->assign('[BACK_URL]', $this->back_url);;
+            }
+
             $tpl->title->assign('[TITLE]', $this->title);
 
             if ( ! empty($this->description)) {

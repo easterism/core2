@@ -31,3 +31,6 @@
 [submodule "mod/metrics/v1.0.0"]
 	path = mod/metrics/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/metrics.git
+[submodule "mod/cron/v3.1.0"]
+	path = mod/cron/v3.1.0
+	url = git@git.rdo.belhard.com:core2/modules/cron.git

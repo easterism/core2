@@ -37,6 +37,7 @@ class editTable extends initEdit {
      * @param string $name
      */
 	public function __construct($name) {
+
 		parent::__construct();
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
@@ -566,13 +567,17 @@ class editTable extends initEdit {
                             }
                         }
 						elseif ($value['type'] == 'switch') {
+                            $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                            $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                            $value['default'] = $value['default'] === $value_y ? $value_y : $value_n;
+
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == $value_y ? 'да' : 'нет';
 
                             } else {
-                                $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
-                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
-                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+                                $color = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
