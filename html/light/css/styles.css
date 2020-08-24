@@ -189,6 +189,22 @@ TOP MENU
     font-size: 12px;
     color: #666;
 }
+.navigate-file {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+.navigate-file input[type="file"] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    opacity: 0;
+    -ms-filter: 'alpha(opacity=0)';
+    font-size: 200px;
+    direction: ltr;
+    cursor: pointer;
+}
 .swipe-area {
     height: 100%;
     left: 0;
