@@ -1064,6 +1064,18 @@
                                     $tpl->item->link->assign('[ONCLICK]', $on_click);
                                     break;
 
+                                case 'file':
+                                    $on_change = ! empty($list_item['onchange'])
+                                        ? $list_item['onchange']
+                                        : "";
+
+                                    $tpl->item->file->assign('[TITLE]',    ! empty($list_item['title']) ? $list_item['title'] : '');
+                                    $tpl->item->file->assign('[ICON]',     ! empty($list_item['icon']) ? $list_item['icon'] : '');
+                                    $tpl->item->file->assign('[CLASS]',    ! empty($list_item['class']) ? $list_item['class'] : '');
+                                    $tpl->item->file->assign('[ID]',       ! empty($list_item['id']) ? $list_item['id'] : '');
+                                    $tpl->item->file->assign('[ONCHANGE]', $on_change);
+                                    break;
+
                                 case 'divider':
                                     $tpl->item->touchBlock('divider');
                                     break;

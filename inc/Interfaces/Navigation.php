@@ -36,6 +36,14 @@ interface Navigation {
      *          ],
      *          [
      *              "type" => 'divider'
+     *          ],
+     *          [
+     *              "type"     => "file",
+     *              "id"       => "ID Element",
+     *              "class"    => "Class Element",
+     *              "title"    => "Text",
+     *              "icon"     => '<i class="fa fa-file"></i>',
+     *              "onchange" => "alert('Файл выбран');",
      *          ]
      *       ]
      *    ]
