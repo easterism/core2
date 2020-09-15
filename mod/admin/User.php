@@ -165,7 +165,8 @@ class User extends \Common {
 
         $core_config            = \Zend_Registry::getInstance()->get('core_config');
         $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
-        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+        $is_auth_pass_on        = true;
+        if ($core_config->auth) $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
 
 
         if ($this->auth->LDAP) {
