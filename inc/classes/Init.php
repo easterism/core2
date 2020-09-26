@@ -360,6 +360,48 @@
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
             }
             else {
+                if (isset($_SERVER['REQUEST_URI'])) {
+
+                    // Обработчик данных страницы регистрации
+
+                    if (preg_match('~^/restore/pass/complete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        return $this->setPassUser();
+                    }
+
+                    if (preg_match('~^/restore_pass_user_compete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        if (empty($_GET['key'])){
+                            http_response_code(404);
+                            return '';
+                        }
+                        return $this->ConfirmRestorePassUser();
+                    }
+
+                    if (preg_match('~^/restore_pass_user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        return $this->restorePassUser();
+                    }
+
+                    if (preg_match('~^/registration/complete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        return $this->setPassUser();
+                    }
+
+                    if (preg_match('~^/confirm_reg_user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                       if (empty($_GET['key'])){
+                           http_response_code(404);
+                           return '';
+                       }
+                        return $this->registrationConfirmUser();
+                    }
+
+                    if (preg_match('~^/registration/user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        return $this->registrationUser();
+                    }
+
+                    if (preg_match('~^/registry([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        return $this->getRegistryUser();
+                    }
+                }
+
+
                 // GET LOGIN PAGE
                 if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     if ( ! empty($_POST['xjxr'])) {
@@ -370,7 +412,10 @@
                         return '';
                     }
                 }
+
                 return $this->getLogin();
+
+
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -534,6 +579,7 @@
 
             $errorNamespace = new SessionContainer('Error');
             $blockNamespace = new SessionContainer('Block');
+
             if (!empty($blockNamespace->blocked)) {
                 $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
                 $tpl2->assign('[ERROR_LOGIN]', '');
@@ -546,6 +592,7 @@
                 $tpl2->assign('[ERROR_LOGIN]', '');
             }
             $config = Zend_Registry::get('config');
+
             if (empty($config->ldap->active) || !$config->ldap->active) {
                 $tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
             }
@@ -559,6 +606,9 @@
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
 
+            if ( $this->config->registry->active == 'Y'){
+                $tpl2->registry->assign('', '');
+            }
 
             $favicon = $this->getSystemFavicon();
 
@@ -568,6 +618,352 @@
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
+
+        /**
+         * Форма Регистрации
+         * @return string
+         * @throws Zend_Exception
+         */
+        protected function getRegistryUser() {
+
+            $tpl = new Templater2();
+            if (Tool::isMobileBrowser()) {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
+            } else {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
+            }
+
+            $tpl->assign('{system_name}', $this->getSystemName());
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/RegistryUser.html");
+
+            $logo = $this->getSystemLogo();
+
+            if (is_file($logo)) {
+                $tpl2->logo->assign('{logo}', $logo);
+            }
+            if ( ! empty($this->auth->TOKEN)) {
+                $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
+            }
+
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
+            $tpl->assign('<!--index -->', $tpl2->parse());
+            return $tpl->parse();
+        }
+
+        /**
+         * @return false|string
+         * @throws Exception
+         */
+        protected  function registrationUser(){
+
+            $login = trim($_POST['email']);
+            $db = $this->getConnection($this->config->database);
+            $array_name = explode(' ', $_POST['name']);
+            $first_name  ='';
+            $middle_name ='';
+            $last_name   ='';
+            if (count($array_name) == 1 ){
+                $first_name  = $array_name[0];
+            }elseif (count($array_name) == 2){
+                $first_name  = $array_name[0];
+                $middle_name = $array_name[1];
+            }else {
+                $first_name  = $array_name[1];
+                $middle_name = $array_name[2];
+                $last_name   = $array_name[0];
+            }
+
+            $u_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+            $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+            if (!$u_id) {
+                //create new user
+
+                $db->insert('core_users', [
+                    'visible' 		=> 'N',
+                    'is_admin_sw' 	=> 'N',
+                    'u_login' 		=> $login,
+                    'email' 		=> $login,
+                    'date_added'	=> new Zend_Db_Expr('NOW()'),
+                    'role_id'       => $this->config->registry->role
+                ]);
+                $user_id = $db->lastInsertId();
+
+                $db->insert('core_users_profile', [
+                    'user_id' 		=> $user_id,
+                    'firstname' 	=> $first_name,
+                    'middlename' 	=> $middle_name,
+                    'lastname' 	    => $last_name,
+                ]);
+
+                $db->insert('mod_ordering_contractors', [
+                    'user_id' 		=> $user_id,
+                    'title' 	    => $_POST['company_name'],
+                    'email' 		=> $_POST['email'],
+                    'unp' 		    => $_POST['unp'],
+                    'phone' 		=> $_POST['tel'],
+                    'reg_key' 	    => $reg_key,
+                    'date_expired'  => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
+                ]);
+
+
+                $protocol    = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                $host        = ! empty($this->config->system) ? $this->config->system->host : '';
+                $system_name = ! empty($this->config->system) ? $this->config->system->name : $host;
+
+                $content_email = "
+                Вы зарегистрированы на сервисе {$host}<br>
+                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+
+                <a href=\"{$protocol}://{$host}/confirm_reg_user?key={$reg_key}}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/confirm_reg_user?key={$reg_key}</a>
+            ";
+
+                $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
+                $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
+
+
+                $reg = Zend_Registry::getInstance();
+                $reg->set('context', ['queue', 'index']);
+
+                require_once 'Email.php';
+                $email = new \Core2\Email();
+                $email->to($_POST['email'])
+                    ->subject("{$system_name}: Регистрация на сервисе")
+                    ->body($tpl_email)
+                    ->send(true);
+
+
+                return json_encode([
+                    'status' => 'success'
+                ]);
+
+            }else {
+
+                return json_encode([
+                    'status' => 'error'
+                ]);
+            }
+
+        }
+
+        /**
+         * @return string
+         * @throws Exception
+         */
+        protected function registrationConfirmUser(){
+            $db = $this->getConnection($this->config->database);
+            $tpl = new Templater2();
+            if (Tool::isMobileBrowser()) {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
+            } else {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
+            }
+
+            $tpl->assign('{system_name}', $this->getSystemName());
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/ConfirmRegistryUser.html");
+
+            $logo = $this->getSystemLogo();
+
+            if (is_file($logo)) {
+                $tpl2->logo->assign('{logo}', $logo);
+            }
+            $date_expired = $db->fetchRow("
+                SELECT date_expired
+                FROM mod_ordering_contractors
+                WHERE reg_key = ?
+                AND date_expired > NOW()
+            ",$_GET['key']);
+
+            if (empty($date_expired)){
+                $tpl2->error->assign('[ERROR_MSG]', 'Ссылка устарела');
+            }else {
+                $tpl2->pass->assign('[KEY]', $_GET['key']);
+            }
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
+            $tpl->assign('<!--index -->', $tpl2->parse());
+            return $tpl->parse();
+
+        }
+
+        /**
+         * @return false|string
+         */
+        protected function setPassUser(){
+            $db = $this->getConnection($this->config->database);
+
+            $user_info = $db->fetchRow("
+            SELECT user_id,
+                   id
+            FROM mod_ordering_contractors 
+            WHERE reg_key = ?
+            LIMIT 1
+        ", $_POST['key']);
+
+            $where = $db->quoteInto('id = ?', $user_info['id']);
+            $db->update('mod_ordering_contractors', [
+                'reg_key'         => new Zend_Db_Expr('NULL'),
+                'date_expired'    => new Zend_Db_Expr('NULL')
+            ], $where);
+
+            $where = $db->quoteInto('u_id = ?', $user_info['user_id']);
+            $db->update('core_users', [
+                'u_pass'         => Tool::pass_salt($_POST['password']),
+            ], $where);
+
+            return json_encode([
+                'status' => 'success'
+            ]);
+
+        }
+
+        /**
+         * @return string
+         */
+        protected  function  restorePassUser(){
+            if (! empty($_POST['email'])){
+                $db = $this->getConnection($this->config->database);
+                $user_info = $db->fetchRow("
+                    SELECT u_id
+                    FROM core_users 
+                    WHERE email = ?
+                    LIMIT 1
+            ", $_POST['email']);
+                if(! empty($user_info)){
+                    $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+
+
+                    $db = $this->getConnection($this->config->database);
+
+                    $user_info = $db->fetchRow("
+                        SELECT oc.user_id
+                        FROM core_users AS u
+                        LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
+                        WHERE u.email = ?
+                        LIMIT 1
+                    ", $_POST['email']);
+
+                    $where = $db->quoteInto('user_id = ?', $user_info['user_id']);
+                    $db->update('mod_ordering_contractors', [
+                        'reg_key'         => $reg_key,
+                        'date_expired'    =>  new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
+                    ], $where);
+
+
+
+                    $protocol    = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                    $host        = ! empty($this->config->system) ? $this->config->system->host : '';
+                    $system_name = ! empty($this->config->system) ? $this->config->system->name : $host;
+
+                    $content_email = "
+                Вы запросили смену пароля на сервисе{$host}<br>
+                Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
+
+                <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}</a>
+            ";
+
+                    $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
+                    $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
+
+
+                    $reg = Zend_Registry::getInstance();
+                    $reg->set('context', ['queue', 'index']);
+
+                    require_once 'Email.php';
+                    $email = new \Core2\Email();
+                    $email->to($_POST['email'])
+                        ->subject("{$system_name}: Восстановление пароля")
+                        ->body($tpl_email)
+                        ->send(true);
+
+                    return json_encode([
+                        'status' => 'success'
+                    ]);
+                }else {
+                    return json_encode([
+                        'message' => 'no_email'
+                    ]);
+                }
+            }
+
+            $tpl = new Templater2();
+            if (Tool::isMobileBrowser()) {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
+            } else {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
+            }
+
+            $tpl->assign('{system_name}', $this->getSystemName());
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/RestorePassUser.html");
+
+            $logo = $this->getSystemLogo();
+
+            if (is_file($logo)) {
+                $tpl2->logo->assign('{logo}', $logo);
+            }
+
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
+            $tpl->assign('<!--index -->', $tpl2->parse());
+            return $tpl->parse();
+        }
+
+        /**
+         * @return string
+         * @throws Exception
+         */
+        protected function ConfirmRestorePassUser(){
+
+            $db = $this->getConnection($this->config->database);
+            $tpl = new Templater2();
+            if (Tool::isMobileBrowser()) {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
+            } else {
+                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
+            }
+
+            $tpl->assign('{system_name}', $this->getSystemName());
+            $tpl2 = new Templater2("core2/html/" . THEME . "/login/ConfirmRestorePassUser.html");
+
+            $logo = $this->getSystemLogo();
+
+            if (is_file($logo)) {
+                $tpl2->logo->assign('{logo}', $logo);
+            }
+            $date_expired = $db->fetchRow("
+                SELECT date_expired
+                FROM mod_ordering_contractors
+                WHERE reg_key = ?
+                AND date_expired > NOW()
+            ",$_GET['key']);
+
+            if (empty($date_expired)){
+                $tpl2->error->assign('[ERROR_MSG]', 'Ссылка устарела');
+            }else {
+                $tpl2->pass->assign('[KEY]', $_GET['key']);
+            }
+            $favicon = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
+            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
+
+            $tpl->assign('<!--index -->', $tpl2->parse());
+            return $tpl->parse();
+
+        }
+
+
 
 
         /**

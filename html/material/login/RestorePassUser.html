@@ -1,0 +1,17 @@
+<form class="login-form" onsubmit="RegistryUser.RestorePassUser(this); return false">
+    <!-- BEGIN logo -->
+    <div class="container-fluid logo-container">
+        <img src="{logo}" alt="logo"/>
+    </div>
+    <!-- END logo -->
+    <!-- BEGIN error -->
+    <div id="error">[ERROR_MSG]</div>
+    <!-- END error -->
+    <div class="form-registry">
+        <h5 class="title-registry">Восстановление пароля</h5>
+        <input type="Email" name="email" class="form-control" placeholder="Email" required autofocus value="" id="UserEMAIL">
+        <button type="submit" class="log-btn" >Подтвердить</button>
+
+        <a href="/" class="brn-registry ">Войти</a>
+    </div>
+</form>

@@ -1,0 +1,21 @@
+<form class="login-form" onsubmit="RegistryUser.registry(this); return false">
+    <input name="action" type="hidden" />
+    <!-- BEGIN logo -->
+    <div class="container-fluid logo-container">
+        <img src="{logo}" alt="logo"/>
+    </div>
+    <!-- END logo -->
+    <!-- BEGIN error -->
+    <div id="error">[ERROR_MSG]</div>
+    <!-- END error -->
+    <div class="form-registry">
+        <h3 class="title-registry">Регистрация</h3>
+        <input type="text" name="unp"  class="form-control" placeholder="УНП" required autofocus value="" id="UserUNP">
+        <input type="text" name="company_name" class="form-control" placeholder="Название организации" required autofocus value="" id="UserCOMPANY_NAME">
+        <input type="text" name="name"  class="form-control" placeholder="ФИО" required autofocus value="" id="UserNAME">
+        <input type="Email" name="email" class="form-control" placeholder="Email" required autofocus value="" id="UserEMAIL">
+        <input type="tel" name="tel" class="form-control" placeholder="Телефон" required autofocus value="" id="UserTEL">
+        <button type="submit" class="log-btn" >Зарегестрироваться</button>
+        <a href="/" class="brn-registry ">Войти</a>
+    </div>
+</form>

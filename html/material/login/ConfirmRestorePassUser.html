@@ -1,0 +1,30 @@
+<form class="login-form" onsubmit="RegistryUser.ConfirmRestorePassUser(this); return false">
+    <!-- BEGIN logo -->
+    <div class="container-fluid logo-container">
+        <img src="{logo}" alt="logo"/>
+    </div>
+    <!-- END logo -->
+    <!-- BEGIN error -->
+    <div id="error">[ERROR_MSG]</div>
+    <!-- END error -->
+    <div class="form-registry">
+        <!-- BEGIN pass -->
+        <h5 class="title-registry">Восстановление пароля</h5>
+        <input class="form-control" id="key_from"  name ="key" type="hidden" value="[KEY]">
+        <div id="client-users">
+            <div class="form-group">
+                <input class="form-control" id="users_password" name="password" type="password" required autofocus placeholder="Пароль">
+                <span class="error-message"></span>
+            </div>
+
+            <div class="form-group">
+
+                <input class="form-control" id="users_password2" name="password2" type="password" required autofocus placeholder="Подтверждение пароля">
+                <span class="error-message"></span>
+            </div>
+        </div>
+        <button type="submit" class="log-btn" >Подтвердить</button>
+        <!-- END pass -->
+        <a href="/" class="brn-registry ">Войти</a>
+    </div>
+</form>
