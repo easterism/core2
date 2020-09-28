@@ -72,29 +72,6 @@ body {
     height: 40px;
 }
 
-.brn-registry {
-    display: inline-block;
-    text-align: center;
-    margin-top: 10px;
-    font-size: 16px;
-    height: 40px;
-    line-height: 40px;
-    padding: 0 24px;
-    color: #a39e9e;
-    width: 100%;
-}
-.brn-registry:hover {
-    color: #428bca;
-    text-decoration: none;
-}
-.title-registry {
-    text-transform: uppercase;
-    text-align: center;
-    margin: 15px;
-}
-.form-registry > input {
-    margin-bottom: 10px;
-}
 .error-message {
     color: #e50000;
 }

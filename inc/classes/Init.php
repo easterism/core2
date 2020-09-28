@@ -362,42 +362,55 @@
             else {
                 if (isset($_SERVER['REQUEST_URI'])) {
 
-                    // Обработчик данных страницы регистрации
+                    if (preg_match('~^/registration(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            return $this->getRegistration();
 
-                    if (preg_match('~^/restore/pass/complete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->setPassUser();
-                    }
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            return $this->registration();
 
-                    if (preg_match('~^/restore_pass_user_compete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        if (empty($_GET['key'])){
+                        } else {
                             http_response_code(404);
                             return '';
                         }
-                        return $this->ConfirmRestorePassUser();
                     }
 
-                    if (preg_match('~^/restore_pass_user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->restorePassUser();
+                    if (preg_match('~^/registration/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            if (empty($_GET['key'])){
+                                http_response_code(404);
+                                return '';
+                            }
+                            return $this->getRegistrationConfirm();
+
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            return $this->setPassUser();
+
+                        } else {
+                            http_response_code(404);
+                            return '';
+                        }
                     }
 
-                    if (preg_match('~^/registration/complete([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                    if (preg_match('~^/restore(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            return $this->getRestore();
+
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            if (empty($_GET['key'])){
+                                http_response_code(404);
+                                return '';
+                            }
+                            return $this->restoreConfirm();
+
+                        } else {
+                            http_response_code(404);
+                            return '';
+                        }
+                    }
+
+                    if (preg_match('~^/restore/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
                         return $this->setPassUser();
-                    }
-
-                    if (preg_match('~^/confirm_reg_user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                       if (empty($_GET['key'])){
-                           http_response_code(404);
-                           return '';
-                       }
-                        return $this->registrationConfirmUser();
-                    }
-
-                    if (preg_match('~^/registration/user([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->registrationUser();
-                    }
-
-                    if (preg_match('~^/registry([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->getRegistryUser();
                     }
                 }
 
@@ -414,8 +427,6 @@
                 }
 
                 return $this->getLogin();
-
-
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -607,7 +618,7 @@
             }
 
             if ( $this->config->registry->active == 'Y'){
-                $tpl2->registry->assign('', '');
+                $tpl2->touchBlock('registration');
             }
 
             $favicon = $this->getSystemFavicon();
@@ -624,7 +635,7 @@
          * @return string
          * @throws Zend_Exception
          */
-        protected function getRegistryUser() {
+        protected function getRegistration() {
 
             $tpl = new Templater2();
             if (Tool::isMobileBrowser()) {
@@ -654,73 +665,74 @@
             return $tpl->parse();
         }
 
+
         /**
          * @return false|string
          * @throws Exception
          */
-        protected  function registrationUser(){
+        protected function registration() {
 
-            $login = trim($_POST['email']);
-            $db = $this->getConnection($this->config->database);
-            $array_name = explode(' ', $_POST['name']);
-            $first_name  ='';
-            $middle_name ='';
-            $last_name   ='';
-            if (count($array_name) == 1 ){
-                $first_name  = $array_name[0];
-            }elseif (count($array_name) == 2){
+            $login       = trim($_POST['email']);
+            $db          = $this->getConnection($this->config->database);
+            $array_name  = explode(' ', $_POST['name']);
+            $first_name  = '';
+            $middle_name = '';
+            $last_name   = '';
+            if (count($array_name) == 1) {
+                $first_name = $array_name[0];
+            } elseif (count($array_name) == 2) {
                 $first_name  = $array_name[0];
                 $middle_name = $array_name[1];
-            }else {
+            } else {
                 $first_name  = $array_name[1];
                 $middle_name = $array_name[2];
                 $last_name   = $array_name[0];
             }
 
-            $u_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+            $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
             if (!$u_id) {
                 //create new user
 
                 $db->insert('core_users', [
-                    'visible' 		=> 'N',
-                    'is_admin_sw' 	=> 'N',
-                    'u_login' 		=> $login,
-                    'email' 		=> $login,
-                    'date_added'	=> new Zend_Db_Expr('NOW()'),
-                    'role_id'       => $this->config->registry->role
+                    'visible'     => 'N',
+                    'is_admin_sw' => 'N',
+                    'u_login'     => $login,
+                    'email'       => $login,
+                    'date_added'  => new Zend_Db_Expr('NOW()'),
+                    'role_id'     => $this->config->registry->role
                 ]);
                 $user_id = $db->lastInsertId();
 
                 $db->insert('core_users_profile', [
-                    'user_id' 		=> $user_id,
-                    'firstname' 	=> $first_name,
-                    'middlename' 	=> $middle_name,
-                    'lastname' 	    => $last_name,
+                    'user_id'    => $user_id,
+                    'firstname'  => $first_name,
+                    'middlename' => $middle_name,
+                    'lastname'   => $last_name,
                 ]);
 
                 $db->insert('mod_ordering_contractors', [
-                    'user_id' 		=> $user_id,
-                    'title' 	    => $_POST['company_name'],
-                    'email' 		=> $_POST['email'],
-                    'unp' 		    => $_POST['unp'],
-                    'phone' 		=> $_POST['tel'],
-                    'reg_key' 	    => $reg_key,
-                    'date_expired'  => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
+                    'user_id'      => $user_id,
+                    'title'        => $_POST['company_name'],
+                    'email'        => $_POST['email'],
+                    'unp'          => $_POST['unp'],
+                    'phone'        => $_POST['tel'],
+                    'reg_key'      => $reg_key,
+                    'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
                 ]);
 
 
-                $protocol    = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                $host        = ! empty($this->config->system) ? $this->config->system->host : '';
-                $system_name = ! empty($this->config->system) ? $this->config->system->name : $host;
+                $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                $host        = !empty($this->config->system) ? $this->config->system->host : '';
+                $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
 
                 $content_email = "
-                Вы зарегистрированы на сервисе {$host}<br>
-                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-
-                <a href=\"{$protocol}://{$host}/confirm_reg_user?key={$reg_key}}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/confirm_reg_user?key={$reg_key}</a>
-            ";
+                    Вы зарегистрированы на сервисе {$host}<br>
+                    Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+    
+                    <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
+                       style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+                ";
 
                 $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
                 $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
@@ -741,22 +753,24 @@
                     'status' => 'success'
                 ]);
 
-            }else {
+            } else {
 
                 return json_encode([
                     'status' => 'error'
                 ]);
             }
-
         }
+
 
         /**
          * @return string
          * @throws Exception
          */
-        protected function registrationConfirmUser(){
-            $db = $this->getConnection($this->config->database);
+        protected function getRegistrationConfirm(){
+
+            $db  = $this->getConnection($this->config->database);
             $tpl = new Templater2();
+
             if (Tool::isMobileBrowser()) {
                 $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
             } else {
@@ -776,11 +790,11 @@
                 FROM mod_ordering_contractors
                 WHERE reg_key = ?
                 AND date_expired > NOW()
-            ",$_GET['key']);
+            ", $_GET['key']);
 
-            if (empty($date_expired)){
+            if (empty($date_expired)) {
                 $tpl2->error->assign('[ERROR_MSG]', 'Ссылка устарела');
-            }else {
+            } else {
                 $tpl2->pass->assign('[KEY]', $_GET['key']);
             }
             $favicon = $this->getSystemFavicon();
@@ -790,57 +804,61 @@
 
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
-
         }
+
 
         /**
          * @return false|string
+         * @throws Zend_Db_Adapter_Exception
+         * @throws Zend_Db_Exception
          */
-        protected function setPassUser(){
+        protected function setPassUser() {
+
             $db = $this->getConnection($this->config->database);
 
             $user_info = $db->fetchRow("
-            SELECT user_id,
-                   id
-            FROM mod_ordering_contractors 
-            WHERE reg_key = ?
-            LIMIT 1
-        ", $_POST['key']);
+                SELECT user_id,
+                       id
+                FROM mod_ordering_contractors 
+                WHERE reg_key = ?
+                LIMIT 1
+            ", $_POST['key']);
 
             $where = $db->quoteInto('id = ?', $user_info['id']);
             $db->update('mod_ordering_contractors', [
-                'reg_key'         => new Zend_Db_Expr('NULL'),
-                'date_expired'    => new Zend_Db_Expr('NULL')
+                'reg_key'      => new Zend_Db_Expr('NULL'),
+                'date_expired' => new Zend_Db_Expr('NULL')
             ], $where);
 
             $where = $db->quoteInto('u_id = ?', $user_info['user_id']);
             $db->update('core_users', [
-                'u_pass'         => Tool::pass_salt($_POST['password']),
+                'u_pass' => Tool::pass_salt($_POST['password']),
             ], $where);
 
             return json_encode([
                 'status' => 'success'
             ]);
-
         }
 
+
         /**
-         * @return string
+         * @return false|string
+         * @throws Zend_Db_Adapter_Exception
+         * @throws Zend_Db_Exception
          */
-        protected  function  restorePassUser(){
-            if (! empty($_POST['email'])){
-                $db = $this->getConnection($this->config->database);
+        protected function getRestore() {
+
+            if ( ! empty($_POST['email'])) {
+                $db        = $this->getConnection($this->config->database);
                 $user_info = $db->fetchRow("
                     SELECT u_id
                     FROM core_users 
                     WHERE email = ?
                     LIMIT 1
-            ", $_POST['email']);
-                if(! empty($user_info)){
+                ", $_POST['email']);
+
+                if ( ! empty($user_info)) {
                     $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-
-
-                    $db = $this->getConnection($this->config->database);
 
                     $user_info = $db->fetchRow("
                         SELECT oc.user_id
@@ -852,23 +870,22 @@
 
                     $where = $db->quoteInto('user_id = ?', $user_info['user_id']);
                     $db->update('mod_ordering_contractors', [
-                        'reg_key'         => $reg_key,
-                        'date_expired'    =>  new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
+                        'reg_key'      => $reg_key,
+                        'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
                     ], $where);
 
 
-
-                    $protocol    = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                    $host        = ! empty($this->config->system) ? $this->config->system->host : '';
-                    $system_name = ! empty($this->config->system) ? $this->config->system->name : $host;
+                    $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                    $host        = !empty($this->config->system) ? $this->config->system->host : '';
+                    $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
 
                     $content_email = "
-                Вы запросили смену пароля на сервисе{$host}<br>
-                Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
-
-                <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}</a>
-            ";
+                        Вы запросили смену пароля на сервисе{$host}<br>
+                        Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
+        
+                        <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
+                           style=\"font-size: 16px\">{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}</a>
+                    ";
 
                     $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
                     $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
@@ -887,7 +904,7 @@
                     return json_encode([
                         'status' => 'success'
                     ]);
-                }else {
+                } else {
                     return json_encode([
                         'message' => 'no_email'
                     ]);
@@ -895,6 +912,7 @@
             }
 
             $tpl = new Templater2();
+
             if (Tool::isMobileBrowser()) {
                 $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
             } else {
@@ -918,15 +936,17 @@
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
+        
 
         /**
          * @return string
          * @throws Exception
          */
-        protected function ConfirmRestorePassUser(){
+        protected function restoreConfirm() {
 
-            $db = $this->getConnection($this->config->database);
+            $db  = $this->getConnection($this->config->database);
             $tpl = new Templater2();
+
             if (Tool::isMobileBrowser()) {
                 $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
             } else {
@@ -945,12 +965,12 @@
                 SELECT date_expired
                 FROM mod_ordering_contractors
                 WHERE reg_key = ?
-                AND date_expired > NOW()
-            ",$_GET['key']);
+                  AND date_expired > NOW()
+            ", $_GET['key']);
 
-            if (empty($date_expired)){
+            if (empty($date_expired)) {
                 $tpl2->error->assign('[ERROR_MSG]', 'Ссылка устарела');
-            }else {
+            } else {
                 $tpl2->pass->assign('[KEY]', $_GET['key']);
             }
             $favicon = $this->getSystemFavicon();
@@ -962,8 +982,6 @@
             return $tpl->parse();
 
         }
-
-
 
 
         /**

@@ -7,11 +7,22 @@
     <!-- BEGIN error -->
     <div id="error">[ERROR_MSG]</div>
     <!-- END error -->
-    <div class="form-registry">
-        <h5 class="title-registry">Восстановление пароля</h5>
-        <input type="Email" name="email" class="form-control" placeholder="Email" required autofocus value="" id="UserEMAIL">
-        <button type="submit" class="log-btn" >Подтвердить</button>
+    <div>
+        <h4 class="text-center">Восстановление пароля</h4>
+        <br>
 
-        <a href="/" class="brn-registry ">Войти</a>
+        <div class="form-group">
+            <input type="Email" name="email" class="form-control"
+                   placeholder="Email" required autofocus id="UserEMAIL">
+        </div>
+
+        <button type="submit" class="log-btn">Подтвердить</button>
+
+        <br><br>
+        <div>
+            <a href="/registration" class="text-muted pull-left">Регистрация</a>
+            <a href="/" class="text-muted pull-right">Войти</a>
+            <div class="clearfix"></div>
+        </div>
     </div>
 </form>

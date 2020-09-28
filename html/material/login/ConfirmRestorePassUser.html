@@ -13,18 +13,25 @@
         <input class="form-control" id="key_from"  name ="key" type="hidden" value="[KEY]">
         <div id="client-users">
             <div class="form-group">
-                <input class="form-control" id="users_password" name="password" type="password" required autofocus placeholder="Пароль">
+                <input class="form-control" id="users_password" name="password"
+                       type="password" required autofocus placeholder="Пароль">
                 <span class="error-message"></span>
             </div>
 
             <div class="form-group">
-
-                <input class="form-control" id="users_password2" name="password2" type="password" required autofocus placeholder="Подтверждение пароля">
+                <input class="form-control" id="users_password2" name="password2"
+                       type="password" required placeholder="Подтверждение пароля">
                 <span class="error-message"></span>
             </div>
         </div>
         <button type="submit" class="log-btn" >Подтвердить</button>
         <!-- END pass -->
-        <a href="/" class="brn-registry ">Войти</a>
+
+        <br><br>
+        <div>
+            <a href="/registration" class="text-muted pull-left">Регистрация</a>
+            <a href="/" class="text-muted pull-right">Войти</a>
+            <div class="clearfix"></div>
+        </div>
     </div>
 </form>
