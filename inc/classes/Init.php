@@ -757,9 +757,8 @@
             ]);
 
 
-            $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-            $host        = !empty($this->config->system) ? $this->config->system->host : '';
-            $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
+            $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+            $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
             $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
@@ -769,18 +768,14 @@
                    style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
             ";
 
-            $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
-            $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
-
-
             $reg = Zend_Registry::getInstance();
             $reg->set('context', ['queue', 'index']);
 
             require_once 'Email.php';
             $email = new \Core2\Email();
             $email->to($_POST['email'])
-                ->subject("{$system_name}: Регистрация на сервисе")
-                ->body($tpl_email)
+                ->subject("Автопромсервис: Регистрация на сервисе")
+                ->body($content_email)
                 ->send(true);
 
             return json_encode([
@@ -907,16 +902,12 @@
                     $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
                     $content_email = "
-                        Вы запросили смену пароля на сервисе{$host}<br>
-                        Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
+                        Вы запросили смену пароля на сервисе {$host}<br>
+                        Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
+                        <a href=\"{$protocol}://{$host}/restore/complete?key={$reg_key}}\" 
                            style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
-
-                    $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
-                    $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
-
 
                     $reg = Zend_Registry::getInstance();
                     $reg->set('context', ['queue', 'index']);
@@ -925,7 +916,7 @@
                     $email = new \Core2\Email();
                     $email->to($_GET['email'])
                         ->subject("Автопромсервис: Восстановление пароля")
-                        ->body($tpl_email)
+                        ->body($content_email)
                         ->send(true);
 
                     return json_encode([
