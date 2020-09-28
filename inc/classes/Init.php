@@ -384,7 +384,7 @@
                             return $this->getRegistrationConfirm();
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            return $this->setPassUser();
+                            return $this->setUserPass();
 
                         } else {
                             http_response_code(404);
@@ -410,7 +410,7 @@
                     }
 
                     if (preg_match('~^/restore/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->setPassUser();
+                        return $this->setUserPass();
                     }
                 }
 
@@ -744,7 +744,7 @@
                 require_once 'Email.php';
                 $email = new \Core2\Email();
                 $email->to($_POST['email'])
-                    ->subject("{$system_name}: Регистрация на сервисе")
+                    ->subject("Автопромсервис: Регистрация на сервисе")
                     ->body($tpl_email)
                     ->send(true);
 
@@ -812,7 +812,7 @@
          * @throws Zend_Db_Adapter_Exception
          * @throws Zend_Db_Exception
          */
-        protected function setPassUser() {
+        protected function setUserPass() {
 
             $db = $this->getConnection($this->config->database);
 
@@ -875,9 +875,8 @@
                     ], $where);
 
 
-                    $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                    $host        = !empty($this->config->system) ? $this->config->system->host : '';
-                    $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
+                    $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                    $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
                     $content_email = "
                         Вы запросили смену пароля на сервисе{$host}<br>
@@ -897,7 +896,7 @@
                     require_once 'Email.php';
                     $email = new \Core2\Email();
                     $email->to($_POST['email'])
-                        ->subject("{$system_name}: Восстановление пароля")
+                        ->subject("Автопромсервис: Восстановление пароля")
                         ->body($tpl_email)
                         ->send(true);
 
