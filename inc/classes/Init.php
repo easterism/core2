@@ -394,14 +394,12 @@
 
                     if (preg_match('~^/restore(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            return $this->getRestore();
 
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            if (empty($_GET['key'])){
-                                http_response_code(404);
-                                return '';
+                            if (empty($_GET['key'])) {
+                                    return $this->getRestore();
+                            } else {
+                                    return $this->restoreConfirm();
                             }
-                            return $this->restoreConfirm();
 
                         } else {
                             http_response_code(404);
@@ -617,9 +615,17 @@
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
 
-            if ( $this->config->registry->active == 'Y'){
-                $tpl2->touchBlock('registration');
+            if( ! empty($this->config->mail->server) &&  ! empty($this->config->mail->port) ){
+                if ( $this->config->registry->active == 'Y'){
+                    $tpl2->touchBlock('registration');
+                }
+
+                if ( $this->config->registry->restore == 'Y'){
+                    $tpl2->touchBlock('restore');
+                }
             }
+
+
 
             $favicon = $this->getSystemFavicon();
 
@@ -672,12 +678,41 @@
          */
         protected function registration() {
 
-            $login       = trim($_POST['email']);
-            $db          = $this->getConnection($this->config->database);
+            $login   = trim($_POST['email']);
+            $db      = $this->getConnection($this->config->database);
+            $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+            $u_email = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $_POST['email']));
+
+            $repeat_contractor = $db->fetchOne("
+                SELECT id
+                FROM mod_ordering_contractors
+                WHERE email = ?
+            ", $_POST['email']);
+
+            if ($u_id){
+                return json_encode([
+                    'status' => 'repeat_login'
+                ]);
+            }
+
+            if ($u_email){
+                return json_encode([
+                    'status' => 'repeat_email'
+                ]);
+            }
+
+            if ($repeat_contractor){
+                return json_encode([
+                    'status' => 'repeat_contractor'
+                ]);
+            }
+
             $array_name  = explode(' ', $_POST['name']);
             $first_name  = '';
             $middle_name = '';
             $last_name   = '';
+
+
             if (count($array_name) == 1) {
                 $first_name = $array_name[0];
             } elseif (count($array_name) == 2) {
@@ -689,76 +724,68 @@
                 $last_name   = $array_name[0];
             }
 
-            $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-            if (!$u_id) {
-                //create new user
 
-                $db->insert('core_users', [
-                    'visible'     => 'N',
-                    'is_admin_sw' => 'N',
-                    'u_login'     => $login,
-                    'email'       => $login,
-                    'date_added'  => new Zend_Db_Expr('NOW()'),
-                    'role_id'     => $this->config->registry->role
-                ]);
-                $user_id = $db->lastInsertId();
+            //create new user
 
-                $db->insert('core_users_profile', [
-                    'user_id'    => $user_id,
-                    'firstname'  => $first_name,
-                    'middlename' => $middle_name,
-                    'lastname'   => $last_name,
-                ]);
+            $db->insert('core_users', [
+                'visible'     => 'N',
+                'is_admin_sw' => 'N',
+                'u_login'     => $login,
+                'email'       => $login,
+                'date_added'  => new Zend_Db_Expr('NOW()'),
+                'role_id'     => $this->config->registry->role
+            ]);
+            $user_id = $db->lastInsertId();
 
-                $db->insert('mod_ordering_contractors', [
-                    'user_id'      => $user_id,
-                    'title'        => $_POST['company_name'],
-                    'email'        => $_POST['email'],
-                    'unp'          => $_POST['unp'],
-                    'phone'        => $_POST['tel'],
-                    'reg_key'      => $reg_key,
-                    'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
-                ]);
+            $db->insert('core_users_profile', [
+                'user_id'    => $user_id,
+                'firstname'  => $first_name,
+                'middlename' => $middle_name,
+                'lastname'   => $last_name,
+            ]);
 
-
-                $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                $host        = !empty($this->config->system) ? $this->config->system->host : '';
-                $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
-
-                $content_email = "
-                    Вы зарегистрированы на сервисе {$host}<br>
-                    Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-    
-                    <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
-                       style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
-                ";
-
-                $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
-                $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
+            $db->insert('mod_ordering_contractors', [
+                'user_id'      => $user_id,
+                'title'        => $_POST['company_name'],
+                'email'        => $_POST['email'],
+                'unp'          => $_POST['unp'],
+                'phone'        => $_POST['tel'],
+                'reg_key'      => $reg_key,
+                'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
+            ]);
 
 
-                $reg = Zend_Registry::getInstance();
-                $reg->set('context', ['queue', 'index']);
+            $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+            $host        = !empty($this->config->system) ? $this->config->system->host : '';
+            $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
 
-                require_once 'Email.php';
-                $email = new \Core2\Email();
-                $email->to($_POST['email'])
-                    ->subject("Автопромсервис: Регистрация на сервисе")
-                    ->body($tpl_email)
-                    ->send(true);
+            $content_email = "
+                Вы зарегистрированы на сервисе {$host}<br>
+                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+
+                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+            ";
+
+            $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
+            $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
 
 
-                return json_encode([
-                    'status' => 'success'
-                ]);
+            $reg = Zend_Registry::getInstance();
+            $reg->set('context', ['queue', 'index']);
 
-            } else {
+            require_once 'Email.php';
+            $email = new \Core2\Email();
+            $email->to($_POST['email'])
+                ->subject("{$system_name}: Регистрация на сервисе")
+                ->body($tpl_email)
+                ->send(true);
 
-                return json_encode([
-                    'status' => 'error'
-                ]);
-            }
+            return json_encode([
+                'status' => 'success'
+            ]);
         }
 
 
@@ -778,6 +805,7 @@
             }
 
             $tpl->assign('{system_name}', $this->getSystemName());
+
             $tpl2 = new Templater2("core2/html/" . THEME . "/login/ConfirmRegistryUser.html");
 
             $logo = $this->getSystemLogo();
@@ -848,17 +876,17 @@
          */
         protected function getRestore() {
 
-            if ( ! empty($_POST['email'])) {
+            if ( ! empty($_GET['email'])) {
                 $db        = $this->getConnection($this->config->database);
                 $user_info = $db->fetchRow("
                     SELECT u_id
                     FROM core_users 
                     WHERE email = ?
                     LIMIT 1
-                ", $_POST['email']);
+                ", $_GET['email']);
 
                 if ( ! empty($user_info)) {
-                    $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+                    $reg_key = Tool::pass_salt(md5($_GET['email'] . microtime()));
 
                     $user_info = $db->fetchRow("
                         SELECT oc.user_id
@@ -866,7 +894,7 @@
                         LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
                         WHERE u.email = ?
                         LIMIT 1
-                    ", $_POST['email']);
+                    ", $_GET['email']);
 
                     $where = $db->quoteInto('user_id = ?', $user_info['user_id']);
                     $db->update('mod_ordering_contractors', [
@@ -883,7 +911,7 @@
                         Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
                         <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
-                           style=\"font-size: 16px\">{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}</a>
+                           style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
 
                     $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
@@ -895,7 +923,7 @@
 
                     require_once 'Email.php';
                     $email = new \Core2\Email();
-                    $email->to($_POST['email'])
+                    $email->to($_GET['email'])
                         ->subject("Автопромсервис: Восстановление пароля")
                         ->body($tpl_email)
                         ->send(true);
@@ -935,7 +963,7 @@
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
-        
+
 
         /**
          * @return string
@@ -953,6 +981,7 @@
             }
 
             $tpl->assign('{system_name}', $this->getSystemName());
+
             $tpl2 = new Templater2("core2/html/" . THEME . "/login/ConfirmRestorePassUser.html");
 
             $logo = $this->getSystemLogo();

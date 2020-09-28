@@ -19,9 +19,12 @@ RegistryUser.registration = function(form) {
 
             if (data.status === 'success') {
                 swal("На указанную вами почту отправлены данные для входа в систему.", '', 'success').catch(swal.noop);
-
-            }else {
-                swal("Такой Email уже есть в системе.", '', 'error').catch(swal.noop);
+            }else if (data.status === 'repeat_login'){
+                swal("Такой Пользователь уже есть в системе.", '', 'error').catch(swal.noop);
+            }else if (data.status === 'repeat_email'){
+                swal("Пользователь с таким Email уже есть в системе.", '', 'error').catch(swal.noop);
+            }else if (data.status === 'repeat_contractor'){
+                swal("Контрагент с таким Email  уже есть в системе.", '', 'error').catch(swal.noop);
             }
         })
 
@@ -83,7 +86,7 @@ RegistryUser.RestorePassUser = function(form) {
     $.ajax({
         url: "/restore",
         dataType: "json",
-        method: "POST",
+        method: "GET",
         data: $(form).serialize()
     })
         .done(function(data, status) {
