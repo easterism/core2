@@ -396,9 +396,9 @@
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                             if (empty($_GET['key'])) {
-                                    return $this->getRestore();
+                                return $this->getRestore();
                             } else {
-                                    return $this->restoreConfirm();
+                                return $this->restoreConfirm();
                             }
 
                         } else {
@@ -764,7 +764,7 @@
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
-                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
+                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
                    style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
             ";
 
@@ -886,7 +886,7 @@
                     $user_info = $db->fetchRow("
                         SELECT oc.user_id
                         FROM core_users AS u
-                        LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
+                            LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
                         WHERE u.email = ?
                         LIMIT 1
                     ", $_GET['email']);
@@ -905,7 +905,7 @@
                         Вы запросили смену пароля на сервисе {$host}<br>
                         Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore/complete?key={$reg_key}}\" 
+                        <a href=\"{$protocol}://{$host}/restore/complete?key={$reg_key}\" 
                            style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
 
