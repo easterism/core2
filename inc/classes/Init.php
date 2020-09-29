@@ -742,7 +742,6 @@ use Zend\Cache\StorageFactory;
             $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
             $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
-
             $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>

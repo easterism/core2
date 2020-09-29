@@ -79,57 +79,29 @@ body {
 /*
 PRELOADERS
 */
-#preloader {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    z-index: 100000;
-}
-#preloader > .lock-screen {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: #fff;
-    -webkit-box-shadow: inset 0 0 10px #D8D8D8;
-    -moz-box-shadow: inset 0 0 10px #D8D8D8;
-    -o-box-shadow: inset 0 0 10px #D8D8D8;
-    box-shadow: inset 0 0 10px #D8D8D8;
-    opacity: .2;
-    cursor: wait;
-}
-#preloader > .block {
-    min-width: 140px;
-    max-width: 200px;
-    padding: 8px 15px;
-    background: #ffffff;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-    border: 1px solid #cdd1d8;
-    margin-left: -73px;
-    display: block;
-    position: absolute;
-    right: auto;
-    text-align: left;
-    left: 50%;
-    top: 22px;
-    z-index: 1031;
-    -webkit-box-shadow: 0 1px 8px #ccc;
-    box-shadow: 0 1px 8px #ccc;
-}
-#preloader > .block .spinner-icon {
-    width: 18px;
-    height: 18px;
-    box-sizing: border-box;
-    border: solid 2px transparent;
-    border-top-color: #01a8fe;
-    border-left-color: #01a8fe;
-    border-radius: 50%;
-    float: left;
-    margin-right: 13px;
-    -webkit-animation: preloader-spinner 400ms linear infinite;
-    animation: preloader-spinner 400ms linear infinite;
-}
-#preloader > .block .spinner-text {
+
+.lds-dual-ring {
     display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+}
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 15px;
+    height: 15px;
+    padding-right: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
