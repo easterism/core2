@@ -616,6 +616,7 @@
             if ( ! empty($this->auth->TOKEN)) {
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
+
             if( ! empty($this->config->mail->server) &&  ! empty($this->config->mail->port) ){
                 if ( $this->config->registry->active == 'Y'){
                     $tpl2->touchBlock('registration');
@@ -625,8 +626,6 @@
                     $tpl2->touchBlock('restore');
                 }
             }
-
-
 
             $favicon = $this->getSystemFavicon();
 
@@ -912,7 +911,7 @@
                         Вы запросили смену пароля на сервисе{$host}<br>
                         Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore_pass_user_compete?key={$reg_key}}\" 
+                        <a href=\"{$protocol}://{$host}/restore?key={$reg_key}}\" 
                            style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
 
