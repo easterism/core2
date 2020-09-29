@@ -13,7 +13,12 @@
     require_once($conf_file);
     require_once("Error.php");
 
-    use Zend\Cache\StorageFactory;
+use Core2\Acl;
+use Core2\Db;
+use Core2\Email;
+use Core2\I18n;
+use Core2\Log;
+use Zend\Cache\StorageFactory;
     use Zend\Session\Config\SessionConfig;
     use Zend\Session\SessionManager;
     use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
@@ -37,7 +42,7 @@
                 'charset' => 'utf8'
             ),
             'driver_options' => [
-                \PDO::ATTR_TIMEOUT => 3
+                PDO::ATTR_TIMEOUT => 3
             ],
             'isDefaultTableAdapter' => true,
             'profiler' => array(
@@ -117,7 +122,7 @@
 
     //подключаем мультиязычность
     require_once 'I18n.php';
-    $translate = new \Core2\I18n($config);
+    $translate = new I18n($config);
 
 	if (isset($config->auth) && $config->auth->on) {
 		$realm = $config->auth->params->realm;
@@ -198,7 +203,7 @@
 	 * Class Init
      * @property Modules $dataModules
      */
-    class Init extends \Core2\Db {
+    class Init extends Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -206,7 +211,7 @@
         protected $auth;
 
         /**
-         * @var \Core2\Acl
+         * @var Acl
          */
         protected $acl;
         protected $is_cli = false;
@@ -354,7 +359,7 @@
                 require_once 'core2/inc/Interfaces/File.php';
                 require_once 'core2/inc/Interfaces/Subscribe.php';
                 // SETUP ACL
-                $this->acl = new \Core2\Acl();
+                $this->acl = new Acl();
                 $this->acl->setupAcl();
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
@@ -518,7 +523,7 @@
         public function __destruct() {
 
             if ($this->config->system->profile && $this->config->system->profile->on) {
-                $log = new \Core2\Log('profile');
+                $log = new Log('profile');
 
                 if ($log->getWriter()) {
                     $sql_queries = $this->db->fetchAll("show profiles");
@@ -741,7 +746,6 @@
             $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-
                 <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
                    style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
             ";
@@ -750,7 +754,7 @@
             $reg->set('context', ['queue', 'index']);
 
             require_once 'Email.php';
-            $email = new \Core2\Email();
+            $email = new Email();
             $email->to($_POST['email'])
                 ->subject("Автопромсервис: Регистрация на сервисе")
                 ->body($content_email)
@@ -891,7 +895,7 @@
                     $reg->set('context', ['queue', 'index']);
 
                     require_once 'Email.php';
-                    $email = new \Core2\Email();
+                    $email = new Email();
                     $email->to($_GET['email'])
                         ->subject("Автопромсервис: Восстановление пароля")
                         ->body($content_email)
@@ -1952,7 +1956,7 @@
         parse_str($loc, $params);
         if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-        $acl = new \Core2\Acl();
+        $acl = new Acl();
 
         Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
 
@@ -1985,7 +1989,7 @@
                 }
             }
 
-            $db        = new \Core2\Db;
+            $db        = new Db;
             $location  = $db->getModuleLocation($params['module']);
             $file_path = $location . "/ModAjax.php";
 
