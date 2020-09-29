@@ -413,7 +413,7 @@ use Zend\Cache\StorageFactory;
                     }
 
                     if (preg_match('~^/restore/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->setUserPass();
+                        return $this->setUserRestorePass();
                     }
                 }
 
@@ -686,8 +686,8 @@ use Zend\Cache\StorageFactory;
             $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
             $u_email = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $_POST['email']));
 
-            $repeat_contractor = $db->fetchOne("
-                SELECT id
+            $repeat_contractor = $db->fetchRow("
+                SELECT email,active_sw
                 FROM mod_ordering_contractors
                 WHERE email = ?
             ", $_POST['email']);
@@ -704,33 +704,48 @@ use Zend\Cache\StorageFactory;
                 ]);
             }
 
-            if ($repeat_contractor){
+            if ($repeat_contractor['active_sw'] == 'N'){
+                $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+                $where = $db->quoteInto('email = ?', $repeat_contractor['email']);
+                $db->update('mod_ordering_contractors', [
+                    'reg_key'      => $reg_key,
+                    'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
+                ], $where);
+
+                $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+
+                $content_email = "
+                Вы зарегистрированы на сервисе {$host}<br>
+                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+            ";
+
+                $reg = Zend_Registry::getInstance();
+                $reg->set('context', ['queue', 'index']);
+
+                require_once 'Email.php';
+                $email = new Email();
+                $email->to($_POST['email'])
+                    ->subject("Автопромсервис: Регистрация на сервисе")
+                    ->body($content_email)
+                    ->send(true);
+
+                return json_encode([
+                    'status' => 'success'
+                ]);
+            }
+            if ($repeat_contractor['active_sw'] == 'Y'){
                 return json_encode([
                     'status' => 'repeat_contractor'
                 ]);
             }
 
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-
-            //create new user
-
-            $db->insert('core_users', [
-                'visible'     => 'N',
-                'is_admin_sw' => 'N',
-                'u_login'     => $login,
-                'email'       => $login,
-                'date_added'  => new Zend_Db_Expr('NOW()'),
-                'role_id'     => $this->config->registry->role
-            ]);
-            $user_id = $db->lastInsertId();
-
-            $db->insert('core_users_profile', [
-                'user_id'   => $user_id,
-                'firstname' => $_POST['company_name'],
-            ]);
+            //create new contractor
 
             $db->insert('mod_ordering_contractors', [
-                'user_id'      => $user_id,
                 'title'        => $_POST['company_name'],
                 'email'        => $_POST['email'],
                 'unp'          => $_POST['unp'],
@@ -832,6 +847,44 @@ use Zend\Cache\StorageFactory;
             $db->update('mod_ordering_contractors', [
                 'reg_key'      => new Zend_Db_Expr('NULL'),
                 'date_expired' => new Zend_Db_Expr('NULL')
+            ], $where);
+
+            $where = $db->quoteInto('id = ?', $user_info['id']);
+            $db->update('mod_ordering_contractors', [
+                'u_pass' => Tool::pass_salt($_POST['password']),
+            ], $where);
+
+            return json_encode([
+                'status' => 'success'
+            ]);
+        }
+
+        /**
+         * @return false|string
+         * @throws Zend_Db_Adapter_Exception
+         * @throws Zend_Db_Exception
+         */
+        protected function setUserRestorePass() {
+
+            $db = $this->getConnection($this->config->database);
+
+            $user_info = $db->fetchRow("
+                SELECT user_id,
+                       id
+                FROM mod_ordering_contractors 
+                WHERE reg_key = ?
+                LIMIT 1
+            ", $_POST['key']);
+
+            $where = $db->quoteInto('id = ?', $user_info['id']);
+            $db->update('mod_ordering_contractors', [
+                'reg_key'      => new Zend_Db_Expr('NULL'),
+                'date_expired' => new Zend_Db_Expr('NULL')
+            ], $where);
+
+            $where = $db->quoteInto('id = ?', $user_info['id']);
+            $db->update('mod_ordering_contractors', [
+                'u_pass' => Tool::pass_salt($_POST['password']),
             ], $where);
 
             $where = $db->quoteInto('u_id = ?', $user_info['user_id']);
