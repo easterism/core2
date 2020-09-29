@@ -101,14 +101,6 @@ class CoreController extends Common implements File {
 
                         return json_encode(['status' => 'success']);
                         break;
-
-                    case 'registry':
-                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                            throw new Exception('Некорректный запрос');
-                        }
-
-                        return json_encode(['status' => 'success']);
-                        break;
                 }
             } catch (Exception $e) {
                 return json_encode([
@@ -350,7 +342,6 @@ class CoreController extends Common implements File {
 		}
 		return true;
 	}
-
 
 
     /**

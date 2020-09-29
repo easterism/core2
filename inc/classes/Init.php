@@ -367,7 +367,6 @@
                             return $this->getRegistration();
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
                             return $this->registration();
 
                         } else {
@@ -385,7 +384,7 @@
                             return $this->getRegistrationConfirm();
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            return $this->setPassUser();
+                            return $this->setUserPass();
 
                         } else {
                             http_response_code(404);
@@ -394,23 +393,22 @@
                     }
 
                     if (preg_match('~^/restore(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                             if (empty($_GET['key'])) {
-                                    return $this->getRestore();
-                            }else {
-                                    return $this->restoreConfirm();
+                                return $this->getRestore();
+                            } else {
+                                return $this->restoreConfirm();
                             }
 
-                        }  else {
+                        } else {
                             http_response_code(404);
                             return '';
                         }
                     }
 
                     if (preg_match('~^/restore/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
-                        return $this->setPassUser();
+                        return $this->setUserPass();
                     }
                 }
 
@@ -617,12 +615,12 @@
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
 
-            if( ! empty($this->config->mail->server) &&  ! empty($this->config->mail->port) ){
-                if ( $this->config->registry->active == 'Y'){
+            if ($this->config->mail && $this->config->mail->server) {
+                if ($this->config->registry->active == 'Y') {
                     $tpl2->touchBlock('registration');
                 }
 
-                if ( $this->config->registry->restore == 'Y'){
+                if ($this->config->registry->restore == 'Y') {
                     $tpl2->touchBlock('restore');
                 }
             }
@@ -677,10 +675,11 @@
          * @throws Exception
          */
         protected function registration() {
-            $login       = trim($_POST['email']);
-            $db          = $this->getConnection($this->config->database);
-            $u_id        = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
-            $u_email     = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $_POST['email']));
+
+            $login   = trim($_POST['email']);
+            $db      = $this->getConnection($this->config->database);
+            $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+            $u_email = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $_POST['email']));
 
             $repeat_contractor = $db->fetchOne("
                 SELECT id
@@ -708,60 +707,58 @@
 
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
 
-                //create new user
+            //create new user
 
-                $db->insert('core_users', [
-                    'visible'     => 'N',
-                    'is_admin_sw' => 'N',
-                    'u_login'     => $login,
-                    'email'       => $login,
-                    'date_added'  => new Zend_Db_Expr('NOW()'),
-                    'role_id'     => $this->config->registry->role
-                ]);
-                $user_id = $db->lastInsertId();
+            $db->insert('core_users', [
+                'visible'     => 'N',
+                'is_admin_sw' => 'N',
+                'u_login'     => $login,
+                'email'       => $login,
+                'date_added'  => new Zend_Db_Expr('NOW()'),
+                'role_id'     => $this->config->registry->role
+            ]);
+            $user_id = $db->lastInsertId();
 
-                $db->insert('core_users_profile', [
-                    'user_id'    => $user_id,
-                    'firstname'  => $_POST['company_name'],
-                ]);
+            $db->insert('core_users_profile', [
+                'user_id'   => $user_id,
+                'firstname' => $_POST['company_name'],
+            ]);
 
-                $db->insert('mod_ordering_contractors', [
-                    'user_id'      => $user_id,
-                    'title'        => $_POST['company_name'],
-                    'email'        => $_POST['email'],
-                    'unp'          => $_POST['unp'],
-                    'phone'        => $_POST['tel'],
-                    'reg_key'      => $reg_key,
-                    'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
-                ]);
+            $db->insert('mod_ordering_contractors', [
+                'user_id'      => $user_id,
+                'title'        => $_POST['company_name'],
+                'email'        => $_POST['email'],
+                'unp'          => $_POST['unp'],
+                'phone'        => $_POST['tel'],
+                'reg_key'      => $reg_key,
+                'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
+            ]);
 
-                $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                $host        = !empty($this->config->system) ? $this->config->system->host : '';
-                $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
+            $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+            $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
-                $content_email = "
-                    Вы зарегистрированы на сервисе {$host}<br>
-                    Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                    <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
-                       style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
-                ";
 
-                $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
-                $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
+            $content_email = "
+                Вы зарегистрированы на сервисе {$host}<br>
+                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
-                $reg = Zend_Registry::getInstance();
-                $reg->set('context', ['queue', 'index']);
+                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+            ";
 
-                require_once 'Email.php';
-                $email = new \Core2\Email();
-                $email->to($_POST['email'])
-                    ->subject("{$system_name}: Регистрация на сервисе")
-                    ->body($tpl_email)
-                    ->send(true);
+            $reg = Zend_Registry::getInstance();
+            $reg->set('context', ['queue', 'index']);
 
-                return json_encode([
-                    'status' => 'success'
-                ]);
+            require_once 'Email.php';
+            $email = new \Core2\Email();
+            $email->to($_POST['email'])
+                ->subject("Автопромсервис: Регистрация на сервисе")
+                ->body($content_email)
+                ->send(true);
+
+            return json_encode([
+                'status' => 'success'
+            ]);
         }
 
 
@@ -816,7 +813,7 @@
          * @throws Zend_Db_Adapter_Exception
          * @throws Zend_Db_Exception
          */
-        protected function setPassUser() {
+        protected function setUserPass() {
 
             $db = $this->getConnection($this->config->database);
 
@@ -867,7 +864,7 @@
                     $user_info = $db->fetchRow("
                         SELECT oc.user_id
                         FROM core_users AS u
-                        LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
+                            LEFT JOIN mod_ordering_contractors AS oc ON u.u_id = oc.user_id
                         WHERE u.email = ?
                         LIMIT 1
                     ", $_GET['email']);
@@ -879,21 +876,16 @@
                     ], $where);
 
 
-                    $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                    $host        = !empty($this->config->system) ? $this->config->system->host : '';
-                    $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
+                    $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+                    $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
                     $content_email = "
-                        Вы запросили смену пароля на сервисе{$host}<br>
-                        Для продолжения  <b>перейдите по указанной ниже ссылке</b>.<br><br>
+                        Вы запросили смену пароля на сервисе {$host}<br>
+                        Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore?key={$reg_key}}\" 
+                        <a href=\"{$protocol}://{$host}/restore?key={$reg_key}\" 
                            style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
-
-                    $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
-                    $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
-
 
                     $reg = Zend_Registry::getInstance();
                     $reg->set('context', ['queue', 'index']);
@@ -901,8 +893,8 @@
                     require_once 'Email.php';
                     $email = new \Core2\Email();
                     $email->to($_GET['email'])
-                        ->subject("{$system_name}: Восстановление пароля")
-                        ->body($tpl_email)
+                        ->subject("Автопромсервис: Восстановление пароля")
+                        ->body($content_email)
                         ->send(true);
 
                     return json_encode([
