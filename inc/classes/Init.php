@@ -747,7 +747,7 @@
             ";
 
             $reg = Zend_Registry::getInstance();
-                $reg->set('context', ['queue', 'index']);
+            $reg->set('context', ['queue', 'index']);
 
             require_once 'Email.php';
             $email = new \Core2\Email();
