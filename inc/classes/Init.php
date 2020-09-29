@@ -706,22 +706,6 @@
                 ]);
             }
 
-            $array_name  = explode(' ', $_POST['name']);
-            $first_name  = '';
-            $middle_name = '';
-            $last_name   = '';
-            if (count($array_name) == 1) {
-                $first_name = $array_name[0];
-            } elseif (count($array_name) == 2) {
-                $first_name  = $array_name[0];
-                $middle_name = $array_name[1];
-            } else {
-                $first_name  = $array_name[1];
-                $middle_name = $array_name[2];
-                $last_name   = $array_name[0];
-            }
-
-
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
 
                 //create new user
@@ -738,9 +722,7 @@
 
                 $db->insert('core_users_profile', [
                     'user_id'    => $user_id,
-                    'firstname'  => $first_name,
-                    'middlename' => $middle_name,
-                    'lastname'   => $last_name,
+                    'firstname'  => $_POST['company_name'],
                 ]);
 
                 $db->insert('mod_ordering_contractors', [
@@ -753,7 +735,6 @@
                     'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
                 ]);
 
-
                 $protocol    = !empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
                 $host        = !empty($this->config->system) ? $this->config->system->host : '';
                 $system_name = !empty($this->config->system) ? $this->config->system->name : $host;
@@ -761,14 +742,12 @@
                 $content_email = "
                     Вы зарегистрированы на сервисе {$host}<br>
                     Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-    
                     <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}}\" 
                        style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
                 ";
 
                 $tpl_email = file_get_contents("core2/html/" . THEME . "/login/email.html");
                 $tpl_email = str_replace('[CONTENT]', $content_email, $tpl_email);
-
 
                 $reg = Zend_Registry::getInstance();
                 $reg->set('context', ['queue', 'index']);
@@ -779,9 +758,6 @@
                     ->subject("{$system_name}: Регистрация на сервисе")
                     ->body($tpl_email)
                     ->send(true);
-
-
-
 
                 return json_encode([
                     'status' => 'success'
