@@ -615,17 +615,15 @@
                 $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
             }
 
-            if( ! empty($this->config->mail->server) &&  ! empty($this->config->mail->port) ){
-                if ( $this->config->registry->active == 'Y'){
+            if ($this->config->mail && $this->config->mail->server) {
+                if ($this->config->registry->active == 'Y') {
                     $tpl2->touchBlock('registration');
                 }
 
-                if ( $this->config->registry->restore == 'Y'){
+                if ($this->config->registry->restore == 'Y') {
                     $tpl2->touchBlock('restore');
                 }
             }
-
-
 
             $favicon = $this->getSystemFavicon();
 
@@ -707,24 +705,6 @@
                 ]);
             }
 
-            $array_name  = explode(' ', $_POST['name']);
-            $first_name  = '';
-            $middle_name = '';
-            $last_name   = '';
-
-
-            if (count($array_name) == 1) {
-                $first_name = $array_name[0];
-            } elseif (count($array_name) == 2) {
-                $first_name  = $array_name[0];
-                $middle_name = $array_name[1];
-            } else {
-                $first_name  = $array_name[1];
-                $middle_name = $array_name[2];
-                $last_name   = $array_name[0];
-            }
-
-
             $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
 
             //create new user
@@ -740,10 +720,8 @@
             $user_id = $db->lastInsertId();
 
             $db->insert('core_users_profile', [
-                'user_id'    => $user_id,
-                'firstname'  => $first_name,
-                'middlename' => $middle_name,
-                'lastname'   => $last_name,
+                'user_id'   => $user_id,
+                'firstname' => $_POST['company_name'],
             ]);
 
             $db->insert('mod_ordering_contractors', [
@@ -756,9 +734,9 @@
                 'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
             ]);
 
-
             $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
             $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+
 
             $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
@@ -769,7 +747,7 @@
             ";
 
             $reg = Zend_Registry::getInstance();
-            $reg->set('context', ['queue', 'index']);
+                $reg->set('context', ['queue', 'index']);
 
             require_once 'Email.php';
             $email = new \Core2\Email();
@@ -905,7 +883,7 @@
                         Вы запросили смену пароля на сервисе {$host}<br>
                         Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore/complete?key={$reg_key}\" 
+                        <a href=\"{$protocol}://{$host}/restore?key={$reg_key}\" 
                            style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
                     ";
 
