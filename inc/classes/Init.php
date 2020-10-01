@@ -13,12 +13,7 @@
     require_once($conf_file);
     require_once("Error.php");
 
-use Core2\Acl;
-use Core2\Db;
-use Core2\Email;
-use Core2\I18n;
-use Core2\Log;
-use Zend\Cache\StorageFactory;
+    use Zend\Cache\StorageFactory;
     use Zend\Session\Config\SessionConfig;
     use Zend\Session\SessionManager;
     use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
@@ -42,7 +37,7 @@ use Zend\Cache\StorageFactory;
                 'charset' => 'utf8'
             ),
             'driver_options' => [
-                PDO::ATTR_TIMEOUT => 3
+                \PDO::ATTR_TIMEOUT => 3
             ],
             'isDefaultTableAdapter' => true,
             'profiler' => array(
@@ -122,7 +117,7 @@ use Zend\Cache\StorageFactory;
 
     //подключаем мультиязычность
     require_once 'I18n.php';
-    $translate = new I18n($config);
+    $translate = new \Core2\I18n($config);
 
 	if (isset($config->auth) && $config->auth->on) {
 		$realm = $config->auth->params->realm;
@@ -203,7 +198,7 @@ use Zend\Cache\StorageFactory;
 	 * Class Init
      * @property Modules $dataModules
      */
-    class Init extends Db {
+    class Init extends \Core2\Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -211,7 +206,7 @@ use Zend\Cache\StorageFactory;
         protected $auth;
 
         /**
-         * @var Acl
+         * @var \Core2\Acl
          */
         protected $acl;
         protected $is_cli = false;
@@ -359,7 +354,7 @@ use Zend\Cache\StorageFactory;
                 require_once 'core2/inc/Interfaces/File.php';
                 require_once 'core2/inc/Interfaces/Subscribe.php';
                 // SETUP ACL
-                $this->acl = new Acl();
+                $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
@@ -523,7 +518,7 @@ use Zend\Cache\StorageFactory;
         public function __destruct() {
 
             if ($this->config->system->profile && $this->config->system->profile->on) {
-                $log = new Log('profile');
+                $log = new \Core2\Log('profile');
 
                 if ($log->getWriter()) {
                     $sql_queries = $this->db->fetchAll("show profiles");
@@ -686,27 +681,28 @@ use Zend\Cache\StorageFactory;
             $u_id    = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
             $u_email = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $_POST['email']));
 
-            $repeat_contractor = $db->fetchRow("
-                SELECT email,active_sw
-                FROM mod_ordering_contractors
-                WHERE email = ?
-            ", $_POST['email']);
-
-            if ($u_id){
+            if ($u_id) {
                 return json_encode([
                     'status' => 'repeat_login'
                 ]);
             }
 
-            if ($u_email){
+            if ($u_email) {
                 return json_encode([
                     'status' => 'repeat_email'
                 ]);
             }
 
-            if ($repeat_contractor['active_sw'] == 'N'){
+            $contractor = $db->fetchRow("
+                SELECT email,
+                       active_sw
+                FROM mod_ordering_contractors
+                WHERE email = ?
+            ", $_POST['email']);
+
+            if (empty($contractor) || $contractor['active_sw'] == 'N') {
                 $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-                $where = $db->quoteInto('email = ?', $repeat_contractor['email']);
+                $where = $db->quoteInto('email = ?', $contractor['email']);
                 $db->update('mod_ordering_contractors', [
                     'reg_key'      => $reg_key,
                     'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
@@ -716,17 +712,17 @@ use Zend\Cache\StorageFactory;
                 $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
                 $content_email = "
-                Вы зарегистрированы на сервисе {$host}<br>
-                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
-            ";
+                    Вы зарегистрированы на сервисе {$host}<br>
+                    Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+                    <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
+                       style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+                ";
 
                 $reg = Zend_Registry::getInstance();
                 $reg->set('context', ['queue', 'index']);
 
                 require_once 'Email.php';
-                $email = new Email();
+                $email = new \Core2\Email();
                 $email->to($_POST['email'])
                     ->subject("Автопромсервис: Регистрация на сервисе")
                     ->body($content_email)
@@ -735,48 +731,12 @@ use Zend\Cache\StorageFactory;
                 return json_encode([
                     'status' => 'success'
                 ]);
-            }
-            if ($repeat_contractor['active_sw'] == 'Y'){
+
+            } else {
                 return json_encode([
                     'status' => 'repeat_contractor'
                 ]);
             }
-
-            $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-            //create new contractor
-
-            $db->insert('mod_ordering_contractors', [
-                'title'        => $_POST['company_name'],
-                'email'        => $_POST['email'],
-                'unp'          => $_POST['unp'],
-                'phone'        => $_POST['tel'],
-                'reg_key'      => $reg_key,
-                'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
-            ]);
-
-            $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-            $host     = ! empty($this->config->system) ? $this->config->system->host : '';
-
-            $content_email = "
-                Вы зарегистрированы на сервисе {$host}<br>
-                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
-            ";
-
-            $reg = Zend_Registry::getInstance();
-            $reg->set('context', ['queue', 'index']);
-
-            require_once 'Email.php';
-            $email = new Email();
-            $email->to($_POST['email'])
-                ->subject("Автопромсервис: Регистрация на сервисе")
-                ->body($content_email)
-                ->send(true);
-
-            return json_encode([
-                'status' => 'success'
-            ]);
         }
 
 
@@ -947,7 +907,7 @@ use Zend\Cache\StorageFactory;
                     $reg->set('context', ['queue', 'index']);
 
                     require_once 'Email.php';
-                    $email = new Email();
+                    $email = new \Core2\Email();
                     $email->to($_GET['email'])
                         ->subject("Автопромсервис: Восстановление пароля")
                         ->body($content_email)
@@ -2008,7 +1968,7 @@ use Zend\Cache\StorageFactory;
         parse_str($loc, $params);
         if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-        $acl = new Acl();
+        $acl = new \Core2\Acl();
 
         Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
 
@@ -2041,7 +2001,7 @@ use Zend\Cache\StorageFactory;
                 }
             }
 
-            $db        = new Db;
+            $db        = new \Core2\Db;
             $location  = $db->getModuleLocation($params['module']);
             $file_path = $location . "/ModAjax.php";
 
