@@ -365,9 +365,8 @@ use Zend\Cache\StorageFactory;
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
             }
             else {
-                if (isset($_SERVER['REQUEST_URI'])) {
-
-                    if (preg_match('~^/registration(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                if (isset($_GET['core'])){
+                    if ($_GET['core'] == 'registration'){
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             return $this->getRegistration();
 
@@ -380,7 +379,7 @@ use Zend\Cache\StorageFactory;
                         }
                     }
 
-                    if (preg_match('~^/registration/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                    if ($_GET['core'] == 'registration_complete') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             if (empty($_GET['key'])){
                                 http_response_code(404);
@@ -397,7 +396,7 @@ use Zend\Cache\StorageFactory;
                         }
                     }
 
-                    if (preg_match('~^/restore(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                    if ($_GET['core'] == 'restore') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                             if (empty($_GET['key'])) {
@@ -412,12 +411,11 @@ use Zend\Cache\StorageFactory;
                         }
                     }
 
-                    if (preg_match('~^/restore/complete(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'])) {
+                    if ($_GET['core'] == 'restore_complete') {
                         return $this->setUserRestorePass();
                     }
+
                 }
-
-
                 // GET LOGIN PAGE
                 if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                     if ( ! empty($_POST['xjxr'])) {
@@ -718,8 +716,8 @@ use Zend\Cache\StorageFactory;
                 $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+                <a href=\"{$protocol}://{$host}/?core=registration_complete&key={$reg_key}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/?core=registration_complete&key={$reg_key}</a>
             ";
 
                 $reg = Zend_Registry::getInstance();
@@ -939,8 +937,8 @@ use Zend\Cache\StorageFactory;
                         Вы запросили смену пароля на сервисе {$host}<br>
                         Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/restore?key={$reg_key}\" 
-                           style=\"font-size: 16px\">{$protocol}://{$host}/restore?key={$reg_key}</a>
+                        <a href=\"{$protocol}://{$host}/?core=restore&key={$reg_key}\" 
+                           style=\"font-size: 16px\">{$protocol}://{$host}/?core=restore&key={$reg_key}</a>
                     ";
 
                     $reg = Zend_Registry::getInstance();

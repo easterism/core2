@@ -10,7 +10,7 @@ function RegistryUser() {}
 RegistryUser.registration = function(form) {
     preloader.buttonLoader('start');
     $.ajax({
-        url: "/registration",
+        url: "?core=registration",
         dataType: "json",
         method: "POST",
         data: $(form).serialize()
@@ -51,7 +51,7 @@ RegistryUser.ConfirmRegistryUser = function(form){
     }
     preloader.buttonLoader('start');
     $.ajax({
-        url:  "/registration/complete",
+        url:  "?core=registration_complete",
         dataType: "json",
         method: "POST",
         data: {
@@ -83,7 +83,7 @@ RegistryUser.ConfirmRegistryUser = function(form){
 RegistryUser.RestorePassUser = function(form) {
     preloader.buttonLoader('start');
     $.ajax({
-        url: "/restore",
+        url: "?core=restore",
         dataType: "json",
         method: "GET",
         data: $(form).serialize()
@@ -128,7 +128,7 @@ RegistryUser.ConfirmRestorePassUser = function(form){
     }
     preloader.buttonLoader('start');
     $.ajax({
-        url:  "/restore/complete",
+        url:  "?core=restore_complete",
         dataType: "json",
         method: "POST",
         data: {
