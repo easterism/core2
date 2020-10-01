@@ -693,6 +693,7 @@
                 ]);
             }
 
+
             $contractor = $db->fetchRow("
                 SELECT email,
                        active_sw
@@ -700,43 +701,71 @@
                 WHERE email = ?
             ", $_POST['email']);
 
-            if (empty($contractor) || $contractor['active_sw'] == 'N') {
-                $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-                $where = $db->quoteInto('email = ?', $contractor['email']);
-                $db->update('mod_ordering_contractors', [
-                    'reg_key'      => $reg_key,
-                    'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
-                ], $where);
+            if ( ! empty($contractor)) {
+                if ($contractor['active_sw'] == 'N') {
+                    $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+                    $where = $db->quoteInto('email = ?', $contractor['email']);
+                    $db->update('mod_ordering_contractors', [
+                        'reg_key'      => $reg_key,
+                        'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
+                    ], $where);
 
-                $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-                $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+                    $this->sendEmailRegistration($_POST['email'], $reg_key);
 
-                $content_email = "
-                    Вы зарегистрированы на сервисе {$host}<br>
-                    Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                    <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
-                       style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
-                ";
+                    return json_encode([
+                        'status' => 'success'
+                    ]);
 
-                $reg = Zend_Registry::getInstance();
-                $reg->set('context', ['queue', 'index']);
-
-                require_once 'Email.php';
-                $email = new \Core2\Email();
-                $email->to($_POST['email'])
-                    ->subject("Автопромсервис: Регистрация на сервисе")
-                    ->body($content_email)
-                    ->send(true);
-
-                return json_encode([
-                    'status' => 'success'
-                ]);
-
-            } else {
-                return json_encode([
-                    'status' => 'repeat_contractor'
-                ]);
+                } else {
+                    return json_encode([
+                        'status' => 'repeat_contractor'
+                    ]);
+                }
             }
+
+            $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
+            $db->insert('mod_ordering_contractors', [
+                'title'        => $_POST['company_name'],
+                'email'        => $_POST['email'],
+                'unp'          => $_POST['unp'],
+                'phone'        => $_POST['tel'],
+                'reg_key'      => $reg_key,
+                'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)'),
+            ]);
+
+            $this->sendEmailRegistration($_POST['email'], $reg_key);
+
+            return json_encode([
+                'status' => 'success'
+            ]);
+        }
+
+
+        /**
+         * @param $mail_address
+         * @param $reg_key
+         */
+        function sendEmailRegistration($mail_address, $reg_key) {
+
+            $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+            $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+
+            $content_email = "
+                Вы зарегистрированы на сервисе {$host}<br>
+                Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+                <a href=\"{$protocol}://{$host}/registration/complete?key={$reg_key}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/registration/complete?key={$reg_key}</a>
+            ";
+
+            $reg = Zend_Registry::getInstance();
+            $reg->set('context', ['queue', 'index']);
+
+            require_once 'Email.php';
+            $email = new \Core2\Email();
+            $email->to($mail_address)
+                ->subject("Автопромсервис: Регистрация на сервисе")
+                ->body($content_email)
+                ->send(true);
         }
 
 
