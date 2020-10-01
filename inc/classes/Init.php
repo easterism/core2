@@ -443,6 +443,7 @@
                 if ($this->fileAction()) return '';
 
                 if ($module === 'admin') {
+
                     if ($this->auth->MOBILE) {
                         require_once 'core2/inc/MobileController.php';
                         $core = new MobileController();

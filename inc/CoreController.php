@@ -85,7 +85,7 @@ class CoreController extends Common implements File {
                 return;
             }
         }
-
+       
         if ( ! $this->auth->ADMIN) throw new Exception(911);
 
 
