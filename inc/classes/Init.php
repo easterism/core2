@@ -752,8 +752,8 @@
                 $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-                <a href=\"{$protocol}://{$host}/?core=registration_complete&key={$reg_key}\" 
-                   style=\"font-size: 16px\">{$protocol}://{$host}/?core=registration_complete&key={$reg_key}</a>
+                <a href=\"{$protocol}://{$host}/index.php?core=registration_complete&key={$reg_key}\" 
+                   style=\"font-size: 16px\">{$protocol}://{$host}/index.php?core=registration_complete&key={$reg_key}</a>
             ";
 
             $reg = Zend_Registry::getInstance();
@@ -927,8 +927,8 @@
                         Вы запросили смену пароля на сервисе {$host}<br>
                         Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
         
-                        <a href=\"{$protocol}://{$host}/?core=restore&key={$reg_key}\" 
-                           style=\"font-size: 16px\">{$protocol}://{$host}/?core=restore&key={$reg_key}</a>
+                        <a href=\"{$protocol}://{$host}/index.php?core=restore&key={$reg_key}\" 
+                           style=\"font-size: 16px\">{$protocol}://{$host}/index.php?core=restore&key={$reg_key}</a>
                     ";
 
                     $reg = Zend_Registry::getInstance();
