@@ -615,11 +615,11 @@
             }
 
             if ($this->config->mail && $this->config->mail->server) {
-                if ($this->config->registry->active == 'Y') {
+                if ($this->core_config->registry->active == 'Y') {
                     $tpl2->touchBlock('registration');
                 }
 
-                if ($this->config->registry->restore == 'Y') {
+                if ($this->core_config->registry->restore == 'Y') {
                     $tpl2->touchBlock('restore');
                 }
             }
