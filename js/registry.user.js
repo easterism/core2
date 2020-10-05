@@ -18,19 +18,16 @@ RegistryUser.registration = function(form) {
         .done(function(data, status) {
             preloader.buttonLoader('stop');
             if (data.status === 'success') {
-                swal("На указанную вами почту отправлены данные для входа в систему.", '', 'success').catch(swal.noop);
-            } else if (data.status === 'repeat_login') {
-                swal("Пользователь c таким Email уже есть в системе.", '', 'error').catch(swal.noop);
-            } else if (data.status === 'repeat_email') {
-                swal("Пользователь с таким Email уже есть в системе.", '', 'error').catch(swal.noop);
-            } else if (data.status === 'repeat_contractor') {
-                swal("Контрагент с таким Email уже есть в системе.", '', 'error').catch(swal.noop);
+                $('#success').text(data.message).css('margin-bottom','100px');
+                $('.form-registry').css('display','none');
+            } else {
+                $('#error').text(data.message);
             }
         })
 
         .fail(function(){
             preloader.buttonLoader('stop');
-            swal('Ошибка запроса', '', 'error').catch(swal.noop);
+            $('#error').text('Попробуйте позже');
         });
 };
 
@@ -61,21 +58,15 @@ RegistryUser.ConfirmRegistryUser = function(form){
     }).done(function (data) {
         preloader.buttonLoader('stop');
         if (data.status === 'success') {
-            swal({
-                title: "Готово!",
-                text: "Вы сможете зайти в систему, после прохождения модерации",
-                type: "success"
-            }).then(function() {
-                window.location.href = "/";
-            });
-
+            $('#success').html(data.message).css('margin-bottom','100px');
+            $('.form-registry').css('display','none');
         } else {
-            swal("Попробуйте позже.", '', 'error').catch(swal.noop);
+            $('#error').text(data.message);
         }
 
     }).fail(function () {
         preloader.buttonLoader('stop');
-        swal("Попробуйте позже.", '', 'error').catch(swal.noop);
+        $('#error').text('Попробуйте позже');
 
     });
 };
@@ -91,22 +82,18 @@ RegistryUser.RestorePassUser = function(form) {
         .done(function(data, status) {
             preloader.buttonLoader('stop');
             if (data.status === 'success') {
-                swal({
-                    title: "На указанную вами почту отправлены данные для смены пароля",
-                    text: "",
-                    type: "success"
-                }).then(function() {
-                    window.location.href = "/";
-                });
+                $('#error').text('');
+                $('#success').text(data.message).css('margin-bottom','100px');
+                $('.form-registry').css('display','none');
 
-            } else if (data.message === 'no_email') {
-                swal("Такого email нету в системе", '', 'error').catch(swal.noop);
+            } else  {
+                $('#error').text(data.message);
             }
         })
 
         .fail(function(){
             preloader.buttonLoader('stop');
-            swal('Ошибка запроса', '', 'error').catch(swal.noop);
+            $('#error').text('Попробуйте позже');
         });
 };
 
@@ -138,21 +125,16 @@ RegistryUser.ConfirmRestorePassUser = function(form){
     }).done(function (data) {
         preloader.buttonLoader('stop');
         if (data.status === 'success') {
-            swal({
-                title: "Пароль изменен!",
-                text: "Вернитесь на форму входа и войдите в систему с новым паролем",
-                type: "success"
-            }).then(function() {
-                window.location.href = "/";
-            });
-
+            $('#error').text('');
+            $('#success').html(data.message).css('margin-bottom','100px');
+            $('.form-registry').css('display','none');
         } else {
-            swal("Попробуйте позже.", '', 'error').catch(swal.noop);
+            $('#error').text(data.message);
         }
 
     }).fail(function () {
         preloader.buttonLoader('stop');
-        swal("Попробуйте позже.", '', 'error').catch(swal.noop);
+        $('#error').text('Попробуйте позже');
     });
 };
 

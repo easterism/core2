@@ -682,13 +682,29 @@
 
             if ($u_id) {
                 return json_encode([
-                    'status' => 'repeat_login'
+                    'status' => 'error',
+                    'message' => 'Такой пользователь уже есть'
                 ]);
             }
 
             if ($u_email) {
                 return json_encode([
-                    'status' => 'repeat_email'
+                    'status' => 'error',
+                    'message' => 'Такой Email уже есть'
+                ]);
+            }
+
+            if (empty($login)){
+                return json_encode([
+                    'status' => 'error',
+                    'message' => 'Поле Email не заполнено'
+                ]);
+            }
+
+            if (empty($_POST['unp'])){
+                return json_encode([
+                    'status' => 'error',
+                    'message' => 'Поле УНП не заполнено'
                 ]);
             }
 
@@ -712,12 +728,14 @@
                     $this->sendEmailRegistration($_POST['email'], $reg_key);
 
                     return json_encode([
-                        'status' => 'success'
+                        'status' => 'success',
+                        'message' => 'На указанную вами почту отправлены данные для входа в систему.'
                     ]);
 
                 } else {
                     return json_encode([
-                        'status' => 'repeat_contractor'
+                        'status' => 'error',
+                        'message' => 'Такой контрагент уже есть'
                     ]);
                 }
             }
@@ -821,30 +839,41 @@
          */
         protected function setUserPass() {
 
-            $db = $this->getConnection($this->config->database);
+         $db = $this->getConnection($this->config->database);
 
-            $user_info = $db->fetchRow("
-                SELECT user_id,
-                       id
-                FROM mod_ordering_contractors 
-                WHERE reg_key = ?
-                LIMIT 1
-            ", $_POST['key']);
+         $user_info = $db->fetchRow("
+             SELECT user_id,
+                    id
+             FROM mod_ordering_contractors 
+             WHERE reg_key = ?
+             LIMIT 1
+         ", $_POST['key']);
+         if (! empty($_POST['password'])) {
+             $where = $db->quoteInto('id = ?', $user_info['id']);
+             $db->update('mod_ordering_contractors', [
+                 'reg_key' => new Zend_Db_Expr('NULL'),
+                 'date_expired' => new Zend_Db_Expr('NULL')
+             ], $where);
 
-            $where = $db->quoteInto('id = ?', $user_info['id']);
-            $db->update('mod_ordering_contractors', [
-                'reg_key'      => new Zend_Db_Expr('NULL'),
-                'date_expired' => new Zend_Db_Expr('NULL')
-            ], $where);
+             $where = $db->quoteInto('id = ?', $user_info['id']);
+             $db->update('mod_ordering_contractors', [
+                 'u_pass' => Tool::pass_salt($_POST['password']),
+             ], $where);
 
-            $where = $db->quoteInto('id = ?', $user_info['id']);
-            $db->update('mod_ordering_contractors', [
-                'u_pass' => Tool::pass_salt($_POST['password']),
-            ], $where);
+             return json_encode([
+                 'status' => 'success',
+                 'message' => '<h4>Готово!</h4>
+                <p>Вы сможете зайти в систему, после прохождения модерации</p>'
 
-            return json_encode([
-                'status' => 'success'
-            ]);
+             ]);
+         }else {
+             return json_encode([
+                 'status' => 'error',
+                 'message' => 'Заполните поле пароль'
+
+             ]);
+         }
+
         }
 
         /**
@@ -854,16 +883,17 @@
          */
         protected function setUserRestorePass() {
 
-            $db = $this->getConnection($this->config->database);
+        $db = $this->getConnection($this->config->database);
 
-            $user_info = $db->fetchRow("
-                SELECT user_id,
-                       id
-                FROM mod_ordering_contractors 
-                WHERE reg_key = ?
-                LIMIT 1
-            ", $_POST['key']);
+        $user_info = $db->fetchRow("
+            SELECT user_id,
+                   id
+            FROM mod_ordering_contractors 
+            WHERE reg_key = ?
+            LIMIT 1
+        ", $_POST['key']);
 
+        if (! empty($_POST['password'])){
             $where = $db->quoteInto('id = ?', $user_info['id']);
             $db->update('mod_ordering_contractors', [
                 'reg_key'      => new Zend_Db_Expr('NULL'),
@@ -881,8 +911,19 @@
             ], $where);
 
             return json_encode([
-                'status' => 'success'
+                'status' => 'success',
+                'message' => '<h4>Пароль изменен!</h4>
+                <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>'
+
             ]);
+        }else {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Заполните поле пароль'
+
+            ]);
+        }
+
         }
 
 
@@ -942,11 +983,13 @@
                         ->send(true);
 
                     return json_encode([
-                        'status' => 'success'
+                        'status' => 'success',
+                        'message' => 'На указанную вами почту отправлены данные для смены пароля'
                     ]);
                 } else {
                     return json_encode([
-                        'message' => 'no_email'
+                        'status' => 'error',
+                        'message' => 'Такого email нету в системе'
                     ]);
                 }
             }
