@@ -562,13 +562,13 @@
          */
         protected function getLogin() {
 
-            if (isset($_POST['action']) && !$this->auth->ID) {
+            if (isset($_POST['action']) && ! $this->auth->ID) {
                 require_once 'core2/inc/CoreController.php';
                 $this->setContext('admin');
                 $core = new CoreController();
-                $url = "index.php";
+                $url  = "index.php";
                 if ($core->action_login($_POST)) {
-                    if (!empty($_SERVER['QUERY_STRING'])) {
+                    if ( ! empty($_SERVER['QUERY_STRING'])) {
                         $url .= "#" . $_SERVER['QUERY_STRING'];
                     }
                 }
@@ -588,10 +588,10 @@
             $errorNamespace = new SessionContainer('Error');
             $blockNamespace = new SessionContainer('Block');
 
-            if (!empty($blockNamespace->blocked)) {
+            if ( ! empty($blockNamespace->blocked)) {
                 $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
                 $tpl2->assign('[ERROR_LOGIN]', '');
-            } elseif (!empty($errorNamespace->ERROR)) {
+            } elseif ( ! empty($errorNamespace->ERROR)) {
                 $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
                 $tpl2->assign('[ERROR_LOGIN]', $errorNamespace->TMPLOGIN);
                 $errorNamespace->ERROR = '';
@@ -601,7 +601,7 @@
             }
             $config = Zend_Registry::get('config');
 
-            if (empty($config->ldap->active) || !$config->ldap->active) {
+            if (empty($config->ldap->active) || ! $config->ldap->active) {
                 $tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
             }
 
@@ -632,6 +632,7 @@
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
         }
+
 
         /**
          * Форма Регистрации
@@ -682,28 +683,28 @@
 
             if ($u_id) {
                 return json_encode([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Такой пользователь уже есть'
                 ]);
             }
 
             if ($u_email) {
                 return json_encode([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Такой Email уже есть'
                 ]);
             }
 
-            if (empty($login)){
+            if (empty($login)) {
                 return json_encode([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Поле Email не заполнено'
                 ]);
             }
 
-            if (empty($_POST['unp'])){
+            if (empty($_POST['unp'])) {
                 return json_encode([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Поле УНП не заполнено'
                 ]);
             }
@@ -719,7 +720,7 @@
             if ( ! empty($contractor)) {
                 if ($contractor['active_sw'] == 'N') {
                     $reg_key = Tool::pass_salt(md5($_POST['email'] . microtime()));
-                    $where = $db->quoteInto('email = ?', $contractor['email']);
+                    $where   = $db->quoteInto('email = ?', $contractor['email']);
                     $db->update('mod_ordering_contractors', [
                         'reg_key'      => $reg_key,
                         'date_expired' => new Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
@@ -728,13 +729,13 @@
                     $this->sendEmailRegistration($_POST['email'], $reg_key);
 
                     return json_encode([
-                        'status' => 'success',
+                        'status'  => 'success',
                         'message' => 'На указанную вами почту отправлены данные для входа в систему.'
                     ]);
 
                 } else {
                     return json_encode([
-                        'status' => 'error',
+                        'status'  => 'error',
                         'message' => 'Такой контрагент уже есть'
                     ]);
                 }
@@ -767,7 +768,7 @@
             $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
             $host     = ! empty($this->config->system) ? $this->config->system->host : '';
 
-                $content_email = "
+            $content_email = "
                 Вы зарегистрированы на сервисе {$host}<br>
                 Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
                 <a href=\"{$protocol}://{$host}/index.php?core=registration_complete&key={$reg_key}\" 
@@ -839,42 +840,42 @@
          */
         protected function setUserPass() {
 
-         $db = $this->getConnection($this->config->database);
+            $db = $this->getConnection($this->config->database);
 
-         $user_info = $db->fetchRow("
-             SELECT user_id,
-                    id
-             FROM mod_ordering_contractors 
-             WHERE reg_key = ?
-             LIMIT 1
-         ", $_POST['key']);
-         if (! empty($_POST['password'])) {
-             $where = $db->quoteInto('id = ?', $user_info['id']);
-             $db->update('mod_ordering_contractors', [
-                 'reg_key' => new Zend_Db_Expr('NULL'),
-                 'date_expired' => new Zend_Db_Expr('NULL')
-             ], $where);
+            $user_info = $db->fetchRow("
+                SELECT user_id,
+                       id
+                FROM mod_ordering_contractors 
+                WHERE reg_key = ?
+                LIMIT 1
+            ", $_POST['key']);
+            if ( ! empty($_POST['password'])) {
+                $where = $db->quoteInto('id = ?', $user_info['id']);
+                $db->update('mod_ordering_contractors', [
+                    'reg_key'      => new Zend_Db_Expr('NULL'),
+                    'date_expired' => new Zend_Db_Expr('NULL')
+                ], $where);
 
-             $where = $db->quoteInto('id = ?', $user_info['id']);
-             $db->update('mod_ordering_contractors', [
-                 'u_pass' => Tool::pass_salt($_POST['password']),
-             ], $where);
+                $where = $db->quoteInto('id = ?', $user_info['id']);
+                $db->update('mod_ordering_contractors', [
+                    'u_pass' => Tool::pass_salt($_POST['password']),
+                ], $where);
 
-             return json_encode([
-                 'status' => 'success',
-                 'message' => '<h4>Готово!</h4>
-                <p>Вы сможете зайти в систему, после прохождения модерации</p>'
+                return json_encode([
+                    'status'  => 'success',
+                    'message' => '<h4>Готово!</h4>
+                                  <p>Вы сможете зайти в систему, после прохождения модерации</p>'
+                ]);
 
-             ]);
-         }else {
-             return json_encode([
-                 'status' => 'error',
-                 'message' => 'Заполните поле пароль'
+            } else {
+                return json_encode([
+                    'status'  => 'error',
+                    'message' => 'Заполните поле пароль'
 
-             ]);
-         }
-
+                ]);
+            }
         }
+
 
         /**
          * @return false|string
@@ -883,46 +884,44 @@
          */
         protected function setUserRestorePass() {
 
-        $db = $this->getConnection($this->config->database);
+            $db = $this->getConnection($this->config->database);
 
-        $user_info = $db->fetchRow("
-            SELECT user_id,
-                   id
-            FROM mod_ordering_contractors 
-            WHERE reg_key = ?
-            LIMIT 1
-        ", $_POST['key']);
+            $user_info = $db->fetchRow("
+                SELECT user_id,
+                       id
+                FROM mod_ordering_contractors 
+                WHERE reg_key = ?
+                LIMIT 1
+            ", $_POST['key']);
 
-        if (! empty($_POST['password'])){
-            $where = $db->quoteInto('id = ?', $user_info['id']);
-            $db->update('mod_ordering_contractors', [
-                'reg_key'      => new Zend_Db_Expr('NULL'),
-                'date_expired' => new Zend_Db_Expr('NULL')
-            ], $where);
+            if ( ! empty($_POST['password'])) {
+                $where = $db->quoteInto('id = ?', $user_info['id']);
+                $db->update('mod_ordering_contractors', [
+                    'reg_key'      => new Zend_Db_Expr('NULL'),
+                    'date_expired' => new Zend_Db_Expr('NULL')
+                ], $where);
 
-            $where = $db->quoteInto('id = ?', $user_info['id']);
-            $db->update('mod_ordering_contractors', [
-                'u_pass' => Tool::pass_salt($_POST['password']),
-            ], $where);
+                $where = $db->quoteInto('id = ?', $user_info['id']);
+                $db->update('mod_ordering_contractors', [
+                    'u_pass' => Tool::pass_salt($_POST['password']),
+                ], $where);
 
-            $where = $db->quoteInto('u_id = ?', $user_info['user_id']);
-            $db->update('core_users', [
-                'u_pass' => Tool::pass_salt($_POST['password']),
-            ], $where);
+                $where = $db->quoteInto('u_id = ?', $user_info['user_id']);
+                $db->update('core_users', [
+                    'u_pass' => Tool::pass_salt($_POST['password']),
+                ], $where);
 
-            return json_encode([
-                'status' => 'success',
-                'message' => '<h4>Пароль изменен!</h4>
-                <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>'
-
-            ]);
-        }else {
-            return json_encode([
-                'status' => 'error',
-                'message' => 'Заполните поле пароль'
-
-            ]);
-        }
+                return json_encode([
+                    'status'  => 'success',
+                    'message' => '<h4>Пароль изменен!</h4>
+                                  <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>'
+                ]);
+            } else {
+                return json_encode([
+                    'status'  => 'error',
+                    'message' => 'Заполните поле пароль'
+                ]);
+            }
 
         }
 
@@ -983,12 +982,12 @@
                         ->send(true);
 
                     return json_encode([
-                        'status' => 'success',
+                        'status'  => 'success',
                         'message' => 'На указанную вами почту отправлены данные для смены пароля'
                     ]);
                 } else {
                     return json_encode([
-                        'status' => 'error',
+                        'status'  => 'error',
                         'message' => 'Такого email нету в системе'
                     ]);
                 }
@@ -1064,7 +1063,6 @@
 
             $tpl->assign('<!--index -->', $tpl2->parse());
             return $tpl->parse();
-
         }
 
 
