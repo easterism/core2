@@ -1,13 +1,13 @@
 /**
  * @constructor
  */
-function RegistryUser() {}
+function Login() {}
 
 
 /**
  * @param form
  */
-RegistryUser.registration = function(form) {
+Login.registration = function(form) {
     preloader.buttonLoader('start');
     $.ajax({
         url: "index.php?core=registration",
@@ -36,7 +36,7 @@ RegistryUser.registration = function(form) {
  * @param form
  * @constructor
  */
-RegistryUser.ConfirmRegistryUser = function(form){
+Login.ConfirmRegistryUser = function(form){
 
     let valueX = $("#users_password").val();
     let valueY = $("#users_password2").val();
@@ -71,12 +71,17 @@ RegistryUser.ConfirmRegistryUser = function(form){
     });
 };
 
-RegistryUser.RestorePassUser = function(form) {
+
+/**
+ * @param form
+ * @constructor
+ */
+Login.RestorePassUser = function(form) {
     preloader.buttonLoader('start');
     $.ajax({
         url: "index.php?core=restore",
         dataType: "json",
-        method: "GET",
+        method: "POST",
         data: $(form).serialize()
     })
         .done(function(data, status) {
@@ -103,7 +108,7 @@ RegistryUser.RestorePassUser = function(form) {
  * @param form
  * @constructor
  */
-RegistryUser.ConfirmRestorePassUser = function(form){
+Login.ConfirmRestorePassUser = function(form){
 
     let valueX = $("#users_password").val();
     let valueY = $("#users_password2").val();
