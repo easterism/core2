@@ -30,7 +30,10 @@ class Login extends Db {
     public function dispatch() {
 
         if (isset($_GET['core']) && $this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration && $this->core_config->registration->on) {
+            if ($this->core_config->registration &&
+                $this->core_config->registration->on &&
+                $this->core_config->registration->role_id
+            ) {
 
                 if ($_GET['core'] == 'registration') {
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -58,7 +61,7 @@ class Login extends Db {
                             http_response_code(404);
                             return '';
                         }
-                        return $this->getRegistrationComplete($_GET['key']);
+                        return $this->registrationComplete($_GET['key']);
 
                     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (empty($_POST['key'])){
@@ -72,7 +75,7 @@ class Login extends Db {
                             ]);
                         }
 
-                        return $this->setUserPass($_POST['key'], $_POST['password']);
+                        return $this->registrationPass($_POST['key'], $_POST['password']);
 
                     } else {
                         http_response_code(404);
@@ -119,7 +122,7 @@ class Login extends Db {
                             'message' => $this->_('Заполните пароль')
                         ]);
                     }
-                    return $this->setUserRestorePass($_POST['key'], $_POST['password']);
+                    return $this->restorePass($_POST['key'], $_POST['password']);
                 }
             }
         }
@@ -224,7 +227,10 @@ class Login extends Db {
         }
 
         if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration && $this->core_config->registration->on) {
+            if ($this->core_config->registration &&
+                $this->core_config->registration->on &&
+                $this->core_config->registration->role_id
+            ) {
                 $tpl->ext_actions->touchBlock('registration');
             }
 
@@ -401,41 +407,12 @@ class Login extends Db {
 
 
     /**
-     * @param $mail_address
-     * @param $reg_key
-     */
-    private function sendEmailRegistration($mail_address, $reg_key) {
-
-        $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-        $host     = ! empty($this->config->system) ? $this->config->system->host : '';
-        $doc_path = rtrim(DOC_PATH, '/') . '/';
-
-        $content_email = "
-            Вы зарегистрированы на сервисе {$host}<br>
-            Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
-               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
-        ";
-
-        $reg = \Zend_Registry::getInstance();
-        $reg->set('context', ['queue', 'index']);
-
-        require_once 'Email.php';
-        $email = new \Core2\Email();
-        $email->to($mail_address)
-            ->subject("Автопромсервис: Регистрация на сервисе")
-            ->body($content_email)
-            ->send(true);
-    }
-
-
-    /**
      * @param $key
      * @return string|string[]
      * @throws \Zend_Db_Exception
      * @throws \Exception
      */
-    private function getRegistrationComplete($key) {
+    private function registrationComplete($key) {
 
         $tpl  = new \Templater3("core2/html/" . THEME . "/login/registration-complete.html");
         $logo = $this->getSystemLogo();
@@ -481,7 +458,7 @@ class Login extends Db {
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Db_Exception
      */
-    private function setUserPass($key, $password) {
+    private function registrationPass($key, $password) {
 
         $user_info = $this->db->fetchRow("
             SELECT id,
@@ -501,79 +478,73 @@ class Login extends Db {
             ]);
         }
 
-        $this->db->insert('core_users', [
-            'visible'     => 'N',
-            'is_admin_sw' => 'N',
-            'u_login'     => trim($user_info['email']),
-            'u_pass'      => \Tool::pass_salt($password),
-            'email'       => trim($user_info['email']),
-            'date_added'  => new \Zend_Db_Expr('NOW()'),
-            'role_id'     => $this->config->registry->role
-        ]);
-        $user_id = $this->db->lastInsertId();
+        $isset_login = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users AS u 
+            WHERE u_login = ?
+        ", trim($user_info['email']));
 
-        $this->db->insert('core_users_profile', [
-            'user_id'   => $user_id,
-            'firstname' => $user_info['title'],
-        ]);
+        if ($isset_login) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $this->_('Пользователь с таким логином уже существует')
+            ]);
+        }
 
-        $where = $this->db->quoteInto('id = ?', $user_info['id']);
-        $this->db->update('mod_ordering_contractors', [
-            'reg_key'      => new \Zend_Db_Expr('NULL'),
-            'date_expired' => new \Zend_Db_Expr('NULL'),
-            'user_id'      => $user_id,
-        ], $where);
+        $isset_email = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users AS u 
+            WHERE u_login = ?
+        ", trim($user_info['email']));
+
+        if ($isset_email) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $this->_('Пользователь с таким email уже существует')
+            ]);
+        }
+
+        $this->db->beginTransaction();
+        try {
+            $this->db->insert('core_users', [
+                'visible'     => 'N',
+                'is_admin_sw' => 'N',
+                'u_login'     => trim($user_info['email']),
+                'u_pass'      => \Tool::pass_salt($password),
+                'email'       => trim($user_info['email']),
+                'date_added'  => new \Zend_Db_Expr('NOW()'),
+                'role_id'     => $this->core_config->registration->role_id
+            ]);
+            $user_id = $this->db->lastInsertId();
+
+            $this->db->insert('core_users_profile', [
+                'user_id'   => $user_id,
+                'firstname' => $user_info['title'],
+            ]);
+
+            $where = $this->db->quoteInto('id = ?', $user_info['id']);
+            $this->db->update('mod_ordering_contractors', [
+                'reg_key'      => new \Zend_Db_Expr('NULL'),
+                'date_expired' => new \Zend_Db_Expr('NULL'),
+                'user_id'      => $user_id,
+            ], $where);
+
+            $this->db->commit();
+
+        } catch (\Exception $e) {
+            $this->db->rollback();
+
+            return json_encode([
+                'status'  => 'error',
+                'message' => "Ошибка создания пользователя. Обратитесь к администратору"
+            ]);
+        }
+
 
         return json_encode([
             'status'  => 'success',
             'message' => '<h4>Готово!</h4>
                           <p>Вы сможете зайти в систему, после прохождения модерации</p>'
-        ]);
-    }
-
-
-    /**
-     * @param $key
-     * @param $password
-     * @return false|string
-     * @throws \Zend_Db_Adapter_Exception
-     */
-    private function setUserRestorePass($key, $password) {
-
-        $user_info = $this->db->fetchRow("
-            SELECT id,
-                   user_id
-            FROM mod_ordering_contractors 
-            WHERE reg_key = ?
-              AND date_expired > NOW()
-            LIMIT 1
-        ", $key);
-
-        if (empty($user_info)) {
-            return json_encode([
-                'status'  => 'error',
-                'message' => $this->_('Ссылка устарела')
-            ]);
-        }
-
-        $where = $this->db->quoteInto('id = ?', $user_info['id']);
-        $this->db->update('mod_ordering_contractors', [
-            'u_pass'       => \Tool::pass_salt($password),
-            'reg_key'      => new \Zend_Db_Expr('NULL'),
-            'date_expired' => new \Zend_Db_Expr('NULL'),
-        ], $where);
-
-        if ( ! empty($user_info['user_id'])) {
-            $where = $this->db->quoteInto('u_id = ?', $user_info['user_id']);
-            $this->db->update('core_users', [
-                'u_pass' => \Tool::pass_salt($password),
-            ], $where);
-        }
-
-        return json_encode([
-            "status"  => "success",
-            "message" => "<h4>Пароль изменен!</h4>
-                          <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>"
         ]);
     }
 
@@ -593,7 +564,10 @@ class Login extends Db {
         }
 
         if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration && $this->core_config->registration->on) {
+            if ($this->core_config->registration &&
+                $this->core_config->registration->on &&
+                $this->core_config->registration->role_id
+            ) {
                 $tpl->touchBlock('registration');
             }
         }
@@ -698,7 +672,10 @@ class Login extends Db {
         $tpl->assign('[ERROR_MSG]', $error_message);
 
         if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration && $this->core_config->registration->on) {
+            if ($this->core_config->registration &&
+                $this->core_config->registration->on &&
+                $this->core_config->registration->role_id
+            ) {
                 $tpl->touchBlock('registration');
             }
         }
@@ -708,6 +685,80 @@ class Login extends Db {
         $html = str_replace('<!--index -->', $tpl->render(), $html);
 
         return $html;
+    }
+
+
+    /**
+     * @param $key
+     * @param $password
+     * @return false|string
+     * @throws \Zend_Db_Adapter_Exception
+     */
+    private function restorePass($key, $password) {
+
+        $user_info = $this->db->fetchRow("
+            SELECT id,
+                   user_id
+            FROM mod_ordering_contractors 
+            WHERE reg_key = ?
+              AND date_expired > NOW()
+            LIMIT 1
+        ", $key);
+
+        if (empty($user_info)) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $this->_('Ссылка устарела')
+            ]);
+        }
+
+        $where = $this->db->quoteInto('id = ?', $user_info['id']);
+        $this->db->update('mod_ordering_contractors', [
+            'reg_key'      => new \Zend_Db_Expr('NULL'),
+            'date_expired' => new \Zend_Db_Expr('NULL'),
+        ], $where);
+
+        if ( ! empty($user_info['user_id'])) {
+            $where = $this->db->quoteInto('u_id = ?', $user_info['user_id']);
+            $this->db->update('core_users', [
+                'u_pass' => \Tool::pass_salt($password),
+            ], $where);
+        }
+
+        return json_encode([
+            "status"  => "success",
+            "message" => "<h4>Пароль изменен!</h4>
+                          <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>"
+        ]);
+    }
+
+
+    /**
+     * @param $mail_address
+     * @param $reg_key
+     */
+    private function sendEmailRegistration($mail_address, $reg_key) {
+
+        $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+        $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+        $doc_path = rtrim(DOC_PATH, '/') . '/';
+
+        $content_email = "
+            Вы зарегистрированы на сервисе {$host}<br>
+            Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
+               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
+        ";
+
+        $reg = \Zend_Registry::getInstance();
+        $reg->set('context', ['queue', 'index']);
+
+        require_once 'Email.php';
+        $email = new \Core2\Email();
+        $email->to($mail_address)
+            ->subject("Автопромсервис: Регистрация на сервисе")
+            ->body($content_email)
+            ->send(true);
     }
 
 
