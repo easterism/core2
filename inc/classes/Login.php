@@ -58,7 +58,7 @@ class Login extends Db {
                             http_response_code(404);
                             return '';
                         }
-                        return $this->getRegistrationConfirm($_GET['key']);
+                        return $this->getRegistrationComplete($_GET['key']);
 
                     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (empty($_POST['key'])){
@@ -68,7 +68,7 @@ class Login extends Db {
                         if (empty($_POST['password'])) {
                             return json_encode([
                                 'status'  => 'error',
-                                'message' => 'Заполните пароль'
+                                'message' => $this->_('Заполните пароль')
                             ]);
                         }
 
@@ -86,7 +86,7 @@ class Login extends Db {
                     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                         if ( ! empty($_GET['key'])) {
-                            return $this->restoreConfirm($_GET['key']);
+                            return $this->restoreComplete($_GET['key']);
 
                         } else {
                             return $this->getRestore();
@@ -96,7 +96,7 @@ class Login extends Db {
                         if (empty($_POST['email'])) {
                             return json_encode([
                                 'status'  => 'error',
-                                'message' => 'Заполните email'
+                                'message' => $this->_('Заполните email')
                             ]);
                         }
 
@@ -116,7 +116,7 @@ class Login extends Db {
                     if (empty($_POST['password'])) {
                         return json_encode([
                             'status'  => 'error',
-                            'message' => 'Заполните пароль'
+                            'message' => $this->_('Заполните пароль')
                         ]);
                     }
                     return $this->setUserRestorePass($_POST['key'], $_POST['password']);
@@ -224,12 +224,12 @@ class Login extends Db {
         }
 
         if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration->on) {
-                $tpl->touchBlock('registration');
+            if ($this->core_config->registration && $this->core_config->registration->on) {
+                $tpl->ext_actions->touchBlock('registration');
             }
 
-            if ($this->core_config->restore->on) {
-                $tpl->touchBlock('restore');
+            if ($this->core_config->restore && $this->core_config->restore->on) {
+                $tpl->ext_actions->touchBlock('restore');
             }
         }
 
@@ -248,12 +248,19 @@ class Login extends Db {
      */
     private function getRegistration() {
 
-        $tpl  = new \Templater3("core2/html/" . THEME . "/login/RegistryUser.html");
+        $tpl  = new \Templater3("core2/html/" . THEME . "/login/registration.html");
         $logo = $this->getSystemLogo();
 
         if (is_file($logo)) {
             $tpl->logo->assign('{logo}', $logo);
         }
+
+        if ($this->config->mail && $this->config->mail->server) {
+            if ($this->core_config->restore && $this->core_config->restore->on) {
+                $tpl->touchBlock('restore');
+            }
+        }
+
 
         $html = $this->getIndex();
         $html = str_replace('<!--index -->', $tpl->render(), $html);
@@ -273,47 +280,71 @@ class Login extends Db {
         if (empty($data['email'])) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Email не заполнен'
+                'message' => $this->_('Email не заполнен')
             ]);
         }
 
         if (empty($data['unp'])) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'УНП не заполнено'
+                'message' => $this->_('УНП не заполнено')
             ]);
         }
 
         if (empty($data['company_name'])) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Название организации не заполнено'
+                'message' => $this->_('Название организации не заполнено')
             ]);
         }
 
         if (empty($data['tel'])) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Телефон не заполнен'
+                'message' => $this->_('Телефон не заполнен')
             ]);
         }
 
         $data['email'] = trim($data['email']);
 
-        $isset_user_login = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $data['email']));
-        $isset_user_email = $this->dataUsers->fetchRow($this->db->quoteInto("email = ?", $data['email']));
+        $isset_user_login = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users
+            WHERE u_login = ?
+        ", $data['email']);
+
 
         if ($isset_user_login) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Такой пользователь уже есть'
+                'message' => $this->_('Такой пользователь уже есть')
             ]);
         }
+
+        $isset_user_email = $this->db->fetchOne("
+            SELECT 1
+            FROM core_users
+            WHERE email = ?
+        ", $data['email']);
 
         if ($isset_user_email) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Пользователь с таким Email уже есть'
+                'message' => $this->_('Пользователь с таким Email уже есть')
+            ]);
+        }
+
+        $isset_unp = $this->db->fetchOne("
+            SELECT 1
+            FROM mod_ordering_contractors
+            WHERE unp = ?
+              AND is_deleted_sw = 'N' 
+        ", $data['unp']);
+
+        if ($isset_unp) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $this->_('Организация с таким УНП уже есть')
             ]);
         }
 
@@ -339,13 +370,13 @@ class Login extends Db {
 
                 return json_encode([
                     'status'  => 'success',
-                    'message' => 'На указанную вами почту отправлены данные для входа в систему.'
+                    'message' => $this->_('На указанную вами почту отправлены данные для входа в систему')
                 ]);
 
             } else {
                 return json_encode([
                     'status'  => 'error',
-                    'message' => 'Организация с таким Email уже есть'
+                    'message' => $this->_('Организация с таким Email уже есть')
                 ]);
             }
         }
@@ -363,7 +394,8 @@ class Login extends Db {
         $this->sendEmailRegistration($data['email'], $reg_key);
 
         return json_encode([
-            'status' => 'success'
+            'status'  => 'success',
+            'message' => $this->_('На указанную вами почту отправлены данные для входа в систему')
         ]);
     }
 
@@ -382,7 +414,7 @@ class Login extends Db {
             Вы зарегистрированы на сервисе {$host}<br>
             Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
             <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
-               style=\"font-size: 16px\">{$protocol}://{$host}/index.php?core=registration_complete&key={$reg_key}</a>
+               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
         ";
 
         $reg = \Zend_Registry::getInstance();
@@ -403,9 +435,9 @@ class Login extends Db {
      * @throws \Zend_Db_Exception
      * @throws \Exception
      */
-    private function getRegistrationConfirm($key) {
+    private function getRegistrationComplete($key) {
 
-        $tpl  = new \Templater3("core2/html/" . THEME . "/login/ConfirmRegistryUser.html");
+        $tpl  = new \Templater3("core2/html/" . THEME . "/login/registration-complete.html");
         $logo = $this->getSystemLogo();
 
         if (is_file($logo)) {
@@ -419,12 +451,21 @@ class Login extends Db {
               AND date_expired > NOW()
         ", $key);
 
+        $error_message = '';
+
         if ($isset_key) {
             $tpl->pass->assign('[KEY]', $key);
         } else {
-            $tpl->error->assign('[ERROR_MSG]', 'Ссылка устарела');
+            $error_message = $this->_('Ссылка устарела');
         }
 
+        $tpl->assign('[ERROR_MSG]', $error_message);
+
+        if ($this->config->mail && $this->config->mail->server) {
+            if ($this->core_config->restore && $this->core_config->restore->on) {
+                $tpl->touchBlock('restore');
+            }
+        }
 
         $html = $this->getIndex();
         $html = str_replace('<!--index -->', $tpl->render(), $html);
@@ -454,7 +495,7 @@ class Login extends Db {
         if (empty($user_info)) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Ссылка устарела'
+                'message' => $this->_('Ссылка устарела')
             ]);
         }
 
@@ -493,7 +534,7 @@ class Login extends Db {
         if (empty($user_info)) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Ссылка устарела'
+                'message' => $this->_('Ссылка устарела')
             ]);
         }
 
@@ -525,12 +566,18 @@ class Login extends Db {
      */
     private function getRestore() {
 
-        $tpl = new \Templater3("core2/html/" . THEME . "/login/RestorePassUser.html");
+        $tpl = new \Templater3("core2/html/" . THEME . "/login/restore.html");
 
         $logo = $this->getSystemLogo();
 
         if (is_file($logo)) {
             $tpl->logo->assign('{logo}', $logo);
+        }
+
+        if ($this->config->mail && $this->config->mail->server) {
+            if ($this->core_config->registration && $this->core_config->registration->on) {
+                $tpl->touchBlock('registration');
+            }
         }
 
         $html = $this->getIndex();
@@ -559,7 +606,7 @@ class Login extends Db {
         if (empty($user_id)) {
             return json_encode([
                 'status'  => 'error',
-                'message' => 'Пользователя с таким Email нет в системе'
+                'message' => $this->_('Пользователя с таким Email нет в системе')
             ]);
         }
 
@@ -581,7 +628,7 @@ class Login extends Db {
             Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
             <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore&key={$reg_key}\" 
-               style=\"font-size: 16px\">{$protocol}://{$host}/index.php?core=restore&key={$reg_key}</a>
+               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore&key={$reg_key}</a>
         ";
 
         $this->setContext('queue');
@@ -595,7 +642,7 @@ class Login extends Db {
 
         return json_encode([
             'status'  => 'success',
-            'message' => 'На указанную вами почту отправлены данные для смены пароля'
+            'message' => $this->_('На указанную вами почту отправлены данные для смены пароля')
         ]);
     }
 
@@ -605,9 +652,9 @@ class Login extends Db {
      * @return string|string[]
      * @throws \Exception
      */
-    private function restoreConfirm($key) {
+    private function restoreComplete($key) {
 
-        $tpl = new \Templater3("core2/html/" . THEME . "/login/ConfirmRestorePassUser.html");
+        $tpl = new \Templater3("core2/html/" . THEME . "/login/restore-complete.html");
 
         $logo = $this->getSystemLogo();
 
@@ -622,12 +669,21 @@ class Login extends Db {
               AND date_expired > NOW()
         ", $key);
 
+        $error_message = '';
+
         if ($isset_key) {
             $tpl->pass->assign('[KEY]', $key);
         } else {
-            $tpl->error->assign('[ERROR_MSG]', 'Ссылка устарела');
+            $error_message = $this->_('Ссылка устарела');
         }
 
+        $tpl->assign('[ERROR_MSG]', $error_message);
+
+        if ($this->config->mail && $this->config->mail->server) {
+            if ($this->core_config->registration && $this->core_config->registration->on) {
+                $tpl->touchBlock('registration');
+            }
+        }
 
 
         $html = $this->getIndex();

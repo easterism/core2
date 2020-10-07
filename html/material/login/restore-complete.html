@@ -1,15 +1,14 @@
-<form class="login-form" onsubmit="Login.ConfirmRestorePassUser(this); return false">
+<form class="form-main" onsubmit="CoreLogin.restoreComplete(this); return false">
     <!-- BEGIN logo -->
     <div class="container-fluid logo-container">
         <img src="{logo}" alt="logo"/>
     </div>
     <!-- END logo -->
-    <!-- BEGIN error -->
-    <div class="error">[ERROR_MSG]</div>
-    <!-- END error -->
-    <div id="error"></div>
-    <div id="success"></div>
-    <div class="form-registry">
+
+    <div class="text-center text-danger">[ERROR_MSG]</div>
+    <div class="text-center text-success"></div>
+
+    <div class="form-restore">
         <!-- BEGIN pass -->
         <h4 class="text-center">Восстановление пароля</h4>
         <br>
@@ -32,12 +31,15 @@
                 <span class="error-message"></span>
             </div>
         </div>
-        <button type="submit" class="log-btn has-spinner" >Подтвердить</button>
+        <button type="submit" class="btn-login has-spinner" >Подтвердить</button>
         <!-- END pass -->
     </div>
     <div class="callback-button-form-user">
         <a href="index.php" class="text-muted pull-left">Войти</a>
+
+        <!-- BEGIN registration -->
         <a href="index.php?core=registration" class="text-muted pull-right">Регистрация</a>
+        <!-- END registration -->
         <div class="clearfix"></div>
     </div>
 </form>
