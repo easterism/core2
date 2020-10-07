@@ -485,7 +485,9 @@ class Login extends Db {
 
         $user_info = $this->db->fetchRow("
             SELECT id,
-                   user_id
+                   user_id,
+                   email,
+                   title
             FROM mod_ordering_contractors 
             WHERE reg_key = ?
               AND date_expired > NOW()
@@ -499,11 +501,27 @@ class Login extends Db {
             ]);
         }
 
+        $this->db->insert('core_users', [
+            'visible'     => 'N',
+            'is_admin_sw' => 'N',
+            'u_login'     => trim($user_info['email']),
+            'u_pass'      => \Tool::pass_salt($password),
+            'email'       => trim($user_info['email']),
+            'date_added'  => new \Zend_Db_Expr('NOW()'),
+            'role_id'     => $this->config->registry->role
+        ]);
+        $user_id = $this->db->lastInsertId();
+
+        $this->db->insert('core_users_profile', [
+            'user_id'   => $user_id,
+            'firstname' => $user_info['title'],
+        ]);
+
         $where = $this->db->quoteInto('id = ?', $user_info['id']);
         $this->db->update('mod_ordering_contractors', [
-            'u_pass'       => \Tool::pass_salt($password),
             'reg_key'      => new \Zend_Db_Expr('NULL'),
             'date_expired' => new \Zend_Db_Expr('NULL'),
+            'user_id'      => $user_id,
         ], $where);
 
         return json_encode([
