@@ -1,16 +1,33 @@
-<form class="login-form" method="post">
+<form class="form-main" method="post">
     <input name="action" type="hidden" />
     <!-- BEGIN logo -->
     <div class="container-fluid logo-container">
         <img src="{logo}" alt="logo"/>
     </div>
     <!-- END logo -->
+
     <!-- BEGIN error -->
     <div id="error">[ERROR_MSG]</div>
     <!-- END error -->
+
     <label for="input-login" class="sr-only">Логин или email</label>
     <input type="text" name="login" class="form-control" placeholder="Логин или email" required autofocus value="[ERROR_LOGIN]" id="UserName">
+
     <label for="gfhjkm" class="sr-only">Пароль</label>
     <input type="password" name="password" id="gfhjkm" class="form-control" placeholder="Пароль" required>
-    <button type="submit" class="log-btn">Войти</button>
+
+    <button type="submit" class="btn-login">Войти</button>
+
+    <!-- BEGIN ext_actions -->
+    <br><br>
+    <div>
+        <!-- BEGIN registration -->
+        <a href="index.php?core=registration" class="text-muted pull-left">Регистрация</a>
+        <!-- END registration -->
+        <!-- BEGIN restore -->
+        <a href="index.php?core=restore" class="text-muted pull-right">Забыли пароль</a>
+        <!-- END restore -->
+        <div class="clearfix"></div>
+    </div>
+    <!-- END ext_actions -->
 </form>
