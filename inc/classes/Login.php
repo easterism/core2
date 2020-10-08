@@ -358,7 +358,7 @@ class Login extends Db {
         $contractor = $this->db->fetchRow("
             SELECT id,
                    email,
-                   active_sw
+                   is_active_sw
             FROM mod_ordering_contractors
             WHERE email = ?
         ", $data['email']);
