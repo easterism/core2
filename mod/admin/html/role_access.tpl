@@ -1,4 +1,4 @@
-<table style="width: 100%;">
+<table style="width: 100%;white-space: nowrap;">
     <tr>
         <td style="min-width: 180px">Доступен</td>
         <td style="min-width: 150px"><input type="checkbox" name="access[access][MODULE_ID]" id="access_MODULE_ID"/></td>
