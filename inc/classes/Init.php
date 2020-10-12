@@ -882,41 +882,26 @@
 
 
 
-
-            if (isset($this->config->system->js)) {
-                $system_js = "";
-
-                if (is_object($this->config->system->js)) {
-                    foreach ($this->config->system->js as $src) {
-                        if (file_exists($src)) {
-                            $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
-                        }
+            $system_js = "";
+            if (isset($this->config->system->js) && is_object($this->config->system->js)) {
+                foreach ($this->config->system->js as $src) {
+                    if (file_exists($src)) {
+                        $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                     }
-
-                } elseif (file_exists($src)) {
-                    $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
-
-                $tpl->assign("<!--system_js-->", $system_js);
             }
+            $tpl->assign("<!--system_js-->", $system_js);
 
 
-            if (isset($this->config->system->css)) {
-                $system_css = "";
-
-                if (is_object($this->config->system->css)) {
-                    foreach ($this->config->system->css as $src) {
-                        if (file_exists($src)) {
-                            $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
-                        }
+            $system_css = "";
+            if (isset($this->config->system->css) && is_object($this->config->system->css)) {
+                foreach ($this->config->system->css as $src) {
+                    if (file_exists($src)) {
+                        $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                     }
-
-                } elseif (file_exists($src)) {
-                    $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                 }
-
-                $tpl->assign("<!--system_css-->", $system_css);
             }
+            $tpl->assign("<!--system_css-->", $system_css);
 
             return $tpl->render();
         }
