@@ -507,7 +507,7 @@ class Login extends Db {
         $this->db->beginTransaction();
         try {
             $this->db->insert('core_users', [
-                'visible'     => 'N',
+                'visible'     => 'Y',
                 'is_admin_sw' => 'N',
                 'u_login'     => trim($user_info['email']),
                 'u_pass'      => \Tool::pass_salt($password),
