@@ -120,7 +120,8 @@ class Gitlab extends \Common
             $zip = new \ZipArchive();
             $upload_dir 	    = $this->config->temp . '/' . SessionContainer::getDefaultManager()->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
-            $fn                 = tempnam($upload_dir, "gitlabzip");
+            $fn                 = tempnam($this->config->temp, "gitlabzip");
+            if (!$fn) throw new \Exception("Не удалось создать файл для установки");
             file_put_contents($fn, $body);
 
             if ($zip->open($fn) === true){
@@ -135,7 +136,7 @@ class Gitlab extends \Common
                     }
                 }
                 if ($dirToZip) {
-                    $fn     = tempnam($upload_dir, "gitlabzip_");
+                    $fn     = tempnam($this->config->temp, "gitlabzip_");
                     $res    = $zip->open($fn, \ZipArchive::CREATE);
                     if ($res === true) {
                         $this->zipDir($zip, $dirToZip);
@@ -144,11 +145,11 @@ class Gitlab extends \Common
                         $zip = $fn;
 
                     } else {
-                        $this->error = $this->translate->tr("Не удалось создать подготовить файл для установки");
+                        $this->error = $this->translate->tr("Не удалось подготовить файл для установки");
                         return;
                     }
                 } else {
-                    $this->error = $this->translate->tr("Не удалось создать подготовить файл для установки");
+                    $this->error = $this->translate->tr("Не удалось подготовить файл для установки");
                     return;
                 }
             } else {
