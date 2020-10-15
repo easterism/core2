@@ -510,7 +510,7 @@ class ajaxFunc extends Common {
 			return;
 		}
         $order_fields = $this->getSessForm($data['class_id']);
-        if ( ! empty($data['class_id'])) {
+        if ( ! empty($order_fields['mainTableId'])) {
             $this->response->assign($order_fields['mainTableId'] . "_error", "style.display", 'none');
         }
         if ( ! empty($order_fields['back'])) {
