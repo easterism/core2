@@ -15,7 +15,7 @@ body {
 	height:100%;
 }
 
-#rootContainer div {
+#rootContainer .form-container {
 	position: absolute;
 	width: 260px;
 	height: 200px;
@@ -25,14 +25,29 @@ body {
 	margin-top: -100px;
 	text-align: center;
 }
+#rootContainer .form-footer {
+	padding: 0 15px;
+}
+#rootContainer .text-muted {
+	color: #9a9a9a;
+}
+#rootContainer .pull-left {
+	float: left;
+}
+#rootContainer .pull-right {
+	float: right;
+}
 
 
 table {
-	border:0px; 
+	border:0;
 }
-table td{
+table td {
 	padding:2px;
 	font-size:11px;
+}
+table td:first-child {
+	width: 90px;
 }
 
 button, .button {
@@ -66,42 +81,22 @@ input {
 }
 
 
-.error-message {
+.text-danger {
 	color: #e50000;
+}
+.text-success {
+	color: #1ab100;
+	font-size: 12px;
+}
+.text-center {
+	text-align: center;
 }
 
 /*
 PRELOADERS
 */
 
-.btn-loader {
-	display: inline-block;
-	width: 15px;
-	height: 15px;
-	margin-right: 5px;
-	margin-bottom: -2px;
-}
-.btn-loader:after {
-	content: " ";
-	display: block;
-	width: 15px;
-	height: 15px;
-	padding-right: 10px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-	border-color: #fff transparent #fff transparent;
-	animation: btn-loader 1.2s linear infinite;
-}
-@keyframes btn-loader {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
-}
-
-.callback-button-form-user {
+.form-footer {
 	margin-top: 20px;
 }
 .error {

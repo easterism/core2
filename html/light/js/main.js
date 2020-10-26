@@ -327,13 +327,10 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected, ' +
-			  '#module-settings.menu-module-selected, ' +
-              '#module-billing.menu-module-selected')[0]
-        ) {
-            $('#user-section').addClass('active');
+        if ($('#module-profile.menu-module-selected')[0]) {
+            $('#user-section > .dropdown').addClass('active');
         } else {
-            $('#user-section').removeClass('active');
+            $('#user-section > .dropdown').removeClass('active');
         }
 
 		if (!callback) {

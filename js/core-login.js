@@ -10,7 +10,7 @@ function CoreLogin() {}
 CoreLogin.registration = function (form) {
 
     CoreLogin.loaderShow();
-    $('.form-main > .text-danger').text('');
+    $('.form-main .text-danger').text('');
 
     $.ajax({
         url: "index.php?core=registration",
@@ -21,16 +21,16 @@ CoreLogin.registration = function (form) {
         .done(function (data) {
             CoreLogin.loaderHide();
             if (data.status === 'success') {
-                $('.form-main > .text-success').text(data.message).css('margin-bottom', '100px');
+                $('.form-main .text-success').text(data.message).css('margin-bottom', '50px');
                 $('.form-registration').hide();
             } else {
-                $('.form-main > .text-danger').text(data.message);
+                $('.form-main .text-danger').text(data.message);
             }
         })
 
         .fail(function () {
             CoreLogin.loaderHide();
-            $('.form-main > .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
+            $('.form-main .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
         });
 };
 
@@ -45,19 +45,17 @@ CoreLogin.registrationComplete = function (form) {
     var pass2 = $("#users_password2").val();
 
     if ( ! pass1 || ! pass2) {
-        $('#users_password2').parent().addClass('has-error');
-        $('#users_password2').parent().find('.error-message').text('Введите пароль').show();
+        $('.form-main .text-danger').text('Введите пароль');
         return false;
     }
 
     if (pass1 !== pass2) {
-        $('#users_password2').parent().addClass('has-error');
-        $('#users_password2').parent().find('.error-message').text('пароли не совпадают').show();
+        $('.form-main .text-danger').text('Пароли не совпадают').show();
         return false;
     }
 
     CoreLogin.loaderShow();
-    $('.form-main > .text-danger').text('');
+    $('.form-main .text-danger').text('');
 
     $.ajax({
         url: "index.php?core=registration_complete",
@@ -70,15 +68,15 @@ CoreLogin.registrationComplete = function (form) {
     }).done(function (data) {
         CoreLogin.loaderHide();
         if (data.status === 'success') {
-            $('.form-main > .text-success').html(data.message).css('margin-bottom', '100px');
+            $('.form-main .text-success').html(data.message).css('margin-bottom', '50px');
             $('.form-registration').hide();
         } else {
-            $('.form-main > .text-danger').text(data.message);
+            $('.form-main .text-danger').text(data.message);
         }
 
     }).fail(function () {
         CoreLogin.loaderHide();
-        $('.form-main > .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
+        $('.form-main .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
     });
 };
 
@@ -90,7 +88,7 @@ CoreLogin.registrationComplete = function (form) {
 CoreLogin.restore = function (form) {
 
     CoreLogin.loaderShow();
-    $('.form-main > .text-danger').text('');
+    $('.form-main .text-danger').text('');
 
     $.ajax({
         url: "index.php?core=restore",
@@ -102,17 +100,17 @@ CoreLogin.restore = function (form) {
             CoreLogin.loaderHide();
 
             if (data.status === 'success') {
-                $('.form-main > .text-success').text(data.message).css('margin-bottom', '100px');
+                $('.form-main .text-success').text(data.message).css('margin-bottom', '50px');
                 $('.form-restore').hide();
 
             } else {
-                $('.form-main > .text-danger').text(data.message);
+                $('.form-main .text-danger').text(data.message);
             }
         })
 
         .fail(function () {
             CoreLogin.loaderHide();
-            $('.form-main > .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
+            $('.form-main .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
         });
 };
 
@@ -127,13 +125,12 @@ CoreLogin.restoreComplete = function (form) {
     var pass2 = $("#users_password2").val();
 
     if (pass1 !== pass2) {
-        $('#users_password2').parent().addClass('has-error');
-        $('#users_password2').parent().find('.error-message').text('пароли не совпадают').show();
+        $('.form-main .text-danger').text('Пароли не совпадают').show();
         return false;
     }
 
     CoreLogin.loaderShow();
-    $('.form-main > .text-danger').text('');
+    $('.form-main .text-danger').text('');
 
     $.ajax({
         url: "index.php?core=restore_complete",
@@ -147,15 +144,15 @@ CoreLogin.restoreComplete = function (form) {
         CoreLogin.loaderHide();
 
         if (data.status === 'success') {
-            $('.form-main > .text-success').html(data.message).css('margin-bottom', '100px');
+            $('.form-main .text-success').html(data.message).css('margin-bottom', '50px');
             $('.form-restore').hide();
         } else {
-            $('.form-main > .text-danger').text(data.message);
+            $('.form-main .text-danger').text(data.message);
         }
 
     }).fail(function () {
         CoreLogin.loaderHide();
-        $('.form-main > .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
+        $('.form-main .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
     });
 };
 
@@ -169,7 +166,7 @@ CoreLogin.loaderShow = function () {
 
     $btn.attr("disabled", "disabled");
     $btn.attr('data-btn-text', $btn.text());
-    $btn.html('<div class="btn-loader"></div>Загрузка');
+    $btn.html('<div class="btn-loader"></div>Загрузка...');
 }
 
 

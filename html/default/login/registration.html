@@ -1,47 +1,61 @@
-<form class="form-main" onsubmit="CoreLogin.registration(this); return false">
-    <input name="action" type="hidden" />
-    <!-- BEGIN logo -->
-    <div class="container-fluid logo-container">
-        <img src="{logo}" alt="logo"/>
-    </div>
-    <!-- END logo -->
+<div class="form-container">
+    <form class="form-main" onsubmit="CoreLogin.registration(this); return false">
+        <input name="action" type="hidden" />
+        <!-- BEGIN logo -->
+        <div class="container-fluid logo-container">
+            <img src="{logo}" alt="logo"/>
+        </div>
+        <!-- END logo -->
 
-    <div class="text-center text-danger"></div>
-    <div class="text-center text-success"></div>
+        <br>
+        <h3>Регистрация</h3>
 
-    <div class="form-registration">
-        <h4 class="text-center">Регистрация</h4>
+        <div class="text-center text-danger"></div>
+        <div class="text-center text-success"></div>
         <br>
 
-        <div class="form-group">
-            <input type="text" name="unp" class="form-control"
-                   placeholder="УНП" required autofocus id="UserUNP">
+        <div class="form-registration">
+            <table>
+                <tr>
+                    <td align="right">УНП</td>
+                    <td align="left">
+                        <input type="text" name="unp" class="form-control" required autofocus id="control-unp">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">Название организации</td>
+                    <td align="left">
+                        <input type="text" name="company_name" class="form-control" required id="control-company-name">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">Email</td>
+                    <td align="left">
+                        <input type="email" name="email" class="form-control" required id="control-email">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">Телефон</td>
+                    <td align="left">
+                        <input type="tel" name="tel" class="form-control" required id="control-tel">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right"></td>
+                    <td align="left">
+                        <button type="submit" class="btn-login has-spinner" >Зарегистрироваться</button>
+                    </td>
+                </tr>
+            </table>
+
         </div>
+        <div class="form-footer">
+            <a href="index.php" class="text-muted pull-left">Войти</a>
 
-        <div class="form-group">
-            <input type="text" name="company_name" class="form-control"
-                   placeholder="Название организации" required id="UserCOMPANY_NAME">
+            <!-- BEGIN restore -->
+            <a href="index.php?core=restore" class="text-muted pull-right">Забыли пароль</a>
+            <!-- END restore -->
+            <div class="clearfix"></div>
         </div>
-
-        <div class="form-group">
-            <input type="email" name="email" class="form-control"
-                   placeholder="Email" required id="UserEMAIL">
-        </div>
-
-        <div class="form-group">
-            <input type="tel" name="tel" class="form-control"
-                   placeholder="Телефон" required id="UserTEL">
-        </div>
-
-        <button type="submit" class="btn-login has-spinner" >Зарегистрироваться</button>
-
-    </div>
-    <div class="callback-button-form-user">
-        <a href="index.php" class="text-muted pull-left">Войти</a>
-
-        <!-- BEGIN restore -->
-        <a href="index.php?core=restore" class="text-muted pull-right">Забыли пароль</a>
-        <!-- END restore -->
-        <div class="clearfix"></div>
-    </div>
-</form>
+    </form>
+</div>

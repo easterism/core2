@@ -192,7 +192,7 @@ class Login extends Db {
             return '';
         }
 
-        $tpl = new \Templater3("core2/html/" . THEME . "/login/login.html");
+        $tpl = new \Templater2("core2/html/" . THEME . "/login/login.html");
 
         $errorNamespace = new SessionContainer('Error');
         $blockNamespace = new SessionContainer('Block');
@@ -364,7 +364,7 @@ class Login extends Db {
         ", $data['email']);
 
         if ( ! empty($contractor)) {
-            if ($contractor['active_sw'] == 'N') {
+            if ($contractor['is_active_sw'] == 'N') {
                 $reg_key = \Tool::pass_salt(md5($data['email'] . microtime()));
                 $where   = $this->db->quoteInto('id = ?', $contractor['id']);
                 $this->db->update('mod_ordering_contractors', [
@@ -527,6 +527,7 @@ class Login extends Db {
                 'reg_key'      => new \Zend_Db_Expr('NULL'),
                 'date_expired' => new \Zend_Db_Expr('NULL'),
                 'user_id'      => $user_id,
+                'is_active_sw' => 'Y',
             ], $where);
 
             $this->db->commit();
@@ -543,8 +544,7 @@ class Login extends Db {
 
         return json_encode([
             'status'  => 'success',
-            'message' => '<h4>Готово!</h4>
-                          <p>Вы сможете зайти в систему, после прохождения модерации</p>'
+            'message' => '<h4>Готово!</h4><p>Вы можете войти в систему</p>'
         ]);
     }
 
@@ -807,6 +807,26 @@ class Login extends Db {
 
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');
         $tpl->assign('favicon.ico', isset($this->favicon['ico']) && is_file($this->favicon['ico']) ? $this->favicon['ico'] : '');
+
+
+        $system_js = "";
+        if ($this->config->mail &&
+            $this->config->mail->server &&
+            (($this->core_config->registration && $this->core_config->registration->on) ||
+            ($this->core_config->restore && $this->core_config->restore->on))
+        ) {
+            $scripts = [
+                'core2/js/core-login.js',
+                'core2/js/jquery.maskedinput.min.js',
+            ];
+            foreach ($scripts as $src) {
+                if (file_exists($src)) {
+                    $system_js .= "<script src=\"{$src}\"></script>";
+                }
+            }
+        }
+        $tpl->assign("<!--system_js-->", $system_js);
+
 
         return $tpl->render();
     }
