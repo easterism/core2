@@ -345,6 +345,7 @@ class Login extends Db {
             FROM mod_ordering_contractors
             WHERE unp = ?
               AND is_deleted_sw = 'N' 
+              AND user_id IS NOT NULL
         ", $data['unp']);
 
         if ($isset_unp) {
@@ -354,37 +355,48 @@ class Login extends Db {
             ]);
         }
 
+        $isset_email = $this->db->fetchOne("
+            SELECT 1
+            FROM mod_ordering_contractors
+            WHERE email = ?
+              AND is_deleted_sw = 'N' 
+              AND user_id IS NOT NULL
+        ", $data['email']);
+
+        if ($isset_email) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $this->_('Организация с таким email уже есть')
+            ]);
+        }
+
 
         $contractor = $this->db->fetchRow("
             SELECT id,
                    email,
                    is_active_sw
             FROM mod_ordering_contractors
-            WHERE email = ?
-        ", $data['email']);
+            WHERE (email = ? OR unp = ?)
+              AND user_id IS NULL
+        ", [
+            $data['email'],
+            $data['unp']
+        ]);
 
         if ( ! empty($contractor)) {
-            if ($contractor['is_active_sw'] == 'N') {
-                $reg_key = \Tool::pass_salt(md5($data['email'] . microtime()));
-                $where   = $this->db->quoteInto('id = ?', $contractor['id']);
-                $this->db->update('mod_ordering_contractors', [
-                    'reg_key'      => $reg_key,
-                    'date_expired' => new \Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
-                ], $where);
+            $reg_key = \Tool::pass_salt(md5($data['email'] . microtime()));
+            $where   = $this->db->quoteInto('id = ?', $contractor['id']);
+            $this->db->update('mod_ordering_contractors', [
+                'reg_key'      => $reg_key,
+                'date_expired' => new \Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
+            ], $where);
 
-                $this->sendEmailRegistration($data['email'], $reg_key);
+            $this->sendEmailRegistration($data['email'], $reg_key);
 
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $this->_('На указанную вами почту отправлены данные для входа в систему')
-                ]);
-
-            } else {
-                return json_encode([
-                    'status'  => 'error',
-                    'message' => $this->_('Организация с таким Email уже есть')
-                ]);
-            }
+            return json_encode([
+                'status'  => 'success',
+                'message' => $this->_('На указанную вами почту отправлены данные для входа в систему')
+            ]);
         }
 
         $reg_key = \Tool::pass_salt(md5($data['email'] . microtime()));
