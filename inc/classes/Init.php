@@ -522,12 +522,20 @@
             }
             // DEPRECATED
             if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
+                $this->is_rest = [
+                    'module'  => $matches[1],
+                    'version' => '',
+                    'action'  => $matches[2],
+                ];
                 return;
             }
             // DEPRECATED
             if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = $matches;
+                $this->is_soap = [
+                    'module'  => isset($matches[2]) ? $matches[2] : $matches[3],
+                    'version' => '',
+                    'action'  => isset($matches[2]) ? 'wsdl.xml' : 'service.php',
+                ];
                 return;
             }
             if (preg_match('~^soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)/(?<action>wsdl\.xml|service\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
@@ -1347,7 +1355,7 @@
             return json_encode([
                 'status' => 'success',
                 'data'   => $data,
-            ]);
+            ] + $data); // Для совместимости с разными приложениями
         }
 
 
