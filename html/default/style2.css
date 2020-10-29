@@ -74,6 +74,11 @@ pre span {
 	border: solid 1px #CCCCCC;
 	font-size:11px;
 }
+.input:focus, select:focus {
+	outline-style:none;
+	box-shadow:none;
+	border:1px solid grey;
+}
 
 .checkbox {
 	border:0;
