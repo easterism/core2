@@ -1401,10 +1401,11 @@ class InstallModule extends \Common {
                 return json_decode($body);
             }
         } catch (RequestException $e) {
-            $msg = Psr7\str($e->getRequest());
+            $msg = '';
             if ($e->hasResponse()) {
                 $msg = Psr7\str($e->getResponse());
             }
+            if (!$msg) $msg = $e->getMessage();
             throw new \Exception($msg);
         }
 
@@ -1419,7 +1420,7 @@ class InstallModule extends \Common {
      * @return  mixed                   Массив с информацией о доступных для установки модулей
      * @throws  \Exception
      */
-    public function getModsListFromRepo($repo_url) {
+    private function getModsListFromRepo($repo_url) {
         //проверяем есть ли ключ к репозиторию, если нет то получаем
         $repo_url = trim($repo_url);
         if (substr_count($repo_url, "repo?apikey=") == 0) {
@@ -1497,14 +1498,17 @@ class InstallModule extends \Common {
     /**
      * Таблица-список доступных модулей из репозитория
      *
-     * @param   string  $repo_url   Подготовленный URL для запроса к репозиторию
+     * @param   string  $repo_id   порядковый номер репозитория
      *
      */
-    public function getHTMLModsListFromRepo($repo_url) {
-        $_GET['repo_id'] = !empty($_GET['repo_id']) ? $_GET['repo_id'] : "";
+    public function getHTMLModsListFromRepo($repo_id) {
         try {
+            $mod_repos = $this->getSetting('repo');
+            $mod_repos = explode(";", $mod_repos);
+            $repo_url = $mod_repos[$repo_id];
             //достаём список модулей
             $repo_list = $this->getModsListFromRepo($repo_url);
+            if (!$repo_list) throw new \RuntimeException(404);
 
             $api_key = explode("?apikey=", $repo_url);
             $api_key = !empty($api_key[1]) ? $api_key[1] : uniqid();
@@ -1657,8 +1661,8 @@ class InstallModule extends \Common {
                 $copy_list[$module_id] = $val[$max_ver];
                 unset($val[$max_ver]);
                 if (!empty($val)) {
-                    $copy_list[$module_id]['version'] .= " <a href=\"\" onclick=\"$('.repo_table_{$_GET['repo_id']}_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
-                    $copy_list[$module_id]['version'] .= "<table width=\"100%\" class=\"repo_table_{$_GET['repo_id']}_{$module_id}\" style=\"display: none;\"><tbody>";
+                    $copy_list[$module_id]['version'] .= " <a href=\"\" onclick=\"$('.repo_table_{$repo_id}_{$module_id}').toggle(); return false;\">Предыдущие версии</a><br>";
+                    $copy_list[$module_id]['version'] .= "<table width=\"100%\" class=\"repo_table_{$repo_id}_{$module_id}\" style=\"display: none;\"><tbody>";
                     foreach ($val as $version => $val2) {
                         $copy_list[$module_id]['version'] .= "<tr><td style=\"border: 0px; padding: 0px;\">{$version}</td><td style=\"border: 0px; text-align: right; padding: 0px;\">{$val2['install_info']}</td></tr>";
                     }
@@ -1671,7 +1675,7 @@ class InstallModule extends \Common {
 //            $list->setRecordCount($per_page);
 
             //пагинация
-            $ss         = new \Zend_Session_Namespace('Search');
+            $ss         = new SessionContainer('Search');
             $ssi        = 'main_' . $list_id;
             $ss         = $ss->$ssi;
             $per_page   = empty($ss["count_{$list_id}"]) ? 1 : (int)$ss["count_{$list_id}"];
@@ -1693,7 +1697,12 @@ class InstallModule extends \Common {
             $list->data = $copy_list;
             $list->showTable();
 
-        } catch (\Exception $e) {
+        }
+        catch (\RuntimeException $e) {
+            $this->addNotice("", $this->translate->tr("При подключении к репозиторию произошла ошибка"), $e->getMessage(), "danger");
+            echo $this->printNotices();
+        }
+        catch (\Exception $e) {
             $this->addNotice("", $this->translate->tr("При подключении к репозиторию произошла ошибка"), $e->getMessage(), "danger");
             echo $this->printNotices();
         }

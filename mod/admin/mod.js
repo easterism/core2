@@ -1,6 +1,6 @@
 var modules = {
-    'repo': function (repo_url, repo_id) {
-        $.ajax({url:'index.php?module=admin&action=modules&getModsListFromRepo=' + repo_url})
+    'repo': function (repo_id) {
+        $.ajax({url:'index.php?module=admin&action=modules&getModsListFromRepo=' + repo_id})
 		.done(function(data, textStatus){
 			if(textStatus == 'success') {
 				$("#repo_" + repo_id).html(data);

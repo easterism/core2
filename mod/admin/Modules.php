@@ -26,6 +26,7 @@ class Modules extends \Common
 {
     private $app = "index.php?module=admin&action=modules";
     private $_module;
+    public $install = [];
 
     /**
      * User constructor.
@@ -519,17 +520,17 @@ class Modules extends \Common
 
 
             // Инсталяция модуля
-            if (!empty($_POST['install'])) {
+            if (!empty($this->install['install'])) {
                 $install = new InstallModule();
-                echo $install->mInstall($_POST['install']);
+                echo $install->mInstall($this->install['install']);
                 exit();
             }
 
 
             // Инсталяция модуля из репозитория
-            if (!empty($_POST['install_from_repo'])) {
+            if (!empty($this->install['install_from_repo'])) {
                 $install = new InstallModule();
-                echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
+                echo $install->mInstallFromRepo($this->install['repo'], $this->install['install_from_repo']);
                 exit();
             }
 
@@ -761,7 +762,7 @@ class Modules extends \Common
                     echo "<div id=\"repo_{$i}\"> Подключаемся...</div>";
                     echo "<script type=\"text\/javascript\" language=\"javascript\">";
                     echo    "$(document).ready(function () {";//ассинхронно получаем списки из репозитория
-                    echo        "window.setTimeout(modules.repo('" . urlencode($repo) . "', {$i}), 1);";
+                    echo        "window.setTimeout(modules.repo({$i}), 1);";
                     echo    "});";
                     echo "</script>";
                     echo "<br><br><br>";

@@ -439,9 +439,9 @@ class CoreController extends Common implements File {
         }
 
         //список модулей из репозитория
-        if (!empty($_GET['getModsListFromRepo'])) {
+        if (isset($_GET['getModsListFromRepo'])) {
             $install = new Install();
-            $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+            $install->getHTMLModsListFromRepo((int) $_GET['getModsListFromRepo']);
             return;
         }
         //скачивание архива модуля
@@ -457,6 +457,12 @@ class CoreController extends Common implements File {
         }
 
         $mods = new Modules();
+        if (!empty($_POST['install'])) {
+            $mods->install = ['install' => $_POST['install']];
+        }
+        if (!empty($_POST['install_from_repo'])) {
+            $mods->install = ['repo' => $_POST['repo'], 'install_from_repo' => $_POST['install_from_repo']];
+        }
         $mods->dispatch();
 	}
 
