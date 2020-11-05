@@ -290,17 +290,24 @@ class editTable extends initEdit {
 			$this->readOnly = true;
 		}
 		elseif ($refid) {
-			if ($this->table) {
-				if ($access_edit == 'owner' || $access_read == 'owner') {
-					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
-					if (!isset($res['author'])) {
-						$this->noAccess();
-						return;
-					} elseif ($authNamespace->NAME !== $res['author']) {
-						$this->readOnly = true;
-					}
-				}
-			}
+            if ($this->table) {
+                if ($access_edit == 'owner' || $access_read == 'owner') {
+                    $res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
+
+                    if ($access_read == 'owner') {
+                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
+                            $this->noAccess();
+                            return;
+                        }
+                    }
+
+                    if ($access_edit == 'owner') {
+                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
+                            $this->readOnly = true;
+                        }
+                    }
+                }
+            }
 		}
 
 		if (!$this->readOnly) { //форма доступна для редактирования
