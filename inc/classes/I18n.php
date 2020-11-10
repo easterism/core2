@@ -1,4 +1,4 @@
-<?
+<?php
 namespace Core2;
 /**
  * Локализация core2
@@ -10,8 +10,7 @@ namespace Core2;
  */
 use Zend\I18n\Translator\Translator;
 
-class I18n
-{
+class I18n {
 
     private $translate;
     private $locale;
@@ -19,12 +18,10 @@ class I18n
 
 
     /**
-     * @return void
-     *
-     * инициализируется свойство $translate
+     * @param \Zend_Config $config
      */
-	public function __construct(\Zend_Config $config)
-	{
+	public function __construct(\Zend_Config $config) {
+
         if (isset($config->translate) && $config->translate->on) {
             try {
                 if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
@@ -53,23 +50,23 @@ class I18n
 
     /**
      * Добавляем все имеющиеся варианты перевода текста и определяем язык пользователя
-     *
+     * @param $config
      * @return void
      */
-	public function setup($config)
-	{
+	public function setup($config) {
+
         if ($config['locale'] == 'ru') return;
         $this->translate = new Translator();
         $this->setLocale($config['locale']);
         $this->translate->addTranslationFile($config['adapter'], $config['content'], $config['domain'], $config['locale']);
 	}
 
+
     /**
      * Проверяет, создан ли объект для переводов
      * @return mixed
      */
-    public function isSetup()
-    {
+    public function isSetup() {
         return $this->translate;
     }
 
@@ -80,22 +77,30 @@ class I18n
 	 * @param $lng
      * @return void
 	 */
-	public function setLocale($lng)
-	{
+	public function setLocale($lng) {
+
 		$this->translate->setLocale($lng);
         $this->locale = $lng;
 	}
 
-    public function getLocale()
-    {
+
+    /**
+     * @return false|string
+     */
+    public function getLocale() {
+
         return $this->locale;
     }
+
 
     /**
      * Добавление переводов для модулей
      * @param $location
+     * @param $domain
+     * @throws \Zend_Config_Exception
      */
     public function setupExtra($location, $domain) {
+
         $ini = $location . "/conf.ini";
 
         if ($this->translate && is_dir($location . "/translations") && file_exists($ini)) {
@@ -135,12 +140,11 @@ class I18n
 	/**
 	 * Получение перевода с английского на язык пользователя
      *
-	 * @param   string $str   Строка на английском, которую следует перевести на язык пользователя
-	 * @param   string $categ Категория к которой относится строка(необязательный параметр)
-	 * @return  string        Переведеная строка (если перевод не найден, возращает $str)
+	 * @param   string $str    Строка на английском, которую следует перевести на язык пользователя
+	 * @param   string $domain Категория к которой относится строка(необязательный параметр)
+	 * @return  string         Переведеная строка (если перевод не найден, возращает $str)
 	 */
-	public function tr($str, $domain = "core2")
-	{
+	public function tr($str, $domain = "core2") {
         if (!$this->translate) {
             return $str;
         }
