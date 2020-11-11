@@ -24,7 +24,7 @@ body {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );
     color: #777;
 }
-.login-form {
+.form-main {
     width: 320px;
     padding: 90px 30px;
     -moz-border-radius: 8px;
@@ -40,7 +40,7 @@ body {
     -webkit-box-shadow: 0 0 50px rgba(0,0,0,0.2);
     box-shadow: 0 0 50px rgba(0,0,0,0.2);
 }
-.log-btn {
+.btn-login {
     font-size: 16px;
     height: 40px;
     line-height: 40px;
@@ -52,7 +52,7 @@ body {
     border-radius: 4px;
     transition: background .2s;
 }
-.log-btn:hover {
+.btn-login:hover {
     background: #286090;
 }
 .logo-container {
@@ -70,4 +70,46 @@ body {
 #gfhjkm {
     margin-bottom: 30px;
     height: 40px;
+}
+.error-message {
+    color: #e50000;
+}
+
+/*
+PRELOADERS
+*/
+
+.btn-loader {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    margin-bottom: -2px;
+}
+.btn-loader:after {
+    content: " ";
+    display: block;
+    width: 15px;
+    height: 15px;
+    padding-right: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: btn-loader 1.2s linear infinite;
+}
+@keyframes btn-loader {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.form-footer {
+    margin-top: 20px;
+}
+.error {
+    color: red;
+    margin-bottom: 15px;
 }

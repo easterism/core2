@@ -1,0 +1,46 @@
+<form class="form-main" onsubmit="CoreLogin.registrationComplete(this); return false">
+    <!-- BEGIN logo -->
+    <div class="container-fluid logo-container">
+        <img src="{logo}" alt="logo"/>
+    </div>
+    <!-- END logo -->
+
+
+    <h4 class="text-center">Завершение регистрации</h4>
+    <div class="text-center text-danger">[ERROR_MSG]</div>
+    <div class="text-center text-success"></div>
+
+    <div class="form-registration">
+        <!-- BEGIN pass -->
+
+        <br>
+        <p class="text-center">
+            Введите пароль, который вы будете использовать для входа в систему
+        </p>
+
+        <br>
+        <input class="form-control" id="key_from"  name ="key" type="hidden" value="[KEY]">
+        <div id="client-users">
+            <div class="form-group">
+                <input class="form-control" id="control-password" name="password" type="password"
+                       required autofocus placeholder="Пароль">
+            </div>
+
+            <div class="form-group">
+                <input class="form-control" id="control-password2" name="password2" type="password"
+                       required placeholder="Подтверждение пароля">
+            </div>
+        </div>
+        <button type="submit" class="btn-login has-spinner">Подтвердить</button>
+        <!-- END pass -->
+    </div>
+
+    <div class="form-footer">
+        <a href="index.php" class="text-muted pull-left">Войти</a>
+
+        <!-- BEGIN restore -->
+        <a href="index.php?core=restore" class="text-muted pull-right">Забыли пароль</a>
+        <!-- END restore -->
+        <div class="clearfix"></div>
+    </div>
+</form>

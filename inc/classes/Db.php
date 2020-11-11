@@ -16,24 +16,37 @@ use Zend\Cache\StorageFactory;
  */
 class Db {
 
+    /**
+     * @var \Zend_Config_Ini
+     */
     protected $config;
-    private $core_config;
-	private $_s               = array();
-	private $_settings        = array();
-	private $_locations       = array();
-    private $schemaName       = 'public';
 
-	/**
-	 * Db constructor.
-	 * @param null $config
-	 */
+    /**
+     * @var \Zend_Config_Ini
+     */
+    private $core_config;
+
+    private $_s         = array();
+    private $_settings  = array();
+    private $_locations = array();
+    private $schemaName = 'public';
+
+    /**
+     * Db constructor.
+     * @param null $config
+     * @throws \Zend_Exception
+     */
 	public function __construct($config = null) {
-		if (is_null($config)) {
+
+	    if (is_null($config)) {
 			$this->config = \Zend_Registry::get('config');
 		} else {
 			$this->config = $config;
 		}
-		if (!$config) return false;
+
+		if ( ! $config) {
+		    return false;
+        }
 	}
 
 

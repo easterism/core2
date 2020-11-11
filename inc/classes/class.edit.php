@@ -290,17 +290,24 @@ class editTable extends initEdit {
 			$this->readOnly = true;
 		}
 		elseif ($refid) {
-			if ($this->table) {
-				if ($access_edit == 'owner' || $access_read == 'owner') {
-					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
-					if (!isset($res['author'])) {
-						$this->noAccess();
-						return;
-					} elseif ($authNamespace->NAME !== $res['author']) {
-						$this->readOnly = true;
-					}
-				}
-			}
+            if ($this->table) {
+                if ($access_edit == 'owner' || $access_read == 'owner') {
+                    $res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
+
+                    if ($access_read == 'owner') {
+                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
+                            $this->noAccess();
+                            return;
+                        }
+                    }
+
+                    if ($access_edit == 'owner') {
+                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
+                            $this->readOnly = true;
+                        }
+                    }
+                }
+            }
 		}
 
 		if (!$this->readOnly) { //форма доступна для редактирования
@@ -567,13 +574,17 @@ class editTable extends initEdit {
                             }
                         }
 						elseif ($value['type'] == 'switch') {
+                            $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                            $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                            $value['default'] = $value['default'] === $value_y ? $value_y : $value_n;
+
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == $value_y ? 'да' : 'нет';
 
                             } else {
-                                $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
-                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
-                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+                                $color = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);

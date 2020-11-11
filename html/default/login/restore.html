@@ -1,0 +1,43 @@
+<div class="form-container">
+    <form class="form-main" onsubmit="CoreLogin.restore(this); return false">
+        <!-- BEGIN logo -->
+        <div class="container-fluid logo-container">
+            <img src="{logo}" alt="logo"/>
+        </div>
+        <!-- END logo -->
+
+        <br>
+        <h3 class="text-center">Восстановление пароля</h3>
+
+        <div class="text-center text-danger"></div>
+        <div class="text-center text-success"></div>
+        <br>
+
+        <div class="form-restore">
+
+            <table>
+                <tr>
+                    <td align="right">Email</td>
+                    <td align="left">
+                        <input type="Email" name="email" class="form-control" required autofocus id="control-email">
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td align="left">
+                        <button type="submit" class="btn-login has-spinner">Подтвердить</button>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div class="form-footer">
+            <a href="index.php" class="text-muted pull-left">Войти</a>
+
+            <!-- BEGIN registration -->
+            <a href="index.php?core=registration" class="text-muted pull-right">Регистрация</a>
+            <!-- END registration -->
+            <div class="clearfix"></div>
+        </div>
+    </form>
+</div>

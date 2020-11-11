@@ -9,17 +9,22 @@ interface Navigation {
 
     /**
      * Возвращает массив определенного формата описывающий пункты для верхнего меню
-     * type LINK
+     * [
+     *   [
      *      "type"  => 'link',
      *      "title" => 'Text',
      *      "icon"  => '<i class="fa fa-star"></i>',
      *      "link"  => 'index.php#module=profile',
-     *
-     * type LIST
+     *   ],
+     *   [
      *      "type"  => 'list',
      *      "title" => 'Text',
      *      "icon"  => '<i class="fa fa-star"></i>',
      *      "list"  => [
+     *          [
+     *              "type"  => 'header',
+     *              "title" => 'Text',
+     *          ],
      *          [
      *              "type"    => "link",
      *              "id"      => "ID Element",
@@ -28,15 +33,21 @@ interface Navigation {
      *              "link"    => "index.php#module=profile",
      *              "icon"    => '<i class="fa fa-star"></i>',
      *              "onclick" => "alert(123);return false;",
-     *          ]
+     *          ],
      *          [
      *              "type" => 'divider'
-     *          ]
+     *          ],
      *          [
-     *              "type"  => 'header',
-     *              "title" => 'Text',
+     *              "type"     => "file",
+     *              "id"       => "ID Element",
+     *              "class"    => "Class Element",
+     *              "title"    => "Text",
+     *              "icon"     => '<i class="fa fa-file"></i>',
+     *              "onchange" => "alert('Файл выбран');",
      *          ]
-     *      ]
+     *       ]
+     *    ]
+     * ]
      * @return mixed
      */
     public function getNavigationItems();

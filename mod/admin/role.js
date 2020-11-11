@@ -69,21 +69,11 @@ $(document).ready(function() {
 	let module_name = '';
 	$('.roleModulesClick').click(function(){
 		clicks += 1;
-		let  this_id 			= $(this).parent('.roleModules').attr('id');
-		let  access_role 		 = '#access_' 	 		+ this_id;
-		let  default_role 		 = '#default_' 	 		+ this_id;
-		let  list_all_role 		 = '#list_all_' 	 	+ this_id;
-		let  list_owner_role 	 = '#list_owner_' 		+ this_id;
-		let  list_default_role   = '#list_default_' 	+ this_id;
-		let  read_all_role 		 = '#read_all_' 		+ this_id;
-		let  read_owner_role 	 = '#read_owner_' 		+ this_id;
-		let  read_default_role 	 = '#read_default_' 	+ this_id;
-		let  edit_all_role 		 = '#edit_all_' 		+ this_id;
-		let  edit_owner_role 	 = '#edit_owner_' 		+ this_id;
-		let  edit_default_role 	 = '#edit_default_' 	+ this_id;
-		let  delete_all_role 	 = '#delete_all_' 		+ this_id;
-		let  delete_owner_role 	 = '#delete_owner_' 	+ this_id;
-		let  delete_default_role = '#delete_default_' 	+ this_id;
+		let this_id 		= $(this).parent('.roleModules').attr('id');
+		let access_role 	= $('#access_'+ this_id);
+		let all_role 		= $("input[id$='all_"+ this_id +"']");
+		let owner_role 		= $("input[id$='owner_"+ this_id +"']");
+		let default_role 	= $("input[id$='default_"+ this_id +"']");
 
 		if (module_name !== this_id){
 			clicks = 1;
@@ -91,78 +81,26 @@ $(document).ready(function() {
 		module_name = this_id;
 
 		if ( clicks === 1 ){
-			$(access_role).prop('checked', true);
-			$(access_role).prop("disabled",false);
-			$(list_all_role).prop("disabled",false);
-			$(read_all_role).prop("disabled",false);
-			$(edit_all_role).prop("disabled",false);
-			$(delete_all_role).prop("disabled",false);
-
-			$(default_role).prop('checked', false);
-			$(list_default_role).prop('checked', false);
-			$(read_default_role).prop('checked', false);
-			$(edit_default_role).prop('checked', false);
-			$(delete_default_role).prop('checked', false);
-
-			$(list_all_role).prop('checked', true);
-			$(read_all_role).prop('checked', true);
-			$(edit_all_role).prop('checked', true);
-			$(delete_all_role).prop('checked', true);
-
-			$(list_owner_role).prop("disabled",true);
-			$(list_owner_role).prop("checked",true);
-
-			$(read_owner_role).prop("checked",true);
-			$(read_owner_role).prop("disabled",true);
-
-			$(edit_owner_role).prop("checked",true);
-			$(edit_owner_role).prop("disabled",true);
-
-			$(delete_owner_role).prop("checked",true);
-			$(delete_owner_role).prop("disabled",true);
-		} else if (clicks === 2){
-			$(list_all_role).prop('checked', false);
-			$(read_all_role).prop('checked', false);
-			$(edit_all_role).prop('checked', false);
-			$(delete_all_role).prop('checked', false);
-
-			$(list_owner_role).prop('checked', true);
-			$(read_owner_role).prop('checked', true);
-			$(edit_owner_role).prop('checked', true);
-			$(delete_owner_role).prop('checked', true);
-
-			$(list_owner_role).prop("disabled",false);
-			$(read_owner_role).prop("disabled",false);
-			$(edit_owner_role).prop("disabled",false);
-			$(delete_owner_role).prop("disabled",false);
-
-		} else if (clicks === 3){
-			$(access_role).prop('checked', false);
-			$(default_role).prop('checked', true);
-
-			$(list_owner_role).prop('checked', false);
-			$(read_owner_role).prop('checked', false);
-			$(edit_owner_role).prop('checked', false);
-			$(delete_owner_role).prop('checked', false);
-
-			$(list_default_role).prop('checked', true);
-			$(read_default_role).prop('checked', true);
-			$(edit_default_role).prop('checked', true);
-			$(delete_default_role).prop('checked', true);
-
-		} else if (clicks === 4){
-			$(default_role).prop('checked', false);
-			$(list_default_role).prop('checked', false);
-			$(read_default_role).prop('checked', false);
-			$(edit_default_role).prop('checked', false);
-			$(delete_default_role).prop('checked', false);
+			access_role.prop('checked', true);
+			access_role.prop("disabled",false);
+			all_role.prop('checked', true);
+			owner_role.prop('disabled', true);
+			owner_role.prop('checked', true);
+		} else if ( clicks === 2 ){
+			all_role.prop('checked', false);
+			owner_role.prop('checked', true);
+			owner_role.prop('disabled', false);
+		} else if ( clicks === 3 ){
+			access_role.prop('checked', false);
+			owner_role.prop('checked', false);
+			default_role.prop('checked', true);
+		} else if ( clicks === 4 ){
+			default_role.prop('checked', false);
+		}
+		if (clicks === 4 ){
+			clicks = 0;
 		}
 
-			if (clicks === 4 ){
-				clicks = 0;
-			}
-
 	});
-
 
 });
