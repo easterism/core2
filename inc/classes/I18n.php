@@ -12,6 +12,9 @@ use Zend\I18n\Translator\Translator;
 
 class I18n {
 
+    /**
+     * @var Translator
+     */
     private $translate;
     private $locale;
     private $domain;
@@ -126,7 +129,7 @@ class I18n {
                     Error::Exception("Адаптер перевода модуля не поддерживается");
                 }
                 try {
-                    $this->translate->addTranslationFile($config->translate->adapter, $content, $domain, $config['locale']);
+                    $this->translate->addTranslationFile($config->translate->adapter, $content, $domain, $config->translate->locale);
                     unset($translate_second);
                 } catch (\Zend_Translate_Exception $e) {
                     Error::Exception($e->getMessage());
