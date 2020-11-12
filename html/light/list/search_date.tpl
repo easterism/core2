@@ -6,7 +6,7 @@
         <input class="ctrl-dpr-from-day first input" id="[ID]-from-day" min="1" max="31"
                autocomplete="off" placeholder="дд" type="text"/>
         <input class="ctrl-dpr-from-month middle input" id="[ID]-from-month" min="1" max="12"
-               autocomplete="off" placeholder="мм" type="nutextmber"/>
+               autocomplete="off" placeholder="мм" type="text"/>
         <input class="ctrl-dpr-from-year middle input" id="[ID]-from-year" max="9999"
                autocomplete="off" placeholder="гггг" type="number"/>
 
@@ -20,7 +20,7 @@
                autocomplete="off" placeholder="гггг" type="number"/>
 
         <span class="ctrl-dpr-clear middle">
-            <img src="core2/html/light/img/clear.png" alt="Очистить" title="Очистить">
+            <img src="core2/html/light/img/clear.png" alt="_tr(Очистить)" title="_tr(Очистить)">
         </span>
         <span class="ctrl-dpr-trigger last">
             <img src="core2/html/light/img/calendar.png" alt="..." title="...">

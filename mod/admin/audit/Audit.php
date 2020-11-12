@@ -55,11 +55,11 @@ class Audit extends \Common {
             if ($a_result && count($a_result['COM']) > 0) {
                 reset($a_result['COM']);
                 while (list($key, $val) = each($a_result['COM'])) {
-                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:void(0);\" onclick=\"load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">Исправить</span></b></a><br />";
+                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:void(0);\" onclick=\"load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">" . $this->_('Исправить') . "</span></b></a><br />";
                 }
-                echo "<input class=\"auditButton\" type=\"button\" value=\"Исправить все\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
+                echo "<input class=\"auditButton\" type=\"button\" value=\"" . $this->_('Исправить все') . "\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
                 if ( ! empty($a_result['WARNING'])) {
-                    echo "<h3>Предупреждения:</h3>";
+                    echo "<h3>" . $this->_('Предупреждения') . ":</h3>";
                     foreach ($a_result['WARNING'] as $val) {
                         echo "<span class=auditWarningText>".$val."</span></br>";
                     }
@@ -84,7 +84,7 @@ class Audit extends \Common {
                     $this->db->insert(
                         "core_settings",
                         array(
-                            'system_name'   => 'Email для уведомлений от аудита системы',
+                            'system_name'   => $this->_('Email для уведомлений от аудита системы'),
                             'code'          => 'admin_email',
                             'is_custom_sw'  => 'Y',
                             'visible'       => 'Y'
@@ -165,11 +165,11 @@ class Audit extends \Common {
                 }
             }
             if ($is_puchkom) {
-                echo "<h3>Всё пучком!</h3>";
+                echo "<h3>" . $this->_('Всё пучком!') . "</h3>";
             }
 
-        } catch (Exception $e) {
-            $install->addNotice("", $e->getMessage(), "Ошибка", "danger");
+        } catch (\Exception $e) {
+            $install->addNotice("", $e->getMessage(), $this->_("Ошибка"), "danger");
         }
 
         $html = $install->printNotices();

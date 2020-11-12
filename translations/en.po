@@ -3,8 +3,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: core2\n"
-"POT-Creation-Date: 2018-12-15 16:20+0300\n"
-"PO-Revision-Date: 2020-11-11 13:37+0300\n"
+"POT-Creation-Date: 2020-11-11 19:56+0300\n"
+"PO-Revision-Date: 2020-11-12 18:30+0300\n"
 "Last-Translator: easter <easter.by@gmail.com>\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 2.4.1\n"
 "X-Poedit-Basepath: ..\n"
-"X-Poedit-KeywordsList: $this->translate->tr;tr;_tr\n"
+"X-Poedit-KeywordsList: $this->translate->tr;tr;_tr;_\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Crowdin-Project: core2\n"
 "X-Crowdin-Language: en\n"
@@ -23,745 +23,1009 @@ msgstr ""
 "X-Poedit-SearchPath-1: html\n"
 "X-Poedit-SearchPath-2: mod/admin\n"
 
-#: inc/CoreController.php:83 inc/MobileController.php:63
+#: inc/CoreController.php:115 inc/MobileController.php:66
 msgid "События аудита"
 msgstr "Audit events"
 
-#: inc/CoreController.php:87 inc/MobileController.php:67
+#: inc/CoreController.php:122 inc/MobileController.php:70
 msgid "Система работает в штатном режиме."
 msgstr "System is running in normal mode."
 
-#: inc/CoreController.php:89 inc/MobileController.php:69
+#: inc/CoreController.php:124 inc/MobileController.php:72
 msgid "Обнаружены изменения в файлах модулей:"
 msgstr "Detected changes in files module:"
 
-#: inc/CoreController.php:95
+#: inc/CoreController.php:130
 msgid "Не задан администратор базы данных"
 msgstr "The database administrator is not specified"
 
-#: inc/CoreController.php:98 inc/MobileController.php:72
-#: mod/admin/InstallModule.php:1812 mod/admin/InstallModule.php:1830
+#: inc/CoreController.php:134 inc/MobileController.php:75
+#: mod/admin/InstallModule.php:1847 mod/admin/InstallModule.php:1865
 msgid "Ошибка"
 msgstr "Error"
 
-#: inc/CoreController.php:157
+#: inc/CoreController.php:141
+msgid "Очистить кэш"
+msgstr "Clear cache"
+
+#: inc/CoreController.php:199
 msgid "Javascript выключен или ваш браузер его не поддерживает!"
 msgstr "JavaScript is turned off or your browser does not support it!"
 
-#: inc/CoreController.php:161
+#: inc/CoreController.php:203
 msgid "Ваш доступ временно заблокирован!"
 msgstr "Your access temporarily blocked!"
 
-#: inc/CoreController.php:166
+#: inc/CoreController.php:208
 msgid "Ошибка авторизации!"
 msgstr "Authorization error!"
 
-#: inc/CoreController.php:180
+#: inc/CoreController.php:222
 msgid "Ошибка пароля!"
 msgstr "Password error!"
 
-#: inc/CoreController.php:223
+#: inc/CoreController.php:265
 msgid "Неверный пароль или пользователь отключён"
 msgstr "The password is incorrect or the user is disconnected"
 
-#: inc/CoreController.php:227
+#: inc/CoreController.php:269
 msgid "Ошибка LDAP: "
 msgstr "LDAP Error: "
 
-#: inc/CoreController.php:231
+#: inc/CoreController.php:273
 msgid "Неизвестная ошибка авторизации по LDAP"
 msgstr "Unknown LDAP authorization error"
 
-#: inc/CoreController.php:258
+#: inc/CoreController.php:300
 msgid "Неверный пароль"
 msgstr "Incorrect Password"
 
-#: inc/CoreController.php:271
+#: inc/CoreController.php:313
 msgid "Ошибка сохранения сессии. Проверьте настройки системного времени."
 msgstr "Error saving session. Check the settings of the system time."
 
-#: inc/CoreController.php:292
+#: inc/CoreController.php:338
 msgid "Нет такого пользователя"
 msgstr "No such user"
 
-#: inc/CoreController.php:321
+#: inc/CoreController.php:368
 msgid "Не удалось сохранить данные сессии"
 msgstr "Can't store session data"
 
-#: inc/CoreController.php:341
+#: inc/CoreController.php:388
 msgid "Нет доступа к базе данных."
 msgstr "You do not have access to the database."
 
-#: inc/CoreController.php:343
+#: inc/CoreController.php:390
 msgid "Не верный адрес базы данных."
 msgstr "Not sure the address database."
 
-#: inc/CoreController.php:345
+#: inc/CoreController.php:392
 msgid "Нет соединения с базой данных."
 msgstr "There is no connection to the database."
 
-#: inc/CoreController.php:425 inc/MobileController.php:104
+#: inc/CoreController.php:472 inc/MobileController.php:107
 msgid "Произошла ошибка! Не удалось получить данные"
 msgstr "An error occurred! Failed to retrieve data"
 
-#: inc/CoreController.php:466 inc/MobileController.php:136
+#: inc/CoreController.php:513 inc/MobileController.php:139
 msgid "Не удалось определить идентификатор ресурса"
 msgstr "Unable to determine the resource ID"
 
-#: inc/CoreController.php:467 inc/MobileController.php:137
+#: inc/CoreController.php:514 inc/MobileController.php:140
 msgid "Нет данных для удаления"
 msgstr "No data for deletion"
 
-#: inc/CoreController.php:471 inc/CoreController.php:473
-#: inc/MobileController.php:141 inc/MobileController.php:143
+#: inc/CoreController.php:518 inc/CoreController.php:520
+#: inc/MobileController.php:144 inc/MobileController.php:146
 msgid "Не удалось определить параметры удаления"
 msgstr "Unable to identifiy deletion parameters"
 
-#: inc/CoreController.php:497 inc/MobileController.php:167
+#: inc/CoreController.php:544 inc/MobileController.php:170
 msgid "Данные не содержат признака автора!"
 msgstr "The data doesn't contain the author's marker!"
 
-#: inc/CoreController.php:542
+#: inc/CoreController.php:589
 msgid "Ошибка! Сначала переключитесь на сортировку по умолчанию."
 msgstr "Mistake! Switch to the default sort first."
 
-#: inc/CoreController.php:574 inc/MobileController.php:238
+#: inc/CoreController.php:624 inc/MobileController.php:241
 msgid "Справочник пользователей системы"
 msgstr "System user's guide"
 
-#: inc/CoreController.php:577 inc/MobileController.php:241
+#: inc/CoreController.php:628 inc/MobileController.php:244
 msgid "Создание нового пользователя"
 msgstr "Add a user"
 
-#: inc/CoreController.php:581 inc/MobileController.php:245
+#: inc/CoreController.php:632 inc/MobileController.php:248
 #, php-format
 msgid "Редактирование пользователя \"%s\""
 msgstr "Edit a user \"%s\""
 
-#: inc/CoreController.php:600 inc/MobileController.php:264
+#: inc/CoreController.php:650 inc/MobileController.php:267
 msgid "Настройки системы"
 msgstr "System settings"
 
-#: inc/CoreController.php:601 inc/MobileController.php:265
+#: inc/CoreController.php:651 inc/MobileController.php:268
 msgid "Дополнительные параметры"
 msgstr "Additional settings"
 
-#: inc/CoreController.php:602 inc/MobileController.php:266
+#: inc/CoreController.php:652 inc/MobileController.php:269
 msgid "Персональные параметры"
 msgstr "Personal settings"
 
-#: inc/CoreController.php:604 inc/MobileController.php:268
-#: inc/classes/Init.php:845
+#: inc/CoreController.php:654 inc/MobileController.php:271
+#: inc/classes/Init.php:1066
 msgid "Конфигурация"
 msgstr "Configuration"
 
 # для сообщения обратной связи
-#: inc/CoreController.php:657 inc/MobileController.php:322
+#: inc/CoreController.php:707 inc/MobileController.php:325
 msgid "Выберите модуль."
 msgstr "Select a module."
 
-#: inc/CoreController.php:660 inc/MobileController.php:325
+#: inc/CoreController.php:710 inc/MobileController.php:328
 msgid "Введите текст сообщения."
 msgstr "Enter your message."
 
-#: inc/CoreController.php:674
+#: inc/CoreController.php:724
 msgid "Не удалось отправить сообщение."
 msgstr "Can't send the message."
 
-#: inc/CoreController.php:699 inc/MobileController.php:355
+#: inc/CoreController.php:749 inc/MobileController.php:358
 msgid "Не удалось отправить сообщение"
 msgstr "Can't send the message"
 
-#: inc/CoreController.php:789 inc/MobileController.php:435
+#: inc/CoreController.php:864 inc/MobileController.php:438
 #, php-format
 msgid "Здравствуйте, %s"
 msgstr "Hello %s"
 
-#: inc/CoreController.php:812 inc/MobileController.php:458
+#: inc/CoreController.php:887 inc/MobileController.php:461
 #, php-format
 msgid "Последний раз Вы заходили %s с IP адреса %s"
 msgstr "The last you logged in from %s, IP address %s"
 
-#: inc/CoreController.php:909
+#: inc/CoreController.php:984
 msgid "База данных"
 msgstr "Database"
 
-#: inc/CoreController.php:910
+#: inc/CoreController.php:985
 msgid "Контроль целостности"
 msgstr "Integrity control"
 
-#: inc/CoreController.php:1020 inc/CoreController.php:1023
-#: inc/MobileController.php:785
+#: inc/CoreController.php:1095 inc/CoreController.php:1098
+#: inc/MobileController.php:788
 msgid "Отправка уведомлений отключена"
 msgstr "Sending notifications is disabled"
 
-#: inc/CoreController.php:1023 inc/MobileController.php:785
+#: inc/CoreController.php:1098 inc/MobileController.php:788
 msgid "Не задан параметр 'host' в conf.ini"
 msgstr "The 'host' parameter in conf.ini is not specified"
 
-#: inc/CoreController.php:1070 inc/MobileController.php:829
+#: inc/CoreController.php:1145 inc/MobileController.php:832
 msgid "Уведомление не отправлено"
 msgstr "The notification has not been sent"
 
-#: inc/MobileController.php:72
+#: inc/MobileController.php:75
 msgid "Аудит файлов модулей"
 msgstr "File auditing modules"
 
-#: inc/MobileController.php:735
+#: inc/MobileController.php:738
 #, php-format
 msgid "Информация о регистрации на портале %s"
 msgstr "Information on registration on the portal %s"
 
-#: inc/MobileController.php:741 mod/admin/ModAjax.php:732
+#: inc/MobileController.php:744 mod/admin/ModAjax.php:1058
 msgid "Не удалось отправить сообщение пользователю"
 msgstr "Failed to send the message to the user"
 
-#: inc/ajax.func.php:420
+#: inc/ajax.func.php:430
 msgid "Вам разрешено редактировать только собственные данные."
 msgstr "You are only allowed to edit your own data."
 
-#: inc/ajax.func.php:483
+#: inc/ajax.func.php:493
 msgid "Кто-то редактировал эту запись одновременно с вами, но успел сохранить данные раньше вас. Ничего страшного, обновите страницу и проверьте, возможно этот кто-то сделал за вас работу :)"
 msgstr "Someone edited this record at the same time as you but saved the changes before you. it's okay, refresh the page and check it again, perhaps that someone did your work for you :)"
 
-#: inc/ajax.func.php:539 mod/admin/ModAjax.php:767
+#: inc/ajax.func.php:549 mod/admin/ModAjax.php:532 mod/admin/ModAjax.php:830
 #, php-format
 msgid "Файл %s не найден"
 msgstr "File %s not found"
 
-#: inc/ajax.func.php:544 mod/admin/ModAjax.php:771
+#: inc/ajax.func.php:554 mod/admin/ModAjax.php:537 mod/admin/ModAjax.php:834
 #, php-format
 msgid "Что-то пошло не так. Размер файла %s не совпадает"
 msgstr "Something has gone wrong. The file size of %s does not match"
 
-#: inc/classes/Common.php:144
+#: inc/ajax.func.php:576
+#, php-format
+msgid "Размер изображения <b>\"%s\"</b> %sx%s, а должен быть %sx%s"
+msgstr "Image size <b>\"%s\"</b>%sx%s, but should be%sx%s"
+
+#: inc/ajax.func.php:588
+#, php-format
+msgid "Высота изображения <b>\"%s\"</b> %spx, а должна быть %spx"
+msgstr "The height of the image is <b>\"%s\"</b>%spx, but should be%spx"
+
+#: inc/ajax.func.php:597
+#, php-format
+msgid "Ширина изображения <b>\"%s\"</b> %spx, а должна быть %spx"
+msgstr "The width of the image is <b>\"%s\"</b>%spx, but should be%spx"
+
+#: inc/classes/Common.php:168 inc/classes/CommonApi.php:132
 msgid "Не найден конфигурационный файл модуля."
 msgstr "Configuration file for the module not found."
 
-#: inc/classes/Common.php:164
+#: inc/classes/Common.php:188
 #, php-format
 msgid "Модуль \"%s\" сломан. Не найден файл контроллера."
 msgstr "Module ' %s ' is broken. Controller file not found."
 
-#: inc/classes/Common.php:175
+#: inc/classes/Common.php:199
 #, php-format
 msgid "Модуль \"%s\" сломан. Не найден класс контроллера."
 msgstr "Module ' %s ' is broken. Controller class not found."
 
-#: inc/classes/Common.php:184
+#: inc/classes/Common.php:208
 #, php-format
 msgid "Модуль \"%s\" не найден"
 msgstr "Module \"%s\" not found"
 
-#: inc/classes/Common.php:195
+#: inc/classes/Common.php:219
 #, php-format
 msgid "Плагин \"%s\" не найден."
 msgstr "File %s not found."
 
-#: inc/classes/Db.php:120
+#: inc/classes/Db.php:151
 msgid "Модель не найдена."
 msgstr "Model not found."
 
-#: inc/classes/Db.php:315
+#: inc/classes/Db.php:355
 msgid "Не задан файл журнала запросов"
 msgstr "Query log file not specified"
 
-#: inc/classes/Db.php:597
+#: inc/classes/Db.php:647
 msgid "Не определен идентификатор модуля."
 msgstr "Module ID not specified."
 
-#: inc/classes/Db.php:606 inc/classes/Init.php:648
+#: inc/classes/Db.php:657 inc/classes/Init.php:711
 msgid "Модуль не существует"
 msgstr "Module does not exist"
 
-#: inc/classes/Init.php:326
-msgid "Модуль Webservice не активен"
-msgstr "The Webservice module is inactive"
-
-#: inc/classes/Init.php:333
-msgid "Модуль Webservice не существует"
-msgstr "The Webservice module is does not exist"
-
-#: inc/classes/Init.php:344
-msgid "Модуль Webservice сломан"
-msgstr "The Webservice module is broken"
-
-#: inc/classes/Init.php:442 inc/classes/Init.php:1217
-#: mod/admin/InstallModule.php:1774
+#: inc/classes/Init.php:383 inc/classes/Init.php:1493
+#: mod/admin/InstallModule.php:1809
 msgid "Модуль не найден"
 msgstr "Module not found"
 
-#: inc/classes/Init.php:463
+#: inc/classes/Init.php:405
 msgid "Субмодуль не существует"
 msgstr "Submodule does not exist"
 
-#: inc/classes/Init.php:472
+#: inc/classes/Init.php:413
 #, php-format
 msgid "Модуль %s не существует"
 msgstr "Module %s does not exist"
 
-#: inc/classes/Init.php:476
+#: inc/classes/Init.php:422
 #, php-format
 msgid "Субмодуль %s не существует"
 msgstr "Submodule %s does not exist"
 
-#: inc/classes/Init.php:499
+#: inc/classes/Init.php:454
 #, php-format
 msgid "Метод %s не существует"
 msgstr "Module %s does not exist"
 
-#: inc/classes/Init.php:609
+#: inc/classes/Init.php:590
+msgid "Модуль Webservice не активен"
+msgstr "The Webservice module is inactive"
+
+#: inc/classes/Init.php:600
+msgid "Модуль Webservice не существует"
+msgstr "The Webservice module is does not exist"
+
+#: inc/classes/Init.php:614
+msgid "Модуль Webservice сломан"
+msgstr "The Webservice module is broken"
+
+#: inc/classes/Init.php:672
 msgid "Не удалось определить местоположение данных."
 msgstr "Failed to locate data."
 
-#: inc/classes/Init.php:656
+#: inc/classes/Init.php:719
 msgid "Модуль сломан"
 msgstr "Module is broken"
 
-#: inc/classes/Init.php:838 mod/admin/User.php:81
+#: inc/classes/Init.php:1059 mod/admin/User.php:114
 msgid "Админ"
 msgstr "Admin"
 
-#: inc/classes/Init.php:844 mod/admin/modules.php:8
+#: inc/classes/Init.php:1065 mod/admin/Modules.php:49
 msgid "Модули"
 msgstr "Modules"
 
-#: inc/classes/Init.php:846
+#: inc/classes/Init.php:1067
 msgid "Справочники"
 msgstr "Directories"
 
-#: inc/classes/Init.php:847
+#: inc/classes/Init.php:1068
 msgid "Пользователи"
 msgstr "Users"
 
-#: inc/classes/Init.php:848
+#: inc/classes/Init.php:1069
 msgid "Роли"
 msgstr "Roles"
 
-#: inc/classes/Init.php:849 mod/admin/monitoring.php:58
+#: inc/classes/Init.php:1070 mod/admin/monitoring.php:58
 msgid "Мониторинг"
 msgstr "Monitoring"
 
-#: inc/classes/Init.php:850
+#: inc/classes/Init.php:1071
 msgid "Аудит"
 msgstr "Auditing"
 
-#: inc/classes/Init.php:918
+#: inc/classes/Init.php:1139
 #, php-format
 msgid "File '%s' does not exists"
 msgstr "Module %s does not exists"
 
-#: inc/classes/Init.php:924
+#: inc/classes/Init.php:1145
 #, php-format
 msgid "Class '%s' not found"
 msgstr "Class ' %s ' not found"
 
-#: inc/classes/Init.php:938
+#: inc/classes/Init.php:1159
 #, php-format
 msgid "Cli method '%s' not found in class '%s'"
 msgstr "Cli method ' %s ' not found in class ' %s '"
 
-#: inc/classes/Init.php:1042
+#: inc/classes/Init.php:1269
 msgid "Ошибка запроса к файловому объекту"
 msgstr "File object request error"
 
-#: inc/classes/Init.php:1062
+#: inc/classes/Init.php:1289
 msgid "Не удалось определить контекст файла"
 msgstr "Could not determine file context"
 
-#: inc/classes/Init.php:1178
+#: inc/classes/Init.php:1417
 msgid "Class Billing_Disable does not exists"
 msgstr "Class Billing_Disable does not exists"
 
-#: inc/classes/Init.php:1237 inc/classes/Init.php:1273
+#: inc/classes/Init.php:1513 inc/classes/Init.php:1549
 msgid "Метод не найден"
 msgstr "Method not found"
 
-#: inc/classes/class.list.php:1093
+#: inc/classes/Login.php:74 inc/classes/Login.php:122
+msgid "Заполните пароль"
+msgstr "Fill in your password"
+
+#: inc/classes/Login.php:102
+msgid "Заполните email"
+msgstr "Fill in your email"
+
+#: inc/classes/Login.php:289
+msgid "Email не заполнен"
+msgstr "Email is not filled"
+
+#: inc/classes/Login.php:296
+msgid "УНП не заполнено"
+msgstr "UNP is not completed"
+
+#: inc/classes/Login.php:303
+msgid "Название организации не заполнено"
+msgstr "Organization name is blank"
+
+#: inc/classes/Login.php:310
+msgid "Телефон не заполнен"
+msgstr "Phone not full"
+
+#: inc/classes/Login.php:326
+msgid "Такой пользователь уже есть"
+msgstr "This user already exists"
+
+#: inc/classes/Login.php:339
+msgid "Пользователь с таким Email уже есть"
+msgstr "There is already a user with this Email"
+
+#: inc/classes/Login.php:354
+msgid "Организация с таким УНП уже есть"
+msgstr "An organization with such a UNP already exists"
+
+#: inc/classes/Login.php:369
+msgid "Организация с таким email уже есть"
+msgstr "An organization with this email already exists"
+
+#: inc/classes/Login.php:398 inc/classes/Login.php:416
+msgid "На указанную вами почту отправлены данные для входа в систему"
+msgstr "Login data has been sent to the mail you specified"
+
+#: inc/classes/Login.php:448 inc/classes/Login.php:489
+#: inc/classes/Login.php:681 inc/classes/Login.php:723
+msgid "Ссылка устарела"
+msgstr "Link is out of date"
+
+#: inc/classes/Login.php:502
+msgid "Пользователь с таким логином уже существует"
+msgstr "User with this login already exists"
+
+#: inc/classes/Login.php:515
+msgid "Пользователь с таким email уже существует"
+msgstr "User with this email already exists"
+
+#: inc/classes/Login.php:613
+msgid "Пользователя с таким Email нет в системе"
+msgstr "There is no user with this Email in the system"
+
+#: inc/classes/Login.php:649
+msgid "На указанную вами почту отправлены данные для смены пароля"
+msgstr "The data for changing the password has been sent to the mail you specified"
+
+#: inc/classes/class.ini.php:112
+msgid "Сохранить"
+msgstr "Save"
+
+#: inc/classes/class.ini.php:113
+msgid "Выбрать"
+msgstr "Choose"
+
+#: inc/classes/class.ini.php:114
+msgid "Очистить"
+msgstr "Clear"
+
+#: inc/classes/class.ini.php:115
+msgid "Нет доступа для чтения этой записи"
+msgstr "No read access for this record"
+
+#: inc/classes/class.list.php:322 inc/classes/class.list.php:325
+msgid "Некорректно указан параметр числового поиска"
+msgstr "Numeric search parameter specified incorrectly"
+
+#: inc/classes/class.list.php:1181
 #, php-format
 msgid "%s из %s"
 msgstr "%s from %s"
 
-#: mod/admin/InstallModule.php:157
+#: mod/admin/InstallModule.php:162
 msgid "install.xml не найден. Установка прервана."
 msgstr "install.xml was not found. Installation aborted."
 
-#: mod/admin/InstallModule.php:243 mod/admin/InstallModule.php:771
-#: mod/admin/InstallModule.php:775 mod/admin/InstallModule.php:779
-#: mod/admin/InstallModule.php:1154 mod/admin/InstallModule.php:1159
-#: mod/admin/InstallModule.php:1718
+#: mod/admin/InstallModule.php:248 mod/admin/InstallModule.php:797
+#: mod/admin/InstallModule.php:801 mod/admin/InstallModule.php:805
+#: mod/admin/InstallModule.php:1180 mod/admin/InstallModule.php:1185
+#: mod/admin/InstallModule.php:1754
 msgid "Файлы модуля"
 msgstr "Module files"
 
-#: mod/admin/InstallModule.php:243
+#: mod/admin/InstallModule.php:248
 msgid "Копирование файлов:"
 msgstr "Copying files:"
 
-#: mod/admin/InstallModule.php:243
+#: mod/admin/InstallModule.php:248
 msgid "Ошибка: нет доступа для записи, скопируйте файлы вручную"
 msgstr "Error: no write access, copy files manually"
 
-#: mod/admin/InstallModule.php:268 mod/admin/ModAjax.php:790
+#: mod/admin/InstallModule.php:273 mod/admin/ModAjax.php:853
 msgid "Ошибка архива"
 msgstr "Archive error"
 
-#: mod/admin/InstallModule.php:284
+#: mod/admin/InstallModule.php:289
 msgid "Не могу создать директорию для разархивирования"
 msgstr "Can't create unzip directory"
 
-#: mod/admin/InstallModule.php:314 mod/admin/InstallModule.php:316
-#: mod/admin/InstallModule.php:327
+#: mod/admin/InstallModule.php:319 mod/admin/InstallModule.php:321
+#: mod/admin/InstallModule.php:332
 msgid "Права доступа"
 msgstr "Access rights"
 
-#: mod/admin/InstallModule.php:314 mod/admin/InstallModule.php:316
+#: mod/admin/InstallModule.php:319 mod/admin/InstallModule.php:321
 msgid "Права по умолчанию"
 msgstr "Default rights"
 
-#: mod/admin/InstallModule.php:314 mod/admin/InstallModule.php:327
+#: mod/admin/InstallModule.php:319 mod/admin/InstallModule.php:332
 msgid "Добавлены"
 msgstr "Added"
 
-#: mod/admin/InstallModule.php:316
+#: mod/admin/InstallModule.php:321
 msgid "Отсутствуют"
 msgstr "Absent"
 
-#: mod/admin/InstallModule.php:327
+#: mod/admin/InstallModule.php:332
 msgid "Дополнительные права"
 msgstr "Additional rights"
 
-#: mod/admin/InstallModule.php:347
-#, fuzzy
-#| msgid "Не удалось определить параметры удаления"
+#: mod/admin/InstallModule.php:353
 msgid "Не удалось определить требуемую версию ядра"
-msgstr "Unable to identifiy deletion parameters"
+msgstr "Could not determine the required kernel version"
 
-#: mod/admin/InstallModule.php:351
+#: mod/admin/InstallModule.php:359
 msgid "Не задана версия ядра"
 msgstr "Kernel version not set"
 
-#: mod/admin/InstallModule.php:353
+#: mod/admin/InstallModule.php:363
 #, php-format
 msgid "Требуется ядро %s"
 msgstr "Kernel %s required"
 
-#: mod/admin/InstallModule.php:369 mod/admin/InstallModule.php:372
-#: mod/admin/InstallModule.php:394 mod/admin/InstallModule.php:400
-#: mod/admin/InstallModule.php:411
+#: mod/admin/InstallModule.php:381 mod/admin/InstallModule.php:384
+#: mod/admin/InstallModule.php:406 mod/admin/InstallModule.php:412
+#: mod/admin/InstallModule.php:423
 msgid "Зависимость от модулей"
 msgstr "Dependency on modules"
 
-#: mod/admin/InstallModule.php:369
+#: mod/admin/InstallModule.php:381
 msgid "Модуль не установлен"
 msgstr "Module not installed"
 
-#: mod/admin/InstallModule.php:376 mod/admin/InstallModule.php:404
+#: mod/admin/InstallModule.php:388 mod/admin/InstallModule.php:416
 msgid "Установите все необходимые модули!"
 msgstr "Install all required modules!"
 
-#: mod/admin/InstallModule.php:411 mod/admin/InstallModule.php:485
+#: mod/admin/InstallModule.php:423 mod/admin/InstallModule.php:497
 msgid "Проверка выполнена"
 msgstr "Check completed"
 
-#: mod/admin/InstallModule.php:411
+#: mod/admin/InstallModule.php:423
 msgid "Не имеет зависимостей"
 msgstr "Has no dependencies"
 
-#: mod/admin/InstallModule.php:485 mod/admin/InstallModule.php:538
-#: mod/admin/InstallModule.php:738 mod/admin/InstallModule.php:1700
-#: mod/admin/modules.php:201
+#: mod/admin/InstallModule.php:497 mod/admin/InstallModule.php:551
+#: mod/admin/InstallModule.php:767 mod/admin/InstallModule.php:1739
+#: mod/admin/Modules.php:242
 msgid "Субмодули"
 msgstr "Submodules"
 
-#: mod/admin/InstallModule.php:485
+#: mod/admin/InstallModule.php:497
 msgid "Модуль не имеет субмодулей"
 msgstr "The module has no submodules"
 
-#: mod/admin/InstallModule.php:530 mod/admin/InstallModule.php:1703
+#: mod/admin/InstallModule.php:543 mod/admin/InstallModule.php:1742
 msgid "Регистрация модуля"
 msgstr "Module registration"
 
-#: mod/admin/InstallModule.php:530
+#: mod/admin/InstallModule.php:543
 msgid "Операция выполнена"
 msgstr "Operation completed"
 
-#: mod/admin/InstallModule.php:530 mod/admin/InstallModule.php:538
-#: mod/admin/InstallModule.php:553 mod/admin/InstallModule.php:579
-#: mod/admin/InstallModule.php:738 mod/admin/InstallModule.php:753
-#: mod/admin/InstallModule.php:779 mod/admin/InstallModule.php:1816
+#: mod/admin/InstallModule.php:543 mod/admin/InstallModule.php:551
+#: mod/admin/InstallModule.php:563 mod/admin/InstallModule.php:589
+#: mod/admin/InstallModule.php:767 mod/admin/InstallModule.php:779
+#: mod/admin/InstallModule.php:805 mod/admin/InstallModule.php:1851
 msgid "Успешно"
 msgstr "Successfully"
 
-#: mod/admin/InstallModule.php:538
+#: mod/admin/InstallModule.php:551
 msgid "Субмодули добавлены"
 msgstr "Submodules were added"
 
-#: mod/admin/InstallModule.php:551 mod/admin/InstallModule.php:553
+#: mod/admin/InstallModule.php:561 mod/admin/InstallModule.php:563
 msgid "Установка"
 msgstr "Installation"
 
-#: mod/admin/InstallModule.php:551 mod/admin/InstallModule.php:553
+#: mod/admin/InstallModule.php:561 mod/admin/InstallModule.php:563
 msgid "Установка завершена"
 msgstr "Installation completed"
 
-#: mod/admin/InstallModule.php:579 mod/admin/InstallModule.php:625
-#: mod/admin/InstallModule.php:871 mod/admin/InstallModule.php:1688
-#: mod/admin/InstallModule.php:1691 mod/admin/InstallModule.php:1693
-#: mod/admin/InstallModule.php:1696
+#: mod/admin/InstallModule.php:589 mod/admin/InstallModule.php:635
+#: mod/admin/InstallModule.php:897 mod/admin/InstallModule.php:1727
+#: mod/admin/InstallModule.php:1730 mod/admin/InstallModule.php:1732
+#: mod/admin/InstallModule.php:1735
 msgid "Таблицы модуля"
 msgstr "Module tables"
 
-#: mod/admin/InstallModule.php:579 mod/admin/InstallModule.php:625
+#: mod/admin/InstallModule.php:589 mod/admin/InstallModule.php:635
 msgid "Таблицы добавлены"
 msgstr "Tables added"
 
-#: mod/admin/InstallModule.php:581 mod/admin/InstallModule.php:618
+#: mod/admin/InstallModule.php:591 mod/admin/InstallModule.php:628
 msgid "Попытка удаления таблиц не относящихся к модулю!"
 msgstr "Attempt to delete non-module tables!"
 
-#: mod/admin/InstallModule.php:610 mod/admin/InstallModule.php:650
+#: mod/admin/InstallModule.php:620 mod/admin/InstallModule.php:660
 #, php-format
 msgid "Не найден файл %s для обновления модуля!"
 msgstr "Can't find %s for updating module !"
 
-#: mod/admin/InstallModule.php:738
+#: mod/admin/InstallModule.php:767
 msgid "Субмодули обновлены"
 msgstr "Modules were updated"
 
-#: mod/admin/InstallModule.php:751 mod/admin/InstallModule.php:753
-#: mod/admin/InstallModule.php:1990
+#: mod/admin/InstallModule.php:777 mod/admin/InstallModule.php:779
+#: mod/admin/InstallModule.php:2023
 msgid "Обновление"
 msgstr "Update"
 
-#: mod/admin/InstallModule.php:751 mod/admin/InstallModule.php:753
-#: mod/admin/InstallModule.php:1816
+#: mod/admin/InstallModule.php:777 mod/admin/InstallModule.php:779
+#: mod/admin/InstallModule.php:1851
 msgid "Обновление завершено"
 msgstr "Update completed"
 
-#: mod/admin/InstallModule.php:771 mod/admin/InstallModule.php:775
-#: mod/admin/InstallModule.php:779
+#: mod/admin/InstallModule.php:797 mod/admin/InstallModule.php:801
+#: mod/admin/InstallModule.php:805
 msgid "Удаление"
 msgstr "Deleting"
 
-#: mod/admin/InstallModule.php:771
+#: mod/admin/InstallModule.php:797
 msgid "Папка закрыта для записи, удалите её самостоятельно"
 msgstr "The folder is closed for writing, delete it yourself"
 
-#: mod/admin/InstallModule.php:775
+#: mod/admin/InstallModule.php:801
 msgid "Файлы не найдены"
 msgstr "File not found"
 
-#: mod/admin/InstallModule.php:871
+#: mod/admin/InstallModule.php:897
 msgid "В SQL для удаления модуля обнаружена попытка удаления таблиц не относящихся к модулю"
 msgstr "An attempt to delete non-module tables was detected in SQL to delete a module"
 
-#: mod/admin/InstallModule.php:919
+#: mod/admin/InstallModule.php:945
 msgid "Вернуться к списку модулей"
 msgstr "Back to the list of modules"
 
-#: mod/admin/InstallModule.php:937
+#: mod/admin/InstallModule.php:963
 msgid "У вас уже установлена эта версия!"
 msgstr "You already have this version installed!"
 
-#: mod/admin/InstallModule.php:939
+#: mod/admin/InstallModule.php:965
 msgid "У вас установлена более актуальная версия!"
 msgstr "You have a more current version installed!"
 
-#: mod/admin/InstallModule.php:1154 mod/admin/InstallModule.php:1159
+#: mod/admin/InstallModule.php:1180 mod/admin/InstallModule.php:1185
 msgid "Копирование"
 msgstr "Copying"
 
-#: mod/admin/InstallModule.php:1154
+#: mod/admin/InstallModule.php:1180
 msgid "Файлы не скопированы, скопируйте их вручную"
 msgstr "No files copied, please copy them manually"
 
-#: mod/admin/InstallModule.php:1159
+#: mod/admin/InstallModule.php:1185
 msgid "Файлы скопированы успешно"
 msgstr "Files copied successfully"
 
-#: mod/admin/InstallModule.php:1216
+#: mod/admin/InstallModule.php:1249
 msgid "Хэши файлов модуля не совпадают с эталоном! Установка прервана."
 msgstr "The hashes of the module files do not match the reference! Installation aborted."
 
-#: mod/admin/InstallModule.php:1258
+#: mod/admin/InstallModule.php:1291
 msgid "Модуль не найден в доступных модулях"
 msgstr "Module not found in available modules"
 
-#: mod/admin/InstallModule.php:1277 mod/admin/InstallModule.php:1326
+#: mod/admin/InstallModule.php:1310 mod/admin/InstallModule.php:1358
 msgid "Установщик"
 msgstr "Installer"
 
-#: mod/admin/InstallModule.php:1277 mod/admin/InstallModule.php:1326
+#: mod/admin/InstallModule.php:1310 mod/admin/InstallModule.php:1358
 msgid "Установка прервана, произведен откат транзакции"
 msgstr "Installation aborted, transaction rolled back"
 
-#: mod/admin/InstallModule.php:1654
+#: mod/admin/InstallModule.php:1693
 msgid "При подключении к репозиторию произошла ошибка"
 msgstr "An error occurred while connecting to the repository"
 
-#: mod/admin/InstallModule.php:1691
+#: mod/admin/InstallModule.php:1730
 msgid "Удаление таблиц"
 msgstr "Dropping tables"
 
-#: mod/admin/InstallModule.php:1691
+#: mod/admin/InstallModule.php:1730
 msgid "Выполнение SQL завершено"
 msgstr "SQL execution completed"
 
-#: mod/admin/InstallModule.php:1693 mod/admin/InstallModule.php:1696
+#: mod/admin/InstallModule.php:1732 mod/admin/InstallModule.php:1735
 msgid "Таблицы не удалены"
 msgstr "Tables not deleted"
 
-#: mod/admin/InstallModule.php:1700
+#: mod/admin/InstallModule.php:1739
 msgid "Удаление субмодулей"
 msgstr "Removing submodules"
 
-#: mod/admin/InstallModule.php:1700 mod/admin/InstallModule.php:1703
+#: mod/admin/InstallModule.php:1739 mod/admin/InstallModule.php:1742
 msgid "Выполнено"
 msgstr "Done"
 
-#: mod/admin/InstallModule.php:1703
+#: mod/admin/InstallModule.php:1742
 msgid "Удаление сведений о модуле"
 msgstr "Removing module information"
 
-#: mod/admin/InstallModule.php:1718
+#: mod/admin/InstallModule.php:1754
 msgid "Файлы не удалены"
 msgstr "Files not deleted"
 
-#: mod/admin/InstallModule.php:1718
+#: mod/admin/InstallModule.php:1754
 msgid "Файлы системных модулей удаляются вручную!"
 msgstr "System module files are deleted manually!"
 
-#: mod/admin/InstallModule.php:1725 mod/admin/InstallModule.php:1733
+#: mod/admin/InstallModule.php:1761 mod/admin/InstallModule.php:1769
 msgid "Деинсталяция"
 msgstr "Uninstall"
 
-#: mod/admin/InstallModule.php:1729
+#: mod/admin/InstallModule.php:1765
 msgid "Модуль уже удален или не существует!"
 msgstr "The module has already been removed or does not exist!"
 
-#: mod/admin/InstallModule.php:1733
+#: mod/admin/InstallModule.php:1769
 msgid "Деинсталяция прервана"
 msgstr "Uninstallation aborted"
 
-#: mod/admin/InstallModule.php:1774
+#: mod/admin/InstallModule.php:1809
 msgid "Поиск эталона"
 msgstr "Search for a reference"
 
-#: mod/admin/InstallModule.php:1774 mod/admin/InstallModule.php:1980
+#: mod/admin/InstallModule.php:1809 mod/admin/InstallModule.php:2013
 msgid "Поиск в доступных модулях и репозиториях"
 msgstr "Search in available modules and repositories"
 
-#: mod/admin/InstallModule.php:1802 mod/admin/InstallModule.php:1812
-#: mod/admin/InstallModule.php:1816 mod/admin/InstallModule.php:1827
-#: mod/admin/InstallModule.php:1830
+#: mod/admin/InstallModule.php:1837 mod/admin/InstallModule.php:1847
+#: mod/admin/InstallModule.php:1851 mod/admin/InstallModule.php:1862
+#: mod/admin/InstallModule.php:1865
 msgid "Обновление файлов"
-msgstr "Updating files..."
+msgstr "Updating files"
 
-#: mod/admin/InstallModule.php:1802 mod/admin/InstallModule.php:1827
-#, fuzzy
-#| msgid "Не задан путь к файлу журнала"
+#: mod/admin/InstallModule.php:1837 mod/admin/InstallModule.php:1862
 msgid "Перезапись файлов прервана"
-msgstr "Log file address not specified"
+msgstr "File overwrite interrupted"
 
-#: mod/admin/InstallModule.php:1802
+#: mod/admin/InstallModule.php:1837
 msgid "Папка закрыта для записи"
 msgstr "The folder is closed for writing"
 
-#: mod/admin/InstallModule.php:1812
+#: mod/admin/InstallModule.php:1847
 msgid "Убедитесь, что есть доступ на запись для всех файлов"
 msgstr "Make sure all files have write access"
 
-#: mod/admin/InstallModule.php:1980
+#: mod/admin/InstallModule.php:2013
 msgid "Поиск обновлений"
 msgstr "Search for updates"
 
-#: mod/admin/InstallModule.php:1980
+#: mod/admin/InstallModule.php:2013
 msgid "Обновления не найдены"
 msgstr "No updates found"
 
-#: mod/admin/InstallModule.php:1990
+#: mod/admin/InstallModule.php:2023
 msgid "Обновление прервано, произведен откат транзакции"
 msgstr "Update aborted, transaction rolled back"
 
-#: mod/admin/ModAjax.php:41 mod/admin/ModAjax.php:185
+#: mod/admin/ModAjax.php:46 mod/admin/ModAjax.php:190
 msgid "Идентификатор может состоять только из цифр или маленьких латинских букв"
 msgstr "The identifier can only consist of numbers or small Latin letters"
 
-#: mod/admin/ModAjax.php:55
+#: mod/admin/ModAjax.php:60
 msgid "Идентификатор дополнительного правила доступа может состоять только из цифр и букв"
 msgstr "Additional access rule identifier can only consist of numbers and letters"
 
-#: mod/admin/ModAjax.php:87
+#: mod/admin/ModAjax.php:92
 msgid "Для активации модуля необходимо активировать модули:"
 msgstr "To activate a module, you must activate the modules:"
 
-#: mod/admin/ModAjax.php:109
+#: mod/admin/ModAjax.php:114
 msgid "Для деактивации модуля необходимо деактивировать модули:"
 msgstr "To deactivate a module, you must deactivate the modules:"
 
-#: mod/admin/ModAjax.php:191
-#, fuzzy
-#| msgid "Не определен идентификатор модуля."
+#: mod/admin/ModAjax.php:196
 msgid "Не найден идентификатор модуля"
-msgstr "Module ID not specified."
+msgstr "Module ID not found"
 
-#: mod/admin/ModAjax.php:206
-#, fuzzy
-#| msgid "Не определен идентификатор модуля."
+#: mod/admin/ModAjax.php:211
 msgid "Ошибка определения субмодуля"
-msgstr "Module ID not specified."
+msgstr "Submodule definition error"
 
-#: mod/admin/ModAjax.php:281
+#: mod/admin/ModAjax.php:286
 msgid "Указанный идентификатор справочника уже существует."
 msgstr "The specified directory ID already exists."
 
-#: mod/admin/ModAjax.php:349
+#: mod/admin/ModAjax.php:354
 msgid "Указанное значение уже существует в данном справочнике."
 msgstr "The specified value already exists in this reference."
 
-#: mod/admin/ModAjax.php:750
+#: mod/admin/ModAjax.php:813
 msgid "Не удалось получить токен."
 msgstr "Can't get token."
 
-#: mod/admin/ModAjax.php:752
-#, fuzzy
-#| msgid "Не удалось определить параметры удаления"
+#: mod/admin/ModAjax.php:815
 msgid "Не удалось получить группу репозитория."
-msgstr "Unable to identifiy deletion parameters"
+msgstr "Failed to get repository group."
 
-#: mod/admin/ModAjax.php:753
-#, fuzzy
-#| msgid "Не удалось отправить сообщение"
+#: mod/admin/ModAjax.php:816
 msgid "Не удалось получить версию релиза."
-msgstr "Can't send the message"
+msgstr "Failed to get the release version."
 
-#: mod/admin/ModAjax.php:808
+#: mod/admin/ModAjax.php:871
 msgid "install.xml не найден."
 msgstr "install.xml not found."
 
-#: mod/admin/ModAjax.php:891
-#, fuzzy
-#| msgid "Не удалось отправить сообщение"
+#: mod/admin/ModAjax.php:954
 msgid "Не удалось получить хэш файлов модуля"
-msgstr "Can't send the message"
+msgstr "Failed to get hash of module files"
 
-#: mod/admin/ModAjax.php:940
-#, fuzzy
-#| msgid "Неверный пароль"
-msgid "Неверный тип архива"
-msgstr "Incorrect Password"
+#: mod/admin/ModAjax.php:1003
+#, php-format
+msgid "Неверный тип архива %s"
+msgstr "Wrong archive type%s"
 
-#: mod/admin/ModAjax.php:995
+#: mod/admin/ModAjax.php:1104
 msgid "Пользователь с таким логином уже существует."
 msgstr "A user with this login already exists."
 
-#: mod/admin/ModAjax.php:1020
+#: mod/admin/ModAjax.php:1129
 msgid "Пользователь с таким email уже существует."
 msgstr "Same email already registered."
 
-#: mod/admin/Settings.php:57 mod/admin/enum.php:172 mod/admin/modules.php:281
+#: mod/admin/Modules.php:47
+msgid "Установленные модули"
+msgstr "Installed modules"
+
+#: mod/admin/Modules.php:48
+msgid "Доступные модули"
+msgstr "Available modules"
+
+#: mod/admin/Modules.php:153 mod/admin/Modules.php:155
+#: mod/admin/Modules.php:260 mod/admin/Modules.php:262 mod/admin/enum.php:33
+msgid "Идентификатор:"
+msgstr "Identifier:"
+
+#: mod/admin/Modules.php:155
+msgid "маленикие латинские буквы или цифры"
+msgstr "small latin letters or numbers"
+
+#: mod/admin/Modules.php:158
+msgid "Системный:"
+msgstr "Systemic:"
+
+#: mod/admin/Modules.php:160
+msgid "Отображаемый:"
+msgstr "Displayed:"
+
+#: mod/admin/Modules.php:162
+msgid "Есть главная страница:"
+msgstr "There is a main page:"
+
+#: mod/admin/Modules.php:164
+msgid "Зависит от модулей:"
+msgstr "Depends on modules:"
+
+#: mod/admin/Modules.php:169 mod/admin/Modules.php:270
+msgid "Позиция в меню:"
+msgstr "Position in the menu:"
+
+#: mod/admin/Modules.php:213 mod/admin/Modules.php:312
+msgid "Доступ по умолчанию:"
+msgstr "Default access:"
+
+#: mod/admin/Modules.php:218 mod/admin/Modules.php:316
+msgid "Дополнительные правила доступа:"
+msgstr "Additional access rules:"
+
+#: mod/admin/Modules.php:234 mod/admin/Modules.php:513
+msgid "Отмена"
+msgstr "Cancel"
+
+#: mod/admin/Modules.php:257
+msgid "Субмодуль:"
+msgstr "Submodule:"
+
+#: mod/admin/Modules.php:262
+msgid " маленикие латинские буквы или цифры"
+msgstr " small latin letters or numbers"
+
+#: mod/admin/Modules.php:264
+msgid "Адрес внешнего ресурса:"
+msgstr "External resource address:"
+
+#: mod/admin/Modules.php:322 mod/admin/Settings.php:57 mod/admin/enum.php:175
 msgid "Отменить"
 msgstr "Cancel"
+
+#: mod/admin/Modules.php:338
+msgid "Субмодуль"
+msgstr "Submodule"
+
+#: mod/admin/Modules.php:339
+msgid "Путь"
+msgstr "Path"
+
+#: mod/admin/Modules.php:340 mod/admin/Modules.php:374
+msgid "Позиция"
+msgstr "Position"
+
+#: mod/admin/Modules.php:369
+msgid "Модуль"
+msgstr "Module"
+
+#: mod/admin/Modules.php:370 mod/admin/Modules.php:541
+#: mod/admin/Modules.php:546 mod/admin/enum.php:265 mod/admin/enum.php:279
+msgid "Идентификатор"
+msgstr "Identifier"
+
+#: mod/admin/Modules.php:371 mod/admin/Modules.php:549
+msgid "Версия"
+msgstr "Version"
+
+#: mod/admin/Modules.php:372 mod/admin/Modules.php:551
+msgid "Системный"
+msgstr "System"
+
+#: mod/admin/Modules.php:373
+msgid "Отображаемый"
+msgstr "Displayed"
+
+#: mod/admin/Modules.php:375 mod/admin/Modules.php:552
+msgid "Действие"
+msgstr "Action"
+
+#: mod/admin/Modules.php:466
+msgid "Загрузить"
+msgstr "Download"
+
+#: mod/admin/Modules.php:480
+msgid "Инструкция по установке модуля"
+msgstr "Module installation instructions"
+
+#: mod/admin/Modules.php:497
+msgid "Информация по установке отсутствует"
+msgstr "Installation information is unavailable"
+
+#: mod/admin/Modules.php:514
+msgid "Скачать файлы модуля"
+msgstr "Download module files"
+
+#: mod/admin/Modules.php:540 mod/admin/Modules.php:545
+msgid "Имя модуля"
+msgstr "Module name"
+
+#: mod/admin/Modules.php:547 mod/admin/Roles.php:132 mod/admin/Settings.php:114
+#: mod/admin/Settings.php:171
+msgid "Описание"
+msgstr "Description"
+
+#: mod/admin/Modules.php:548
+msgid "Зависимости"
+msgstr "Dependencies"
+
+#: mod/admin/Modules.php:550
+msgid "Автор"
+msgstr "Author"
+
+#: mod/admin/Modules.php:632
+msgid "Неверный install.xml"
+msgstr "Invalid install.xml"
+
+#: mod/admin/Modules.php:663
+msgid "Предыдущие версии"
+msgstr "Previous versions"
+
+#: mod/admin/Modules.php:717
+msgid "Адреса репозиториев для загрузки модулей"
+msgstr "Repositories for loading modules"
+
+#: mod/admin/Modules.php:736
+msgid "Указать адреса репозиториев"
+msgstr "Specify repository addresses"
+
+#: mod/admin/Roles.php:27
+msgid "Роли и доступ"
+msgstr "Roles and access"
+
+#: mod/admin/Roles.php:43
+msgid "Название:"
+msgstr "Title:"
+
+#: mod/admin/Roles.php:44
+msgid "Краткое описание:"
+msgstr "Short description:"
+
+#: mod/admin/Roles.php:45
+msgid "Позиция в иерархии:"
+msgstr "Position in the hierarchy:"
+
+#: mod/admin/Roles.php:110
+msgid "Доступ к модулям:"
+msgstr "Access to modules:"
+
+#: mod/admin/Roles.php:131 mod/admin/User.php:81 mod/admin/User.php:109
+msgid "Роль"
+msgstr "Role"
+
+#: mod/admin/Roles.php:133
+msgid "Иерархия"
+msgstr "Hierarchy"
 
 #: mod/admin/Settings.php:63
 msgid "Редактировать"
@@ -772,7 +1036,7 @@ msgstr "Edit"
 msgid "Ключ:"
 msgstr "Key:"
 
-#: mod/admin/Settings.php:93 mod/admin/Settings.php:151 mod/admin/enum.php:110
+#: mod/admin/Settings.php:93 mod/admin/Settings.php:151 mod/admin/enum.php:113
 msgid "Значение:"
 msgstr "Value:"
 
@@ -784,301 +1048,142 @@ msgstr "Description:"
 msgid "Ключ"
 msgstr "Key"
 
-#: mod/admin/Settings.php:113 mod/admin/Settings.php:170 mod/admin/enum.php:180
-#: mod/admin/enum.php:182
+#: mod/admin/Settings.php:113 mod/admin/Settings.php:170 mod/admin/enum.php:183
+#: mod/admin/enum.php:185
 msgid "Значение"
-msgstr ""
+msgstr "Value"
 
-#: mod/admin/Settings.php:114 mod/admin/Settings.php:171
-#: mod/admin/modules.php:494 mod/admin/roles.php:93
-msgid "Описание"
-msgstr "Description"
-
-#: mod/admin/User.php:56 mod/admin/User.php:74
+#: mod/admin/User.php:78 mod/admin/User.php:106
 msgid "Логин"
 msgstr "Login"
 
-#: mod/admin/User.php:57
-msgid "Фамилия"
-msgstr "Last name"
+#: mod/admin/User.php:79 mod/admin/User.php:107
+msgid "ФИО"
+msgstr "Full name"
 
-#: mod/admin/User.php:58 mod/admin/User.php:75
-msgid "Имя"
-msgstr "Name"
+#: mod/admin/User.php:110
+msgid "Дата последнего входа"
+msgstr "Last login date"
 
-#: mod/admin/User.php:77 mod/admin/roles.php:92
-msgid "Роль"
-msgstr "Role"
-
-#: mod/admin/User.php:78
+#: mod/admin/User.php:111
 msgid "Дата регистрации"
 msgstr "Registration date"
 
-#: mod/admin/User.php:79
+#: mod/admin/User.php:112
 msgid "Нужно сменить пароль"
 msgstr "You need to change the password"
 
-#: mod/admin/User.php:80
+#: mod/admin/User.php:113
 msgid "Неверный email"
 msgstr "Invalid email address"
 
-#: mod/admin/User.php:121
+#: mod/admin/User.php:160
 msgid "Отправить информацию о пользователе на email"
 msgstr "Send user information to email"
 
-#: mod/admin/User.php:124
+#: mod/admin/User.php:163
 msgid "Отправить информацию об изменении на email"
 msgstr "Send information about the change to email"
 
-#: mod/admin/User.php:143
+#: mod/admin/User.php:213
 msgid "Роль:"
 msgstr "Role:"
 
-#: mod/admin/User.php:145
+#: mod/admin/User.php:214
 msgid "Фамилия:"
 msgstr "Last name:"
 
-#: mod/admin/User.php:146
+#: mod/admin/User.php:215
 msgid "Имя:"
 msgstr "Name:"
 
-#: mod/admin/User.php:147
+#: mod/admin/User.php:216
 msgid "Отчество:"
 msgstr "Patronymic:"
 
-#: mod/admin/User.php:148
+#: mod/admin/User.php:220
 msgid "Пароль:"
 msgstr "Password:"
 
-#: mod/admin/User.php:149
+#: mod/admin/User.php:225
 msgid "Сертификат:"
 msgstr "Certificate:"
 
-#: mod/admin/User.php:152
+#: mod/admin/User.php:229
 msgid "Неверный email:"
 msgstr "Invalid email address:"
 
-#: mod/admin/User.php:154
+#: mod/admin/User.php:232
 msgid "Предупреждение о смене пароля:"
 msgstr "Password change notification:"
 
-#: mod/admin/User.php:157
+#: mod/admin/User.php:235
 msgid "Администратор безопасности (полный доступ):"
 msgstr "Security Administrator (full access):"
 
-#: mod/admin/User.php:165
+#: mod/admin/User.php:245
 msgid "Вернуться к списку пользователей"
 msgstr "Back to user list"
 
-#: mod/admin/enum.php:28
+#: mod/admin/enum.php:31
 msgid "Название справочника:"
 msgstr "Directory title:"
 
-#: mod/admin/enum.php:30 mod/admin/modules.php:112 mod/admin/modules.php:114
-#: mod/admin/modules.php:219 mod/admin/modules.php:221
-msgid "Идентификатор:"
-msgstr "Identifier:"
-
-#: mod/admin/enum.php:32
+#: mod/admin/enum.php:35
 msgid "Идентификатор справочника:"
 msgstr "Directory ID:"
 
-#: mod/admin/enum.php:65
+#: mod/admin/enum.php:68
 msgid "Новое поле"
 msgstr "New field"
 
-#: mod/admin/enum.php:66
+#: mod/admin/enum.php:69
 msgid "Дополнительные поля:"
 msgstr "Additional fields:"
 
-#: mod/admin/enum.php:70
+#: mod/admin/enum.php:73
 msgid "Вернуться к списку справочников"
 msgstr "Back to the list of references"
 
-#: mod/admin/enum.php:86
+#: mod/admin/enum.php:89
 #, php-format
 msgid "Перечень значений справочника \"%s\""
 msgstr "The list of values of the \" %s \" lookup"
 
-#: mod/admin/enum.php:166
+#: mod/admin/enum.php:169
 msgid "По умолчанию:"
 msgstr "Default:"
 
-#: mod/admin/enum.php:168
+#: mod/admin/enum.php:171
 msgid "Статус:"
 msgstr "Status:"
 
-#: mod/admin/enum.php:183
+#: mod/admin/enum.php:210
 msgid "По умолчанию"
 msgstr "Default"
 
-#: mod/admin/enum.php:208
+#: mod/admin/enum.php:211
 msgid "Очередность"
 msgstr "Priority"
 
-#: mod/admin/enum.php:244 mod/admin/enum.php:258 mod/admin/modules.php:329
-#: mod/admin/modules.php:488 mod/admin/modules.php:493
-msgid "Идентификатор"
-msgstr "Identifier"
-
-#: mod/admin/enum.php:245 mod/admin/enum.php:259
+#: mod/admin/enum.php:266 mod/admin/enum.php:280
 msgid "Название справочника"
 msgstr "Directory title"
 
-#: mod/admin/enum.php:260
-msgid "Дополпительные поля"
+#: mod/admin/enum.php:281
+msgid "Дополнительные поля"
 msgstr "Additional fields"
 
-#: mod/admin/enum.php:261
+#: mod/admin/enum.php:282
 msgid "Значений"
 msgstr "Values"
 
-#: mod/admin/gitlab/Gitlab.php:113 mod/admin/gitlab/Gitlab.php:117
-#: mod/admin/gitlab/Gitlab.php:121
-#, fuzzy
-#| msgid "Не удалось отправить сообщение"
+#: mod/admin/gitlab/Gitlab.php:147 mod/admin/gitlab/Gitlab.php:151
+#: mod/admin/gitlab/Gitlab.php:155
 msgid "Не удалось создать подготовить файл для установки"
-msgstr "Can't send the message"
+msgstr "Failed to create prepare file for installation"
 
-#: mod/admin/modules.php:6
-msgid "Установленные модули"
-msgstr "Installed modules"
-
-#: mod/admin/modules.php:7
-msgid "Доступные модули"
-msgstr "Available modules"
-
-#: mod/admin/modules.php:114
-msgid "маленикие латинские буквы или цифры"
-msgstr "small latin letters or numbers"
-
-#: mod/admin/modules.php:117
-msgid "Системный:"
-msgstr "Systemic:"
-
-#: mod/admin/modules.php:119
-msgid "Отображаемый:"
-msgstr "Displayed:"
-
-#: mod/admin/modules.php:121
-msgid "Есть главная страница:"
-msgstr "There is a main page:"
-
-#: mod/admin/modules.php:123
-msgid "Зависит от модулей:"
-msgstr "Depends on modules:"
-
-#: mod/admin/modules.php:128 mod/admin/modules.php:229
-msgid "Позиция в меню:"
-msgstr "Position in the menu:"
-
-#: mod/admin/modules.php:172 mod/admin/modules.php:271
-msgid "Доступ по умолчанию:"
-msgstr "Default access:"
-
-#: mod/admin/modules.php:177 mod/admin/modules.php:275
-msgid "Дополнительные правила доступа:"
-msgstr "Additional access rules:"
-
-#: mod/admin/modules.php:193 mod/admin/modules.php:460
-#, fuzzy
-#| msgid "Отменить"
-msgid "Отмена"
-msgstr "Cancel"
-
-#: mod/admin/modules.php:216
-msgid "Субмодуль:"
-msgstr "Submodule:"
-
-#: mod/admin/modules.php:221
-msgid " маленикие латинские буквы или цифры"
-msgstr "small latin letters or numbers"
-
-#: mod/admin/modules.php:223
-msgid "Адрес внешнего ресурса:"
-msgstr "External resource address:"
-
-#: mod/admin/modules.php:297
-msgid "Субмодуль"
-msgstr "Submodule"
-
-#: mod/admin/modules.php:298
-msgid "Путь"
-msgstr "Path"
-
-#: mod/admin/modules.php:299 mod/admin/modules.php:333
-msgid "Позиция"
-msgstr "Position"
-
-#: mod/admin/modules.php:328
-msgid "Модуль"
-msgstr "Module"
-
-#: mod/admin/modules.php:330 mod/admin/modules.php:496
-msgid "Версия"
-msgstr "Version"
-
-#: mod/admin/modules.php:331 mod/admin/modules.php:498
-msgid "Системный"
-msgstr "System"
-
-#: mod/admin/modules.php:332
-msgid "Отображаемый"
-msgstr "Displayed"
-
-#: mod/admin/modules.php:334 mod/admin/modules.php:499
-msgid "Действие"
-msgstr "Action"
-
-#: mod/admin/modules.php:413
-msgid "Загрузить"
-msgstr "Download"
-
-#: mod/admin/modules.php:427
-#, fuzzy
-#| msgid "Информация по установке отсутствует"
-msgid "Инструкция по установке модуля"
-msgstr "Installation information is unavailable"
-
-#: mod/admin/modules.php:444
-msgid "Информация по установке отсутствует"
-msgstr "Installation information is unavailable"
-
-#: mod/admin/modules.php:461
-#, fuzzy
-#| msgid "Аудит файлов модулей"
-msgid "Скачать файлы модуля"
-msgstr "File auditing modules"
-
-#: mod/admin/modules.php:487 mod/admin/modules.php:492
-msgid "Имя модуля"
-msgstr "Module name"
-
-#: mod/admin/modules.php:495
-msgid "Зависимости"
-msgstr "Dependencies"
-
-#: mod/admin/modules.php:497
-msgid "Автор"
-msgstr "Author"
-
-#: mod/admin/modules.php:578
-msgid "Неверный install.xml"
-msgstr "Invalid install.xml"
-
-#: mod/admin/modules.php:609
-msgid "Предыдущие версии"
-msgstr "Previous versions"
-
-#: mod/admin/modules.php:664
-msgid "Адреса репозиториев для загрузки модулей"
-msgstr "Repositories for loading modules"
-
-#: mod/admin/modules.php:683
-msgid "Указать адреса репозиториев"
-msgstr "Specify repository addresses"
-
-#: mod/admin/monitoring.php:36 mod/admin/monitoring.php:192
+#: mod/admin/monitoring.php:36 mod/admin/monitoring.php:201
 msgid "Не задан путь к файлу журнала"
 msgstr "Log file address not specified"
 
@@ -1099,7 +1204,7 @@ msgid "Архив журнала"
 msgstr "Log archive"
 
 #: mod/admin/monitoring.php:83 mod/admin/monitoring.php:103
-#: mod/admin/monitoring.php:159 mod/admin/monitoring.php:173
+#: mod/admin/monitoring.php:159 mod/admin/monitoring.php:182
 msgid "Пользователь"
 msgstr "User"
 
@@ -1109,7 +1214,7 @@ msgid "Время входа"
 msgstr "Login time"
 
 #: mod/admin/monitoring.php:85 mod/admin/monitoring.php:105
-#: mod/admin/monitoring.php:160 mod/admin/monitoring.php:174
+#: mod/admin/monitoring.php:160 mod/admin/monitoring.php:183
 msgid "Время последней активности"
 msgstr "Time of last activity"
 
@@ -1125,45 +1230,149 @@ msgstr "force log out"
 msgid "Время выхода"
 msgstr "Log out tive"
 
-#: mod/admin/monitoring.php:194
+#: mod/admin/monitoring.php:203
 msgid "Отсутствует файл журнала"
 msgstr "Log file is missing"
 
-#: mod/admin/monitoring.php:233
+#: mod/admin/monitoring.php:242
 msgid "Файл не найден!"
 msgstr "File not found!"
 
-#: mod/admin/monitoring.php:267
+#: mod/admin/monitoring.php:273
 msgid "Ошибка записи во временный файл"
 msgstr "Error writing to a temporary file"
 
-#: mod/admin/monitoring.php:352
-msgid "Сформировать архив"
-msgstr "Create arch"
+msgid "Добавить"
+msgstr "Create"
 
-#: mod/admin/roles.php:5
-msgid "Роли и доступ"
-msgstr "Roles and access"
+msgid "Удалить"
+msgstr "Delete"
 
-#: mod/admin/roles.php:17
-msgid "Название:"
-msgstr "Title:"
+msgid "Поиск"
+msgstr "Search"
 
-#: mod/admin/roles.php:18
-msgid "Краткое описание:"
-msgstr "Short description:"
+msgid "Колонки"
+msgstr "Columns"
 
-#: mod/admin/roles.php:19
-msgid "Позиция в иерархии:"
-msgstr "Position in the hierarchy:"
+msgid "Всего"
+msgstr "Total"
 
-#: mod/admin/roles.php:74
-msgid "Доступ к модулям:"
-msgstr "Access to modules:"
+msgid "Искать"
+msgstr "Search"
 
-#: mod/admin/roles.php:94
-msgid "Иерархия"
-msgstr "Hierarchy"
+msgid "Применить"
+msgstr "Apply"
+
+msgid "Профиль"
+msgstr "Profile"
+
+msgid "Обратная связь"
+msgstr "Feedback"
+
+msgid "Регистрация"
+msgstr "Sign up"
+
+msgid "Зарегистрироваться"
+msgstr "Create account"
+
+msgid "Войти"
+msgstr "Sign in"
+
+msgid "Забыли пароль"
+msgstr "Forgot your password"
+
+msgid "Восстановление пароля"
+msgstr "Password recovery"
+
+msgid "Подтвердить"
+msgstr "Confirm"
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "Логин или email"
+msgstr "Login or email"
+
+msgid "Редактирование справочника"
+msgstr "Editing a reference book"
+
+msgid "изменить"
+msgstr "change"
+
+msgid "повторите"
+msgstr "repeat"
+
+msgid "Доступен"
+msgstr "Default"
+
+msgid "Просмотр списка"
+msgstr "List view"
+
+msgid "Все"
+msgstr "All"
+
+msgid "Владелец"
+msgstr "Owner"
+
+msgid "Чтение"
+msgstr "Reading"
+
+msgid "Редактирование"
+msgstr "Editing"
+
+msgid "Имя файла"
+msgstr "File name"
+
+msgid "Дата создания архива"
+msgstr "Archive creation date"
+
+msgid "Не могу прочитать директорию '%s'. Проверьте права доступа."
+msgstr "Can't read directory '%s'. Check access rights."
+
+msgid "Email для уведомлений от аудита системы"
+msgstr "Email for notifications from system audit"
+
+msgid "Предупреждения"
+msgstr "Warnings"
+
+msgid "Исправить все"
+msgstr "Fix everything"
+
+msgid "Исправить"
+msgstr "Fix"
+
+msgid "Всё пучком!"
+msgstr "Everything in a bunch!"
+
+msgid "Последний раз заходил"
+msgstr "Last time I went"
+
+msgid "с IP адреса"
+msgstr "from IP address"
+
+msgid "Всего строк"
+msgstr "Total lines"
+
+msgid "Отобразить"
+msgstr "Display"
+
+msgid "Показать"
+msgstr "Show"
+
+msgid "Скачать"
+msgstr "Show"
+
+#~ msgid "Фамилия"
+#~ msgstr "Last name"
+
+#~ msgid "Имя"
+#~ msgstr "Name"
+
+#~ msgid "Дополпительные поля"
+#~ msgstr "Additional fields"
+
+#~ msgid "Сформировать архив"
+#~ msgstr "Create arch"
 
 #~ msgid "Module webservice does not active"
 #~ msgstr "Module webservice does not active"

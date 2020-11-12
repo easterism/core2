@@ -162,17 +162,6 @@ class Db {
 
 
     /**
-     * Ищет перевод для строки $str
-     *
-     * @param string $str
-     * @return string
-     */
-    public function _($str) {
-        return $this->translate->tr($str);
-	}
-
-
-    /**
      * @param \Zend_Config $database
      * @return \Zend_Db_Adapter_Abstract
      */
@@ -363,7 +352,7 @@ class Db {
                 $this->config->log->system->writer == 'file'
             ) {
                 if ( ! $this->config->log->system->file) {
-                    throw new \Exception($this->_('Не задан файл журнала запросов'));
+                    throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
                 }
 
                 $log = new Log('access');

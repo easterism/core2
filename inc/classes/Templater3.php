@@ -9,6 +9,7 @@ class Templater3 {
     protected $blocks   = array();
     protected $vars     = array();
     protected $_p       = array();
+    protected $plugins  = array();
     protected $reassign = false;
     protected $loop     = '';
     protected $html     = '';
@@ -20,6 +21,8 @@ class Templater3 {
      */
     public function __construct($template_file = '') {
         if ($template_file) $this->loadTemplate($template_file);
+        //добавляем плагин по умолчанию
+        $this->addPlugin("tr", Zend_Registry::get('translate'));
     }
 
 
@@ -63,6 +66,10 @@ class Templater3 {
      */
     public function __toString() {
         return $this->render();
+    }
+
+    public function addPlugin($title, $obj) {
+        $this->plugins[strtolower($title)] = $obj;
     }
 
 
@@ -144,7 +151,7 @@ class Templater3 {
         $html = $this->html;
 
         if (strpos($html, 'BEGIN')) {
-            $matches = array();
+            $matches = [];
             preg_match_all("~<\!-- BEGIN ([a-zA-Z0-9_]+?) -->~s", $html, $matches);
             if (isset($matches[1]) && count($matches[1])) {
                 foreach ($matches[1] as $block) {
@@ -186,6 +193,28 @@ class Templater3 {
         $assigned   = str_replace(array_keys($this->vars), $this->vars, $html);
         $html       = $this->loop . $assigned;
         $this->loop = '';
+
+
+
+
+        //apply plugins
+        foreach ($this->plugins as $plugin => $process) {
+            $matches = [];
+            preg_match_all("/_{$plugin}\(([^\)]+)\)/sm", $html, $matches);
+
+            if ( ! empty($matches[1])) {
+                foreach ($matches[1] as $key => $value) {
+                    $explode_value = explode(',', $value);
+                    array_walk($explode_value, function (&$val) {
+                        $val = trim($val, "\"'");
+                        return $val;
+                    });
+                    $matches[1][$key] = call_user_func_array([$process, $plugin], $explode_value);
+                }
+            }
+            $html = str_replace($matches[0], $matches[1], $html);
+        }
+
 
         return $html;
     }

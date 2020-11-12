@@ -2,7 +2,7 @@
 	<div class="lock-screen"></div>
 	<div class="block">
 		<div class="spinner-icon"></div>
-		<div class="">Загрузка...</div>
+		<div class="">_tr(Загрузка)...</div>
 	</div>
 </div>
 <table id="main" width="100%"><tbody><tr>
@@ -57,34 +57,34 @@
 							<li class="dropdown-profile profile">
 								<a href="index.php#module=profile">
 									<i class="fa fa-user"></i>
-									Профиль
+									_tr(Профиль)
 								</a>
 							</li>
 							<li class="dropdown-profile messages">
 								<a href="index.php#module=profile&action=messages">
 									<i class="fa fa-envelope-o"></i>
-									Сообщения
+									_tr(Сообщения)
 								</a>
 							</li>
 							<li class="dropdown-profile divider"></li>
 							<li class="dropdown-billing">
 								<a href="index.php#module=billing">
 									<i class="fa fa-credit-card"></i>
-									Ваш баланс
+									_tr(Ваш баланс)
 								</a>
 							</li>
 							<li class="dropdown-billing divider"></li>
 							<li class="dropdown-settings">
 								<a href="index.php#module=settings">
 									<i class="fa fa-cogs"></i>
-									Настройки
+									_tr(Настройки)
 								</a>
 							</li>
 							<li class="dropdown-settings divider"></li>
 							<li>
 								<a href="javascript:void(0);" onclick="logout()">
 									<i class="fa fa-power-off"></i>
-									Выход
+									_tr(Выход)
 								</a>
 							</li>
 						</ul>

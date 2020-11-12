@@ -85,6 +85,24 @@ class Common extends \Core2\Acl {
 
 
     /**
+     * Ищет перевод для строки $str
+     * @param string $str
+     * @param string $module
+     * @return string
+     */
+    public function _($str, $module = '') {
+
+        $module = $module ?: $this->module;
+
+        if ($module === 'admin') {
+            $module = 'core2';
+        }
+
+        return $this->translate->tr($str, $module);
+    }
+
+
+    /**
      * @return mixed
      * @throws Zend_Exception
      */

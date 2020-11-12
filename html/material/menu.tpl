@@ -2,7 +2,7 @@
     <div class="lock-screen"></div>
     <div class="block">
         <div class="spinner-icon"></div>
-        <div class="spinner-text">Загрузка...</div>
+        <div class="spinner-text">_tr(Загрузка)...</div>
     </div>
 </div>
 <table id="main" width="100%"><tbody><tr>
@@ -50,24 +50,24 @@
                 <!-- END navigate_item -->
 
                 <li class="nav navbar-nav nav-billing">
-                    <a href="index.php#module=billing" title="Оплаты"
+                    <a href="index.php#module=billing" title="_tr(Оплаты)"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=billing');">
                         <i class="fa fa-credit-card"></i>
                     </a>
                 </li>
                 <li class="nav navbar-nav nav-settings">
-                    <a href="index.php#module=settings" title="Настройки"
+                    <a href="index.php#module=settings" title="_tr(Настройки)"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=settings');">
                         <i class="fa fa-gears"></i>
                     </a>
                 </li>
                 <li class="nav navbar-nav nav-feedback">
-                    <a href="#" onclick="$(this).popover('toggle');return false;" title="Обратная связь">
+                    <a href="#" onclick="$(this).popover('toggle');return false;" title="_tr(Обратная связь)">
                         <i class="fa fa-comment-o"></i>
                     </a>
                 </li>
                 <li class="nav navbar-nav nav-messages">
-                    <a href="index.php#module=profile&action=messages" title="Сообщения"
+                    <a href="index.php#module=profile&action=messages" title="_tr(Сообщения)"
                        onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">
                         <i class="fa fa-envelope-o"></i>
                     </a>

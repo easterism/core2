@@ -797,7 +797,7 @@ class editTable extends initEdit {
 							} else {
 								if ($value['default']) {
 									$disabled     = ' disabled="disabled" ';
-									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="изменить"/>';
+									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="' . $this->_('изменить') . '"/>';
                                     $change_class = '';
 								} else {
 									$disabled     = '';
@@ -806,7 +806,7 @@ class editTable extends initEdit {
 								}
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"password-control {$change_class}\">";
 								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-1\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
-								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">повторите</span> ";
+								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">" . $this->_('повторите') . "</span> ";
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"pass-2-container\"><input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}</div>";
 								$controlGroups[$cellId]['html'][$key] .= "</div>";
 							}

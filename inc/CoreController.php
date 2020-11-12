@@ -984,7 +984,7 @@ class CoreController extends Common implements File {
         $tab->addTab($this->translate->tr("База данных"), 		    $app, 100);
         $tab->addTab($this->translate->tr("Контроль целостности"),	$app, 150);
 
-        $tab->beginContainer("Аудит");
+        $tab->beginContainer($this->_("Аудит"));
 
         if ($tab->activeTab == 1) {
             $audit->database();
