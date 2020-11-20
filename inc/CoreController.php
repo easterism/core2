@@ -15,11 +15,12 @@ require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/Roles.php";
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 use Core2\User as User;
 use Core2\Settings as Settings;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
+use Core2\Enum as Enum;
 use Core2\InstallModule as Install;
 
 
@@ -439,9 +440,9 @@ class CoreController extends Common implements File {
         }
 
         //список модулей из репозитория
-        if (!empty($_GET['getModsListFromRepo'])) {
+        if (isset($_GET['getModsListFromRepo'])) {
             $install = new Install();
-            $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+            $install->getHTMLModsListFromRepo((int) $_GET['getModsListFromRepo']);
             return;
         }
         //скачивание архива модуля
@@ -457,6 +458,12 @@ class CoreController extends Common implements File {
         }
 
         $mods = new Modules();
+        if (!empty($_POST['install'])) {
+            $mods->install = ['install' => $_POST['install']];
+        }
+        if (!empty($_POST['install_from_repo'])) {
+            $mods->install = ['repo' => $_POST['repo'], 'install_from_repo' => $_POST['install_from_repo']];
+        }
         $mods->dispatch();
 	}
 
