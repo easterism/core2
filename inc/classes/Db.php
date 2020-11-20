@@ -2,8 +2,8 @@
 namespace Core2;
 
 require_once "Cache.php";
-use Zend\Cache\StorageFactory;
-
+use Laminas\Cache\StorageFactory;
+use Laminas\Session\Container as SessionContainer;
 
 /**
  * Class Db
@@ -309,7 +309,7 @@ class Db {
      */
 	public function closeSession($expired = 'N') {
 
-		$auth = new \Zend\Session\Container('Auth');
+		$auth = new SessionContainer('Auth');
 
 		if ($auth && $auth->ID && $auth->LIVEID) {
             $row = $this->dataSession->find($auth->LIVEID)->current();
@@ -332,7 +332,7 @@ class Db {
 	 */
 	public function logActivity($exclude = array()) {
 
-        $auth = new \Zend\Session\Container('Auth');
+        $auth = new SessionContainer('Auth');
 
         if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
             if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {

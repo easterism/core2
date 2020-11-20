@@ -3,11 +3,11 @@
 require_once __DIR__ .'/classes/Common.php';
 require_once __DIR__ .'/classes/Image.php';
 
-use Zend\Session\Container as SessionContainer;
-use Zend\Validator\EmailAddress as ValidateEmailAddress;
-use Zend\Validator\Hostname as ValidateHostname;
-use Zend\I18n\Validator\IsFloat;
-use Zend\I18n\Validator\IsInt;
+use Laminas\Session\Container as SessionContainer;
+use Laminas\Validator\EmailAddress as ValidateEmailAddress;
+use Laminas\Validator\Hostname as ValidateHostname;
+use Laminas\I18n\Validator\IsFloat;
+use Laminas\I18n\Validator\IsInt;
 
 
 
@@ -271,10 +271,15 @@ class ajaxFunc extends Common {
 	 * @param array $data
 	 */
 	protected function displayError($data) {
-        $order_fields = $this->getSessForm($data['class_id']);
-    	$this->response->assign($order_fields['mainTableId'] . "_error", "innerHTML", '<a name="' . $order_fields['mainTableId'] . '_error"> </a>' . implode("<br/>", $this->error));
-		$this->response->assign($order_fields['mainTableId'] . "_error", "style.display", 'block');
-		$this->response->script("toAnchor('{$order_fields['mainTableId']}_error')");
+        $mainTableId = $this->getSessFormField($data['class_id'], 'mainTableId');
+        if (!$mainTableId) {
+            //нужно для случая, когда форма генерится не стандартным классом
+            //тогда id элемента для вывода ошибок можно задать вручную
+            $mainTableId = $data['class_id'];
+        }
+    	$this->response->assign($mainTableId . "_error", "innerHTML", '<a name="' . $mainTableId . '_error"> </a>' . implode("<br/>", $this->error));
+		$this->response->assign($mainTableId . "_error", "style.display", 'block');
+		$this->response->script("toAnchor('{$mainTableId}_error')");
     }
 
 

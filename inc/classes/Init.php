@@ -81,7 +81,8 @@
             $config2->merge(new Zend_Config_Ini($conf_d, $section));
         }
         $config->merge($config2);
-    } catch (Zend_Config_Exception $e) {
+    }
+    catch (Zend_Config_Exception $e) {
         \Core2\Error::Exception($e->getMessage());
     }
 
@@ -186,7 +187,6 @@
         Zend_Registry::set('core_config', $core_config);
     }
 
-	require_once 'Zend_Session_Namespace.php'; //DEPRECATED
 	require_once 'Db.php';
 	require_once 'Common.php';
 	require_once 'Templater.php'; //DEPRECATED
@@ -351,6 +351,7 @@
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
+                require_once 'Zend_Session_Namespace.php'; //DEPRECATED
                 require_once 'core2/inc/classes/Acl.php';
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
@@ -500,70 +501,6 @@
 
 
         /**
-         * Форма входа в систему
-         * @return string
-         * @throws Zend_Exception
-         */
-        protected function getLogin() {
-
-            if (isset($_POST['action']) && !$this->auth->ID) {
-                require_once 'core2/inc/CoreController.php';
-                $this->setContext('admin');
-                $core = new CoreController();
-                $url = "index.php";
-                if ($core->action_login($_POST)) {
-                    if (!empty($_SERVER['QUERY_STRING'])) {
-                        $url .= "#" . $_SERVER['QUERY_STRING'];
-                    }
-                }
-                header("Location: $url");
-                return '';
-            }
-            $tpl = new Templater2();
-            if (Tool::isMobileBrowser()) {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
-            } else {
-                $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
-            }
-
-            $tpl->assign('{system_name}', $this->getSystemName());
-            $tpl2 = new Templater2("core2/html/" . THEME . "/login/login.html");
-
-            $errorNamespace = new SessionContainer('Error');
-            $blockNamespace = new SessionContainer('Block');
-            if (!empty($blockNamespace->blocked)) {
-                $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
-                $tpl2->assign('[ERROR_LOGIN]', '');
-            } elseif (!empty($errorNamespace->ERROR)) {
-                $tpl2->error->assign('[ERROR_MSG]', $errorNamespace->ERROR);
-                $tpl2->assign('[ERROR_LOGIN]', $errorNamespace->TMPLOGIN);
-                $errorNamespace->ERROR = '';
-            } else {
-                $tpl2->error->assign('[ERROR_MSG]', '');
-                $tpl2->assign('[ERROR_LOGIN]', '');
-            }
-            $config = Zend_Registry::get('config');
-            if (empty($config->ldap->active) || !$config->ldap->active) {
-                $tpl2->assign('<form', "<form onsubmit=\"document.getElementById('gfhjkm').value=hex_md5(document.getElementById('gfhjkm').value)\"");
-            }
-
-            $logo = $this->getSystemLogo();
-
-            if (is_file($logo)) {
-                $tpl2->logo->assign('{logo}', $logo);
-            }
-            if ( ! empty($this->auth->TOKEN)) {
-                $tpl2->assign('name="action"', 'name="action" value="' . $this->auth->TOKEN . '"');
-            }
-
-            $this->assignSystemFavicon($tpl);
-
-            $tpl->assign('<!--index -->', $tpl2->parse());
-            return $tpl->parse();
-        }
-
-
-        /**
          * Направлен ли запрос к вебсервису
          * @todo прогнать через роутер
          */
@@ -684,28 +621,29 @@
             return $res;
         }
 
-
         /**
-         * Получение favicon системы из conf.ini
+         * get favicons from conf.ini
          * @return array
          */
-        private function assignSystemFavicon(&$tpl) {
+        private function getSystemFavicon() {
 
             $favicon_png = $this->config->system->favicon_png;
             $favicon_ico = $this->config->system->favicon_ico;
 
-            if (!is_file($favicon_png)) {
-                $favicon_png = is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png';
-            }
-            if (!is_file($favicon_ico)) {
-                $favicon_ico = is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico';
-            }
+            $favicon_png = $favicon_png && is_file($favicon_png)
+                ? $favicon_png
+                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
 
-            $tpl->assign('favicon.png', $favicon_png);
-            $tpl->assign('favicon.ico', $favicon_ico);
+            $favicon_ico = $favicon_ico && is_file($favicon_ico)
+                ? $favicon_ico
+                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
 
+
+            return [
+                'png' => $favicon_png,
+                'ico' => $favicon_ico,
+            ];
         }
-
 
         /**
          * Проверка удаления с последующей переадресацией
@@ -808,7 +746,10 @@
 
             $tpl->assign('{system_name}', $this->getSystemName());
 
-            $this->assignSystemFavicon($tpl);
+            $favicons = $this->getSystemFavicon();
+
+            $tpl->assign('favicon.png', $favicons['png']);
+            $tpl->assign('favicon.ico', $favicons['ico']);
 
             $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
@@ -955,8 +896,8 @@
                         }
                     }
                 }
+                $tpl->assign("<!--system_js-->", $system_js);
             }
-            $tpl->assign("<!--system_js-->", $system_js);
 
 
             $system_css = "";

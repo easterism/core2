@@ -15,7 +15,7 @@ require_once __DIR__ . '/../../inc/classes/class.tab.php';
 require_once __DIR__ . '/../../inc/classes/Templater2.php';
 require_once 'InstallModule.php';
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 
 
 /**

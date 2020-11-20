@@ -3,11 +3,11 @@ namespace Core2;
 
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 
-use Zend\Mail;
-use Zend\Mail\Transport;
-use Zend\Mime\Message as MimeMessage;
-use Zend\Mime\Mime;
-use Zend\Mime\Part as MimePart;
+use Laminas\Mail;
+use Laminas\Mail\Transport;
+use Laminas\Mime\Message as MimeMessage;
+use Laminas\Mime\Mime;
+use Laminas\Mime\Part as MimePart;
 
 /**
  * Class Email
@@ -490,6 +490,7 @@ class Email {
         }
 
         $message->setSubject($subj);
+        $message->getHeaders()->addHeaderLine('Content-Type', 'multipart/related');
 
         $parts = [];
 

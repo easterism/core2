@@ -1,6 +1,6 @@
 <?php
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 
 /**
  * обратная совместимост с ZF1
