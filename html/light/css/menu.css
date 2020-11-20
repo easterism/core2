@@ -235,6 +235,9 @@ a {color: #337AB7}
 #user-section {
     color: #463265;
 }
+#user-section > li {
+    display: inline-block;
+}
 #user-section .dropdown-toggle {
     display: inline-block;
     padding: 6px 10px;
@@ -261,8 +264,8 @@ a {color: #337AB7}
 #user-section .dropdown-toggle .fa-caret {margin-left: 5px}
 #user-section .dropdown-menu > li > a {color: #463265}
 #user-section .dropdown-menu i {margin-right: 5px}
-#user-section.active .dropdown-menu > li.active > a,
-#user-section.active {
+#user-section > .dropdown.active .dropdown-menu > li.active > a,
+#user-section > .dropdown.active {
     background-color: #42A5F5;
     color: #463265;
 }

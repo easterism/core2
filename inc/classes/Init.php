@@ -192,6 +192,7 @@
 	require_once 'Templater.php'; //DEPRECATED
 	require_once 'Templater2.php'; //DEPRECATED
 	require_once 'Templater3.php';
+	require_once 'Login.php';
 
 
 	/**
@@ -232,6 +233,7 @@
 				date_default_timezone_set($tz);
 			}
 		}
+
 
         /**
          * Общая проверка аутентификации
@@ -360,17 +362,11 @@
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
             }
             else {
-                // GET LOGIN PAGE
-                if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
-                    if ( ! empty($_POST['xjxr'])) {
-                        throw new Exception('expired');
-                    }
-                    if ( ! empty($_GET['module'])) {
-                        http_response_code(403);
-                        return '';
-                    }
-                }
-                return $this->getLogin();
+
+                $login = new \Core2\Login();
+                $login->setSystemName($this->getSystemName());
+                $login->setFavicon($this->getSystemFavicon());
+                return $login->dispatch();
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -391,6 +387,7 @@
                 if ($this->fileAction()) return '';
 
                 if ($module === 'admin') {
+
                     if ($this->auth->MOBILE) {
                         require_once 'core2/inc/MobileController.php';
                         $core = new MobileController();
@@ -589,12 +586,20 @@
             }
             // DEPRECATED
             if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
+                $this->is_rest = [
+                    'module'  => $matches[1],
+                    'version' => '',
+                    'action'  => $matches[2],
+                ];
                 return;
             }
             // DEPRECATED
             if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-                $this->is_soap = $matches;
+                $this->is_soap = [
+                    'module'  => isset($matches[2]) ? $matches[2] : $matches[3],
+                    'version' => '',
+                    'action'  => isset($matches[2]) ? 'wsdl.xml' : 'service.php',
+                ];
                 return;
             }
             if (preg_match('~^soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)/(?<action>wsdl\.xml|service\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
@@ -677,21 +682,6 @@
         private function getSystemName() {
             $res = $this->config->system->name;
             return $res;
-        }
-
-
-        /**
-         * Получение логотипа системы из conf.ini
-         * или установка логотипа по умолчанию
-         * @return string
-         */
-        private function getSystemLogo() {
-            $res = $this->config->system->logo;
-            if (!empty($res) && is_file($res)) {
-                return $res;
-            } else {
-                return 'core2/html/' . THEME . '/img/logo.gif';
-            }
         }
 
 
@@ -954,6 +944,7 @@
 
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
 
+
             if (isset($this->config->system->js)) {
                 $system_js = "";
 
@@ -963,31 +954,20 @@
                             $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                         }
                     }
-
-                } elseif (file_exists($src)) {
-                    $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
-
-                $tpl->assign("<!--system_js-->", $system_js);
             }
+            $tpl->assign("<!--system_js-->", $system_js);
 
 
-            if (isset($this->config->system->css)) {
-                $system_css = "";
-
-                if (is_object($this->config->system->css)) {
-                    foreach ($this->config->system->css as $src) {
-                        if (file_exists($src)) {
-                            $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
-                        }
+            $system_css = "";
+            if (isset($this->config->system->css) && is_object($this->config->system->css)) {
+                foreach ($this->config->system->css as $src) {
+                    if (file_exists($src)) {
+                        $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                     }
-
-                } elseif (file_exists($src)) {
-                    $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                 }
-
-                $tpl->assign("<!--system_css-->", $system_css);
             }
+            $tpl->assign("<!--system_css-->", $system_css);
 
             return $tpl->render();
         }
@@ -1047,6 +1027,18 @@
                                     $tpl->item->link->assign('[ID]',      ! empty($list_item['id']) ? $list_item['id'] : '');
                                     $tpl->item->link->assign('[LINK]',    $link);
                                     $tpl->item->link->assign('[ONCLICK]', $on_click);
+                                    break;
+
+                                case 'file':
+                                    $on_change = ! empty($list_item['onchange'])
+                                        ? $list_item['onchange']
+                                        : "";
+
+                                    $tpl->item->file->assign('[TITLE]',    ! empty($list_item['title']) ? $list_item['title'] : '');
+                                    $tpl->item->file->assign('[ICON]',     ! empty($list_item['icon']) ? $list_item['icon'] : '');
+                                    $tpl->item->file->assign('[CLASS]',    ! empty($list_item['class']) ? $list_item['class'] : '');
+                                    $tpl->item->file->assign('[ID]',       ! empty($list_item['id']) ? $list_item['id'] : '');
+                                    $tpl->item->file->assign('[ONCHANGE]', $on_change);
                                     break;
 
                                 case 'divider':
@@ -1421,7 +1413,7 @@
             return json_encode([
                 'status' => 'success',
                 'data'   => $data,
-            ]);
+            ] + $data); // Для совместимости с разными приложениями
         }
 
 

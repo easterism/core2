@@ -1,24 +1,36 @@
-<div>
+<div class="form-container">
 	<!-- BEGIN logo --><img src="{logo}" alt=""/><!-- END logo --><br/><br/>
-	<!-- BEGIN error --><b><span class="error">[ERROR_MSG]</span></b><br/><br/><!-- END error -->
+	<!-- BEGIN error --><b><span class="text-danger">[ERROR_MSG]</span></b><br/><br/><!-- END error -->
 	<form method="POST" action="" id="loginForm">
-	<noscript>
-		<input name="js_disabled" type="hidden" value="1"/>
-	</noscript>
+		<noscript>
+			<input name="js_disabled" type="hidden" value="1"/>
+		</noscript>
 		<input name="action" type="hidden" />
-	<table>
-		<tr>
-			<td align="right">_tr("Логин или email:")</td>
-			<td align="left"><input id="login" name="login" type="text" value="[ERROR_LOGIN]"/></td>
-		</tr>
-		<tr>
-			<td align="right">_tr("Пароль:")</td>
-			<td align="left"><input name="password" type="password" id="gfhjkm" autocomplete="off"/></td>
-		</tr>
-		<tr>
-			<td></td>
-			<td align="left"><button class="button" type="submit" id="enter">_tr("Войти")</button></td>
-		</tr>
-	</table>
+		<table>
+			<tr>
+				<td align="right">_tr("Логин или email:")</td>
+				<td align="left"><input id="login" name="login" type="text" value="[ERROR_LOGIN]"/></td>
+			</tr>
+			<tr>
+				<td align="right">_tr("Пароль:")</td>
+				<td align="left"><input name="password" type="password" id="gfhjkm" autocomplete="off"/></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td align="left"><button class="button" type="submit" id="enter">_tr("Войти")</button></td>
+			</tr>
+		</table>
 	</form>
+	<!-- BEGIN ext_actions -->
+	<br><br>
+	<div>
+		<!-- BEGIN registration -->
+		<a href="index.php?core=registration" class="text-muted pull-left">_tr("Регистрация")</a>
+		<!-- END registration -->
+		<!-- BEGIN restore -->
+		<a href="index.php?core=restore" class="text-muted pull-right">_tr("Забыли пароль")</a>
+		<!-- END restore -->
+		<div class="clearfix"></div>
+	</div>
+	<!-- END ext_actions -->
 </div>

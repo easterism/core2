@@ -15,7 +15,7 @@ body {
 	height:100%;
 }
 
-#rootContainer div {
+#rootContainer .form-container {
 	position: absolute;
 	width: 260px;
 	height: 200px;
@@ -25,14 +25,29 @@ body {
 	margin-top: -100px;
 	text-align: center;
 }
+#rootContainer .form-footer {
+	padding: 0 15px;
+}
+#rootContainer .text-muted {
+	color: #9a9a9a;
+}
+#rootContainer .pull-left {
+	float: left;
+}
+#rootContainer .pull-right {
+	float: right;
+}
 
 
 table {
-	border:0px; 
+	border:0;
 }
-table td{
+table td {
 	padding:2px;
 	font-size:11px;
+}
+table td:first-child {
+	width: 90px;
 }
 
 button, .button {
@@ -66,3 +81,25 @@ input {
 }
 
 
+.text-danger {
+	color: #e50000;
+}
+.text-success {
+	color: #1ab100;
+	font-size: 12px;
+}
+.text-center {
+	text-align: center;
+}
+
+/*
+PRELOADERS
+*/
+
+.form-footer {
+	margin-top: 20px;
+}
+.error {
+	color: red;
+	margin-bottom: 15px;
+}

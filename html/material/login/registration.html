@@ -1,0 +1,47 @@
+<form class="form-main" onsubmit="CoreLogin.registration(this); return false">
+    <input name="action" type="hidden" />
+    <!-- BEGIN logo -->
+    <div class="container-fluid logo-container">
+        <img src="{logo}" alt="logo"/>
+    </div>
+    <!-- END logo -->
+
+    <h4 class="text-center">Регистрация</h4>
+    <div class="text-center text-danger"></div>
+    <div class="text-center text-success"></div>
+    <br>
+
+    <div class="form-registration">
+
+        <div class="form-group">
+            <input type="text" name="unp" class="form-control"
+                   placeholder="УНП" required autofocus id="control-unp">
+        </div>
+
+        <div class="form-group">
+            <input type="text" name="company_name" class="form-control"
+                   placeholder="Название организации" required id="control-company-name">
+        </div>
+
+        <div class="form-group">
+            <input type="email" name="email" class="form-control"
+                   placeholder="Email" required id="control-email">
+        </div>
+
+        <div class="form-group">
+            <input type="tel" name="tel" class="form-control"
+                   placeholder="Телефон" required id="control-tel">
+        </div>
+
+        <button type="submit" class="btn-login has-spinner" >Зарегистрироваться</button>
+
+    </div>
+    <div class="form-footer">
+        <a href="index.php" class="text-muted pull-left">Войти</a>
+
+        <!-- BEGIN restore -->
+        <a href="index.php?core=restore" class="text-muted pull-right">Забыли пароль</a>
+        <!-- END restore -->
+        <div class="clearfix"></div>
+    </div>
+</form>

@@ -86,7 +86,7 @@ class CoreController extends Common implements File {
                 return;
             }
         }
-
+       
         if ( ! $this->auth->ADMIN) throw new Exception(911);
 
 
@@ -343,6 +343,7 @@ class CoreController extends Common implements File {
 		}
 		return true;
 	}
+
 
     /**
      * Сохранение информации о входе пользователя

@@ -42,7 +42,15 @@
     "guzzlehttp/guzzle": "6.5.0",
     "blueimp/jquery-file-upload": "10.*",
     "firephp/firephp-core": "*",
-    "phpseclib/phpseclib": "~2.0"
+    "phpseclib/phpseclib": "~2.0",
+    "ext-json": "*",
+    "ext-zip": "*",
+    "ext-mbstring": "*",
+    "ext-curl": "*",
+    "ext-gd": "*",
+    "ext-intl": "*",
+    "ext-pdo": "*",
+    "ext-xml": "*"
   },
   "scripts": {
     "post-update-cmd": [
