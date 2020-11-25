@@ -770,25 +770,35 @@ class listTable extends initList {
                 elseif ($value['type'] == 'multilist') {
                     $tpl2->assign("{ATTR}", $value['in']);
 
-                    $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    foreach ($temp as $row) {
-                        $k = current($row);
-                        $v = end($row);
-                        $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->opt->assign("{VALUE}", $k);
-                        $tpl2->opt->assign("{LABEL}", $v);
+                    $options_raw = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
+                    $options     = array('' => 'Все');
 
-                        if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->opt->assign("{selected}", " selected=\"selected\"");
+                    foreach ($options_raw as $option_key => $option_value) {
+                        if (is_array($option_value)) {
+                            if (count($option_value) == 2) {
+                                $k = current($option_value);
+                                $v = end($option_value);
+                                if (is_array($v) && isset($v['id']) && isset($v['value'])) {
+                                    $k = $v['id'];
+                                    $v = $v['value'];
+                                }
+                                $options[$k] = $v;
+
+                            } elseif (count($option_value) == 3) {
+                                $k  = current($option_value);
+                                $v  = next($option_value);
+                                $gr = end($option_value);
+                                $options[$gr][$k] = $v;
+                            }
                         } else {
-                            $tpl2->opt->assign("{selected}", "");
+                            $options[$option_key] = $option_value;
                         }
-                        $tpl2->opt->reassign();
                     }
-                    $sqlSearchCount++;
-                    // input нужен для того, чтобы обрабатывать пустые checkbox
-                    // пустые чекбоксы не постятся вообще
-                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
+                    $sqlSearchCount++;;
+                    $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
+                    $tpl2->fillDropDown('{ID}', $options, $next);
+
+                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
 
                 if (!empty($this->sessData['search'])) {
