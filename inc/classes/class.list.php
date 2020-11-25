@@ -49,6 +49,7 @@ class listTable extends initList {
     private $is_seq             = false;
     private $sessData           = array();
     private $search_sql         = "";
+    private $scripts		    = array();
 
 
     /**
@@ -356,7 +357,7 @@ class listTable extends initList {
                                     } else {
                                         $search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
                                     }
-                                } elseif ($next['type'] == 'checkbox' || $next['type'] == 'checkbox2' || $next['type'] == 'multilist') {
+                                } elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                                     if (is_array($search_value)) {
                                         foreach ($search_value as $k => $val) {
                                             if (!$val) unset($search_value[$k]);
@@ -369,15 +370,13 @@ class listTable extends initList {
                                                 if (is_array($search_value) && ! empty($search_value)) {
                                                     $search_checkbox = array();
                                                     foreach ($search_value as $search_val) {
-                                                        $search_checkbox[] = str_replace("ADD_SEARCH", "?", $next['field']);
-                                                        $questions[]       = $search_val;
+                                                        $search_checkbox[] = str_replace("ADD_SEARCH", $this->db->quote($search_val), $next['field']);
                                                     }
 
                                                     $search .= " AND (" . implode(" OR ", $search_checkbox) . ")";
 
                                                 } else {
-                                                    $search .= " AND " . str_replace("ADD_SEARCH", "?", $next['field']);
-                                                    $questions[] = $search_value;
+                                                    $search .= " AND " . str_replace("ADD_SEARCH", $this->db->quote($search_value), $next['field']);
                                                 }
                                             }
                                         }
@@ -661,7 +660,7 @@ class listTable extends initList {
                 $tpl2->assign("{OUT}", $value['out']);
                 $tpl2->assign("{NAME}", "search[$this->main_table_id][$key]");
 
-                if ($value['type'] != 'checkbox' && $value['type'] != 'checkbox2' && $value['type'] != 'multilist') {
+                if ( ! in_array($value['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                     $tpl2->assign("{ID}", $searchFieldId);
                     $tpl2->assign("{ATTR}", $value['in']);
                     $value['value'] = '';
@@ -767,11 +766,13 @@ class listTable extends initList {
                     $tpl2->fillDropDown('{ID}', $options, $next);
                     $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
-                elseif ($value['type'] == 'multilist') {
-                    $tpl2->assign("{ATTR}", $value['in']);
+                elseif (in_array($value['type'], ['multilist', 'multilist2'])) {
+                    if ($value['type'] == 'multilist2') {
+                        $this->scripts['multilist2'] = true;
+                    }
 
                     $options_raw = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    $options     = array('' => 'Все');
+                    $options     = [];
 
                     foreach ($options_raw as $option_key => $option_value) {
                         if (is_array($option_value)) {
@@ -794,11 +795,15 @@ class listTable extends initList {
                             $options[$option_key] = $option_value;
                         }
                     }
-                    $sqlSearchCount++;;
+                    $sqlSearchCount++;
+
+                    $tpl2->assign("{ATTR}", $value['in']);
                     $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
                     $tpl2->fillDropDown('{ID}', $options, $next);
 
-                    $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
+                    // input нужен для того, чтобы обрабатывать пустые checkbox
+                    // пустые чекбоксы не постятся вообще
+                    $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
                 }
 
                 if (!empty($this->sessData['search'])) {
@@ -812,7 +817,17 @@ class listTable extends initList {
             }
             $serviceHeadHTML .=     $tpl->parse();
         }
-        
+
+
+
+        if ($this->scripts) {
+            if (isset($this->scripts['multilist2'])) {
+                Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
+                Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
+                Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
+                Tool::printJs("core2/html/" . THEME . "/js/select2.ru.min.js", true);
+            }
+        }
 
         
         // DATA HEADER первая строка таблицы
