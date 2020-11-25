@@ -99,12 +99,12 @@ var listx = {
      * @returns {boolean}
      */
     dateKeyup: function (id, obj) {
-        if (obj.id == id + '_day' && Number(obj.value) > 31) {
+        if (obj.id === id + '_day' && Number(obj.value) > 31) {
             obj.value = '';
             obj.focus();
             return false;
         }
-        if (obj.id == id + '_month' && Number(obj.value) > 12) {
+        if (obj.id === id + '_month' && Number(obj.value) > 12) {
             obj.value = '';
             obj.focus();
             return false;
@@ -264,11 +264,11 @@ var listx = {
      * @param $this
      * @param e
      */
-    switch_active: function($this, e) {    
+    switch_active: function($this, e) {
         e.cancelBubble = true;
         var data = String($($this).attr('t_name'));
         var src = String($($this).attr('src'));
-        var alt = $($this).attr('alt');                              
+        var alt = $($this).attr('alt');
         var val = $($this).attr('val');
         if (alt == 'on') {
             var is_active = "N";
