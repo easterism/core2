@@ -49,7 +49,8 @@ class listTable extends initList {
     private $is_seq             = false;
     private $sessData           = array();
     private $search_sql         = "";
-    private $scripts		    = array();
+    private $scripts            = array();
+    private $service_content    = array();
 
 
     /**
@@ -154,6 +155,15 @@ class listTable extends initList {
             'field'     => $field,
             'out'         => $out
         );
+    }
+
+
+    /**
+     * @param $text
+     */
+    public function addServiceText($text) {
+
+        $this->service_content[$this->main_table_id][] = $text;
     }
 
 
@@ -1157,8 +1167,9 @@ class listTable extends initList {
         //SERVICE ROW
         // Панель с кнопками
         // к-во записей
-        $tpl = new Templater2('core2/html/' . THEME . "/list/serviceHead.tpl");
+        $tpl = new Templater3('core2/html/' . THEME . "/list/serviceHead.tpl");
         $tpl->assign('[TOTAL_RECORD_COUNT]', ($this->roundRecordCount ? "~" : "") . $this->recordCount);
+
         $buttons = '';
         if (!empty($this->table_button[$this->main_table_id])) {
             reset($this->table_button[$this->main_table_id]);
@@ -1171,6 +1182,14 @@ class listTable extends initList {
             }
         }
         $tpl->assign('[BUTTONS]', $buttons);
+
+        if ( ! empty($this->service_content[$this->main_table_id])) {
+            foreach ($this->service_content[$this->main_table_id] as $content) {
+                $tpl->service_content->assign('[CONTENT]', $content);
+                $tpl->service_content->reassign();
+            }
+        }
+
         if ($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner') && ($this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
             //if ($this->multiEdit) $serviceHeadHTML .=     $this->button($this->classText['EDIT'], "", "multiEdit('$this->editURL', '$this->main_table_id')");
             if ($this->addURL) {
@@ -1182,6 +1201,7 @@ class listTable extends initList {
                 }
             }
         }
+
         if (($this->deleteURL || $this->deleteKey) && ($this->checkAcl($this->resource, 'delete_all') || $this->checkAcl($this->resource, 'delete_owner'))) {
             $tpl->delButton->assign('Удалить', $this->classText['DELETE']);
             if ($this->deleteURL) {
@@ -1190,7 +1210,8 @@ class listTable extends initList {
                 $tpl->delButton->assign('[delURL]', "listx.del('{$this->resource}', '{$this->classText['DELETE_MSG']}', $this->ajax)");
             }
         }
-        $serviceHeadHTML .= $tpl->parse();
+
+        $serviceHeadHTML .= $tpl->render();
 
         $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML); // побликуем шапку списка
         $tplRoot->body->assign('[BODY]', $tableBodyHTML); // побликуем список

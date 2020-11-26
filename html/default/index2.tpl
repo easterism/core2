@@ -10,7 +10,7 @@
 	<meta name="description" content="CORE2">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="stylesheet" href="core2/html/default/style2.css?_=6" type="text/css" />
+	<link rel="stylesheet" href="core2/html/default/style2.css?_=7" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
 	<!--system_css-->

@@ -1,6 +1,11 @@
 	<tr class="servicePanel">
 		<th colspan="100">
-			<div class="recordNum"><b>_tr(Всего):</b>&nbsp;[TOTAL_RECORD_COUNT]</div>
+			<div class="recordNum">
+                <b>_tr(Всего):</b>&nbsp;[TOTAL_RECORD_COUNT]
+                <!-- BEGIN service_content -->
+                <span class="service-panel-content">[CONTENT]</span>
+                <!-- END service_content -->
+            </div>
             <!-- BEGIN delButton -->
             <div style="float:right;">
                 <input type="button" class="button core-list-delete" value="_tr(Удалить)" onclick="[delURL]"/>
