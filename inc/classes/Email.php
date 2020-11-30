@@ -490,7 +490,6 @@ class Email {
         }
 
         $message->setSubject($subj);
-        $message->getHeaders()->addHeaderLine('Content-Type', 'multipart/related');
 
         $parts = [];
 

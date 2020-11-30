@@ -215,7 +215,7 @@ class editTable extends initEdit {
 		if (!$this->isSaved) {
 			$this->save('save.php');
 		}
-		$authNamespace = Zend_Registry::get('auth');
+		$authNamespace = new SessionContainer('Auth');
 		if (is_array($this->SQL)) {
 			$arr = $this->SQL;
 			$current = current($arr);
@@ -309,7 +309,7 @@ class editTable extends initEdit {
 
 			$onsubmit = "edit.onsubmit(this);";
 			if ($this->saveConfirm) {
-				$onsubmit .= "if(!confirm('{$this->saveConfirm}')){return false;};";
+				$onsubmit .= "if(!confirm('{$this->saveConfirm}')){return false};";
 			}
 
 			if (count($this->beforeSaveArr)) {
