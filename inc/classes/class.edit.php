@@ -62,7 +62,7 @@ class editTable extends initEdit {
      * @return cell|Zend_Db_Adapter_Abstract
      */
 	public function __get($data) {
-        if ($data === 'db' || $data === 'cache') {
+        if ($data === 'db' || $data === 'cache' || $data === 'translate') {
             return parent::__get($data);
         }
 		$this->$data = new cell($this->main_table_id);
@@ -797,16 +797,17 @@ class editTable extends initEdit {
 							} else {
 								if ($value['default']) {
 									$disabled     = ' disabled="disabled" ';
-									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="' . $this->_('изменить') . '"/>';
+									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="' . $this->translate->tr('изменить') . '"/>';
                                     $change_class = '';
 								} else {
 									$disabled     = '';
 									$change       = '';
 									$change_class = 'no-change';
 								}
+
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"password-control {$change_class}\">";
 								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-1\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
-								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">" . $this->_('повторите') . "</span> ";
+								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">" . $this->translate->tr('повторите') . "</span> ";
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"pass-2-container\"><input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}</div>";
 								$controlGroups[$cellId]['html'][$key] .= "</div>";
 							}
