@@ -1,5 +1,4 @@
 <form class="form-main" onsubmit="CoreLogin.registration(this); return false">
-    <input name="action" type="hidden" />
     <!-- BEGIN logo -->
     <div class="container-fluid logo-container">
         <img src="{logo}" alt="logo"/>
@@ -13,25 +12,12 @@
 
     <div class="form-registration">
 
+        <!-- BEGIN field -->
         <div class="form-group">
-            <input type="text" name="unp" class="form-control"
-                   placeholder="УНП" required autofocus id="control-unp">
+            <input type="[TYPE]" name="[NAME]" class="form-control"
+                   placeholder="[TITLE]" [REQUIRED]>
         </div>
-
-        <div class="form-group">
-            <input type="text" name="company_name" class="form-control"
-                   placeholder="Название организации" required id="control-company-name">
-        </div>
-
-        <div class="form-group">
-            <input type="email" name="email" class="form-control"
-                   placeholder="Email" required id="control-email">
-        </div>
-
-        <div class="form-group">
-            <input type="tel" name="tel" class="form-control"
-                   placeholder="Телефон" required id="control-tel">
-        </div>
+        <!-- END field -->
 
         <button type="submit" class="btn-login has-spinner">_tr(Зарегистрироваться)</button>
 

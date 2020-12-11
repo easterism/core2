@@ -7,6 +7,44 @@ function CoreLogin() {}
 /**
  * @param form
  */
+CoreLogin.login = function (form) {
+
+    CoreLogin.loaderShow();
+    $('.form-main .text-danger').text('');
+
+    $.ajax({
+        url: "index.php?core=login",
+        method: "POST",
+        data: {
+            login: $('[name=login]', form).val(),
+            password: hex_md5($('[name=password]', form).val())
+        }
+    })
+        .success(function () {
+            location.reload();
+        })
+
+        .always (function (jqXHR, textStatus) {
+            CoreLogin.loaderHide();
+
+            if (textStatus !== 'success') {
+                var data = {};
+
+                try {
+                    data = JSON.parse(jqXHR.responseText);
+                } catch (err) {
+                    // ignore
+                }
+
+                $('.form-main .text-danger').text(data.error_message || "Ошибка. Попробуйте позже, либо обратитесь к администратору");
+            }
+        });
+};
+
+
+/**
+ * @param form
+ */
 CoreLogin.registration = function (form) {
 
     CoreLogin.loaderShow();
@@ -24,7 +62,7 @@ CoreLogin.registration = function (form) {
                 $('.form-main .text-success').text(data.message).css('margin-bottom', '50px');
                 $('.form-registration').hide();
             } else {
-                $('.form-main .text-danger').text(data.message);
+                $('.form-main .text-danger').text(data.error_message);
             }
         })
 
@@ -41,8 +79,8 @@ CoreLogin.registration = function (form) {
  */
 CoreLogin.registrationComplete = function (form) {
 
-    var pass1 = $("#users_password").val();
-    var pass2 = $("#users_password2").val();
+    var pass1 = $("[name=password]").val();
+    var pass2 = $("[name=password2]").val();
 
     if ( ! pass1 || ! pass2) {
         $('.form-main .text-danger').text('Введите пароль');
@@ -71,7 +109,7 @@ CoreLogin.registrationComplete = function (form) {
             $('.form-main .text-success').html(data.message).css('margin-bottom', '50px');
             $('.form-registration').hide();
         } else {
-            $('.form-main .text-danger').text(data.message);
+            $('.form-main .text-danger').text(data.error_message);
         }
 
     }).fail(function () {
@@ -104,7 +142,7 @@ CoreLogin.restore = function (form) {
                 $('.form-restore').hide();
 
             } else {
-                $('.form-main .text-danger').text(data.message);
+                $('.form-main .text-danger').text(data.error_message);
             }
         })
 
@@ -121,8 +159,8 @@ CoreLogin.restore = function (form) {
  */
 CoreLogin.restoreComplete = function (form) {
 
-    var pass1 = $("#users_password").val();
-    var pass2 = $("#users_password2").val();
+    var pass1 = $("[name=password]").val();
+    var pass2 = $("[name=password2]").val();
 
     if (pass1 !== pass2) {
         $('.form-main .text-danger').text('Пароли не совпадают').show();
@@ -147,7 +185,7 @@ CoreLogin.restoreComplete = function (form) {
             $('.form-main .text-success').html(data.message).css('margin-bottom', '50px');
             $('.form-restore').hide();
         } else {
-            $('.form-main .text-danger').text(data.message);
+            $('.form-main .text-danger').text(data.error_message);
         }
 
     }).fail(function () {
@@ -165,8 +203,10 @@ CoreLogin.loaderShow = function () {
     var $btn = $('.has-spinner');
 
     $btn.attr("disabled", "disabled");
-    $btn.attr('data-btn-text', $btn.text());
-    $btn.html('<div class="btn-loader"></div>Загрузка...');
+
+    if ($btn.find('.btn-loader').length == 0) {
+        $btn.prepend('<span class="btn-loader"></span>');
+    }
 }
 
 
@@ -177,7 +217,7 @@ CoreLogin.loaderHide = function () {
 
     var $btn = $('.has-spinner');
 
-    $btn.html($btn.attr('data-btn-text'));
+    $btn.find('.btn-loader').remove();
     $btn.removeAttr("disabled");
 }
 

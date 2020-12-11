@@ -204,7 +204,7 @@ class Templater3 {
 
             if ( ! empty($matches[1])) {
                 foreach ($matches[1] as $key => $value) {
-                    $explode_value = explode(',', $value);
+                    $explode_value = explode('|', $value);
                     array_walk($explode_value, function (&$val) {
                         $val = trim($val, "\"'");
                         return $val;

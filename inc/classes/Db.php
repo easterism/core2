@@ -493,6 +493,17 @@ class Db {
 	}
 
 
+    /**
+     * Ищет перевод для строки $str
+     * @param string $str
+     * @param string $module
+     * @return string
+     */
+    public function _($str, $module = 'core2') {
+        return $this->translate->tr($str, $module);
+    }
+
+
 	/**
      * Активна ли учетка юзера
 	 * @param int $id
