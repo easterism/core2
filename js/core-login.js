@@ -223,8 +223,21 @@ CoreLogin.loaderHide = function () {
 
 
 $(function () {
-    if ($("#UserTEL")[0]) {
-        $("#UserTEL").mask("+375(99) 999-99-99");
+
+    // Добавление маски для полей с телефоном
+    if ($("input[type=phone]")[0] && typeof window.Cleave === 'function') {
+
+        $("input[type=phone]").each(function (key, input) {
+            $(input).on('keyup', function () {
+                if ($(this).val() !== '' && $(this).val().substr(0, 1) !== '+') {
+                    $(this).val('+' + $(this).val());
+                }
+            });
+            new Cleave(input, {
+                phone: true,
+                phoneRegionCode: 'RU'
+            });
+        });
     }
 });
 

@@ -247,13 +247,22 @@ class Login extends Db {
             }
         }
 
+        $isset_phone = false;
+
         if ($this->core_config->registration->fields) {
             $fields = $this->core_config->registration->fields->toArray();
 
             if ( ! empty($fields)) {
                 foreach ($fields as $name => $field) {
+
+                    $type = ! empty($field['type']) ? htmlspecialchars($field['type']) : 'text';
+
+                    if ($type == 'phone') {
+                        $isset_phone = true;
+                    }
+
                     $tpl->field->assign('[NAME]',     $name);
-                    $tpl->field->assign('[TYPE]',     ! empty($field['type']) ? htmlspecialchars($field['type']) : 'text');
+                    $tpl->field->assign('[TYPE]',     $type);
                     $tpl->field->assign('[TITLE]',    ! empty($field['title']) ? htmlspecialchars($field['title']) : '');
                     $tpl->field->assign('[REQUIRED]', ! empty($field['required']) ? 'required' : '');
                     $tpl->field->reassign();
@@ -264,6 +273,15 @@ class Login extends Db {
 
         $html = $this->getIndex();
         $html = str_replace('<!--index -->', $tpl->render(), $html);
+
+
+        if ($isset_phone) {
+            $scripts = [
+                '<script src="core2/js/cleave.min.js"></script>',
+                '<script src="core2/js/cleave-phone.i18n.js"></script>',
+            ];
+            $html = str_replace('<!--system_js-->', implode('', $scripts), $html);
+        }
 
         return $html;
     }
@@ -1096,24 +1114,6 @@ class Login extends Db {
 
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');
         $tpl->assign('favicon.ico', isset($this->favicon['ico']) && is_file($this->favicon['ico']) ? $this->favicon['ico'] : '');
-
-
-        $system_js = "";
-        if ($this->config->mail &&
-            $this->config->mail->server &&
-            ($this->core_config->registration && $this->core_config->registration->on)
-        ) {
-            $scripts = [
-                'core2/js/jquery.maskedinput.min.js',
-            ];
-            foreach ($scripts as $src) {
-                if (file_exists($src)) {
-                    $system_js .= "<script src=\"{$src}\"></script>";
-                }
-            }
-        }
-        $tpl->assign("<!--system_js-->", $system_js);
-
 
         return $tpl->render();
     }
