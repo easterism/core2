@@ -313,11 +313,11 @@ class listTable extends initList {
                                         $questions[] = $search_value[0];
                                     }
                                     if (!$search_value[0] && $search_value[1]) {
-                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') < ?";
+                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') <= ?";
                                         $questions[] = $search_value[1];
                                     }
                                     if ($search_value[0] && $search_value[1]) {
-                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') >= ? AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') < ?";
+                                        $search .= " AND DATE_FORMAT({$next['field']}, '%Y-%m-%d') BETWEEN ? AND ?";
                                         $questions[] = $search_value[0];
                                         $questions[] = $search_value[1];
                                     }
