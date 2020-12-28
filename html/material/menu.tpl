@@ -89,7 +89,7 @@
                         <li class="dropdown-profile profile">
                             <a href="index.php#module=profile"
                                onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');">
-                                <i class="fa fa-user fa-fw"></i> Профиль
+                                <i class="fa fa-user fa-fw"></i> _tr(Профиль)
                             </a>
                         </li>
 
@@ -97,7 +97,7 @@
                         <li>
                             <a href="javascript:void(0);" onclick="logout()">
                                 <i class="fa fa-power-off fa-fw"></i>
-                                Выход
+                                _tr(Выход)
                             </a>
                         </li>
                     </ul>
