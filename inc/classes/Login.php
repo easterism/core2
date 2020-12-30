@@ -420,8 +420,9 @@ class Login extends Db {
      */
     private function login($login, $password) {
 
+        $blockNamespace = new SessionContainer('Block');
+
         try {
-            $blockNamespace = new SessionContainer('Block');
 
             if ( ! empty($blockNamespace->blocked)) {
                 throw new \Exception($this->translate->tr("Ваш доступ временно заблокирован!"));
@@ -975,7 +976,7 @@ class Login extends Db {
      */
     private final function getAuthRoot() {
 
-        require_once '../CoreController.php';
+        require_once __DIR__ . '/../CoreController.php';
 
         $auth            = [];
         $auth['u_pass']  = \CoreController::RP;
