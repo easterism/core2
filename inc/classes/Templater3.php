@@ -144,6 +144,28 @@ class Templater3 {
 
 
     /**
+     * Isset html block
+     * @param  string $block
+     * @return bool
+     */
+    public function issetBlock($block) {
+
+        $begin_pos = strpos($this->html, "<!-- BEGIN {$block} -->");
+
+        if ($begin_pos === false) {
+            return false;
+        }
+
+        $begin_pos += strlen("<!-- BEGIN {$block} -->");
+        $end_pos    = strrpos($this->html, "<!-- END {$block} -->");
+
+        return $begin_pos !== false &&
+               $end_pos !== false &&
+               $end_pos >= $begin_pos;
+    }
+
+
+    /**
      * The final render
      * @return string
      */
