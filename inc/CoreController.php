@@ -355,6 +355,29 @@ class CoreController extends Common implements File {
         }
 
 
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    // Войти под пользователем
+                    case 'login_user':
+                        $user = new User();
+                        $user->loginUser($_POST['user_id']);
+
+                        return json_encode([
+                            'status' => 'success',
+                        ]);
+                        break;
+                }
+
+            } catch (Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+
 		$user = new User();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
