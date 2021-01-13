@@ -13,9 +13,6 @@
 [submodule "mod/cron/v3.0.2"]
 	path = mod/cron/v3.0.2
 	url = git@git.rdo.belhard.com:core2/modules/cron.git
-[submodule "mod/webservice/v2.1.0"]
-	path = mod/webservice/v2.1.0
-	url = git@git.rdo.belhard.com:core2/modules/webservice.git
 [submodule "mod/metrics/v1.0.0"]
 	path = mod/metrics/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/metrics.git
