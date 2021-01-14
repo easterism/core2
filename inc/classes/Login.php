@@ -29,102 +29,107 @@ class Login extends Db {
      */
     public function dispatch() {
 
-        if (isset($_GET['core']) && $this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration &&
-                $this->core_config->registration->on &&
-                $this->core_config->registration->role_id
-            ) {
+        if (isset($_GET['core'])) {
+            if ($this->config->mail && $this->config->mail->server) {
+                if ($this->core_config->registration &&
+                    $this->core_config->registration->on &&
+                    $this->core_config->registration->role_id
+                ) {
 
-                if ($_GET['core'] == 'registration') {
-                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                        return $this->getPageRegistration();
+                    if ($_GET['core'] == 'registration') {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            return $this->getPageRegistration();
 
-                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                        return $this->registration($_POST);
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            return $this->registration($_POST);
 
-                    } else {
-                        http_response_code(404);
-                        return '';
+                        } else {
+                            http_response_code(404);
+
+                            return '';
+                        }
+                    }
+
+                    if ($_GET['core'] == 'registration_complete') {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            if (empty($_GET['key'])) {
+                                http_response_code(404);
+                                return '';
+                            }
+
+                            return $this->getPageRegistrationComplete($_GET['key']);
+
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            if (empty($_POST['key'])) {
+                                http_response_code(404);
+                                return '';
+                            }
+                            if (empty($_POST['password'])) {
+                                return json_encode([
+                                    'status'        => 'error',
+                                    'error_message' => $this->_('Заполните пароль')
+                                ]);
+                            }
+
+                            return $this->registrationComplete($_POST['key'], $_POST['password']);
+
+                        } else {
+                            http_response_code(404);
+                            return '';
+                        }
                     }
                 }
 
-                if ($_GET['core'] == 'registration_complete') {
-                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                        if (empty($_GET['key'])){
+                if ($this->core_config->restore && $this->core_config->restore->on) {
+                    if ($_GET['core'] == 'restore') {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            return $this->getPageRestore();
+
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            if (empty($_POST['email'])) {
+                                return json_encode([
+                                    'status'        => 'error',
+                                    'error_message' => $this->_('Заполните email')
+                                ]);
+                            }
+
+                            return $this->restore($_POST["email"]);
+
+                        } else {
                             http_response_code(404);
                             return '';
                         }
-                        return $this->getPageRegistrationComplete($_GET['key']);
+                    }
 
-                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                        if (empty($_POST['key'])){
-                            http_response_code(404);
-                            return '';
+
+                    if ($_GET['core'] == 'restore_complete') {
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            if (empty($_GET['key'])) {
+                                http_response_code(404);
+                                return '';
+                            }
+
+                            return $this->getPageRestoreComplete($_GET['key']);
+
+                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            if (empty($_POST['key'])) {
+                                http_response_code(404);
+                                return '';
+                            }
+
+                            if (empty($_POST['password'])) {
+                                return json_encode([
+                                    'status'        => 'error',
+                                    'error_message' => $this->_('Заполните пароль')
+                                ]);
+                            }
+
+                            return $this->restoreComplete($_POST['key'], $_POST['password']);
                         }
-                        if (empty($_POST['password'])) {
-                            return json_encode([
-                                'status'  => 'error',
-                                'error_message' => $this->_('Заполните пароль')
-                            ]);
-                        }
-
-                        return $this->registrationComplete($_POST['key'], $_POST['password']);
-
-                    } else {
-                        http_response_code(404);
-                        return '';
                     }
                 }
             }
 
-            if ($this->core_config->restore && $this->core_config->restore->on) {
-                if ($_GET['core'] == 'restore') {
-                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                        return $this->getPageRestore();
-
-                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                        if (empty($_POST['email'])) {
-                            return json_encode([
-                                'status'  => 'error',
-                                'error_message' => $this->_('Заполните email')
-                            ]);
-                        }
-
-                        return $this->restore($_POST["email"]);
-
-                    } else {
-                        http_response_code(404);
-                        return '';
-                    }
-                }
-
-
-                if ($_GET['core'] == 'restore_complete') {
-                    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                        if (empty($_GET['key'])) {
-                            http_response_code(404);
-                            return '';
-                        }
-
-                        return $this->getPageRestoreComplete($_GET['key']);
-
-                    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                        if (empty($_POST['key'])) {
-                            http_response_code(404);
-                            return '';
-                        }
-
-                        if (empty($_POST['password'])) {
-                            return json_encode([
-                                'status'        => 'error',
-                                'error_message' => $this->_('Заполните пароль')
-                            ]);
-                        }
-
-                        return $this->restoreComplete($_POST['key'], $_POST['password']);
-                    }
-                }
-            }
 
             if ($_GET['core'] == 'login') {
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
