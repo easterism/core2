@@ -8,6 +8,8 @@
 
 namespace Core2;
 
+use Zend\Session\Container as SessionContainer;
+
 
 /**
  * Class User
@@ -95,6 +97,7 @@ class User extends \Common {
                    CASE u.`is_pass_changed` WHEN 'N' THEN 'Да' END AS is_pass_changed,
                    CASE u.`is_email_wrong` WHEN 'Y' THEN 'Да' END AS is_email_wrong,
                    CASE u.`is_admin_sw` WHEN 'Y' THEN 'Да' END AS is_admin_sw,
+                   null AS login_btn,
                    u.visible
             FROM core_users AS u
                  LEFT JOIN core_users_profile AS up ON up.user_id = u.u_id
@@ -112,9 +115,10 @@ class User extends \Common {
         $list->addColumn($this->_("Нужно сменить пароль"),  "120", "TEXT");
         $list->addColumn($this->_("Неверный email"),        "125", "TEXT");
         $list->addColumn($this->_("Админ"),                 "1",   "TEXT");
+        $list->addColumn("",                                "1",   "BLOCK");
         $list->addColumn("",                                "1",   "STATUS_INLINE", "core_users.visible");
 
-        $list->paintCondition = "'TCOL_10' == 'N'";
+        $list->paintCondition = "'TCOL_11' == 'N'";
         $list->paintColor     = "fafafa";
         $list->fontColor      = "silver";
 
@@ -122,8 +126,14 @@ class User extends \Common {
         $list->editURL   = $this->app . "&edit=TCOL_00";
         $list->deleteKey = "core_users.u_id";
 
+        $list->getData();
+        foreach ($list->data as $key => $row) {
+            $list->data[$key][10] = "<button class=\"button btn btn-sm btn-default\" type=\"button\" onclick=\"AdminUsers.loginUser('{$row[0]}')\">Войти</button>";
+        }
 
         ob_start();
+        $this->printCssModule('admin', '/css/admin.users.css');
+        $this->printJsModule('admin', '/js/admin.users.js');
         $list->showTable();
         return ob_get_clean();
     }
@@ -165,7 +175,8 @@ class User extends \Common {
 
         $core_config            = \Zend_Registry::getInstance()->get('core_config');
         $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
-        $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
+        $is_auth_pass_on        = true;
+        if ($core_config->auth) $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
 
 
         if ($this->auth->LDAP) {
@@ -272,6 +283,72 @@ class User extends \Common {
         } else {
             return $this->table();
         }
+    }
+
+
+    /**
+     * @param $user_id
+     * @return bool
+     * @throws \Exception
+     */
+    public function loginUser($user_id) {
+
+        $user = $this->db->fetchRow("
+            SELECT u.u_id,
+                   u.u_login,
+                   u.email,
+                   u.role_id,
+                   u.is_admin_sw,
+                   u.visible,
+                   up.firstname,
+                   up.lastname,
+                   up.middlename,
+                   r.name AS role
+            FROM core_users AS u
+                LEFT JOIN core_users_profile AS up ON u.u_id = up.user_id 
+                LEFT JOIN core_roles AS r ON r.id = u.role_id  
+            WHERE u.u_id = ?
+        ", $user_id);
+
+        if (empty($user)) {
+            throw new \Exception($this->_('Указанный пользователь не найден'));
+        }
+
+        if ($user['visible'] == 'N') {
+            throw new \Exception($this->_('Указанный пользователь не активен'));
+        }
+
+        $authNamespace = new SessionContainer('Auth');
+        $authNamespace->accept_answer = true;
+
+        $session_life = $this->db->fetchOne("
+            SELECT value 
+            FROM core_settings 
+            WHERE visible = 'Y' 
+              AND code = 'session_lifetime' 
+            LIMIT 1
+        ");
+
+        if ($session_life) {
+            $authNamespace->setExpirationSeconds($session_life, "accept_answer");
+        }
+
+        if (session_id() == 'deleted') {
+            throw new \Exception($this->_("Ошибка сохранения сессии. Проверьте настройки системного времени."));
+        }
+
+        $authNamespace->ID     = (int)$user['u_id'];
+        $authNamespace->NAME   = $user['u_login'];
+        $authNamespace->EMAIL  = $user['email'];
+        $authNamespace->LN     = $user['lastname'];
+        $authNamespace->FN     = $user['firstname'];
+        $authNamespace->MN     = $user['middlename'];
+        $authNamespace->ADMIN  = $user['is_admin_sw'] == 'Y';
+        $authNamespace->ROLE   = $user['role'] ? $user['role'] : -1;
+        $authNamespace->ROLEID = $user['role_id'] ? $user['role_id'] : 0;
+        $authNamespace->LDAP   = false;
+
+        return true;
     }
 
 

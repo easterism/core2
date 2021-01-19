@@ -31,7 +31,7 @@ var control_datepicker_range = {
                     date2 = '';
                     $input_to.val('')
                 }
-                var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date < date2))
+                var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date <= date2))
                     ? 'ctrl-dpr-highlight'
                     : '';
                 var classes2 = control_datepicker_range.callbackDayClass(date);
@@ -50,7 +50,7 @@ var control_datepicker_range = {
                     $input_to.val("");
 
                 } else if( selectedDate < date1 ) {
-                    date1.setDate(date1.getDate() + 1);
+                    date1.setDate(date1.getDate());
                     var new_year  = date1.getFullYear();
                     var new_month = ('0' + (date1.getMonth() + 1)).slice(-2);
                     var new_day   = ('0' + (date1.getDate())).slice(-2);
@@ -62,7 +62,7 @@ var control_datepicker_range = {
                     control_datepicker_range.callbackChange(dateText, to_date_text, wrapper);
 
                 } else {
-                    selectedDate.setDate(selectedDate.getDate() + 1);
+                    selectedDate.setDate(selectedDate.getDate());
                     var new_year  = selectedDate.getFullYear();
                     var new_month = ('0' + (selectedDate.getMonth() + 1)).slice(-2);
                     var new_day   = ('0' + (selectedDate.getDate())).slice(-2);
@@ -92,7 +92,7 @@ var control_datepicker_range = {
         $ctrl.datepicker( "option", "beforeShowDay", function(date) {
             var date1 = $.datepicker.parseDate(dateFormat, $input_from.val());
             var date2 = $.datepicker.parseDate(dateFormat, $input_to.val());
-            var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date < date2))
+            var classes = date1 && ((date.getTime() == date1.getTime()) || (date2 && date >= date1 && date <= date2))
                 ? ' ctrl-dpr-highlight '
                 : '';
             var classes2 = control_datepicker_range.callbackDayClass(date);
@@ -156,7 +156,7 @@ var control_datepicker_range = {
 
         if (date_to) {
             var date_to_class = new Date(date_to);
-            var new_date_to = date_to_class.setDate(date_to_class.getDate() + 1);
+            var new_date_to = date_to_class.setDate(date_to_class.getDate());
             date_to = $.datepicker.formatDate("yy-mm-dd", new Date(new_date_to));
         }
 
@@ -180,7 +180,7 @@ var control_datepicker_range = {
 
         if (split_to[0]) {
             var date_to_class = new Date(split_to[0]);
-            var new_date_to = date_to_class.setDate(date_to_class.getDate() - 1);
+            var new_date_to = date_to_class.setDate(date_to_class.getDate());
             split_to[0] = $.datepicker.formatDate("yy-mm-dd", new Date(new_date_to));
         }
 

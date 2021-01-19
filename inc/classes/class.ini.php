@@ -93,22 +93,27 @@ class initEdit extends \Core2\Acl {
 	public $MCEConf	      = array('theme' => "modern");
 	public $back		  = "";
 	public $firstColWidth = "";
-	public $classText	  = array(
-        'SAVE'               => 'Сохранить',
-        'MODAL_BUTTON'       => 'Выбрать',
-        'MODAL_BUTTON_CLEAR' => 'Очистить',
-        'noReadAccess'       => 'Нет доступа для чтения этой записи'
-    );
+	public $classText	  = [];
+
 
     /**
      * initEdit constructor.
      */
 	public function __construct() {
 		parent::__construct();
+
         $mask_date = $this->getSetting('mask_date');
         if ($mask_date) {
             $this->date_mask = $mask_date;
         }
+
+
+        $this->classText = [
+            'SAVE'               => parent::__get('translate')->tr('Сохранить'),
+            'MODAL_BUTTON'       => parent::__get('translate')->tr('Выбрать'),
+            'MODAL_BUTTON_CLEAR' => parent::__get('translate')->tr('Очистить'),
+            'noReadAccess'       => parent::__get('translate')->tr('Нет доступа для чтения этой записи'),
+        ];
 	}
 }
 

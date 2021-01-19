@@ -75,7 +75,8 @@ class Users extends Zend_Db_Table_Abstract {
 	 * @return mixed
 	 */
 	public function getUserByLogin($login) {
-        $res   = $this->_db->fetchRow("
+
+        $res = $this->_db->fetchRow("
             SELECT `u_id`, 
                    `u_pass`, 
                    u.email, 

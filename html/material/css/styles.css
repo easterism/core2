@@ -64,8 +64,7 @@ pre span {
 select,
 textarea {
     display: inline-block;
-    height: 34px;
-    padding: 4px 12px;
+    padding: 3px 8px;
     font-size: 14px;
     line-height: 1.42857143;
     color: #555;
@@ -432,6 +431,9 @@ tr.servicePanel .recordNum {
 	float: left;
     padding: 5px 0;
 }
+tr.servicePanel .recordNum .service-panel-content {
+	margin-left: 20px;
+}
 
 /*
 LIST class search container
@@ -606,7 +608,6 @@ table.editTable > tbody > tr > td {
 	background-color:transparent;
 	border:0;
 	vertical-align:top;
-	padding:3px;
 }
 table.editTable td > table > tbody > tr > td {
     padding: 0;
@@ -756,7 +757,6 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 }
 .colorpicker-component .input-group-addon {
     width: 40px;
-    height: 34px;
     line-height: 20px;
 }
 .combobox-control > input.form-control {

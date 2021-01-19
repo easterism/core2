@@ -1,6 +1,6 @@
 <?
 require_once("class.ini.php");
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 
 $counter = 0;
 
@@ -62,7 +62,7 @@ class editTable extends initEdit {
      * @return cell|Zend_Db_Adapter_Abstract
      */
 	public function __get($data) {
-        if ($data === 'db' || $data === 'cache') {
+        if ($data === 'db' || $data === 'cache' || $data === 'translate') {
             return parent::__get($data);
         }
 		$this->$data = new cell($this->main_table_id);
@@ -215,7 +215,7 @@ class editTable extends initEdit {
 		if (!$this->isSaved) {
 			$this->save('save.php');
 		}
-		$authNamespace = Zend_Registry::get('auth');
+		$authNamespace = new SessionContainer('Auth');
 		if (is_array($this->SQL)) {
 			$arr = $this->SQL;
 			$current = current($arr);
@@ -290,24 +290,17 @@ class editTable extends initEdit {
 			$this->readOnly = true;
 		}
 		elseif ($refid) {
-            if ($this->table) {
-                if ($access_edit == 'owner' || $access_read == 'owner') {
-                    $res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
-
-                    if ($access_read == 'owner') {
-                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
-                            $this->noAccess();
-                            return;
-                        }
-                    }
-
-                    if ($access_edit == 'owner') {
-                        if ( ! isset($res['author']) || $authNamespace->NAME !== $res['author']) {
-                            $this->readOnly = true;
-                        }
-                    }
-                }
-            }
+			if ($this->table) {
+				if ($access_edit == 'owner' || $access_read == 'owner') {
+					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
+					if (!isset($res['author'])) {
+						$this->noAccess();
+						return;
+					} elseif ($authNamespace->NAME !== $res['author']) {
+						$this->readOnly = true;
+					}
+				}
+			}
 		}
 
 		if (!$this->readOnly) { //форма доступна для редактирования
@@ -316,7 +309,7 @@ class editTable extends initEdit {
 
 			$onsubmit = "edit.onsubmit(this);";
 			if ($this->saveConfirm) {
-				$onsubmit .= "if(!confirm('{$this->saveConfirm}')){return false;};";
+				$onsubmit .= "if(!confirm('{$this->saveConfirm}')){return false};";
 			}
 
 			if (count($this->beforeSaveArr)) {
@@ -574,17 +567,13 @@ class editTable extends initEdit {
                             }
                         }
 						elseif ($value['type'] == 'switch') {
-                            $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
-                            $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
-
-                            $value['default'] = $value['default'] === $value_y ? $value_y : $value_n;
-
                             if ($this->readOnly) {
-                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == $value_y ? 'да' : 'нет';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
 
                             } else {
-                                $color = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
+                                $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
+                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
@@ -797,16 +786,17 @@ class editTable extends initEdit {
 							} else {
 								if ($value['default']) {
 									$disabled     = ' disabled="disabled" ';
-									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="изменить"/>';
+									$change       = '<input class="buttonSmall" type="button" onclick="edit.changePass(\'' . $fieldId . '\')" value="' . $this->translate->tr('изменить') . '"/>';
                                     $change_class = '';
 								} else {
 									$disabled     = '';
 									$change       = '';
 									$change_class = 'no-change';
 								}
+
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"password-control {$change_class}\">";
 								$controlGroups[$cellId]['html'][$key] .= "<input $disabled class=\"input pass-1\" id=\"" . $fieldId . "\" type=\"password\" name=\"control[$field]\" " . $attrs . " value=\"{$value['default']}\"/>";
-								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">повторите</span> ";
+								$controlGroups[$cellId]['html'][$key] .= " <span class=\"password-repeat\">" . $this->translate->tr('повторите') . "</span> ";
 								$controlGroups[$cellId]['html'][$key] .= "<div class=\"pass-2-container\"><input $disabled class=\"input pass-2\" id=\"" . $fieldId . "2\" type=\"password\" name=\"control[$field%re]\" />{$change}</div>";
 								$controlGroups[$cellId]['html'][$key] .= "</div>";
 							}

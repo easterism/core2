@@ -1,15 +1,11 @@
-<div class="form-container">
+<div class="form-container form-main">
 	<!-- BEGIN logo --><img src="{logo}" alt=""/><!-- END logo --><br/><br/>
-	<!-- BEGIN error --><b><span class="text-danger">[ERROR_MSG]</span></b><br/><br/><!-- END error -->
-	<form method="POST" action="" id="loginForm">
-		<noscript>
-			<input name="js_disabled" type="hidden" value="1"/>
-		</noscript>
-		<input name="action" type="hidden" />
+	<b><span class="text-danger"></span></b><br/><br/>
+	<form method="POST" onsubmit="CoreLogin.login(this); return false" id="loginForm">
 		<table>
 			<tr>
 				<td align="right">_tr("Логин или email:")</td>
-				<td align="left"><input id="login" name="login" type="text" value="[ERROR_LOGIN]"/></td>
+				<td align="left"><input id="login" name="login" type="text" value=""/></td>
 			</tr>
 			<tr>
 				<td align="right">_tr("Пароль:")</td>
@@ -17,7 +13,7 @@
 			</tr>
 			<tr>
 				<td></td>
-				<td align="left"><button class="button" type="submit" id="enter">_tr("Войти")</button></td>
+				<td align="left"><button class="button has-spinner" type="submit" id="enter">_tr(Войти)</button></td>
 			</tr>
 		</table>
 	</form>
@@ -25,10 +21,10 @@
 	<br><br>
 	<div>
 		<!-- BEGIN registration -->
-		<a href="index.php?core=registration" class="text-muted pull-left">_tr("Регистрация")</a>
+		<a href="index.php?core=registration" class="text-muted pull-left">_tr(Регистрация)</a>
 		<!-- END registration -->
 		<!-- BEGIN restore -->
-		<a href="index.php?core=restore" class="text-muted pull-right">_tr("Забыли пароль")</a>
+		<a href="index.php?core=restore" class="text-muted pull-right">_tr(Забыли пароль)</a>
 		<!-- END restore -->
 		<div class="clearfix"></div>
 	</div>

@@ -15,11 +15,12 @@ require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/Roles.php";
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 use Core2\User as User;
 use Core2\Settings as Settings;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
+use Core2\Enum as Enum;
 use Core2\InstallModule as Install;
 
 
@@ -146,270 +147,6 @@ class CoreController extends Common implements File {
 
 
 	/**
-     * Используется при входе в систему
-	 * @param $errorNamespace
-	 * @param $blockNamespace
-	 * @param $error
-     * @return void
-	 */
-	private function setError ($errorNamespace, $blockNamespace, $error) {
-
-		$errorNamespace->ERROR = $error;
-		$this->processError($errorNamespace, $blockNamespace);
-        header("HTTP/1.1 400 Bad Request");
-        header("Location: index.php");
-		die;
-	}
-
-
-	/**
-     * Используется при входе в систему
-	 * @param $errorNamespace
-	 * @param $blockNamespace
-	 */
-	private function processError ($errorNamespace, $blockNamespace) {
-
-		if (!empty($errorNamespace->ERROR)) {
-			if (isset($errorNamespace->numberOfPageRequests)) {
-        		$errorNamespace->numberOfPageRequests++;
-    		} else {
-		        $errorNamespace->numberOfPageRequests = 1;
-		    }
-		    if ($errorNamespace->numberOfPageRequests > 5) {
-		    	
-		    	$blockNamespace->blocked = time();
-		    	$blockNamespace->setExpirationSeconds(60);
-		    	
-		    	$errorNamespace->numberOfPageRequests = 1;
-		    }
-		}
-	}
-
-
-    /**
-	 * Авторизация пользователя через форму
-	 *
-     * @return bool
-     */
-    public function action_login ($post) {
-
-		$errorNamespace = new SessionContainer('Error');
-		$blockNamespace = new SessionContainer('Block');
-		if (!empty($post['js_disabled'])) {
-			$errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Javascript выключен или ваш браузер его не поддерживает!"), 400));
-            return false;
-		}
-		if (!empty($blockNamespace->blocked)) {
-			$errorNamespace->ERROR = $this->translate->tr("Ваш доступ временно заблокирован!");
-		}
-		else {
-            $authNamespace = new SessionContainer('Auth');
-            if (empty($this->auth->TOKEN) || $this->auth->TOKEN !== $post['action'] || $this->auth->TOKEN !== md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT'])) {
-                $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка авторизации!")));
-                return false;
-            }
-			try {
-			    $db = $this->getConnection($this->config->database);
-			} catch (Exception $e) {
-				$errorNamespace->ERROR = $this->catchLoginException($e);
-                return false;
-			}
-			$authLDAP = false;
-            $login = trim($post['login']);
-            $passw = $post['password'];
-
-            if (empty($this->config->ldap->active) && (!ctype_print($passw) || strlen($passw) < 30)) {
-                $errorNamespace->ERROR = $this->catchLoginException(new Exception($this->translate->tr("Ошибка пароля!")));
-                return false;
-            }
-			if ($login !== 'root') {
-				//ldap
-				if (!empty($this->config->ldap->active) && $this->config->ldap->active) {
-					require_once 'core2/inc/classes/LdapAuth.php';
-                    $ldapAuth = new LdapAuth();
-                    $ldapAuth->auth($login, $passw);
-                    $ldapStatus = $ldapAuth->getStatus();
-					switch ($ldapStatus) {
-						case LdapAuth::ST_LDAP_AUTH_SUCCESS :
-                            $authLDAP = true;
-                            $userData = $ldapAuth->getUserData();
-                            $login    = $userData['login'];
-							if (isset($userData['root']) && $userData['root'] === true) {
-                                $res = $this->setRoot();
-								break;
-							}
-
-                            $u_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login))->u_id;
-							if (!$u_id) {
-								//create new user
-								$dataForSave = array(					
-									'visible' 		=> 'Y',
-									'is_admin_sw' 	=> $userData['admin'] ? 'Y' : 'N',
-									'u_login' 		=> $login,
-									'date_added'	=> new Zend_Db_Expr('NOW()'),
-								);
-								$db->insert('core_users', $dataForSave);
-							} elseif ($userData['admin']) {
-								$db->update('core_users', array('is_admin_sw' => 'Y'), $db->quoteInto('u_id=?', $u_id));
-							}
-						break;
-						
-						case LdapAuth::ST_LDAP_USER_NOT_FOUND :							
-//							$this->setError($errorNamespace, $blockNamespace, "Пользователь не найден");
-							//удаляем пользователя если его нету в AD и с префиксом LDAP_%
-							//$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
-                            $passw = md5($passw);
-						break;
-						
-						case LdapAuth::ST_LDAP_INVALID_PASSWORD :
-							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Неверный пароль или пользователь отключён"));
-						break;
-						
-						case LdapAuth::ST_ERROR :
-							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Ошибка LDAP: ") . $ldapAuth->getMessage());
-						break;
-						
-						default:
-							$this->setError($errorNamespace, $blockNamespace, $this->translate->tr("Неизвестная ошибка авторизации по LDAP"));
-						break;
-					}
-				}
-
-				if (empty($res)) {
-					$res   = $this->dataUsers->getUserByLogin($login);
-				}
-			}
-			else {
-				$res = $this->setRoot();
-			}
-			if ($res) {
-
-				if ($authLDAP) {
-					$res['LDAP'] = true;
-				} else {
-					$res['LDAP'] = false;
-				}
-
-				$md5_pass = Tool::pass_salt($passw);
-
-				if ($res['LDAP']) {
-					$res['u_pass'] = $md5_pass;
-				}
-
-				if ($res['u_pass'] !== $md5_pass) {
-					$errorNamespace->ERROR = $this->translate->tr("Неверный пароль");
-					$errorNamespace->TMPLOGIN = $res['u_login'];
-					
-					//$errorNamespace->setExpirationHops(1, 'ERROR');
-				} else {
-
-
-					$authNamespace->accept_answer 		= true;
-					$sLife = $db->fetchOne("SELECT value FROM core_settings WHERE visible='Y' AND code='session_lifetime' LIMIT 1");
-					if ($sLife) {
-						$authNamespace->setExpirationSeconds($sLife, "accept_answer");
-					}
-					if (session_id() == 'deleted') {
-						$errorNamespace->ERROR = $this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени.");
-						$errorNamespace->TMPLOGIN = $res['u_login'];
-					}
-					$authNamespace->ID 		= (int) $res['u_id'];
-					$authNamespace->NAME 	= $res['u_login'];
-					$authNamespace->EMAIL 	= $res['email'];
-					if ($res['u_login'] == 'root') {
-						$authNamespace->ADMIN   = true;
-                        $authNamespace->ROLEID 	= 0;
-					} else {
-						$authNamespace->LN 		= $res['lastname'];
-						$authNamespace->FN 		= $res['firstname'];
-						$authNamespace->MN 		= $res['middlename'];
-						$authNamespace->ADMIN 	= $res['is_admin_sw'] == 'Y';
-						$authNamespace->ROLE 	= $res['role'] ? $res['role'] : -1;
-						$authNamespace->ROLEID 	= $res['role_id'] ? $res['role_id'] : 0;
-                        $authNamespace->LIVEID  = $this->storeSession($authNamespace);
-					}
-					$authNamespace->LDAP = $res['LDAP'];
-                    if (!($authNamespace->init)) { //регенерация сессии для предотвращения угона
-                        $authNamespace->getManager()->regenerateId();
-                        $authNamespace->init = true;
-                    }
-				}
-			} else {
-				$errorNamespace->ERROR = $this->translate->tr("Нет такого пользователя");
-				//$errorNamespace->setExpirationHops(1, 'ERROR');
-			}			
-			$this->processError($errorNamespace, $blockNamespace);
-		}
-		return true;
-	}
-
-
-    /**
-     * Сохранение информации о входе пользователя
-     * @param SessionContainer $auth
-     * @return mixed
-     */
-    private function storeSession(SessionContainer $auth) {
-        if ($auth && $auth->ID && $auth->ID > 0) {
-            $sid = $auth->getManager()->getId();
-            $sess = $this->dataSession;
-            $row = $sess->fetchRow($sess->select()->where("logout_time IS NULL AND user_id=?", $auth->ID)
-                                                ->where("sid=?", $sid)
-                                                ->where("ip=?", $_SERVER['REMOTE_ADDR'])
-                                                ->limit(1));
-            if (!$row) {
-                $row = $sess->createRow();
-                $row->sid = $sid;
-                $row->login_time = new Zend_Db_Expr('NOW()');
-                $row->user_id = $auth->ID;
-                $row->ip = $_SERVER['REMOTE_ADDR'];
-                $row->save();
-            }
-            if (!$row->id) throw new Exception($this->translate->tr("Не удалось сохранить данные сессии"));
-            return $row->id;
-        }
-    }
-
-    /**
-     * Обработка исключений входа в систему
-     * @param $exception
-     * @return mixed
-     */
-    private function catchLoginException($exception)
-    {
-        $message = $exception->getMessage();
-        $code = $exception->getCode();
-        if ($code == 400) {
-            header("HTTP/1.1 400 Bad Request");
-        } else {
-            header("HTTP/1.1 503 Service Unavailable");
-        }
-        if ($code == 1044) {
-            return $this->translate->tr('Нет доступа к базе данных.');
-        } elseif ($code == 2002) {
-            return $this->translate->tr('Не верный адрес базы данных.');
-        } elseif ($code == 1049) {
-            return $this->translate->tr('Нет соединения с базой данных.');
-        } else {
-            return $message;
-        }
-    }
-
-    /**
-     * установка данных дя пользователя root
-     * @return array
-     */
-    private final function setRoot() {
-        $res            = array();
-        $res['u_pass']  = self::RP;
-        $res['u_id']    = -1;
-        $res['u_login'] = 'root';
-        $res['email']   = 'easter.by@gmail.com';
-        return $res;
-    }
-
-
-	/**
 	 * @throws Exception
      * @return void|string
 	 */
@@ -439,9 +176,9 @@ class CoreController extends Common implements File {
         }
 
         //список модулей из репозитория
-        if (!empty($_GET['getModsListFromRepo'])) {
+        if (isset($_GET['getModsListFromRepo'])) {
             $install = new Install();
-            $install->getHTMLModsListFromRepo($_GET['getModsListFromRepo']);
+            $install->getHTMLModsListFromRepo((int) $_GET['getModsListFromRepo']);
             return;
         }
         //скачивание архива модуля
@@ -457,6 +194,12 @@ class CoreController extends Common implements File {
         }
 
         $mods = new Modules();
+        if (!empty($_POST['install'])) {
+            $mods->install = ['install' => $_POST['install']];
+        }
+        if (!empty($_POST['install_from_repo'])) {
+            $mods->install = ['repo' => $_POST['repo'], 'install_from_repo' => $_POST['install_from_repo']];
+        }
         $mods->dispatch();
 	}
 
@@ -616,6 +359,29 @@ class CoreController extends Common implements File {
 
 	    if ( ! $this->auth->ADMIN) {
 		    throw new Exception(911);
+        }
+
+
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    // Войти под пользователем
+                    case 'login_user':
+                        $user = new User();
+                        $user->loginUser($_POST['user_id']);
+
+                        return json_encode([
+                            'status' => 'success',
+                        ]);
+                        break;
+                }
+
+            } catch (Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
         }
 
 
@@ -984,7 +750,7 @@ class CoreController extends Common implements File {
         $tab->addTab($this->translate->tr("База данных"), 		    $app, 100);
         $tab->addTab($this->translate->tr("Контроль целостности"),	$app, 150);
 
-        $tab->beginContainer("Аудит");
+        $tab->beginContainer($this->_("Аудит"));
 
         if ($tab->activeTab == 1) {
             $audit->database();

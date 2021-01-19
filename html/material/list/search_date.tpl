@@ -20,7 +20,7 @@
                autocomplete="off" placeholder="гггг" type="number"/>
 
         <span class="ctrl-dpr-clear middle">
-            <img src="core2/html/material/img/clear.png" alt="Очистить" title="Очистить">
+            <img src="core2/html/material/img/clear.png" alt="_tr(Очистить)" title="_tr(Очистить)">
         </span>
         <span class="ctrl-dpr-trigger last">
             <img src="core2/html/material/img/calendar.png" alt="..." title="...">

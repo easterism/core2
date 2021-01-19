@@ -2,7 +2,7 @@
 	<div class="lock-screen"></div>
 	<div class="block">
 		<div class="spinner-icon"></div>
-		<div class="">Загрузка...</div>
+		<div class="">_tr(Загрузка)...</div>
 	</div>
 </div>
 <table id="main" width="100%"><tbody><tr>
@@ -66,7 +66,7 @@
 								<a href="index.php#module=profile&action=messages"
 								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">
 									<i class="fa fa-envelope-o"></i>
-									Сообщения
+									_tr(Сообщения)
 								</a>
 							</li>
 							<li class="dropdown-profile divider"></li>
@@ -83,7 +83,7 @@
 							<li>
 								<a href="javascript:logout()">
 									<i class="fa fa-power-off"></i>
-									Выход
+									_tr(Выход)
 								</a>
 							</li>
 						</ul>

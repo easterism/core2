@@ -46,4 +46,12 @@ class Settings extends Zend_Db_Table_Abstract {
         return $this->fetchAll($sel);
     }
 
+    /**
+     * @return mixed
+     */
+    public function getCustom() {
+        $sel = $this->select()->where("visible = 'Y' AND is_custom_sw = 'Y'");
+        return $this->fetchAll($sel);
+    }
+
 }

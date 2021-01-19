@@ -13,11 +13,11 @@
     require_once($conf_file);
     require_once("Error.php");
 
-    use Zend\Cache\StorageFactory;
-    use Zend\Session\Config\SessionConfig;
-    use Zend\Session\SessionManager;
-    use Zend\Session\SaveHandler\Cache AS SessionHandlerCache;
-    use Zend\Session\Container as SessionContainer;
+    use Laminas\Cache\StorageFactory;
+    use Laminas\Session\Config\SessionConfig;
+    use Laminas\Session\SessionManager;
+    use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
+    use Laminas\Session\Container as SessionContainer;
 
     $conf_file = DOC_ROOT . "conf.ini";
 
@@ -81,7 +81,8 @@
             $config2->merge(new Zend_Config_Ini($conf_d, $section));
         }
         $config->merge($config2);
-    } catch (Zend_Config_Exception $e) {
+    }
+    catch (Zend_Config_Exception $e) {
         \Core2\Error::Exception($e->getMessage());
     }
 
@@ -186,7 +187,6 @@
         Zend_Registry::set('core_config', $core_config);
     }
 
-	require_once 'Zend_Session_Namespace.php'; //DEPRECATED
 	require_once 'Db.php';
 	require_once 'Common.php';
 	require_once 'Templater.php'; //DEPRECATED
@@ -351,6 +351,7 @@
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
+                require_once 'Zend_Session_Namespace.php'; //DEPRECATED
                 require_once 'core2/inc/classes/Acl.php';
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
@@ -620,9 +621,8 @@
             return $res;
         }
 
-
         /**
-         * Получение favicon системы из conf.ini
+         * get favicons from conf.ini
          * @return array
          */
         private function getSystemFavicon() {
@@ -644,7 +644,6 @@
                 'ico' => $favicon_ico,
             ];
         }
-
 
         /**
          * Проверка удаления с последующей переадресацией
@@ -747,11 +746,10 @@
 
             $tpl->assign('{system_name}', $this->getSystemName());
 
-            $favicon = $this->getSystemFavicon();
+            $favicons = $this->getSystemFavicon();
 
-            $tpl->assign('favicon.png', isset($favicon['png']) && is_file($favicon['png']) ? $favicon['png'] : '');
-            $tpl->assign('favicon.ico', isset($favicon['ico']) && is_file($favicon['ico']) ? $favicon['ico'] : '');
-
+            $tpl->assign('favicon.png', $favicons['png']);
+            $tpl->assign('favicon.ico', $favicons['ico']);
 
             $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
@@ -888,17 +886,18 @@
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
 
 
+            if (isset($this->config->system->js)) {
+                $system_js = "";
 
-
-            $system_js = "";
-            if (isset($this->config->system->js) && is_object($this->config->system->js)) {
-                foreach ($this->config->system->js as $src) {
-                    if (file_exists($src)) {
-                        $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                if (is_object($this->config->system->js)) {
+                    foreach ($this->config->system->js as $src) {
+                        if (file_exists($src)) {
+                            $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                        }
                     }
                 }
+                $tpl->assign("<!--system_js-->", $system_js);
             }
-            $tpl->assign("<!--system_js-->", $system_js);
 
 
             $system_css = "";
