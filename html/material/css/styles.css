@@ -431,6 +431,9 @@ tr.servicePanel .recordNum {
 	float: left;
     padding: 5px 0;
 }
+tr.servicePanel .recordNum .service-panel-content {
+	margin-left: 20px;
+}
 
 /*
 LIST class search container

@@ -403,6 +403,9 @@ tr.servicePanel .recordNum {
 	float: left;
     padding: 5px 0;
 }
+tr.servicePanel .recordNum .service-panel-content {
+	margin-left: 20px;
+}
 
 /*
 LIST class search container
@@ -451,10 +454,10 @@ LIST class search container
     padding-top: 8px;
 }
 .showFilterIcon {
-    cursor:pointer;
-    height: 16px;
-    float:left;
-    background-image: url(../list/img/view.png);
+	cursor:pointer;
+	height: 16px;
+	float:left;
+	background-image: url(../list/img/view.png);
     background-repeat: no-repeat;
     padding-left: 20px;
     font-weight: normal;
@@ -477,12 +480,12 @@ LIST class search container
     margin: 0 10px;
     float: left;
     font-weight: normal;
-    background-image: url(../list/img/application_view_columns.png);
+	background-image: url(../list/img/application_view_columns.png);
     background-repeat: no-repeat;
     padding-left: 20px;
 }
 .columnFilterIcon:hover {
-    text-decoration: underline;
+     text-decoration: underline;
 }
 .list-filter-container {
     margin-bottom: 15px;
@@ -676,16 +679,16 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
     -webkit-transition: .15s;
     transition: .15s;
 }
-.core-switch input.default:checked + .core-slider { background-color: #444;}
-.core-switch input.primary:checked + .core-slider { background-color: #2196F3;}
-.core-switch input.success:checked + .core-slider { background-color: #8bc34a;}
-.core-switch input.info:checked + .core-slider { background-color: #3de0f5;}
-.core-switch input.warning:checked + .core-slider { background-color: #FFC107;}
-.core-switch input.danger:checked + .core-slider { background-color: #f44336;}
-.core-switch input:focus + .core-slider {
+.core-switch.color-default input.core-switch-active:checked ~ .core-slider { background-color: #444;}
+.core-switch.color-primary input.core-switch-active:checked ~ .core-slider { background-color: #2196F3;}
+.core-switch.color-success input.core-switch-active:checked ~ .core-slider { background-color: #8bc34a;}
+.core-switch.color-info input.core-switch-active:checked ~ .core-slider { background-color: #3de0f5;}
+.core-switch.color-warning input.core-switch-active:checked ~ .core-slider { background-color: #FFC107;}
+.core-switch.color-danger input.core-switch-active:checked ~ .core-slider { background-color: #f44336;}
+.core-switch input:focus ~ .core-slider {
     box-shadow: 0 0 1px #2196F3;
 }
-.core-switch input:checked + .core-slider:before {
+.core-switch input.core-switch-active:checked ~ .core-slider:before {
     -webkit-transform: translateX(16px);
     -ms-transform: translateX(16px);
     transform: translateX(16px);

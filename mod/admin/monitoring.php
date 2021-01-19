@@ -134,7 +134,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 										FROM core_session 
 										WHERE user_id = ? 
 										ORDER BY login_time DESC LIMIT 1", $show);
-			echo '<div>Последний раз заходил <b>' . $res['login_time'] . '</b> с IP адреса <b>' . $res['ip'] . '</b></div>';
+			echo '<div>' . $this->_('Последний раз заходил') . ' <b>' . $res['login_time'] . '</b> ' . $this->_('с IP адреса') . ' <b>' . $res['ip'] . '</b></div>';
 			$list = new listTable($this->resId . 'xxx2'); 
 			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
 			$list->addSearch("IP", "ip", "TEXT");
@@ -325,14 +325,14 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		$list = new listTable($this->resId . 'archive');
 		$list->noCheckboxes = "yes";
 		$list->SQL = "SELECT 1";
-		$list->addColumn("Имя файла", "", "TEXT");
-		$list->addColumn("Дата создания архива", "", "DATETIME");
-		$list->addColumn("Загрузить", "90", "BLOCK");
+		$list->addColumn($this->_("Имя файла"), "", "TEXT");
+		$list->addColumn($this->_("Дата создания архива"), "", "DATETIME");
+		$list->addColumn($this->_("Загрузить"), "90", "BLOCK");
 		$data = $list->getData();
 
 		$dir = opendir($zipFolder);
 		if (!$dir) {
-			throw new Exception("Не могу прочитать директорию '$zipFolder'. Проверьте права доступа.");
+			throw new Exception(sprintf($this->_("Не могу прочитать директорию '%s'. Проверьте права доступа."), $zipFolder));
 		}
 		$dataForList = array();
 		$i = 0;

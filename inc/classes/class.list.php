@@ -48,6 +48,9 @@ class listTable extends initList {
     private $extraHeaders       = array();
     private $is_seq             = false;
     private $sessData           = array();
+    private $search_sql         = "";
+    private $scripts            = array();
+    private $service_content    = array();
 
 
     /**
@@ -152,6 +155,24 @@ class listTable extends initList {
             'field'     => $field,
             'out'         => $out
         );
+    }
+
+
+    /**
+     * @param $text
+     */
+    public function addServiceText($text) {
+
+        $this->service_content[$this->main_table_id][] = $text;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getSearchSql() {
+
+        return $this->search_sql;
     }
 
 
@@ -346,7 +367,7 @@ class listTable extends initList {
                                     } else {
                                         $search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
                                     }
-                                } elseif ($next['type'] == 'checkbox' || $next['type'] == 'checkbox2' || $next['type'] == 'multilist') {
+                                } elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                                     if (is_array($search_value)) {
                                         foreach ($search_value as $k => $val) {
                                             if (!$val) unset($search_value[$k]);
@@ -359,15 +380,13 @@ class listTable extends initList {
                                                 if (is_array($search_value) && ! empty($search_value)) {
                                                     $search_checkbox = array();
                                                     foreach ($search_value as $search_val) {
-                                                        $search_checkbox[] = str_replace("ADD_SEARCH", "?", $next['field']);
-                                                        $questions[]       = $search_val;
+                                                        $search_checkbox[] = str_replace("ADD_SEARCH", $this->db->quote($search_val), $next['field']);
                                                     }
 
                                                     $search .= " AND (" . implode(" OR ", $search_checkbox) . ")";
 
                                                 } else {
-                                                    $search .= " AND " . str_replace("ADD_SEARCH", "?", $next['field']);
-                                                    $questions[] = $search_value;
+                                                    $search .= " AND " . str_replace("ADD_SEARCH", $this->db->quote($search_value), $next['field']);
                                                 }
                                             }
                                         }
@@ -642,7 +661,7 @@ class listTable extends initList {
                 $tpl2->assign("{OUT}", $value['out']);
                 $tpl2->assign("{NAME}", "search[$this->main_table_id][$key]");
 
-                if ($value['type'] != 'checkbox' && $value['type'] != 'checkbox2' && $value['type'] != 'multilist') {
+                if ( ! in_array($value['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                     $tpl2->assign("{ID}", $searchFieldId);
                     $tpl2->assign("{ATTR}", $value['in']);
                     $value['value'] = '';
@@ -748,25 +767,41 @@ class listTable extends initList {
                     $tpl2->fillDropDown('{ID}', $options, $next);
                     $tpl->fields->assign('{FIELD_CONTROL}', $tpl2->render());
                 }
-                elseif ($value['type'] == 'multilist') {
-                    $tpl2->assign("{ATTR}", $value['in']);
+                elseif (in_array($value['type'], ['multilist', 'multilist2'])) {
+                    if ($value['type'] == 'multilist2') {
+                        $this->scripts['multilist2'] = true;
+                    }
 
-                    $temp = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
-                    foreach ($temp as $row) {
-                        $k = current($row);
-                        $v = end($row);
-                        $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
-                        $tpl2->opt->assign("{VALUE}", $k);
-                        $tpl2->opt->assign("{LABEL}", $v);
+                    $options_raw = $this->searchArrayArrange($this->sqlSearch[$sqlSearchCount]);
+                    $options     = [];
 
-                        if (is_array($next) && in_array($row[0], $next)) {
-                            $tpl2->opt->assign("{selected}", " selected=\"selected\"");
+                    foreach ($options_raw as $option_key => $option_value) {
+                        if (is_array($option_value)) {
+                            if (count($option_value) == 2) {
+                                $k = current($option_value);
+                                $v = end($option_value);
+                                if (is_array($v) && isset($v['id']) && isset($v['value'])) {
+                                    $k = $v['id'];
+                                    $v = $v['value'];
+                                }
+                                $options[$k] = $v;
+
+                            } elseif (count($option_value) == 3) {
+                                $k  = current($option_value);
+                                $v  = next($option_value);
+                                $gr = end($option_value);
+                                $options[$gr][$k] = $v;
+                            }
                         } else {
-                            $tpl2->opt->assign("{selected}", "");
+                            $options[$option_key] = $option_value;
                         }
-                        $tpl2->opt->reassign();
                     }
                     $sqlSearchCount++;
+
+                    $tpl2->assign("{ATTR}", $value['in']);
+                    $tpl2->assign("{ID}", $searchFieldId . "_" . $k);
+                    $tpl2->fillDropDown('{ID}', $options, $next);
+
                     // input нужен для того, чтобы обрабатывать пустые checkbox
                     // пустые чекбоксы не постятся вообще
                     $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
@@ -783,7 +818,17 @@ class listTable extends initList {
             }
             $serviceHeadHTML .=     $tpl->parse();
         }
-        
+
+
+
+        if ($this->scripts) {
+            if (isset($this->scripts['multilist2'])) {
+                Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
+                Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
+                Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
+                Tool::printJs("core2/html/" . THEME . "/js/select2.ru.min.js", true);
+            }
+        }
 
         
         // DATA HEADER первая строка таблицы
@@ -1110,8 +1155,9 @@ class listTable extends initList {
         //SERVICE ROW
         // Панель с кнопками
         // к-во записей
-        $tpl = new Templater2('core2/html/' . THEME . "/list/serviceHead.tpl");
+        $tpl = new Templater3('core2/html/' . THEME . "/list/serviceHead.tpl");
         $tpl->assign('[TOTAL_RECORD_COUNT]', ($this->roundRecordCount ? "~" : "") . $this->recordCount);
+
         $buttons = '';
         if (!empty($this->table_button[$this->main_table_id])) {
             reset($this->table_button[$this->main_table_id]);
@@ -1124,6 +1170,14 @@ class listTable extends initList {
             }
         }
         $tpl->assign('[BUTTONS]', $buttons);
+
+        if ( ! empty($this->service_content[$this->main_table_id])) {
+            foreach ($this->service_content[$this->main_table_id] as $content) {
+                $tpl->service_content->assign('[CONTENT]', $content);
+                $tpl->service_content->reassign();
+            }
+        }
+
         if ($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner') && ($this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
             //if ($this->multiEdit) $serviceHeadHTML .=     $this->button($this->classText['EDIT'], "", "multiEdit('$this->editURL', '$this->main_table_id')");
             if ($this->addURL) {
@@ -1135,6 +1189,7 @@ class listTable extends initList {
                 }
             }
         }
+
         if (($this->deleteURL || $this->deleteKey) && ($this->checkAcl($this->resource, 'delete_all') || $this->checkAcl($this->resource, 'delete_owner'))) {
             $tpl->delButton->assign('Удалить', $this->classText['DELETE']);
             if ($this->deleteURL) {
@@ -1143,7 +1198,8 @@ class listTable extends initList {
                 $tpl->delButton->assign('[delURL]', "listx.del('{$this->resource}', '{$this->classText['DELETE_MSG']}', $this->ajax)");
             }
         }
-        $serviceHeadHTML .= $tpl->parse();
+
+        $serviceHeadHTML .= $tpl->render();
 
         $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML); // побликуем шапку списка
         $tplRoot->body->assign('[BODY]', $tableBodyHTML); // побликуем список

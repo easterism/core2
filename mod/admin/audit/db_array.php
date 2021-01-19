@@ -65,6 +65,7 @@ $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['seq']['EXTRA']   = "";
 $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['global_id'] = array();
 $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['global_id']['TYPE']    = "varchar(20)";
 $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['global_id']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_enum']['COLUMNS']['global_id']['DEFAULT'] = "NULL";
 $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['global_id']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_enum']['COLUMNS']['custom_field'] = array();
@@ -506,7 +507,7 @@ $DB_ARRAY['TABLES']['core_session']['COLUMNS']['sid']['EXTRA']   = "";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time'] = array();
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time']['TYPE']    = "timestamp";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time']['NULL']    = "NO";
-$DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time']['DEFAULT'] = "0000-00-00 00:00:00";
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time']['DEFAULT'] = "NULL";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['login_time']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['logout_time'] = array();
@@ -536,7 +537,7 @@ $DB_ARRAY['TABLES']['core_session']['COLUMNS']['is_expired_sw']['EXTRA']   = "";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity'] = array();
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity']['TYPE']    = "timestamp";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity']['NULL']    = "NO";
-$DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity']['DEFAULT'] = "0000-00-00 00:00:00";
+$DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity']['DEFAULT'] = "NULL";
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['last_activity']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_session']['COLUMNS']['crypto_sw'] = array();
@@ -818,6 +819,18 @@ $DB_ARRAY['TABLES']['core_users']['COLUMNS']['role_id']['TYPE']    = "int(11) un
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['role_id']['NULL']    = "YES";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['role_id']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['role_id']['EXTRA']   = "";
+
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['reg_key'] = array();
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['reg_key']['TYPE']    = "varchar(255)";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['reg_key']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['reg_key']['DEFAULT'] = "NULL";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['reg_key']['EXTRA']   = "";
+
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['date_expired'] = array();
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['date_expired']['TYPE']    = "timestamp";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['date_expired']['NULL']    = "YES";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['date_expired']['DEFAULT'] = "NULL";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['date_expired']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['is_email_wrong'] = array();
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['is_email_wrong']['TYPE']    = "enum('Y','N')";

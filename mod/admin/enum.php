@@ -2,15 +2,15 @@
 
 $tab = new tabs('enum'); 
 
-$title = "Справочники";
+$title = $this->_("Справочники");
 
 if (isset($_GET['edit']) && $_GET['edit'] == '0') {
-	$title = "Создание нового справочника";
+	$title = $this->_("Создание нового справочника");
 }
 
 if ( ! empty($_GET['edit'])) {
 	$name = $this->dataEnum->find($_GET['edit'])->current()->name;
-	$title = "Редактирование справочника";
+	$title = $this->_("Редактирование справочника");
 }
 
 $tab->beginContainer($title);

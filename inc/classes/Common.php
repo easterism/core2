@@ -85,6 +85,24 @@ class Common extends \Core2\Acl {
 
 
     /**
+     * Ищет перевод для строки $str
+     * @param string $str
+     * @param string $module
+     * @return string
+     */
+    public function _($str, $module = '') {
+
+        $module = $module ?: $this->module;
+
+        if ($module === 'admin') {
+            $module = 'core2';
+        }
+
+        return $this->translate->tr($str, $module);
+    }
+
+
+    /**
      * @return mixed
      * @throws Zend_Exception
      */
@@ -103,7 +121,7 @@ class Common extends \Core2\Acl {
      */
     public function __get($k) {
 		//исключение для герета базы или кеша, выполняется всегда
-		if ($k == 'db' || $k == 'cache' || $k == 'translate') {
+		if (in_array($k, ['db', 'cache', 'translate', 'log'])) {
 			return parent::__get($k);
 		}
 		//геттер для модели

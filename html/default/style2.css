@@ -288,6 +288,9 @@ tr.servicePanel .recordNum {
 	float: left;
 	padding: 5px;
 }
+tr.servicePanel .recordNum .service-panel-content {
+	margin-left: 15px;
+}
 
 
 /*

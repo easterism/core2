@@ -1,6 +1,2 @@
-<select id="{ID}" name="{NAME}[]" multiple="multiple">
-    <!-- BEGIN opt -->
-    <option value="{VALUE}" {selected}>{LABEL}</option>
-    <!-- END opt -->
-</select>
+<select id="{ID}" {ATTR} name="{NAME}[]" multiple="multiple"></select>
 <div class="searchOutHtml">{OUT}</div>

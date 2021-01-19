@@ -1,11 +1,11 @@
 	<tr class="searchPanel">
 		<th colspan="100">
 			<!-- BEGIN col -->
-			<div class="columnFilterIcon" onclick="{CLICK_COL}" title="Колонки"></div>
+			<div class="columnFilterIcon" onclick="{CLICK_COL}" title="_tr(Колонки)"></div>
 			<!-- END col -->
-			<div class="showFilterIcon" onclick="{CLICK_FILTER}" title="Поиск"></div>
+			<div class="showFilterIcon" onclick="{CLICK_FILTER}" title="_tr(Поиск)"></div>
 			<!-- BEGIN clear -->
-			<div class="clearFilterIcon" onclick="{CLICK_CLEAR}" title="Очистить"></div>
+			<div class="clearFilterIcon" onclick="{CLICK_CLEAR}" title="_tr(Очистить)"></div>
 			<!-- END clear -->
 		</th>
 	</tr>
@@ -19,7 +19,7 @@
                     <div>
                         {FIELD_CONTROL}
                         <!-- BEGIN submit -->
-                        <div style="padding: 5px 0"><input type="submit" class="buttonSmall" value="Искать"></div>
+                        <div style="padding: 5px 0"><input type="submit" class="buttonSmall" value="_tr(Искать)"></div>
                         <!-- END submit -->
                     </div>
                 </div>
@@ -35,7 +35,7 @@
 					<!-- BEGIN filterColumn -->
 					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label><br>
 					<!-- END filterColumn -->
-					<input type="submit" class="buttonSmall" value="Применить" style="margin:5px"/>
+					<input type="submit" class="buttonSmall" value="_tr(Применить)" style="margin:5px"/>
 				</form>
 			</div>
 		</td>
