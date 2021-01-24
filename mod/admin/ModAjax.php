@@ -664,7 +664,10 @@ class ModAjax extends ajaxFunc {
                 $row->save();
             }
             if ($send_info_sw) {
-                $this->sendUserInformation($data['control'], $update);
+                $res = $this->sendUserInformation($data['control'], $update);
+                if (isset($res['error'])) {
+                    $this->response->script("alertify.warning('Не удалось отправить уведомление');");
+                }
             }
 
             $this->db->commit();
@@ -1047,17 +1050,17 @@ class ModAjax extends ajaxFunc {
         if (isset($dataNewUser['u_pass'])) {
             $body .= "Ваш пароль: <b>{$dataNewUser['u_pass']}</b>" . $crlf;
         }
+        $from = $this->modAdmin->getSetting('feedback_email');
+        if (!$from) return;
 
         $result = $this->modAdmin->createEmail()
-            ->from('noreply@' . $_SERVER["SERVER_NAME"])
+            ->from($from)
             ->to($dataNewUser['email'])
             ->subject('Информация о регистрации на портале ' . $_SERVER["SERVER_NAME"])
             ->body($body)
             ->send();
         
-        if ( ! $result) {
-            throw new Exception($this->_('Не удалось отправить сообщение пользователю'));
-        }
+        return $result;
 	}
 
 
