@@ -521,7 +521,7 @@ class Db {
 	 */
 	final public function isModuleActive($module_id) {
         $is = $this->isModuleInstalled($module_id);
-        return $is['visible'] === 'Y' ? true : false;
+        return $is && $is['visible'] === 'Y' ? true : false;
 	}
 
 

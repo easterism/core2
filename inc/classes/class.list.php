@@ -286,14 +286,15 @@ class listTable extends initList {
             $next = current($map);
             if (!empty($this->sessData['search'])) {
                 foreach ($this->sessData['search'] as $search_value) {
-                    if (strpos($next['type'], '_custom') !== false) {
+                    if (is_array($next) && strpos($next['type'], '_custom') !== false) {
                         $next['type'] = str_replace('_custom', '', $next['type']);
                         $this->customSearch[$next['field']] = $search_value;
                         if (trim($search_value)) {
                             $this->customSearchHasVal = true;
                         }
-                    } else {
-                        if ($next['type']) {
+                    }
+                    else {
+                        if (is_array($next) && $next['type']) {
                             if ($next['type'] == 'date') {
                                 try {
                                     if ($search_value[0]) {
