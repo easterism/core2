@@ -1,7 +1,7 @@
 <?php
 namespace Core2;
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 
 
 require_once 'Templater3.php';
@@ -185,10 +185,10 @@ class Login extends Db {
      * @param $favicon
      * @throws \Exception
      */
-    public function setFavicon($favicon) {
+    public function setFavicon(Array $favicon) {
 
         if ( ! is_array($favicon)) {
-            throw new \Exception('Incorrect favicon data');
+            throw new \Exception('Incorrect favicon');
         }
 
         $this->favicon = $favicon;

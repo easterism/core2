@@ -14,7 +14,7 @@ require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/Roles.php";
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
 use Core2\User as User;

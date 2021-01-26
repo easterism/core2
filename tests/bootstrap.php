@@ -15,11 +15,11 @@ if ( ! file_exists($autoload_file)) {
 require_once $autoload_file;
 require_once DOC_ROOT . 'core2/inc/classes/Error.php';
 
-use Zend\Cache\StorageFactory;
-use Zend\Session\Config\SessionConfig;
-use Zend\Session\SessionManager;
-use Zend\Session\SaveHandler\Cache;
-use Zend\Session\Container as SessionContainer;
+use Laminas\Cache\StorageFactory;
+use Laminas\Session\Config\SessionConfig;
+use Laminas\Session\SessionManager;
+use Laminas\Session\SaveHandler\Cache;
+use Laminas\Session\Container as SessionContainer;
 
 
 $config = [

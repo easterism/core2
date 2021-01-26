@@ -8,7 +8,7 @@ namespace Core2;
  * @package    Сlasses
  * @subpackage I18n
  */
-use Zend\I18n\Translator\Translator;
+use Laminas\I18n\Translator\Translator;
 
 class I18n {
 

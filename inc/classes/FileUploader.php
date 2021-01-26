@@ -1,7 +1,7 @@
 <?php
 namespace Core2\Store;
 
-use Zend\Session\Container as SessionContainer;
+use Laminas\Session\Container as SessionContainer;
 
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 require_once DOC_ROOT . "core2/inc/classes/Image.php";
