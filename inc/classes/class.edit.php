@@ -1249,14 +1249,14 @@ class editTable extends initEdit {
                                 $tpl->assign('[OPTIONS]',    json_encode($options));
 
 
-                                foreach ($value['default'] as $option_id) {
+                                foreach ($value['default'] as $selected_id) {
                                     $isset_option = false;
                                     foreach ($options as $options_key => $options_value) {
-                                        if (is_array($options_value) && isset($options_value[$option_id])) {
+                                        if (is_array($options_value) && isset($options_value[$selected_id])) {
                                             $isset_option = true;
                                             break;
 
-                                        } elseif (is_scalar($options_value) && $options_key == $option_id) {
+                                        } elseif (is_scalar($options_value) && $options_key == $selected_id) {
                                             $isset_option = true;
                                             break;
                                         }
@@ -1267,12 +1267,75 @@ class editTable extends initEdit {
                                     }
 
 
-                                    $tpl->item->fillDropDown('[ID]', $options, $option_id);
+                                    $tpl->item->fillDropDown('[ID]', $options, $selected_id);
 
                                     $tpl->item->assign('[ATTRIBUTES]', $attrs);
                                     $tpl->item->assign('[FIELD]',      $field);
-                                    $tpl->item->assign('[ID]',         crc32(microtime() . $option_id));
+                                    $tpl->item->assign('[ID]',         crc32(microtime() . $selected_id));
                                     $tpl->item->reassign();
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+
+                        } elseif ($value['type'] == 'multilist3') {
+                            $items = $this->selectSQL[$select];
+
+                            if ( ! is_array($value['default'])) {
+                                $value['default'] = explode(",", $value['default']);
+                            }
+
+                            if ($this->readOnly) {
+                                $options_out = [];
+                                foreach ($items as $options_key => $options_value) {
+                                    if (is_array($options_value)) {
+                                        foreach ($options_value as $options_value_id => $options_value_title) {
+                                            if (in_array($options_value_id, $value['default'])) {
+                                                $options_out[] = $options_value_title;
+                                            }
+                                        }
+
+                                    } elseif (is_scalar($options_value) && in_array($options_key, $value['default'])) {
+                                        $options_out[] = $options_value;
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= implode('<br>', $options_out);
+
+                            } else {
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist3.html');
+                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl->assign('[FIELD_ID]',   $fieldId);
+                                $tpl->assign('[FIELD]',      $field);
+                                $tpl->assign('[ATTRIBUTES]', str_replace(['"', "'"], ['!::', '!:'], $attrs));
+                                $tpl->assign('[DATA]',       json_encode($items));
+
+
+                                $items_selected = [];
+
+                                foreach ($value['default'] as $selected_id) {
+                                    foreach ($items as $item_id => $item_title) {
+                                        $is_selected = $item_id == $selected_id;
+                                        $is_disabled = ! $is_selected && array_search($item_id, $value['default']) !== false;
+
+                                        if ($is_selected) {
+                                            $items_selected[] = $item_id;
+                                        }
+
+                                        $tpl->items->item->assign('[ITEM_ID]',  $item_id);
+                                        $tpl->items->item->assign('[TITLE]',    $item_title);
+                                        $tpl->items->item->assign('[DISABLED]', $is_disabled ? 'disabled="disabled"' : '');
+                                        $tpl->items->item->assign('[SELECTED]', $is_selected ? 'selected="selected"' : '');
+                                        $tpl->items->item->reassign();
+                                    }
+
+
+                                    $tpl->items->assign('[ATTRIBUTES]', $attrs);
+                                    $tpl->items->assign('[FIELD]',      $field);
+                                    $tpl->items->assign('[ID]',         crc32(microtime() . $selected_id));
+                                    $tpl->items->reassign();
                                 }
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();

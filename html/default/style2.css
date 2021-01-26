@@ -532,6 +532,36 @@ table.editTable td {
 	border-bottom: 1px dashed #4677b6;
 	white-space: nowrap;
 }
+.multilist2-items > .multilist2-item {
+	margin-bottom: 8px;
+}
+.multilist2-items > .multilist2-item > .multilist2-delete {
+	padding: 5px;
+	cursor: pointer;
+}
+.multilist3-items > .multilist3-item {
+	margin-bottom: 8px;
+}
+.multilist3-items > .multilist3-item > .multilist3-sort {
+	padding: 5px;
+	color: #757575;
+	cursor: n-resize;
+}
+.multilist3-items > .multilist3-item > .multilist3-delete {
+	padding: 5px;
+	cursor: pointer;
+}
+.field-dataset-items .field-dataset-item > td {
+	padding-bottom: 8px;
+	padding-right: 4px;
+}
+.field-dataset-items .field-dataset-item > td .field-dataset-delete {
+	padding: 5px;
+	cursor: pointer;
+}
+.field-dataset-items > thead > tr > th {
+	padding-right: 10px;
+}
 
 /*
 TAB class table
