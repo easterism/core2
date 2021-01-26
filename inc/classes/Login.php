@@ -307,20 +307,25 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        $isset_key = $this->db->fetchOne("
-            SELECT 1
-            FROM core_users
-            WHERE reg_key = ?
-              AND date_expired > NOW()
-              AND visible = 'N'
-        ", $key);
-
         $error_message = '';
 
-        if ($isset_key) {
+        if ($this->core_config->registration->module) {
             $tpl->pass->assign('[KEY]', $key);
+
         } else {
-            $error_message = $this->_('Ссылка устарела');
+            $isset_key = $this->db->fetchOne("
+                SELECT 1
+                FROM core_users
+                WHERE reg_key = ?
+                  AND date_expired > NOW()
+                  AND visible = 'N'
+            ", $key);
+
+            if ($isset_key) {
+                $tpl->pass->assign('[KEY]', $key);
+            } else {
+                $error_message = $this->_('Ссылка устарела');
+            }
         }
 
         $tpl->assign('[ERROR_MSG]', $error_message);
