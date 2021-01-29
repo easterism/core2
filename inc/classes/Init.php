@@ -1,4 +1,4 @@
-<?
+<?php
     header('Content-Type: text/html; charset=utf-8');
 
     // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
@@ -12,7 +12,10 @@
 
     require_once($conf_file);
     require_once("Error.php");
+    require_once("Log.php");
+    require_once 'Zend_Registry.php'; //DEPRECATED
 
+    use Laminas\ServiceManager\ServiceManager;
     use Laminas\Cache\StorageFactory;
     use Laminas\Session\Config\SessionConfig;
     use Laminas\Session\SessionManager;
@@ -128,8 +131,6 @@
 			if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
 		}
 	}
-
-	require_once("Log.php");
 
 	//устанавливаем шкурку
 	if (!empty($config->theme)) {
@@ -1364,7 +1365,10 @@
          * @param string $action
          */
         private function setContext($module, $action = 'index') {
-            Zend_Registry::set('context', array($module, $action));
+            $registry     = Zend_Registry::getInstance();
+            //$registry 	= new ServiceManager();
+            //$registry->setAllowOverride(true);
+            $registry->set('context', array($module, $action));
         }
 
 
