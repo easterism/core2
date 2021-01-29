@@ -1,6 +1,6 @@
-<?
+<?php
 require_once "class.ini.php";
-require_once "Templater.php";
+require_once "Templater2.php";
 
 
 /**
@@ -74,12 +74,11 @@ class tabs extends initTabs {
 		$HTML = "<table class=\"containerTable\">
 			<tr>
 				<td class=\"containerHeaderTD\">";
-        $tpl = new Templater("core2/html/" . THEME . "/tab/caption.tpl");
+        $tpl = new Templater2("core2/html/" . THEME . "/tab/caption.tpl");
 		$tpl->assign('[caption]', $caption);
 		if ( ! empty($this->help[$this->tabs_id])) {
-			$tpl->touchBlock('help');
-			$tpl->assign('[TAB_ID]', $this->tabs_id);
-			$tpl->assign('[HELP]', $this->help[$this->tabs_id]);
+			$tpl->help->assign('[TAB_ID]', $this->tabs_id);
+			$tpl->help->assign('[HELP]', $this->help[$this->tabs_id]);
 			unset($this->help[$this->tabs_id]);
 		}
 		$HTML .= $tpl->parse() . "</td></tr>";

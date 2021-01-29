@@ -145,11 +145,11 @@ class Gitlab extends \Common
                         $zip = $fn;
 
                     } else {
-                        $this->error = $this->translate->tr("Не удалось подготовить файл для установки");
+                        $this->error = $this->translate->tr("Не удалось подготовить файл для установки! $res");
                         return;
                     }
                 } else {
-                    $this->error = $this->translate->tr("Не удалось подготовить файл для установки");
+                    $this->error = $this->translate->tr("Не удалось подготовить директорию для установки");
                     return;
                 }
             } else {

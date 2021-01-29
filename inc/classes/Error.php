@@ -1,4 +1,4 @@
-<?
+<?php
 namespace Core2;
 
 require_once 'Tool.php';
@@ -164,7 +164,7 @@ class Error {
      * @param int $code
      * @return string|void
      */
-	public static function catchJsonException($out, $code = 0) {
+	public static function catchJsonException($out = [], $code = 0) {
 
 		if ($code == 400) {
 			header("HTTP/1.1 400 Bad Request");

@@ -1,4 +1,4 @@
-<?
+<?php
 class Templater {
 	
 	private $blocks = array();
