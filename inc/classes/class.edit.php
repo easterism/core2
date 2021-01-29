@@ -1,4 +1,4 @@
-<?
+<?php
 require_once("class.ini.php");
 use Laminas\Session\Container as SessionContainer;
 

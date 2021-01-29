@@ -1,4 +1,4 @@
-<?
+<?php
 require_once 'Acl.php';
 
 class CommonPlugin extends \Core2\Acl {

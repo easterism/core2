@@ -1,4 +1,4 @@
-<?
+<?php
 namespace Core2;
 
 require_once "Cache.php";

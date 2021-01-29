@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('class.ini.php');
 require_once('Templater3.php');
 
