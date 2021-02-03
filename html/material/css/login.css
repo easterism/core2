@@ -22,11 +22,15 @@ body {
                 linear-gradient(to bottom, rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
                 linear-gradient(135deg, #20465d 0%,#4a232b 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );
+    background-image: url("../img/login.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     color: #777;
 }
 .form-main {
     width: 320px;
-    padding: 90px 30px;
+    padding: 60px 30px;
     -moz-border-radius: 8px;
     -webkit-border-radius: 8px;
     border-radius: 8px;
@@ -50,17 +54,17 @@ body {
     padding: 0 24px;
     color: white;
     width: 100%;
-    background: #428bca;
+    background: #ff9800;
     border: 0;
     border-radius: 4px;
     transition: background .2s;
 }
 .btn-login:hover {
-    background: #286090;
+    background: #f57c00;
 }
 .logo-container {
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 30px;
 }
 #error {
     color: red;
@@ -112,8 +116,4 @@ PRELOADERS
 
 .form-footer {
     margin-top: 20px;
-}
-.error {
-    color: red;
-    margin-bottom: 15px;
 }

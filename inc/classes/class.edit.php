@@ -1578,7 +1578,7 @@ class editTable extends initEdit {
                                                     </button>
                                                 {% } %}
                                                 {% if (!i) { %}
-                                                    <button class="btn btn-warning cancel buttonSmall">
+                                                    <button class="btn btn-warning btn-sm cancel buttonSmall">
                                                         <i class="glyphicon glyphicon-ban-circle"></i>
                                                         <span>Отмена</span>
                                                     </button>

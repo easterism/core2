@@ -64,14 +64,15 @@ pre span {
 select,
 textarea {
     display: inline-block;
-    padding: 3px 8px;
-    font-size: 14px;
+    padding: 5px 10px;
+    height: 30px;
+    font-size: 12px;
     line-height: 1.42857143;
     color: #555;
     background-color: #fff;
     background-image: none;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 3px;
     -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
     box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
     -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
@@ -890,8 +891,8 @@ table.calendar {
 .buttonSmall {
     margin: 0 3px 0 0;
     display: inline-block;
-    padding: 3px 12px;
-    font-size: 14px;
+    padding: 5px 10px;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.42857143;
     text-align: center;
@@ -913,7 +914,7 @@ table.calendar {
             border-radius: 4px;
     color: #333;
     background-color: #fff;
-    height: 34px;
+    height: 30px;
 }
 
 .button:active,
@@ -1250,7 +1251,7 @@ label.control-label {font-weight: 700}
 .clearfix {clear:both}
 .bg-white {background-color: #fff}
 .form-control.modal-control-title {width: 235px}
-.modal-control .modal-control-button {height: 34px}
+.modal-control .modal-control-button {height: 30px}
 .modal-control .input-group {min-width: 350px}
 .ctrl-dpr-controls > *,
 .ctrl-dtp-controls > *,
@@ -1356,7 +1357,7 @@ label.control-label {font-weight: 700}
     margin-right: -1px;
     background-color: #F4F4F4;
     margin-left: -1px;
-    height: 34px;
+    height: 30px;
     min-width: 30px;
     font-size: 14px;
     box-sizing: border-box;
@@ -1497,7 +1498,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: transparent;
 }
 .fileinput-button {
-    line-height: 26px;
+    line-height: 20px;
 }
 .password-control .buttonSmall {
     -webkit-border-bottom-left-radius: 0;
@@ -1532,7 +1533,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
             border-top-right-radius: 0;
 }
 .password-control .password-repeat {
-    line-height: 34px;
+    line-height: 30px;
     padding: 0 5px;
     float: left;
 }
