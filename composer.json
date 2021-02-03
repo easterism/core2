@@ -28,7 +28,6 @@
     "laminas/laminas-validator": "2.12.*",
     "laminas/laminas-mail": "2.10.*",
     "laminas/laminas-i18n": "2.10.*",
-    "zf1/zend-registry": "~1.12",
     "zf1/zend-config": "~1.12",
     "zf1/zend-acl": "~1.12",
     "zf1/zend-ldap": "~1.12",

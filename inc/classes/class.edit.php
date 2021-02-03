@@ -1,4 +1,4 @@
-<?
+<?php
 require_once("class.ini.php");
 use Laminas\Session\Container as SessionContainer;
 
@@ -1137,7 +1137,8 @@ class editTable extends initEdit {
                             $select++;
 
 
-                        } elseif ($value['type'] == 'multiselect2') {
+                        }
+						elseif ($value['type'] == 'multiselect2') {
                             $options = [];
 
                             if (is_array($this->selectSQL[$select])) {
@@ -1192,7 +1193,8 @@ class editTable extends initEdit {
                             }
                             $select++;
 
-                        } elseif ($value['type'] == 'multilist2') {
+                        }
+						elseif ($value['type'] == 'multilist2') {
                             if (is_array($this->selectSQL[$select])) {
                                 $options = $this->selectSQL[$select];
 
@@ -1268,7 +1270,8 @@ class editTable extends initEdit {
                             }
                             $select++;
 
-                        } elseif ($value['type'] == 'multilist3') {
+                        }
+						elseif ($value['type'] == 'multilist3') {
                             $items = $this->selectSQL[$select];
 
                             if ( ! is_array($value['default'])) {
@@ -1331,7 +1334,8 @@ class editTable extends initEdit {
                             }
                             $select++;
 
-						} elseif ($value['type'] == 'dataset') {
+						}
+						elseif ($value['type'] == 'dataset') {
                             if (empty($value['in']) || ! is_string($value['default'])) {
                                 throw new Exception('Некорректно заполнены настройки формы');
                             }
@@ -1448,7 +1452,8 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }
 
-                        } elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
+                        }
+						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
 							list($module, $action) = Zend_Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("

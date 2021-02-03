@@ -1,4 +1,4 @@
-<?
+<?php
 namespace Core2;
 
 require_once DOC_ROOT . "core2/mod/admin/DBMaster.php";
