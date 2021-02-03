@@ -19,7 +19,7 @@ Installation
 2. Create MySQL schema with [db.sql](db.sql)
 3. Create *admin* user with the same password.
  ```sql
-  INSERT INTO `core_users` (`u_login`, `u_pass`, `visible`, `is_admin_sw`) VALUES ('admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y');
+  INSERT INTO `core_users` (`u_login`, `u_pass`, `visible`, `is_admin_sw`, `date_added`) VALUES ('admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y', NOW());
   ```
 
 4. Create *index.php* file anywhere inside the document root. Make sure that *core2* folder is available from its place.
