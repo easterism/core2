@@ -855,7 +855,7 @@ $(document).ready(function() {
     var tplFeedback =
 		"<div class=\"feedback-container\">" +
 			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
-			"<button class=\"btn btn-info pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
+			"<button class=\"btn btn-info btn-sm pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
 			"<div class=\"clearfix\"></div>" +
 		"</div>";
 
