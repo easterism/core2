@@ -1940,9 +1940,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     overflow: hidden;
     padding: 5px 0 0;
 }
-.core-tabs > .core-tabs-body {
-    padding-top: 26px;
-}
+/* Мешает если добавлять в табы в панели*/
+/*.core-tabs > .core-tabs-body {*/
+/*    padding-top: 26px;*/
+/*}*/
 .core-tabs > .core-tabs-body .tab-content > .tab-pane,
 .core-tabs > .core-tabs-body .pill-content > .pill-pane {display: none}
 
