@@ -1697,7 +1697,7 @@ if ( ! empty($ft)) {
 			    if ($(this).find('.files > tr').length <= 0) {
 				    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
 				}
-				alert('Файл \"' + fileName + '\" является некорректным.');
+				alert('Файл \"' + fileName + '\" имеет некорректное расширение.');
 				return false;
 			}
         });
