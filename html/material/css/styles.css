@@ -1930,7 +1930,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 }
 .core-tabs > .core-tabs-heading {
     padding-bottom: 6px;
-    margin-bottom: -15px;
+    /*margin-bottom: -15px;*/
     border-bottom: 1px solid transparent;
 }
 .core-tabs > .core-tabs-heading > .core-tabs-subtitle {
