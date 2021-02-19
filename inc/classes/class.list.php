@@ -1260,6 +1260,17 @@ class listTable extends initList {
 
 
     /**
+     * @return false|string
+     */
+    public function render() {
+
+        ob_start();
+        $this->showTable();
+        return ob_get_clean();
+    }
+
+
+    /**
      * Print grid HTML
      * @return void
      */

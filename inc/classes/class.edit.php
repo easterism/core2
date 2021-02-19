@@ -182,6 +182,20 @@ class editTable extends initEdit {
 
     /**
      * @param array $options
+     * @return false|string
+     * @throws Zend_Db_Adapter_Exception
+     * @throws Zend_Exception
+     */
+    public function render($options = []) {
+
+	    ob_start();
+        $this->showTable($options);
+        return ob_get_clean();
+	}
+
+
+    /**
+     * @param array $options
      * @throws Zend_Db_Adapter_Exception
      * @throws Zend_Exception
      */
