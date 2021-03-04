@@ -164,6 +164,24 @@ class Log {
 
 
     /**
+     * Предупреждение в лог
+     * @param array|string $msg
+     * @param array        $context
+     */
+    public function error($msg, $context = array()) {
+        if (is_array($msg)) {
+            $context = $msg;
+            $msg = '-';
+        }
+        if ($this->handlers) {
+            $this->setHandler(Logger::ERROR);
+        }
+        $this->log->error($msg, $context);
+        $this->removeCustomWriter();
+    }
+
+
+    /**
      * Отладочная информация в лог
      * @param array|string $msg
      * @param array        $context
