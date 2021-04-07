@@ -1148,6 +1148,12 @@
 	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
 
+                    $autoload_file = $location . "/vendor/autoload.php";
+                    if (file_exists($autoload_file)) {
+                        require_once($autoload_file);
+                    }
+
+
 	                $mod_instance = new $mod_cli();
 	                $result = call_user_func_array(array($mod_instance, $action), $params);
 
