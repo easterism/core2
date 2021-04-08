@@ -26,8 +26,10 @@ class Log {
     /**
      * Log constructor.
      * @param string $name
+     * @throws \Exception
      */
     public function __construct($name = 'core2') {
+
         if ($name !== 'access') {
             //эта секция предназначена для работы ядра
             $this->log = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
@@ -45,19 +47,20 @@ class Log {
                 } else {
                     return new \stdClass();
                 }
+
             } elseif ($name === 'webhook') {
                 if (isset($this->config->log) &&
-                    isset($this->config->log->webhook))
-                {
-
+                    isset($this->config->log->webhook)
+                ) {
                     //TODO add more webhooks
+
                 } else {
                     return new \stdClass();
                 }
             } else {
                 if (isset($this->config->log) &&
                     isset($this->config->log->system) &&
-                    !empty($this->config->log->system->file) &&
+                    ! empty($this->config->log->system->file) &&
                     is_string($this->config->log->system->file)
                 ) {
                     $stream = new StreamHandler($this->config->log->system->file);
@@ -67,28 +70,30 @@ class Log {
             }
         } else {
             $this->config = \Zend_Registry::getInstance()->get('config');
-            $this->log = new Logger($name);
+            $this->log    = new Logger($name);
         }
     }
+
+
     /**
      * Обработчик метода не доступного через экземпляр
      * @param string    $name       Имя метода
      * @param array     $arguments  Параметры метода
      * @return object|null
      */
-    public function __call($name, $arguments)
-    {
+    public function __call($name, $arguments) {
+
         if ($name == 'slack') {
-            if (!$this->config->log || !$this->config->log->webhook->slack) return new \stdObject();
-            $channel = null;
-            $username = null;
-            $useAttachment = true;
-            $iconEmoji = null;
-            $useShortAttachment = false;
+            if ( ! $this->config->log || ! $this->config->log->webhook->slack) return new \stdObject();
+            $channel                = null;
+            $username               = null;
+            $useAttachment          = true;
+            $iconEmoji              = null;
+            $useShortAttachment     = false;
             $includeContextAndExtra = false;
-            $level = Logger::CRITICAL;
-            $bubble = true;
-            $excludeFields = array();
+            $level                  = Logger::CRITICAL;
+            $bubble                 = true;
+            $excludeFields          = array();
 
             if (isset($arguments[0])) $channel = $arguments[0];
             if (isset($arguments[1])) $username = $arguments[1];
@@ -103,9 +108,10 @@ class Log {
 
 
     /**
-     * дополнительный лог в заданный файл
+     * Дополнительный лог в заданный файл
      * @param $filename
      * @return $this
+     * @throws \Exception
      */
     public function file($filename) {
         if ( ! $this->writer_custom) {
@@ -200,6 +206,14 @@ class Log {
 
 
     /**
+     * @return string
+     */
+    public function getWriter() {
+        return $this->writer;
+    }
+
+
+    /**
      * прекращение записи в заданный дополнительный лог
      */
     private function removeCustomWriter() {
@@ -227,10 +241,6 @@ class Log {
                 $this->writer = 'syslog';
             }
         }
-    }
-
-    public function getWriter() {
-        return $this->writer;
     }
 
     /**

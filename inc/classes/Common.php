@@ -376,7 +376,7 @@ class Common extends \Core2\Acl {
                 $data_msg .= '<pre>' . $data->getTraceAsString() . '</pre>';
 
             } else {
-                $data_msg = '<pre>' . print_r($data, true) . '</pre>';
+                $data_msg = '<pre>' . json_encode($data, JSON_PRETTY_PRINT) . '</pre>';
             }
         }
 
