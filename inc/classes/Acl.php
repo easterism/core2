@@ -36,10 +36,12 @@ class Acl extends Db {
 		parent::__construct();
 	}
 
-	/**
-	 *
-	 */
+
+    /**
+     * @throws \Zend_Acl_Exception
+     */
 	public function setupAcl() {
+
 		$registry 	= \Zend_Registry::getInstance();
 		$registry->set('addRes', $this->addRes);
 		$auth 		= $registry->get('auth');
@@ -101,27 +103,32 @@ class Acl extends Db {
 					}
 				}
 			}
-			//echo "<PRE>";print_r($access_default);echo "</PRE>";die;
+
 
 			if ($auth->ROLE !== -1) {
-				$roles   = $this->db->fetchAll("SELECT id, name, access
-											FROM core_roles
-											WHERE is_active_sw = 'Y'
-											ORDER BY position DESC");
+				$roles = $this->db->fetchAll("
+                    SELECT id, 
+                           name, 
+                           access
+					FROM core_roles
+					WHERE is_active_sw = 'Y'
+					ORDER BY position DESC
+                ");
+
 				$i = 1;
-				foreach ($roles as $value) {
-					$roleName = $value['name'];
+				foreach ($roles as $role) {
+					$roleName = $role['name'];
 					if (self::INHER_ROLES == 'Y') {
 						if ($i == 1) {
-							$acl->addRole(new \Zend_Acl_Role($value['name']));
+							$acl->addRole(new \Zend_Acl_Role($role['name']));
 						} else {
-							$acl->addRole(new \Zend_Acl_Role($value['name']), $roleName);
+							$acl->addRole(new \Zend_Acl_Role($role['name']), $roleName);
 						}
 					} else {
 						$acl->addRole(new \Zend_Acl_Role($roleName));
 					}
 
-					$access = unserialize($value['access']);
+					$access = unserialize($role['access']);
                     if ( ! empty($access)) {
                         foreach ($access as $type => $data) {
                             if (strpos($type, 'default') === false) {
@@ -211,12 +218,13 @@ class Acl extends Db {
 			$resources = $this->cache->getItem($key . 'availRes');
 			$resources2 = $this->cache->getItem($key . 'availSubRes');
 		}
-		//echo "<PRE>";print_r($acl);echo "</PRE>";die;
+
 		$registry->set('acl', $acl);
 		$registry->set('availRes', $resources);
 		$registry->set('availSubRes', $resources2);
 
 	}
+
 
     /**
      * Проверка существования и установка ресурса в ACL
@@ -299,21 +307,32 @@ class Acl extends Db {
 	 * @return bool
 	 */
 	public function checkAcl($source, $type = 'access') {
+
         $registry = \Zend_Registry::getInstance();
-		$xxx = strrpos($source, 'xxx');
-		if ($xxx > 0) {
-			$source   = substr($source, 0, $xxx); //TODO SHOULD BE FIX
+
+        if (($xxx = strrpos($source, 'xxx')) > 0) {
+			$source = substr($source, 0, $xxx); //TODO SHOULD BE FIX
 		}
-        $acl      = $registry->get('acl');
-        $auth     = $registry->get('auth');
+
+        if (($index = strrpos($source, '_index')) > 0) {
+			$source = substr($source, 0, $index); //TODO SHOULD BE FIX
+		}
+
+        $acl  = $registry->get('acl');
+        $auth = $registry->get('auth');
+
 		if ($auth->NAME == 'root' || $auth->ADMIN) {
 			return true;
+
 		} elseif (in_array($source, $registry->get('availRes'))) {
 			return $acl->isAllowed($auth->ROLE, $source, $type);
+
 		} elseif (in_array($source, $registry->get('availSubRes'))) {
 			return $acl->isAllowed($auth->ROLE, $source, $type);
+
 		} elseif (in_array($source, $registry->get('addRes'))) {
 			return $acl->isAllowed($auth->ROLE, $source, $type);
+
 		} else {
 			return false;
 		}
