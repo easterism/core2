@@ -118,21 +118,22 @@ CREATE TABLE IF NOT EXISTS `core_modules` (
   KEY `seq` (`seq`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=1489;
 
+CREATE TABLE `core_session` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`sid` VARCHAR(128) NOT NULL DEFAULT '' COLLATE 'utf8_general_ci',
+	`login_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`logout_time` DATETIME NULL DEFAULT NULL,
+	`user_id` INT(11) UNSIGNED NOT NULL,
+	`ip` VARCHAR(20) NOT NULL DEFAULT '' COLLATE 'utf8_general_ci',
+	`is_expired_sw` ENUM('N','Y') NOT NULL DEFAULT 'N' COLLATE 'utf8_general_ci',
+	`last_activity` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`crypto_sw` ENUM('N','Y') NOT NULL DEFAULT 'N' COLLATE 'utf8_general_ci',
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `user_id` (`user_id`) USING BTREE,
+	INDEX `sid` (`sid`) USING BTREE
+)
+COLLATE='utf8_general_ci' ENGINE=MyISAM;
 
-CREATE TABLE IF NOT EXISTS `core_session` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `sid` varchar(128) NOT NULL DEFAULT '',
-  `login_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `logout_time` datetime DEFAULT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `ip` varchar(20) NOT NULL DEFAULT '',
-  `is_expired_sw` enum('N','Y') NOT NULL DEFAULT 'N',
-  `last_activity` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `crypto_sw` enum('N','Y') NOT NULL DEFAULT 'N',
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `sid` (`sid`)
-) ENGINE=MyISAM AUTO_INCREMENT=3410 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=3276;
 
 CREATE TABLE IF NOT EXISTS `core_settings` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
