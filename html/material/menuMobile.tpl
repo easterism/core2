@@ -1,10 +1,3 @@
-<div id="preloader" style="display:none">
-	<div class="lock-screen"></div>
-	<div class="block">
-		<div class="spinner-icon"></div>
-		<div class="">_tr(Загрузка)...</div>
-	</div>
-</div>
 <table id="main" width="100%"><tbody><tr>
 		<td id="menu-container" valign="top">
 			<div id="menu-wrapper">
@@ -91,6 +84,13 @@
 				</ul>
 			</nav>
 			<div id="mainContainer">
+				<div id="preloader" style="display:none">
+					<div class="lock-screen"></div>
+					<div class="block">
+						<div class="spinner-icon"></div>
+						<div class="">_tr(Загрузка)...</div>
+					</div>
+				</div>
 				<div id="main_body"></div>
 			</div>
 		</td>

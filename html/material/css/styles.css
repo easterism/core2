@@ -242,11 +242,13 @@ TOP MENU
 PRELOADERS
 */
 #preloader {
-    position: fixed;
+    position: absolute;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 50px);
     text-align: center;
-    z-index: 100000;
+    z-index: 19;
+    margin-left: -30px;
+    margin-top: -30px;
 }
 #preloader > .lock-screen {
     position: absolute;
@@ -274,7 +276,7 @@ PRELOADERS
     right: auto;
     text-align: left;
     left: 50%;
-    top: 22px;
+    top: 10px;
     z-index: 1031;
     -webkit-box-shadow: 0 1px 8px #ccc;
             box-shadow: 0 1px 8px #ccc;
