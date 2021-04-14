@@ -1,3 +1,21 @@
+CREATE TABLE IF NOT EXISTS `core_roles` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `is_active_sw` enum('Y','N') NOT NULL DEFAULT 'Y',
+  `lastupdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `description` varchar(255) DEFAULT NULL,
+  `lastuser` int(11) unsigned DEFAULT NULL,
+  `access` text,
+  `date_added` datetime NOT NULL,
+  `author` varchar(60) NOT NULL DEFAULT '',
+  `position` int(11) NOT NULL,
+  `access_add` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `core_roles_idx1` (`is_active_sw`),
+  KEY `position` (`position`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=3276;
+
 CREATE TABLE IF NOT EXISTS `core_users` (
   `u_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `u_login` varchar(120) NOT NULL DEFAULT '',
@@ -100,23 +118,6 @@ CREATE TABLE IF NOT EXISTS `core_modules` (
   KEY `seq` (`seq`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=1489;
 
-CREATE TABLE IF NOT EXISTS `core_roles` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `is_active_sw` enum('Y','N') NOT NULL DEFAULT 'Y',
-  `lastupdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `description` varchar(255) DEFAULT NULL,
-  `lastuser` int(11) unsigned DEFAULT NULL,
-  `access` text,
-  `date_added` datetime NOT NULL,
-  `author` varchar(60) NOT NULL DEFAULT '',
-  `position` int(11) NOT NULL,
-  `access_add` text,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`),
-  KEY `core_roles_idx1` (`is_active_sw`),
-  KEY `position` (`position`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=3276;
 
 CREATE TABLE IF NOT EXISTS `core_session` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
