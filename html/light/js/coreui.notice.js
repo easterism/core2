@@ -1,7 +1,7 @@
 
 var CoreUI = typeof CoreUI !== 'undefined' ? CoreUI : {};
 
-CoreUI.snackbar = {
+CoreUI.notice = {
 
     __autoincrement: 0,
 
@@ -21,11 +21,11 @@ CoreUI.snackbar = {
             options.icon = icon || '';
         }
 
-        const container = document.getElementById("coreui-snackbar-container");
+        const container = document.getElementById("coreui-notice-container");
 
         if ( ! container) {
             const container = document.createElement("div");
-            container.id = "coreui-snackbar-container";
+            container.id = "coreui-notice-container";
             document.body.appendChild(container);
         }
 
@@ -33,9 +33,9 @@ CoreUI.snackbar = {
         toast.id = ++this.__autoincrement;
         toast.id = "toast-" + toast.id;
         if (options.animationIn) {
-            toast.className = "coreui-snackbar animated " + options.animationIn;
+            toast.className = "coreui-notice animated " + options.animationIn;
         } else {
-            toast.className = "coreui-snackbar animated fadeIn";
+            toast.className = "coreui-notice animated fadeIn";
         }
 
         const containertoast = document.createElement("div");
@@ -153,7 +153,7 @@ CoreUI.snackbar = {
             }
             window.setTimeout(function() {
                 toast.parentNode.removeChild(toast);
-            }, 500);
+            }, 200);
         };
 
         // auto close
@@ -171,9 +171,9 @@ CoreUI.snackbar = {
         }
 
         if (options.type) {
-            toast.className += " coreui-snackbar-" + options.type;
+            toast.className += " coreui-notice-" + options.type;
         } else {
-            toast.className += " coreui-snackbar-default";
+            toast.className += " coreui-notice-default";
         }
 
         if (options.classes) {
@@ -196,11 +196,11 @@ CoreUI.snackbar = {
                 function () {
                     toast.parentNode.removeChild(toast);
                 }.bind(this),
-                500
+                200
             );
         }
 
-        document.getElementById("coreui-snackbar-container").appendChild(toast);
+        document.getElementById("coreui-notice-container").appendChild(toast);
         return toast;
     },
 }

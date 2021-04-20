@@ -21,7 +21,7 @@
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/light/css/coreui.snackbar.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/light/css/coreui.notice.css" type="text/css"/>
 
 	<!--[if lte IE 10]>
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2-ie.min.css" type="text/css"/>
@@ -43,7 +43,7 @@
 	<script type="text/javascript" src="core2/html/light/js/cleave.min.js"></script>
 	<script type="text/javascript" src="core2/html/light/js/es6-promise.auto.min.js"></script>
 	<script type="text/javascript" src="core2/html/light/js/sweetalert2.min.js"></script>
-	<script type="text/javascript" src="core2/html/light/js/coreui.snackbar.js?_=1"></script>
+	<script type="text/javascript" src="core2/html/light/js/coreui.notice.js?_=1"></script>
 
 	<!--[if lte IE 10]>
 	<script type="text/javascript" src="core2/html/light/js/sweetalert2-ie.min.js"></script>
