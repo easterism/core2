@@ -554,13 +554,21 @@
          * @return StdClass|void
          */
         private function checkToken() {
+
             $token = '';
-            if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) return;
+
+            if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) {
+                    return;
+                }
+
                 $token = $_SERVER['HTTP_AUTHORIZATION'];
-            }
-            else if (!empty($_SERVER['HTTP_CORE2M'])) {
+
+            } elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
                 $token = $_SERVER['HTTP_CORE2M'];
+
+            } elseif ( ! empty($_COOKIE['Core2m'])) {
+                $token = $_COOKIE['Core2m'];
             }
 
             if ($token) {
