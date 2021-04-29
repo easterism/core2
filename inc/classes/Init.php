@@ -250,19 +250,20 @@
             }
 
             $this->detectWebService();
-            $this->auth = new StdClass();
+
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', $this->auth); //DEPRECATED
-                return;
-            }
-            if (PHP_SAPI === 'cli') {
-                $this->is_cli = true;
-                Zend_Registry::set('auth', $this->auth);  //DEPRECATED
+                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
                 return;
             }
 
-            $this->auth 	= new SessionContainer('Auth');
-            if (!empty($this->auth->ID) && $this->auth->ID > 0) {
+            if (PHP_SAPI === 'cli') {
+                $this->is_cli = true;
+                Zend_Registry::set('auth', new StdClass());  //DEPRECATED
+                return;
+            }
+
+            $this->auth = new SessionContainer('Auth');
+            if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
                     if ($this->auth->LIVEID) {
@@ -550,7 +551,6 @@
         /**
          * Проверка наличия токена в запросе
          * Только для запросов с авторизацией по токену!
-         *
          * @return StdClass|void
          */
         private function checkToken() {
@@ -566,9 +566,6 @@
 
             } elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
                 $token = $_SERVER['HTTP_CORE2M'];
-
-            } elseif ( ! empty($_COOKIE['Core2m'])) {
-                $token = $_COOKIE['Core2m'];
             }
 
             if ($token) {
