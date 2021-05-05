@@ -47,9 +47,7 @@
     margin: 12px;
     max-width: 670px;
     min-height: 46px;
-    padding: 6px 24px;
-    padding-left: 12px;
-    padding-right: 52px;
+    padding: 6px 52px 6px 12px;
     position: relative;
     right: auto;
     text-align: left;
