@@ -586,8 +586,8 @@ class editTable extends initEdit {
 
                             } else {
                                 $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
-                                $value_y = ! empty($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
-                                $value_n = ! empty($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+                                $value_y = isset($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
+                                $value_n = isset($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
