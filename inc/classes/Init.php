@@ -892,16 +892,13 @@
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
 
 
-            if (isset($this->config->system->js)) {
-                $system_js = "";
-
-                if (is_object($this->config->system->js)) {
-                    foreach ($this->config->system->js as $src) {
-                        $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
-                    }
+            $system_js = "";
+            if (isset($this->config->system->js) && is_object($this->config->system->js)) {
+                foreach ($this->config->system->js as $src) {
+                    $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
-                $tpl->assign("<!--system_js-->", $system_js);
             }
+            $tpl->assign("<!--system_js-->", $system_js);
 
 
             $system_css = "";
