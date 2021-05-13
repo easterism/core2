@@ -166,6 +166,8 @@ class Error {
      */
 	public static function catchJsonException($out = [], $code = 0) {
 
+	    if (!$out) $out = [];
+
 		if ($code == 400) {
 			header("HTTP/1.1 400 Bad Request");
 

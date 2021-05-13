@@ -123,8 +123,8 @@ class Gitlab extends \Common
             $fn                 = tempnam($this->config->temp, "gitlabzip");
             if (!$fn) throw new \Exception("Не удалось создать файл для установки");
             file_put_contents($fn, $body);
-
-            if ($zip->open($fn) === true){
+            $opened = $zip->open($fn);
+            if ($opened === true){
                 $zip->extractTo($destinationFolder);
                 $zip->close();
                 unlink($fn);
@@ -136,7 +136,7 @@ class Gitlab extends \Common
                     }
                 }
                 if ($dirToZip) {
-                    $fn     = tempnam($this->config->temp, "gitlabzip_");
+                    $fn     = tempnam($this->config->temp, "gitlabzip_") . ".zip";
                     $res    = $zip->open($fn, \ZipArchive::CREATE);
                     if ($res === true) {
                         $this->zipDir($zip, $dirToZip);
@@ -145,15 +145,16 @@ class Gitlab extends \Common
                         $zip = $fn;
 
                     } else {
-                        $this->error = $this->translate->tr("Не удалось подготовить файл для установки! $res");
+                        $this->error = $this->translate->tr("Не удалось подготовить файл для установки! {$this->getZipError($res)}");
                         return;
                     }
                 } else {
                     $this->error = $this->translate->tr("Не удалось подготовить директорию для установки");
                     return;
                 }
-            } else {
-                $this->error = $this->translate->tr("Не удалось создать подготовить файл для установки");
+            }
+            else {
+                $this->error = $this->translate->tr("Не удалось создать подготовить файл для установки. {$this->getZipError($opened)}");
                 return;
             }
         } catch (RequestException $e) {
@@ -167,6 +168,87 @@ class Gitlab extends \Common
             $this->error = $e->getMessage();
         }
         return $zip;
+    }
+
+    /**
+     * @param $code
+     * @return string
+     */
+    private function getZipError($code) {
+        switch ($code)
+        {
+            case 1:
+                return 'Multi-disk zip archives not supported';
+
+            case 2:
+                return 'Renaming temporary file failed';
+
+            case 3:
+                return 'Closing zip archive failed';
+
+            case 4:
+                return 'Seek error';
+
+            case 5:
+                return 'Read error';
+
+            case 6:
+                return 'Write error';
+
+            case 7:
+                return 'CRC error';
+
+            case 8:
+                return 'Containing zip archive was closed';
+
+            case 9:
+                return 'No such file';
+
+            case 10:
+                return 'File already exists';
+
+            case 11:
+                return 'Can\'t open file';
+
+            case 12:
+                return 'Failure to create temporary file';
+
+            case 13:
+                return 'Zlib error';
+
+            case 14:
+                return 'Malloc failure';
+
+            case 15:
+                return 'Entry has been changed';
+
+            case 16:
+                return 'Compression method not supported';
+
+            case 17:
+                return 'Premature EOF';
+
+            case 18:
+                return 'Invalid argument';
+
+            case 19:
+                return 'Not a zip archive';
+
+            case 20:
+                return 'Internal error';
+
+            case 21:
+                return 'Zip archive inconsistent';
+
+            case 22:
+                return 'Can\'t remove file';
+
+            case 23:
+                return 'Entry has been deleted';
+
+            default:
+                return 'An unknown error has occurred('.intval($code).')';
+        }
     }
 
     /**
