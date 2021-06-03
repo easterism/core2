@@ -1852,14 +1852,14 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload-ui.css");
                     Tool::printJs("core2/js/tmpl.min.js", true);
                     Tool::printJs("core2/js/load-image.min.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.iframe-transport.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-process.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-image.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-audio.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-video.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-validate.js", true);
-                    Tool::printJs("core2/vendor/blueimp/jquery-file-upload/js/jquery.fileupload-ui.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.iframe-transport.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-process.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-image.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-audio.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-video.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-validate.js", true);
+                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-ui.js", true);
                 }
                 if (isset($this->scripts['modal'])) {
                     Tool::printJs("core2/vendor/belhard/simplemodal/src/jquery.simplemodal.js", true);

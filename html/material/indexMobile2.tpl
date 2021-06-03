@@ -50,7 +50,7 @@
     <script type="text/javascript" src="core2/html/material/js/snarl.min.js"></script>
 
     <!--[if (gte IE 8)&(lt IE 10)]>
-    <script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
+    <script src="core2/vendor/belhard/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
     <![endif]-->
 
 	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=2"></script>
