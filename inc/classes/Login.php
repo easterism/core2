@@ -307,20 +307,25 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        $isset_key = $this->db->fetchOne("
-            SELECT 1
-            FROM core_users
-            WHERE reg_key = ?
-              AND date_expired > NOW()
-              AND visible = 'N'
-        ", $key);
-
         $error_message = '';
 
-        if ($isset_key) {
+        if ($this->core_config->registration->module) {
             $tpl->pass->assign('[KEY]', $key);
+
         } else {
-            $error_message = $this->_('Ссылка устарела');
+            $isset_key = $this->db->fetchOne("
+                SELECT 1
+                FROM core_users
+                WHERE reg_key = ?
+                  AND date_expired > NOW()
+                  AND visible = 'N'
+            ", $key);
+
+            if ($isset_key) {
+                $tpl->pass->assign('[KEY]', $key);
+            } else {
+                $error_message = $this->_('Ссылка устарела');
+            }
         }
 
         $tpl->assign('[ERROR_MSG]', $error_message);
@@ -827,6 +832,44 @@ class Login extends Db {
      */
     private function restore($email) {
 
+        // Кастомное восстановление
+        if ($this->core_config->restore->module) {
+            $module_name = strtolower($this->core_config->restore->module);
+            $location    = $this->getModuleLocation($module_name);
+
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
+
+            require_once "{$location}/{$mod_controller_name}.php";
+
+
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof \Restore)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
+            }
+
+            try {
+                $result_text = $mod_controller->coreRestore($email);
+
+                return json_encode([
+                    'status'  => 'success',
+                    'message' => $result_text && is_string($result_text)
+                        ? $result_text
+                        : $this->_('На указанную вами почту отправлены данные для смены пароля'),
+                ]);
+
+            } catch (\Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $user_id = $this->db->fetchOne("
             SELECT u.u_id
             FROM core_users AS u
@@ -837,7 +880,7 @@ class Login extends Db {
         if (empty($user_id)) {
             return json_encode([
                 'status'        => 'error',
-                'error_message' => $this->_('Пользователя с таким Email нет в системе')
+                'error_message' => $this->_('В системе нет пользователя с таким Email')
             ]);
         }
 
@@ -849,28 +892,7 @@ class Login extends Db {
             'date_expired' => new \Zend_Db_Expr('DATE_ADD(NOW(), INTERVAL 1 DAY)')
         ], $where);
 
-
-        $name     = $this->config->system && $this->config->system->name ? $this->config->system->name : $_SERVER['SERVER_NAME'];
-        $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
-        $host     = ! empty($this->config->system) ? $this->config->system->host : '';
-        $doc_path = rtrim(DOC_PATH, '/') . '/';
-
-        $content_email = "
-            Вы запросили смену пароля на сервисе {$host}<br>
-            Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
-
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\" 
-               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
-        ";
-
-        $this->setContext('queue');
-
-        require_once 'Email.php';
-        $core_email = new \Core2\Email();
-        $core_email->to($email)
-            ->subject("{$name}: Восстановление пароля")
-            ->body($content_email)
-            ->send(true);
+        $this->sendEmailRestore($email, $reg_key);
 
         return json_encode([
             'status'  => 'success',
@@ -886,6 +908,44 @@ class Login extends Db {
      * @throws \Zend_Db_Adapter_Exception
      */
     private function restoreComplete($key, $password) {
+
+        // Кастомное завершение восстановления
+        if ($this->core_config->restore->module) {
+            $module_name = strtolower($this->core_config->restore->module);
+            $location    = $this->getModuleLocation($module_name);
+
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
+
+            require_once "{$location}/{$mod_controller_name}.php";
+
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof \Restore)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
+            }
+
+            try {
+                $result_text = $mod_controller->coreRestoreComplete($key, $password);
+
+                return json_encode([
+                    'status'  => 'success',
+                    'message' => $result_text && is_string($result_text)
+                        ? $result_text
+                        : "<h4>Пароль изменен!</h4><p>Вернитесь на форму входа и войдите в систему с новым паролем</p>",
+                ]);
+
+            } catch (\Exception $e) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+        }
+
 
         $user_id = $this->db->fetchOne("
             SELECT u_id
@@ -912,8 +972,7 @@ class Login extends Db {
 
         return json_encode([
             "status"  => "success",
-            "message" => "<h4>Пароль изменен!</h4>
-                          <p>Вернитесь на форму входа и войдите в систему с новым паролем</p>"
+            "message" => "<h4>Пароль изменен!</h4><p>Вернитесь на форму входа и войдите в систему с новым паролем</p>"
         ]);
     }
 
@@ -943,6 +1002,37 @@ class Login extends Db {
         $email = new \Core2\Email();
         $email->to($mail_address)
             ->subject("{$name}: Регистрация на сервисе")
+            ->body($content_email)
+            ->send(true);
+    }
+
+
+    /**
+     * @param $mail_address
+     * @param $reg_key
+     */
+    private function sendEmailRestore($mail_address, $reg_key) {
+
+        $name     = $this->config->system && $this->config->system->name ? $this->config->system->name : $_SERVER['SERVER_NAME'];
+        $protocol = ! empty($this->config->system) && $this->config->system->https ? 'https' : 'http';
+        $host     = ! empty($this->config->system) ? $this->config->system->host : '';
+        $doc_path = rtrim(DOC_PATH, '/') . '/';
+
+        $content_email = "
+            Вы запросили смену пароля на сервисе {$host}<br>
+            Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
+
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\" 
+               style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
+        ";
+
+        $reg = \Zend_Registry::getInstance();
+        $reg->set('context', ['queue', 'index']);
+
+        require_once 'Email.php';
+        $core_email = new \Core2\Email();
+        $core_email->to($mail_address)
+            ->subject("{$name}: Восстановление пароля")
             ->body($content_email)
             ->send(true);
     }
