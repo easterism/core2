@@ -80,7 +80,8 @@ class ajaxFunc extends Common {
 		$int      = array();
 		$host     = array();
 		$phone    = array();
-		
+		$uri    = array();
+
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
 				$control[$field] = trim($val);
@@ -141,6 +142,8 @@ class ajaxFunc extends Common {
 					$int[] = $field;
 				} elseif (in_array("host", $params)) {
 					$host[] = $field;
+				} elseif (in_array("uri", $params)) {
+					$uri[] = $field;
 				} elseif (in_array("phone", $params)) {
 					$phone[] = $field;
 				}
@@ -249,11 +252,11 @@ class ajaxFunc extends Common {
 				    foreach ($validator->getMessages() as $message) {
 				        $this->error[] = "- $message";
 				    }
-				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').className='reqField';";
+				    $script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "').classList.add('reqField');";
 				}
 			}
 		}
-		
+
 		
 		$this->script = $script;
 		if (count($this->error)) {

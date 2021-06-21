@@ -36,9 +36,10 @@ class Acl extends Db {
 		parent::__construct();
 	}
 
-	/**
-	 *
-	 */
+
+    /**
+     * @throws \Zend_Acl_Exception
+     */
 	public function setupAcl() {
 		$registry 	= \Zend_Registry::getInstance();
 		$registry->set('addRes', $this->addRes);

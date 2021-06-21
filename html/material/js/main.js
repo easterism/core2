@@ -410,6 +410,7 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
  */
 var load = function (url, data, id, callback) {
 	preloader.show();
+
 	if (!id) id = '#main_body';
 	else if (typeof id === 'string') {
 		id = '#' + id;
