@@ -26,7 +26,7 @@ body {
 }
 .form-main {
     width: 320px;
-    padding: 90px 30px;
+    padding: 60px 30px;
     -moz-border-radius: 8px;
     -webkit-border-radius: 8px;
     border-radius: 8px;
@@ -74,7 +74,6 @@ body {
     margin-bottom: 30px;
     height: 40px;
 }
-
 .error-message {
     color: #e50000;
 }
@@ -112,8 +111,4 @@ PRELOADERS
 
 .form-footer {
     margin-top: 20px;
-}
-.error {
-    color: red;
-    margin-bottom: 15px;
 }

@@ -4,7 +4,6 @@ require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
-require_once 'classes/installModule.php';
 require_once 'classes/Alert.php';
 
 require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";

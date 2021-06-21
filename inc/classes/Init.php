@@ -250,19 +250,20 @@
             }
 
             $this->detectWebService();
-            $this->auth = new StdClass();
+
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', $this->auth); //DEPRECATED
-                return;
-            }
-            if (PHP_SAPI === 'cli') {
-                $this->is_cli = true;
-                Zend_Registry::set('auth', $this->auth);  //DEPRECATED
+                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
                 return;
             }
 
-            $this->auth 	= new SessionContainer('Auth');
-            if (!empty($this->auth->ID) && $this->auth->ID > 0) {
+            if (PHP_SAPI === 'cli') {
+                $this->is_cli = true;
+                Zend_Registry::set('auth', new StdClass());  //DEPRECATED
+                return;
+            }
+
+            $this->auth = new SessionContainer('Auth');
+            if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
                     if ($this->auth->LIVEID) {
@@ -550,16 +551,20 @@
         /**
          * Проверка наличия токена в запросе
          * Только для запросов с авторизацией по токену!
-         *
          * @return StdClass|void
          */
         private function checkToken() {
+
             $token = '';
-            if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) return;
+
+            if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) {
+                    return;
+                }
+
                 $token = $_SERVER['HTTP_AUTHORIZATION'];
-            }
-            else if (!empty($_SERVER['HTTP_CORE2M'])) {
+
+            } elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
                 $token = $_SERVER['HTTP_CORE2M'];
             }
 
@@ -887,26 +892,19 @@
             $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
 
 
-            if (isset($this->config->system->js)) {
-                $system_js = "";
-
-                if (is_object($this->config->system->js)) {
-                    foreach ($this->config->system->js as $src) {
-                        if (file_exists($src)) {
-                            $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
-                        }
-                    }
+            $system_js = "";
+            if (isset($this->config->system->js) && is_object($this->config->system->js)) {
+                foreach ($this->config->system->js as $src) {
+                    $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
-                $tpl->assign("<!--system_js-->", $system_js);
             }
+            $tpl->assign("<!--system_js-->", $system_js);
 
 
             $system_css = "";
             if (isset($this->config->system->css) && is_object($this->config->system->css)) {
                 foreach ($this->config->system->css as $src) {
-                    if (file_exists($src)) {
-                        $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
-                    }
+                    $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                 }
             }
             $tpl->assign("<!--system_css-->", $system_css);
@@ -1151,6 +1149,12 @@
 	                if (array_search($action, $self_methods) === false) {
 	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
+
+                    $autoload_file = $location . "/vendor/autoload.php";
+                    if (file_exists($autoload_file)) {
+                        require_once($autoload_file);
+                    }
+
 
 	                $mod_instance = new $mod_cli();
 	                $result = call_user_func_array(array($mod_instance, $action), $params);

@@ -697,12 +697,13 @@ class Db {
 	}
 
 
-	/**
+    /**
      * Получаем экземпляр логера
-	 * @param string $name
-	 * @return Log
-	 */
-	final public function log($name) {
+     * @param string $name
+     * @return Log
+     * @throws \Exception
+     */
+	final public function log($name = 'core2') {
 
 		$log = new Log($name);
 		return $log;
