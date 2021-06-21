@@ -28,7 +28,7 @@
         \Core2\Error::Exception("conf.ini is missing.");
     }
     $config = array(
-        'system' => array('name' => 'CORE'),
+        'system' => array('name' => 'CORE2'),
         'include_path' => '',
         'temp' => getenv('TMP'),
         'debug' => array('on' => false),
