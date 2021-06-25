@@ -36,7 +36,7 @@ use Core2\InstallModule as Install;
  */
 class CoreController extends Common implements File {
 
-	const RP = '8c1733d4cd0841199aa02ec9362be324';
+	const RP = '187777f095b3006d4dbdf3b3548ac407';
 	protected $tpl = '';
 	protected $theme = 'default';
 

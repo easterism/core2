@@ -1069,7 +1069,7 @@ class Login extends Db {
      * Получение данных дя пользователя root
      * @return array
      */
-    private final function getAuthRoot() {
+    private function getAuthRoot() {
 
         require_once __DIR__ . '/../CoreController.php';
 
@@ -1093,12 +1093,12 @@ class Login extends Db {
 
         require_once 'LdapAuth.php';
 
-        $ldapAuth = new \LdapAuth();
+        $ldapAuth = new LdapAuth();
         $ldapAuth->auth($login, $password);
         $ldapStatus = $ldapAuth->getStatus();
 
         switch ($ldapStatus) {
-            case \LdapAuth::ST_LDAP_AUTH_SUCCESS :
+            case LdapAuth::ST_LDAP_AUTH_SUCCESS :
                 $userData = $ldapAuth->getUserData();
                 $login    = $userData['login'];
 
@@ -1124,16 +1124,16 @@ class Login extends Db {
                 return $this->getAuthLogin($login);
                 break;
 
-            case \LdapAuth::ST_LDAP_USER_NOT_FOUND :
+            case LdapAuth::ST_LDAP_USER_NOT_FOUND :
                 //удаляем пользователя если его нету в AD и с префиксом LDAP_%
                 //$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
                 break;
 
-            case \LdapAuth::ST_LDAP_INVALID_PASSWORD :
+            case LdapAuth::ST_LDAP_INVALID_PASSWORD :
                 throw new \Exception($this->translate->tr("Неверный пароль или пользователь отключён"));
                 break;
 
-            case \LdapAuth::ST_ERROR :
+            case LdapAuth::ST_ERROR :
                 throw new \Exception($this->translate->tr("Ошибка LDAP: ") . $ldapAuth->getMessage());
                 break;
 

@@ -1,6 +1,13 @@
-<?
+<?php
+namespace Core2;
+require_once 'Db.php';
 
-class LdapAuth extends Common {
+use Laminas\Authentication\AuthenticationService;
+use Laminas\Authentication\Result;
+use Laminas\Authentication\Adapter\Ldap as LdapAdapter;
+use Laminas\Ldap\Ldap;
+
+class LdapAuth extends Db {
 	const ST_LDAP_AUTH_SUCCESS 		= 1;
 	const ST_LDAP_USER_NOT_FOUND	= 2;
 	const ST_LDAP_INVALID_PASSWORD	= 3;
@@ -47,12 +54,12 @@ class LdapAuth extends Common {
 	 * LDAP auth only
 	 * @param $login
 	 * @param $password
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function auth($login, $password) {
 		try {
-			$auth = Zend_Auth::getInstance();
-			$config = Zend_Registry::getInstance()->get('config');
+			$auth = new AuthenticationService();
+			$config = \Zend_Registry::getInstance()->get('config');
 			$log_path = $config->ldap->log_path;
 			$root = $config->ldap->root;
 			$admin = $config->ldap->admin;
@@ -61,17 +68,17 @@ class LdapAuth extends Common {
 			unset($options['log_path']);
 			unset($options['root']);
 			unset($options['admin']);
-			$adapter = new Zend_Auth_Adapter_Ldap($options, $login, $password);
+			$adapter = new LdapAdapter($options, $login, $password);
 			$result = $auth->authenticate($adapter);
 			if (!$result->isValid()) {
 				// Authentication failed; print the reasons why
 				switch ($result->getCode()) {
 
-					case Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND:
+					case Result::FAILURE_IDENTITY_NOT_FOUND:
 						$this->setStatus(LdapAuth::ST_LDAP_USER_NOT_FOUND);
 						break;
 
-					case Zend_Auth_Result::FAILURE_CREDENTIAL_INVALID:
+					case Result::FAILURE_CREDENTIAL_INVALID:
 						$this->setStatus(LdapAuth::ST_LDAP_INVALID_PASSWORD);
 						break;
 
@@ -81,10 +88,10 @@ class LdapAuth extends Common {
 				foreach ($result->getMessages() as $message) {
 					$msg .= "$message\n";
 				}
-				throw new Exception($msg);
+				throw new \Exception($msg);
 			} else {
 				if ($result->getIdentity() !== $auth->getIdentity()) {
-					throw new Exception('Ошибка аутентификации');
+					throw new \Exception('Ошибка аутентификации');
 				}
 				$this->setStatus(LdapAuth::ST_LDAP_AUTH_SUCCESS);
 				$userData = array('login' => $result->getIdentity());
@@ -99,7 +106,7 @@ class LdapAuth extends Common {
 				$this->setUserData($userData);
 			}
 
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			if (!$this->status) $this->setStatus(LdapAuth::ST_ERROR);
 			$this->setMessage($e->getMessage());
 		}
@@ -110,7 +117,7 @@ class LdapAuth extends Common {
      */
 	public function getLdapInfo($login) {
 
-		$config = Zend_Registry::getInstance()->get('config');
+		$config = \Zend_Registry::getInstance()->get('config');
 		$options = $config->ldap->toArray();
 		unset($options['active']);
 		unset($options['log_path']);
@@ -127,7 +134,7 @@ class LdapAuth extends Common {
 
 		$key = 'profile_' . md5($login);
 		if (!($this->cache->test($key))) {
-			$ldap = new Zend_Ldap($options);
+			$ldap = new Ldap($options);
 			$ldap->bind();
 			$temp = explode('\\', $login);
 			if (isset($temp[1])) $login = $temp[1];
