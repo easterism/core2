@@ -211,6 +211,10 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
+        if (!empty($this->config->ldap->active)) {
+            $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
+        }
+
         if ($this->config->mail && $this->config->mail->server) {
             if ($this->core_config->registration &&
                 $this->core_config->registration->on &&
@@ -444,7 +448,7 @@ class Login extends Db {
 
             if ($this->config->ldap &&
                 $this->config->ldap->active &&
-                ((function_exists('ctype_print') ? ! ctype_print($password) : true) || strlen($password) < 30)
+                ((function_exists('ctype_print') ? ! ctype_print($password) : true) || strlen($password) < 1)
             ) {
                 throw new \Exception($this->translate->tr("Ошибка пароля!"), 400);
             }
@@ -1106,19 +1110,19 @@ class Login extends Db {
                     return $this->getAuthRoot();
                 }
 
-                $user_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login))->u_id;
-                if ( ! $user_id) {
+                $user = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+                if ( ! $user) {
                     //create new user
                     $this->db->insert('core_users', [
                         'visible'     => 'Y',
                         'is_admin_sw' => $userData['admin'] ? 'Y' : 'N',
                         'u_login'     => $login,
-                        'role_id'     => $this->config->ldap->role_id ?: new \Zend_Db_Expr('NULL'),
+                        'role_id'     => $userData['role_id'] ?: new \Zend_Db_Expr('NULL'),
                         'date_added'  => new \Zend_Db_Expr('NOW()'),
                     ]);
 
                 } elseif ($userData['admin']) {
-                    $this->db->update('core_users', ['is_admin_sw' => 'Y'], $this->db->quoteInto('u_id = ?', $user_id));
+                    $this->db->update('core_users', ['is_admin_sw' => 'Y'], $this->db->quoteInto('u_id = ?', $user->u_id));
                 }
 
                 return $this->getAuthLogin($login);

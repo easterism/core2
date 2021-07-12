@@ -616,7 +616,7 @@ class CoreController extends Common implements File {
 
 		if ($this->auth->NAME !== 'root' && $this->auth->LDAP) {
 			require_once 'core2/inc/classes/LdapAuth.php';
-			$ldap = new LdapAuth();
+			$ldap = new \Core2\LdapAuth();
 			$ldap->getLdapInfo($this->auth->NAME);
 		}
 

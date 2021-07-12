@@ -63,16 +63,19 @@ class LdapAuth extends Db {
 			$log_path = $config->ldap->log_path;
 			$root = $config->ldap->root;
 			$admin = $config->ldap->admin;
+			$role_id = $config->ldap->role_id;
 			$options = $config->ldap->toArray();
 			unset($options['active']);
 			unset($options['log_path']);
 			unset($options['root']);
 			unset($options['admin']);
+			unset($options['role_id']);
 			$adapter = new LdapAdapter($options, $login, $password);
 			$result = $auth->authenticate($adapter);
 			if (!$result->isValid()) {
 				// Authentication failed; print the reasons why
-				switch ($result->getCode()) {
+                $code = $result->getCode();
+				switch ($code) {
 
 					case Result::FAILURE_IDENTITY_NOT_FOUND:
 						$this->setStatus(LdapAuth::ST_LDAP_USER_NOT_FOUND);
@@ -85,11 +88,14 @@ class LdapAuth extends Db {
 				}
 
 				$msg = '';
-				foreach ($result->getMessages() as $message) {
+				foreach ($result->getMessages() as $i => $message) {
+                    if ($i < 2) continue; // Messages from position 2 and up are informational messages from the LDAP
+
 					$msg .= "$message\n";
 				}
 				throw new \Exception($msg);
-			} else {
+			}
+			else {
 				if ($result->getIdentity() !== $auth->getIdentity()) {
 					throw new \Exception('Ошибка аутентификации');
 				}
@@ -103,6 +109,8 @@ class LdapAuth extends Db {
 				if ($admin === $userData['login']) {
 					$userData['admin'] = true;
 				}
+				//$ldapInfo = $this->getLdapInfo($userData['login']);
+                $userData['role_id'] = $role_id;
 				$this->setUserData($userData);
 			}
 
@@ -123,6 +131,7 @@ class LdapAuth extends Db {
 		unset($options['log_path']);
 		unset($options['root']);
 		unset($options['admin']);
+		unset($options['role_id']);
 		$options = current($options);
 		//echo "<PRE>";print_r($options);echo "</PRE>";die;
 		//$options['accountCanonicalForm'] = 2;
@@ -163,8 +172,8 @@ class LdapAuth extends Db {
 					'firstname' => $data['givenname'][0]
 				));
 			}
-			$this->auth->LN = $data['sn'][0];
-			$this->auth->FN = $data['givenname'][0];
+			//$this->auth->LN = $data['sn'][0];
+			//$this->auth->FN = $data['givenname'][0];
 			$this->cache->save($login, $key, array('core_users'));
 		}
 	}
