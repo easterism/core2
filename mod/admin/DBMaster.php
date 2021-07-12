@@ -422,7 +422,7 @@ class DBMaster {
 		$a_comments = array();
 		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
 
-        while (list($key, $val) = each($rows)) {
+        foreach ($rows as $val) {
             $table_name = $val['table_name'];
             $a_reffers[$table_name][$val['referenced_table_name']] = 1;
             $a_ref_cols[$table_name][$val['constraint_name']] = $val;
@@ -438,7 +438,7 @@ class DBMaster {
 		$tmp_pos = 0;
 		while ($tbl_count > 0) {	
 			reset($a_tables);
-			while (list($key, $val) = each($a_tables)) {
+            foreach ($a_tables as $key => $val) {
 				if ($val == 1) continue;
 				if (!$this->canTableBeAddedToFinalArray($key, $a_reffers, $a_tables)) continue;
 				
@@ -451,8 +451,7 @@ class DBMaster {
 		}
 		
 		reset($a_result_tables);
-		while (list($key, $val) = each($a_result_tables)) {
-
+		foreach ($a_result_tables as $key => $val) {
 
             $rows = $this->db->fetchAll("explain $key");
             $a_tmp = array();
@@ -479,7 +478,7 @@ class DBMaster {
 			if (isset($a_ref_cols[$key]) and is_array($a_ref_cols[$key])) {
 				reset($a_ref_cols[$key]);
 						
-				while (list($k, $v) = each($a_ref_cols[$key])) {
+                foreach ($a_ref_cols[$key] as $k => $v) {
 					$a_oprs = $this->defineFkArr($v['table_name'], $v['column_name'], $script);
 					
 					$a_result_tables[$key]['FK'][$k]['COL_NAME']   = $v['column_name'];		
