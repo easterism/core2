@@ -566,7 +566,7 @@ class Db {
 											  AND m.module_id = ?
 											  AND sm_key = ?
 											  ORDER BY sm.seq",
-				$id);
+				[$id[0], $id[1]]);
 			$this->cache->setItem($key, $mods);
             $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
