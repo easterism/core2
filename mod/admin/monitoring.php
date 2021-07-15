@@ -158,7 +158,9 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
                 LIMIT 1
             ", $show);
 
-			echo '<div>' . $this->_('Последний раз заходил') . ' <b>' . $res['login_time'] . '</b> ' . $this->_('с IP адреса') . ' <b>' . $res['ip'] . '</b></div>';
+			if ($res) {
+                echo '<div>' . $this->_('Последний раз заходил') . ' <b>' . $res['login_time'] . '</b> ' . $this->_('с IP адреса') . ' <b>' . $res['ip'] . '</b></div>';
+            }
 
 			$list = new listTable($this->resId . 'xxx2');
 			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
