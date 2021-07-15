@@ -118,13 +118,15 @@ class listTable extends initList {
      * @param $script
      * @param string $msg
      * @param int $nocheck
+     * @param string $callback
      */
-    public function addButton($name, $script, $msg = "", $nocheck = 0) {
+    public function addButton($name, $script, $msg = "", $nocheck = 0, $callback = '') {
         $this->table_button[$this->main_table_id][] = array(
             'name'    => addslashes($name),
             'url'     => $script,
             'confirm' => addslashes($msg),
-            'nocheck' => $nocheck
+            'nocheck' => $nocheck,
+            'callback' => $callback
         );
     }
 
@@ -447,6 +449,15 @@ class listTable extends initList {
         } else {
             $this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
             $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
+        }
+
+        if ( ! empty($questions)) {
+            $this->search_sql = $search;
+            foreach ($questions as $question) {
+                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
+            }
+        } else {
+            $this->search_sql = $search;
         }
 
         if ( ! empty($questions)) {
@@ -1173,7 +1184,9 @@ class listTable extends initList {
             reset($this->table_button[$this->main_table_id]);
             foreach ($this->table_button[$this->main_table_id] as $button_key => $button_value) {
                 if (empty($button_value['html'])) {
-                    $buttons .= $this->button($button_value['name'], "", "listx.buttonAction('{$this->resource}', '{$button_value['url']}', '{$button_value['confirm']}', {$button_value['nocheck']}, this)");
+                    $params = "'{$this->resource}', '{$button_value['url']}', '{$button_value['confirm']}', {$button_value['nocheck']}, this";
+                    if ($button_value['callback']) $params .= ", {$button_value['callback']}";
+                    $buttons .= $this->button($button_value['name'], "", "listx.buttonAction($params)");
                 } else {
                     $buttons .= $button_value['html'];
                 }
