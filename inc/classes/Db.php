@@ -566,7 +566,7 @@ class Db {
 											  AND m.module_id = ?
 											  AND sm_key = ?
 											  ORDER BY sm.seq",
-				$id);
+				[$id[0], $id[1]]);
 			$this->cache->setItem($key, $mods);
             $this->cache->setTags($key, ['is_active_core_modules']);
 		} else {
@@ -713,7 +713,7 @@ class Db {
 	/**
 	 * Получение всех настроек системы
 	 */
-	final private function getAllSettings() {
+	private function getAllSettings() {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
 			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
