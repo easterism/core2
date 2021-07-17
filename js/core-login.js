@@ -11,34 +11,36 @@ CoreLogin.login = function (form) {
 
     CoreLogin.loaderShow();
     $('.form-main .text-danger').text('');
-
+    var p = $('[name=password]', form);
+    var pv = p.val();
+    if (!p.data('ldap') || $('[name=login]', form).val() == 'root') pv = hex_md5(pv);
     $.ajax({
         url: "index.php?core=login",
         method: "POST",
         data: {
             login: $('[name=login]', form).val(),
-            password: hex_md5($('[name=password]', form).val())
+            password: pv
         }
     })
-        .success(function () {
-            location.reload();
-        })
+    .success(function () {
+        location.reload();
+    })
 
-        .always (function (jqXHR, textStatus) {
-            CoreLogin.loaderHide();
+    .always (function (jqXHR, textStatus) {
+        CoreLogin.loaderHide();
 
-            if (textStatus !== 'success') {
-                var data = {};
+        if (textStatus !== 'success') {
+            var data = {};
 
-                try {
-                    data = JSON.parse(jqXHR.responseText);
-                } catch (err) {
-                    // ignore
-                }
-
-                $('.form-main .text-danger').text(data.error_message || "Ошибка. Попробуйте позже, либо обратитесь к администратору");
+            try {
+                data = JSON.parse(jqXHR.responseText);
+            } catch (err) {
+                // ignore
             }
-        });
+
+            $('.form-main .text-danger').text(data.error_message || "Ошибка. Попробуйте позже, либо обратитесь к администратору");
+        }
+    });
 };
 
 

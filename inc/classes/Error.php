@@ -21,7 +21,7 @@ class Error {
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
 			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
-			if ($code == 13) {//ошибки для js объекта с наличием error
+			if ($code == 13) { //ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
 			} else {
 				echo $msg;
@@ -154,7 +154,12 @@ class Error {
 	 * @param $exception
 	 */
 	public static function catchZendException($exception) {
-		$message = $exception->getMessage();
+		$cnf = self::getConfig();
+        if ($cnf && $cnf->debug->on) {
+            $message = $exception->getMessage(); //TODO вести журнал
+        } else {
+            $message = "Ошибка базы данных!";
+        }
 		$code = $exception->getCode();
 		self::Exception($message, $code);
 	}
