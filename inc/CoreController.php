@@ -14,6 +14,7 @@ require_once DOC_ROOT . "core2/mod/admin/User.php";
 require_once DOC_ROOT . "core2/mod/admin/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/Roles.php";
+require_once DOC_ROOT . "core2/mod/admin/Enum.php";
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\User as User;
@@ -713,11 +714,38 @@ class CoreController extends Common implements File {
 	 * @throws Exception
      * @return void
 	 */
-	public function action_enum() {
-		if (!$this->auth->ADMIN) throw new Exception(911);
-		$this->printJs("core2/mod/admin/enum.js");
-		$app = "index.php?module=admin&action=enum";
-		require_once $this->path . 'enum.php';
+	public function action_enum()
+    {
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        $enum = new Enum();
+        $tab = new tabs('enum');
+
+        $title = $this->_("Справочники");
+        if (!empty($_GET['edit'])) {
+            $title = $this->_("Редактирование справочника");
+        }
+        elseif (isset($_GET['new'])) {
+            $title = $this->_("Создание нового справочника");
+        }
+        $tab->beginContainer($title);
+        $this->printJs("core2/mod/admin/enum.js");
+        $this->printJs("core2/mod/admin/mod.js");
+        if (!empty($_GET['edit'])) {
+            echo $enum->editEnum($_GET['edit']);
+            $tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"%s\""), $this->dataEnum->find($_GET['edit'])->current()->name));
+            if (isset($_GET['newvalue'])) {
+                echo $enum->newEnumValue($_GET['edit']);
+            } elseif (!empty($_GET['editvalue'])) {
+                echo $enum->editEnumValue($_GET['edit'], $_GET['editvalue']);
+            }
+            echo $enum->listEnumValues($_GET['edit']);
+            $tab->endContainer();
+        } elseif (isset($_GET['new'])) {
+            echo $enum->newEnum();
+        } else {
+            echo $enum->listEnum();
+        }
+        $tab->endContainer();
 	}
 
 
