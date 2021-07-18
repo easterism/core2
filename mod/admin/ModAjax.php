@@ -150,11 +150,12 @@ class ModAjax extends ajaxFunc {
 		if (!$this->saveData($data)) {
 			return $this->response;
 		}
-		if (!$refId) {
+
+        $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
+
+		if ( ! $refId) {
 			//TODO add the new module tab
 		} else {
-			$this->cache->removeItem($module_id);
-			$this->cache->clearByTags(['is_active_core_modules']);
 			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
 		}
 		$this->done($data);
