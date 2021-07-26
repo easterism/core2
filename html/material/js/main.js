@@ -410,6 +410,7 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
  */
 var load = function (url, data, id, callback) {
 	preloader.show();
+
 	if (!id) id = '#main_body';
 	else if (typeof id === 'string') {
 		id = '#' + id;
@@ -558,22 +559,22 @@ var load = function (url, data, id, callback) {
         $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
         $('#navbar-top .module-action').text(action_title);
 
-        if (xhrs[locData.id]) {
-        	xhrs[locData.id].abort();
+        if (xhrs[id]) {
+        	xhrs[id].abort();
         }
 
         if (locData.data) {
-            $(locData.id).load('index.php' + url, locData.data, callback);
+            $(id).load('index.php' + url, locData.data, callback);
 
         } else {
-			xhrs[locData.id] = $.ajax({
+			xhrs[id] = $.ajax({
 				url: 'index.php' + url,
 				data: data,
 				global: false,
 				async: true,
 				method: 'GET'
 			}).done(function (result) {
-				$(locData.id).html(result);
+				$(id).html(result);
 
 				if (current_module !== load_module || current_action !== load_action ||
 					document.location.hash.match(/^#module=([a-zA-Z0-9_]+)$/) ||

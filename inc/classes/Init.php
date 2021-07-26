@@ -28,7 +28,7 @@
         \Core2\Error::Exception("conf.ini is missing.");
     }
     $config = array(
-        'system' => array('name' => 'CORE'),
+        'system' => array('name' => 'CORE2'),
         'include_path' => '',
         'temp' => getenv('TMP'),
         'debug' => array('on' => false),
@@ -519,7 +519,7 @@
 
             $matches = [];
 
-            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
                 $this->is_rest = $matches;
                 return;
             }
@@ -535,13 +535,13 @@
             // DEPRECATED
             if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
                 $this->is_soap = [
-                    'module'  => isset($matches[2]) ? $matches[2] : $matches[3],
+                    'module'  => ! empty($matches[2]) ? $matches[2] : $matches[3],
                     'version' => '',
-                    'action'  => isset($matches[2]) ? 'wsdl.xml' : 'service.php',
+                    'action'  => ! empty($matches[2]) ? 'wsdl.xml' : 'service.php',
                 ];
                 return;
             }
-            if (preg_match('~^soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d\.\d)/(?<action>wsdl\.xml|service\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+            if (preg_match('~soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)/(?<action>wsdl\.xml|service\.php)~', $_SERVER['REQUEST_URI'], $matches)) {
                 $this->is_soap = $matches;
                 return;
             }

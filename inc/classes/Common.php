@@ -258,7 +258,7 @@ class Common extends \Core2\Acl {
                 }
 			}
 			else {
-				$v = $this->{$k} = $this;
+				//$v = $this->{$k} = new \Laminas\Stdlib\ArrayObject();
 			}
 		}
 

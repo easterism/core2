@@ -211,6 +211,10 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
+        if (!empty($this->config->ldap->active)) {
+            $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
+        }
+
         if ($this->config->mail && $this->config->mail->server) {
             if ($this->core_config->registration &&
                 $this->core_config->registration->on &&
@@ -444,7 +448,7 @@ class Login extends Db {
 
             if ($this->config->ldap &&
                 $this->config->ldap->active &&
-                ((function_exists('ctype_print') ? ! ctype_print($password) : true) || strlen($password) < 30)
+                ((function_exists('ctype_print') ? ! ctype_print($password) : true) || strlen($password) < 1)
             ) {
                 throw new \Exception($this->translate->tr("Ошибка пароля!"), 400);
             }
@@ -1069,7 +1073,7 @@ class Login extends Db {
      * Получение данных дя пользователя root
      * @return array
      */
-    private final function getAuthRoot() {
+    private function getAuthRoot() {
 
         require_once __DIR__ . '/../CoreController.php';
 
@@ -1093,12 +1097,12 @@ class Login extends Db {
 
         require_once 'LdapAuth.php';
 
-        $ldapAuth = new \LdapAuth();
+        $ldapAuth = new LdapAuth();
         $ldapAuth->auth($login, $password);
         $ldapStatus = $ldapAuth->getStatus();
 
         switch ($ldapStatus) {
-            case \LdapAuth::ST_LDAP_AUTH_SUCCESS :
+            case LdapAuth::ST_LDAP_AUTH_SUCCESS :
                 $userData = $ldapAuth->getUserData();
                 $login    = $userData['login'];
 
@@ -1106,34 +1110,34 @@ class Login extends Db {
                     return $this->getAuthRoot();
                 }
 
-                $user_id = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login))->u_id;
-                if ( ! $user_id) {
+                $user = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
+                if ( ! $user) {
                     //create new user
                     $this->db->insert('core_users', [
                         'visible'     => 'Y',
                         'is_admin_sw' => $userData['admin'] ? 'Y' : 'N',
                         'u_login'     => $login,
-                        'role_id'     => $this->config->ldap->role_id ?: new \Zend_Db_Expr('NULL'),
+                        'role_id'     => $userData['role_id'] ?: new \Zend_Db_Expr('NULL'),
                         'date_added'  => new \Zend_Db_Expr('NOW()'),
                     ]);
 
                 } elseif ($userData['admin']) {
-                    $this->db->update('core_users', ['is_admin_sw' => 'Y'], $this->db->quoteInto('u_id = ?', $user_id));
+                    $this->db->update('core_users', ['is_admin_sw' => 'Y'], $this->db->quoteInto('u_id = ?', $user->u_id));
                 }
 
                 return $this->getAuthLogin($login);
                 break;
 
-            case \LdapAuth::ST_LDAP_USER_NOT_FOUND :
+            case LdapAuth::ST_LDAP_USER_NOT_FOUND :
                 //удаляем пользователя если его нету в AD и с префиксом LDAP_%
                 //$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
                 break;
 
-            case \LdapAuth::ST_LDAP_INVALID_PASSWORD :
+            case LdapAuth::ST_LDAP_INVALID_PASSWORD :
                 throw new \Exception($this->translate->tr("Неверный пароль или пользователь отключён"));
                 break;
 
-            case \LdapAuth::ST_ERROR :
+            case LdapAuth::ST_ERROR :
                 throw new \Exception($this->translate->tr("Ошибка LDAP: ") . $ldapAuth->getMessage());
                 break;
 
