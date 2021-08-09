@@ -11,13 +11,20 @@ CoreLogin.login = function (form) {
 
     CoreLogin.loaderShow();
     $('.form-main .text-danger').text('');
-
+    
+    var $passInput = $('[name=password]', form);
+    var passValue  = $passInput.val();
+    
+    if ( ! $passInput.data('ldap') || $('[name=login]', form).val() === 'root') {
+        passValue = hex_md5(passValue);
+    }
+    
     $.ajax({
         url: "index.php?core=login",
         method: "POST",
         data: {
             login: $('[name=login]', form).val(),
-            password: hex_md5($('[name=password]', form).val())
+            password: passValue
         }
     })
 

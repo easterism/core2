@@ -52,7 +52,7 @@ class DBMaster {
 		$op_pos = 0;
 		reset($inArr);
 		//echo "<PRE>";print_r($a_cur_tables);echo"</PRE>";die();
-		while (list($key, $val) = each($a_ini_tables)) {
+        foreach ($a_ini_tables as $key => $val) {
 			// -- CHECK IF TABLE DOES NOT EXISTS
 			$op_pos++;
 			if (!isset($a_cur_tables[$key])) {
@@ -65,8 +65,8 @@ class DBMaster {
 			
 			$a_columns = $val['COLUMNS'];
 			reset($a_columns);
-			// -- CHECK COLUMNS 
-			while (list($k, $v) = each($a_columns)) {
+			// -- CHECK COLUMNS
+            foreach ($a_columns as $k => $v) {
 				//echo "<pre>";print_r($a_cur_tables); die;
 				if(!isset($a_cur_tables[$key]['COLS'][$k])) {
 					$a_result['COM'][$op_pos] = "Column <b>$k</b> for table <b>$key</b> does not exist.";
@@ -79,8 +79,7 @@ class DBMaster {
 				//-- CHECK IF WE NEED TO CORRECT TABLE
 				reset($v);
 				$need_to_alter_column = false;
-				
-				while (list($k1, $v1) = each($v)) {
+                foreach ($v as $k1 => $v1) {
 					if ($v1 != $a_cur_tables[$key]['COLS'][$k][$k1]) {
 						//echo $k1."--".$v1."--".$a_cur_tables[$key]['COLS'][$k][$k1];
 						//echo "<PRE>";print_r($a_cur_tables[$key]['COLS'][$k]);echo"</PRE>";//die();
@@ -174,8 +173,7 @@ class DBMaster {
 			
 			
 		}
-		
-		while (list($key, $val) = each($a_cur_tables)) {
+        foreach ($a_cur_tables as $key => $val) {
 			// -- CHECK IF TABLE DOES NOT EXISTS
 			$op_pos++;
 			
@@ -184,9 +182,9 @@ class DBMaster {
 			
 			//echo "<pre>";print_r($a_cur_tables);echo "<br>";
 			reset($a_columns);
-			// -- CHECK COLUMNS 
-			while (list($k, $v) = each($a_cur_columns)) {
-				if(!isset($a_ini_tables[$key]['COLUMNS'][$k])) {
+			// -- CHECK COLUMNS
+            foreach ($a_cur_columns as $k => $v) {
+				if (!isset($a_ini_tables[$key]['COLUMNS'][$k])) {
 					
 					$a_result['WARNING'][$op_pos] = "Таблица <b>$key</b> имеет столбец <b>$k</b>, которого нет в эталонной таблице.";
 					//$a_result['SQL'][$op_pos] = $this->alterTableAddColumn($key, $k, $v);
@@ -253,9 +251,8 @@ class DBMaster {
                     [EXTRA] => auto_increment
                 )
 		*/
-                
-		
-		while (list($key, $val) = each($inArr['COLUMNS'])) {
+
+        foreach ($inArr['COLUMNS'] as $key => $val) {
 			$str .= "`$key` " . $val['TYPE'];
 			if ($val['NULL'] == 'NO') {
 				$str .= " NOT NULL";
@@ -422,7 +419,7 @@ class DBMaster {
 		$a_comments = array();
 		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
 
-        while (list($key, $val) = each($rows)) {
+        foreach ($rows as $val) {
             $table_name = $val['table_name'];
             $a_reffers[$table_name][$val['referenced_table_name']] = 1;
             $a_ref_cols[$table_name][$val['constraint_name']] = $val;
@@ -438,7 +435,7 @@ class DBMaster {
 		$tmp_pos = 0;
 		while ($tbl_count > 0) {	
 			reset($a_tables);
-			while (list($key, $val) = each($a_tables)) {
+            foreach ($a_tables as $key => $val) {
 				if ($val == 1) continue;
 				if (!$this->canTableBeAddedToFinalArray($key, $a_reffers, $a_tables)) continue;
 				
@@ -451,14 +448,12 @@ class DBMaster {
 		}
 		
 		reset($a_result_tables);
-		while (list($key, $val) = each($a_result_tables)) {
-
+		foreach ($a_result_tables as $key => $val) {
 
             $rows = $this->db->fetchAll("explain $key");
             $a_tmp = array();
-			
-			while (list($k, $v) = each($rows)) {
-				while (list($k1, $v1) = each($v)) {
+            foreach ($rows as $k => $v) {
+                foreach ($v as $k1 => $v1) {
 					if ($k1 == 'Field') continue;
 					$a_tmp[$v['Field']][strtoupper($k1)] = $v1;	
 				}
@@ -479,7 +474,7 @@ class DBMaster {
 			if (isset($a_ref_cols[$key]) and is_array($a_ref_cols[$key])) {
 				reset($a_ref_cols[$key]);
 						
-				while (list($k, $v) = each($a_ref_cols[$key])) {
+                foreach ($a_ref_cols[$key] as $k => $v) {
 					$a_oprs = $this->defineFkArr($v['table_name'], $v['column_name'], $script);
 					
 					$a_result_tables[$key]['FK'][$k]['COL_NAME']   = $v['column_name'];		
@@ -491,7 +486,7 @@ class DBMaster {
 			}
 			
 			reset($a_columns);
-			while (list($k, $v) = each($a_columns)) {
+            foreach ($a_columns as $k => $v) {
 				if ($v['KEY'] == 'PRI') {
 					$a_result_tables[$key]['PRIMARY_KEY'] = $k;
 					break;
@@ -531,12 +526,12 @@ class DBMaster {
 	private function getTableKeyInfo($inScript) {
 		$a_res = array();
 		$a_tmp = explode(chr(10), $inScript);
-		while (list($key, $val) = each($a_tmp)) {
+        foreach ($a_tmp as $key => $val) {
 			$val = trim($val);
 			$cnt_name = '';
 			if (strpos($val, 'KEY') === 0) {
 				$a_val = explode('`', $val);
-				while (list($k, $v) = each($a_val)) {
+                foreach ($a_val as $k => $v) {
 					if ($k % 2 == 0) continue;
 					if ($k == 1) {
 						$cnt_name = $v;
@@ -551,7 +546,7 @@ class DBMaster {
 			
 			if (strpos($val, 'UNIQUE KEY') === 0) {
 				$a_val = explode('`', $val);
-				while (list($k, $v) = each($a_val)) {
+                foreach ($a_val as $k => $v) {
 					if ($k % 2 == 0) continue;
 					if ($k == 1) {
 						$cnt_name = $v;
@@ -594,8 +589,7 @@ class DBMaster {
 		
 		$a_res['ON_DEL'] = 'NO ACTION';
 		$a_res['ON_UPD'] = 'NO ACTION';
-		
-		while (list($key, $val) = each($a_tmp)) {
+        foreach ($a_tmp as $key => $val) {
 			if (strpos($val, "FOREIGN KEY (`$inColumn`) REFERENCES")) {
 
 				$a_res['ON_DEL'] = $this->parseStr($val, 'ON DELETE');
@@ -653,8 +647,7 @@ class DBMaster {
 		$this->addCommentToInstallArray($str, 'TABLES contains information about tables');
 		$this->addToInstallArray($str, 'array()', 'TABLES');
 		$this->addEmptyLines($str, 1);
-
-		while (list ($key, $val) = each($a_tables)) {
+        foreach ($a_tables as $key => $val) {
 			$this->addCommentToInstallArray($str, 'TABLE: ' . $key);
 			$this->addToInstallArray($str, 'array()', 'TABLES', $key);
 			$this->addEmptyLines($str, 0);
@@ -676,7 +669,7 @@ class DBMaster {
 			$this->addEmptyLines($str, 1);
 			
 			reset($val['COLS']);
-			while (list ($k, $v) = each($val["COLS"])) {
+            foreach ($val["COLS"] as $k => $v) {
 				$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'COLUMNS', $k);
 				$this->addEmptyLines($str, 0);
 				$this->addToInstallArray($str, '"' . $v['TYPE'] . '"', 'TABLES', $key, 'COLUMNS', $k, 'TYPE');
@@ -695,7 +688,7 @@ class DBMaster {
 				$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'FK');
 				$this->addEmptyLines($str, 1);
 				reset($val['FK']);
-				while (list ($k, $v) = each($val["FK"])) {	
+                foreach ($val["FK"] as $k => $v) {
 					$this->addToInstallArray($str, '"' . $v['COL_NAME'] . '"', 'TABLES', $key, 'FK', $k, 'COL_NAME');
 					$this->addEmptyLines($str, 0);	
 					$this->addToInstallArray($str, '"' . $v['REF_TABLE'] . '"', 'TABLES', $key, 'FK', $k, 'REF_TABLE');
@@ -715,9 +708,8 @@ class DBMaster {
 				$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'KEY');
 				$this->addEmptyLines($str, 0);
 				reset($val['KEY']);
-				
-				while (list($k, $v) = each($val['KEY'])) {
-					$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'KEY', $k);	
+                foreach ($val["KEY"] as $k => $v) {
+					$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'KEY', $k);
 					$this->addEmptyLines($str, 0);
 					if ($v['TYPE'] != 'MUL') {
 						$this->addToInstallArray($str, '"' . $v['TYPE'] . '"', 'TABLES', $key, 'KEY', $k, 'TYPE');	
@@ -725,8 +717,8 @@ class DBMaster {
 					}
 					$this->addToInstallArray($str, 'array()', 'TABLES', $key, 'KEY', $k, 'COLUMNS');	
 					$this->addEmptyLines($str, 0);
-					while (list($kc, $vc) = each($v['COLS'])) {
-						$this->addToInstallArray($str, '"' . $vc . '"', 'TABLES', $key, 'KEY', $k, 'COLUMNS', $kc);	
+                    foreach ($v['COLS'] as $kc => $vc) {
+						$this->addToInstallArray($str, '"' . $vc . '"', 'TABLES', $key, 'KEY', $k, 'COLUMNS', $kc);
 						$this->addEmptyLines($str, 0);	
 					}
 					
@@ -746,7 +738,7 @@ class DBMaster {
 	private function canTableBeAddedToFinalArray($inTableName, &$a_reffers, &$a_tables) {
 		if (!isset($a_reffers[$inTableName])) return true;
 		reset($a_reffers[$inTableName]);
-		while (list($key, $val) = each($a_reffers[$inTableName])) {
+        foreach ($a_reffers[$inTableName] as $key => $val) {
 			if (!isset($a_tables[$key])) $a_tables[$key] = -1;
 			if ($a_tables[$key] != 1 and $inTableName != $key) {
 				return false;
@@ -773,7 +765,7 @@ class DBMaster {
 		$inStr = trim($inStr);
 		$a_tmp = explode(chr(10), $inStr);
 		$inStr = '';
-		while (list ($key, $val) = each($a_tmp)) {
+        foreach ($a_tmp as $key => $val) {
 			if ($key > 0) {
 				for ($x =0; $x < $inPos; $x++) {
 					$val = '&nbsp;' . $val;
@@ -804,7 +796,7 @@ class DBMaster {
 		 $inStr = str_replace("''", chr(2), $inStr);
 		 $a_tmp = explode('`', $inStr);
 		 $str = '';
-		 while (list($key, $val) = each($a_tmp)) {
+        foreach ($a_tmp as $key => $val) {
 		 	if ($key % 2 != 0) {
 		 		$str .= "`<span style=\"color:#0933D0\">$val</span>`";
 		 	} else {
@@ -814,7 +806,7 @@ class DBMaster {
 		 
 		$a_tmp = explode("'", $str);
 		 $str = '';
-		 while (list($key, $val) = each($a_tmp)) {
+        foreach ($a_tmp as $key => $val) {
 		 	if ($key % 2 != 0) {
 		 		$str .= "'<span style=\"color:red\">$val</span>'";
 		 	} else {
@@ -823,7 +815,6 @@ class DBMaster {
 		 }		 
 		 
 		 $str = str_replace(chr(2), "<span style=\"color:red\">''</span>", $str);
-		 
 		 return $str;
 	}
 	

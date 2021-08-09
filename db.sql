@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `core_roles` (
   UNIQUE KEY `name` (`name`),
   KEY `core_roles_idx1` (`is_active_sw`),
   KEY `position` (`position`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=3276;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_users` (
   `u_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `core_users` (
   KEY `core_users_idx1` (`visible`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `core_users_fk1` FOREIGN KEY (`role_id`) REFERENCES `core_roles` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=8192;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_users_profile` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `core_users_profile` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `core_users_profile_fk` FOREIGN KEY (`user_id`) REFERENCES `core_users` (`u_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `core_users_profile_fk1` FOREIGN KEY (`user_id`) REFERENCES `core_users` (`u_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=16384;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_controls` (
   `tbl` varchar(60) NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `core_enum` (
   KEY `parent_id_2` (`parent_id`),
   KEY `seq` (`seq`),
   CONSTRAINT `core_enum_fk` FOREIGN KEY (`parent_id`) REFERENCES `core_enum` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=819;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_log` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `core_log` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `session_id` (`sid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=770;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_modules` (
   `m_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -116,12 +116,12 @@ CREATE TABLE IF NOT EXISTS `core_modules` (
   UNIQUE KEY `module_id` (`module_id`),
   KEY `core_modules_idx1` (`visible`),
   KEY `seq` (`seq`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=1489;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `core_session` (
 	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`sid` VARCHAR(128) NOT NULL DEFAULT '' COLLATE 'utf8_general_ci',
-	`login_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`login_time` TIMESTAMP NULL DEFAULT NULL,
 	`logout_time` DATETIME NULL DEFAULT NULL,
 	`user_id` INT(11) UNSIGNED NOT NULL,
 	`ip` VARCHAR(20) NOT NULL DEFAULT '' COLLATE 'utf8_general_ci',
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `core_settings` (
   UNIQUE KEY `code` (`code`),
   KEY `seq` (`seq`),
   KEY `visible` (`visible`)
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=819;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Экспортируемые данные не выделены.
 CREATE TABLE IF NOT EXISTS `core_submodules` (
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `core_submodules` (
   KEY `core_submodules_idx1` (`visible`),
   KEY `seq` (`seq`),
   CONSTRAINT `core_submodules_fk` FOREIGN KEY (`m_id`) REFERENCES `core_modules` (`m_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=274 DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=862;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `core_users_roles` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -184,5 +184,5 @@ CREATE TABLE IF NOT EXISTS `core_users_roles` (
   CONSTRAINT `core_users_roles_fk` FOREIGN KEY (`user_id`) REFERENCES `core_users` (`u_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `core_users_roles_fk1` FOREIGN KEY (`user_id`) REFERENCES `core_users` (`u_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `core_users_roles_fk2` FOREIGN KEY (`role_id`) REFERENCES `core_roles` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=16384;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
