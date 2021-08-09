@@ -20,23 +20,25 @@ CoreLogin.login = function (form) {
             password: hex_md5($('[name=password]', form).val())
         }
     })
-        .success(function () {
-            location.reload();
-        })
 
-        .always (function (jqXHR, textStatus) {
+        .always (function (jqXHR) {
             CoreLogin.loaderHide();
 
-            if (textStatus !== 'success') {
-                var data = {};
+            var response     = typeof jqXHR === 'string' ? jqXHR : jqXHR.responseText;
+            var errorMessage = '';
 
-                try {
-                    data = JSON.parse(jqXHR.responseText);
-                } catch (err) {
-                    // ignore
-                }
+            try {
+                var data = JSON.parse(response);
+                errorMessage = typeof data.error_message === 'string' ? data.error_message : '';
 
-                $('.form-main .text-danger').text(data.error_message || "Ошибка. Попробуйте позже, либо обратитесь к администратору");
+            } catch (err) {
+                errorMessage = response || "Ошибка. Попробуйте позже, либо обратитесь к администратору";
+            }
+
+            if (errorMessage !== '') {
+                $('.form-main .text-danger').text(errorMessage);
+            } else {
+                location.reload();
             }
         });
 };
