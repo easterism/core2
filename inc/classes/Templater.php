@@ -192,8 +192,7 @@ class Templater {
 		// -- FIND SELECT --
 		if ($this->selects[1]) {
 			reset($this->selects[1]);
-			
-			while (list($key, $val) = each($this->selects[1])) {
+            foreach ($this->selects[1] as $key => $val) {
 				if (stripos(' ' . $val, ' id="' . $selectID . '"') !== false or stripos(' ' . $val, ' name="' . $selectID . '"') !== false) {
 					$selPos = $key;
 					break;

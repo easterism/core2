@@ -36,7 +36,8 @@ class Users extends Zend_Db_Table_Abstract {
         } else {
             $sel->where($expr);
         }
-        return $this->fetchRow($sel)->$field;
+        $res = $this->fetchRow($sel);
+        return $res ? $this->fetchRow($sel)->$field : null;
     }
 
 
