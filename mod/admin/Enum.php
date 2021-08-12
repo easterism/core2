@@ -82,7 +82,7 @@ class Enum extends \Common {
         $edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
         $list_custom = "";
         $tpl = new \Templater3("core2/mod/admin/html/custom_enum_field.tpl");
-        $enums = $this->dataEnum->fetchFields(array('global_id', 'name'), "parent_id IS NULL")->toArray();
+        $enums = $this->dataEnum->fetchPairs(array('global_id', 'name'), "parent_id IS NULL");
         $tpl->fillDropDown('yyy', $enums, '');
         $custom_field = $tpl->render();
 

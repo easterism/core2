@@ -28,6 +28,17 @@ class Enum extends Zend_Db_Table_Abstract {
 		return $this->fetchAll($sel);
 	}
 
+    public function fetchPairs($fields, $expr, $var = array()) {
+        $res = $this->fetchFields($fields, $expr, $var = array())->toArray();
+        $data = [];
+        foreach ($res as $item) {
+            $key = current($item);
+            $val = next($item);
+            $data[$key] = $val;
+        }
+        return $data;
+    }
+
 	public function fetchOne($field, $expr, $var = array())
 	{
 		$sel = $this->select();
