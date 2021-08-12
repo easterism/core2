@@ -404,6 +404,155 @@ var edit = {
 	/**
 	 *
 	 */
+	multilist3: {
+
+		data : {},
+		themePath : {},
+
+		tpl :
+			'<div class="multilist3-item multilist3-item-[KEY]" style="display: none">'+
+			'<select name="control[[FIELD]][]" [ATTRIBUTES]' +
+			'onchange="edit.multilist3.recalculateItems(\'[FIELD_ID]\');">[OPTIONS]</select> ' +
+			'<span class="fa fa-bars multilist3-sort"></span> '+
+			'<img src="[THEME_PATH]/img/delete.png" alt="X" title="Удалить" class="multilist3-delete"'+
+			'onclick="edit.multilist3.deleteItem(\'[FIELD_ID]\', \'[KEY]\')">'+
+			'</div>',
+
+
+		/**
+		 * @param fieldId
+		 * @param itemId
+		 */
+		deleteItem: function(fieldId, itemId) {
+			$('#multilist3-' + fieldId + ' .multilist3-item-' + itemId).fadeOut('fast', function() {
+				$(this).remove();
+				edit.multilist3.recalculateItems(fieldId);
+			});
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @param fieldName
+		 * @param attribs
+		 * @returns {boolean}
+		 */
+		addItem: function(fieldId, fieldName, attribs) {
+
+			var key         = this.keygen();
+			var tpl         = this.tpl;
+			var optionsData = '';
+			var selectData  = edit.multilist3.getSelectedData(fieldId);
+			var data        = this.data[fieldId];
+
+			if (selectData.length >= Object.keys(data).length) {
+				return false;
+			}
+
+
+			if (Object.keys(data).length) {
+				// let groupPrev = '';
+
+				$.each(data, function(key, item) {
+					// item.group_name = item.group_name === null ? 'Без группы' : item.group_name;
+					//
+					// if (key === 0 || groupPrev !== item.group_name) {
+					// 	optionsData += '<optgroup label="' + item.group_name + '">';
+					// }
+
+
+
+					optionsData += '<option value="' + key + '"';
+					if ($.inArray(key, selectData) !== -1) {
+						optionsData += ' disabled="disabled"';
+					}
+					optionsData += '>' + item + '</option>';
+
+
+					// groupPrev     = item.group_name;
+					// let groupNext = data[key + 1] !== undefined
+					// 	? (data[key + 1].group_name !== null ? data[key + 1].group_name : 'Без группы')
+					// 	: '';
+					//
+					// if (groupNext !== item.group_name || data[key + 1] === undefined) {
+					// 	optionsData += '</optgroup>';
+					// }
+				});
+			}
+
+			attribs = attribs.replace(/!::/g, '"').replace(/!:/g, "'");
+
+			tpl = tpl.replace(/\[KEY\]/g,        key);
+			tpl = tpl.replace(/\[FIELD\]/g,      fieldName);
+			tpl = tpl.replace(/\[FIELD_ID\]/g,   fieldId);
+			tpl = tpl.replace(/\[ATTRIBUTES\]/g, attribs);
+			tpl = tpl.replace(/\[THEME_PATH\]/g, edit.multilist3.themePath);
+			tpl = tpl.replace(/\[OPTIONS\]/g,    optionsData);
+
+			$('#multilist3-' + fieldId + ' .multilist3-items').append(tpl);
+			$('#multilist3-' + fieldId + ' .multilist3-item-' + key).fadeIn('fast');
+
+			edit.multilist3.recalculateItems(fieldId);
+		},
+
+
+		/**
+		 * @param fieldId
+		 * @returns {[]}
+		 */
+		getSelectedData: function(fieldId) {
+
+			var selectData  = [];
+
+			$('#multilist3-' + fieldId + ' select').each(function(key, select) {
+				selectData.push($(select).val());
+			});
+
+			return selectData;
+		},
+
+
+		/**
+		 * @param fieldId
+		 */
+		recalculateItems: function(fieldId) {
+
+			var selectData = edit.multilist3.getSelectedData(fieldId);
+
+			$('#multilist3-' + fieldId + ' select').each(function(key, select) {
+				$('option', select).each(function(okey, option) {
+					if ($(select).val() !== $(option).attr('value') &&
+						$.inArray($(option).attr('value'), selectData) !== -1
+					) {
+						$(option).attr('disabled', 'disabled');
+					} else {
+						$(option).removeAttr('disabled');
+					}
+				});
+			});
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param ext_int
+		 * @returns {*}
+		 */
+		keygen : function(ext_int) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = ext_int ? ext_int : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	},
+
+
+	/**
+	 *
+	 */
 	fieldDataset: {
 
 		data: {},

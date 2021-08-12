@@ -118,42 +118,73 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 	elseif ($tab->activeTab == 2) { // История посещений
 		if ( ! empty($_GET['show'])) {
 			$show = (int)$_GET['show'];
-			$res  = $this->db->fetchRow("SELECT u_login, up.lastname, up.firstname, up.middlename
-										  FROM core_users AS u
-											   JOIN core_users_profile AS up ON up.user_id = u.u_id
-										WHERE u_id = ? LIMIT 1", $show);
-			$name = $res['firstname'];
-			if (!empty($name)) {
-				$name .= ' ' . $res['lastname'];
-			} else {
-				$name = $res['u_login'];
-			}
-			if (!empty($name)) $name = '<b>' . $name . '</b>';
+			$res  = $this->db->fetchRow("
+                SELECT u_login, 
+                       up.lastname, 
+                       up.firstname, 
+                       up.middlename
+				FROM core_users AS u
+				    LEFT JOIN core_users_profile AS up ON up.user_id = u.u_id
+				WHERE u_id = ? 
+                LIMIT 1
+            ", $show);
+
+			if ($res) {
+                $name = $res['firstname'];
+
+                if ( ! empty($name)) {
+                    $name .= ' ' . $res['lastname'];
+                } else {
+                    $name = $res['u_login'];
+                }
+
+                if ( ! empty($name)) {
+                    $name = '<b>' . $name . '</b>';
+                }
+
+            } else {
+                $name = '';
+            }
+
+
 			echo "<div>{$this->translate->tr('Пользователь')} {$name}</div>";
-			$res = $this->db->fetchRow("SELECT DATE_FORMAT(login_time, '%d-%m-%Y %H:%i:%s') AS login_time, ip
-										FROM core_session 
-										WHERE user_id = ? 
-										ORDER BY login_time DESC LIMIT 1", $show);
-			echo '<div>' . $this->_('Последний раз заходил') . ' <b>' . $res['login_time'] . '</b> ' . $this->_('с IP адреса') . ' <b>' . $res['ip'] . '</b></div>';
-			$list = new listTable($this->resId . 'xxx2'); 
+
+			$res = $this->db->fetchRow("
+                SELECT DATE_FORMAT(login_time, '%d-%m-%Y %H:%i:%s') AS login_time, 
+                       ip
+				FROM core_session 
+				WHERE user_id = ? 
+				ORDER BY login_time DESC 
+                LIMIT 1
+            ", $show);
+
+			if ($res) {
+                echo '<div>' . $this->_('Последний раз заходил') . ' <b>' . $res['login_time'] . '</b> ' . $this->_('с IP адреса') . ' <b>' . $res['ip'] . '</b></div>';
+            }
+
+			$list = new listTable($this->resId . 'xxx2');
 			$list->addSearch($this->translate->tr("Время входа"), "login_time", "DATE");
 			$list->addSearch("IP", "ip", "TEXT");
 			//$list->addSearch("Отображать под", "r.boss", "text");
-			$list->SQL = "SELECT user_id,
-								 login_time,
-								 COALESCE(logout_time, 'окончание сессии') AS _out,
-								 COALESCE(ip, 'не определен') AS ip
-							FROM `core_session` AS s
-							WHERE user_id='{$show}'
-							ADD_SEARCH
-							ORDER BY login_time DESC";
-			$list->addColumn($this->translate->tr("Время входа"), "", "DATETIME");
-			$list->addColumn($this->translate->tr("Время выхода"), "", "TEXT");
+
+            $list->SQL = $this->db->quoteInto("
+                SELECT user_id,
+				       login_time,
+					   COALESCE(logout_time, 'окончание сессии') AS _out,
+					   COALESCE(ip, 'не определен') AS ip
+                FROM `core_session` AS s
+                WHERE user_id = ? /*ADD_SEARCH*/
+                ORDER BY login_time DESC
+			", $show);
+
+			$list->addColumn($this->translate->tr("Время входа"), "220", "DATETIME");
+			$list->addColumn($this->translate->tr("Время выхода"), "",   "TEXT");
 			$list->addColumn("IP", "1%", "TEXT");
 
 			//$list->editURL 			= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
 			$list->noCheckboxes = 'yes';
 			$list->showTable();
+
 		} else {
 			$list = new listTable($this->resId . 'xxx2'); 
 			$list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
@@ -179,9 +210,9 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 				ORDER BY last_activity DESC
             ";
 
-			$list->addColumn($this->translate->tr("Пользователь"),               "", "TEXT");
-			$list->addColumn($this->translate->tr("Время последней активности"), "", "DATETIME");
-			$list->addColumn("IP",                                               "1", "TEXT");
+			$list->addColumn($this->translate->tr("Пользователь"),               "",    "TEXT");
+			$list->addColumn($this->translate->tr("Время последней активности"), "220", "DATETIME");
+			$list->addColumn("IP",                                               "1",   "TEXT");
 
 			$list->editURL 		= $app . "&show=TCOL_00&tab_" . $this->resId . "=" . $tab->activeTab;
 			$list->noCheckboxes = 'yes';

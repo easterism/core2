@@ -19,6 +19,7 @@
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/sweetalert2.min.css?_=2" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/coreui.notice.css?_=1" type="text/css"/>
 
 	<!--[if lte IE 10]>
 	<link rel="stylesheet" href="core2/html/material/css/sweetalert2-ie.min.css" type="text/css"/>
@@ -27,40 +28,41 @@
 	<link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=6" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=14" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=16" type="text/css"/>
 
 	<!--system_css-->
 
-	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/QueryString.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/cleave.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
+	<script type="text/javascript" src="core2/js/md5.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/lib/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/lib/jquery.cookie.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
+	<script type="text/javascript" src="core2/js/QueryString.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/cleave.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
+	<script type="text/javascript" src="core2/html/material/js/coreui.notice.js?_=1"></script>
 
 	<!--[if lte IE 10]>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>
 	<![endif]-->
 
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/snarl.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/bootstrap.min.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/control_datepicker_range.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/snarl.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/bootstrap.min.js?_=2"></script>
+	<script type="text/javascript" src="core2/html/material/js/jquery.touchSwipe.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/control_datepicker_range.js"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
 	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.list.js?_=2"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/class.edit.js?_=7"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/material/js/main.js?_=7"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=2"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=8"></script>
+	<script type="text/javascript" src="core2/js/eTip.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/main.js?_=7"></script>
     <!--[if IE]>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
     <![endif]-->

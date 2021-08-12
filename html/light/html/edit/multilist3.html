@@ -1,0 +1,37 @@
+<div class="multilist3-container" id="multilist3-[FIELD_ID]">
+    <div class="multilist3-items">
+
+        <!-- BEGIN items -->
+        <div class="multilist3-item multilist3-item-[ID]">
+            <select name="control[[FIELD]][]" onchange="edit.multilist3.recalculateItems('[FIELD_ID]');" [ATTRIBUTES]>
+
+                <!-- BEGIN item -->
+                <option value="[ITEM_ID]" [DISABLED] [SELECTED]>[TITLE]</option>
+                <!-- END item -->
+
+            </select>
+
+            <span class="fa fa-bars multilist3-sort"></span>
+            <img src="[THEME_PATH]/img/delete.png" alt="X" title="_tr(Удалить)" class="multilist3-delete"
+                 onclick="edit.multilist3.deleteItem('[FIELD_ID]', '[ID]')">
+        </div>
+        <!-- END items -->
+    </div>
+
+    <a class="btn btn-link btn-sm" href="#"
+       onclick="edit.multilist3.addItem('[FIELD_ID]', '[FIELD]', '[ATTRIBUTES]'); return false">_tr(Добавить)</a>
+
+    <script>
+        $(function(){
+            edit.multilist3.data['[FIELD_ID]'] = [DATA];
+            edit.multilist3.themePath          = '[THEME_PATH]';
+            $("#multilist3-[FIELD_ID] .multilist3-items").sortable({
+                opacity: 0.6,
+                distance: 5,
+                handle: ".multilist3-sort",
+                cursor: "n-resize",
+                containment: "parent"
+            });
+        });
+    </script>
+</div>

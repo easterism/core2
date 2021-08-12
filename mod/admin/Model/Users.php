@@ -99,4 +99,28 @@ class Users extends Zend_Db_Table_Abstract {
 
         return $res;
 	}
+
+    /**
+     * Получаем список всех активных юзеров
+     * @return array
+     */
+	public function getAllUsers() {
+        $res = $this->_db->fetchAll("
+            SELECT `u_id`, 
+                   u.email, 
+                   `u_login`, 
+                   p.lastname, 
+                   p.firstname, 
+                   p.middlename, 
+                   u.is_admin_sw, 
+                   r.name AS role, 
+                   u.role_id
+            FROM `core_users` AS u
+                LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
+                LEFT JOIN core_roles AS r ON r.id = u.role_id
+            WHERE u.`visible` = 'Y' 
+        ");
+
+        return $res;
+    }
 }

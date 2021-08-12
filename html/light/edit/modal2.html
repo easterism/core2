@@ -1,15 +1,15 @@
 <div class="modal-control">
     <input type="hidden" id="[KEY]" name="[NAME]" value="[VALUE]">
     <div class="input-group">
-        <input id="[KEY]-title" class="modal-control-title form-control first"
+        <input id="[KEY]-title" class="modal-control-title form-control input-sm first"
                value="[TEXT]" type="text" disabled="disabled">
         <!-- BEGIN clear -->
         <button type="button" class="modal-control-clear btn btn-default add-on middle" onclick="edit.modal2.clear('[KEY]');">
             <img src="[THEME_DIR]/img/clear.png" alt="Очистить" title="Очистить">
         </button>
         <!-- END clear -->
-        <input type="button" class="modal-control-button btn btn-default last" value="_tr(Выбрать)"
-               onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', '[URL]')">
+        <input type="button" class="modal-control-button btn btn-default btn-sm last" value="_tr(Выбрать)"
+               onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', [URL])">
         <div class="clearfix"></div>
     </div>
     <div class="modal fade" id="[KEY]-modal" tabindex='-1' style="display: none">

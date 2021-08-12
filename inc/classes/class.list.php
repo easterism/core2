@@ -449,7 +449,16 @@ class listTable extends initList {
         } else {
             $this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
             $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
-        }        
+        }
+
+        if ( ! empty($questions)) {
+            $this->search_sql = $search;
+            foreach ($questions as $question) {
+                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
+            }
+        } else {
+            $this->search_sql = $search;
+        }
 
         if ( ! empty($questions)) {
             $this->search_sql = $search;
