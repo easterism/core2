@@ -80,7 +80,7 @@ a {color: #337AB7}
 }
 #main #home-button > a.home-select,
 #main #home-button > a:hover {
-    background-color: #2e475b;
+    background-color: #00000036;
     outline: none;
     border-left: 3px solid #2196F3;
     padding-left: 14px;
@@ -169,7 +169,7 @@ a {color: #337AB7}
 #menu-modules .menu-module.module-hover a,
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
-    background-color: #26465b;
+    background-color: #00000026;
     padding-left: 14px;
     outline: none;
 }
@@ -181,16 +181,16 @@ a {color: #337AB7}
 #menu-modules .menu-module > a:hover,
 #menu-modules .menu-module-selected > a.index-select,
 #menu-modules .module-submodules > a:hover {
-    background-color: #26465b;
+    background-color: #00000040;
 }
 
 #menu-modules .menu-module-selected.module-isset-submodules > a.index-select,
 #menu-modules .menu-module-selected > a:hover,
 #menu-modules .menu-module-selected > .module-submodules > a:hover {
-    background-color: #1e384a;
+    background-color: #00000040;
 }
 #menu-modules a.module-submodules-selected {
-    background-color: #1e384a;
+    background-color: #00000040;
 }
 #menu-submodules {
     margin: 0;
@@ -236,7 +236,7 @@ a {color: #337AB7}
 #menu-submodules .submenu-module-title:hover a,
 #menu-submodules .submenu-module-title.selected a,
 #menu-submodules .menu-submodule-selected a {
-    background-color: #2e475b;
+    background-color: #00000026;
 }
 #menu-submodules .submenu-module-title a {
     font-weight: bold;

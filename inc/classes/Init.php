@@ -27,33 +27,35 @@
     if (!file_exists($conf_file)) {
         \Core2\Error::Exception("conf.ini is missing.");
     }
-    $config = array(
-        'system' => array('name' => 'CORE2'),
+    $config = [
+        'system'       => ['name' => 'CORE2'],
         'include_path' => '',
-        'temp' => getenv('TMP'),
-        'debug' => array('on' => false),
-        'session' => array('cookie_httponly' => true,
-                        'use_only_cookies' => true),
-        'database' => array(
+        'temp'         => getenv('TMP'),
+        'debug'        => ['on' => false],
+        'session'      => [
+            'cookie_httponly'  => true,
+            'use_only_cookies' => true,
+        ],
+        'database' => [
             'adapter' => 'Pdo_Mysql',
-            'params' => array(
-                'charset' => 'utf8'
-            ),
-            'driver_options' => [
-                \PDO::ATTR_TIMEOUT => 3
+            'params'  => [
+                'charset' => 'utf8',
+            ],
+            'driver_options'=> [
+                \PDO::ATTR_TIMEOUT => 3,
             ],
             'isDefaultTableAdapter' => true,
-            'profiler' => array(
+            'profiler'              => [
                 'enabled' => false,
-                'class' => 'Zend_Db_Profiler_Firebug'
-            ),
-            'caseFolding' => true,
-            'autoQuoteIdentifiers' => true,
-            'allowSerialization' => true,
-            'autoReconnectOnUnserialize' => true
-        )
-    );
-	// определяем путь к темповой папке
+                'class'   => 'Zend_Db_Profiler_Firebug',
+            ],
+            'caseFolding'                => true,
+            'autoQuoteIdentifiers'       => true,
+            'allowSerialization'         => true,
+            'autoReconnectOnUnserialize' => true,
+        ],
+    ];
+    // определяем путь к темповой папке
     if (empty($config['temp'])) {
         $config['temp'] = sys_get_temp_dir();
         if (empty($config['temp'])) {
@@ -134,10 +136,16 @@
 	}
 
 	//устанавливаем шкурку
-	if (!empty($config->theme)) {
-		define('THEME', $config->theme);
+	if ( ! empty($config->theme)) {
+        define('THEME', $config->theme);
+
+    } elseif ( ! empty($config->system->theme) &&
+               ! empty($config->system->theme->name)
+    ) {
+        define('THEME', $config->system->theme->name);
+
 	} else {
-		define('THEME', 'default');
+		define('THEME', 'material');
 	}
 
 	// DEPRECATED!!! MPDF PATH
@@ -874,6 +882,18 @@
                 }
             }
 
+
+            if ( ! empty($this->config->system) &&
+                 ! empty($this->config->system->theme) &&
+                 ! empty($this->config->system->theme->bg_color) &&
+                 ! empty($this->config->system->theme->text_color) &&
+                 ! empty($this->config->system->theme->border_color) &&
+                $tpl_menu->issetBlock('theme_style')
+            ) {
+                $tpl_menu->theme_style->assign("[BG_COLOR]",     $this->config->system->theme->bg_color);
+                $tpl_menu->theme_style->assign("[TEXT_COLOR]",   $this->config->system->theme->text_color);
+                $tpl_menu->theme_style->assign("[BORDER_COLOR]", $this->config->system->theme->border_color);
+            }
 
             $tpl->assign('<!--index-->', $tpl_menu->render());
             $out = '';

@@ -110,3 +110,29 @@
         </div>
     </td>
 </tr></tbody></table>
+<!-- BEGIN theme_style -->
+<style>
+    #menu-wrapper { background-color: [BG_COLOR] }
+    #main-content #sidebar-toggle { background-color: [BG_COLOR] }
+
+    #menu-submodules,
+    #menu-submodules .menu-submodule,
+    #menu-submodules .menu-submodule-selected { background-color: [BG_COLOR] }
+
+    #home-button > a { color: [TEXT_COLOR] }
+
+    #main-content #sidebar-toggle { color: [TEXT_COLOR] }
+
+    #menu-modules .menu-module:hover a,
+    #menu-modules .menu-module a:hover,
+    #menu-modules .menu-module a:focus,
+    #menu-modules .menu-module.module-hover a,
+    #menu-modules .menu-module-selected a {
+        border-left-color: [BORDER_COLOR];
+    }
+    #main #home-button > a.home-select,
+    #main #home-button > a:hover {
+        border-left-color: [BORDER_COLOR];
+    }
+</style>
+<!-- END theme_style -->
