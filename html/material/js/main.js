@@ -489,32 +489,6 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected')[0] &&
-			! $('#submodule-profile-messages.menu-submodule-selected')[0]
-		) {
-            $('#user-section .nav-profile, #user-section .dropdown-profile').addClass('active');
-        } else {
-            $('#user-section .nav-profile, #user-section .dropdown-profile').removeClass('active');
-        }
-
-        if ($('#module-settings.menu-module-selected')[0]) {
-			$('#user-section .nav-settings').addClass('active');
-        } else {
-			$('#user-section .nav-settings').removeClass('active');
-        }
-
-        if ($('#submodule-profile-messages.menu-submodule-selected')[0]) {
-			$('#user-section .nav-messages').addClass('active');
-        } else {
-			$('#user-section .nav-messages').removeClass('active');
-        }
-
-        if ($('#module-billing.menu-module-selected')[0]) {
-			$('#user-section .nav-billing').addClass('active');
-        } else {
-			$('#user-section .nav-billing').removeClass('active');
-        }
-
 		if (!callback) {
 			if (ax) {
 				for (var key in ax) {
@@ -716,29 +690,6 @@ $(document).ready(function() {
                 "</h2>"
             );
         }
-        if ($('#module-profile')[0]) {
-            var title = $('#module-profile .module-title').html();
-            $('.dropdown-profile.profile > a').html(title);
-            $('.dropdown-profile.profile').addClass('show');
-            $('.dropdown-profile.divider').addClass('show');
-        }
-		if ($('#submodule-profile-messages')[0]) {
-			$('#user-section .nav-messages').addClass('show');
-			$('#user-section .nav-feedback').addClass('show');
-            $('.dropdown-profile.messages').addClass('show');
-		}
-        if ($('#module-settings')[0]) {
-            var title = $('#module-settings .module-title').html();
-            $('.dropdown-settings > a').html(title);
-            $('.dropdown-settings').addClass('show');
-            $('#user-section .nav-settings').addClass('show');
-        }
-        if ($('#module-billing')[0]) {
-            var title = $('#module-billing .module-title').html();
-            $('.dropdown-billing > a').html(title);
-            $('.dropdown-billing').addClass('show');
-            $('#user-section .nav-billing').addClass('show');
-        }
     });
 
     main_menu.setAngles();
@@ -860,7 +811,7 @@ $(document).ready(function() {
 			"<div class=\"clearfix\"></div>" +
 		"</div>";
 
-	$('#user-section .nav-feedback a').popover({
+	$('#user-section a.nav-feedback').popover({
 		"placement" : "bottom",
 		"trigger" : "manual",
 		"title" : "Обратная связь",

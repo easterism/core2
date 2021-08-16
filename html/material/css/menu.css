@@ -250,7 +250,7 @@ a {color: #337AB7}
     margin-bottom: 0;
     font-size: 14px;
     font-weight: 400;
-    line-height: 1.42857143;
+    line-height: 28px;
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
@@ -270,10 +270,6 @@ a {color: #337AB7}
 #user-section .dropdown-menu > li > a {color: #463265}
 #user-section .dropdown-menu i {margin-right: 5px}
 
-#user-section > .nav-profile > div.dropdown-toggle:focus,
-#user-section > .nav-profile > div.dropdown-toggle:hover {
-    background-color: #F0F0F0;
-}
 #user-section .active .dropdown-menu > li.active > a,
 #user-section .active > a {
     background-color: #F0F0F0;
@@ -292,28 +288,12 @@ a {color: #337AB7}
     padding: 0 20px;
     white-space: nowrap;
 }
-.dropdown-profile,
-.dropdown-billing,
-.dropdown-settings,
-.nav > li.nav-settings,
-.nav > li.nav-billing,
-.nav > li.nav-messages,
-.nav > li.nav-feedback,
-#module-settings,
-#module-profile,
-#module-billing,
-#submodule-profile-messages {
-    display: none;
-}
 .nav-feedback .feedback-container textarea {
     min-width: 240px;
     max-width: 240px;
     min-height: 100px;
     max-height: 250px;
 }
-.dropdown-billing.show,
-.dropdown-settings.show,
-.dropdown-profile.show {display: list-item}
 #user-section #msgCount {
     background-color: #FF4C80;
     position: absolute;
@@ -433,10 +413,6 @@ a {color: #337AB7}
     .nav > li.nav-feedback > a {
         padding: 10px 8px;
     }
-    .nav-settings.show,
-    .nav-billing.show,
-    .nav-messages.show ,
-    .nav-feedback.show {display: list-item}
 }
 /* Desktop */
 @media(min-width:768px) {
