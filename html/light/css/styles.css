@@ -210,11 +210,12 @@ TOP MENU
 PRELOADERS
 */
 #preloader {
-    position: fixed;
+    position: absolute;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 43px);
     text-align: center;
     z-index: 100000;
+    top: 43px;
 }
 #preloader > .lock-screen {
     position: absolute;
@@ -230,7 +231,7 @@ PRELOADERS
 }
 #preloader > .block {
     min-width: 140px;
-    max-width: 200px;
+    max-width: 230px;
     padding: 8px 15px;
     background: #ffffff;
     -webkit-border-radius: 4px;
@@ -260,7 +261,9 @@ PRELOADERS
     -webkit-animation: preloader-spinner 400ms linear infinite;
             animation: preloader-spinner 400ms linear infinite;
 }
-
+#preloader > .block .spinner-text {
+    display: inline-block;
+}
 @-webkit-keyframes preloader-spinner {
     0%   { -webkit-transform: rotate(0deg); }
     100% { -webkit-transform: rotate(360deg); }

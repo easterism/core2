@@ -163,7 +163,7 @@ var preloader = {
 	extraLoad : {},
 	oldHash : {},
 	show : function() {
-		//$("#preloader").css('margin-top', ($("#menu-container").height()));
+		$("#preloader .spinner-text").text('Загрузка...');
 		$("#preloader").show();
 	},
 	hide : function() {
@@ -230,6 +230,10 @@ var preloader = {
 				pairs.push(pu);
 			}
 		return '{' + pairs.join(',') + '}';
+	},
+	setText: function(text) {
+		this.show();
+		$("#preloader .spinner-text").text(text);
 	},
 	normUrl: function () {
 
