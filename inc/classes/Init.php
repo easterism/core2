@@ -1227,7 +1227,7 @@
             }
 
             if ($mod_controller instanceof Navigation) {
-                $navigation = $mod_controller->navigationItems($navigation);
+                $mod_controller->navigationItems($navigation);
             }
 
             return $navigation->toArray();
