@@ -37,4 +37,13 @@ class SubModules extends Zend_Db_Table_Abstract {
         }
         return $this->fetchAll($sel);
     }
+
+    public function getSubmodules($module) {
+        $data = $this->_db->fetchPairs("
+            SELECT sm_key, sm_name
+            FROM core_submodules
+            WHERE m_id=(SELECT m_id FROM core_modules WHERE module_id=?)
+        ", $module);
+        return $data;
+    }
 }

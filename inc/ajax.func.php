@@ -323,17 +323,17 @@ class ajaxFunc extends Common {
         }
 
 		try {
-			if (empty($data['class_id'])) {
-			    throw new Exception("Form error", 500);
+            if (empty($data['class_id'])) {
+                throw new Exception("Form error", 500);
             }
 
-			$order_fields = $this->getSessForm($data['class_id']);
+            $order_fields = $this->getSessForm($data['class_id']);
 
 			if (count($this->error)) {
 				throw new Exception('');
 			}
 
-			$authNamespace = Zend_Registry::get('auth');
+			$authNamespace = new SessionContainer('Auth');
 			$control       = array();
 			$fileFlag      = array();
 			$fileFlagDel   = array();
