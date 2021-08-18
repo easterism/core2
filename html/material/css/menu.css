@@ -321,7 +321,7 @@ a {color: #337AB7}
     position: relative;
 }
 #user-section .avatar-container img {
-    margin-top: -1px;
+    margin-top: -2px;
     margin-left: -1px;
 }
 .nav-second-level-toggle {
