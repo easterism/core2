@@ -6,10 +6,10 @@
  */
 class Templater3 {
 
-    protected $blocks   = array();
-    protected $vars     = array();
-    protected $_p       = array();
-    protected $plugins  = array();
+    protected $blocks   = [];
+    protected $vars     = [];
+    protected $_p       = [];
+    protected $plugins  = [];
     protected $reassign = false;
     protected $loop     = '';
     protected $html     = '';
@@ -20,7 +20,11 @@ class Templater3 {
      * @throws Exception
      */
     public function __construct($template_file = '') {
-        if ($template_file) $this->loadTemplate($template_file);
+
+        if ($template_file) {
+            $this->loadTemplate($template_file);
+        }
+
         //добавляем плагин по умолчанию
         $this->addPlugin("tr", Zend_Registry::get('translate'));
     }
@@ -68,6 +72,11 @@ class Templater3 {
         return $this->render();
     }
 
+
+    /**
+     * @param $title
+     * @param $obj
+     */
     public function addPlugin($title, $obj) {
         $this->plugins[strtolower($title)] = $obj;
     }

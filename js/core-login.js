@@ -11,36 +11,43 @@ CoreLogin.login = function (form) {
 
     CoreLogin.loaderShow();
     $('.form-main .text-danger').text('');
-    var p = $('[name=password]', form);
-    var pv = p.val();
-    if (!p.data('ldap') || $('[name=login]', form).val() == 'root') pv = hex_md5(pv);
+    
+    var $passInput = $('[name=password]', form);
+    var passValue  = $passInput.val();
+    
+    if ( ! $passInput.data('ldap') || $('[name=login]', form).val() === 'root') {
+        passValue = hex_md5(passValue);
+    }
+    
     $.ajax({
         url: "index.php?core=login",
         method: "POST",
         data: {
             login: $('[name=login]', form).val(),
-            password: pv
+            password: passValue
         }
     })
-    .success(function () {
-        location.reload();
-    })
 
-    .always (function (jqXHR, textStatus) {
-        CoreLogin.loaderHide();
+        .always (function (jqXHR) {
+            CoreLogin.loaderHide();
 
-        if (textStatus !== 'success') {
-            var data = {};
+            var response     = typeof jqXHR === 'string' ? jqXHR : jqXHR.responseText;
+            var errorMessage = '';
 
             try {
-                data = JSON.parse(jqXHR.responseText);
+                var data = JSON.parse(response);
+                errorMessage = typeof data.error_message === 'string' ? data.error_message : '';
+
             } catch (err) {
-                // ignore
+                errorMessage = response || "Ошибка. Попробуйте позже, либо обратитесь к администратору";
             }
 
-            $('.form-main .text-danger').text(data.error_message || "Ошибка. Попробуйте позже, либо обратитесь к администратору");
-        }
-    });
+            if (errorMessage !== '') {
+                $('.form-main .text-danger').text(errorMessage);
+            } else {
+                location.reload();
+            }
+        });
 };
 
 

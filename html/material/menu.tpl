@@ -43,29 +43,6 @@
                 <li class="nav navbar-nav nav-[MODULE_NAME]">[HTML]</li>
                 <!-- END navigate_item -->
 
-                <li class="nav navbar-nav nav-billing">
-                    <a href="index.php#module=billing" title="_tr(Оплаты)"
-                       onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=billing');">
-                        <i class="fa fa-credit-card"></i>
-                    </a>
-                </li>
-                <li class="nav navbar-nav nav-settings">
-                    <a href="index.php#module=settings" title="_tr(Настройки)"
-                       onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=settings');">
-                        <i class="fa fa-gears"></i>
-                    </a>
-                </li>
-                <li class="nav navbar-nav nav-feedback">
-                    <a href="#" onclick="$(this).popover('toggle');return false;" title="_tr(Обратная связь)">
-                        <i class="fa fa-comment-o"></i>
-                    </a>
-                </li>
-                <li class="nav navbar-nav nav-messages">
-                    <a href="index.php#module=profile&action=messages" title="_tr(Сообщения)"
-                       onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">
-                        <i class="fa fa-envelope-o"></i>
-                    </a>
-                </li>
                 <li class="nav navbar-nav nav-profile dropdown">
                     <div class="dropdown-toggle" data-toggle="dropdown">
                         <div class="avatar-container">
@@ -80,14 +57,10 @@
                         </li>
                         <li class="divider"></li>
 
-                        <li class="dropdown-profile profile">
-                            <a href="index.php#module=profile"
-                               onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');">
-                                <i class="fa fa-user fa-fw"></i> _tr(Профиль)
-                            </a>
-                        </li>
+                        <!-- BEGIN navigate_item_profile -->
+                        <li class="dropdown-[MODULE_NAME]">[HTML]</li>
+                        <!-- END navigate_item_profile -->
 
-                        <li class="dropdown-profile divider"></li>
                         <li>
                             <a href="javascript:void(0);" onclick="logout()">
                                 <i class="fa fa-power-off fa-fw"></i>
@@ -110,3 +83,29 @@
         </div>
     </td>
 </tr></tbody></table>
+<!-- BEGIN theme_style -->
+<style>
+    #menu-wrapper { background-color: [BG_COLOR] }
+    #main-content #sidebar-toggle { background-color: [BG_COLOR] }
+
+    #menu-submodules,
+    #menu-submodules .menu-submodule,
+    #menu-submodules .menu-submodule-selected { background-color: [BG_COLOR] }
+
+    #home-button > a { color: [TEXT_COLOR] }
+
+    #main-content #sidebar-toggle { color: [TEXT_COLOR] }
+
+    #menu-modules .menu-module:hover a,
+    #menu-modules .menu-module a:hover,
+    #menu-modules .menu-module a:focus,
+    #menu-modules .menu-module.module-hover a,
+    #menu-modules .menu-module-selected a {
+        border-left-color: [BORDER_COLOR];
+    }
+    #main #home-button > a.home-select,
+    #main #home-button > a:hover {
+        border-left-color: [BORDER_COLOR];
+    }
+</style>
+<!-- END theme_style -->
