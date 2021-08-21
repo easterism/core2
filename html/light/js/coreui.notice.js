@@ -152,7 +152,9 @@ CoreUI.notice = {
                 toast.classList.add("fadeOut");
             }
             window.setTimeout(function() {
-                toast.parentNode.removeChild(toast);
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
             }, 200);
         };
 
@@ -194,7 +196,9 @@ CoreUI.notice = {
             }
             window.setTimeout(
                 function () {
-                    toast.parentNode.removeChild(toast);
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
                 }.bind(this),
                 200
             );
