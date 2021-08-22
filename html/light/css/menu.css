@@ -75,7 +75,11 @@ a {color: #337AB7}
 }
 @media(max-width:768px) {
     #main #main-content {margin-left: 0;}
-    #main #navbar-top {left: 0px;}
+    #main #navbar-top {
+        height: 42px;
+        min-height: 42px;
+        background-color: #fafafa;
+    }
     #main.s-toggle #main-content {margin-left: 0;}
     #main.s-toggle #menu-container {margin-left: 0;}
 }

@@ -34,11 +34,6 @@
 		</td>
 		<td id="main-content" valign="top">
 			<nav class="navbar navbar-default navbar-static-top" id="navbar-top">
-				<div class="navbar-header">
-					<a id="sidebar-toggle" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
-					<div class="module-title"></div>
-					<div class="module-action"></div>
-				</div>
 				<ul id="user-section" class="nav navbar-top-links navbar-right">
 					<li class="dropdown">
 						<div class="dropdown-toggle" data-toggle="dropdown">
