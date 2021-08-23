@@ -214,93 +214,111 @@ class Enum extends \Common {
         return ob_get_clean();
     }
 
-    public function editEnumValue($enum_id, $value_id) {
-        $add = (int)$value_id;
-        $res = $this->dataEnum->find($enum_id)->current()->custom_field;
-        $custom_fields = unserialize(base64_decode($res));
-        $edit = new \editTable('enumxxxur');
 
-        $res2 = $this->dataEnum->find($add)->current()->custom_field;
-        $arr_fields = array();
+    /**
+     * @param $enum_id
+     * @param $value_id
+     * @return false|string
+     * @throws \Zend_Db_Adapter_Exception
+     * @throws \Zend_Exception
+     */
+    public function editEnumValue($enum_id, $value_id) {
+
+        $add           = (int)$value_id;
+        $res           = $this->dataEnum->find($enum_id)->current()->custom_field;
+        $custom_fields = unserialize(base64_decode($res));
+        $edit          = new \editTable('enumxxxur');
+
+        $res2       = $this->dataEnum->find($add)->current()->custom_field;
+        $arr_fields = [];
 
         /* Формирование массива кастомных полей из строки */
 
-        if (!empty($res2)) {
+        if ( ! empty($res2)) {
             $name_val = explode(":::", $res2);
             foreach ($name_val as $v) {
-                $temp  = explode("::", $v);
+                $temp                 = explode("::", $v);
                 $arr_fields[$temp[0]] = isset($temp[1]) ? $temp[1] : "";
             }
         }
+
         $fields_sql = '';
         $edit->addControl($this->translate->tr("Значение:"), "TEXT", "maxlength=\"128\" size=\"60\"", "", "", true);
+
         if (is_array($custom_fields) && count($custom_fields)) {
             $fields_sql = "\n";
             foreach ($custom_fields as $key => $val) {
-                $label       = isset($arr_fields[$val['label']]) ? $arr_fields[$val['label']] : '';
-                $default     = '';
-                $fields_sql .= "'{$label}' AS id_$key,\n";
 
-                if ($val['type'] == 1) $type = 'TEXT';
-                elseif ($val['type'] == 2) {
+                $fields_sql .= "NULL AS id_$key,\n";
+
+                if ($val['type'] == 1) {
+                    $type = 'TEXT';
+
+                } elseif ($val['type'] == 2) {
                     $type = 'LIST';
                     $edit->selectSQL[] = $this->getEnumDropdown($val['enum'], true, true);
-                    $default = $this->db->fetchOne("
-                            SELECT e.name
-                            FROM core_enum AS e
-                            WHERE e.is_default_sw = 'Y'
-                              AND (SELECT id
-                                   FROM core_enum
-                                   WHERE global_id = ?
-                                   LIMIT 1) = e.parent_id
-                        ", $val['enum']);
+
+                    // $default = $this->db->fetchOne("
+                    //     SELECT e.name
+                    //     FROM core_enum AS e
+                    //     WHERE e.is_default_sw = 'Y'
+                    //       AND (SELECT id
+                    //            FROM core_enum
+                    //            WHERE global_id = ?
+                    //            LIMIT 1) = e.parent_id
+                    // ", $val['enum']);
 
                 } elseif ($val['type'] == 3) {
                     $type = 'CHECKBOX';
                     $edit->selectSQL[] = $this->getEnumDropdown($val['enum'], true);
-                }
-                elseif ($val['type'] == 4) $type = 'TEXTAREA';
-                elseif ($val['type'] == 5) {
+
+                } elseif ($val['type'] == 4) {
+                    $type = 'TEXTAREA';
+
+                } elseif ($val['type'] == 5) {
                     $type = 'RADIO';
-                    $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
+                    $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
+
                 } elseif ($val['type'] == 6) {
                     $type              = 'LIST';
                     $temp = explode(',', $val['list']);
-                    $arr = array();
+                    $arr = [];
                     foreach ($temp as $value) {
                         $arr[$value] = $value;
                     }
                     $edit->selectSQL[] = $arr;
                 }
-                $edit->addControl($val['label'], $type, '', '', $default);
+
+                $field_value = isset($arr_fields[$val['label']]) ? $arr_fields[$val['label']] : '';
+                $edit->addControl($val['label'], $type, '', '', $field_value);
             }
+
             $fields_sql = rtrim($fields_sql);
             $edit->addParams("custom_fields", base64_encode(serialize($custom_fields)));
         }
 
         $edit->SQL = $this->db->quoteInto("
-                SELECT id,
-                       name, $fields_sql
-                       is_default_sw,
-                       is_active_sw,
-                       parent_id
-                FROM core_enum
-                WHERE id = ?
-            ", $value_id);
+            SELECT id,
+                   name, {$fields_sql}
+                   is_default_sw,
+                   is_active_sw,
+                   parent_id
+            FROM core_enum
+            WHERE id = ?
+        ", $value_id);
 
-        $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-        $edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N");
-        $edit->selectSQL[] = array('Y' => 'вкл.', 'N' => 'выкл.');
-        $edit->addControl($this->translate->tr("Статус:"), "RADIO", "", "", "Y");
+
+        $edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N"); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
+        $edit->addControl($this->translate->tr("Статус:"), "RADIO", "", "", "Y"); $edit->selectSQL[] = ['Y' => 'вкл.', 'N' => 'выкл.'];
         $edit->addControl("", "HIDDEN", "", "", $enum_id, true);
 
         $edit->back = $this->app . "&edit=" . $enum_id;
         $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$enum_id}')");
         $edit->save("xajax_saveEnumValue(xajax.getFormValues(this.id))");
-        ob_start();
-        $edit->showTable();
-        return ob_get_clean();
+
+        return $edit->render();
     }
+
 
     public function listEnumValues($enum_id) {
 
