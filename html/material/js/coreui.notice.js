@@ -21,7 +21,8 @@ CoreUI.notice = {
             options.icon = icon || '';
         }
 
-        const container = document.getElementById("coreui-notice-container");
+        let limit = 3;
+        let container = document.getElementById("coreui-notice-container");
 
         if ( ! container) {
             const container = document.createElement("div");
@@ -182,6 +183,12 @@ CoreUI.notice = {
             toast.className += " " + options.classes;
         }
 
+        if (typeof options.limit === 'number') {
+            if (options.limit >= 0) {
+                limit = options.limit;
+            }
+        }
+
         const removeSnackbar = function() {
             if (options.animationIn) {
                 toast.classList.remove(options.animationIn);
@@ -204,7 +211,13 @@ CoreUI.notice = {
             );
         }
 
-        document.getElementById("coreui-notice-container").appendChild(toast);
+        container = document.getElementById("coreui-notice-container");
+
+        if (limit > 0 && container && container.childNodes.length >= limit) {
+            container.childNodes[0].hide();
+        }
+
+        container.appendChild(toast);
         return toast;
     },
 }
