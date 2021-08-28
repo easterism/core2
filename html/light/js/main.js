@@ -331,12 +331,6 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected')[0]) {
-            $('#user-section > .dropdown').addClass('active');
-        } else {
-            $('#user-section > .dropdown').removeClass('active');
-        }
-
 		if (!callback) {
 			if (ax) {
 				for (var key in ax) {
@@ -519,19 +513,6 @@ $(document).ready(function() {
                 "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
                 "</h2>"
             );
-        }
-        if ($('#module-profile')[0]) {
-            $('.dropdown-profile.profile').addClass('show');
-            $('.dropdown-profile.divider').addClass('show');
-            if ($('#submodule-profile-messages')[0]) {
-                $('.dropdown-profile.messages').addClass('show');
-            }
-        }
-        if ($('#module-settings')[0]) {
-            $('.dropdown-settings').addClass('show');
-        }
-        if ($('#module-billing')[0]) {
-            $('.dropdown-billing').addClass('show');
         }
     });
 

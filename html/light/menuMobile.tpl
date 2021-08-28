@@ -35,6 +35,10 @@
 		<td id="main-content" valign="top">
 			<nav class="navbar navbar-default navbar-static-top" id="navbar-top">
 				<ul id="user-section" class="nav navbar-top-links navbar-right">
+					<!-- BEGIN navigate_item -->
+					<li class="nav navbar-nav nav-[MODULE_NAME]">[HTML]</li>
+					<!-- END navigate_item -->
+
 					<li class="dropdown">
 						<div class="dropdown-toggle" data-toggle="dropdown">
 							<div class="avatar-container">
@@ -49,33 +53,11 @@
 							</li>
 							<li class="divider"></li>
 
-							<li class="dropdown-profile profile">
-								<a href="index.php#module=profile">
-									<i class="fa fa-user"></i>
-									_tr(Профиль)
-								</a>
-							</li>
-							<li class="dropdown-profile messages">
-								<a href="index.php#module=profile&action=messages">
-									<i class="fa fa-envelope-o"></i>
-									_tr(Сообщения)
-								</a>
-							</li>
-							<li class="dropdown-profile divider"></li>
-							<li class="dropdown-billing">
-								<a href="index.php#module=billing">
-									<i class="fa fa-credit-card"></i>
-									_tr(Ваш баланс)
-								</a>
-							</li>
-							<li class="dropdown-billing divider"></li>
-							<li class="dropdown-settings">
-								<a href="index.php#module=settings">
-									<i class="fa fa-cogs"></i>
-									_tr(Настройки)
-								</a>
-							</li>
-							<li class="dropdown-settings divider"></li>
+
+							<!-- BEGIN navigate_item_profile -->
+							<li class="dropdown-[MODULE_NAME]">[HTML]</li>
+							<!-- END navigate_item_profile -->
+
 							<li>
 								<a href="javascript:void(0);" onclick="logout()">
 									<i class="fa fa-power-off"></i>

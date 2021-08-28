@@ -23,6 +23,7 @@ a {color: #337AB7}
     /*-ms-box-shadow: 2px 0 5px #000;*/
     /*-o-box-shadow: 2px 0 5px #000;*/
     /*box-shadow: 2px 0 5px #000;*/
+    height: 100%;
 }
 #rootContainer {
     position: relative;
@@ -31,13 +32,19 @@ a {color: #337AB7}
     background: transparent;
 }
 #mainContainer {
-    padding: 80px 30px 30px;
-    height: auto;
-    background-color: #e6e6e6;
+    overflow: auto;
+    position: absolute;
+    top: 42px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 30px 30px 30px;
 }
 #main_body {
     height: auto;
     width: 100%;
+    width: min-content;
+    min-width: 100%;
 }
 #main-content #sidebar-toggle {
     /*background-color: #607D8B;*/
@@ -241,6 +248,10 @@ a {color: #337AB7}
 }
 #user-section > li {
     display: inline-block;
+    margin: 0;
+}
+#user-section > li > a {
+    padding: 11px 15px;
 }
 #user-section .dropdown-toggle {
     display: inline-block;
@@ -280,27 +291,26 @@ a {color: #337AB7}
     padding: 0 20px;
     white-space: nowrap;
 }
-.dropdown-settings,
-.dropdown-profile,
-.dropdown-billing,
-#module-settings,
-#module-profile,
-#module-billing,
-#submodule-profile-messages {
-    display: none;
+.nav-profile .feedback-container textarea {
+    min-width: 240px;
+    max-width: 240px;
+    min-height: 100px;
+    max-height: 250px;
 }
-.dropdown-settings.show,
-.dropdown-profile.show {display: list-item}
 #msgCount {
     background-color: #FF4C80;
     position: relative;
-    left: -5px;
-    padding: 3px 0px;
-    width: 19px;
-    height: 19px;
+    left: 5px;
+    padding: 2px 0;
+    width: 13px;
+    height: 13px;
     text-align: center;
     margin-right: 1px;
     float: left;
+    font-size: 10px;
+    -webkit-animation: pulse_msg .8s infinite ease-out;
+    -moz-animation: pulse_msg .8s infinite ease-out;
+    animation: pulse_msg .8s infinite ease-out;
 }
 .avatar-container {
     width: 28px;
@@ -319,4 +329,35 @@ a {color: #337AB7}
 }
 .nav-second-level-toggle {
     padding-top: 4px;
+}
+
+
+@-moz-keyframes pulse_msg {
+    0% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+    50% { -webkit-transform: scale(1); -moz-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1) }
+    100% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+}
+
+@-webkit-keyframes pulse_msg {
+    0% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+    50% { -webkit-transform: scale(1); -moz-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1) }
+    100% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+}
+
+@-o-keyframes pulse_msg {
+    0% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+    50% { -webkit-transform: scale(1); -moz-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1) }
+    100% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+}
+
+@-ms-keyframes pulse_msg {
+    0% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+    50% { -webkit-transform: scale(1); -moz-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1) }
+    100% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+}
+
+@keyframes pulse_msg {
+    0% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
+    50% { -webkit-transform: scale(1); -moz-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1) }
+    100% { -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -ms-transform: scale(0.9); -o-transform: scale(0.9); transform: scale(0.9) }
 }
