@@ -45,7 +45,7 @@ CoreLogin.login = function (form) {
             if (errorMessage !== '') {
                 $('.form-main .text-danger').text(errorMessage);
             } else {
-                // location.reload();
+                location.reload();
             }
         });
 };
