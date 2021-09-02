@@ -45,6 +45,46 @@ CoreLogin.login = function (form) {
             if (errorMessage !== '') {
                 $('.form-main .text-danger').text(errorMessage);
             } else {
+                // location.reload();
+            }
+        });
+};
+
+
+/**
+ * Авторизация через соц сеть
+ * @param socialName
+ * @param code
+ */
+CoreLogin.authSocial = function (socialName, code) {
+
+    CoreLogin.loaderShow();
+    $('.form-main .text-danger').text('');
+
+    $.ajax({
+        url: "index.php?core=auth_" + socialName,
+        method: "POST",
+        data: {
+            code: code
+        }
+    })
+        .always (function (jqXHR) {
+            CoreLogin.loaderHide();
+
+            var response     = typeof jqXHR === 'string' ? jqXHR : jqXHR.responseText;
+            var errorMessage = '';
+
+            try {
+                var data = JSON.parse(response);
+                errorMessage = typeof data.error_message === 'string' ? data.error_message : '';
+
+            } catch (err) {
+                errorMessage = response || "Ошибка. Попробуйте позже, либо обратитесь к администратору";
+            }
+
+            if (errorMessage !== '') {
+                $('.form-main .text-danger').text(errorMessage);
+            } else {
                 location.reload();
             }
         });
@@ -231,7 +271,54 @@ CoreLogin.loaderHide = function () {
 }
 
 
+/**
+ * Получение параметров из адреса
+ * @param queryString
+ * @returns {{}}
+ */
+CoreLogin.parseQuery = function (queryString) {
+
+    var query = {};
+    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+
+    for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=');
+        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+    }
+
+    return query;
+}
+
+
 $(function () {
+
+    var parameters = CoreLogin.parseQuery(location.search);
+
+    if (parameters.hasOwnProperty('core') &&
+        parameters.hasOwnProperty('code') &&
+        parameters['core'] &&
+        parameters['code']
+    ) {
+        switch (parameters['core']) {
+            case 'auth_vk':
+                if ($('.auth-social-vk')[0]) {
+                    CoreLogin.authSocial('vk', parameters['code']);
+                }
+                break;
+
+            case 'auth_ok':
+                if ($('.auth-social-ok')[0]) {
+                    CoreLogin.authSocial('ok', parameters['code']);
+                }
+                break;
+
+            case 'auth_fb':
+                if ($('.auth-social-fb')[0]) {
+                    CoreLogin.authSocial('fb', parameters['code']);
+                }
+                break;
+        }
+    }
 
     // Добавление маски для полей с телефоном
     if ($("input[type=phone]")[0] && typeof window.Cleave === 'function') {
