@@ -1,14 +1,14 @@
 <?php
 namespace Core2;
 
-require_once DOC_ROOT . "core2/mod/admin/DBMaster.php";
-require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/audit/DBMaster.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
 
 class Audit extends \Common {
 
     public function database() {
         $DB_ARRAY = array();
-        $pathToArray = "core2/mod/admin/audit/db_array.php";
+        $pathToArray = "core2/mod/admin/classes/audit/db_array.php";
         //$o_master = new DBMaster(); print_r($o_master->getSystemInstallDBArray());
         if (!file_exists($pathToArray)) {
             echo "Cannot find file";

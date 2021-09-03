@@ -7,12 +7,13 @@ use Laminas\Session\Container as SessionContainer;
 
 /**
  * Class Db
- * @property \Zend_Db_Adapter_Abstract                   $db
- * @property Cache $cache
- * @property \Core2\I18n                                 $translate
- * @property Log                                         $log
- * @property \CoreController                             $modAdmin
- * @property \Session                                    $dataSession
+ * @property \Zend_Db_Adapter_Abstract $db
+ * @property Cache                     $cache
+ * @property I18n                      $translate
+ * @property Log                       $log
+ * @property \CoreController           $modAdmin
+ * @property \Session                  $dataSession
+ * @property \Zend_Config_Ini          $core_config
  */
 class Db {
 
@@ -24,7 +25,7 @@ class Db {
     /**
      * @var \Zend_Config_Ini
      */
-    private $core_config;
+    private $_core_config;
 
     private $_s         = array();
     private $_settings  = array();
@@ -58,15 +59,15 @@ class Db {
 	 */
 	public function __get($k) {
 		if ($k == 'core_config') {
-            $reg = \Zend_Registry::getInstance();
-            $this->core_config = $reg->get('core_config');
-            return $this->core_config;
+            $reg                = \Zend_Registry::getInstance();
+            $this->_core_config = $reg->get('core_config');
+            return $this->_core_config;
         }
 		if ($k == 'db') {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
-				if (!$this->core_config) $this->core_config = $reg->get('core_config');
+				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
 				$db = $this->establishConnection($this->config->database);
 			} else {
 				$db = $reg->get('db');
@@ -78,9 +79,9 @@ class Db {
 		if ($k == 'cache') {
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
-                if (!$this->core_config) $this->core_config = $reg->get('core_config');
-                $options = $this->core_config->cache->options ? $this->core_config->cache->options->toArray() : [];
-                $adapter = !empty($this->core_config->cache->adapter) ? $this->core_config->cache->adapter : 'Filesystem';
+                if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
+                $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
+                $adapter = !empty($this->_core_config->cache->adapter) ? $this->_core_config->cache->adapter : 'Filesystem';
                 if (isset($this->config->cache->adapter)) {
                     $adapter = $this->config->cache->adapter;
                     $options = $this->config->cache->options;
@@ -180,7 +181,7 @@ class Db {
                 }
 
                 //set profiler
-                if ($this->core_config && $this->core_config->profile && $this->core_config->profile->on) {
+                if ($this->_core_config && $this->_core_config->profile && $this->_core_config->profile->on) {
                     $db->query("set profiling=1");
                     $db->query("set profiling_history_size = 100");
                 }

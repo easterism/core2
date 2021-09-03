@@ -1,11 +1,11 @@
 <?php
 namespace Core2;
 
-require_once __DIR__ . '/../../inc/classes/Common.php';
-require_once __DIR__ . '/../../inc/classes/class.list.php';
-require_once __DIR__ . '/../../inc/classes/class.edit.php';
-require_once __DIR__ . '/../../inc/classes/class.tab.php';
-require_once __DIR__ . '/../../inc/classes/Templater3.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
+require_once DOC_ROOT . 'core2/inc/classes/Common.php';
+require_once DOC_ROOT . 'core2/inc/classes/Templater3.php';
 
 /**
  * Class Roles
@@ -28,7 +28,7 @@ class Roles extends \Common {
 
         if ($tab->activeTab == 1) {
             if (isset($_GET['edit']) && $_GET['edit'] != '') {
-                $this->printJs("core2/mod/admin/role.js");
+                $this->printJs("core2/mod/admin/assets/js/role.js");
                 $edit = new \editTable('roles');
                 $edit->SQL = $this->db->quoteInto("
                     SELECT id,
@@ -77,7 +77,7 @@ class Roles extends \Common {
 
 
                 foreach ($modules as $module) {
-                    $tpl = new \Templater3("core2/mod/admin/html/role_access.tpl");
+                    $tpl = new \Templater3("core2/mod/admin/assets/html/role_access.html");
 
                     if ($module['access_add']) {
                         $access_add_data = @unserialize(base64_decode($module['access_add']));

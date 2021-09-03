@@ -109,3 +109,12 @@ PRELOADERS
 	color: red;
 	margin-bottom: 15px;
 }
+.auth-social {
+	margin-top: 30px;
+}
+.auth-social > div {
+	margin-bottom: 10px;
+}
+.auth-social a {
+	margin-right: 6px;
+}

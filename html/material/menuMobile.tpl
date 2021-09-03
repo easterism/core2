@@ -36,7 +36,12 @@
 					<div class="module-title"></div>
 					<div class="module-action"></div>
 				</div>
+
 				<ul id="user-section" class="nav navbar-top-links navbar-right">
+					<!-- BEGIN navigate_item -->
+					<li class="nav navbar-nav nav-[MODULE_NAME]">[HTML]</li>
+					<!-- END navigate_item -->
+
 					<li class="nav navbar-nav nav-profile dropdown">
 						<div class="dropdown-toggle" data-toggle="dropdown">
 							<div class="avatar-container">
@@ -51,28 +56,10 @@
 							</li>
 							<li class="divider"></li>
 
-							<li class="dropdown-profile profile">
-								<a href="index.php#module=profile"
-								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile');"></a>
-							</li>
-							<li class="dropdown-profile messages">
-								<a href="index.php#module=profile&action=messages"
-								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=profile&action=messages');">
-									<i class="fa fa-envelope-o"></i>
-									_tr(Сообщения)
-								</a>
-							</li>
-							<li class="dropdown-profile divider"></li>
-							<li class="dropdown-billing">
-								<a href="index.php#module=billing"
-								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=billing');"></a>
-							</li>
-							<li class="dropdown-billing divider"></li>
-							<li class="dropdown-settings">
-								<a href="index.php#module=settings"
-								   onclick="if (event.button === 0 && ! event.ctrlKey) load('index.php#module=settings');"></a>
-							</li>
-							<li class="dropdown-settings divider"></li>
+							<!-- BEGIN navigate_item_profile -->
+							<li class="dropdown-[MODULE_NAME]">[HTML]</li>
+							<!-- END navigate_item_profile -->
+
 							<li>
 								<a href="javascript:logout()">
 									<i class="fa fa-power-off"></i>

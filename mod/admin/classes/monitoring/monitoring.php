@@ -77,7 +77,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 			if ( ! $sLife) {
 				$sLife = ini_get('session.gc_maxlifetime');
 			}
-			$this->printJs("core2/mod/admin/monitor.js");
+			$this->printJs("core2/mod/admin/assets/js/monitor.js");
 			
 			$list = new listTable($this->resId); 
 			$list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
@@ -220,8 +220,8 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 		}
 	}
 	elseif ($tab->activeTab == 3) { // журнал запросов
-		$this->printCss("core2/mod/admin/css/monitoring.css");
-		$this->printJs("core2/mod/admin/monitoring.js");
+		$this->printCss("core2/mod/admin/assets/css/monitoring.css");
+		$this->printJs("core2/mod/admin/assets/js/monitoring.js");
 
 		if (isset($this->config->log) &&
 			isset($this->config->log->system) &&
@@ -245,7 +245,7 @@ $tab->beginContainer($this->translate->tr("Мониторинг"));
 			$body        = $data['body'];
 		}
 
-		$tpl = new Templater3("core2/mod/admin/html/monitoring.tpl");
+		$tpl = new Templater3("core2/mod/admin/assets/html/monitoring.html");
         $tpl->assign('[COUNT_LINES]',  Tool::commafy($count_lines));
         $tpl->assign('[VIEW_LINES]',   $lines);
         $tpl->assign('[SEARCH]',       htmlspecialchars($search));

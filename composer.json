@@ -31,7 +31,6 @@
     "zf1/zend-config": "~1.12",
     "zf1/zend-acl": "~1.12",
     "laminas/laminas-authentication": "2.8.*",
-    "laminas/laminas-ldap": "2.11.0",
     "belhard/zend-db": "dev-master",
     "belhard/xajax": "dev-master",
     "belhard/floatthead": "dev-master",

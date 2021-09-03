@@ -6,17 +6,17 @@ require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 
-require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
-require_once DOC_ROOT . "core2/mod/admin/User.php";
-require_once DOC_ROOT . "core2/mod/admin/Settings.php";
-require_once DOC_ROOT . "core2/mod/admin/Modules.php";
-require_once DOC_ROOT . "core2/mod/admin/Roles.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/Gitlab.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/users/User.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
-use Core2\User as User;
+use Core2\View as User;
 use Core2\Settings as Settings;
 
 /**
@@ -141,7 +141,7 @@ class MobileController extends Common {
 		$sessData = $sess->$resource;
         $deleteKey  = $sessData['deleteKey'];
         if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
-        list($table, $refid) = explode(".", $deleteKey);
+        [$table, $refid] = explode(".", $deleteKey);
         if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
@@ -235,7 +235,7 @@ class MobileController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
         //require_once 'core2/mod/ModAjax.php';
         $app = "index.php?module={$this->module}&action=users";
-        $user = new User();
+        $user = new View();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
         if (isset($_GET['edit']) && $_GET['edit'] === '0') {
@@ -408,9 +408,9 @@ class MobileController extends Common {
 				}
 			}
 		}
-		$this->printJs("core2/mod/admin/feedback.js", true);
+        $this->printJs("core2/mod/admin/assets/js/feedback.js", true);
 		require_once 'classes/Templater2.php';
-		$tpl = new Templater2("core2/mod/admin/html/feedback.tpl");
+		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
 		return $tpl->parse();
 	}
@@ -510,7 +510,7 @@ class MobileController extends Common {
 	 */
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-        $this->printCss($this->path . "role.css");
+        $this->printCss($this->path . "assets/css/role.css");
         $roles = new Roles();
         $roles->dispatch();
 	}
@@ -522,9 +522,9 @@ class MobileController extends Common {
 	 */
 	public function action_enum() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$this->printJs("core2/mod/admin/enum.js");
+		$this->printJs("core2/mod/admin/assets/js/enum.js");
 		$app = "index.php?module=admin&action=enum&loc=core";
-		require_once $this->path . 'enum.php';
+		require_once $this->path . 'classes/enum/enum.php';
 	}
 
 
@@ -536,7 +536,7 @@ class MobileController extends Common {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
             $app = "index.php?module=admin&action=monitoring&loc=core";
-            require_once $this->path . 'monitoring.php';
+            require_once $this->path . 'classes/monitoring/monitoring.php';
         } catch (Exception $e) {
             Alert::printDanger($e->getMessage());
         }
@@ -550,8 +550,8 @@ class MobileController extends Common {
 	public function action_audit() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$app = "index.php?module=admin&action=audit&loc=core";
-		require_once $this->path . 'DBMaster.php';
-		require_once $this->path . 'audit.php';
+		require_once $this->path . 'classes/audit/DBMaster.php';
+		require_once $this->path . 'classes/audit/Audit.php';
 	}
 
 

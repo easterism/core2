@@ -1,5 +1,15 @@
 <?php
 
+use Laminas\Session\Container as SessionContainer;
+use Core2\Mod\Admin;
+
+use Core2\Settings as Settings;
+use Core2\Modules as Modules;
+use Core2\Roles as Roles;
+use Core2\Enum as Enum;
+use Core2\InstallModule as Install;
+
+
 require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
@@ -8,21 +18,12 @@ require_once 'classes/Alert.php';
 
 require_once 'Interfaces/File.php';
 
-require_once DOC_ROOT . "core2/mod/admin/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/gitlab/Gitlab.php";
-require_once DOC_ROOT . "core2/mod/admin/User.php";
-require_once DOC_ROOT . "core2/mod/admin/Settings.php";
-require_once DOC_ROOT . "core2/mod/admin/Modules.php";
-require_once DOC_ROOT . "core2/mod/admin/Roles.php";
-require_once DOC_ROOT . "core2/mod/admin/Enum.php";
-
-use Laminas\Session\Container as SessionContainer;
-use Core2\User as User;
-use Core2\Settings as Settings;
-use Core2\Modules as Modules;
-use Core2\Roles as Roles;
-use Core2\Enum as Enum;
-use Core2\InstallModule as Install;
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/Gitlab.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
 
 
 /**
@@ -37,9 +38,9 @@ use Core2\InstallModule as Install;
  */
 class CoreController extends Common implements File {
 
-	const RP = '187777f095b3006d4dbdf3b3548ac407';
-	protected $tpl = '';
-	protected $theme = 'default';
+    const RP = '187777f095b3006d4dbdf3b3548ac407';
+    protected $tpl   = '';
+    protected $theme = 'default';
 
 
     /**
@@ -47,12 +48,14 @@ class CoreController extends Common implements File {
      */
 	public function __construct() {
 		parent::__construct();
-		$this->module = 'admin';
-		$this->path = 'core2/mod/';
-		$this->path .= !empty($this->module) ? $this->module . "/" : '';
-		if (!empty($this->config->theme)) {
-			$this->theme = $this->config->theme;
-		}
+
+        $this->module = 'admin';
+        $this->path   = 'core2/mod/';
+        $this->path  .= ! empty($this->module) ? $this->module . "/" : '';
+
+        if ( ! empty($this->config->theme)) {
+            $this->theme = $this->config->theme;
+        }
 	}
 
 
@@ -61,7 +64,9 @@ class CoreController extends Common implements File {
      * @param array  $arg
      */
     public function __call ($k, $arg) {
-		if (!method_exists($this, $k)) return;
+		if ( ! method_exists($this, $k)) {
+            return;
+        }
 	}
 
 
@@ -76,7 +81,7 @@ class CoreController extends Common implements File {
 
     /**
      * @throws Exception
-     * @return void
+     * @return string
      */
 	public function action_index() {
 
@@ -88,7 +93,9 @@ class CoreController extends Common implements File {
             }
         }
        
-        if ( ! $this->auth->ADMIN) throw new Exception(911);
+        if ( ! $this->auth->ADMIN) {
+            throw new Exception(911);
+        }
 
 
         if (isset($_GET['data'])) {
@@ -104,6 +111,7 @@ class CoreController extends Common implements File {
                         return json_encode(['status' => 'success']);
                         break;
                 }
+
             } catch (Exception $e) {
                 return json_encode([
                     'status'        => 'error',
@@ -116,7 +124,7 @@ class CoreController extends Common implements File {
         $tab = new tabs('mod');
         $tab->beginContainer($this->_("События аудита"));
 
-        $this->printJsModule('admin', '/js/admin.index.js');
+        $this->printJsModule('admin', '/assets/js/admin.index.js');
 
         try {
             $changedMods = $this->checkModulesChanges();
@@ -152,7 +160,10 @@ class CoreController extends Common implements File {
      * @return void|string
 	 */
 	public function action_modules() {
-        if (!$this->auth->ADMIN) throw new Exception(911);
+
+        if ( ! $this->auth->ADMIN) {
+            throw new Exception(911);
+        }
 
         //проверка наличия обновлений для модулей
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
@@ -201,7 +212,7 @@ class CoreController extends Common implements File {
         if (!empty($_POST['install_from_repo'])) {
             $mods->install = ['repo' => $_POST['repo'], 'install_from_repo' => $_POST['install_from_repo']];
         }
-        $mods->dispatch();
+        return $mods->dispatch();
 	}
 
 
@@ -210,11 +221,12 @@ class CoreController extends Common implements File {
 	 * @throws Exception
      * @return void
 	 */
-	public function action_switch(){
+	public function action_switch() {
+
 		try {
-			if (!isset($_POST['data'])) {
-				throw new Exception($this->translate->tr('Произошла ошибка! Не удалось получить данные'));
-			}
+            if ( ! isset($_POST['data'])) {
+                throw new Exception($this->translate->tr('Произошла ошибка! Не удалось получить данные'));
+            }
 
 			$res = explode('.', $_POST['data']);
 
@@ -260,7 +272,7 @@ class CoreController extends Common implements File {
 		$sessData   = $sess->$resource;
         $deleteKey  = $sessData['deleteKey'];
         if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
-        list($table, $refid) = explode(".", $deleteKey);
+        [$table, $refid] = explode(".", $deleteKey);
         if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
@@ -352,11 +364,15 @@ class CoreController extends Common implements File {
 
 
 	/**
-     * Субмодуль Пользователи
+     * Пользователи
 	 * @throws Exception
-     * @return void
+     * @return string
 	 */
-	public function action_users () {
+	public function action_users(): string {
+
+        require_once __DIR__ . "/../mod/admin/classes/users/View.php";
+        require_once __DIR__ . "/../mod/admin/classes/users/Users.php";
+        require_once __DIR__ . "/../mod/admin/classes/users/User.php";
 
 	    if ( ! $this->auth->ADMIN) {
 		    throw new Exception(911);
@@ -368,8 +384,8 @@ class CoreController extends Common implements File {
                 switch ($_GET['data']) {
                     // Войти под пользователем
                     case 'login_user':
-                        $user = new User();
-                        $user->loginUser($_POST['user_id']);
+                        $users = new Admin\Users\Users();
+                        $users->loginUser($_POST['user_id']);
 
                         return json_encode([
                             'status' => 'success',
@@ -385,23 +401,38 @@ class CoreController extends Common implements File {
             }
         }
 
+        $app   = "index.php?module=admin&action=users";
+		$view  = new Admin\Users\View();
+        $panel = new Panel();
 
-		$user = new User();
-        $tab = new tabs('users');
-        $title = $this->translate->tr("Справочник пользователей системы");
 
-        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
-            $user->create();
-            $title = $this->translate->tr("Создание нового пользователя");
+        ob_start();
 
-        } elseif ( ! empty($_GET['edit'])) {
-            $user->get($_GET['edit']);
-            $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
+        try {
+            if (isset($_GET['edit'])) {
+                if (empty($_GET['edit'])) {
+                    $panel->setTitle($this->_("Создание нового пользователя"), '', $app);
+                    echo $view->getEdit($app);
+
+                } else {
+                    $user = new Admin\Users\User($_GET['edit']);
+                    $panel->setTitle($user->u_login, $this->_('Редактирование пользователя'), $app);
+                    echo $view->getEdit($app, $user);
+                }
+
+
+            } else {
+                $panel->setTitle($this->_("Справочник пользователей системы"));
+                echo $view->getList($app);
+            }
+
+        } catch (\Exception $e) {
+            echo Alert::danger($e->getMessage(), 'Ошибка');
         }
 
-        $tab->beginContainer($title);
-        echo $user->dispatch();
-        $tab->endContainer();
+
+        $panel->setContent(ob_get_clean());
+        return $panel->render();
 	}
 
 
@@ -601,9 +632,9 @@ class CoreController extends Common implements File {
 				}
 			}
 		}
-		$this->printJs("core2/mod/admin/feedback.js", true);
+		$this->printJs("core2/mod/admin/assets/js/feedback.js", true);
 		require_once 'classes/Templater2.php';
-		$tpl = new Templater2("core2/mod/admin/html/feedback.tpl");
+		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
 		return $tpl->parse();
 	}
@@ -704,7 +735,7 @@ class CoreController extends Common implements File {
 	 */
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
-		$this->printCss($this->path . "role.css");
+		$this->printCss($this->path . "assets/css/role.css");
         $roles = new Roles();
         $roles->dispatch();
 	}
@@ -728,8 +759,8 @@ class CoreController extends Common implements File {
             $title = $this->_("Создание нового справочника");
         }
         $tab->beginContainer($title);
-        $this->printJs("core2/mod/admin/enum.js");
-        $this->printJs("core2/mod/admin/mod.js");
+        $this->printJs("core2/mod/admin/assets/js/enum.js");
+        $this->printJs("core2/mod/admin/assets/js/mod.js");
         if (!empty($_GET['edit'])) {
             echo $enum->editEnum($_GET['edit']);
             $tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"%s\""), $this->dataEnum->find($_GET['edit'])->current()->name));
@@ -757,7 +788,7 @@ class CoreController extends Common implements File {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
             $app = "index.php?module=admin&action=monitoring";
-            require_once $this->path . 'monitoring.php';
+            require_once $this->path . 'classes/monitoring/monitoring.php';
         } catch (Exception $e) {
             echo Alert::danger($e->getMessage());
         }
@@ -771,7 +802,7 @@ class CoreController extends Common implements File {
 	public function action_audit() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$app = "index.php?module=admin&action=audit";
-		require_once $this->path . 'audit/Audit.php';
+		require_once $this->path . 'classes/audit/Audit.php';
         $audit = new \Core2\Audit();
         $tab = new tabs('audit');
 

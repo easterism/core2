@@ -846,7 +846,7 @@
                             $modules_css = array_merge($modules_css, $module_css);
                         }
 
-                        if (THEME !== 'default' && ! Tool::isMobileBrowser()) {
+                        if (THEME !== 'default') {
                             $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
                         }
                     }

@@ -40,48 +40,7 @@ var main_menu = {
                 $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
             }
         });
-    },
-
-
-	/**
-	 *
-	 */
-	sendFeedback: function () {
-
-		var $textarea      = $('#user-section .nav-feedback textarea');
-		var moduleTitle    = $('.navbar-header .module-title').text();
-		var submoduleTitle = $('.navbar-header .module-action').text();
-
-		preloader.show();
-		$.ajax({
-			method: 'POST',
-			url: 'index.php?module=profile&action=messages&data=send_feedback',
-			data: {
-				"message" : $textarea.val(),
-				"location_href" : location.href,
-				"location_module" : moduleTitle,
-				"location_submodule" : submoduleTitle
-			},
-			dataType: 'json'
-		}).done(function (data) {
-			preloader.hide();
-
-			if (data.status !== 'success') {
-				var message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
-				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
-
-			} else {
-				$('#user-section .nav-feedback a').popover('hide');
-				$textarea.val('');
-				swal("Сообщение отправлено", "", 'success').catch(swal.noop);
-			}
-
-		}).fail(function (error) {
-			preloader.hide();
-
-			swal("Ошибка отправки сообщения", 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
-		});
-	}
+    }
 };
 
 
@@ -803,21 +762,6 @@ $(document).ready(function() {
             }
         }
     });
-
-    var tplFeedback =
-		"<div class=\"feedback-container\">" +
-			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
-			"<button class=\"btn btn-info btn-sm pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
-			"<div class=\"clearfix\"></div>" +
-		"</div>";
-
-	$('#user-section a.nav-feedback').popover({
-		"placement" : "bottom",
-		"trigger" : "manual",
-		"title" : "Обратная связь",
-		"html" : true,
-		"content" : tplFeedback
-	});
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();

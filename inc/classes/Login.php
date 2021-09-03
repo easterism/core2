@@ -11,7 +11,6 @@ require_once 'Tool.php';
 /**
  * Class Login
  * @package Core2
- * @property \Zend_Config_Ini $core_config
  * @property \Users           $dataUsers
  */
 class Login extends Db {
@@ -131,6 +130,57 @@ class Login extends Db {
             }
 
 
+            if ($this->core_config->auth &&
+                $this->core_config->auth->module &&
+                $this->core_config->auth->social &&
+                $_SERVER['REQUEST_METHOD'] === 'POST' &&
+                in_array($_GET['core'], ['auth_vk', 'auth_ok', 'auth_fb'])
+            ) {
+                try {
+                    $code = $_POST['code'] ?? '';
+
+                    if ( ! is_string($code)) {
+                        throw new \Exception($this->_('Некорректный запрос'));
+                    }
+
+                    switch ($_GET['core']) {
+                        case 'auth_vk':
+                            if ($this->core_config->auth->social->vk &&
+                                $this->core_config->auth->social->vk->on
+                            ) {
+                                $this->authVk($code);
+                            }
+                            break;
+
+                        case 'auth_ok':
+                            if ($this->core_config->auth->social->ok &&
+                                $this->core_config->auth->social->ok->on
+                            ) {
+                                $this->authOk($code);
+                            }
+                            break;
+
+                        case 'auth_fb':
+                            if ($this->core_config->auth->social->fb &&
+                                $this->core_config->auth->social->fb->on
+                            ) {
+                                $this->authFb($code);
+                            }
+                            break;
+                    }
+
+                    return json_encode([
+                        'status' => 'success'
+                    ]);
+
+                } catch (\Exception $e) {
+                    return json_encode([
+                        'error_message' => $e->getMessage()
+                    ]);
+                }
+            }
+
+
             if ($_GET['core'] == 'login') {
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($_POST['login'])) {
@@ -147,7 +197,19 @@ class Login extends Db {
                         ]);
                     }
 
-                    return $this->login($_POST["login"], $_POST['password']);
+                    try {
+                        $this->authLoginPassword($_POST["login"], $_POST['password']);
+
+                        return json_encode([
+                            'status' => 'success'
+                        ]);
+
+                    } catch (\Exception $e) {
+                        return json_encode([
+                            'status'        => 'error',
+                            'error_message' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
         }
@@ -211,8 +273,50 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if (!empty($this->config->ldap->active)) {
+        if ($this->core_config->auth &&
+            $this->core_config->auth->ldap &&
+            $this->core_config->auth->ldap->on
+        ) {
             $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
+        }
+
+        if ($this->core_config->auth &&
+            $this->core_config->auth->module &&
+            $this->core_config->auth->social
+        ) {
+            if ($this->core_config->auth->social->fb &&
+                $this->core_config->auth->social->fb->on &&
+                $this->core_config->auth->social->fb->app_id &&
+                $this->core_config->auth->social->fb->api_secret &&
+                $this->core_config->auth->social->fb->redirect_url
+            ) {
+
+                $tpl->social->fb->assign('[APP_ID]',       $this->core_config->auth->social->fb->app_id);
+                $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+            }
+
+            if ($this->core_config->auth->social->ok &&
+                $this->core_config->auth->social->ok->on &&
+                $this->core_config->auth->social->ok->app_id &&
+                $this->core_config->auth->social->ok->public_key &&
+                $this->core_config->auth->social->ok->secret_key &&
+                $this->core_config->auth->social->ok->redirect_url
+            ) {
+
+                $tpl->social->ok->assign('[APP_ID]',       $this->core_config->auth->social->ok->app_id);
+                $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
+            }
+
+            if ($this->core_config->auth->social->vk &&
+                $this->core_config->auth->social->vk->on &&
+                $this->core_config->auth->social->vk->app_id &&
+                $this->core_config->auth->social->vk->api_secret &&
+                $this->core_config->auth->social->vk->redirect_url
+            ) {
+
+                $tpl->social->vk->assign('[APP_ID]',       $this->core_config->auth->social->vk->app_id);
+                $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+            }
         }
 
         if ($this->config->mail && $this->config->mail->server) {
@@ -427,128 +531,116 @@ class Login extends Db {
 
 
     /**
-     * Авторизация пользователя через форму
-     * @param $login
-     * @param $password
-     * @return string
+     * @param array $user
+     * @return bool
+     * @throws \Exception
      */
-    private function login($login, $password) {
+    private function auth(array $user): bool {
+
+        $authNamespace = new SessionContainer('Auth');
+        $authNamespace->accept_answer = true;
+
+        $session_life = $this->db->fetchOne("
+            SELECT value 
+            FROM core_settings 
+            WHERE visible = 'Y' 
+              AND code = 'session_lifetime' 
+            LIMIT 1
+        ");
+
+        if ($session_life) {
+            $authNamespace->setExpirationSeconds($session_life, "accept_answer");
+        }
+
+        if (session_id() == 'deleted') {
+            throw new \Exception($this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени."));
+        }
+
+        $authNamespace->ID    = (int)$user['u_id'];
+        $authNamespace->NAME  = $user['u_login'];
+        $authNamespace->EMAIL = $user['email'];
+
+        if ($user['u_login'] == 'root') {
+            $authNamespace->ADMIN  = true;
+            $authNamespace->ROLEID = 0;
+        } else {
+            $authNamespace->LN     = $user['lastname'];
+            $authNamespace->FN     = $user['firstname'];
+            $authNamespace->MN     = $user['middlename'];
+            $authNamespace->ADMIN  = $user['is_admin_sw'] == 'Y';
+            $authNamespace->ROLE   = $user['role'] ?: -1;
+            $authNamespace->ROLEID = $user['role_id'] ?: 0;
+            $authNamespace->LIVEID = $this->storeSession($authNamespace);
+        }
+
+        $authNamespace->LDAP = $user['LDAP'] ?? false;
+
+
+        //регенерация сессии для предотвращения угона
+        if ( ! ($authNamespace->init)) {
+            $authNamespace->getManager()->regenerateId();
+            $authNamespace->init = true;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Авторизация пользователя через форму
+     * @param string $login
+     * @param string $password
+     * @return bool
+     * @throws \Zend_Db_Exception
+     */
+    private function authLoginPassword(string $login, string $password): bool {
 
         $blockNamespace = new SessionContainer('Block');
 
         try {
-
             if ( ! empty($blockNamespace->blocked)) {
                 throw new \Exception($this->translate->tr("Ваш доступ временно заблокирован!"));
             }
 
-
             $login = trim($login);
-
-
-            if ($this->config->ldap &&
-                $this->config->ldap->active &&
-                ((function_exists('ctype_print') ? ! ctype_print($password) : true) || strlen($password) < 1)
-            ) {
-                throw new \Exception($this->translate->tr("Ошибка пароля!"), 400);
-            }
-
 
             $this->getConnection($this->config->database);
 
-
-            $auth         = [];
-            $is_ldap_auth = false;
-
             if ($login === 'root') {
-                $auth = $this->getAuthRoot();
+                $user = $this->getUserRoot();
 
             } else {
-                // LDAP
-                if ($this->config->ldap && $this->config->ldap->active) {
-                    $auth = $this->getAuthLdap($login, $password);
-
-                    if ( ! empty($auth)) {
-                        $is_ldap_auth = true;
-
-                    } else {
-                        $password = md5($password);
+                if ($this->core_config->auth &&
+                    $this->core_config->auth->ldap &&
+                    $this->core_config->auth->ldap->on
+                ) {
+                    if ((function_exists('ctype_print') ? ! ctype_print($password) : true) ||
+                        strlen($password) < 1
+                    ) {
+                        throw new \Exception($this->_("Ошибка пароля!"));
                     }
-                }
 
-                // LOGIN
-                if (empty($auth)) {
-                    $auth = $this->getAuthLogin($login);
+                    $user           = $this->getUserLdap($login, $password);
+                    $user['LDAP']   = true;
+                    $user['u_pass'] = \Tool::pass_salt($password);
+
+                } else {
+                    $user = $this->dataUsers->getUserByLogin($login);
                 }
             }
 
-            if ( ! $auth) {
+            if ( ! $user) {
                 throw new \Exception($this->translate->tr("Нет такого пользователя"));
             }
 
 
-            $auth['LDAP'] = $is_ldap_auth;
-
-            $md5_pass = \Tool::pass_salt($password);
-
-
-            if ($auth['LDAP']) {
-                $auth['u_pass'] = $md5_pass;
-            }
-
-            if ($auth['u_pass'] !== $md5_pass) {
+            if ($user['u_pass'] !== \Tool::pass_salt($password)) {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
             }
 
-            $authNamespace = new SessionContainer('Auth');
-            $authNamespace->accept_answer = true;
+            $this->auth($user);
 
-            $session_life = $this->db->fetchOne("
-                SELECT value 
-                FROM core_settings 
-                WHERE visible = 'Y' 
-                  AND code = 'session_lifetime' 
-                LIMIT 1
-            ");
-
-            if ($session_life) {
-                $authNamespace->setExpirationSeconds($session_life, "accept_answer");
-            }
-
-            if (session_id() == 'deleted') {
-                throw new \Exception($this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени."));
-            }
-
-            $authNamespace->ID    = (int)$auth['u_id'];
-            $authNamespace->NAME  = $auth['u_login'];
-            $authNamespace->EMAIL = $auth['email'];
-
-            if ($auth['u_login'] == 'root') {
-                $authNamespace->ADMIN  = true;
-                $authNamespace->ROLEID = 0;
-            } else {
-                $authNamespace->LN     = $auth['lastname'];
-                $authNamespace->FN     = $auth['firstname'];
-                $authNamespace->MN     = $auth['middlename'];
-                $authNamespace->ADMIN  = $auth['is_admin_sw'] == 'Y';
-                $authNamespace->ROLE   = $auth['role'] ? $auth['role'] : -1;
-                $authNamespace->ROLEID = $auth['role_id'] ? $auth['role_id'] : 0;
-                $authNamespace->LIVEID = $this->storeSession($authNamespace);
-            }
-
-            $authNamespace->LDAP = $auth['LDAP'];
-
-
-            //регенерация сессии для предотвращения угона
-            if ( ! ($authNamespace->init)) {
-                $authNamespace->getManager()->regenerateId();
-                $authNamespace->init = true;
-            }
-
-
-            return json_encode([
-                'status' => 'success'
-            ]);
+            return true;
 
         } catch (\Exception $e) {
             $code = $e->getCode() > 200 && $e->getCode() < 600 ? $e->getCode() : 403;
@@ -566,11 +658,169 @@ class Login extends Db {
                 $blockNamespace->numberOfPageRequests = 1;
             }
 
+            throw $e;
+        }
+    }
 
-            return json_encode([
-                'status'        => 'error',
-                'error_message' => $e->getMessage(),
-            ]);
+
+    /**
+     * Вход через вконтакт
+     * @param string $code
+     * @return bool
+     * @throws \Exception
+     */
+    private function authVk(string $code): bool {
+
+        if ($this->core_config->auth &&
+            $this->core_config->auth->module
+        ) {
+            if (empty($code)) {
+                throw new \Exception($this->_('Не указан код авторизации'));
+            }
+
+            $module_name = strtolower($this->core_config->auth->module);
+            $location    = $this->getModuleLocation($module_name);
+
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
+
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
+
+            require_once "{$location}/{$mod_controller_name}.php";
+
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
+
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof Auth)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
+            }
+
+            $user_id = $mod_controller->authVk($code);
+            $user    = $this->dataUsers->getUserById($user_id);
+
+            if (empty($user) || ! is_array($user)) {
+                throw new \Exception($this->_('Ошибка входа через соц сеть'));
+            }
+
+            $this->auth($user);
+
+            return true;
+
+        } else {
+            throw new \Exception($this->_('Вход через эту соц сеть недоступен'));
+        }
+    }
+
+
+    /**
+     * Вход через Однокласскини
+     * @param string $code
+     * @return bool
+     * @throws \Exception
+     */
+    private function authOk(string $code): bool {
+
+        if ($this->core_config->auth &&
+            $this->core_config->auth->module
+        ) {
+            if (empty($code)) {
+                throw new \Exception($this->_('Не указан код авторизации'));
+            }
+
+            $module_name = strtolower($this->core_config->auth->module);
+            $location    = $this->getModuleLocation($module_name);
+
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
+
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
+
+            require_once "{$location}/{$mod_controller_name}.php";
+
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
+
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof Auth)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
+            }
+
+            $user_id = $mod_controller->authOk($code);
+            $user    = $this->dataUsers->getUserById($user_id);
+
+            if (empty($user) || ! is_array($user)) {
+                throw new \Exception($this->_('Ошибка входа через соц сеть'));
+            }
+
+            $this->auth($user);
+
+            return true;
+
+        } else {
+            throw new \Exception($this->_('Вход через эту соц сеть недоступен'));
+        }
+    }
+
+
+    /**
+     * Вход через Facebook
+     * @param string $code
+     * @return bool
+     * @throws \Exception
+     */
+    private function authFb(string $code): bool {
+
+        if ($this->core_config->auth &&
+            $this->core_config->auth->module
+        ) {
+            if (empty($code)) {
+                throw new \Exception($this->_('Не указан код авторизации'));
+            }
+
+            $module_name = strtolower($this->core_config->auth->module);
+            $location    = $this->getModuleLocation($module_name);
+
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
+
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
+
+            require_once "{$location}/{$mod_controller_name}.php";
+
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
+
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof Auth)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
+            }
+
+            $user_id = $mod_controller->authFb($code);
+            $user    = $this->dataUsers->getUserById($user_id);
+
+            if (empty($user) || ! is_array($user)) {
+                throw new \Exception($this->_('Ошибка входа через соц сеть'));
+            }
+
+            $this->auth($user);
+
+            return true;
+
+        } else {
+            throw new \Exception($this->_('Вход через эту соц сеть недоступен'));
         }
     }
 
@@ -590,6 +840,7 @@ class Login extends Db {
             $location    = $this->getModuleLocation($module_name);
 
             $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
 
             if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
                 throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
@@ -597,6 +848,9 @@ class Login extends Db {
 
             require_once "{$location}/{$mod_controller_name}.php";
 
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
 
             $this->setContext($module_name);
             $mod_controller = new $mod_controller_name();
@@ -749,6 +1003,7 @@ class Login extends Db {
      * @return false|string
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Db_Exception
+     * @throws \Exception
      */
     private function registrationComplete($key, $password) {
 
@@ -758,12 +1013,17 @@ class Login extends Db {
             $location    = $this->getModuleLocation($module_name);
 
             $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
 
             if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
                 throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
             }
 
             require_once "{$location}/{$mod_controller_name}.php";
+
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
 
             $this->setContext($module_name);
             $mod_controller = new $mod_controller_name();
@@ -833,6 +1093,7 @@ class Login extends Db {
      * @return false|string|string[]
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Db_Exception
+     * @throws \Exception
      */
     private function restore($email) {
 
@@ -842,6 +1103,7 @@ class Login extends Db {
             $location    = $this->getModuleLocation($module_name);
 
             $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
 
             if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
                 throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
@@ -849,6 +1111,9 @@ class Login extends Db {
 
             require_once "{$location}/{$mod_controller_name}.php";
 
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
 
             $this->setContext($module_name);
             $mod_controller = new $mod_controller_name();
@@ -910,6 +1175,7 @@ class Login extends Db {
      * @param $password
      * @return false|string
      * @throws \Zend_Db_Adapter_Exception
+     * @throws \Exception
      */
     private function restoreComplete($key, $password) {
 
@@ -919,12 +1185,17 @@ class Login extends Db {
             $location    = $this->getModuleLocation($module_name);
 
             $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
 
             if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
                 throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
             }
 
             require_once "{$location}/{$mod_controller_name}.php";
+
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
 
             $this->setContext($module_name);
             $mod_controller = new $mod_controller_name();
@@ -1073,7 +1344,7 @@ class Login extends Db {
      * Получение данных дя пользователя root
      * @return array
      */
-    private function getAuthRoot() {
+    private function getUserRoot() {
 
         require_once __DIR__ . '/../CoreController.php';
 
@@ -1088,75 +1359,50 @@ class Login extends Db {
 
 
     /**
-     * @param $login
-     * @param $password
-     * @return array
+     * @param string $login
+     * @param string $password
+     * @return array|bool
      * @throws \Exception
      */
-    private function getAuthLdap($login, $password) {
+    private function getUserLdap(string $login, string $password): array {
 
-        require_once 'LdapAuth.php';
+        if ($this->core_config->auth &&
+            $this->core_config->auth->module
+        ) {
+            $module_name = strtolower($this->core_config->auth->module);
+            $location    = $this->getModuleLocation($module_name);
 
-        $ldapAuth = new LdapAuth();
-        $ldapAuth->auth($login, $password);
-        $ldapStatus = $ldapAuth->getStatus();
+            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
+            $vendor_autoload     = "{$location}/vendor/autoload.php";
 
-        switch ($ldapStatus) {
-            case LdapAuth::ST_LDAP_AUTH_SUCCESS :
-                $userData = $ldapAuth->getUserData();
-                $login    = $userData['login'];
+            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+            }
 
-                if (isset($userData['root']) && $userData['root'] === true) {
-                    return $this->getAuthRoot();
-                }
+            require_once "{$location}/{$mod_controller_name}.php";
 
-                $user = $this->dataUsers->fetchRow($this->db->quoteInto("u_login = ?", $login));
-                if ( ! $user) {
-                    //create new user
-                    $this->db->insert('core_users', [
-                        'visible'     => 'Y',
-                        'is_admin_sw' => $userData['admin'] ? 'Y' : 'N',
-                        'u_login'     => $login,
-                        'role_id'     => $userData['role_id'] ?: new \Zend_Db_Expr('NULL'),
-                        'date_added'  => new \Zend_Db_Expr('NOW()'),
-                    ]);
+            if (file_exists($vendor_autoload)) {
+                require_once $vendor_autoload;
+            }
 
-                } elseif ($userData['admin']) {
-                    $this->db->update('core_users', ['is_admin_sw' => 'Y'], $this->db->quoteInto('u_id = ?', $user->u_id));
-                }
+            $this->setContext($module_name);
+            $mod_controller = new $mod_controller_name();
+            if ( ! ($mod_controller instanceof Auth)) {
+                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
+            }
 
-                return $this->getAuthLogin($login);
-                break;
+            $user_id = $mod_controller->authLdap($login, $password);
+            $user    = $this->dataUsers->getUserById($user_id);
 
-            case LdapAuth::ST_LDAP_USER_NOT_FOUND :
-                //удаляем пользователя если его нету в AD и с префиксом LDAP_%
-                //$this->db->query("DELETE FROM core_users WHERE u_login = ?", $login);
-                break;
+            if (empty($user) || ! is_array($user)) {
+                throw new \Exception($this->_('Ошибка входа через LDAP'));
+            }
 
-            case LdapAuth::ST_LDAP_INVALID_PASSWORD :
-                throw new \Exception($this->translate->tr("Неверный пароль или пользователь отключён"));
-                break;
+            return $user;
 
-            case LdapAuth::ST_ERROR :
-                throw new \Exception($this->translate->tr("Ошибка LDAP: ") . $ldapAuth->getMessage());
-                break;
-
-            default:
-                throw new \Exception($this->translate->tr("Неизвестная ошибка авторизации по LDAP"));
-                break;
+        } else {
+            throw new \Exception($this->_('Вход через LDAP недоступен'));
         }
-
-        return [];
-    }
-
-
-    /**
-     * @param $login
-     * @return mixed
-     */
-    private function getAuthLogin($login) {
-
-        return $this->dataUsers->getUserByLogin($login);
     }
 
 
