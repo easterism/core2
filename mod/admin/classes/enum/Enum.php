@@ -1,11 +1,11 @@
 <?php
 namespace Core2;
 
-require_once __DIR__ . '/../../inc/classes/Common.php';
-require_once __DIR__ . '/../../inc/classes/class.list.php';
-require_once __DIR__ . '/../../inc/classes/class.edit.php';
-require_once __DIR__ . '/../../inc/classes/class.tab.php';
-require_once __DIR__ . '/../../inc/classes/Templater3.php';
+require_once DOC_ROOT . 'core2/inc/classes/Common.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
+require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
+require_once DOC_ROOT . 'core2/inc/classes/Templater3.php';
 
 /**
  * Class Roles
@@ -33,7 +33,7 @@ class Enum extends \Common {
         $edit->addControl($this->translate->tr("Название справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
         $edit->addControl($this->translate->tr("Идентификатор справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
 
-        $tpl = new \Templater3("core2/mod/admin/html/custom_enum_field.tpl");
+        $tpl = new \Templater3("core2/mod/admin/assets/html/custom_enum_field.html");
         $enums = $this->dataEnum->fetchFields(array('global_id', 'name'), "parent_id IS NULL")->toArray();
         $tpl->fillDropDown('yyy', $enums, '');
         $custom_field = $tpl->render();
@@ -81,7 +81,7 @@ class Enum extends \Common {
         $edit->addControl($this->translate->tr("Название справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
         $edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
         $list_custom = "";
-        $tpl = new \Templater3("core2/mod/admin/html/custom_enum_field.tpl");
+        $tpl = new \Templater3("core2/mod/admin/assets/html/custom_enum_field.html");
         $enums = $this->dataEnum->fetchPairs(array('global_id', 'name'), "parent_id IS NULL");
         $tpl->fillDropDown('yyy', $enums, '');
         $custom_field = $tpl->render();

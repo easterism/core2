@@ -819,7 +819,7 @@ class ModAjax extends ajaxFunc {
                 $name = explode("|", $data['control']['name']);
                 if (!$name[0]) throw new Exception($this->_("Не удалось получить группу репозитория."));
                 if (!$name[1]) throw new Exception($this->_("Не удалось получить версию релиза."));
-                require_once('gitlab/Gitlab.php');
+                require_once('classes/modules/Gitlab.php');
                 $gl = new \Core2\Gitlab();
                 $fn = $gl->getZip($name[0], $name[1]);
                 if ($e = $gl->getError()) {
@@ -883,7 +883,7 @@ class ModAjax extends ajaxFunc {
 
 
                 //проверяем все SQL и PHP файлы на ошибки
-                require_once('InstallModule.php');
+                require_once('classes/modules/InstallModule.php');
 
                 $inst                          = new \Core2\InstallModule();
                 $mInfo                         = array('install' => array());
