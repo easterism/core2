@@ -423,7 +423,7 @@ class Tool {
             //помещаем скрипт в head
             echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
         } else {
-            echo '<script type="text/javascript" language="JavaScript" src="' . $src . '"></script>';
+            echo '<script type="text/javascript" src="' . $src . '"></script>';
         }
     }
 
@@ -437,14 +437,14 @@ class Tool {
      *
      * @return array
      */
-    public static function arrayMultisort($array, $on, $order = SORT_ASC) {
+    public static function arrayMultisort($array, $key, $order = SORT_ASC) {
 
         switch ($order) {
             case SORT_ASC:
-                usort($array, create_function('$a, $b', "return strnatcasecmp(\$a['$on'], \$b['$on']);"));
+                usort($array, function($a, $b) use ($key) {return strnatcasecmp($a[$key], $b[$key]);});
                 break;
             case SORT_DESC:
-                usort($array, create_function('$a, $b', "return strnatcasecmp(\$b['$on'], \$a['$on']);"));
+                usort($array, function($a, $b) use ($key) {return strnatcasecmp($b[$key], $a[$key]);});
                 break;
         }
 
@@ -700,4 +700,5 @@ class Tool {
         );
         return $str = iconv("UTF-8", "UTF-8//IGNORE", strtr($string, $replace));
     }
+
 }
