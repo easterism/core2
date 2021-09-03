@@ -1,8 +1,5 @@
 <?php
 namespace Core2;
-use Laminas\Session\Container as SessionContainer;
-use Core2\Mod\Admin;
-
 
 require_once DOC_ROOT . 'core2/inc/classes/Common.php';
 require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
@@ -13,7 +10,8 @@ require_once DOC_ROOT . 'core2/inc/classes/Templater2.php';
 require_once 'InstallModule.php';
 require_once 'View.php';
 
-
+use Laminas\Session\Container as SessionContainer;
+use Core2\Mod\Admin;
 
 /**
  * Class Modules

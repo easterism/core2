@@ -1,15 +1,5 @@
 <?php
 
-use Laminas\Session\Container as SessionContainer;
-use Core2\Mod\Admin;
-
-use Core2\Settings as Settings;
-use Core2\Modules as Modules;
-use Core2\Roles as Roles;
-use Core2\Enum as Enum;
-use Core2\InstallModule as Install;
-
-
 require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
@@ -24,6 +14,15 @@ require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
+
+use Laminas\Session\Container as SessionContainer;
+use Core2\Mod\Admin;
+
+use Core2\Settings as Settings;
+use Core2\Modules as Modules;
+use Core2\Roles as Roles;
+use Core2\Enum as Enum;
+use Core2\InstallModule as Install;
 
 
 /**

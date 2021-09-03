@@ -16,7 +16,6 @@ require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 use Laminas\Session\Container as SessionContainer;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
-use Core2\View as User;
 use Core2\Settings as Settings;
 
 /**

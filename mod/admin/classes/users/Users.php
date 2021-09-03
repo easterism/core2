@@ -1,9 +1,9 @@
 <?php
 namespace Core2\Mod\Admin\Users;
-use Laminas\Session\Container as SessionContainer;
 
 require_once DOC_ROOT . 'core2/inc/classes/Common.php';
 
+use Laminas\Session\Container as SessionContainer;
 
 /**
  *
