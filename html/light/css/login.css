@@ -112,3 +112,9 @@ PRELOADERS
 .form-footer {
     margin-top: 20px;
 }
+.auth-social {
+    margin-top: 30px;
+}
+.auth-social > div {
+    margin-bottom: 10px;
+}

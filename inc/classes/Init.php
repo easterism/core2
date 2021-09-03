@@ -27,33 +27,35 @@
     if (!file_exists($conf_file)) {
         \Core2\Error::Exception("conf.ini is missing.");
     }
-    $config = array(
-        'system' => array('name' => 'CORE2'),
+    $config = [
+        'system'       => ['name' => 'CORE2'],
         'include_path' => '',
-        'temp' => getenv('TMP'),
-        'debug' => array('on' => false),
-        'session' => array('cookie_httponly' => true,
-                        'use_only_cookies' => true),
-        'database' => array(
+        'temp'         => getenv('TMP'),
+        'debug'        => ['on' => false],
+        'session'      => [
+            'cookie_httponly'  => true,
+            'use_only_cookies' => true,
+        ],
+        'database' => [
             'adapter' => 'Pdo_Mysql',
-            'params' => array(
-                'charset' => 'utf8'
-            ),
-            'driver_options' => [
-                \PDO::ATTR_TIMEOUT => 3
+            'params'  => [
+                'charset' => 'utf8',
+            ],
+            'driver_options'=> [
+                \PDO::ATTR_TIMEOUT => 3,
             ],
             'isDefaultTableAdapter' => true,
-            'profiler' => array(
+            'profiler'              => [
                 'enabled' => false,
-                'class' => 'Zend_Db_Profiler_Firebug'
-            ),
-            'caseFolding' => true,
-            'autoQuoteIdentifiers' => true,
-            'allowSerialization' => true,
-            'autoReconnectOnUnserialize' => true
-        )
-    );
-	// определяем путь к темповой папке
+                'class'   => 'Zend_Db_Profiler_Firebug',
+            ],
+            'caseFolding'                => true,
+            'autoQuoteIdentifiers'       => true,
+            'allowSerialization'         => true,
+            'autoReconnectOnUnserialize' => true,
+        ],
+    ];
+    // определяем путь к темповой папке
     if (empty($config['temp'])) {
         $config['temp'] = sys_get_temp_dir();
         if (empty($config['temp'])) {
@@ -91,6 +93,7 @@
 
     // отладка приложения
     if ($config->debug->on) {
+        error_reporting(E_ALL);
         ini_set('display_errors', 1);
     } else {
         ini_set('display_errors', 0);
@@ -133,10 +136,16 @@
 	}
 
 	//устанавливаем шкурку
-	if (!empty($config->theme)) {
-		define('THEME', $config->theme);
+	if ( ! empty($config->theme)) {
+        define('THEME', $config->theme);
+
+    } elseif ( ! empty($config->system->theme) &&
+               ! empty($config->system->theme->name)
+    ) {
+        define('THEME', $config->system->theme->name);
+
 	} else {
-		define('THEME', 'default');
+		define('THEME', 'material');
 	}
 
 	// DEPRECATED!!! MPDF PATH
@@ -837,12 +846,8 @@
                             $modules_css = array_merge($modules_css, $module_css);
                         }
 
-                        if (THEME !== 'default' &&
-                            ! Tool::isMobileBrowser() &&
-                            $modController instanceof Navigation &&
-                            $module_navigation_items = $modController->getNavigationItems()
-                        ) {
-                            $navigate_items[$module_id] = $module_navigation_items;
+                        if (THEME !== 'default') {
+                            $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
                         }
                     }
                     ob_clean();
@@ -865,14 +870,43 @@
                 foreach ($navigate_items as $module_name => $items) {
                     if ( ! empty($items)) {
                         foreach ($items as $item) {
-                            $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
-                            $tpl_menu->navigate_item->assign('[HTML]',        $this->renderNavigateItem($item));
-                            $tpl_menu->navigate_item->reassign();
+                            $position = ! empty($item['position']) ? $item['position'] : '';
+
+                            switch ($position) {
+                                case 'profile':
+                                    if ($tpl_menu->issetBlock('navigate_item_profile')) {
+                                        $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $module_name);
+                                        $tpl_menu->navigate_item_profile->assign('[HTML]',        $this->renderNavigateItem($item));
+                                        $tpl_menu->navigate_item_profile->reassign();
+                                    }
+                                    break;
+
+                                case 'main':
+                                default:
+                                    if ($tpl_menu->issetBlock('navigate_item')) {
+                                        $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
+                                        $tpl_menu->navigate_item->assign('[HTML]',        $this->renderNavigateItem($item));
+                                        $tpl_menu->navigate_item->reassign();
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
             }
 
+
+            if ( ! empty($this->config->system) &&
+                 ! empty($this->config->system->theme) &&
+                 ! empty($this->config->system->theme->bg_color) &&
+                 ! empty($this->config->system->theme->text_color) &&
+                 ! empty($this->config->system->theme->border_color) &&
+                $tpl_menu->issetBlock('theme_style')
+            ) {
+                $tpl_menu->theme_style->assign("[BG_COLOR]",     $this->config->system->theme->bg_color);
+                $tpl_menu->theme_style->assign("[TEXT_COLOR]",   $this->config->system->theme->text_color);
+                $tpl_menu->theme_style->assign("[BORDER_COLOR]", $this->config->system->theme->border_color);
+            }
 
             $tpl->assign('<!--index-->', $tpl_menu->render());
             $out = '';
@@ -926,6 +960,10 @@
 
             $html = '';
             switch ($navigate_item['type']) {
+                case 'divider':
+                    $html = file_get_contents(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.divider.html');
+                    break;
+
                 case 'link':
                     $link = ! empty($navigate_item['link'])
                         ? $navigate_item['link']
@@ -944,13 +982,14 @@
                     $html = $tpl->render();
                     break;
 
-                case 'list':
-                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.list.html');
+                case 'dropdown':
+                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.dropdown.html');
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
-                    $tpl->assign('[ICON]',  ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
+                    $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
+                    $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
 
-                    if ( ! empty($navigate_item['list'])) {
-                        foreach ($navigate_item['list'] as $list_item) {
+                    if ( ! empty($navigate_item['items'])) {
+                        foreach ($navigate_item['items'] as $list_item) {
 
                             switch ($list_item['type']) {
                                 case 'link':
@@ -1062,6 +1101,136 @@
                 $mods[] = array_merge($tmp, array('sm_id' => -7, 'sm_name' => $this->translate->tr('Аудит'), 		'sm_key' => 'audit',      'loc' => 'core'));
             }
             return $mods;
+        }
+
+
+        /**
+         * @param $name
+         * @param $mod_controller
+         * @return array
+         * @throws Zend_Config_Exception
+         */
+        private function getModuleNavigation($name, $mod_controller): array {
+
+            require_once 'Navigation.php';
+
+            $config_module = $this->getModuleConfig($name);
+            $navigation    = new Core2\Navigation();
+
+            if ( ! empty($config_module) &&
+                 ! empty($config_module->system) &&
+                 ! empty($config_module->system->nav)
+            ) {
+                $navigations = $config_module->system->nav->toArray();
+
+                if ( ! empty($navigations)) {
+                    foreach ($navigations as $key => $nav) {
+                        if ( ! empty($nav['type'])) {
+                            $nav['position'] = $nav['position'] ?? '';
+
+                            switch ($nav['type']) {
+                                case 'link':
+                                    $nav['title'] = $nav['title'] ?? '';
+                                    $nav['link']  = $nav['link'] ?? '#';
+
+                                    $nav_link = $navigation->addLink($nav['title'], $nav['link'], $nav['position']);
+
+                                    if ( ! empty($nav['icon'])) {
+                                        $nav_link->setIcon($nav['icon']);
+                                    }
+                                    if ( ! empty($nav['id'])) {
+                                        $nav_link->setId($nav['id']);
+                                    }
+                                    if ( ! empty($nav['class'])) {
+                                        $nav_link->setClass($nav['class']);
+                                    }
+                                    if ( ! empty($nav['onclick'])) {
+                                        $nav_link->setOnClick($nav['onclick']);
+                                    }
+                                    break;
+
+                                case 'divider':
+                                    $navigation->addDivider($nav['position']);
+                                    break;
+
+                                case 'dropdown':
+                                    $nav['title'] = $nav['title'] ?? '';
+                                    $nav['items'] = $nav['items'] ?? [];
+
+                                    $nav_list = $navigation->addDropdown($nav['title'], $nav['position']);
+
+                                    if ( ! empty($nav['icon'])) {
+                                        $nav_list->setIcon($nav['icon']);
+                                    }
+                                    if ( ! empty($nav['class'])) {
+                                        $nav_list->setClass($nav['class']);
+                                    }
+
+                                    if ( ! empty($nav['items'])) {
+                                        foreach ($nav['items'] as $item) {
+
+                                            switch ($item['type']) {
+                                                case 'link':
+                                                    $item['title'] = $item['title'] ?? '';
+                                                    $item['link']  = $item['link'] ?? '#';
+
+                                                    $item_link = $nav_list->addLink($item['title'], $item['link']);
+
+                                                    if ( ! empty($item['id'])) {
+                                                        $item_link->setId($item['id']);
+                                                    }
+                                                    if ( ! empty($item['class'])) {
+                                                        $item_link->setClass($item['class']);
+                                                    }
+                                                    if ( ! empty($item['icon'])) {
+                                                        $item_link->setIcon($item['icon']);
+                                                    }
+                                                    if ( ! empty($item['onclick'])) {
+                                                        $item_link->setOnClick($item['onclick']);
+                                                    }
+                                                    break;
+
+                                                case 'header':
+                                                    $item['title'] = $item['title'] ?? '';
+                                                    $nav_list->addHeader($item['title']);
+                                                    break;
+
+                                                case 'divider':
+                                                    $nav_list->addDivider();
+                                                    break;
+
+                                                case 'file':
+                                                    $item['title'] = $item['title'] ?? '';
+                                                    $item_file = $nav_list->addFile($item['title']);
+
+                                                    if ( ! empty($item['id'])) {
+                                                        $item_file->setId($item['id']);
+                                                    }
+                                                    if ( ! empty($item['class'])) {
+                                                        $item_file->setClass($item['class']);
+                                                    }
+                                                    if ( ! empty($item['icon'])) {
+                                                        $item_file->setIcon($item['icon']);
+                                                    }
+                                                    if ( ! empty($item['onchange'])) {
+                                                        $item_file->setOnChange($item['onchange']);
+                                                    }
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($mod_controller instanceof Navigation) {
+                $mod_controller->navigationItems($navigation);
+            }
+
+            return $navigation->toArray();
         }
 
 

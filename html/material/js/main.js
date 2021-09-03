@@ -40,48 +40,7 @@ var main_menu = {
                 $('a', this).append('<span class="module-icon-letter">' + letter + '</span>');
             }
         });
-    },
-
-
-	/**
-	 *
-	 */
-	sendFeedback: function () {
-
-		var $textarea      = $('#user-section .nav-feedback textarea');
-		var moduleTitle    = $('.navbar-header .module-title').text();
-		var submoduleTitle = $('.navbar-header .module-action').text();
-
-		preloader.show();
-		$.ajax({
-			method: 'POST',
-			url: 'index.php?module=profile&action=messages&data=send_feedback',
-			data: {
-				"message" : $textarea.val(),
-				"location_href" : location.href,
-				"location_module" : moduleTitle,
-				"location_submodule" : submoduleTitle
-			},
-			dataType: 'json'
-		}).done(function (data) {
-			preloader.hide();
-
-			if (data.status !== 'success') {
-				var message = data.error_message ? data.error_message : 'Обновите страницу и попробуйте снова';
-				swal("Ошибка отправки сообщения", message, 'error').catch(swal.noop);
-
-			} else {
-				$('#user-section .nav-feedback a').popover('hide');
-				$textarea.val('');
-				swal("Сообщение отправлено", "", 'success').catch(swal.noop);
-			}
-
-		}).fail(function (error) {
-			preloader.hide();
-
-			swal("Ошибка отправки сообщения", 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
-		});
-	}
+    }
 };
 
 
@@ -489,32 +448,6 @@ var load = function (url, data, id, callback) {
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
 
-        if ($('#module-profile.menu-module-selected')[0] &&
-			! $('#submodule-profile-messages.menu-submodule-selected')[0]
-		) {
-            $('#user-section .nav-profile, #user-section .dropdown-profile').addClass('active');
-        } else {
-            $('#user-section .nav-profile, #user-section .dropdown-profile').removeClass('active');
-        }
-
-        if ($('#module-settings.menu-module-selected')[0]) {
-			$('#user-section .nav-settings').addClass('active');
-        } else {
-			$('#user-section .nav-settings').removeClass('active');
-        }
-
-        if ($('#submodule-profile-messages.menu-submodule-selected')[0]) {
-			$('#user-section .nav-messages').addClass('active');
-        } else {
-			$('#user-section .nav-messages').removeClass('active');
-        }
-
-        if ($('#module-billing.menu-module-selected')[0]) {
-			$('#user-section .nav-billing').addClass('active');
-        } else {
-			$('#user-section .nav-billing').removeClass('active');
-        }
-
 		if (!callback) {
 			if (ax) {
 				for (var key in ax) {
@@ -716,29 +649,6 @@ $(document).ready(function() {
                 "</h2>"
             );
         }
-        if ($('#module-profile')[0]) {
-            var title = $('#module-profile .module-title').html();
-            $('.dropdown-profile.profile > a').html(title);
-            $('.dropdown-profile.profile').addClass('show');
-            $('.dropdown-profile.divider').addClass('show');
-        }
-		if ($('#submodule-profile-messages')[0]) {
-			$('#user-section .nav-messages').addClass('show');
-			$('#user-section .nav-feedback').addClass('show');
-            $('.dropdown-profile.messages').addClass('show');
-		}
-        if ($('#module-settings')[0]) {
-            var title = $('#module-settings .module-title').html();
-            $('.dropdown-settings > a').html(title);
-            $('.dropdown-settings').addClass('show');
-            $('#user-section .nav-settings').addClass('show');
-        }
-        if ($('#module-billing')[0]) {
-            var title = $('#module-billing .module-title').html();
-            $('.dropdown-billing > a').html(title);
-            $('.dropdown-billing').addClass('show');
-            $('#user-section .nav-billing').addClass('show');
-        }
     });
 
     main_menu.setAngles();
@@ -852,21 +762,6 @@ $(document).ready(function() {
             }
         }
     });
-
-    var tplFeedback =
-		"<div class=\"feedback-container\">" +
-			"<textarea placeholder=\"Введите сообщение\"></textarea>" +
-			"<button class=\"btn btn-info btn-sm pull-right\" type=\"button\" onclick=\"main_menu.sendFeedback()\">Отправить</button>" +
-			"<div class=\"clearfix\"></div>" +
-		"</div>";
-
-	$('#user-section .nav-feedback a').popover({
-		"placement" : "bottom",
-		"trigger" : "manual",
-		"title" : "Обратная связь",
-		"html" : true,
-		"content" : tplFeedback
-	});
 
 	xajax.callback.global.onRequest = function () {
 		preloader.show();

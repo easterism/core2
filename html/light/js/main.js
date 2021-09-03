@@ -163,7 +163,7 @@ var preloader = {
 	extraLoad : {},
 	oldHash : {},
 	show : function() {
-		//$("#preloader").css('margin-top', ($("#menu-container").height()));
+		$("#preloader .spinner-text").text('Загрузка...');
 		$("#preloader").show();
 	},
 	hide : function() {
@@ -230,6 +230,10 @@ var preloader = {
 				pairs.push(pu);
 			}
 		return '{' + pairs.join(',') + '}';
+	},
+	setText: function(text) {
+		this.show();
+		$("#preloader .spinner-text").text(text);
 	},
 	normUrl: function () {
 
@@ -326,12 +330,6 @@ var load = function (url, data, id, callback) {
 			$('#menu-modules li').removeClass("menu-module-selected").addClass('menu-module');
 			$('#menu-submodules .menu-submodule-selected, #menu-submodules .menu-submodule').hide();
 		}
-
-        if ($('#module-profile.menu-module-selected')[0]) {
-            $('#user-section > .dropdown').addClass('active');
-        } else {
-            $('#user-section > .dropdown').removeClass('active');
-        }
 
 		if (!callback) {
 			if (ax) {
@@ -515,19 +513,6 @@ $(document).ready(function() {
                 "Во избежание проблем с работой, рекомендуется обновить текущий или установить другой, более современный браузер." +
                 "</h2>"
             );
-        }
-        if ($('#module-profile')[0]) {
-            $('.dropdown-profile.profile').addClass('show');
-            $('.dropdown-profile.divider').addClass('show');
-            if ($('#submodule-profile-messages')[0]) {
-                $('.dropdown-profile.messages').addClass('show');
-            }
-        }
-        if ($('#module-settings')[0]) {
-            $('.dropdown-settings').addClass('show');
-        }
-        if ($('#module-billing')[0]) {
-            $('.dropdown-billing').addClass('show');
         }
     });
 

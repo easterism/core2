@@ -121,7 +121,7 @@ class Common extends \Core2\Acl {
      */
     public function __get($k) {
 		//исключение для герета базы или кеша, выполняется всегда
-		if (in_array($k, ['db', 'cache', 'translate', 'log'])) {
+		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config'])) {
 			return parent::__get($k);
 		}
 		//геттер для модели
@@ -139,41 +139,14 @@ class Common extends \Core2\Acl {
 				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
 			}
 			elseif ($k === 'moduleConfig') {
-                $module_loc = $this->getModuleLocation($this->module);
-                $conf_file  = "{$module_loc}/conf.ini";
-                if (is_file($conf_file)) {
-                    $config_glob  = new Zend_Config_Ini(DOC_ROOT . 'conf.ini');
-                    $extends_glob = $config_glob->getExtends();
 
-                    $config_mod  = new Zend_Config_Ini($conf_file);
-                    $extends_mod = $config_mod->getExtends();
-                    $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
-                        array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
-                        array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
-                        ? $_SERVER['SERVER_NAME']
-                        : 'production';
+			    $module_config = $this->getModuleConfig($this->module);
 
-                    $config_mod = new Zend_Config_Ini($conf_file, $section_mod, true);
-
-                    $conf_ext = $module_loc . "/conf.ext.ini";
-                    if (file_exists($conf_ext)) {
-                        $config_mod_ext  = new Zend_Config_Ini($conf_ext);
-                        $extends_mod_ext = $config_mod_ext->getExtends();
-
-                        $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
-                            array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
-                            array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
-                            ? $_SERVER['SERVER_NAME']
-                            : 'production';
-                        $config_mod->merge(new Zend_Config_Ini($conf_ext, $section_ext));
-                    }
-
-
-                    $config_mod->setReadOnly();
-					$v = $this->{$k} = $config_mod;
-				} else {
+			    if ($module_config === false) {
                     \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
-				}
+                } else {
+                    $v = $this->{$k} = $module_config;
+                }
 			}
 			// Получение экземпляра контроллера указанного модуля
 			elseif (strpos($k, 'mod') === 0) {

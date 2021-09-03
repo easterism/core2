@@ -14,6 +14,7 @@ use Laminas\Session\Container as SessionContainer;
  * Обеспечение журналирования запросов пользователей
  * и других событий
  * Class Logger
+ * @method slack($channel, $username)
  */
 class Log {
     private $log;
@@ -84,7 +85,10 @@ class Log {
     public function __call($name, $arguments) {
 
         if ($name == 'slack') {
-            if ( ! $this->config->log || ! $this->config->log->webhook->slack) return new \stdObject();
+            if ( ! $this->config->log || ! $this->config->log->webhook->slack) {
+                return new \stdObject();
+            }
+
             $channel                = null;
             $username               = null;
             $useAttachment          = true;
@@ -99,7 +103,18 @@ class Log {
             if (isset($arguments[1])) $username = $arguments[1];
 
             //TODO add other params
-            $this->handlers[$name] = array($this->config->log->webhook->slack->url, $channel, $username, $useAttachment, $iconEmoji, $useShortAttachment, $includeContextAndExtra, $level, $bubble, $excludeFields);
+            $this->handlers[$name] = [
+                $this->config->log->webhook->slack->url,
+                $channel,
+                $username,
+                $useAttachment,
+                $iconEmoji,
+                $useShortAttachment,
+                $includeContextAndExtra,
+                $level,
+                $bubble,
+                $excludeFields,
+            ];
 
             return $this;
         }
