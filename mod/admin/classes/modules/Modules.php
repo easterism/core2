@@ -346,7 +346,7 @@ class Modules extends \Common  {
                 else {
 
                     $list = new \listTable('mod');
-
+                    $list->table = "core_modules";
                     $list->SQL = "SELECT m_id,
                                      m_name,
                                      module_id,
@@ -400,7 +400,7 @@ class Modules extends \Common  {
                     //проверка после загрузки страницы наличия обновлений
                     $mods = json_encode($mods);
                     $theme = THEME;
-                    $script = "<script type=\"text\/javascript\" language=\"javascript\">
+                    $script = "<script type=\"text\/javascript\">
                         $(document).ready(function(){
                             //ассинхронно выполняем поиск обновлений
                             window.setTimeout(modules.checkModsUpdates({$mods}, '{$theme}'), 1);

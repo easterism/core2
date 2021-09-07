@@ -345,11 +345,15 @@ class CoreController extends Common implements File {
             }
 			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
 			$tbl = $arr[0];
-			$res = $this->db->fetchPairs("SELECT id, seq FROM `$tbl` WHERE id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC");
+            $id = "id";
+            // исключение для списка модулей
+            if ($tbl == 'core_modules') $id = 'm_id';
+            $sql = "SELECT $id AS id, seq FROM `$tbl` WHERE $id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC";
+			$res = $this->db->fetchPairs($sql);
 			if ($res) {
 				$values = array_values($res);
 				foreach ($_POST['data'] as $k => $val) {
-					$where = $this->db->quoteInto('id=?', $val);
+					$where = $this->db->quoteInto("$id=?", $val);
 					$this->db->update($tbl, array('seq' => $values[$k]), $where);
 				}
 			}
