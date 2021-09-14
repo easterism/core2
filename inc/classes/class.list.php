@@ -1097,7 +1097,8 @@ class listTable extends initList {
                         $time              = substr($sql_value, 11);
 
                         $title = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask)) . ' ' . $time;
-                        $tableBodyHTML .= "<span title=\"$title\">{$humanRelativeDate->getTextForSQLDate($sql_value)}</span>";
+                        $sql_value = trim($sql_value);
+                        $tableBodyHTML .= $sql_value ? "<span title=\"$title\">{$humanRelativeDate->getTextForSQLDate($sql_value)}</span>" : '-';
                     } else if ($value['type'] == 'look') {
                         $tableBodyHTML .= "<div onclick='listx.cancel2(event, \"look" . $this->main_table_id . $int_count . "\");'>" . stripslashes($sql_value) . "</div>";
                         $look = $this->replaceTCOL($row, $value['processing']);

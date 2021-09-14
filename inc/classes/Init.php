@@ -145,7 +145,7 @@
         define('THEME', $config->system->theme->name);
 
 	} else {
-		define('THEME', 'material');
+		define('THEME', 'default');
 	}
 
 	// DEPRECATED!!! MPDF PATH

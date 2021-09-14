@@ -319,7 +319,12 @@ class Enum extends \Common {
         return $edit->render();
     }
 
-
+    /**
+     * Перечень значений справочника
+     * @param $enum_id
+     * @return false|string
+     * @throws \Exception
+     */
     public function listEnumValues($enum_id) {
 
         $fields_sql = "";
