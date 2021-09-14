@@ -1,15 +1,5 @@
 <?php
 
-use Laminas\Session\Container as SessionContainer;
-use Core2\Mod\Admin;
-
-use Core2\Settings as Settings;
-use Core2\Modules as Modules;
-use Core2\Roles as Roles;
-use Core2\Enum as Enum;
-use Core2\InstallModule as Install;
-
-
 require_once 'classes/Common.php';
 require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
@@ -24,6 +14,15 @@ require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
+
+use Laminas\Session\Container as SessionContainer;
+use Core2\Mod\Admin;
+
+use Core2\Settings as Settings;
+use Core2\Modules as Modules;
+use Core2\Roles as Roles;
+use Core2\Enum as Enum;
+use Core2\InstallModule as Install;
 
 
 /**
@@ -346,11 +345,15 @@ class CoreController extends Common implements File {
             }
 			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
 			$tbl = $arr[0];
-			$res = $this->db->fetchPairs("SELECT id, seq FROM `$tbl` WHERE id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC");
+            $id = "id";
+            // исключение для списка модулей
+            if ($tbl == 'core_modules') $id = 'm_id';
+            $sql = "SELECT $id AS id, seq FROM `$tbl` WHERE $id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC";
+			$res = $this->db->fetchPairs($sql);
 			if ($res) {
 				$values = array_values($res);
 				foreach ($_POST['data'] as $k => $val) {
-					$where = $this->db->quoteInto('id=?', $val);
+					$where = $this->db->quoteInto("$id=?", $val);
 					$this->db->update($tbl, array('seq' => $values[$k]), $where);
 				}
 			}

@@ -1,6 +1,5 @@
 <?php
 namespace Core2\Mod\Admin\Users;
-use Zend\Session\Container as SessionContainer;
 
 require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
 require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';

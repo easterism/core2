@@ -33,13 +33,16 @@ class HumanRelativeDate{
 	}
 	
 	public function getTextForSQLDate($sql_date){
-		
+		if (!$sql_date) {
+            $this->string = 'неверная дата';
+            return $this->string;
+        }
 		// Split SQL date into date / time
 		@list($date , $time) = explode(' ' , $sql_date);
 		// Split date in Y,m,d
 		@list($Y,$m,$d) = explode('-' , $date);
 		// Check that this is actually a valid date!
-		if(@checkdate($m , $d , $Y)){
+		if (@checkdate($m , $d , $Y)){
 			// If we have a time, then we can show relative time calcs!
 			if(isset($time) && $time){
 				$this->calc_time = true;
