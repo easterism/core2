@@ -158,11 +158,14 @@ var listx = {
      * @param isAjax
      */
     pageSw: function(obj, id, isAjax) {
+
         var o = $('#pagin_' + id).find('input');
         o.value = obj.getAttribute('title');
+
         var container = '';
-        var p = '_page_' + id + '=' + o.value;
-        if (isAjax)    {
+        var p         = '_page_' + id + '=' + o.value;
+
+        if (isAjax === '1') {
             container = document.getElementById("list" + id).parentNode;
             if (listx.loc[id].indexOf('&__') < 0) {
                 if (container.id) {
@@ -200,10 +203,12 @@ var listx = {
      * @param isAjax
      */
     goToPage: function(obj, id, isAjax) {
+
         var container = '';
-        var o = $('#pagin_' + id).find('input');
-        var p = '_page_' + id + '=' + o.val();
-        if (isAjax)    {
+        var o         = $('#pagin_' + id).find('input');
+        var p         = '_page_' + id + '=' + o.val();
+
+        if (isAjax === '1') {
             container = document.getElementById("list" + id).parentNode;
             if (listx.loc[id].indexOf('&__') < 0) {
                 if (container.id) {
@@ -243,8 +248,12 @@ var listx = {
      * @param isAjax
      */
     countSw: function(obj, id, isAjax) {
+
         var container = '';
-        if (isAjax)    container = document.getElementById("list" + id).parentNode;
+        if (isAjax === '1') {
+            container = document.getElementById("list" + id).parentNode;
+        }
+
         var post = {};
         post['count_' + id] = obj.value;
         load(listx.loc[id], post, container, function () {
@@ -429,7 +438,7 @@ var listx = {
                         preloader.show();
                         $("#main_" + id + "_error").hide();
                         var container = '';
-                        if (isAjax) {
+                        if (isAjax === '1') {
                             container = document.getElementById("list" + id).parentNode;
                         }
                         if (listx.loc[id]) {
@@ -580,17 +589,66 @@ var listx = {
 
 
     /**
-     * @param id
+     * @param resource
      */
-    showFilter : function(id) {
-        var filter = $("#filterColumn" + id);
-        if (filter.is(":visible")) {
-            this.toggle(filter);
-        }
-        var f = $("#filter" + id);
-        this.toggle(f);
-        f.find("form")[0].elements[0].focus();
+    showFilter : function(resource) {
 
+        var search    = $("#filter" + resource);
+        var filters   = $("#filterColumn" + resource);
+        var templates = $("#templates-row-" + resource);
+
+        if (filters.is(":visible")) {
+            this.toggle(filters);
+        }
+        if (templates.is(":visible")) {
+            this.toggle(templates);
+        }
+
+        this.toggle(search);
+        search.find("form")[0]
+            .elements[0]
+            .focus();
+    },
+
+
+    /**
+     * @param resource
+     */
+    showTemplates : function(resource) {
+
+        var search    = $("#filter" + resource);
+        var filters   = $("#filterColumn" + resource);
+        var templates = $("#templates-row-" + resource);
+
+        if (search.is(":visible")) {
+            this.toggle(search);
+        }
+        if (filters.is(":visible")) {
+            this.toggle(filters);
+        }
+
+        this.toggle(templates);
+    },
+
+
+    /**
+     * @param resource
+     */
+    columnFilter : function(resource) {
+
+        var search    = $("#filter" + resource);
+        var filters   = $("#filterColumn" + resource);
+        var templates = $("#templates-row-" + resource);
+
+        if (search.is(":visible")) {
+            this.toggle(search);
+        }
+
+        if (templates.is(":visible")) {
+            this.toggle(templates);
+        }
+
+        this.toggle(filters);
     },
 
 
@@ -610,35 +668,24 @@ var listx = {
 
     /**
      * @param id
-     */
-    columnFilter : function(id) {
-        var filter = $("#filter" + id);
-        if (filter.is(":visible")) {
-            this.toggle(filter);
-        }
-        var f = $("#filterColumn" + id);
-        this.toggle(f);
-    },
-
-
-    /**
-     * @param id
      * @param isAjax
      */
     columnFilterStart : function(id, isAjax) {
-        var o = $('#filterColumn' + id + ' form').find(':checkbox:checked');
-        var l = o.length;
-        var post = {};
-        var t = [];
+
+        var o         = $('#filterColumn' + id + ' form').find(':checkbox:checked');
+        var l         = o.length;
+        var post      = {};
+        var t         = [];
+        var container = '';
 
         for (var i = 0; i < l; i++) {
             t.push(o[i].value);
         }
+
         post['column_' + id] = t;
-        var container = '';
 
         if (listx.loc[id]) {
-            if (isAjax) {
+            if (isAjax === '1') {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__filter=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -666,17 +713,182 @@ var listx = {
         }
     },
 
+    template: {
+
+        /**
+         * Создание критерия поиска
+         * @param resource
+         * @param isAjax
+         */
+        create: function (resource, isAjax) {
+
+            var post = $("#filter" + resource).find(":input").serializeArray();
+
+            if ($('#filterColumn' + resource)[0]) {
+                var columnsCheckboxes = $('#filterColumn' + resource + ' form').find(':checkbox:checked');
+
+                for (var i = 0; i < columnsCheckboxes.length; i++) {
+                    post.push({
+                        'name' : 'column_' + resource + '[]',
+                        'value': columnsCheckboxes[i].value
+                    });
+                }
+            }
+
+            if ( ! post || post.length === 0) {
+                swal('Не заполнены критерии для сохранения', '', 'warning').catch(swal.noop);
+                return false;
+            }
+
+            if (isAjax === '1') {
+                // FIXME бех этого не ставится курсор в поле ввода названия
+                $('.modal.in').removeAttr('tabindex');
+            }
+
+            swal({
+                title: "Укажите название для шаблона",
+                input: "text",
+                showCancelButton: true,
+                confirmButtonColor: '#5bc0de',
+                confirmButtonText: "Сохранить",
+                cancelButtonText: "Отмена",
+                preConfirm: (templateTitle) => {
+
+                    return new Promise(function (resolve, reject) {
+                        if ( ! templateTitle || $.trim(templateTitle) === '') {
+                            reject('Укажите название');
+                        } else {
+                            resolve();
+                        }
+                    });
+                },
+            }).then(
+                function(templateTitle) {
+
+                    preloader.show();
+
+                    post.push({
+                        'name' : 'template_create_' + resource,
+                        'value': templateTitle,
+                    });
+
+                    if (listx.loc[resource]) {
+                        if (isAjax === '1') {
+                            var container = document.getElementById("list" + resource).parentNode;
+                            load(listx.loc[resource] + '&__template_create=1', post, container, function () {
+                                preloader.hide();
+                            });
+
+                        } else {
+                            load(listx.loc[resource] + '&__template_create=1', post, '', function () {
+                                preloader.hide();
+                            });
+                        }
+                    } else {
+                        swal('Ошибка', 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+                        preloader.hide();
+                    }
+
+                }, function(dismiss) {}
+            );
+        },
+
+
+        /**
+         * Удаление критерия поиска
+         * @param resource
+         * @param id
+         * @param isAjax
+         */
+        remove: function (resource, id, isAjax) {
+
+            swal({
+                title: 'Удалить этот шаблон?',
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#f0ad4e',
+                confirmButtonText: "Да",
+                cancelButtonText: "Нет"
+            }).then(
+                function(result) {
+
+                    preloader.show();
+
+                    let post = [{
+                        'name' : 'template_remove_' + resource,
+                        'value': id,
+                    }];
+
+                    if (listx.loc[resource]) {
+                        if (isAjax === '1') {
+                            var container = document.getElementById("list" + resource).parentNode;
+                            load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
+                                preloader.hide();
+                            });
+
+                        } else {
+                            load(listx.loc[resource] + '&__template_remove=1', post, '', function () {
+                                preloader.hide();
+                            });
+                        }
+                    } else {
+                        swal('Ошибка', 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+                        preloader.hide();
+                    }
+
+                }, function(dismiss) {}
+            );
+        },
+
+
+        /**
+         * Выбор критерия поиска
+         * @param resource
+         * @param id
+         * @param isAjax
+         */
+        select: function (resource, id, isAjax) {
+
+            preloader.show();
+
+            let post = [{
+                'name' : 'template_select_' + resource,
+                'value': id,
+            }];
+
+            if (listx.loc[resource]) {
+                if (isAjax === '1') {
+                    var container = document.getElementById("list" + resource).parentNode;
+                    load(listx.loc[resource] + '&__template_select=1', post, container, function () {
+                        preloader.hide();
+                    });
+
+                } else {
+                    load(listx.loc[resource] + '&__template_select=1', post, '', function () {
+                        preloader.hide();
+                    });
+                }
+            } else {
+                swal('Ошибка', 'Обновите страницу и попробуйте снова', 'error').catch(swal.noop);
+                preloader.hide();
+            }
+        }
+    },
+
 
     /**
      * @param id
      * @param isAjax
      */
     clearFilter: function(id, isAjax) {
-        var post = {};
-        post['clear_form' + id] = 1;
+
+        var post      = {};
         var container = '';
+
+        post['clear_form' + id] = 1;
+
         if (listx.loc[id]) {
-            if (isAjax) {
+            if (isAjax === '1') {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__clear=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -719,7 +931,7 @@ var listx = {
         var container = '';
 
         if (listx.loc[id]) {
-            if (isAjax) {
+            if (isAjax === '1') {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__search=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -757,7 +969,7 @@ var listx = {
         var post = {};
         post['orderField_main_' + id] = data;
         if (listx.loc[id]) {
-            if (isAjax) {
+            if (isAjax === '1') {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__order=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
