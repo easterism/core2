@@ -103,12 +103,12 @@ class listTable extends initList {
     /**
      * @param $name
      * @param string $width
-     * @param $type
+     * @param string $type
      * @param string $in
      * @param string $processing
      * @param bool $sort
      */
-    public function addColumn($name, $width = "0%", $type = 'TEXT', $in = "", $processing = "", $sort = true) {
+    public function addColumn($name, $width = "0%", $type = "TEXT", $in = "", $processing = "", $sort = true) {
         if (!array_key_exists($this->main_table_id, $this->table_column)) {
             $this->table_column[$this->main_table_id] = array();
         }
@@ -541,7 +541,7 @@ class listTable extends initList {
                 };
             }
         }
-        if (!$this->extOrder && !$this->customSearchHasVal) {
+        if (isset($this->table_column[$this->main_table_id]) && !$this->extOrder && !$this->customSearchHasVal) {
             if ($order) {
                 $orderField = $order + 1;
                 $tempSQL    = $this->SQL;
