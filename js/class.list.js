@@ -349,16 +349,34 @@ var listx = {
 		//list.checkChecked(id);
 		return;
 	},
-	showFilter : function(id) {
-        var filter = $("#filterColumn" + id);
-        if (filter.is(":visible")) {
-            this.toggle(filter);
-        }
-		var f = $("#filter" + id);
-		this.toggle(f);
-		f.find("form")[0].elements[0].focus();
-		return;
+
+
+	/**
+	 * @param resource
+	 */
+	showFilter : function(resource) {
+
+		var search    = $("#filter" + resource);
+		var filters   = $("#filterColumn" + resource);
+		var templates = $("#templates-row-" + resource);
+
+		if (filters.is(":visible")) {
+			filters.hide();
+		}
+		if (templates.is(":visible")) {
+			templates.hide();
+		}
+
+		this.toggle(search);
+		search.find("form")[0]
+			.elements[0]
+			.focus();
 	},
+
+
+	/**
+	 * @param f
+	 */
 	toggle : function(f) {
 		if (f.hasClass('hide')) {
 			f.toggle('fast');
@@ -368,13 +386,47 @@ var listx = {
 			f.addClass('hide');
 		}
 	},
-	columnFilter : function(id) {
-        var filter = $("#filter" + id);
-        if (filter.is(":visible")) {
-            this.toggle(filter);
-        }
-		var f = $("#filterColumn" + id);
-		this.toggle(f);
+
+
+	/**
+	 * @param resource
+	 */
+	showTemplates : function(resource) {
+
+		var search    = $("#filter" + resource);
+		var filters   = $("#filterColumn" + resource);
+		var templates = $("#templates-row-" + resource);
+
+		if (search.is(":visible")) {
+			search.hide();
+		}
+		if (filters.is(":visible")) {
+			filters.hide();
+		}
+
+		this.toggle(templates);
+	},
+
+
+	/**
+	 * @param resource
+	 */
+	columnFilter : function(resource) {
+
+		var search    = $("#filter" + resource);
+		var filters   = $("#filterColumn" + resource);
+		var templates = $("#templates-row-" + resource);
+
+		if (search.is(":visible")) {
+			this.toggle(search);
+			search.hide();
+		}
+
+		if (templates.is(":visible")) {
+			templates.hide()
+		}
+
+		this.toggle(filters);
 	},
 	columnFilterStart : function(id, isAjax) {
 		var o = $('#filterColumn' + id + ' form').find(':checkbox:checked');
@@ -429,6 +481,142 @@ var listx = {
 			}
 		}
 		//load(listx.loc[id], post);
+	},
+
+	template: {
+
+		/**
+		 * Создание критерия поиска
+		 * @param resource
+		 * @param isAjax
+		 */
+		create: function (resource, isAjax) {
+
+			var post = $("#filter" + resource).find(":input").serializeArray();
+
+			if ($('#filterColumn' + resource)[0]) {
+				var columnsCheckboxes = $('#filterColumn' + resource + ' form').find(':checkbox:checked');
+
+				for (var i = 0; i < columnsCheckboxes.length; i++) {
+					post.push({
+						'name' : 'column_' + resource + '[]',
+						'value': columnsCheckboxes[i].value
+					});
+				}
+			}
+
+			if ( ! post || post.length === 0) {
+				alert('Не заполнены критерии для сохранения');
+				return false;
+			}
+
+			if (isAjax === '1') {
+				// FIXME бех этого не ставится курсор в поле ввода названия
+				$('.modal.in').removeAttr('tabindex');
+			}
+
+			var templateTitle = prompt("Укажите название для шаблона");
+
+			if ( ! templateTitle || $.trim(templateTitle) === '') {
+				alert('Укажите название');
+				return false;
+			}
+
+			preloader.show();
+
+			post.push({
+				'name' : 'template_create_' + resource,
+				'value': templateTitle,
+			});
+
+			if (listx.loc[resource]) {
+				if (isAjax === '1') {
+					var container = document.getElementById("list" + resource).parentNode;
+					load(listx.loc[resource] + '&__template_create=1', post, container, function () {
+						preloader.hide();
+					});
+
+				} else {
+					load(listx.loc[resource] + '&__template_create=1', post, '', function () {
+						preloader.hide();
+					});
+				}
+			} else {
+				alert('Ошибка. Обновите страницу и попробуйте снова');
+				preloader.hide();
+			}
+		},
+
+
+		/**
+		 * Удаление критерия поиска
+		 * @param resource
+		 * @param id
+		 * @param isAjax
+		 */
+		remove: function (resource, id, isAjax) {
+
+			if (confirm('Удалить этот шаблон?')) {
+				preloader.show();
+
+				let post = [{
+					'name' : 'template_remove_' + resource,
+					'value': id,
+				}];
+
+				if (listx.loc[resource]) {
+					if (isAjax === '1') {
+						var container = document.getElementById("list" + resource).parentNode;
+						load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
+							preloader.hide();
+						});
+
+					} else {
+						load(listx.loc[resource] + '&__template_remove=1', post, '', function () {
+							preloader.hide();
+						});
+					}
+				} else {
+					alert('Ошибка. Обновите страницу и попробуйте снова');
+					preloader.hide();
+				}
+
+			}
+		},
+
+
+		/**
+		 * Выбор критерия поиска
+		 * @param resource
+		 * @param id
+		 * @param isAjax
+		 */
+		select: function (resource, id, isAjax) {
+
+			preloader.show();
+
+			let post = [{
+				'name' : 'template_select_' + resource,
+				'value': id,
+			}];
+
+			if (listx.loc[resource]) {
+				if (isAjax === '1') {
+					var container = document.getElementById("list" + resource).parentNode;
+					load(listx.loc[resource] + '&__template_select=1', post, container, function () {
+						preloader.hide();
+					});
+
+				} else {
+					load(listx.loc[resource] + '&__template_select=1', post, '', function () {
+						preloader.hide();
+					});
+				}
+			} else {
+				alert('Ошибка. Обновите страницу и попробуйте снова');
+				preloader.hide();
+			}
+		}
 	},
 	doOrder : function(id, data, isAjax) {
 		var container = '';
