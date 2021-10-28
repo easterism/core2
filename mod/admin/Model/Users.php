@@ -124,4 +124,21 @@ class Users extends Zend_Db_Table_Abstract {
 
         return $res;
     }
+
+    /**
+     * Получение списка имен активных пользователей
+     * @return array
+     */
+    public function getUsersDropdown() {
+        $res = $this->_db->fetchPairs("
+            SELECT `u_id`, 
+                   CONCAT_WS(' ', p.lastname, p.firstname, p.middlename) AS name
+            FROM `core_users` AS u
+                LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
+            WHERE u.`visible` = 'Y' 
+        ");
+
+        return $res;
+    }
+
 }
