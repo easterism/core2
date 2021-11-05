@@ -10,102 +10,102 @@ use GuzzleHttp\Exception\RequestException;
  * Created by PhpStorm.
  * User: StepovichPE
  * Date: 17.03.2017
- * Time: 9:25
+ * Time: 9:25s
  */
-class Gitlab extends \Common
-{
+class Gitlab extends \Common {
+
     private $error;
     private $client;
     private $api_version = 'v4';
-    private $per_page = '80';
-    private $projects = array();
+    private $per_page    = '80';
+    private $projects    = [];
 
-    public function __construct()
-    {
+
+    /**
+     *
+     */
+    public function __construct() {
+
         parent::__construct();
 
-        $host   = $this->moduleConfig->gitlab->host;
-        $token  = $this->moduleConfig->gitlab->token;
-        $this->client = new Client(['base_uri' => "https://$host/api/{$this->api_version}/",
-                                    'headers' => [
-                                        'Accept'     => 'application/json',
-                                        'PRIVATE-TOKEN' => $token
-                                    ]
-                                ]);
+        $host         = $this->moduleConfig->gitlab->host;
+        $token        = $this->moduleConfig->gitlab->token;
+        $this->client = new Client([
+            'base_uri' => "https://{$host}/api/{$this->api_version}/",
+            'headers'  => [
+                'Accept'        => 'application/json',
+                'PRIVATE-TOKEN' => $token,
+            ],
+        ]);
     }
+
 
     /**
      * Получаем список всех релизов из Gitlab
-     *
-     * @param $host
-     * @param $token
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function getTags() {
-        $host   = $this->moduleConfig->gitlab->host;
-        $token  = $this->moduleConfig->gitlab->token;
 
-        $arch           = array();
-        $filter_group   = array();
+        $arch         = [];
+        $filter_group = [];
         if ($this->moduleConfig->gitlab->filter && $this->moduleConfig->gitlab->filter->group) {
             $filter_group = explode(",", $this->moduleConfig->gitlab->filter->group);
         }
 
         $this->getProjects();
-        $data           = $this->projects;
+        $data = $this->projects;
+
+
         foreach ($data as $repo) {
             if ($filter_group) {
-                if (!in_array($repo->namespace->full_path, $filter_group)) continue;
+                if ( ! in_array($repo->namespace->full_path, $filter_group)) continue;
             }
-            //$tags = \Tool::doCurlRequest("https://$host/api/{$this->api_version}/projects/{$repo->id}/repository/tags", array(), array("PRIVATE-TOKEN:$token"));
+
             try {
                 $response = $this->client->request('GET', "projects/{$repo->id}/repository/tags");
-                $code = $response->getStatusCode();
-                $body = $response->getBody()->getContents();
-                $tags = json_decode($body);
+                $code     = $response->getStatusCode();
+                $body     = $response->getBody()->getContents();
+                $tags     = json_decode($body);
+
+                if ( ! isset($arch[$repo->id])) $arch[$repo->id] = [
+                    'name' => $repo->path_with_namespace,
+                    'tags' => [],
+                ];
 
                 if ($tags) {
-                    if (!isset($arch[$repo->id])) $arch[$repo->id] = array('name' => $repo->path_with_namespace, 'tags' => array());
                     foreach ($tags as $tag) {
-                        //echo "<pre>";print_r($tag);echo "</pre>";//die;
-                        $arch[$repo->id]['tags'][] = array('name' => $tag->name,
-                            'message' => $tag->message,
-                            'author_name' => $tag->commit->author_name,
-                            'author_email' => $tag->commit->author_email,
-                            'authored_date' => $tag->commit->authored_date
-                        );
+                        $arch[$repo->id]['tags'][] = [
+                            'name'          => $tag->name,
+                            'message'       => $tag->message,
+                            'author_name'   => $tag->commit->author_name,
+                            'author_email'  => $tag->commit->author_email,
+                            'authored_date' => $tag->commit->authored_date,
+                        ];
                     }
                 }
-            }
-            catch (RequestException $e) {
+
+            } catch (RequestException $e) {
                 //$msg = Psr7\str($e->getRequest());
                 if ($e->hasResponse()) {
                     //$msg = Psr7\str($e->getResponse());
-                    $msg = json_decode($e->getResponse()->getBody());
-                    $this->error =  $msg->error;
+                    $msg         = json_decode($e->getResponse()->getBody());
+                    $this->error = $msg->error;
                 }
             } catch (\Exception $e) {
-                $this->error =  $e->getMessage();
+                $this->error = $e->getMessage();
             }
-        }
-        //echo "<pre>";print_r($arch);echo "</pre>";die;
-        foreach ($arch as $item) {
-            echo $item['name'];
-            echo "<ul>";
-            foreach ($item['tags'] as $tag) {
-                echo "<li><a href=\"javascript:void(0);\" onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();\">{$tag['name']}</a>
-                {$tag['author_name']} ({$tag['author_email']})
-                </li>";
-            }
-            echo "</ul>";
         }
 
+        return $arch;
     }
+
 
     /**
      * Получаем адрес архива
      * @param $group
      * @param $tag
      * @return string $zip
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function getZip($group, $tag) {
         $group = urlencode($group);
