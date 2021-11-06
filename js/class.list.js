@@ -354,6 +354,22 @@ var listx = {
 	/**
 	 * @param resource
 	 */
+	toggleAllColumns : function(resource) {
+
+		var filterContainer = $("#filterColumn" + resource + ' .list-filter-container');
+		var inputAll        = filterContainer.find('.checkbox-all input');
+
+		if (inputAll.is(":checked")) {
+			filterContainer.find('.checkbox input').prop("checked", true);
+		} else {
+			filterContainer.find('.checkbox input').prop("checked", false);
+		}
+	},
+
+
+	/**
+	 * @param resource
+	 */
 	showFilter : function(resource) {
 
 		var search    = $("#filter" + resource);

@@ -50,6 +50,10 @@
 	<td colspan="100">
 		<div class="list-filter-container">
 			<form onsubmit="listx.columnFilterStart('[RESOURCE]', '[AJAX]'); return false;">
+				<div class="checkbox checkbox-all">
+					<label><input type="checkbox" onclick="listx.toggleAllColumns('[RESOURCE]')" checked="checked">Все</label>
+				</div>
+
 				<!-- BEGIN filterColumn -->
 				<div class="checkbox">
 					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
