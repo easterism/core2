@@ -985,7 +985,7 @@ var listx = {
         var post = {};
         post['orderField_main_' + id] = data;
         if (listx.loc[id]) {
-            if (isAjax === '1') {
+            if (isAjax === 1) {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__order=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {

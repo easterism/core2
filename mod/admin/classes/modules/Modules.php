@@ -34,10 +34,12 @@ class Modules extends \Common  {
 
         $this->printJs("core2/mod/admin/assets/js/mod.js");
 
+
+
         $panel = new \Panel('tab');
-        $panel->addTab($this->_("Установленные модули (0)"), 'install',   $this->app);
-        $panel->addTab($this->_("Доступные модули"),	     'available', $this->app);
         $panel->setTitle($this->_("Модули"));
+        $panel->addTab($this->_("Установленные модули"), 'install',   $this->app);
+        $panel->addTab($this->_("Доступные модули"),     'available', $this->app);
 
         ob_start();
 
@@ -456,7 +458,7 @@ class Modules extends \Common  {
                     }
 
                     $edit->classText['SAVE'] = $this->_("Загрузить");
-                    $edit->back              = $this->app . "&tab_mod=" . $tabs->activeTab;
+                    $edit->back              = $this->app . "&tab=" . $panel->getActiveTab();
                     $edit->save("xajax_saveAvailModule(xajax.getFormValues(this.id))");
                     $edit->showTable();
 
@@ -502,8 +504,8 @@ class Modules extends \Common  {
                         $edit->readOnly = true;
                     }
 
-                    $edit->addButton($this->_("Отмена"), "load('$this->app&tab_mod=2')");
-                    $edit->addButtonCustom('<input class="button" type="button" value="' . $this->_("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab_mod=2&download_mod=' . $avail_id . '\')">');
+                    $edit->addButton($this->_("Отмена"), "load('$this->app&tab=available')");
+                    $edit->addButtonCustom('<input class="button" type="button" value="' . $this->_("Скачать файлы модуля") . '" onclick="loadPDF(\'index.php?module=admin&action=modules&tab=available&download_mod=' . $avail_id . '\')">');
                     $edit->showTable();
 
                     die;
@@ -686,12 +688,12 @@ class Modules extends \Common  {
                     }
                 }
                 if ($this->moduleConfig->gitlab && $this->moduleConfig->gitlab->host) {
-                    $list->addButtonCustom("<button class=\"button\" onclick=\"load('index.php?module=admin&action=modules&add_mod=-1&tab_mod=2')\">Загрузить с GitLab</button>");
+                    $list->addButtonCustom("<button class=\"button\" onclick=\"load('index.php?module=admin&action=modules&add_mod=-1&tab=available')\">Загрузить с GitLab</button>");
                 }
 
                 $list->data 		= $tmp;
-                $list->addURL 		= $this->app . "&add_mod=0&tab_mod=2";
-                $list->editURL 		= $this->app . "&tab_mod=2&add_mod=TCOL_00";
+                $list->addURL 		= $this->app . "&tab=available&add_mod=0";
+                $list->editURL 		= $this->app . "&tab=available&add_mod=TCOL_00";
                 $list->deleteKey	= "core_available_modules.id";
                 $list->showTable();
 
