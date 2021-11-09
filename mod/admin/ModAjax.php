@@ -38,15 +38,13 @@ class ModAjax extends ajaxFunc {
 
         if ( ! $refId) {
             $fields['module_id'] = 'req';
-        }
-
-		if ( ! $refId) {
 			preg_match("/[^a-z|0-9]/", $data['control']['module_id'], $arr);
 			if (count($arr)) {
 				$this->error[] = "- " . $this->_('Идентификатор может состоять только из цифр или маленьких латинских букв');
 				$this->response->script("document.getElementById('" . $data['class_id'] . "module_id').className='reqField';");
 			}
 			$curent_status = '';
+            $data['control']['seq'] = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_modules LIMIT 1");
 		} else {
 			$inf = $this->db->fetchRow("SELECT `visible`,`dependencies`, module_id FROM `core_modules` WHERE `m_id`=?", $refId);
 			$curent_status = $inf['visible'];
