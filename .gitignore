@@ -1,12 +1,7 @@
-/mod/cron
-/mod/webservice
-/mod/profile
-/mod/queue
-/mod/repo
-/mod/settings
+/mod/*
+!/mod/admin
 /.svn
 /vendor
-/mod/billing
 *.lock
 /mod/admin/conf.d.ini
 /mod/admin/conf.ext.ini

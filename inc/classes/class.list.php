@@ -51,6 +51,7 @@ class listTable extends initList {
     private $search_sql         = "";
     private $scripts            = array();
     private $service_content    = array();
+    private $show_templates     = false;
 
 
     /**
@@ -63,6 +64,15 @@ class listTable extends initList {
         $this->resource        = $name;
         $this->main_table_id   = "main_" . $name;
         $this->search_table_id = "search_" . $name;
+    }
+
+
+    /**
+     *
+     */
+    public function showTemplates() {
+
+        $this->show_templates = true;
     }
 
 
@@ -204,17 +214,69 @@ class listTable extends initList {
             $tmp[$countPOST] = (int)$_POST[$countPOST];
         }
 
+
         //SEARCH
-        if (!empty($_POST['search'][$this->main_table_id])) {
+        if ( ! empty($_POST['search'][$this->main_table_id])) {
             $tmp['search'] = $_POST['search'][$this->main_table_id];
         }
-        if (!empty($_POST['clear_form' . $this->resource])) {
-            $tmp['search'] = array();
+        if ( ! empty($_POST['clear_form' . $this->resource])) {
+            $tmp['search'] = [];
         }
 
         //COLUMNS
-        if (!empty($_POST['column_' . $this->resource])) {
+        if ( ! empty($_POST['column_' . $this->resource])) {
             $tmp['column'] = $_POST['column_' . $this->resource];
+        }
+
+        //TEMPLATES
+        if ( ! empty($_POST['template_create_' . $this->resource])) {
+            $profile_controller = $this->getProfileController();
+            if ($profile_controller instanceof ModProfileController) {
+                $template_title = $_POST['template_create_' . $this->resource];
+                $hash           = $this->getUniqueHash();
+
+                $list_template = $profile_controller->getUserData("list_template_{$hash}");
+                $list_template = $list_template ?: [];
+                $list_template[hash('crc32b', $template_title)] = [
+                    'title'  => $template_title,
+                    'search' => $tmp['search'] ?? [],
+                    'column' => $tmp['column'] ?? [],
+                ];
+
+                $profile_controller->putUserData("list_template_{$hash}", $list_template);
+            }
+        }
+
+        if ( ! empty($_POST['template_remove_' . $this->resource])) {
+            $profile_controller = $this->getProfileController();
+            if ($profile_controller instanceof ModProfileController) {
+                $template_id = $_POST['template_remove_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+                $list_template = $profile_controller->getUserData("list_template_{$hash}");
+                $list_template = $list_template ?: [];
+
+
+                if (isset($list_template[$template_id])) {
+                    unset($list_template[$template_id]);
+                    $profile_controller->putUserData("list_template_{$hash}", $list_template);
+                }
+            }
+        }
+
+        if ( ! empty($_POST['template_select_' . $this->resource])) {
+            $profile_controller = $this->getProfileController();
+            if ($profile_controller instanceof ModProfileController) {
+                $template_id = $_POST['template_select_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+
+                $list_template = $profile_controller->getUserData("list_template_{$hash}");
+                $list_template = $list_template ?: [];
+
+                if (isset($list_template[$template_id])) {
+                    $tmp['search'] = $list_template[$template_id]['search'];
+                    $tmp['column'] = $list_template[$template_id]['column'];
+                }
+            }
         }
 
         //ORDERING
@@ -607,68 +669,84 @@ class listTable extends initList {
      */
     public function makeTable() {
         
-        if (!count($this->data) && !$this->dataAlreadyGot) {
+        if ( ! count($this->data) && ! $this->dataAlreadyGot) {
             $this->data = $this->getData();
         }
-        if (!$this->recordCount) $this->recordCount = count($this->data);
+
+        if ( ! $this->recordCount) {
+            $this->recordCount = count($this->data);
+        }
 
         $countPOST = 'count_' . $this->resource; //pagination record count
-        $pagePOST = '_page_' . $this->resource; //pagination page number
-        
+        $pagePOST  = '_page_' . $this->resource; //pagination page number
+
         //Шаблон для сообщений об ошибках
         $tpl = new Templater2('core2/html/' . THEME . "/list/error.tpl");
-        $tpl->assign('[ID]', $this->main_table_id . "_error");
+        $tpl->assign('[ID]', "{$this->main_table_id}_error");
+
         if ($this->error) {
             $tpl->assign('"error', '"error block');
             $tpl->assign('[MSG]', $this->error);
         }
+
         $this->HTML .= $tpl->parse();
 
-        $tplRoot = new Templater2('core2/html/' . THEME . "/list/list.html");
-        $tplRoot->assign('[ID]', "list{$this->resource}");
         $serviceHeadHTML = "";
-        $sqlSearchCount = 0;
-        if (isset($this->table_search[$this->main_table_id]) && count($this->table_search[$this->main_table_id])) {
-            //
-            //SEARCH BLOCK-----------------------------------------------------------------------------------------------
-            //
-            if (!empty($this->sessData['search'])) {
+        $sqlSearchCount  = 0;
+
+
+        if (isset($this->table_search[$this->main_table_id]) &&
+            count($this->table_search[$this->main_table_id])
+        ) {
+            if ( ! empty($this->sessData['search'])) {
                 reset($this->sessData['search']);
                 $next = current($this->sessData['search']);
             } else {
                 $next = null;
             }
 
-            $tpl = new Templater2('core2/html/' . THEME . "/list/searchHead.tpl");
-            if ($this->filterColumn) { // формирование фильтра колонок
-                $tpl->filterColumnContainer->assign('{filterColumnID}', "filterColumn" . $this->resource);
-                $tpl->col->assign('{CLICK_COL}', "listx.columnFilter('{$this->resource}')");
-                $tpl->filterColumnContainer->assign('{COL_SUBMIT}', "listx.columnFilterStart('{$this->resource}',$this->ajax);return false;");
+            $tpl = new Templater3('core2/html/' . THEME . "/list/searchHead.tpl");
+            $tpl->assign('[RESOURCE]', $this->resource);
+            $tpl->assign('[AJAX]',     $this->ajax);
+
+            if ( ! empty($this->sessData['search']) && count($this->sessData['search'])) {
+                $tpl->touchBlock('clear');
+            }
+
+            // Фильтра колонок
+            if ($this->filterColumn) {
+                $tpl->touchBlock('col');
+                $tpl->touchBlock('filterColumnContainer');
+
                 foreach ($this->table_column[$this->main_table_id] as $k => $cols) {
                     $tpl->filterColumnContainer->filterColumn->assign('{COL_CAPTION}', $cols['name']);
-                    $tpl->filterColumnContainer->filterColumn->assign('{VAL}', $k + 1);
-                    if (!empty($this->sessData['column'])) {
-                        if (!in_array($k + 1, $this->sessData['column'])) {
+                    $tpl->filterColumnContainer->filterColumn->assign('{VAL}',         $k + 1);
+
+                    if ( ! empty($this->sessData['column'])) {
+                        if ( ! in_array($k + 1, $this->sessData['column'])) {
                             $tpl->filterColumnContainer->filterColumn->assign('{checked}', '');
                         } else {
                             $tpl->filterColumnContainer->filterColumn->assign('{checked}', 'checked');
                         }
+
                     } else {
                         $tpl->filterColumnContainer->filterColumn->assign('{checked}', 'checked');
                     }
+
                     if ($k + 1 < count($this->table_column[$this->main_table_id])) {
                         $tpl->filterColumnContainer->filterColumn->reassign();
                     }
                 }
-            }
-            $tpl->assign('{CLICK_FILTER}', "listx.showFilter('{$this->resource}')");
-            $tpl->assign('{CLICK_START}', "listx.startSearch('{$this->resource}',$this->ajax);return false;");
-            $tpl->assign('{filterID}', "filter" . $this->resource);
-            if (!empty($this->sessData['search']) && count($this->sessData['search'])) {
-                $tpl->clear->assign('{CLICK_CLEAR}', "listx.clearFilter('{$this->resource}', $this->ajax)");
+
+                if ($this->show_templates) {
+                    $tpl->filterColumnContainer->touchBlock('column_btn_template');
+                } else {
+                    $tpl->filterColumnContainer->touchBlock('column_btn');
+                }
             }
 
-            // Формирование формы поиска
+
+            // Форма поиска
             $searchFields = $this->table_search[$this->main_table_id];
             foreach ($searchFields as $key => $value) {
                 $searchFieldId = $this->search_table_id . $key;
@@ -726,6 +804,7 @@ class listTable extends initList {
                         $tpl2->checkbox->assign("{0}", "[$j]");
                         $tpl2->checkbox->assign("{VALUE}", $k);
                         $tpl2->checkbox->assign("{LABEL}", $v);
+
                         if (is_array($next) && in_array($row[0], $next)) {
                             $tpl2->checkbox->assign("{checked}", " checked=\"checked\"");
                         } else {
@@ -733,6 +812,7 @@ class listTable extends initList {
                         }
                         $tpl2->checkbox->reassign();
                     }
+
                     $sqlSearchCount++;
                     // input нужен для того, чтобы обрабатывать пустые checkbox
                     // пустые чекбоксы не постятся вообще
@@ -828,16 +908,44 @@ class listTable extends initList {
                     $tpl->fields->assign('{FIELD_CONTROL}', "<input type=\"hidden\" name=\"search[$this->main_table_id][$key][0]\">" . $tpl2->render());
                 }
 
-                if (!empty($this->sessData['search'])) {
+                if ( ! empty($this->sessData['search'])) {
                     $next = next($this->sessData['search']); // берем следующее значение
                 }
+
                 if ($key + 1 < count($searchFields)) {
                     $tpl->fields->reassign();
                 } else {
-                    $tpl->fields->touchBlock('submit');
+                    if ($this->show_templates) {
+                        $tpl->fields->touchBlock('search_btn_template');
+                    } else {
+                        $tpl->fields->touchBlock('search_btn');
+                    }
                 }
             }
-            $serviceHeadHTML .=     $tpl->parse();
+
+            // Шаблоны поиска
+            if ($this->show_templates) {
+
+                $profile_controller = $this->getProfileController();
+                if ($profile_controller instanceof ModProfileController) {
+                    $hash           = $this->getUniqueHash();
+                    $user_templates = $profile_controller->getUserData("list_template_" . $hash);
+
+                    if ( ! empty($user_templates)) {
+                        $tpl->touchBlock('templates_list');
+
+                        $user_templates = array_reverse($user_templates);
+
+                        foreach ($user_templates as $template_id => $user_template) {
+                            $tpl->templates_container->template_item->assign('[ID]',    $template_id);
+                            $tpl->templates_container->template_item->assign('[TITLE]', $user_template['title']);
+                            $tpl->templates_container->template_item->reassign();
+                        }
+                    }
+                }
+            }
+
+            $serviceHeadHTML .= $tpl->render();
         }
 
 
@@ -855,45 +963,66 @@ class listTable extends initList {
         // DATA HEADER первая строка таблицы
         $tpl = new Templater("core2/html/" . THEME . "/list/headerHead.tpl");
         $tpl->assign('{main_table_id}', $this->main_table_id);
-        $tpl->assign('{resource}', $this->resource);
-        $tpl->assign('isAjax', $this->ajax);
+        $tpl->assign('{resource}',      $this->resource);
+        $tpl->assign('isAjax',          $this->ajax);
+
         $eh = count($this->extraHeaders);
         if ($eh) {
             $tpl->assign('{ROWSPAN}', $eh + 1);
         } else {
             $tpl->assign('{ROWSPAN}', 1);
         }
-        $temp = '';
-        $columnsToReplace = array();
+
+        $temp             = '';
+        $columnsToReplace = [];
+
         if ($eh) { // добавляем дополнительные строки в шапку таблицы
             $cell = $tpl->getBlock('extracell');
             $tpl->assign('{ROWSPAN}', $eh + 1);
+
             foreach ($this->extraHeaders as $k => $cols) {
                 foreach ($cols as $caption => $span) {
                     if (isset($span['replace']) && $span['replace']) {
                         $columnsToReplace[] = $k;
                     }
-                    if (!isset($span['col'])) $span['col'] = 1;
-                    if (!isset($span['row'])) $span['row'] = 1;
-                    $temp .= str_replace(array('{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'), 
-                                array($caption, $span['col'], $span['row']), 
-                                $cell);
+
+                    if ( ! isset($span['col'])) $span['col'] = 1;
+                    if ( ! isset($span['row'])) $span['row'] = 1;
+
+                    $temp .= str_replace(
+                        ['{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'],
+                        [$caption, $span['col'], $span['row'],],
+                        $cell
+                    );
                 }
             }
             $tpl->replaceBlock('extracell', $temp);
             $tpl->touchBlock('extrahead');
+
         } else {
             $tpl->assign('{ROWSPAN}', 1);
         }
+
         $temp       = '';
         $cell       = $tpl->getBlock('cell');
         $cellnosort = $tpl->getBlock('cellnosort');
+
         foreach ($this->table_column[$this->main_table_id] as $key => $value) {
-            if (in_array($key, $columnsToReplace)) continue;
-            if ($this->filterColumn && ! empty($this->sessData['column']) && !in_array($key + 1, $this->sessData['column'])) continue;
+            if (in_array($key, $columnsToReplace)) {
+                continue;
+            }
+
+            if ($this->filterColumn &&
+                ! empty($this->sessData['column']) &&
+                ! in_array($key + 1, $this->sessData['column'])
+            ) {
+                continue;
+            }
+
             if ($value['sort']) {
                 $img = '';
-                if (!empty($this->sessData['order'])) {
+
+                if ( ! empty($this->sessData['order'])) {
                     if ($this->sessData['order'] == $key + 1) {
                         if ($this->sessData['orderType'] == "asc") {
                             $img = "core2/html/".THEME."/img/asc.gif";
@@ -901,16 +1030,25 @@ class listTable extends initList {
                         elseif ($this->sessData['orderType'] == "desc") {
                             $img = "core2/html/".THEME."/img/desc.gif";
                         }
-                        if ($img) $img = '<img src="' . $img . '" alt=""/>';
+
+                        if ($img) {
+                            $img = '<img src="' . $img . '" alt=""/>';
+                        }
                     }
                 }
-                $temp .= str_replace(array('{WIDTH}', '{ORDER_VALUE}', '{CAPTION}', '{ORDER_TYPE}', '{COLSPAN}'), 
-                                    array($value['width'], ($key + 1), $value['name'], $img, ''), 
-                                    $cell);
+
+                $temp .= str_replace(
+                    ['{WIDTH}', '{ORDER_VALUE}', '{CAPTION}', '{ORDER_TYPE}', '{COLSPAN}'], [
+                    $value['width'], ($key + 1), $value['name'], $img, ''],
+                    $cell
+                );
+
             } else {
-                $temp .= str_replace(array('{WIDTH}', '{CAPTION}', '{COLSPAN}'), 
-                                    array($value['width'], $value['name'], ''), 
-                                    $cellnosort);
+                $temp .= str_replace(
+                    ['{WIDTH}', '{CAPTION}', '{COLSPAN}'],
+                    [$value['width'], $value['name'], ''],
+                    $cellnosort
+                );
             }
         }
         $tpl->replaceBlock('cell', $temp);
@@ -922,15 +1060,15 @@ class listTable extends initList {
         //TABLE BODY.
         $tableBodyHTML = '';
         $int_count = 0;
-        if (!$this->extOrder) {
+        if ( ! $this->extOrder) {
             $recordNumber = ($this->sessData[$pagePOST] - 1) * $this->sessData[$countPOST];
         }
         if (count($this->addSum)) {
-            $needsum = array();
+            $needsum = [];
         } else {
             $needsum = 0;
         }
-        
+
         //BUILD ROWS WITH DATA
         //echo "<PRE>";print_r($this->data);echo"</PRE>";die();
         $i = 0;
@@ -1062,11 +1200,6 @@ class listTable extends initList {
                         $tableBodyHTML .= $sql_value;
                     } elseif ($value['type'] == 'number') {
                         $tableBodyHTML .= $this->commafy($sql_value);
-                    } elseif ($value['type'] == 'file') {
-                        if (!class_exists('FileMaster')) {
-                            require_once('FileMaster.php');
-                        }
-                        $tableBodyHTML .= FileMaster::getFileInfoForList($sql_value, '', 150, 150);//htmlspecialchars_decode($sql_value);
 
                     } elseif ($value['type'] == 'html' || $value['type'] == 'block') {
                         $tableBodyHTML .= htmlspecialchars_decode($sql_value);
@@ -1225,6 +1358,8 @@ class listTable extends initList {
 
         $serviceHeadHTML .= $tpl->render();
 
+        $tplRoot = new Templater2('core2/html/' . THEME . "/list/list.html");
+        $tplRoot->assign('[ID]', "list{$this->resource}");
         $tplRoot->header->assign('[HEADER]', $serviceHeadHTML . $headerHeadHTML); // побликуем шапку списка
         $tplRoot->body->assign('[BODY]', $tableBodyHTML); // побликуем список
 
@@ -1455,5 +1590,43 @@ class listTable extends initList {
         }
         if ($tres2) $tres = $tres2;
         return $tres;
+    }
+
+
+    /**
+     * Получение контроллера профиля
+     * @return ModProfileController|false
+     * @throws Exception
+     */
+    private function getProfileController() {
+
+        if ($this->isModuleInstalled('profile')) {
+            $profile_location = $this->getModuleLocation('profile');
+            require_once "$profile_location/vendor/autoload.php";
+            require_once "$profile_location/ModProfileController.php";
+            return new ModProfileController();
+
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * Получение хэша соответствующего текущему набору поисковых полей, колонок и имени
+     * @return false|string
+     */
+    private function getUniqueHash() {
+
+        $indicators = [];
+        foreach ($this->table_search[$this->main_table_id] as $search_field) {
+            $indicators[] = $search_field['type'];
+        }
+
+        $indicators[] = $this->filterColumn
+            ? count($this->table_column[$this->main_table_id])
+            : 0;
+
+        return hash('crc32b', $this->resource . implode('', $indicators));
     }
 }
