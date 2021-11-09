@@ -5,7 +5,6 @@ require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
-
 require_once 'Interfaces/File.php';
 
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
@@ -108,7 +107,6 @@ class CoreController extends Common implements File {
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
 
                         return json_encode(['status' => 'success']);
-                        break;
                 }
 
             } catch (Exception $e) {
@@ -408,7 +406,6 @@ class CoreController extends Common implements File {
 		$view  = new Admin\Users\View();
         $panel = new Panel();
 
-
         ob_start();
 
         try {
@@ -433,13 +430,13 @@ class CoreController extends Common implements File {
             echo Alert::danger($e->getMessage(), 'Ошибка');
         }
 
-
         $panel->setContent(ob_get_clean());
         return $panel->render();
 	}
 
 
 	/**
+     * Субмодуль Конфигурация
 	 * @throws Exception
      * @return void
 	 */
