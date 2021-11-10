@@ -165,7 +165,7 @@ var listx = {
         var container = '';
         var p         = '_page_' + id + '=' + o.value;
 
-        if (isAjax === '1') {
+        if (isAjax) {
             container = document.getElementById("list" + id).parentNode;
             if (listx.loc[id].indexOf('&__') < 0) {
                 if (container.id) {
@@ -208,7 +208,7 @@ var listx = {
         var o         = $('#pagin_' + id).find('input');
         var p         = '_page_' + id + '=' + o.val();
 
-        if (isAjax === '1') {
+        if (isAjax) {
             container = document.getElementById("list" + id).parentNode;
             if (listx.loc[id].indexOf('&__') < 0) {
                 if (container.id) {
@@ -250,7 +250,7 @@ var listx = {
     countSw: function(obj, id, isAjax) {
 
         var container = '';
-        if (isAjax === '1') {
+        if (isAjax) {
             container = document.getElementById("list" + id).parentNode;
         }
 
@@ -438,7 +438,7 @@ var listx = {
                         preloader.show();
                         $("#main_" + id + "_error").hide();
                         var container = '';
-                        if (isAjax === '1') {
+                        if (isAjax) {
                             container = document.getElementById("list" + id).parentNode;
                         }
                         if (listx.loc[id]) {
@@ -701,7 +701,7 @@ var listx = {
         post['column_' + id] = t;
 
         if (listx.loc[id]) {
-            if (isAjax === '1') {
+            if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__filter=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -756,7 +756,7 @@ var listx = {
                 return false;
             }
 
-            if (isAjax === '1') {
+            if (isAjax) {
                 // FIXME бех этого не ставится курсор в поле ввода названия
                 $('.modal.in').removeAttr('tabindex');
             }
@@ -789,7 +789,7 @@ var listx = {
                     });
 
                     if (listx.loc[resource]) {
-                        if (isAjax === '1') {
+                        if (isAjax) {
                             var container = document.getElementById("list" + resource).parentNode;
                             load(listx.loc[resource] + '&__template_create=1', post, container, function () {
                                 preloader.hide();
@@ -836,7 +836,7 @@ var listx = {
                     }];
 
                     if (listx.loc[resource]) {
-                        if (isAjax === '1') {
+                        if (isAjax) {
                             var container = document.getElementById("list" + resource).parentNode;
                             load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
                                 preloader.hide();
@@ -873,7 +873,7 @@ var listx = {
             }];
 
             if (listx.loc[resource]) {
-                if (isAjax === '1') {
+                if (isAjax) {
                     var container = document.getElementById("list" + resource).parentNode;
                     load(listx.loc[resource] + '&__template_select=1', post, container, function () {
                         preloader.hide();
@@ -904,7 +904,7 @@ var listx = {
         post['clear_form' + id] = 1;
 
         if (listx.loc[id]) {
-            if (isAjax === '1') {
+            if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__clear=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -947,7 +947,7 @@ var listx = {
         var container = '';
 
         if (listx.loc[id]) {
-            if (isAjax === '1') {
+            if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__search=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {
@@ -985,7 +985,7 @@ var listx = {
         var post = {};
         post['orderField_main_' + id] = data;
         if (listx.loc[id]) {
-            if (isAjax === 1) {
+            if (isAjax) {
                 container = document.getElementById("list" + id).parentNode;
                 load(listx.loc[id] + '&__order=1', post, container, function () {
                     if (listx.reloadEvents.length > 0) {

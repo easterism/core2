@@ -2,7 +2,7 @@
 	<th colspan="100">
 		<div class="showFilterIcon" onclick="listx.showFilter('[RESOURCE]')" title="_tr(Поиск)">_tr(Поиск)</div>
 		<!-- BEGIN clear -->
-		<div class="clearFilterIcon" onclick="listx.clearFilter('[RESOURCE]', '[AJAX]')" title="_tr(Очистить)"></div>
+		<div class="clearFilterIcon" onclick="listx.clearFilter('[RESOURCE]', [AJAX])" title="_tr(Очистить)"></div>
 		<!-- END clear -->
 		<!-- BEGIN col -->
 		<div class="columnFilterIcon" onclick="listx.columnFilter('[RESOURCE]')" title="_tr(Колонки)">_tr(Колонки)</div>
@@ -17,27 +17,29 @@
 
 <tr class="searchContainer hide" id="filter[RESOURCE]">
 	<td colspan="100">
-		<form onsubmit="listx.startSearch('[RESOURCE]', '[AJAX]'); return false;">
+		<form onsubmit="listx.startSearch('[RESOURCE]', [AJAX]); return false;">
 			<!-- BEGIN fields -->
 			<div class="searchRow">
 				<div>{FIELD_CAPTION}:</div>
 				<div>
 					{FIELD_CONTROL}
+					<!-- BEGIN search_btn -->
 					<div style="padding: 5px 0">
-						<!-- BEGIN search_btn -->
 						<input type="submit" class="buttonSmall" value="_tr(Искать)">
-						<!-- END search_btn -->
+					</div>
+					<!-- END search_btn -->
 
-						<!-- BEGIN search_btn_template -->
+					<!-- BEGIN search_btn_template -->
+					<div style="padding: 5px 0">
 						<div class="btn-group">
 							<button type="submit" class="btn btn-sm btn-primary">_tr(Искать)</button>
 							<button type="button" class="btn btn-sm btn-primary"
-									onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">
+									onclick="listx.template.create('[RESOURCE]', [AJAX]);return false;">
 								_tr(Сохранить шаблон)
 							</button>
 						</div>
-						<!-- END search_btn_template -->
 					</div>
+					<!-- END search_btn_template -->
 				</div>
 			</div>
 			<!-- END fields -->
@@ -49,7 +51,7 @@
 <tr class="searchContainer hide" id="filterColumn[RESOURCE]">
 	<td colspan="100">
 		<div class="list-filter-container">
-			<form onsubmit="listx.columnFilterStart('[RESOURCE]', '[AJAX]'); return false;">
+			<form onsubmit="listx.columnFilterStart('[RESOURCE]', [AJAX]); return false;">
 				<div class="checkbox checkbox-all">
 					<label><input type="checkbox" onclick="listx.toggleAllColumns('[RESOURCE]')" checked="checked">Все</label>
 				</div>
@@ -68,7 +70,7 @@
 				<div class="btn-group">
 					<button type="submit" class="btn btn-sm btn-primary">_tr(Применить)</button>
 					<button type="button" class="btn btn-sm btn-primary"
-							onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">
+							onclick="listx.template.create('[RESOURCE]', [AJAX]);return false;">
 						_tr(Сохранить шаблон)
 					</button>
 				</div>
@@ -87,9 +89,9 @@
 			<!-- BEGIN template_item -->
 			<div class="listx-template-item">
 				<button type="button" class="btn btn-sm btn-default listx-template-item-select"
-						onclick="listx.template.select('[RESOURCE]', '[ID]', '[AJAX]')">[TITLE]</button>
+						onclick="listx.template.select('[RESOURCE]', '[ID]', [AJAX])">[TITLE]</button>
 				<button type="button" class="btn btn-sm btn-default listx-template-item-remove"
-						onclick="listx.template.remove('[RESOURCE]', '[ID]', '[AJAX]')"></button>
+						onclick="listx.template.remove('[RESOURCE]', '[ID]', [AJAX])"></button>
 				<div class="clearfix"></div>
 			</div>
 			<!-- END template_item -->

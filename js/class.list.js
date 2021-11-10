@@ -496,7 +496,6 @@ var listx = {
 				load(listx.loc[id], post, container);
 			}
 		}
-		//load(listx.loc[id], post);
 	},
 
 	template: {
@@ -526,7 +525,7 @@ var listx = {
 				return false;
 			}
 
-			if (isAjax === '1') {
+			if (isAjax) {
 				// FIXME бех этого не ставится курсор в поле ввода названия
 				$('.modal.in').removeAttr('tabindex');
 			}
@@ -546,7 +545,7 @@ var listx = {
 			});
 
 			if (listx.loc[resource]) {
-				if (isAjax === '1') {
+				if (isAjax) {
 					var container = document.getElementById("list" + resource).parentNode;
 					load(listx.loc[resource] + '&__template_create=1', post, container, function () {
 						preloader.hide();
@@ -581,7 +580,7 @@ var listx = {
 				}];
 
 				if (listx.loc[resource]) {
-					if (isAjax === '1') {
+					if (isAjax) {
 						var container = document.getElementById("list" + resource).parentNode;
 						load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
 							preloader.hide();
@@ -617,7 +616,7 @@ var listx = {
 			}];
 
 			if (listx.loc[resource]) {
-				if (isAjax === '1') {
+				if (isAjax) {
 					var container = document.getElementById("list" + resource).parentNode;
 					load(listx.loc[resource] + '&__template_select=1', post, container, function () {
 						preloader.hide();
