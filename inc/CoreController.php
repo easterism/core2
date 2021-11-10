@@ -206,6 +206,7 @@ class CoreController extends Common implements File {
         $mods = new Modules();
         if (empty($_POST)) {
             $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/gl.js");
         }
 
         $panel = new \Panel('tab');
@@ -255,7 +256,9 @@ class CoreController extends Common implements File {
                 if (isset($_GET['add_mod'])) {
                     $mods->getAvailableEdit((int) $_GET['add_mod']);
                 }
+
                 $mods->getAvailable();
+                $mods->getRepoModules();
 
                 break;
         }

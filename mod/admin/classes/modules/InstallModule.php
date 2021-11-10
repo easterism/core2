@@ -2028,7 +2028,8 @@ class InstallModule extends \Common {
 
             $this->db->commit();
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= "<pre>" . $e->getTraceAsString() . "</div>";
