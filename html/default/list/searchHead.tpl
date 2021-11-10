@@ -23,21 +23,22 @@
 				<div>{FIELD_CAPTION}:</div>
 				<div>
 					{FIELD_CONTROL}
-					<div style="padding: 5px 0">
-						<!-- BEGIN search_btn -->
-						<input type="submit" class="buttonSmall" value="_tr(Искать)">
-						<!-- END search_btn -->
 
-						<!-- BEGIN search_btn_template -->
-						<div class="btn-group">
-							<button type="submit" class="btn btn-sm btn-primary">_tr(Искать)</button>
-							<button type="button" class="btn btn-sm btn-primary"
-									onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">
-								_tr(Сохранить шаблон)
-							</button>
-						</div>
-						<!-- END search_btn_template -->
+					<!-- BEGIN search_btn -->
+					<div style="padding: 5px 0">
+						<input type="submit" class="buttonSmall" value="_tr(Искать)">
 					</div>
+					<!-- END search_btn -->
+
+					<!-- BEGIN search_btn_template -->
+					<div class="btn-group">
+						<button type="submit" class="btn btn-sm btn-primary">_tr(Искать)</button>
+						<button type="button" class="btn btn-sm btn-primary"
+								onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">
+							_tr(Сохранить шаблон)
+						</button>
+					</div>
+					<!-- END search_btn_template -->
 				</div>
 			</div>
 			<!-- END fields -->
