@@ -1638,7 +1638,7 @@ class InstallModule extends \Common {
                             $Inf['m'][$k] = array('module_id' => $dep_value);
                         }
                     }
-                    //проверяем в соответствии с условиямив се ли нужные модули установлены
+                    //проверяем в соответствии с условиями все ли нужные модули установлены
                     $deps = $this->getNeedToInstallDependedModList($Inf['m']);
                 } elseif (!empty($Inf)) {
                     $deps[] = "<span style=\"color: red;\">Неверный install.xml</span>";
@@ -2036,7 +2036,8 @@ class InstallModule extends \Common {
 
             $this->db->commit();
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $this->db->rollBack();
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= "<pre>" . $e->getTraceAsString() . "</div>";
@@ -2213,7 +2214,7 @@ class InstallModule extends \Common {
                 }
             }
             if (!empty($ver)) {
-                $ver = max(array_keys($ver));
+                $ver = min(array_keys($ver));
             }
         }
         if (empty($ver)) {

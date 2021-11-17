@@ -30,12 +30,12 @@ var modules = {
         if (alertify) {
             alertify.confirm('Скачать архив модуля <b>' + mod + '</b> ' + v + '?', function(e) {
                 if (e) {
-                    loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
+                    loadPDF('index.php?module=admin&action=modules&tab=available&download_mod=' + modId);
                 } else return false;
             });
         } else {
             if (confirm('Скачать архив модуля ' + mod + ' ' + v + '?')) {
-                loadPDF('index.php?module=admin&action=modules&tab_mod=2&download_mod=' + modId);
+                loadPDF('index.php?module=admin&action=modules&tab=available&download_mod=' + modId);
             } else return false;
         }
 	},
@@ -109,7 +109,7 @@ var modules = {
                         var obj = $('td[title=' + item.m_id + ']');
                         var obj_ver = obj.next().next().next();
                         obj_ver.html(obj_ver.html() + ' <b style="color: #008000;"> Доступно обновление до v' + item.version + '</b>');
-                        var obj_do = obj.next().next().next().next().next().next().next();
+                        var obj_do = obj.next().next().next().next().next().next();
                         obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
                     });
                 }

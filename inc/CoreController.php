@@ -5,7 +5,6 @@ require_once 'classes/class.list.php';
 require_once 'classes/class.edit.php';
 require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
-
 require_once 'Interfaces/File.php';
 
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
@@ -14,6 +13,7 @@ require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
+require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
@@ -108,7 +108,6 @@ class CoreController extends Common implements File {
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
 
                         return json_encode(['status' => 'success']);
-                        break;
                 }
 
             } catch (Exception $e) {
@@ -243,13 +242,67 @@ class CoreController extends Common implements File {
 
 
         $mods = new Modules();
-        if (!empty($_POST['install'])) {
-            $mods->install = ['install' => $_POST['install']];
+        if (empty($_POST)) {
+            $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/gl.js");
         }
-        if (!empty($_POST['install_from_repo'])) {
-            $mods->install = ['repo' => $_POST['repo'], 'install_from_repo' => $_POST['install_from_repo']];
+
+        $panel = new \Panel('tab');
+        $panel->addTab($this->_("Установленные модули"), 'install',   "index.php?module=admin&action=modules");
+        $panel->addTab($this->_("Доступные модули"),	     'available', "index.php?module=admin&action=modules");
+        $panel->setTitle($this->_("Модули"));
+        ob_start();
+        switch ($panel->getActiveTab()) {
+            case 'install':
+                if (!empty($_POST)) {
+                    /* Обновление файлов модуля */
+                    if (!empty($_POST['refreshFilesModule'])) {
+                        $install = new Install();
+                        return $install->mRefreshFiles($_POST['refreshFilesModule']);
+                    }
+
+                    /* Обновление модуля */
+                    if (!empty($_POST['updateModule'])) {
+                        $install = new Install();
+                        return $install->checkModUpdates($_POST['updateModule']);
+                    }
+
+                    //Деинсталяция модуля
+                    if (isset($_POST['uninstall'])) {
+                        $install = new Install();
+                        return $install->mUninstall($_POST['uninstall']);
+                    }
+                }
+                if (isset($_GET['edit']) && $_GET['edit'] != '') {
+                    $mods->getInstalledEdit((int) $_GET['edit']);
+                } else {
+                    $mods->getInstalled();
+                }
+                break;
+
+            case 'available':
+                // Инсталяция модуля
+                if (!empty($_POST['install'])) {
+                    $install = new Install();
+                    return $install->mInstall($_POST['install']);
+                }
+                // Инсталяция модуля из репозитория
+                if (!empty($_POST['install_from_repo'])) {
+                    $install = new Install();
+                    return $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
+                }
+                if (isset($_GET['add_mod'])) {
+                    $mods->getAvailableEdit((int) $_GET['add_mod']);
+                }
+
+                $mods->getAvailable();
+                $mods->getRepoModules();
+
+                break;
         }
-        return $mods->dispatch();
+
+        $panel->setContent(ob_get_clean());
+        return $panel->render();
 	}
 
 
@@ -446,7 +499,6 @@ class CoreController extends Common implements File {
 		$view  = new Admin\Users\View();
         $panel = new Panel();
 
-
         ob_start();
 
         try {
@@ -471,13 +523,13 @@ class CoreController extends Common implements File {
             echo Alert::danger($e->getMessage(), 'Ошибка');
         }
 
-
         $panel->setContent(ob_get_clean());
         return $panel->render();
 	}
 
 
 	/**
+     * Субмодуль Конфигурация
 	 * @throws Exception
      * @return void
 	 */

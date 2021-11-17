@@ -9,8 +9,6 @@ use Laminas\Validator\Hostname as ValidateHostname;
 use Laminas\I18n\Validator\IsFloat;
 use Laminas\I18n\Validator\IsInt;
 
-
-
 /**
  * Class ajaxFunc
  */
@@ -663,7 +661,6 @@ class ajaxFunc extends Common {
             }
         }
     }
-
 
     /**
      * Получение служебных данных формы из сессии

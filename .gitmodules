@@ -25,3 +25,6 @@
 [submodule "mod/auth/v1.0.0"]
 	path = mod/auth/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/auth.git
+[submodule "mod/profile/v1.12.0"]
+	path = mod/profile/v1.12.0
+	url = git@git.rdo.belhard.com:core2/modules/profile.git
