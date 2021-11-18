@@ -1,10 +1,10 @@
-/mod/*
-!/mod/admin
+mod/*
+!mod/admin
+mod/admin/conf.d.ini
+mod/admin/conf.ext.ini
 /.svn
 /vendor
 *.lock
-/mod/admin/conf.d.ini
-/mod/admin/conf.ext.ini
 
 \.idea/
 

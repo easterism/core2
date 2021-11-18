@@ -2,7 +2,7 @@
 	<th colspan="100">
 		<div class="showFilterIcon" onclick="listx.showFilter('[RESOURCE]')" title="_tr(Поиск)">_tr(Поиск)</div>
 		<!-- BEGIN clear -->
-		<div class="clearFilterIcon" onclick="listx.clearFilter('[RESOURCE]', '[AJAX]')" title="_tr(Очистить)"></div>
+		<div class="clearFilterIcon" onclick="listx.clearFilter('[RESOURCE]', [AJAX])" title="_tr(Очистить)"></div>
 		<!-- END clear -->
 		<!-- BEGIN col -->
 		<div class="columnFilterIcon" onclick="listx.columnFilter('[RESOURCE]')" title="_tr(Колонки)">_tr(Колонки)</div>
@@ -17,7 +17,7 @@
 
 <tr class="searchContainer hide" id="filter[RESOURCE]">
 	<td colspan="100">
-		<form onsubmit="listx.startSearch('[RESOURCE]', '[AJAX]'); return false;">
+		<form onsubmit="listx.startSearch('[RESOURCE]', [AJAX]); return false;">
 			<!-- BEGIN fields -->
 			<div class="searchRow">
 				<div>{FIELD_CAPTION}</div>
@@ -35,7 +35,7 @@
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu dropdown-menu-left">
-								<li><a href="#" onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">_tr(Сохранить шаблон)</a></li>
+								<li><a href="#" onclick="listx.template.create('[RESOURCE]', [AJAX]);return false;">_tr(Сохранить шаблон)</a></li>
 							</ul>
 						</div>
 						<!-- END search_btn_template -->
@@ -51,7 +51,11 @@
 <tr class="searchContainer hide" id="filterColumn[RESOURCE]">
 	<td colspan="100">
 		<div class="list-filter-container">
-			<form onsubmit="listx.columnFilterStart('[RESOURCE]', '[AJAX]'); return false;">
+			<form onsubmit="listx.columnFilterStart('[RESOURCE]', [AJAX]); return false;">
+				<div class="checkbox checkbox-all">
+					<label><input type="checkbox" onclick="listx.toggleAllColumns('[RESOURCE]')" checked="checked">Все</label>
+				</div>
+
 				<!-- BEGIN filterColumn -->
 				<div class="checkbox">
 					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
@@ -69,7 +73,7 @@
 						<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu dropdown-menu-left">
-						<li><a href="#" onclick="listx.template.create('[RESOURCE]', '[AJAX]');return false;">_tr(Сохранить шаблон)</a></li>
+						<li><a href="#" onclick="listx.template.create('[RESOURCE]', [AJAX]);return false;">_tr(Сохранить шаблон)</a></li>
 					</ul>
 				</div>
 				<!-- END column_btn_template -->
@@ -87,9 +91,9 @@
 			<!-- BEGIN template_item -->
 			<div class="listx-template-item">
 				<button type="button" class="btn btn-sm btn-default listx-template-item-select"
-						onclick="listx.template.select('[RESOURCE]', '[ID]', '[AJAX]')">[TITLE]</button>
+						onclick="listx.template.select('[RESOURCE]', '[ID]', [AJAX])">[TITLE]</button>
 				<button type="button" class="btn btn-sm btn-default listx-template-item-remove"
-						onclick="listx.template.remove('[RESOURCE]', '[ID]', '[AJAX]')"><i class="fa fa-times"></i></button>
+						onclick="listx.template.remove('[RESOURCE]', '[ID]', [AJAX])"><i class="fa fa-times"></i></button>
 				<div class="clearfix"></div>
 			</div>
 			<!-- END template_item -->

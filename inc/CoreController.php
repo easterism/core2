@@ -153,10 +153,11 @@ class CoreController extends Common implements File {
 	}
 
 
-	/**
-	 * @throws Exception
+    /**
      * @return void|string
-	 */
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws Exception
+     */
 	public function action_modules() {
 
         if ( ! $this->auth->ADMIN) {
@@ -197,15 +198,53 @@ class CoreController extends Common implements File {
             $install->downloadAvailMod($_GET['download_mod']);
             return;
         }
-        if (!empty($_GET['__gitlab'])) {
-            $gl = new \Core2\Gitlab();
-            $gl->getTags();
-            return;
+
+        if ( ! empty($_GET['__gitlab'])) {
+            $gitlab = new \Core2\Gitlab();
+            $tags   = $gitlab->getTags();
+
+            ob_start();
+
+            if ( ! empty($tags)) {
+                // FIXME вынести в шаблон
+                echo "<b>Репозитории</b>";
+                echo "<ol>";
+                foreach ($tags as $item) {
+                    echo "<li>{$item['name']}";
+                    echo "<ul>";
+
+                    if ( ! empty($item['tags'])) {
+                        foreach ($item['tags'] as $tag) {
+                            echo "
+                                <li>
+                                    <a href=\"#\" 
+                                       onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();return false\">
+                                        {$tag['name']}
+                                    </a>
+                                    {$tag['author_name']} ({$tag['author_email']})
+                                </li>
+                            ";
+                        }
+                    } else {
+                        echo "<li>Нет тегов</li>";
+                    }
+
+                    echo "</ul></li>";
+                }
+                echo "</ol>";
+
+            } else {
+                echo $this->_("Репозитории не найдены. Проверьте правильность параметров");
+            }
+
+            return ob_get_clean();
         }
+
 
         $mods = new Modules();
         if (empty($_POST)) {
             $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/gl.js");
         }
 
         $panel = new \Panel('tab');
@@ -255,7 +294,9 @@ class CoreController extends Common implements File {
                 if (isset($_GET['add_mod'])) {
                     $mods->getAvailableEdit((int) $_GET['add_mod']);
                 }
+
                 $mods->getAvailable();
+                $mods->getRepoModules();
 
                 break;
         }

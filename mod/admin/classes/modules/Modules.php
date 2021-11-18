@@ -39,7 +39,7 @@ class Modules extends \Common  {
                                 FROM core_available_modules
                                WHERE id = 0";
             if ($avail_id < 0) {
-                \Tool::printJs("core2/mod/admin/assets/js/gl.js", true);
+
                 $edit->addControl("GitLab релиз", "MODAL", array(
                     'disabled' => 'disabled',
                     'size' => '40',
