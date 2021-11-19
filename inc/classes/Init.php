@@ -472,7 +472,11 @@
          */
         public function __destruct() {
 
-            if ($this->config->system->profile && $this->config->system->profile->on) {
+            if ($this->config &&
+                $this->config->system &&
+                $this->config->system->profile &&
+                $this->config->system->profile->on
+            ) {
                 $log = new \Core2\Log('profile');
 
                 if ($log->getWriter()) {
