@@ -190,10 +190,10 @@ class listTable extends initList {
 
 
     /**
-     * Запрос на получение данных
+     * Получение параметров таблицы
      * @return array
      */
-    public function getRequest(): array {
+    public function getParams(): array {
 
         $search = [];
 
@@ -218,18 +218,19 @@ class listTable extends initList {
 
         $page       = $this->sessData['_page_' . $this->resource] ?? 0;
         $count_rows = $this->sessData['count_' . $this->resource] ?? 0;
-        $request    = [];
+        $param    = [];
 
-        $request['search']     = $search;
-        $request['column']     = $this->sessData['column'] ?? [];
-        $request['page']       = $page;
-        $request['count_rows'] = $count_rows;
-        $request['offset']     = $page == 1 ? 0 : ($page - 1) * $count_rows;
-        $request['order']      = $this->sessData['order'] ?? "";
-        $request['order_type'] = $this->sessData['orderType'] ?? "";
+        $param['search']     = $search;
+        $param['column']     = $this->sessData['column'] ?? [];
+        $param['page']       = $page;
+        $param['count_rows'] = $count_rows;
+        $param['offset']     = $page == 1 ? 0 : ($page - 1) * $count_rows;
+        $param['order']      = $this->sessData['order'] ?? "";
+        $param['order_type'] = $this->sessData['orderType'] ?? "";
 
-        return $request;
+        return $param;
     }
+
 
     /**
      * Get data array
