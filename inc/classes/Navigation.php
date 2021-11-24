@@ -25,7 +25,7 @@ class Navigation {
      */
     public function addLink(string $title, string $link, string $position = ''): Link {
 
-        require_once 'navigation/Link.php';
+        require_once 'Navigation/Link.php';
         $nav_link = new Link();
         $nav_link->setTitle($title);
         $nav_link->setLink($link);
@@ -47,7 +47,7 @@ class Navigation {
      */
     public function addDivider(string $position = ''): Divider {
 
-        require_once 'navigation/Divider.php';
+        require_once 'Navigation/Divider.php';
         $nav_divider = new Divider();
 
         if ($position) {
@@ -68,7 +68,7 @@ class Navigation {
      */
     public function addDropdown(string $title, string $position = ''): Dropdown {
 
-        require_once 'navigation/Dropdown.php';
+        require_once 'Navigation/Dropdown.php';
         $nav_dropdown = new Dropdown();
         $nav_dropdown->setTitle($title);
 
