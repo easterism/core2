@@ -129,17 +129,17 @@ class Db extends Table {
                     $type  = $this->search_controls[$key]->getType();
 
                     switch ($type) {
-                        case 'text':
+                        case self::SEARCH_TEXT:
                             $select->where("{$field} LIKE ?", "%{$value}%");
                             break;
 
-                        case 'text_strict':
+                        case self::SEARCH_TEXT_STRICT:
                             $select->where("{$field} = ?", $value);
                             break;
 
-                        case 'date':
-                        case 'datetime':
-                        case 'number':
+                        case self::SEARCH_DATE:
+                        case self::SEARCH_DATETIME:
+                        case self::SEARCH_NUMBER:
                             if (is_array($value)) {
                                 if ($value[0] && $value[1]) {
                                     $where  = $this->db->quoteInto(" `{$field}` BETWEEN ?", $value[0]);
@@ -155,8 +155,7 @@ class Db extends Table {
                             }
                             break;
 
-                        case 'list':
-                        case 'select':
+                        case self::SEARCH_SELECT:
                             $select->where("{$field} IN(?)", $value);
                             break;
                     }
@@ -240,8 +239,8 @@ class Db extends Table {
                     $search_field = $search_column->getField();
 
                     switch ($search_column->getType()) {
-                        case 'date':
-                        case 'datetime':
+                        case self::SEARCH_DATE:
+                        case self::SEARCH_DATETIME:
                             if ( ! empty($search_value[0]) && empty($search_value[1])) {
                                 $quoted_value = $this->db->quote($search_value[0]);
                                 $select->addWhere("{$search_field} >= {$quoted_value}");
@@ -257,23 +256,24 @@ class Db extends Table {
                             }
                             break;
 
-                        case 'radio':
-                        case 'select':
+                        case self::SEARCH_TEXT_STRICT:
+                        case self::SEARCH_RADIO:
+                        case self::SEARCH_SELECT:
                             if ($search_value != '') {
                                 $quoted_value = $this->db->quote($search_value);
                                 $select->addWhere("{$search_field} = {$quoted_value}");
                             }
                             break;
 
-                        case 'checkbox':
-                        case 'multiselect':
+                        case self::SEARCH_CHECKBOX:
+                        case self::SEARCH_MULTISELECT:
                             if ( ! empty($search_value)) {
                                 $quoted_value = $this->db->quote($search_value);
                                 $select->addWhere("{$search_field} IN ({$quoted_value})");
                             }
                             break;
 
-                        case 'text':
+                        case self::SEARCH_TEXT:
                             if ($search_value != '') {
                                 $quoted_value = $this->db->quote('%' . $search_value . '%');
                                 $select->addWhere("{$search_field} LIKE {$quoted_value}");

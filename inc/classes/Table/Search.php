@@ -18,6 +18,7 @@ class Search {
 
     protected $available_types = [
         'text',
+        'text_strict',
         'date',
         'datetime',
         'radio',

@@ -302,6 +302,7 @@ abstract class Table extends Acl {
 
                     switch ($search->getType()) {
                         case self::SEARCH_TEXT :
+                        case self::SEARCH_TEXT_STRICT :
                             $tpl->search->field->text->assign("[KEY]",     $key);
                             $tpl->search->field->text->assign("[VALUE]",   $control_value);
                             $tpl->search->field->text->assign("[IN_TEXT]", $search->getIn());
