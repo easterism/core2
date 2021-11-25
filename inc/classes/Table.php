@@ -37,6 +37,7 @@ abstract class Table extends Acl {
     protected $search_controls       = [];
     protected $records_total         = 0;
     protected $records_per_page      = 25;
+    protected $records_seq           = false;
     protected $current_page          = 1;
     protected $round_record_count    = false;
     protected $is_ajax               = false;
@@ -249,6 +250,12 @@ abstract class Table extends Acl {
      */
     public function render(): string {
 
+        if ( ! $this->checkAcl($this->resource, 'list_all') &&
+             ! $this->checkAcl($this->resource, 'list_owner')
+        ) {
+            return '';
+        }
+
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
         $tpl->assign('[THEME_SRC]', $this->theme_src);
         $tpl->assign('[RESOURCE]',  $this->resource);
@@ -256,11 +263,19 @@ abstract class Table extends Acl {
         $tpl->assign('[LOCATION]',  $this->is_ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING']);
         $tpl->assign('[BUTTONS]',   implode('', $this->buttons));
 
-        if ($this->add_url) {
+        if ($this->add_url &&
+            ($this->checkAcl($this->resource, 'edit_all') ||
+             $this->checkAcl($this->resource, 'edit_owner')) &&
+            ($this->checkAcl($this->resource, 'read_all') ||
+             $this->checkAcl($this->resource, 'read_owner'))
+        ) {
             $tpl->add_button->assign('[URL]', str_replace('?', '#', $this->add_url));
         }
 
-        if ($this->show_delete) {
+        if ($this->show_delete &&
+            ($this->checkAcl($this->resource, 'delete_all') ||
+             $this->checkAcl($this->resource, 'delete_owner'))
+        ) {
             $delete_msg    = $this->getLocution('Are you sure you want to delete this post?');
             $no_select_msg = $this->getLocution('You must select at least one record');
 
@@ -286,13 +301,13 @@ abstract class Table extends Acl {
                     $control_value = $search_value[$key] ?? '';
 
                     switch ($search->getType()) {
-                        case 'text' :
+                        case self::SEARCH_TEXT :
                             $tpl->search->field->text->assign("[KEY]",     $key);
                             $tpl->search->field->text->assign("[VALUE]",   $control_value);
                             $tpl->search->field->text->assign("[IN_TEXT]", $search->getIn());
                             break;
 
-                        case 'radio' :
+                        case self::SEARCH_RADIO :
                             $data = $search->getData();
                             if ( ! empty($data)) {
                                 $data  = array('' => $this->getLocution('All')) + $data;
@@ -311,7 +326,7 @@ abstract class Table extends Acl {
                             }
                             break;
 
-                        case 'checkbox' :
+                        case self::SEARCH_CHECKBOX :
                             $data = $search->getData();
                             if ( ! empty($data)) {
                                 foreach ($data as $checkbox_value => $checkbox_title) {
@@ -329,21 +344,21 @@ abstract class Table extends Acl {
                             }
                             break;
 
-                        case 'date' :
+                        case self::SEARCH_DATE :
                             $tpl->search->field->date->assign("[KEY]",         $key);
                             $tpl->search->field->date->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->search->field->date->assign("[VALUE_END]",   $control_value[1] ?? '');
                             $tpl->search->field->date->assign("[IN_TEXT]",     $search->getIn());
                             break;
 
-                        case 'datetime' :
+                        case self::SEARCH_DATETIME :
                             $tpl->search->field->datetime->assign("[KEY]",         $key);
                             $tpl->search->field->datetime->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->search->field->datetime->assign("[VALUE_END]",   $control_value[1] ?? '');
                             $tpl->search->field->datetime->assign("[IN_TEXT]",     $search->getIn());
                             break;
 
-                        case 'select' :
+                        case self::SEARCH_SELECT :
                             $data    = $search->getData();
                             $options = ['' => ''] + $data;
                             $tpl->search->field->select->assign("[KEY]",      $key);
@@ -351,7 +366,7 @@ abstract class Table extends Acl {
                             $tpl->search->field->select->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
                             break;
 
-                        case 'multiselect' :
+                        case self::SEARCH_MULTISELECT :
                             $data = $search->getData();
                             $tpl->search->field->multiselect->assign("[KEY]",      $key);
                             $tpl->search->field->multiselect->assign("[IN_TEXT]",  $search->getIn());
@@ -416,7 +431,12 @@ abstract class Table extends Acl {
                 $tpl->row->assign('[#]',  $row_number);
 
 
-                if ($this->edit_url) {
+                if ($this->edit_url &&
+                    ($this->checkAcl($this->resource, 'edit_all') ||
+                         $this->checkAcl($this->resource, 'edit_owner') ||
+                     $this->checkAcl($this->resource, 'read_all') ||
+                     $this->checkAcl($this->resource, 'read_owner'))
+                ) {
                     $edit_url = $this->replaceTCOL($row, $this->edit_url);
                     $row->setAppendAttr('class', 'edit-row');
 
@@ -434,36 +454,36 @@ abstract class Table extends Acl {
                         $value = $cell->getValue();
 
                         switch ($column->getType()) {
-                            case 'text':
+                            case self::COLUMN_TEXT:
                                 $tpl->row->col->assign('[VALUE]', htmlspecialchars($value));
                                 break;
 
-                            case 'number':
+                            case self::COLUMN_NUMBER:
                                 $value = strrev($value);
                                 $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
                                 $value = strrev($value);
                                 $tpl->row->col->assign('[VALUE]', $value);
                                 break;
 
-                            case 'html':
+                            case self::COLUMN_HTML:
                                 $tpl->row->col->assign('[VALUE]', $value);
                                 break;
 
-                            case 'date':
+                            case self::COLUMN_DATE:
                                 $date = $value ? date($this->date_mask, strtotime($value)) : '';
                                 $tpl->row->col->assign('[VALUE]', $date);
                                 break;
 
-                            case 'datetime':
+                            case self::COLUMN_DATETIME:
                                 $date = $value ? date($this->datetime_mask, strtotime($value)) : '';
                                 $tpl->row->col->assign('[VALUE]', $date);
                                 break;
 
-                            case 'status':
+                            case self::COLUMN_STATUS:
                                 if ($value == 'Y' || $value == 1) {
-                                    $img = "<img src=\"{$this->theme_src}/img/lightbulb_on.png\" alt=\"_tr(вкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
+                                    $img = "<img src=\"{$this->theme_src}/list/img/lightbulb.png\" alt=\"_tr(вкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
                                 } else {
-                                    $img = "<img src=\"{$this->theme_src}/img/lightbulb_off.png\" alt=\"_tr(выкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
+                                    $img = "<img src=\"{$this->theme_src}/list/img/lightbulb_off.png\" alt=\"_tr(выкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
                                 }
                                 $tpl->row->col->assign('[VALUE]', $img);
                                 break;
@@ -664,7 +684,8 @@ abstract class Table extends Acl {
 
         if (strpos($str, 'TCOL_') !== false) {
             foreach ($row as $field => $value) {
-                $value = htmlentities($value);
+                $value = htmlspecialchars($value);
+                $value = addslashes($value);
                 $str   = str_replace('TCOL_' . strtoupper($field), $value, $str);
             }
             return $str;

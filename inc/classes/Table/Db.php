@@ -20,19 +20,12 @@ class Db extends Table {
     protected $query        = '';
     protected $query_params = '';
 
-    /**
-     * @var \Zend_Db_Adapter_Abstract
-     */
-    private $db;
-
 
     /**
      * @param string $resource
      */
     public function __construct(string $resource) {
         parent::__construct($resource);
-
-        $this->db = (new \Core2\Db())->db;
     }
 
 
@@ -171,6 +164,33 @@ class Db extends Table {
             }
         }
 
+
+        //проверка наличия полей для последовательности и автора
+        if ($this->table) {
+            $table_columns = $this->db->fetchCol("
+                SELECT column_name 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE table_schema = ? 
+                  AND table_name = ?
+            ", [
+                $this->getDbSchema(),
+                $this->table
+            ]);
+
+            if (in_array('seq', $table_columns)) {
+                $this->records_seq = true;
+            }
+
+            if (in_array('author', $table_columns) &&
+                $this->checkAcl($this->resource, 'list_owner') &&
+                ! $this->checkAcl($this->resource, 'list_all')
+            ) {
+                $auth = \Zend_Registry::get('auth');
+                $select->where("author = ?", $auth->NAME);
+            }
+        }
+
+
         $offset = $this->current_page == 1 ? 0 : ($this->current_page - 1) * $this->records_per_page;
         $select->limit((int)$this->records_per_page, (int)$offset);
 
@@ -205,15 +225,16 @@ class Db extends Table {
      * Получение данных по запросу sql
      * @param $query
      * @return array
+     * @throws Exception
      */
     private function fetchDataQuery($query): array {
 
         $select = new Table\Db\Select($query);
 
 
-        if ( ! empty($this->search) && ! empty($this->session->table->search)) {
+        if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
-                $search_column = $this->search[$key];
+                $search_column = $this->search_controls[$key];
 
                 if ($search_column instanceof Search) {
                     $search_field = $search_column->getField();
@@ -263,6 +284,33 @@ class Db extends Table {
             }
         }
 
+        //проверка наличия полей для последовательности и автора
+        if ($this->table) {
+            $table_columns = $this->db->fetchCol("
+                SELECT column_name 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE table_schema = ? 
+                  AND table_name = ?
+            ", [
+                $this->getDbSchema(),
+                $this->table
+            ]);
+
+            if (in_array('seq', $table_columns)) {
+                $this->records_seq = true;
+            }
+
+            if (in_array('author', $table_columns) &&
+                $this->checkAcl($this->resource, 'list_owner') &&
+                ! $this->checkAcl($this->resource, 'list_all')
+            ) {
+                $auth         = \Zend_Registry::get('auth');
+                $quoted_value = $this->db->quote($auth->NAME);
+                $select->addWhere("author = {$quoted_value}");
+            }
+        }
+
+
 
         if (isset($this->session->table->order) && $this->session->table->order) {
             $select->setOrderBy(($this->session->table->order + 1) . ' ' . $this->session->table->order_type);
@@ -283,7 +331,6 @@ class Db extends Table {
 
 
         $sql = $select->getSql();
-
 
         if ($this->round_record_count) {
             $explain = $this->db->fetchAll('EXPLAIN ' . $sql, $this->query_params);
