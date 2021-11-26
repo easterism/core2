@@ -75,8 +75,7 @@ class Db extends Table {
 
     /**
      * Получение данных из базы
-     * @return array
-     * @throws \Zend_Db_Select_Exception
+     * @return Row[]
      */
     public function fetchData(): array {
 
@@ -101,7 +100,6 @@ class Db extends Table {
     /**
      * @param \Zend_Db_Table_Abstract $table
      * @return array
-     * @throws \Zend_Db_Select_Exception
      */
     private function fetchDataTable(\Zend_Db_Table_Abstract $table): array {
 
@@ -114,7 +112,6 @@ class Db extends Table {
     /**
      * @param \Zend_Db_Select $select
      * @return array
-     * @throws \Zend_Db_Select_Exception
      */
     private function fetchDataSelect(\Zend_Db_Select $select): array {
 
@@ -224,7 +221,6 @@ class Db extends Table {
      * Получение данных по запросу sql
      * @param $query
      * @return array
-     * @throws Exception
      */
     private function fetchDataQuery($query): array {
 

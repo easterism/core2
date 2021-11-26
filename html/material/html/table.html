@@ -141,7 +141,10 @@
 
     <!-- BEGIN header -->
     <tr class="table-header">
-      <th width="1%">_tr(№)</th>
+      <!-- BEGIN header_number -->
+      <th style="width: 1px">_tr(№)</th>
+      <!-- END header_number -->
+
       <!-- BEGIN cell -->
       <!-- BEGIN sort -->
       <th class="pointer" onclick="CoreUI.table.order('[RESOURCE]', '[COLUMN_NUMBER]', [IS_AJAX])">
@@ -173,7 +176,10 @@
 
     <!-- BEGIN row -->
     <tr>
+      <!-- BEGIN row_number -->
       <td title="[ID]" class="number-row">[#]</td>
+      <!-- END row_number -->
+
       <!-- BEGIN col -->
       <td>[VALUE]</td>
       <!-- END col -->

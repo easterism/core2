@@ -2469,7 +2469,7 @@ table.coreui-table .search-container form .search-table td {padding-bottom: 10px
 table.coreui-table .search-container form .search-table .control-label,
 table.coreui-table .search-container form .search-table .control,
 table.coreui-table .search-container form .search-table .out-text {
-    min-width: 140px;
+    min-width: 100px;
     padding-left:10px;
     padding-right:10px;
 }

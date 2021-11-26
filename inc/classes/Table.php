@@ -28,6 +28,7 @@ abstract class Table extends Acl {
     protected $show_delete           = false;
     protected $show_columns_switcher = false;
     protected $show_templates        = false;
+    protected $show_number_rows      = true;
     protected $edit_url              = '';
     protected $add_url               = '';
     protected $data                  = [];
@@ -47,7 +48,6 @@ abstract class Table extends Acl {
      * @var SessionContainer
      */
     protected $session        = null;
-    protected $is_fetched     = false;
     protected $theme_src      = '';
     protected $theme_location = '';
     protected $date_mask      = "d.m.Y";
@@ -224,6 +224,22 @@ abstract class Table extends Acl {
      */
     public function hideCheckboxes() {
         $this->show_checkboxes = false;
+    }
+
+
+    /**
+     *
+     */
+    public function showNumberRows() {
+        $this->show_number_rows = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideNumberRows() {
+        $this->show_number_rows = false;
     }
 
 
@@ -413,6 +429,11 @@ abstract class Table extends Acl {
                     $tpl->header->cell->no_sort->assign('[CAPTION]', $column->getTitle());
                 }
 
+
+                if ($this->show_number_rows) {
+                    $tpl->header->touchBlock('header_number');
+                }
+
                 $tpl->header->cell->reassign();
             }
         }
@@ -429,8 +450,10 @@ abstract class Table extends Acl {
 
             foreach ($this->data_rows as $row) {
                 $tpl->row->assign('[ID]', $row->id);
-                $tpl->row->assign('[#]',  $row_number);
 
+                if ($this->show_number_rows) {
+                    $tpl->row->row_number->assign('[#]', $row_number);
+                }
 
                 if ($this->edit_url &&
                     ($this->checkAcl($this->resource, 'edit_all') ||
