@@ -212,6 +212,16 @@ abstract class Table extends Acl {
 
 
     /**
+     * Установка количества строк на странице
+     * @param int $count
+     */
+    public function setRecordsPerPage(int $count) {
+
+        $this->records_per_page = $count;
+    }
+
+
+    /**
      *
      */
     public function showCheckboxes() {
