@@ -1,6 +1,7 @@
 <?php
 namespace Core2\Classes;
 use Core2\Acl;
+use Core2\Classes\Table\Exception;
 use Core2\Classes\Table\Row;
 use Core2\Classes\Table\Button;
 use Core2\Classes\Table\Column;
@@ -23,25 +24,26 @@ require_once 'Table/Search.php';
  */
 abstract class Table extends Acl {
 
-    protected $resource              = '';
-    protected $show_checkboxes       = true;
-    protected $show_delete           = false;
-    protected $show_columns_switcher = false;
-    protected $show_templates        = false;
-    protected $show_number_rows      = true;
-    protected $edit_url              = '';
-    protected $add_url               = '';
-    protected $data                  = [];
-    protected $data_rows             = [];
-    protected $columns               = [];
-    protected $buttons               = [];
-    protected $search_controls       = [];
-    protected $records_total         = 0;
-    protected $records_per_page      = 25;
-    protected $records_seq           = false;
-    protected $current_page          = 1;
-    protected $round_record_count    = false;
-    protected $is_ajax               = false;
+    protected $resource                 = '';
+    protected $show_checkboxes          = true;
+    protected $show_delete              = false;
+    protected $show_columns_switcher    = false;
+    protected $show_templates           = false;
+    protected $show_number_rows         = true;
+    protected $edit_url                 = '';
+    protected $add_url                  = '';
+    protected $data                     = [];
+    protected $data_rows                = [];
+    protected $columns                  = [];
+    protected $buttons                  = [];
+    protected $search_controls          = [];
+    protected $records_total            = 0;
+    protected $records_per_page         = 25;
+    protected $records_per_page_default = 25;
+    protected $records_seq              = false;
+    protected $current_page             = 1;
+    protected $round_record_count       = false;
+    protected $is_ajax                  = false;
 
 
     /**
@@ -141,7 +143,7 @@ abstract class Table extends Acl {
             $this->session->table->records_per_page = abs((int)$_POST["count_{$this->resource}"]);
         }
 
-        if (isset($this->session->table->records_per_page)) {
+        if (isset($this->session->table->records_per_page) && $this->session->table->records_per_page > 0) {
             $this->records_per_page = $this->session->table->records_per_page;
             $this->records_per_page = $this->records_per_page === 0
                 ? 1000000000
@@ -214,10 +216,19 @@ abstract class Table extends Acl {
     /**
      * Установка количества строк на странице
      * @param int $count
+     * @throws Exception
      */
     public function setRecordsPerPage(int $count) {
 
-        $this->records_per_page = $count;
+        if ($count <= 0) {
+            throw new Exception('Задано некорректное значение');
+        }
+
+        $this->records_per_page_default = $count;
+
+        if ( ! isset($this->session->table->records_per_page)) {
+            $this->records_per_page = $count;
+        }
     }
 
 
@@ -583,15 +594,25 @@ abstract class Table extends Acl {
             }
         }
 
+        $per_page_list = [
+            '25'   => '25',
+            '50'   => '50',
+            '100'  => '100',
+            '1000' => '1000',
+        ];
+
+        if ( ! isset($per_page_list[$this->records_per_page_default])) {
+            $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
+        }
+
+        ksort($per_page_list);
+
+        $per_page_list[0] = $this->getLocution('All');
+
         $tpl->pages->fillDropDown(
             'records-per-page-[RESOURCE]',
-            [
-                '25'   => '25',
-                '50'   => '50',
-                '100'  => '100',
-                '1000' => '1000',
-                '0'   => $this->getLocution('All'),
-            ], $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
+            $per_page_list,
+            $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
         );
 
         return $tpl->render();
