@@ -30,6 +30,8 @@ abstract class Table extends Acl {
     protected $show_columns_switcher    = false;
     protected $show_templates           = false;
     protected $show_number_rows         = true;
+    protected $show_service             = true;
+    protected $show_footer              = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $data                     = [];
@@ -220,14 +222,14 @@ abstract class Table extends Acl {
      */
     public function setRecordsPerPage(int $count) {
 
-        if ($count <= 0) {
+        if ($count < 0) {
             throw new Exception('Задано некорректное значение');
         }
 
         $this->records_per_page_default = $count;
 
         if ( ! isset($this->session->table->records_per_page)) {
-            $this->records_per_page = $count;
+            $this->records_per_page = $count === 0 ? 1000000000 : $count;
         }
     }
 
@@ -281,6 +283,38 @@ abstract class Table extends Acl {
 
 
     /**
+     *
+     */
+    public function showService() {
+        $this->show_service = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideService() {
+        $this->show_service = false;
+    }
+
+
+    /**
+     *
+     */
+    public function showFooter() {
+        $this->show_footer = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideFooter() {
+        $this->show_footer = false;
+    }
+
+
+    /**
      * Рендеринг таблицы
      * @return string
      * @throws \Exception
@@ -300,24 +334,27 @@ abstract class Table extends Acl {
         $tpl->assign('[LOCATION]',  $this->is_ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING']);
         $tpl->assign('[BUTTONS]',   implode('', $this->buttons));
 
-        if ($this->add_url &&
-            ($this->checkAcl($this->resource, 'edit_all') ||
-             $this->checkAcl($this->resource, 'edit_owner')) &&
-            ($this->checkAcl($this->resource, 'read_all') ||
-             $this->checkAcl($this->resource, 'read_owner'))
-        ) {
-            $tpl->add_button->assign('[URL]', str_replace('?', '#', $this->add_url));
-        }
 
-        if ($this->show_delete &&
-            ($this->checkAcl($this->resource, 'delete_all') ||
-             $this->checkAcl($this->resource, 'delete_owner'))
-        ) {
-            $delete_msg    = $this->getLocution('Are you sure you want to delete this post?');
-            $no_select_msg = $this->getLocution('You must select at least one record');
+        if ($this->show_service) {
+            if ($this->add_url &&
+                ($this->checkAcl($this->resource, 'edit_all') ||
+                 $this->checkAcl($this->resource, 'edit_owner')) &&
+                ($this->checkAcl($this->resource, 'read_all') ||
+                 $this->checkAcl($this->resource, 'read_owner'))
+            ) {
+                $tpl->service->add_button->assign('[URL]', str_replace('?', '#', $this->add_url));
+            }
 
-            $tpl->del_button->assign('[DELETE_MSG]',       $delete_msg);
-            $tpl->del_button->assign('[DELETE_NO_SELECT]', $no_select_msg);
+            if ($this->show_delete &&
+                ($this->checkAcl($this->resource, 'delete_all') ||
+                 $this->checkAcl($this->resource, 'delete_owner'))
+            ) {
+                $delete_msg    = $this->getLocution('Are you sure you want to delete this post?');
+                $no_select_msg = $this->getLocution('You must select at least one record');
+
+                $tpl->service->del_button->assign('[DELETE_MSG]',       $delete_msg);
+                $tpl->service->del_button->assign('[DELETE_NO_SELECT]', $no_select_msg);
+            }
         }
 
         if ($this->show_checkboxes == true) {
@@ -461,7 +498,10 @@ abstract class Table extends Acl {
 
 
         $this->fetchData();
-        $tpl->assign('[TOTAL_RECORDS]', ($this->round_record_count ? '~' : '') . $this->records_total);
+
+        if ($this->show_service) {
+            $tpl->service->assign('[TOTAL_RECORDS]', ($this->round_record_count ? '~' : '') . $this->records_total);
+        }
 
         if ( ! empty($this->data_rows)) {
             $row_index  = 1;
@@ -576,44 +616,48 @@ abstract class Table extends Acl {
         }
 
 
+        if ($this->show_footer) {
 
-        // Pagination
-        $count_pages = ceil($this->records_total / $this->records_per_page);
-        $tpl->pages->assign('[CURRENT_PAGE]', $this->current_page);
-        $tpl->pages->assign('[COUNT_PAGES]',  $count_pages);
+            // Pagination
+            $count_pages = ceil($this->records_total / $this->records_per_page);
+            $tpl->footer->pages->assign('[CURRENT_PAGE]', $this->current_page);
+            $tpl->footer->pages->assign('[COUNT_PAGES]',  $count_pages);
 
-        if ($count_pages > 1 || $this->records_per_page > 25) {
-            $tpl->pages->touchBlock('gotopage');
-            $tpl->pages->touchBlock('per_page');
+            if ($count_pages > 1) {
+                $tpl->footer->pages->touchBlock('gotopage');
 
-            if ($this->current_page > 1) {
-                $tpl->pages->prev->assign('[PREV_PAGE]', $this->current_page - 1);
-            }
-            if ($this->current_page < $count_pages) {
-                $tpl->pages->next->assign('[NEXT_PAGE]', $this->current_page + 1);
+                if ($this->current_page > 1) {
+                    $tpl->footer->pages->prev->assign('[PREV_PAGE]', $this->current_page - 1);
+                }
+                if ($this->current_page < $count_pages) {
+                    $tpl->footer->pages->next->assign('[NEXT_PAGE]', $this->current_page + 1);
+                }
+
+
+                $per_page_list = [
+                    '25'   => '25',
+                    '50'   => '50',
+                    '100'  => '100',
+                    '1000' => '1000',
+                ];
+
+                if ( ! isset($per_page_list[$this->records_per_page_default]) &&
+                    $this->records_per_page_default > 0
+                ) {
+                    $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
+                }
+
+                ksort($per_page_list);
+
+                $per_page_list[0] = $this->getLocution('All');
+
+                $tpl->footer->pages->per_page->fillDropDown(
+                    'records-per-page-[RESOURCE]',
+                    $per_page_list,
+                    $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
+                );
             }
         }
-
-        $per_page_list = [
-            '25'   => '25',
-            '50'   => '50',
-            '100'  => '100',
-            '1000' => '1000',
-        ];
-
-        if ( ! isset($per_page_list[$this->records_per_page_default])) {
-            $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
-        }
-
-        ksort($per_page_list);
-
-        $per_page_list[0] = $this->getLocution('All');
-
-        $tpl->pages->fillDropDown(
-            'records-per-page-[RESOURCE]',
-            $per_page_list,
-            $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
-        );
 
         return $tpl->render();
     }
