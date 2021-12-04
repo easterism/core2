@@ -323,17 +323,7 @@
 
                 $webservice_controller = new ModWebserviceController();
 
-                $version = $matches['version'];
-                $method  = '';
-
-                $action_explode = explode('/', $matches['action']);
-                foreach ($action_explode as $action_part) {
-                    $method .= ucfirst($action_part);
-                }
-
-                $method = lcfirst($method);
-
-                return $webservice_controller->dispatchRest($route['module'], $method, $version); //TODO сделать через DI
+                return $webservice_controller->dispatchRest($route);
             }
 
             // Веб-сервис (SOAP)
