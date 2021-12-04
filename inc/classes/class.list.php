@@ -180,11 +180,55 @@ class listTable extends initList {
 
 
     /**
+     * Получение сформированного SQL для поиска данных
      * @return string
      */
-    public function getSearchSql() {
+    public function getSearchSql(): string {
 
         return $this->search_sql;
+    }
+
+
+    /**
+     * Получение параметров таблицы
+     * @return array
+     */
+    public function getParams(): array {
+
+        $search = [];
+
+        if ( ! empty($this->table_search[$this->main_table_id])) {
+            foreach ($this->table_search[$this->main_table_id] as $key => $table_search) {
+
+                $value = ! empty($this->sessData['search']) ? ($this->sessData['search'][$key] ?? null) : null;
+
+                if ($value && in_array($table_search['type'], ['date', 'number'])) {
+                    $value = empty($value[0]) && empty($value[1]) ? null : $value;
+                }
+
+                if (isset($value) && $value !== '') {
+                    $search[] = [
+                        'type'  => $table_search['type'],
+                        'field' => $table_search['field'],
+                        'value' => $value,
+                    ];
+                }
+            }
+        }
+
+        $page       = $this->sessData['_page_' . $this->resource] ?? 0;
+        $count_rows = $this->sessData['count_' . $this->resource] ?? 0;
+        $param    = [];
+
+        $param['search']     = $search;
+        $param['column']     = $this->sessData['column'] ?? [];
+        $param['page']       = $page;
+        $param['count_rows'] = $count_rows;
+        $param['offset']     = $page == 1 ? 0 : ($page - 1) * $count_rows;
+        $param['order']      = $this->sessData['order'] ?? "";
+        $param['order_type'] = $this->sessData['orderType'] ?? "";
+
+        return $param;
     }
 
 
@@ -487,30 +531,33 @@ class listTable extends initList {
                 }
             }
         }
-        
 
-        $idm = substr($this->SQL, strripos($this->SQL, "SELECT ") + 6);
-        $idm = trim($idm);
-        $idm = substr($idm, 0, strpos($idm, ","));        
-        if (preg_match("/(as|AS)/", $idm, $as)) {            
-            $idm = substr($idm, 0, strpos($idm, $as[0]));                
-        }                                    
-        if (preg_match("/(\[ON|OFF)\(([a-z._]+)\)\]/", $this->SQL, $mas)) {            
-            $res = explode(".", $mas[2]);            
-            if (isset($res[1])) {
-                $str_repl_on = "'[ON(" .$res[0].".".$res[1].")]'";
-                $str_repl_off = "'[OFF(" .$res[0].".".$res[1].")]'";    
-                $table_data = $mas[2];                    
-            } else {                
-                $str_repl_on = "'[ON(" .$res[0].")]'";
-                $str_repl_off = "'[OFF(" .$res[0].")]'";
-                $table_data = $res[0]."."."is_active_sw";    
-            }                        
-            $this->SQL = str_replace($str_repl_on, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
-            $this->SQL = str_replace($str_repl_off, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
-        } else {
-            $this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
-            $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
+
+
+        if ($this->SQL) {
+            $idm = substr($this->SQL, strripos($this->SQL, "SELECT ") + 6);
+            $idm = trim($idm);
+            $idm = substr($idm, 0, strpos($idm, ","));
+            if (preg_match("/(as|AS)/", $idm, $as)) {
+                $idm = substr($idm, 0, strpos($idm, $as[0]));
+            }
+            if (preg_match("/(\[ON|OFF)\(([a-z._]+)\)\]/", $this->SQL, $mas)) {
+                $res = explode(".", $mas[2]);
+                if (isset($res[1])) {
+                    $str_repl_on = "'[ON(" .$res[0].".".$res[1].")]'";
+                    $str_repl_off = "'[OFF(" .$res[0].".".$res[1].")]'";
+                    $table_data = $mas[2];
+                } else {
+                    $str_repl_on = "'[ON(" .$res[0].")]'";
+                    $str_repl_off = "'[OFF(" .$res[0].")]'";
+                    $table_data = $res[0]."."."is_active_sw";
+                }
+                $this->SQL = str_replace($str_repl_on, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
+                $this->SQL = str_replace($str_repl_off, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
+            } else {
+                $this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
+                $this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
+            }
         }
 
         if ( ! empty($questions)) {
@@ -531,7 +578,10 @@ class listTable extends initList {
             $this->search_sql = $search;
         }
 
-        $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $search, $this->SQL);
+        if ($this->SQL) {
+            $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $search, $this->SQL);
+        }
+
         $order = isset($tmp['order']) ? $tmp['order'] : '';
         if (isset($this->table_column[$this->main_table_id]) && is_array($this->table_column[$this->main_table_id])) {
             foreach ($this->table_column[$this->main_table_id] as $seq => $columns) {
@@ -541,7 +591,11 @@ class listTable extends initList {
                 };
             }
         }
-        if (isset($this->table_column[$this->main_table_id]) && !$this->extOrder && !$this->customSearchHasVal) {
+
+        if ($this->SQL &&
+            isset($this->table_column[$this->main_table_id]) &&
+            ! $this->extOrder && !$this->customSearchHasVal
+        ) {
             if ($order) {
                 $orderField = $order + 1;
                 $tempSQL    = $this->SQL;
@@ -558,7 +612,7 @@ class listTable extends initList {
                 }
                 $this->SQL = $tempSQL . " ORDER BY " . $orderField . " " . $tmp['orderType'];
             }
-            
+
             if ($this->sessData[$pagePOST] == 1) {
                 $this->SQL .= " LIMIT " . $this->sessData[$countPOST];
             } else if ($this->sessData[$pagePOST] > 1){
@@ -566,23 +620,27 @@ class listTable extends initList {
             }
         }
 
-        if ($this->roundRecordCount) {
-            $expl = $this->db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
-            $this->recordCount = 0;
-            foreach ($expl as $value) {
-                if ($value['rows'] > $this->recordCount) {
-                    $this->recordCount = $value['rows'];
-                };
-            }
-            $res = $this->db->fetchAll($this->SQL, $questions);
-        } else {
-            if ($this->config->database->adapter === 'Pdo_Mysql') {
-                $res = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
-                $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
-            } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
-                $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
+        $res = [];
+
+        if ($this->SQL) {
+            if ($this->roundRecordCount) {
+                $expl = $this->db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
+                $this->recordCount = 0;
+                foreach ($expl as $value) {
+                    if ($value['rows'] > $this->recordCount) {
+                        $this->recordCount = $value['rows'];
+                    };
+                }
                 $res = $this->db->fetchAll($this->SQL, $questions);
-                $this->recordCount = $this->db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
+            } else {
+                if ($this->config->database->adapter === 'Pdo_Mysql') {
+                    $res = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
+                    $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
+                } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
+                    $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
+                    $res = $this->db->fetchAll($this->SQL, $questions);
+                    $this->recordCount = $this->db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
+                }
             }
         }
 

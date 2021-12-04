@@ -97,7 +97,7 @@ class Dropdown {
      */
     public function addLink($title, $link): Link {
 
-        require_once 'dropdown/Link.php';
+        require_once 'Dropdown/Link.php';
         $nav_link = new Link();
         $nav_link->setTitle($title);
         $nav_link->setLink($link);
@@ -115,7 +115,7 @@ class Dropdown {
      */
     public function addHeader($title): Header {
 
-        require_once 'dropdown/Header.php';
+        require_once 'Dropdown/Header.php';
         $nav_dropdown = new Header();
         $nav_dropdown->setTitle($title);
 
@@ -131,7 +131,7 @@ class Dropdown {
      */
     public function addDivider(): Divider {
 
-        require_once 'dropdown/Divider.php';
+        require_once 'Dropdown/Divider.php';
         $nav_divider = new Divider();
 
         $this->items[] = $nav_divider;
@@ -147,7 +147,7 @@ class Dropdown {
      */
     public function addFile($title): File {
 
-        require_once 'dropdown/File.php';
+        require_once 'Dropdown/File.php';
         $nav_file = new File();
         $nav_file->setTitle($title);
 

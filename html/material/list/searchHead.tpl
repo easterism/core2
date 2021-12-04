@@ -61,7 +61,7 @@
 
 				<!-- BEGIN filterColumn -->
 				<div class="checkbox">
-					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
+					<label class="list-filter-col"><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
 				</div>
 				<!-- END filterColumn -->
 

@@ -58,18 +58,18 @@
 
 				<!-- BEGIN filterColumn -->
 				<div class="checkbox">
-					<label><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
+					<label class="list-filter-col"><input type="checkbox" value="{VAL}" {checked}/>{COL_CAPTION}</label>
 				</div>
 				<!-- END filterColumn -->
 
 				<!-- BEGIN column_btn -->
-				<input type="submit" class="btn btn-sm btn-primary" value="_tr(Применить)">
+				<input type="submit" class="button btn btn-sm btn-primary" value="_tr(Применить)">
 				<!-- END column_btn -->
 
 				<!-- BEGIN column_btn_template -->
 				<div class="btn-group">
-					<button type="submit" class="btn btn-sm btn-primary">_tr(Применить)</button>
-					<button type="button" class="btn btn-sm btn-primary"
+					<button type="submit" class="button btn btn-sm btn-primary">_tr(Применить)</button>
+					<button type="button" class="button btn btn-sm btn-primary"
 							onclick="listx.template.create('[RESOURCE]', [AJAX]);return false;">
 						_tr(Сохранить шаблон)
 					</button>
