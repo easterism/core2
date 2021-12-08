@@ -16,6 +16,7 @@ class Email {
 
     protected $mail_data = [
         'from'       => '',
+        'reply'      => '',
         'to'         => '',
         'subject'    => '',
         'body'       => '',
@@ -86,6 +87,26 @@ class Email {
                 : $from;
 
             $this->mail_data['from'] = $from;
+            return $this;
+        }
+    }
+
+
+    /**
+     * Вставка\получение адреса для ответа
+     * @param string|array $address
+     * @return $this|string|array
+     */
+    public function replyTo($address = null) {
+
+        if ($address === null) {
+            return @unserialize($this->mail_data['reply'])
+                ? unserialize($this->mail_data['reply'])
+                : $this->mail_data['reply'];
+        } else {
+            $this->mail_data['reply'] = is_array($address)
+                ? serialize($address)
+                : $address;
             return $this;
         }
     }
@@ -269,7 +290,8 @@ class Email {
                             $this->mail_data['body'],
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
-                            $this->mail_data['files']
+                            $this->mail_data['files'],
+                            $this->mail_data['reply']
                         );
 
                         if ( ! $is_send) {
@@ -294,7 +316,8 @@ class Email {
                             $this->mail_data['body'],
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
-                            $this->mail_data['files']
+                            $this->mail_data['files'],
+                            $this->mail_data['reply']
                         );
 
                         if ( ! $is_send) {
@@ -316,7 +339,8 @@ class Email {
                     $this->mail_data['body'],
                     $this->mail_data['cc'],
                     $this->mail_data['bcc'],
-                    $this->mail_data['files']
+                    $this->mail_data['files'],
+                    $this->mail_data['reply']
                 );
 
                 if ( ! $is_send) {
@@ -372,12 +396,13 @@ class Email {
      * @param string $body
      * @param string $cc
      * @param string $bcc
-     * @param array $files
+     * @param array  $files
+     * @param string $reply
      *
      * @return bool Успешна или нет отправка
      * @throws \Zend_Exception
      */
-    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = []) {
+    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '') {
 
         $config = \Zend_Registry::get('config');
 
@@ -395,6 +420,19 @@ class Email {
             $to = "{$to[1]} <{$to[0]}>";
         }
         $to = trim($to);
+
+        if ($reply) {
+            $reply_email   = trim($reply);
+            $reply_name    = '';
+            $reply_explode = explode('<', $reply);
+
+            if ( ! empty($reply_explode[1])) {
+                $reply_email = trim($reply_explode[1], '> ');
+                $reply_name  = trim($reply_explode[0]);
+            }
+
+            $message->setReplyTo($reply_email, $reply_name);
+        }
 
         $force_from = !empty($config->mail->force_from) ? $config->mail->force_from : $from;
 
