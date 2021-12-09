@@ -139,7 +139,7 @@ class Db extends Table {
                         case self::SEARCH_NUMBER:
                             if (is_array($value)) {
                                 if ($value[0] && $value[1]) {
-                                    $where  = $this->db->quoteInto(" `{$field}` BETWEEN ?", $value[0]);
+                                    $where  = $this->db->quoteInto("{$field} BETWEEN ?", $value[0]);
                                     $where .= $this->db->quoteInto(" AND ? ", $value[1]);
                                     $select->where($where);
 
