@@ -210,14 +210,23 @@ class Email {
 
             if (empty($this->mail_data['from'])) {
                 $config = \Zend_Registry::get('config');
-                $server = isset($config->system) && isset($config->system->host)
-                    ? $config->system->host
-                    : $_SERVER['SERVER_NAME'];
-                $server_name = isset($config->system) && isset($config->system->name)
-                    ? $config->system->name
-                    : $server;
 
-                $this->mail_data['from'] = "$server_name <noreply@{$server}>";
+                if ( ! empty($config['mail']) &&
+                     ! empty($config['mail']['username']) &&
+                    filter_var($config['mail']['username'], FILTER_VALIDATE_EMAIL)
+                ) {
+                    $this->mail_data['from'] = $config['mail']['username'];
+
+                } else {
+                    $server = isset($config->system) && isset($config->system->host)
+                        ? $config->system->host
+                        : $_SERVER['SERVER_NAME'];
+                    $server_name = isset($config->system) && isset($config->system->name)
+                        ? $config->system->name
+                        : $server;
+
+                    $this->mail_data['from'] = "$server_name <noreply@{$server}>";
+                }
             }
 
             if ($db->isModuleActive('queue')) {
