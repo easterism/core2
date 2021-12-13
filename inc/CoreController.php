@@ -170,6 +170,7 @@ class CoreController extends Common implements File {
             parse_str(file_get_contents("php://input"), $put_vars);
             $mods = array();
             if (!empty($put_vars['checkModsUpdates'])) {
+                session_write_close();
                 try {
                     $install = new Install();
                     $ups = $install->checkInstalledModsUpdates();
@@ -189,6 +190,7 @@ class CoreController extends Common implements File {
         //список модулей из репозитория
         if (isset($_GET['getModsListFromRepo'])) {
             $install = new Install();
+            session_write_close();
             $install->getHTMLModsListFromRepo((int) $_GET['getModsListFromRepo']);
             return;
         }
