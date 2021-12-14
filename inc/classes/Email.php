@@ -16,7 +16,7 @@ class Email {
 
     protected $mail_data = [
         'from'       => '',
-        'reply'      => '',
+        'reply_to'   => '',
         'to'         => '',
         'subject'    => '',
         'body'       => '',
@@ -100,11 +100,11 @@ class Email {
     public function replyTo($address = null) {
 
         if ($address === null) {
-            return @unserialize($this->mail_data['reply'])
-                ? unserialize($this->mail_data['reply'])
-                : $this->mail_data['reply'];
+            return @unserialize($this->mail_data['reply_to'])
+                ? unserialize($this->mail_data['reply_to'])
+                : $this->mail_data['reply_to'];
         } else {
-            $this->mail_data['reply'] = is_array($address)
+            $this->mail_data['reply_to'] = is_array($address)
                 ? serialize($address)
                 : $address;
             return $this;
@@ -211,11 +211,11 @@ class Email {
             if (empty($this->mail_data['from'])) {
                 $config = \Zend_Registry::get('config');
 
-                if ( ! empty($config['mail']) &&
-                     ! empty($config['mail']['username']) &&
-                    filter_var($config['mail']['username'], FILTER_VALIDATE_EMAIL)
+                if ($config->mail &&
+                    $config->mail->username &&
+                    filter_var($config->mail->username, FILTER_VALIDATE_EMAIL)
                 ) {
-                    $this->mail_data['from'] = $config['mail']['username'];
+                    $this->mail_data['from'] = $config->mail->username;
 
                 } else {
                     $server = isset($config->system) && isset($config->system->host)
@@ -300,7 +300,7 @@ class Email {
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
                             $this->mail_data['files'],
-                            $this->mail_data['reply']
+                            $this->mail_data['reply_to']
                         );
 
                         if ( ! $is_send) {
@@ -326,7 +326,7 @@ class Email {
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
                             $this->mail_data['files'],
-                            $this->mail_data['reply']
+                            $this->mail_data['reply_to']
                         );
 
                         if ( ! $is_send) {
@@ -349,7 +349,7 @@ class Email {
                     $this->mail_data['cc'],
                     $this->mail_data['bcc'],
                     $this->mail_data['files'],
-                    $this->mail_data['reply']
+                    $this->mail_data['reply_to']
                 );
 
                 if ( ! $is_send) {
@@ -381,7 +381,8 @@ class Email {
                 $this->mail_data['body'],
                 $this->mail_data['cc'],
                 $this->mail_data['bcc'],
-                $this->mail_data['files']
+                $this->mail_data['files'],
+                $this->mail_data['reply_to']
             );
 
             if ( ! $is_send) {
@@ -443,7 +444,7 @@ class Email {
             $message->setReplyTo($reply_email, $reply_name);
         }
 
-        $force_from = !empty($config->mail->force_from) ? $config->mail->force_from : $from;
+        $force_from = ! empty($config->mail->force_from) ? $config->mail->force_from : $from;
 
         if ($config->mail && $force_from) {
             $reply_from            = $from;
@@ -456,7 +457,10 @@ class Email {
                 $reply_name  = trim($reply_address_explode[0]);
             }
 
-            $message->setReplyTo($reply_email, $reply_name);
+            if ( ! $reply) {
+                $message->setReplyTo($reply_email, $reply_name);
+            }
+
             $from = $force_from;
         }
 
