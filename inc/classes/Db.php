@@ -30,7 +30,7 @@ class Db {
     private $_s         = array();
     private $_settings  = array();
     private $_locations = array();
-    private $schemaName = 'public';
+    private string $schemaName = 'public';
 
     /**
      * Db constructor.
@@ -297,7 +297,7 @@ class Db {
      * @param string $expired
      * @throws \Zend_Db_Table_Exception
      */
-	public function closeSession($expired = 'N') {
+	public function closeSession($expired = 'N'): void {
 
 		$auth = new SessionContainer('Auth');
 
@@ -320,7 +320,7 @@ class Db {
 	 * @param array $exclude исключения адресов
 	 * @throws \Exception
 	 */
-	public function logActivity($exclude = array()) {
+	public function logActivity($exclude = array()): void {
 
         $auth = new SessionContainer('Auth');
 
@@ -778,7 +778,7 @@ class Db {
 	/**
 	 * Получение всех настроек системы
 	 */
-	private function getAllSettings() {
+	private function getAllSettings(): void {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
 			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");

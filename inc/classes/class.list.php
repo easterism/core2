@@ -1543,8 +1543,12 @@ class listTable extends initList {
      * @return mixed
      */
     protected function array_key_multi_sort($arr, $l , $type) {
-        if ($type == 'asc') usort($arr, create_function('$a, $b', "return strnatcasecmp(\$a['$l'], \$b['$l']);"));
-        if ($type == 'desc') usort($arr, create_function('$a, $b', "return strnatcasecmp(\$b['$l'], \$a['$l']);"));
+        if ($type == 'asc') usort($arr, function($a, $b) use ($l) {
+            return strnatcasecmp($a[$l], $b[$l]);
+        });
+        if ($type == 'desc') usort($arr, function($a, $b) use ($l) {
+            return strnatcasecmp($b[$l], $a[$l]);
+        });
         return($arr);
     }
 
