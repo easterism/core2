@@ -49,13 +49,13 @@ class Select {
                         $columns[$matches[2]] = $field;
 
                     } elseif (preg_match('~\s*[\'"`]?([\w\d_ \.]+)[\'"`]?\s*$~mi', trim($select_column), $matches)) {
-                        $alise = $matches[1];
+                        $alias = $matches[1];
 
-                        if (mb_strpos($alise, '.') !== false) {
-                            $alise = mb_substr($alise, mb_strrpos($alise, '.') + 1);
+                        if (mb_strpos($alias, '.') !== false) {
+                            $alias = mb_substr($alias, mb_strrpos($alias, '.') + 1);
                         }
 
-                        $columns[$alise] = $matches[1];
+                        $columns[$alias] = $matches[1];
                     }
                 }
             }
