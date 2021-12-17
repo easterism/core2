@@ -27,6 +27,45 @@ class Select {
 
 
     /**
+     * Получение колонок
+     * @return array
+     */
+    public function getSelectColumns(): array {
+
+        $columns = [];
+
+        if ( ! empty($this->sql['SELECT'])) {
+            $select_explode = explode(',', $this->sql['SELECT']);
+
+            if ( ! empty($select_explode)) {
+                foreach ($select_explode as $select_column) {
+                    if (preg_match('~\s*(.*)\s+AS\s+[\'"`]?([\w\d_ ]+)[\'"`]?\s*$~mi', trim($select_column), $matches)) {
+                        $field = $matches[1];
+
+                        if (preg_match('~^(\[\d*\])$~', $field, $matches_sub_query)) {
+                            $field = $this->sub_queries[$matches_sub_query[1]] ?? $field;
+                        }
+
+                        $columns[$matches[2]] = $field;
+
+                    } elseif (preg_match('~\s*[\'"`]?([\w\d_ \.]+)[\'"`]?\s*$~mi', trim($select_column), $matches)) {
+                        $alias = $matches[1];
+
+                        if (mb_strpos($alias, '.') !== false) {
+                            $alias = mb_substr($alias, mb_strrpos($alias, '.') + 1);
+                        }
+
+                        $columns[$alias] = $matches[1];
+                    }
+                }
+            }
+        }
+
+        return $columns;
+    }
+
+
+    /**
      * @param string|array $where
      */
     public function addWhere($where) {
