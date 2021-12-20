@@ -14,6 +14,8 @@ interface RestController {
 
     public function setQuery($query);
 
+    public function setBody($body);
+
     public function dispatch();
 
 }

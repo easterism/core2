@@ -76,6 +76,7 @@ class Db extends Table {
     /**
      * Получение данных из базы
      * @return Row[]
+     * @throws \Zend_Db_Select_Exception
      */
     public function fetchData(): array {
 
@@ -100,6 +101,7 @@ class Db extends Table {
     /**
      * @param \Zend_Db_Table_Abstract $table
      * @return array
+     * @throws \Zend_Db_Select_Exception
      */
     private function fetchDataTable(\Zend_Db_Table_Abstract $table): array {
 
@@ -112,6 +114,7 @@ class Db extends Table {
     /**
      * @param \Zend_Db_Select $select
      * @return array
+     * @throws \Zend_Db_Select_Exception
      */
     private function fetchDataSelect(\Zend_Db_Select $select): array {
 
@@ -139,7 +142,7 @@ class Db extends Table {
                         case self::SEARCH_NUMBER:
                             if (is_array($value)) {
                                 if ($value[0] && $value[1]) {
-                                    $where  = $this->db->quoteInto(" `{$field}` BETWEEN ?", $value[0]);
+                                    $where  = $this->db->quoteInto("{$field} BETWEEN ?", $value[0]);
                                     $where .= $this->db->quoteInto(" AND ? ", $value[1]);
                                     $select->where($where);
 
@@ -195,12 +198,18 @@ class Db extends Table {
             $this->session->table->order &&
             isset($this->columns[$this->session->table->order - 1])
         ) {
-            $order_type = $this->session->table->order_type ?? 'ASC';
-            $select->reset('order');
+            $column = $this->columns[$this->session->table->order - 1];
 
+            if ($column instanceof Column && $column->isSorting()) {
+                $order_type     = $this->session->table->order_type ?? 'ASC';
+                $order_field    = $column->getField();
+                $select_columns = $this->getColumns($select);
 
-            $order_field = $this->columns[$this->session->table->order - 1]->getField();
-            $select->order("{$order_field} {$order_type}");
+                if ( ! empty($select_columns[$order_field])) {
+                    $select->reset('order');
+                    $select->order("{$order_field} {$order_type}");
+                }
+            }
         }
 
         $data_rows           = [];
@@ -307,9 +316,21 @@ class Db extends Table {
         }
 
 
+        if (isset($this->session->table->order) &&
+            $this->session->table->order &&
+            isset($this->columns[$this->session->table->order - 1])
+        ) {
+            $column = $this->columns[$this->session->table->order - 1];
 
-        if (isset($this->session->table->order) && $this->session->table->order) {
-            $select->setOrderBy(($this->session->table->order + 1) . ' ' . $this->session->table->order_type);
+            if ($column instanceof Column && $column->isSorting()) {
+                $order_type     = $this->session->table->order_type ?? 'ASC';
+                $order_field    = $column->getField();
+                $select_columns = $select->getSelectColumns();
+
+                if ( ! empty($select_columns[$order_field])) {
+                    $select->setOrderBy("{$order_field} {$order_type}");
+                }
+            }
         }
 
 
@@ -356,10 +377,11 @@ class Db extends Table {
 
     /**
      * Список колонок
-     * @param $select
+     * @param \Zend_Db_Select $select
      * @return array
+     * @throws \Zend_Db_Select_Exception
      */
-    private function getColumns($select): array {
+    private function getColumns(\Zend_Db_Select $select): array {
 
         $columns = $select->getPart('columns');
         $result  = [];

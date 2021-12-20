@@ -31,3 +31,6 @@
 [submodule "mod/webservice/v2.5.1"]
 	path = mod/webservice/v2.5.1
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/queue/v1.6.1"]
+	path = mod/queue/v1.6.1
+	url = git@git.rdo.belhard.com:core2/modules/queue.git

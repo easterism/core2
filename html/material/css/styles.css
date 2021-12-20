@@ -1281,7 +1281,10 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
-label {font-weight: 500}
+label {
+    font-weight: 500;
+    vertical-align: sub;
+}
 label.control-label {font-weight: 700}
 .hide {display:none}
 .show {display:block}

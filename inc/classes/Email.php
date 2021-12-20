@@ -16,6 +16,7 @@ class Email {
 
     protected $mail_data = [
         'from'       => '',
+        'reply_to'   => '',
         'to'         => '',
         'subject'    => '',
         'body'       => '',
@@ -86,6 +87,26 @@ class Email {
                 : $from;
 
             $this->mail_data['from'] = $from;
+            return $this;
+        }
+    }
+
+
+    /**
+     * Вставка\получение адреса для ответа
+     * @param string|array $address
+     * @return $this|string|array
+     */
+    public function replyTo($address = null) {
+
+        if ($address === null) {
+            return @unserialize($this->mail_data['reply_to'])
+                ? unserialize($this->mail_data['reply_to'])
+                : $this->mail_data['reply_to'];
+        } else {
+            $this->mail_data['reply_to'] = is_array($address)
+                ? serialize($address)
+                : $address;
             return $this;
         }
     }
@@ -189,14 +210,23 @@ class Email {
 
             if (empty($this->mail_data['from'])) {
                 $config = \Zend_Registry::get('config');
-                $server = isset($config->system) && isset($config->system->host)
-                    ? $config->system->host
-                    : $_SERVER['SERVER_NAME'];
-                $server_name = isset($config->system) && isset($config->system->name)
-                    ? $config->system->name
-                    : $server;
 
-                $this->mail_data['from'] = "$server_name <noreply@{$server}>";
+                if ($config->mail &&
+                    $config->mail->username &&
+                    filter_var($config->mail->username, FILTER_VALIDATE_EMAIL)
+                ) {
+                    $this->mail_data['from'] = $config->mail->username;
+
+                } else {
+                    $server = isset($config->system) && isset($config->system->host)
+                        ? $config->system->host
+                        : $_SERVER['SERVER_NAME'];
+                    $server_name = isset($config->system) && isset($config->system->name)
+                        ? $config->system->name
+                        : $server;
+
+                    $this->mail_data['from'] = "$server_name <noreply@{$server}>";
+                }
             }
 
             if ($db->isModuleActive('queue')) {
@@ -269,7 +299,8 @@ class Email {
                             $this->mail_data['body'],
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
-                            $this->mail_data['files']
+                            $this->mail_data['files'],
+                            $this->mail_data['reply_to']
                         );
 
                         if ( ! $is_send) {
@@ -294,7 +325,8 @@ class Email {
                             $this->mail_data['body'],
                             $this->mail_data['cc'],
                             $this->mail_data['bcc'],
-                            $this->mail_data['files']
+                            $this->mail_data['files'],
+                            $this->mail_data['reply_to']
                         );
 
                         if ( ! $is_send) {
@@ -316,7 +348,8 @@ class Email {
                     $this->mail_data['body'],
                     $this->mail_data['cc'],
                     $this->mail_data['bcc'],
-                    $this->mail_data['files']
+                    $this->mail_data['files'],
+                    $this->mail_data['reply_to']
                 );
 
                 if ( ! $is_send) {
@@ -348,7 +381,8 @@ class Email {
                 $this->mail_data['body'],
                 $this->mail_data['cc'],
                 $this->mail_data['bcc'],
-                $this->mail_data['files']
+                $this->mail_data['files'],
+                $this->mail_data['reply_to']
             );
 
             if ( ! $is_send) {
@@ -372,12 +406,13 @@ class Email {
      * @param string $body
      * @param string $cc
      * @param string $bcc
-     * @param array $files
+     * @param array  $files
+     * @param string $reply
      *
      * @return bool Успешна или нет отправка
      * @throws \Zend_Exception
      */
-    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = []) {
+    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '') {
 
         $config = \Zend_Registry::get('config');
 
@@ -396,7 +431,20 @@ class Email {
         }
         $to = trim($to);
 
-        $force_from = !empty($config->mail->force_from) ? $config->mail->force_from : $from;
+        if ($reply) {
+            $reply_email   = trim($reply);
+            $reply_name    = '';
+            $reply_explode = explode('<', $reply);
+
+            if ( ! empty($reply_explode[1])) {
+                $reply_email = trim($reply_explode[1], '> ');
+                $reply_name  = trim($reply_explode[0]);
+            }
+
+            $message->setReplyTo($reply_email, $reply_name);
+        }
+
+        $force_from = ! empty($config->mail->force_from) ? $config->mail->force_from : $from;
 
         if ($config->mail && $force_from) {
             $reply_from            = $from;
@@ -409,7 +457,10 @@ class Email {
                 $reply_name  = trim($reply_address_explode[0]);
             }
 
-            $message->setReplyTo($reply_email, $reply_name);
+            if ( ! $reply) {
+                $message->setReplyTo($reply_email, $reply_name);
+            }
+
             $from = $force_from;
         }
 
