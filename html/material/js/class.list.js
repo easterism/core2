@@ -688,7 +688,7 @@ var listx = {
      */
     columnFilterStart : function(id, isAjax) {
 
-        var o         = $('#filterColumn' + id + ' form').find(':checkbox:checked');
+        var o         = $('#filterColumn' + id + ' form').find('.list-filter-col :checkbox:checked');
         var l         = o.length;
         var post      = {};
         var t         = [];

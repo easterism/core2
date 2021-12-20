@@ -2322,6 +2322,233 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-ms-input-placeholder      {color:#aaa;}
 
 
+/* CoreUI-table */
+
+.coreui-table-wrapper {
+    background-color: #ffffff;
+    border-color: #dddddd;
+    border-radius: 2px;
+    border-style: solid;
+    border-width: 1px;
+    margin: 0;
+    position: relative;
+    overflow: auto;
+}
+table.coreui-table {
+    margin-bottom:0;
+    max-width: 100%;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+    color: #555;
+}
+table.coreui-table > thead {background-color: #FFF}
+
+table.coreui-table > tfoot,
+table.coreui-table > thead > .table-control-panel,
+table.coreui-table > thead > .search-container,
+table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
+table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
+
+table.coreui-table > tbody > tr.edit-row {cursor:pointer}
+table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
+table.coreui-table > tbody > tr:hover > td,
+table.coreui-table > tbody > tr:hover > th {background-color: #E1ECF1;}
+
+table.coreui-table > caption + thead > tr:first-child > th,
+table.coreui-table > colgroup + thead > tr:first-child > th,
+table.coreui-table > thead:first-child > tr:first-child > th,
+table.coreui-table > caption + thead > tr:first-child > td,
+table.coreui-table > colgroup + thead > tr:first-child > td,
+table.coreui-table > thead:first-child > tr:first-child > td {border-top: 0 none;}
+
+table.coreui-table > thead > tr > th,
+table.coreui-table > tbody > tr > th,
+table.coreui-table > tfoot > tr > th,
+table.coreui-table > thead > tr > td,
+table.coreui-table > tbody > tr > td,
+table.coreui-table > tfoot > tr > td {
+    font-size: 12px;
+    border-top: 1px solid #DDDDDD;
+    line-height: 1.42857;
+    padding: 5px;
+    vertical-align: middle;
+}
+/*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
+table.coreui-table > thead > tr.table-service-panel > td  {padding: 5px;}
+table.coreui-table > thead > tr.table-service-panel > td > .total  {padding: 5px 0;}
+table.coreui-table > thead > tr > th:first-child,
+table.coreui-table > tbody > tr > th:first-child,
+table.coreui-table > thead > tr > td:first-child,
+table.coreui-table > tbody > tr > td:first-child {
+    padding-left: 10px;
+}
+table.coreui-table > thead > tr > th:last-child,
+table.coreui-table > tbody > tr > th:last-child,
+table.coreui-table > thead > tr > td:last-child,
+table.coreui-table > tbody > tr > td:last-child {
+    padding-right: 10px;
+}
+table.coreui-table > thead > tr > th {
+    border-bottom: 2px solid #D2D2D2;
+    vertical-align: middle;
+    text-align: left;
+}
+table.coreui-table .pointer {cursor: pointer}
+table.coreui-table .table-header > th.pointer:hover > span {text-decoration: underline}
+table.coreui-table .search-controls {
+    padding: 4px 0;
+    margin: 0;
+}
+table.coreui-table .search-controls .search-control {
+    display: inline-block;
+    list-style: none;
+    cursor:pointer;
+    margin-right: 10px;
+}
+table.coreui-table .search-controls .search-control:hover span {text-decoration: underline}
+table.coreui-table > .table-control-panel > td,
+table.coreui-table > .search-container > td,
+table.coreui-table > .table-service-panel > td {padding: 5px 10px}
+
+table.coreui-table > thead > tr > th:first-child,
+table.coreui-table > tbody > tr > th:first-child,
+table.coreui-table > tfoot > tr > th:first-child,
+table.coreui-table > thead > tr > td:first-child,
+table.coreui-table > tbody > tr > td:first-child,
+table.coreui-table > tfoot > tr > td:first-child,
+table.coreui-table > thead > tr > th:last-child,
+table.coreui-table > tbody > tr > th:last-child,
+table.coreui-table > tfoot > tr > th:last-child,
+table.coreui-table > thead > tr > td:last-child,
+table.coreui-table > tbody > tr > td:last-child,
+table.coreui-table > tfoot > tr > td:last-child {
+    border-left:0;
+    border-right:0;
+}
+@media screen and (max-width: 767px) {
+    .coreui-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+    }
+}
+
+table.coreui-table > tfoot form {margin-bottom: 0}
+
+table.coreui-table .search-container form {margin-top: 15px;}
+table.coreui-table .search-container form .search-table th,
+table.coreui-table .search-container form .search-table td {padding-bottom: 10px;}
+table.coreui-table .search-container form .search-table .control-label,
+table.coreui-table .search-container form .search-table .control,
+table.coreui-table .search-container form .search-table .out-text {
+    min-width: 100px;
+    padding-left:10px;
+    padding-right:10px;
+}
+table.coreui-table .search-container form .search-table .control-label {
+    text-align: right;
+}
+table.coreui-table .search-container form .search-table .control .radio,
+table.coreui-table .search-container form .search-table .control .checkbox {
+    position: relative;
+    display: block;
+    min-height: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+table.coreui-table .search-container form .search-table .control .radio > label,
+table.coreui-table .search-container form .search-table .control .checkbox > label{
+    min-height: 20px;
+    padding-left: 20px;
+    margin-bottom: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+table.coreui-table .search-container form label {
+    display: inline-block;
+    font-weight: 700;
+    margin-top: 5px;
+    max-width: 100%;
+}
+table.coreui-table .search-container .control-type-date input {
+    width: 140px;
+    display: inline-block;
+}
+table.coreui-table .search-container .control-type-datetime input {
+    width: 180px;
+    display: inline-block;
+}
+table.coreui-table .search-container .control-type-text input,
+table.coreui-table .search-container .control-type-text_strict input,
+table.coreui-table .search-container .control-type-select select,
+table.coreui-table .search-container .control-type-multiselect select {
+    width: 180px;
+}
+
+
+table.coreui-table select.multiselect {height: 85px}
+table.coreui-table input.gotopage {
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    border: 1px solid #bdbdbd;
+    padding: 0 5px;
+    height: 22px;
+    width: 35px;
+    outline: 0;
+}
+table.coreui-table select.records-per-page {
+    width: 50px;
+    height: 22px;
+    border: 1px solid #bdbdbd;
+    border-radius: 2px;
+    outline: 0;
+    padding: 0;
+}
+
+.coreui-table-wrapper > .preloader {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+.coreui-table-wrapper > .preloader > .lock-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #0000000d;
+    cursor: wait;
+}
+.coreui-table-wrapper > .preloader > .block {
+    width: 175px;
+    position: absolute;
+    top: 95px;
+    display: inline-block;
+    text-align: left;
+    padding: 10px 19px;
+    background-color: #484860;
+    margin-left: -87px;
+    border-radius: 5px;
+    border: 1px solid #484860;
+    opacity: .9;
+    color: #fff;
+}
+.coreui-table-wrapper > .preloader > .block > img {
+    width: 24px;
+    margin-top: -2px;
+    margin-right: 5px;
+}
+.coreui-table-wrapper *,
+.coreui-table-wrapper *:before,
+.coreui-table-wrapper *:after {
+    box-sizing: border-box;
+}
+
+
 /* Mobile */
 @media(max-width:767px) {
     .searchContainer .searchRow div.ctrl-dpr {

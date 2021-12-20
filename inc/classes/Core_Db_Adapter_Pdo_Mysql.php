@@ -38,7 +38,10 @@ class Core_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	public function commit()
 	{
 		if ($this->_transactionLevel === 1) {
-			parent::commit();
+            $conn = $this->getConnection();
+            if ($conn && $conn->inTransaction()) {
+                parent::commit();
+            }
 		}
 		$this->_transactionLevel--;
 
@@ -53,7 +56,10 @@ class Core_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	public function rollBack()
 	{
 		if ($this->_transactionLevel === 1) {
-			parent::rollBack();
+            $conn = $this->getConnection();
+            if ($conn && $conn->inTransaction()) {
+                parent::rollBack();
+            }
 		}
 		$this->_transactionLevel--;
 
