@@ -1281,10 +1281,7 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
-label {
-    font-weight: 500;
-    vertical-align: sub;
-}
+label {font-weight: 500;}
 label.control-label {font-weight: 700}
 .hide {display:none}
 .show {display:block}
@@ -2500,6 +2497,10 @@ table.coreui-table .search-container form label {
     font-weight: 700;
     margin-top: 5px;
     max-width: 100%;
+}
+table.coreui-table .search-container .control-type-number input {
+    width: 140px;
+    display: inline-block;
 }
 table.coreui-table .search-container .control-type-date input {
     width: 140px;

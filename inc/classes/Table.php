@@ -419,6 +419,13 @@ abstract class Table extends Acl {
                             }
                             break;
 
+                        case self::SEARCH_NUMBER :
+                            $tpl->search->field->number->assign("[KEY]",         $key);
+                            $tpl->search->field->number->assign("[VALUE_START]", $control_value[0] ?? '');
+                            $tpl->search->field->number->assign("[VALUE_END]",   $control_value[1] ?? '');
+                            $tpl->search->field->number->assign("[IN_TEXT]",     $search->getIn());
+                            break;
+
                         case self::SEARCH_DATE :
                             $tpl->search->field->date->assign("[KEY]",         $key);
                             $tpl->search->field->date->assign("[VALUE_START]", $control_value[0] ?? '');
