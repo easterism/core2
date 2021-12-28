@@ -2498,6 +2498,10 @@ table.coreui-table .search-container form label {
     margin-top: 5px;
     max-width: 100%;
 }
+table.coreui-table .search-container .control-type-number input {
+    width: 140px;
+    display: inline-block;
+}
 table.coreui-table .search-container .control-type-date input {
     width: 140px;
     display: inline-block;
