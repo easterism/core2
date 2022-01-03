@@ -37,3 +37,6 @@
 [submodule "mod/repo/v1.4.2"]
 	path = mod/repo/v1.4.2
 	url = git@git.rdo.belhard.com:core2/modules/repo.git
+[submodule "mod/cron/v3.3.0"]
+	path = mod/cron/v3.3.0
+	url = git@git.rdo.belhard.com:core2/modules/cron.git
