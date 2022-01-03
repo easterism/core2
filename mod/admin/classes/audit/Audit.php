@@ -53,11 +53,21 @@ class Audit extends \Common {
 
 
             if ($a_result && count($a_result['COM']) > 0) {
-                reset($a_result['COM']);
-                while (list($key, $val) = each($a_result['COM'])) {
-                    echo $val . '<span class="auditSql"><i>(' . $a_result['SQL'][$key] . ')</i></span>' . "&nbsp&nbsp<a href=\"javascript:void(0);\" onclick=\"load('?module=admin&action=audit&db_update_one=1&number=".$key."')\"><b><span class=\"auditLineCorrect\">" . $this->_('Исправить') . "</span></b></a><br />";
+                foreach ($a_result['COM'] as $key => $item) {
+                    $repair = $this->_('Исправить');
+                    echo "
+                        {$item}
+                        <span class=\"auditSql\"><i>({$a_result['SQL'][$key]})</i></span>&nbsp&nbsp
+                        <a href=\"javascript:void(0);\" onclick=\"load('?module=admin&action=audit&db_update_one=1&number={$key}')\">
+                            <b><span class=\"auditLineCorrect\">{$repair}</span></b>
+                        </a>
+                        <br/>
+                    ";
                 }
-                echo "<input class=\"auditButton\" type=\"button\" value=\"" . $this->_('Исправить все') . "\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
+
+                $repair_all = $this->_('Исправить все');
+                echo "<input class=\"auditButton\" type=\"button\" value=\"{$repair_all}\" onclick=\"load('?module=admin&action=audit&db_update=1')\"/>";
+
                 if ( ! empty($a_result['WARNING'])) {
                     echo "<h3>" . $this->_('Предупреждения') . ":</h3>";
                     foreach ($a_result['WARNING'] as $val) {
