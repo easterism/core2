@@ -34,3 +34,6 @@
 [submodule "mod/queue/v1.6.1"]
 	path = mod/queue/v1.6.1
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
+[submodule "mod/repo/v1.4.2"]
+	path = mod/repo/v1.4.2
+	url = git@git.rdo.belhard.com:core2/modules/repo.git
