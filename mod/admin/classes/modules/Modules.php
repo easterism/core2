@@ -33,8 +33,11 @@ class Modules extends \Common  {
     public function getAvailableEdit(Int $avail_id) {
         $edit = new \editTable('mod_available');
         /* Добавление нового модуля */
-        if (!$avail_id || $avail_id < 0) {
-            if (empty($this->config->php) || empty($this->config->php->path)) {
+        if ( ! $avail_id || $avail_id < 0) {
+            if (empty($this->config->php) ||
+                empty($this->config->php->path) ||
+                empty( exec('which php'))
+            ) {
                 $edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
             }
 

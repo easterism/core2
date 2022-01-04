@@ -251,8 +251,9 @@ class CoreController extends Common implements File {
 
         $panel = new \Panel('tab');
         $panel->addTab($this->_("Установленные модули"), 'install',   "index.php?module=admin&action=modules");
-        $panel->addTab($this->_("Доступные модули"),	     'available', "index.php?module=admin&action=modules");
+        $panel->addTab($this->_("Доступные модули"),	 'available', "index.php?module=admin&action=modules");
         $panel->setTitle($this->_("Модули"));
+
         ob_start();
         switch ($panel->getActiveTab()) {
             case 'install':
