@@ -28,8 +28,22 @@ class Data extends Table {
             if ( ! empty($this->search_controls) && ! empty($this->session->table->search)) {
                 $this->data = $filter->searchData($this->data, $this->search_controls, $this->session->table->search);
             }
-            if ( ! empty($this->session->table->order)) {
-                $this->data = $filter->orderData($this->data, $this->session->table->order, $this->session->table->order_type);
+
+            if (isset($this->session->table->order) &&
+                $this->session->table->order &&
+                isset($this->columns[$this->session->table->order - 1])
+            ) {
+                $column = $this->columns[$this->session->table->order - 1];
+
+                if ($column instanceof Column && $column->isSorting()) {
+                    $order_field = $column->getField();
+
+                    $first_row = current($this->data);
+
+                    if (isset($first_row[$order_field])) {
+                        $this->data = $filter->orderData($this->data, $order_field, $this->session->table->order_type);
+                    }
+                }
             }
 
 
