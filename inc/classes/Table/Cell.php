@@ -8,8 +8,8 @@ namespace Core2\Classes\Table;
  */
 class Cell {
 
-    protected $value = '';
-    protected $attr  = [];
+    private $value = '';
+    private $attr  = [];
 
 
     /**
@@ -171,5 +171,23 @@ class Cell {
      */
     public function getAttribs(): array {
         return $this->attr;
+    }
+
+
+    /**
+     * Преобразование в массив
+     * @return array
+     */
+    public function toArray(): array {
+
+        $data = [
+            'value' => $this->value,
+        ];
+
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
+        }
+
+        return $data;
     }
 }

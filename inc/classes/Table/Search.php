@@ -124,4 +124,30 @@ class Search {
         $this->out = $out;
         return $this;
     }
+
+
+    /**
+     * Преобразование в массив
+     * @return array
+     */
+    public function toArray(): array {
+
+        $data = [
+            'caption' => $this->caption,
+            'field'   => $this->field,
+            'type'    => $this->type,
+        ];
+
+        if ( ! empty($this->data)) {
+            $data['data'] = $this->data;
+        }
+        if ( ! empty($this->in)) {
+            $data['in'] = $this->in;
+        }
+        if ( ! empty($this->out)) {
+            $data['out'] = $this->out;
+        }
+
+        return $data;
+    }
 }

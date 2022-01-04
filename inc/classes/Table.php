@@ -31,6 +31,7 @@ abstract class Table extends Acl {
     protected $show_templates           = false;
     protected $show_number_rows         = true;
     protected $show_service             = true;
+    protected $show_header              = true;
     protected $show_footer              = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
@@ -332,7 +333,29 @@ abstract class Table extends Acl {
         $tpl->assign('[RESOURCE]',  $this->resource);
         $tpl->assign('[IS_AJAX]',   (int)$this->is_ajax);
         $tpl->assign('[LOCATION]',  $this->is_ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING']);
-        $tpl->assign('[BUTTONS]',   implode('', $this->buttons));
+
+        if ( ! empty($this->buttons)) {
+            $buttons = [];
+
+            foreach ($this->buttons as $button) {
+                if ($button instanceof Button) {
+                    $attributes = [];
+                    foreach ($button->getAttributes() as $attr => $value) {
+                        $attributes[] = "$attr=\"{$value}\"";
+                    }
+
+                    $implode_attributes = implode(' ', $attributes);
+                    $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
+
+                    $buttons[] = "<button{$implode_attributes}>{$this->title}</button>";
+                }
+            }
+
+            $tpl->assign('[BUTTONS]', implode(' ', $buttons));
+
+        } else {
+            $tpl->assign('[BUTTONS]', '');
+        }
 
 
         if ($this->show_service) {
@@ -676,22 +699,100 @@ abstract class Table extends Acl {
      */
     public function toArray(): array {
 
-        return [
-            'resource'              => $this->resource,
-            'show_checkboxes'       => $this->show_checkboxes,
-            'show_delete'           => $this->show_delete,
-            'show_templates'        => $this->show_templates,
-            'show_columns_switcher' => $this->show_columns_switcher,
-            'edit_url'              => $this->edit_url,
-            'add_url'               => $this->add_url,
-            'columns'               => $this->columns,
-            'buttons'               => $this->buttons,
-            'search'                => $this->search_controls,
-            'records_per_page'      => $this->records_per_page,
-            'records_total'         => $this->records_total,
-            'current_page'          => $this->current_page,
-            'data'                  => $this->data_rows,
+        $toolbar   = [];
+        $search    = [];
+        $columns   = [];
+        $records   = [];
+        $events    = [];
+        $templates = [];
+
+        $count_pages = ceil($this->records_total / $this->records_per_page);
+
+        if ( ! empty($this->buttons)) {
+            foreach ($this->buttons as $button) {
+                if ($button instanceof Table\Button) {
+                    $toolbar['buttons'][] = $button->toArray();
+                }
+            }
+        }
+
+        if ($this->add_url) {
+            $toolbar['btnAdd'] = true;
+            $events['onAdd'] = "load('{$this->add_url}')";
+        }
+
+        if ($this->show_delete) {
+            $toolbar['btnDelete'] = true;
+            $events['onDelete'] = "CoreUI.table.deleteRows('{$this->resource}')";
+        }
+
+        if ($this->edit_url) {
+            $events['onClickRow'] = "load('{$this->edit_url}')";
+        }
+
+        if ( ! empty($this->data_rows)) {
+            foreach ($this->data_rows as $row) {
+                if ($row instanceof Table\Row) {
+                    $records[] = $row->toArray();
+                }
+            }
+        }
+
+        if ( ! empty($this->columns)) {
+            foreach ($this->columns as $column) {
+                if ($column instanceof Table\Column) {
+                    $columns[] = $column->toArray();
+                }
+            }
+        }
+
+        if ( ! empty($this->search_controls)) {
+            foreach ($this->search_controls as $search_control) {
+                if ($search_control instanceof Table\Search) {
+                    $search[] = $search_control->toArray();
+                }
+            }
+        }
+
+        $data = [
+            'resource' => $this->resource,
+            'show'     => [
+                'header'        => $this->show_header,
+                'toolbar'       => true,
+                'footer'        => $this->show_footer,
+                'lineNumbers'   => $this->show_number_rows,
+                'selectRows'    => $this->show_checkboxes,
+                'orderRows'     => false,
+                'switchColumns' => $this->show_columns_switcher,
+                'saveTemplates' => $this->show_templates,
+            ],
+
+            'currentPage'    => $this->current_page,
+            'countPages'     => $count_pages,
+            'recordsPerPage' => $this->records_per_page,
+            'total'          => $this->records_total,
         ];
+
+        if ( ! empty($search)) {
+            $data['search'] = $search;
+        }
+        if ( ! empty($templates)) {
+            $data['templates'] = $templates;
+        }
+        if ( ! empty($toolbar)) {
+            $data['toolbar'] = $toolbar;
+        }
+        if ( ! empty($events)) {
+            $data['events'] = $events;
+        }
+        if ( ! empty($columns)) {
+            $data['columns'] = $columns;
+        }
+        if ( ! empty($records)) {
+            $data['records'] = $records;
+        }
+
+        return $data;
     }
 
 

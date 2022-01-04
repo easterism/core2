@@ -168,4 +168,25 @@ class Column {
     public function isSorting(): bool {
         return $this->is_sorting;
     }
+
+
+    /**
+     * Преобразование в массив
+     * @return array
+     */
+    public function toArray(): array {
+
+        $data = [
+            'title'   => $this->title,
+            'field'   => $this->field,
+            'type'    => $this->type,
+            'sorting' => $this->is_sorting,
+        ];
+
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
+        }
+
+        return $data;
+    }
 }

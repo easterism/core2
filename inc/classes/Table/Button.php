@@ -8,10 +8,10 @@ namespace Core2\Classes\Table;
  */
 class Button {
 
-    protected $title      = '';
-    protected $attributes = [
+    protected $title = '';
+    protected $attr  = [
         'type'  => 'button',
-        'class' => 'btn btn-default btn-xs',
+        'class' => 'btn btn-default',
     ];
 
 
@@ -24,12 +24,35 @@ class Button {
 
 
     /**
+     * @param string $name
+     * @return string|bool
+     */
+    public function getAttr(string $name) {
+
+        if (array_key_exists($name, $this->attr)) {
+            return $this->attr[$name];
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * Получение всех атрибутов
+     * @return array
+     */
+    public function getAttributes(): array {
+        return $this->attr;
+    }
+
+
+    /**
      * @param array $attributes
      * @return Button
      */
     public function setAttribs(array $attributes): Button {
         foreach ($attributes as $attr => $value) {
-            $this->attributes[$attr] = $value;
+            $this->attr[$attr] = $value;
         }
         return $this;
     }
@@ -42,8 +65,8 @@ class Button {
      */
     public function setAppendAttribs(array $attributes): Button {
         foreach ($attributes as $attr => $value) {
-            $this->attributes[$attr] = array_key_exists($attr, $this->attributes)
-                ? $this->attributes[$attr] . $value
+            $this->attr[$attr] = array_key_exists($attr, $this->attr)
+                ? $this->attr[$attr] . $value
                 : $value;
         }
         return $this;
@@ -57,8 +80,8 @@ class Button {
      */
     public function setPrependAttribs(array $attributes): Button {
         foreach ($attributes as $attr => $value) {
-            $this->attributes[$attr] = array_key_exists($attr, $this->attributes)
-                ? $value . $this->attributes[$attr]
+            $this->attr[$attr] = array_key_exists($attr, $this->attr)
+                ? $value . $this->attr[$attr]
                 : $value;
         }
         return $this;
@@ -71,7 +94,7 @@ class Button {
      * @return Button
      */
     public function setAttr(string $attr, string $value): Button {
-        $this->attributes[$attr] = $value;
+        $this->attr[$attr] = $value;
         return $this;
     }
 
@@ -82,8 +105,8 @@ class Button {
      * @return Button
      */
     public function setAppendAttr(string $attr, string $value): Button {
-        $this->attributes[$attr] = array_key_exists($attr, $this->attributes)
-            ? $this->attributes[$attr] . $value
+        $this->attr[$attr] = array_key_exists($attr, $this->attr)
+            ? $this->attr[$attr] . $value
             : $value;
         return $this;
     }
@@ -95,35 +118,27 @@ class Button {
      * @return Button
      */
     public function setPrependAttr(string $attr, string $value): Button {
-        $this->attributes[$attr] = array_key_exists($attr, $this->attributes)
-            ? $value . $this->attributes[$attr]
+        $this->attr[$attr] = array_key_exists($attr, $this->attr)
+            ? $value . $this->attr[$attr]
             : $value;
         return $this;
     }
 
 
     /**
-     * @return string
+     * Преобразование в массив
+     * @return array
      */
-    public function __toString() {
-        return $this->render();
-    }
+    public function toArray(): array {
 
+        $data = [
+            'title' => $this->title
+        ];
 
-    /**
-     * @return string
-     */
-    public function render(): string {
-
-        $attributes = array();
-        foreach ($this->attributes as $attr => $value) {
-            $attributes[] = "$attr=\"{$value}\"";
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
         }
 
-        $implode_attributes = implode(' ', $attributes);
-        $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
-
-
-        return "<button{$implode_attributes}>{$this->title}</button>";
+        return $data;
     }
 }
