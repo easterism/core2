@@ -395,14 +395,25 @@ abstract class Table extends Acl {
 
             foreach ($this->search_controls as $key => $search) {
                 if ($search instanceof Search) {
-                    $control_value = $search_value[$key] ?? '';
+                    $control_value     = $search_value[$key] ?? '';
+                    $search_attributes = $search->getAttributes();
+                    $attributes_str    = '';
+
+                    if ( ! empty($search_attributes)) {
+                        $attributes = [];
+                        foreach ($search_attributes as $attr => $value) {
+                            $attributes[] = "$attr=\"{$value}\"";
+                        }
+                        $implode_attributes = implode(' ', $attributes);
+                        $attributes_str     = $implode_attributes ? ' ' . $implode_attributes : '';
+                    }
 
                     switch ($search->getType()) {
                         case self::SEARCH_TEXT :
                         case self::SEARCH_TEXT_STRICT :
                             $tpl->search->field->text->assign("[KEY]",     $key);
                             $tpl->search->field->text->assign("[VALUE]",   $control_value);
-                            $tpl->search->field->text->assign("[IN_TEXT]", $search->getIn());
+                            $tpl->search->field->text->assign("[IN_TEXT]", $attributes_str);
                             break;
 
                         case self::SEARCH_RADIO :
@@ -413,7 +424,7 @@ abstract class Table extends Acl {
                                     $tpl->search->field->radio->assign("[KEY]",     $key);
                                     $tpl->search->field->radio->assign("[VALUE]",   $radio_value);
                                     $tpl->search->field->radio->assign("[TITLE]",   $radio_title);
-                                    $tpl->search->field->radio->assign("[IN_TEXT]", $search->getIn());
+                                    $tpl->search->field->radio->assign("[IN_TEXT]", $attributes_str);
 
                                     $is_checked = $control_value == $radio_value
                                         ? 'checked="checked"'
@@ -431,7 +442,7 @@ abstract class Table extends Acl {
                                     $tpl->search->field->checkbox->assign("[KEY]",     $key);
                                     $tpl->search->field->checkbox->assign("[VALUE]",   $checkbox_value);
                                     $tpl->search->field->checkbox->assign("[TITLE]",   $checkbox_title);
-                                    $tpl->search->field->checkbox->assign("[IN_TEXT]", $search->getIn());
+                                    $tpl->search->field->checkbox->assign("[IN_TEXT]", $attributes_str);
 
                                     $is_checked = is_array($control_value) && in_array($checkbox_value, $control_value)
                                         ? 'checked="checked"'
@@ -446,35 +457,35 @@ abstract class Table extends Acl {
                             $tpl->search->field->number->assign("[KEY]",         $key);
                             $tpl->search->field->number->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->search->field->number->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->number->assign("[IN_TEXT]",     $search->getIn());
+                            $tpl->search->field->number->assign("[IN_TEXT]",     $attributes_str);
                             break;
 
                         case self::SEARCH_DATE :
                             $tpl->search->field->date->assign("[KEY]",         $key);
                             $tpl->search->field->date->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->search->field->date->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->date->assign("[IN_TEXT]",     $search->getIn());
+                            $tpl->search->field->date->assign("[IN_TEXT]",     $attributes_str);
                             break;
 
                         case self::SEARCH_DATETIME :
                             $tpl->search->field->datetime->assign("[KEY]",         $key);
                             $tpl->search->field->datetime->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->search->field->datetime->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->datetime->assign("[IN_TEXT]",     $search->getIn());
+                            $tpl->search->field->datetime->assign("[IN_TEXT]",     $attributes_str);
                             break;
 
                         case self::SEARCH_SELECT :
                             $data    = $search->getData();
                             $options = ['' => ''] + $data;
                             $tpl->search->field->select->assign("[KEY]",      $key);
-                            $tpl->search->field->select->assign("[IN_TEXT]",  $search->getIn());
+                            $tpl->search->field->select->assign("[IN_TEXT]",  $attributes_str);
                             $tpl->search->field->select->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
                             break;
 
                         case self::SEARCH_MULTISELECT :
                             $data = $search->getData();
                             $tpl->search->field->multiselect->assign("[KEY]",      $key);
-                            $tpl->search->field->multiselect->assign("[IN_TEXT]",  $search->getIn());
+                            $tpl->search->field->multiselect->assign("[IN_TEXT]",  $attributes_str);
                             $tpl->search->field->multiselect->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
                             break;
                     }
@@ -553,13 +564,13 @@ abstract class Table extends Acl {
                      $this->checkAcl($this->resource, 'read_owner'))
                 ) {
                     $edit_url = $this->replaceTCOL($row, $this->edit_url);
-                    $row->setAppendAttr('class', 'edit-row');
+                    $row->setAttrAppend('class', 'edit-row');
 
                     if (strpos($edit_url, 'javascript:') === 0) {
-                        $row->setAppendAttr('onclick', substr($edit_url, 11));
+                        $row->setAttrAppend('onclick', substr($edit_url, 11));
                     } else {
                         $edit_url = str_replace('?', '#', $edit_url);
-                        $row->setAppendAttr('onclick', "load('{$edit_url}');");
+                        $row->setAttrAppend('onclick', "load('{$edit_url}');");
                     }
                 }
 
@@ -727,7 +738,12 @@ abstract class Table extends Acl {
         }
 
         if ($this->edit_url) {
-            $events['onClickRow'] = "load('{$this->edit_url}')";
+            $events['onClickRow']       = "load('{$this->edit_url}')";
+            $events['onSorting']        = "";
+            $events['onSearch']         = "";
+            $events['onFastSearch']     = "";
+            $events['onSaveTemplate']   = "";
+            $events['onSelectTemplate'] = "";
         }
 
         if ( ! empty($this->data_rows)) {
@@ -762,15 +778,15 @@ abstract class Table extends Acl {
                 'footer'        => $this->show_footer,
                 'lineNumbers'   => $this->show_number_rows,
                 'selectRows'    => $this->show_checkboxes,
-                'orderRows'     => false,
                 'switchColumns' => $this->show_columns_switcher,
-                'saveTemplates' => $this->show_templates,
+                'templates'     => $this->show_templates,
             ],
 
-            'currentPage'    => $this->current_page,
-            'countPages'     => $count_pages,
-            'recordsPerPage' => $this->records_per_page,
-            'total'          => $this->records_total,
+            'currentPage'        => $this->current_page,
+            'countPages'         => $count_pages,
+            'recordsPerPage'     => $this->records_per_page,
+            'recordsTotal'       => $this->records_total,
+            'recordsPerPageList' => [ 25, 50, 100, 1000, ],
         ];
 
         if ( ! empty($search)) {
