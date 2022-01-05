@@ -100,7 +100,7 @@ class Column {
      * @return self
      *@throws Exception
      */
-    public function setPrependAttr(string $name, string $value): Column {
+    public function setAttrPrepend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
             (is_string($value) || is_numeric($value))) {
             if (array_key_exists($name, $this->attr)) {
@@ -123,7 +123,7 @@ class Column {
      * @return self
      *@throws Exception
      */
-    public function setAppendAttr(string $name, string $value): Column {
+    public function setAttrAppend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
             (is_string($value) || is_numeric($value))) {
             if (array_key_exists($name, $this->attr)) {

@@ -9,12 +9,12 @@ namespace Core2\Classes\Table;
  */
 class Search {
 
-    protected $caption = '';
-    protected $field   = '';
-    protected $type    = '';
-    protected $data    = [];
-    protected $in      = '';
-    protected $out     = '';
+    private $caption = '';
+    private $field   = '';
+    private $type    = '';
+    private $data    = [];
+    private $out     = '';
+    private $attr    = [];
 
     protected $available_types = [
         'text',
@@ -36,6 +36,7 @@ class Search {
      * @throws Exception
      */
     public function __construct(string $caption, string $field, string $type) {
+
         $this->caption = $caption;
         $this->field   = $field;
 
@@ -75,14 +76,6 @@ class Search {
     /**
      * @return string
      */
-    public function getIn(): string {
-        return $this->in;
-    }
-
-
-    /**
-     * @return string
-     */
     public function getOut(): string {
         return $this->out;
     }
@@ -107,22 +100,130 @@ class Search {
 
 
     /**
-     * @param string $in
-     * @return self
-     */
-    public function setIn(string $in): Search {
-        $this->in = $in;
-        return $this;
-    }
-
-
-    /**
      * @param string $out
      * @return self
      */
     public function setOut(string $out): Search {
         $this->out = $out;
         return $this;
+    }
+
+
+    /**
+     * Установка значения атрибута
+     * @param string $name
+     * @param string $value
+     * @return Search
+     * @throws Exception
+     */
+    public function setAttr(string $name, string $value): Search {
+
+        if ((is_string($name) || is_numeric($name)) &&
+            (is_string($value) || is_numeric($value))
+        ) {
+            $this->attr[$name] = $value;
+
+        } else {
+            throw new Exception("Attribute not valid type. Need string or numeric");
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Установка значения в начале атрибута
+     * @param string $name
+     * @param string $value
+     * @return Search
+     * @throws Exception
+     */
+    public function setAttrPrepend(string $name, string $value): Search {
+
+        if ((is_string($name) || is_numeric($name)) &&
+            (is_string($value) || is_numeric($value))
+        ) {
+            if (array_key_exists($name, $this->attr)) {
+                $this->attr[$name] = $value . $this->attr[$name];
+            } else {
+                $this->attr[$name] = $value;
+            }
+
+        } else {
+            throw new Exception("Attribute not valid type. Need string or numeric");
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Установка значения в конце атрибута
+     * @param string $name
+     * @param string $value
+     * @return Search
+     * @throws Exception
+     */
+    public function setAttrAppend(string $name, string $value): Search {
+
+        if ((is_string($name) || is_numeric($name)) &&
+            (is_string($value) || is_numeric($value))
+        ) {
+            if (array_key_exists($name, $this->attr)) {
+                $this->attr[$name] .= $value;
+            } else {
+                $this->attr[$name] = $value;
+            }
+
+        } else {
+            throw new Exception("Attribute not valid type. Need string or numeric");
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Установка атрибутов
+     * @param array $attributes
+     * @return Search
+     * @throws Exception
+     */
+    public function setAttributes(array $attributes): Search {
+
+        foreach ($attributes as $name => $value) {
+            if (is_string($name) && is_string($value) ) {
+                $this->attr[$name] = $value;
+
+            } else {
+                throw new Exception("Attribute not valid type. Need string");
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Получение всех атрибутов
+     * @return array
+     */
+    public function getAttributes(): array {
+        return $this->attr;
+    }
+
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    public function getAttr(string $name): ?string {
+
+        if (array_key_exists($name, $this->attr)) {
+            return $this->attr[$name];
+        } else {
+            return null;
+        }
     }
 
 
@@ -138,14 +239,14 @@ class Search {
             'type'    => $this->type,
         ];
 
-        if ( ! empty($this->data)) {
-            $data['data'] = $this->data;
-        }
-        if ( ! empty($this->in)) {
-            $data['in'] = $this->in;
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
         }
         if ( ! empty($this->out)) {
             $data['out'] = $this->out;
+        }
+        if ( ! empty($this->data)) {
+            $data['data'] = $this->data;
         }
 
         return $data;

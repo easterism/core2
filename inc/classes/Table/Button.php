@@ -25,14 +25,14 @@ class Button {
 
     /**
      * @param string $name
-     * @return string|bool
+     * @return string
      */
-    public function getAttr(string $name) {
+    public function getAttr(string $name): ?string {
 
         if (array_key_exists($name, $this->attr)) {
             return $this->attr[$name];
         } else {
-            return false;
+            return null;
         }
     }
 
@@ -50,40 +50,12 @@ class Button {
      * @param array $attributes
      * @return Button
      */
-    public function setAttribs(array $attributes): Button {
+    public function setAttributes(array $attributes): Button {
+
         foreach ($attributes as $attr => $value) {
             $this->attr[$attr] = $value;
         }
-        return $this;
-    }
 
-
-
-    /**
-     * @param  array $attributes
-     * @return Button
-     */
-    public function setAppendAttribs(array $attributes): Button {
-        foreach ($attributes as $attr => $value) {
-            $this->attr[$attr] = array_key_exists($attr, $this->attr)
-                ? $this->attr[$attr] . $value
-                : $value;
-        }
-        return $this;
-    }
-
-
-
-    /**
-     * @param  array $attributes
-     * @return Button
-     */
-    public function setPrependAttribs(array $attributes): Button {
-        foreach ($attributes as $attr => $value) {
-            $this->attr[$attr] = array_key_exists($attr, $this->attr)
-                ? $value . $this->attr[$attr]
-                : $value;
-        }
         return $this;
     }
 
@@ -94,7 +66,9 @@ class Button {
      * @return Button
      */
     public function setAttr(string $attr, string $value): Button {
+
         $this->attr[$attr] = $value;
+
         return $this;
     }
 
@@ -104,10 +78,12 @@ class Button {
      * @param string $value
      * @return Button
      */
-    public function setAppendAttr(string $attr, string $value): Button {
+    public function setAttrAppend(string $attr, string $value): Button {
+
         $this->attr[$attr] = array_key_exists($attr, $this->attr)
             ? $this->attr[$attr] . $value
             : $value;
+
         return $this;
     }
 
@@ -117,10 +93,12 @@ class Button {
      * @param string $value
      * @return Button
      */
-    public function setPrependAttr(string $attr, string $value): Button {
+    public function setAttrPrepend(string $attr, string $value): Button {
+
         $this->attr[$attr] = array_key_exists($attr, $this->attr)
             ? $value . $this->attr[$attr]
             : $value;
+
         return $this;
     }
 
