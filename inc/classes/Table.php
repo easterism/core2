@@ -57,38 +57,11 @@ abstract class Table extends Acl {
     protected $theme_location = '';
     protected $date_mask      = "d.m.Y";
     protected $datetime_mask  = "d.m.Y H:i";
-    protected $lang           = 'ru';
     protected $locutions      = [
-        'ru' => [
-            'Search'                                     => 'Поиск',
-            'Clear'                                      => 'Очистить',
-            'All'                                        => 'Все',
-            'Add'                                        => 'Добавить',
-            'Delete'                                     => 'Удалить',
-            'num'                                        => '№',
-            'from'                                       => 'из',
-            'off'                                        => 'выкл',
-            'on'                                         => 'вкл',
-            'Total'                                      => 'Всего',
-            'No records'                                 => 'Нет записей',
-            'Are you sure you want to delete this post?' => 'Вы действительно хотите удалить эту запись?',
-            'You must select at least one record'        => 'Нужно выбрать хотя бы одну запись',
-        ],
-        'en' => [
-            'Search'                                     => 'Search',
-            'Clear'                                      => 'Clear',
-            'All'                                        => 'All',
-            'Add'                                        => 'Add',
-            'Delete'                                     => 'Delete',
-            'num'                                        => '№',
-            'from'                                       => 'from',
-            'off'                                        => 'off',
-            'on'                                         => 'on',
-            'Total'                                      => 'Total',
-            'No records'                                 => 'No records',
-            'Are you sure you want to delete this post?' => 'Are you sure you want to delete this post?',
-            'You must select at least one record'        => 'You must select at least one record',
-        ],
+        'Add'                                        => 'Добавить',
+        'Delete'                                     => 'Удалить',
+        'Are you sure you want to delete this post?' => 'Вы действительно хотите удалить эту запись?',
+        'You must select at least one record'        => 'Нужно выбрать хотя бы одну запись',
     ];
 
     const SEARCH_SELECT      = 'select';
@@ -117,7 +90,6 @@ abstract class Table extends Acl {
         parent::__construct();
 
         $this->resource = $resource;
-        $this->lang     = 'ru';
 
         $this->theme_src      = DOC_PATH . 'core2/html/' . THEME;
         $this->theme_location = DOC_ROOT . 'core2/html/' . THEME;
@@ -368,16 +340,19 @@ abstract class Table extends Acl {
                 ($this->checkAcl($this->resource, 'read_all') ||
                  $this->checkAcl($this->resource, 'read_owner'))
             ) {
-                $tpl->service->add_button->assign('[URL]', str_replace('?', '#', $this->add_url));
+                $tpl->service->add_button->assign('[URL]',      str_replace('?', '#', $this->add_url));
+                $tpl->service->add_button->assign('[ADD_TEXT]', $this->getLocution('Add'));
             }
 
             if ($this->show_delete &&
                 ($this->checkAcl($this->resource, 'delete_all') ||
                  $this->checkAcl($this->resource, 'delete_owner'))
             ) {
+                $delete_text   = $this->getLocution('Delete');
                 $delete_msg    = $this->getLocution('Are you sure you want to delete this post?');
                 $no_select_msg = $this->getLocution('You must select at least one record');
 
+                $tpl->service->del_button->assign('[DELETE_TEXT]',      $delete_text);
                 $tpl->service->del_button->assign('[DELETE_MSG]',       $delete_msg);
                 $tpl->service->del_button->assign('[DELETE_NO_SELECT]', $no_select_msg);
             }
@@ -891,11 +866,24 @@ abstract class Table extends Acl {
 
     /**
      * @param string $locution
+     * @param string $text
+     */
+    public function setLocution(string $locution, string $text) {
+
+        if (isset($this->locutions[$locution])) {
+            $this->locutions[$locution] = $text;
+        }
+    }
+
+
+    /**
+     * @param string $locution
      * @return string
      */
     protected function getLocution(string $locution): string {
-        return isset($this->locutions[$this->lang][$locution])
-            ? htmlspecialchars($this->locutions[$this->lang][$locution])
+
+        return isset($this->locutions[$locution])
+            ? htmlspecialchars($this->locutions[$locution])
             : htmlspecialchars($locution);
     }
 
