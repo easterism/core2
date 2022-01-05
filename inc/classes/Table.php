@@ -348,6 +348,9 @@ abstract class Table extends Acl {
                     $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
 
                     $buttons[] = "<button{$implode_attributes}>{$this->title}</button>";
+
+                } elseif (is_string($button)) {
+                    $buttons[] = $button;
                 }
             }
 
