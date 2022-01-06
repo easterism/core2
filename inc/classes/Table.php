@@ -399,10 +399,10 @@ abstract class Table extends Acl {
                 : [];
 
             if ( ! empty($search_value) && count($search_value)) {
-                $tpl->search_control->touchBlock('search_clear');
+                $tpl->controls->search_control->touchBlock('search_clear');
             }
 
-            $tpl->touchBlock('search_control');
+            $tpl->controls->touchBlock('search_control');
 
             foreach ($this->search_controls as $key => $search) {
                 if ($search instanceof Search) {
@@ -513,7 +513,7 @@ abstract class Table extends Acl {
 
 
         if ($this->show_columns_switcher) {
-            $tpl->touchBlock('column_switcher_control');
+            $tpl->controls->touchBlock('column_switcher_control');
 
             foreach ($this->columns as $key => $column) {
                 if ($column instanceof Column) {
