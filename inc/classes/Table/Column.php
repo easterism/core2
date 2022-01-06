@@ -14,6 +14,7 @@ class Column {
     protected $type       = '';
     protected $attr       = [];
     protected $is_sorting = true;
+    protected $is_show    = true;
 
 
     /**
@@ -163,10 +164,36 @@ class Column {
 
 
     /**
+     * @return $this
+     */
+    public function show(): Column {
+        $this->is_show = true;
+        return $this;
+    }
+
+
+    /**
+     * @return $this
+     */
+    public function hide(): Column {
+        $this->is_show = false;
+        return $this;
+    }
+
+
+    /**
      * @return bool
      */
     public function isSorting(): bool {
         return $this->is_sorting;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isShow(): bool {
+        return $this->is_show;
     }
 
 
@@ -177,10 +204,11 @@ class Column {
     public function toArray(): array {
 
         $data = [
-            'title'   => $this->title,
             'field'   => $this->field,
+            'title'   => $this->title,
             'type'    => $this->type,
             'sorting' => $this->is_sorting,
+            'show'    => $this->is_show,
         ];
 
         if ( ! empty($this->attr)) {
