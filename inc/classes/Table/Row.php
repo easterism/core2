@@ -10,8 +10,8 @@ require_once 'Cell.php';
  */
 class Row implements \Iterator {
 
-    protected $_cells = [];
-    protected $_attr  = [];
+    private $cells = [];
+    private $attr  = [];
 
 
     /**
@@ -21,7 +21,7 @@ class Row implements \Iterator {
     public function __construct($row) {
 
         foreach ($row as $key => $cell) {
-            $this->_cells[$key] = new Cell($cell);
+            $this->cells[$key] = new Cell($cell);
         }
     }
 
@@ -33,11 +33,11 @@ class Row implements \Iterator {
      */
     public function __get(string $field) {
 
-        if ( ! array_key_exists($field, $this->_cells)) {
-            $this->_cells[$field] = new Cell('');
+        if ( ! array_key_exists($field, $this->cells)) {
+            $this->cells[$field] = new Cell('');
         }
 
-        return $this->_cells[$field];
+        return $this->cells[$field];
     }
 
 
@@ -48,10 +48,10 @@ class Row implements \Iterator {
      */
     public function __set(string $field, string $value) {
 
-        if (array_key_exists($field, $this->_cells)) {
-            $this->_cells[$field]->setValue($value);
+        if (array_key_exists($field, $this->cells)) {
+            $this->cells[$field]->setValue($value);
         } else {
-            $this->_cells[$field] = new Cell($value);
+            $this->cells[$field] = new Cell($value);
         }
     }
 
@@ -62,7 +62,7 @@ class Row implements \Iterator {
      * @return bool
      */
     public function __isset(string $field) {
-        return isset($this->_cells[$field]);
+        return isset($this->cells[$field]);
     }
 
 
@@ -73,7 +73,7 @@ class Row implements \Iterator {
      */
     public function setAttr(string $name, string $value) {
 
-        $this->_attr[$name] = $value;
+        $this->attr[$name] = $value;
     }
 
 
@@ -81,14 +81,17 @@ class Row implements \Iterator {
      * Установка значения в начале атрибута
      * @param string $name
      * @param string $value
+     * @return Row
      */
-    public function setPrependAttr(string $name, string $value) {
+    public function setAttrPrepend(string $name, string $value): Row {
 
-        if (array_key_exists($name, $this->_attr)) {
-            $this->_attr[$name] = $value . $this->_attr[$name];
+        if (array_key_exists($name, $this->attr)) {
+            $this->attr[$name] = $value . $this->attr[$name];
         } else {
-            $this->_attr[$name] = $value;
+            $this->attr[$name] = $value;
         }
+
+        return $this;
     }
 
 
@@ -96,76 +99,38 @@ class Row implements \Iterator {
      * Установка значения в конце атрибута
      * @param string $name
      * @param string $value
+     * @return Row
      */
-    public function setAppendAttr(string $name, string $value) {
+    public function setAttrAppend(string $name, string $value): Row {
 
-        if (array_key_exists($name, $this->_attr)) {
-            $this->_attr[$name] .= $value;
+        if (array_key_exists($name, $this->attr)) {
+            $this->attr[$name] .= $value;
         } else {
-            $this->_attr[$name] = $value;
+            $this->attr[$name] = $value;
         }
+
+        return $this;
     }
 
 
     /**
      * Установка атрибутов
      * @param array $attributes
+     * @return Row
      * @throws Exception
      */
-    public function setAttribs(array $attributes) {
+    public function setAttributes(array $attributes): Row {
 
         foreach ($attributes as $name => $value) {
             if (is_string($name) && is_string($value) ) {
-                $this->_attr[$name] = $value;
+                $this->attr[$name] = $value;
 
             } else {
                 throw new Exception("Attribute not valid type. Need string");
             }
         }
-    }
 
-
-    /**
-     * Установка атрибутов в начале
-     * @param array $attributes
-     * @throws Exception
-     */
-    public function setPrependAttribs(array $attributes) {
-
-        foreach ($attributes as $name => $value) {
-            if (is_string($name) && is_string($value) ) {
-                if (array_key_exists($name, $this->_attr)) {
-                    $this->_attr[$name] = $value . $this->_attr[$name];
-                } else {
-                    $this->_attr[$name] = $value;
-                }
-
-            } else {
-                throw new Exception("Attribute not valid type. Need string");
-            }
-        }
-    }
-
-
-    /**
-     * Установка значения в конце атрибута
-     * @param array $attributes
-     * @throws Exception
-     */
-    public function setAppendAttribs(array $attributes) {
-
-        foreach ($attributes as $name => $value) {
-            if (is_string($name) && is_string($value) ) {
-                if (array_key_exists($name, $this->_attr)) {
-                    $this->_attr[$name] .= $value;
-                } else {
-                    $this->_attr[$name] = $value;
-                }
-
-            } else {
-                throw new Exception("Attribute not valid type. Need string");
-            }
-        }
+        return $this;
     }
 
 
@@ -173,28 +138,70 @@ class Row implements \Iterator {
      * Получение всех атрибутов
      * @return array
      */
-    public function getAttribs(): array {
-        return $this->_attr;
+    public function getAttributes(): array {
+        return $this->attr;
+    }
+
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    public function getAttr(string $name): ?string {
+
+        if (array_key_exists($name, $this->attr)) {
+            return $this->attr[$name];
+        } else {
+            return null;
+        }
     }
 
 
     public function rewind() {
-        return reset($this->_cells);
+        return reset($this->cells);
     }
 
     public function key() {
-        return key($this->_cells);
+        return key($this->cells);
     }
 
     public function current() {
-        return current($this->_cells);
+        return current($this->cells);
     }
 
     public function valid() {
-        return key($this->_cells) !== null;
+        return key($this->cells) !== null;
     }
 
     public function next() {
-        return next($this->_cells);
+        return next($this->cells);
+    }
+
+
+    /**
+     * Преобразование в массив
+     * @return array
+     */
+    public function toArray(): array {
+
+        $cells = [];
+
+        if ( ! empty($this->cells)) {
+            foreach ($this->cells as $field => $cell) {
+                if ($cell instanceof Cell) {
+                    $cells[$field] = $cell->toArray();
+                }
+            }
+        }
+
+        $data = [
+            'cells' => $cells,
+        ];
+
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
+        }
+
+        return $data;
     }
 }

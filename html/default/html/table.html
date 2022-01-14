@@ -2,7 +2,7 @@
   <div class="preloader" style="display:none">
     <div class="lock-screen"></div>
     <div class="block">
-      <img src="[THEME_SRC]/img/loading.gif"/> _tr(Загрузка...)
+      <img src="[THEME_SRC]/img/loading.gif"/> <span>_tr(Загрузка...)</span>
     </div>
   </div>
 
@@ -59,34 +59,34 @@
                 <div>
                   <!-- BEGIN datetime -->
                   <div [IN_TEXT]>
-                    <input type="datetime-local" id="search-[RESOURCE]-[KEY]-from-value" class="form-control input-sm"
+                    <input type="datetime-local" id="search-[RESOURCE]-[KEY]-from-value" class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][0]" value="[VALUE_START]"> -
-                    <input type="datetime-local" id="search-[RESOURCE]-[KEY]-to-value"  class="form-control input-sm"
+                    <input type="datetime-local" id="search-[RESOURCE]-[KEY]-to-value"  class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                   </div>
                   <!-- END datetime -->
 
                   <!-- BEGIN date -->
                   <div [IN_TEXT]>
-                    <input type="date" id="search-[RESOURCE]-[KEY]-from-value"  class="form-control input-sm"
+                    <input type="date" id="search-[RESOURCE]-[KEY]-from-value"  class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][0]" value="[VALUE_START]"> -
-                    <input type="date" id="search-[RESOURCE]-[KEY]-to-value"  class="form-control input-sm"
+                    <input type="date" id="search-[RESOURCE]-[KEY]-to-value"  class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                   </div>
                   <!-- END date -->
 
                   <!-- BEGIN number -->
                   <div [IN_TEXT]>
-                    <input type="number" id="search-[RESOURCE]-[KEY]-value-start"  class="form-control input-sm"
+                    <input type="number" id="search-[RESOURCE]-[KEY]-value-start"  class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][0]" value="[VALUE_START]"> -
-                    <input type="number" id="search-[RESOURCE]-[KEY]-value-end"  class="form-control input-sm"
+                    <input type="number" id="search-[RESOURCE]-[KEY]-value-end"  class="form-control input input-sm"
                            name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                   </div>
                   <!-- END number -->
 
                   <!-- BEGIN text -->
                   <div>
-                    <input id="search-[RESOURCE]-[KEY]" class="form-control input-sm" type="text"
+                    <input id="search-[RESOURCE]-[KEY]" class="form-control input input-sm" type="text"
                            name="search[[RESOURCE]][[KEY]]" value="[VALUE]" [IN_TEXT]/>
                   </div>
                   <!-- END text -->
@@ -130,7 +130,7 @@
             <tr>
               <td></td>
               <td class="control">
-                <input type="submit" class="btn btn-primary btn-sm" value="_tr(Поиск)">
+                <input type="submit" class="button btn btn-primary btn-sm" value="_tr(Поиск)">
               </td>
             </tr>
           </table>
@@ -158,7 +158,7 @@
           </div>
           <!-- END column_switcher_field -->
 
-          <input type="submit" class="btn btn-sm btn-primary" value="_tr(Применить)">
+          <input type="submit" class="button btn btn-sm btn-primary" value="_tr(Применить)">
         </form>
       </td>
     </tr>
@@ -173,10 +173,10 @@
         <div class="pull-right">
           <div class="custom-buttons">[BUTTONS]</div>
           <!-- BEGIN add_button -->
-          <a href="[URL]" class="btn btn-success btn-sm">[ADD_TEXT]</a>
+          <a href="[URL]" class="button btn btn-success btn-sm">[ADD_TEXT]</a>
           <!-- END add_button -->
           <!-- BEGIN del_button -->
-          <input type="button" class="btn btn-warning btn-sm" value="[DELETE_TEXT]"
+          <input type="button" class="button del btn btn-warning btn-sm" value="[DELETE_TEXT]"
                  onclick="CoreUI.table.deleteRows('[RESOURCE]', '[DELETE_MSG]', '[DELETE_NO_SELECT]', [IS_AJAX])"/>
           <!-- END del_button -->
         </div>
@@ -253,23 +253,23 @@
       <table width="100%"><tr>
         <!-- BEGIN gotopage -->
         <td align="left">
-          <input type="text" id="table-[RESOURCE]-gotopage" class="gotopage"/>
+          <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"/>
         </td>
         <td align="left">
-          <input class="btn btn-default btn-xs" type="button"
+          <input class="paginButton btn btn-default btn-xs" type="button"
                  onclick="CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"
                  value="&raquo;"/>
         </td>
         <!-- END gotopage -->
         <td align="center" width="100%">
           <!-- BEGIN prev -->
-          <input class="btn btn-default btn-xs" type="button"
+          <input class="paginButton btn btn-default btn-xs" type="button"
                  onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[PREV_PAGE]"
                  value="&laquo;"/>
           <!-- END prev -->
           [CURRENT_PAGE] _tr(из) [COUNT_PAGES]
           <!-- BEGIN next -->
-          <input class="btn btn-default btn-xs" type="button"
+          <input class="paginButton btn btn-default btn-xs" type="button"
                  onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[NEXT_PAGE]"
                  value="&raquo;"/>
           <!-- END next -->

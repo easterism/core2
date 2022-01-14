@@ -7,9 +7,13 @@ require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
 require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
 require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 require_once DOC_ROOT . 'core2/inc/classes/Templater2.php';
+require_once DOC_ROOT . 'core2/inc/classes/Table/Data.php';
+
+require_once "Gitlab.php";
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
+use Core2\Classes\Table;
 
 /**
  * Class Modules
@@ -29,44 +33,32 @@ class Modules extends \Common  {
     public function getAvailableEdit(Int $avail_id) {
         $edit = new \editTable('mod_available');
         /* Добавление нового модуля */
-        if (!$avail_id || $avail_id < 0) {
-            if (empty($this->config->php) || empty($this->config->php->path)) {
+        if ( ! $avail_id || $avail_id < 0) {
+            if (empty($this->config->php) ||
+                empty($this->config->php->path) ||
+                empty( exec('which php'))
+            ) {
                 $edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
             }
 
-            $edit->SQL = "SELECT id,
-                                     name
-                                FROM core_available_modules
-                               WHERE id = 0";
-            if ($avail_id < 0) {
+            $edit->SQL = "
+                SELECT id,
+                       name
+                FROM core_available_modules
+                WHERE id = 0
+            ";
 
-                $edit->addControl("GitLab релиз", "MODAL", array(
-                    'disabled' => 'disabled',
-                    'size' => '40',
-                    'options' => "{minHeight:450,
-                                   minWidth:830,
-                                   position: [350,'20%'],
-                        onShow: function (dialog) { 
-                            $('#modal_name').html('Загрузка...')
-                            gl.xxx={};
-                            $('#modal_name').load('index.php?module=admin&action=modules&__gitlab=1') 
-                        },
-                        onClose: function (dialog) {
-                            dialog.data.fadeOut('fast', function () {
-                                dialog.container.slideUp('fast', function () {
-                                    dialog.overlay.fadeOut('fast', function () {
-                                        if (gl.xxx.group) {
-                                            $('#main_mod_availablename').val(gl.xxx.group + '|' + gl.xxx.tag);
-                                            $('#main_mod_availablename_text').val(gl.xxx.group + ' ' + gl.xxx.tag);
-                                         }
-                                        gl.xxx={};
-                                        $.modal.close();
-                                    });
-                                });
-                            });
-                        }}"), "", "", true);
-            }
-            else {
+            if ($avail_id < 0) {
+                $modal_data = [
+                    'title'    => 'Gitlab репозиторий',
+                    'url'      => 'index.php?module=admin&action=modules&page=table_gitlab',
+                    'size'     => 'large',
+                    'text'     => '',
+                ];
+
+                $edit->addControl("GitLab релиз", "MODAL2", $modal_data, '', '', true);
+
+            } else {
                 $edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
             }
 
@@ -163,22 +155,21 @@ class Modules extends \Common  {
         }
 
 
-        $copy_list = $this->db->fetchAll(
-            "SELECT id,
-                        `name`,
-                        module_id,
-                        module_group,
-                        descr,
-                        NULL AS deps,
-                        version,
-                        NULL AS author,
-                        NULL AS ia_sys_sw,
-                        install_info
-                   FROM core_available_modules
-                  WHERE 1=1
-                  {$where_search}
-               ORDER BY module_group, `name`"
-        );
+        $copy_list = $this->db->fetchAll("
+            SELECT id,
+                   `name`,
+                   module_id,
+                   module_group,
+                   descr,
+                   NULL AS deps,
+                   version,
+                   NULL AS author,
+                   NULL AS ia_sys_sw,
+                   install_info
+            FROM core_available_modules
+            WHERE 1=1 {$where_search}
+            ORDER BY module_group, `name`
+        ");
 
         if (!empty($copy_list)) {
             $allMods = array();
@@ -194,7 +185,7 @@ class Modules extends \Common  {
         $install = new InstallModule();
         foreach ($copy_list as $row) {
             $arr[0] = $row['id'];
-            $arr[1] = ($row['module_group'] ? "/" . $row['module_group'] : '') . $row['name'];
+            $arr[1] = ($row['module_group'] ? "<b>{$row['module_group']}</b> " : '') . $row['name'];
             $arr[2] = $row['module_id'];
             $arr[3] = $row['descr'];
             $mData = unserialize(htmlspecialchars_decode($row['install_info']));
@@ -688,14 +679,17 @@ class Modules extends \Common  {
 
         $list = new \listTable('submod');
 
-        $list->SQL = "SELECT sm_id,
-                                     sm_name,
-                                     sm_path,
-                                     seq,
-                                     visible
-                                FROM core_submodules
-                                WHERE m_id = '$refid'
-                               ORDER BY seq, sm_name";
+        $list->SQL = $this->db->quoteInto("
+            SELECT sm_id,
+                  sm_name,
+                  sm_path,
+                  seq,
+                  visible
+            FROM core_submodules
+            WHERE m_id = ?
+            ORDER BY seq, sm_name
+        ", $refid);
+
         $list->addColumn($this->_("Субмодуль"), "", "TEXT");
         $list->addColumn($this->_("Путь"), "", "TEXT");
         $list->addColumn($this->_("Позиция"), "", "TEXT");
@@ -710,5 +704,115 @@ class Modules extends \Common  {
 
         $list->showTable();
         $tabs->endContainer();
+    }
+
+
+    /**
+     * Gitlab репозитории
+     * @return string
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Exception
+     */
+    public function getTableGitlab(): string {
+
+        $table = new Table\Data("{$this->resId}xxx_gitlab");
+        $table->hideCheckboxes();
+        $table->setAjax();
+
+        $modules = $this->getGitlabModules();
+        $table->setData($modules);
+
+        $table->addSearch($this->_("Модуль"), 'path');
+        $table->addSearch($this->_("Версия"), 'version');
+        $table->addSearch($this->_("Автор"),  'author');
+        $table->addSearch($this->_("Дата"),   'date', $table::SEARCH_DATE);
+
+
+        $table->addColumn($this->_("Модуль"), 'path',    $table::COLUMN_HTML);
+        $table->addColumn($this->_('Версия'), 'version', $table::COLUMN_TEXT, 100);
+        $table->addColumn($this->_("Автор"),  'author',  $table::COLUMN_TEXT, 250);
+        $table->addColumn($this->_("Дата"),   'date',    $table::COLUMN_DATETIME, 120);
+
+
+        $data = $table->fetchData();
+        if ( ! empty($data)) {
+            foreach ($data as $row) {
+
+                $row->module = $row->path->getValue();
+
+                $path       = $row->path->getValue();
+                $path_end   = mb_substr($path, mb_strrpos($path, '/') + 1);
+                $path_begin = mb_substr($path, 0, mb_strrpos($path, '/') + 1);
+                $row->path  = "<span class=\"text-muted\">{$path_begin}</span><b>{$path_end}</b>";
+            }
+        }
+
+        $update_table = $this->_('Обновить список');
+
+        $table->setEditUrl("javascript:edit.modal2.choose('TCOL_MODULE|TCOL_VERSION', 'TCOL_MODULE TCOL_VERSION');");
+        $table->addCustomControl("<button class=\"button btn btn-sm btn-default\" onclick=\"modules.updateTable('" . THEME . "')\">{$update_table}</button>");
+
+        return $table->render();
+    }
+
+
+    /**
+     * Очистка списка модулей из Gitlab
+     * @return bool
+     */
+    public function gitlabClean(): bool {
+
+        $gitlab_cache_key = 'gitlab_modules';
+
+        if ($this->cache->test($gitlab_cache_key)) {
+            $this->cache->clean($gitlab_cache_key);
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Получение списка модулей из Gitlab
+     * @return array|bool
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function getGitlabModules(): array {
+
+        $gitlab_cache_key = 'gitlab_modules';
+
+        if ($this->cache->test($gitlab_cache_key)) {
+            $modules = $this->cache->load($gitlab_cache_key);
+
+        } else {
+            $gitlab         = new Gitlab();
+            $gitlab_modules = $gitlab->getTags();
+            $modules        = [];
+
+            if ( ! empty($gitlab_modules)) {
+                foreach ($gitlab_modules as $module_id => $module) {
+
+                    if ( ! empty($module['tags'])) {
+                        foreach ($module['tags'] as $tag) {
+                            $modules[] = [
+                                'module_id' => $module_id,
+                                'path'      => $module['name'],
+                                'version'   => $tag['name'],
+                                'author'    => "{$tag['author_name']} ({$tag['author_email']})",
+                                'date'      => $tag['authored_date'],
+                            ];
+                        }
+                    }
+                }
+            }
+
+            if ( ! empty($modules)) {
+                $modules = \Tool::arrayMultisort($modules, 'date', SORT_DESC);
+            }
+
+            $this->cache->save($modules, $gitlab_cache_key);
+        }
+
+        return $modules ?: [];
     }
 }

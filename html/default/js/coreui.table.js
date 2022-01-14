@@ -64,11 +64,11 @@ CoreUI.table = {
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    CoreUI.table.preloader.show(resource);
+                    //CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
                     load(CoreUI.table.loc[resource] + '&__clear=1', post, container, function () {
-                        CoreUI.table.preloader.hide(resource);
+                        //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
@@ -96,11 +96,11 @@ CoreUI.table = {
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    CoreUI.table.preloader.show(resource);
+                    //CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
                     load(CoreUI.table.loc[resource] + '&__search=1', post, container, function () {
-                        CoreUI.table.preloader.hide(resource);
+                        //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
@@ -359,7 +359,7 @@ CoreUI.table = {
         var p         = '_page_' + resource + '=' + obj.getAttribute('title');
 
         if (isAjax) {
-            CoreUI.table.preloader.show(resource);
+            //CoreUI.table.preloader.show(resource);
 
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
@@ -370,7 +370,7 @@ CoreUI.table = {
 
             } else {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
-                    CoreUI.table.preloader.hide(resource);
+                    //CoreUI.table.preloader.hide(resource);
                     preloader.callback();
                 });
             }
@@ -424,11 +424,11 @@ CoreUI.table = {
         post['order_' + resource] = columnNumber;
 
         if (isAjax) {
-            CoreUI.table.preloader.show(resource);
+            //CoreUI.table.preloader.show(resource);
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
             load(CoreUI.table.loc[resource] + '&__order=1', post, container, function () {
-                CoreUI.table.preloader.hide(resource);
+                //CoreUI.table.preloader.hide(resource);
                 preloader.callback();
             });
 
@@ -632,14 +632,14 @@ CoreUI.table = {
         var container = '';
 
         if (isAjax) {
-            CoreUI.table.preloader.show(resource);
+            //CoreUI.table.preloader.show(resource);
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
         }
 
         var post = {};
         post['count_' + resource] = select.value;
         load(CoreUI.table.loc[resource], post, container, function () {
-            CoreUI.table.preloader.hide(resource);
+            //CoreUI.table.preloader.hide(resource);
             preloader.callback();
         });
     }
