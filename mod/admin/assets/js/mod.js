@@ -10,6 +10,33 @@ var modules = {
 			$("#repo_" + repo_id).html("Фатальная ошибка!");
 		});
     },
+
+
+	/**
+	 * Очистка кэша в списке модулей полученных из gitlab
+	 * @param theme
+	 */
+	updateTable: function (theme) {
+
+        $.ajax({
+			url:'index.php?module=admin&action=modules&data=cache_clean',
+			dataType: "json",
+			type: "POST",
+		})
+		.done(function(data) {
+			if (data.hasOwnProperty('status') && data.status === 'success') {
+				$(".modal .modal-body").html('<div style="text-align:center"><img src="core2/html/' + theme + '/img/load.gif"> Обновление списка</div>');
+				$(".modal .modal-body").load('index.php?module=admin&action=modules&page=table_gitlab');
+
+			} else {
+				alert("Ошибка обновления списка");
+			}
+		})
+		.fail(function () {
+			alert("Не удалось обновить список");
+		});
+    },
+
     'spoiler': function (id) {
         $('.' + id).toggle();
     },

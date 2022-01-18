@@ -50,6 +50,7 @@ class Gitlab extends \Common {
         $filter_group = [];
         if ($this->moduleConfig->gitlab->filter && $this->moduleConfig->gitlab->filter->group) {
             $filter_group = explode(",", $this->moduleConfig->gitlab->filter->group);
+            $filter_group = array_map('trim', $filter_group);
         }
 
         $this->getProjects();

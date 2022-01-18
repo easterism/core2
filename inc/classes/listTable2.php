@@ -1,4 +1,5 @@
-<?
+<?php
+
 require_once("class.ini.php");
 class listTable2 extends initList {
 	public $addSum 				= array();

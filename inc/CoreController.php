@@ -8,7 +8,6 @@ require_once 'classes/Alert.php';
 require_once 'Interfaces/File.php';
 
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
@@ -164,6 +163,48 @@ class CoreController extends Common implements File {
             throw new Exception(911);
         }
 
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    case 'cache_clean':
+                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                            throw new Exception('Некорректный http метод');
+                        }
+                        header("Content-Type: application/json");
+                        (new \Core2\Modules())->gitlabClean();
+                        return json_encode([
+                            'status' => 'success'
+                        ]);
+                        break;
+                }
+
+                throw new Exception($this->_('Некорректный адрес'));
+
+            } catch (Exception $e) {
+                header("Content-Type: application/json");
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage()
+                ]);
+            }
+        }
+
+        if (isset($_GET['page'])) {
+            try {
+                switch ($_GET['page']) {
+                    case 'table_gitlab':
+                        return (new \Core2\Modules())->getTableGitlab();
+                        break;
+                }
+
+                throw new Exception($this->_('Некорректный адрес'));
+
+            } catch (Exception $e) {
+                return Alert::danger($e->getMessage());
+            }
+        }
+
+
         //проверка наличия обновлений для модулей
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
             header('Content-type: application/json; charset="utf-8"');
@@ -201,47 +242,6 @@ class CoreController extends Common implements File {
             return;
         }
 
-        if ( ! empty($_GET['__gitlab'])) {
-            $gitlab = new \Core2\Gitlab();
-            $tags   = $gitlab->getTags();
-
-            ob_start();
-
-            if ( ! empty($tags)) {
-                // FIXME вынести в шаблон
-                echo "<b>Репозитории</b>";
-                echo "<ol>";
-                foreach ($tags as $item) {
-                    echo "<li>{$item['name']}";
-                    echo "<ul>";
-
-                    if ( ! empty($item['tags'])) {
-                        foreach ($item['tags'] as $tag) {
-                            echo "
-                                <li>
-                                    <a href=\"#\" 
-                                       onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();return false\">
-                                        {$tag['name']}
-                                    </a>
-                                    {$tag['author_name']} ({$tag['author_email']})
-                                </li>
-                            ";
-                        }
-                    } else {
-                        echo "<li>Нет тегов</li>";
-                    }
-
-                    echo "</ul></li>";
-                }
-                echo "</ol>";
-
-            } else {
-                echo $this->_("Репозитории не найдены. Проверьте правильность параметров");
-            }
-
-            return ob_get_clean();
-        }
-
 
         $mods = new Modules();
         if (empty($_POST)) {
@@ -251,8 +251,9 @@ class CoreController extends Common implements File {
 
         $panel = new \Panel('tab');
         $panel->addTab($this->_("Установленные модули"), 'install',   "index.php?module=admin&action=modules");
-        $panel->addTab($this->_("Доступные модули"),	     'available', "index.php?module=admin&action=modules");
+        $panel->addTab($this->_("Доступные модули"),	 'available', "index.php?module=admin&action=modules");
         $panel->setTitle($this->_("Модули"));
+
         ob_start();
         switch ($panel->getActiveTab()) {
             case 'install':

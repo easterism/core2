@@ -14,6 +14,7 @@ class Column {
     protected $type       = '';
     protected $attr       = [];
     protected $is_sorting = true;
+    protected $is_show    = true;
 
 
     /**
@@ -100,7 +101,7 @@ class Column {
      * @return self
      *@throws Exception
      */
-    public function setPrependAttr(string $name, string $value): Column {
+    public function setAttrPrepend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
             (is_string($value) || is_numeric($value))) {
             if (array_key_exists($name, $this->attr)) {
@@ -123,7 +124,7 @@ class Column {
      * @return self
      *@throws Exception
      */
-    public function setAppendAttr(string $name, string $value): Column {
+    public function setAttrAppend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
             (is_string($value) || is_numeric($value))) {
             if (array_key_exists($name, $this->attr)) {
@@ -163,9 +164,57 @@ class Column {
 
 
     /**
+     * @return $this
+     */
+    public function show(): Column {
+        $this->is_show = true;
+        return $this;
+    }
+
+
+    /**
+     * @return $this
+     */
+    public function hide(): Column {
+        $this->is_show = false;
+        return $this;
+    }
+
+
+    /**
      * @return bool
      */
     public function isSorting(): bool {
         return $this->is_sorting;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isShow(): bool {
+        return $this->is_show;
+    }
+
+
+    /**
+     * Преобразование в массив
+     * @return array
+     */
+    public function toArray(): array {
+
+        $data = [
+            'field'   => $this->field,
+            'title'   => $this->title,
+            'type'    => $this->type,
+            'sorting' => $this->is_sorting,
+            'show'    => $this->is_show,
+        ];
+
+        if ( ! empty($this->attr)) {
+            $data['attr'] = $this->attr;
+        }
+
+        return $data;
     }
 }

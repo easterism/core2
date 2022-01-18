@@ -966,10 +966,10 @@ table.calendar {
     user-select: none;
     background-image: none;
     border: 1px solid #ccc;
-    -webkit-border-radius: 3px;
-       -moz-border-radius: 3px;
-         -o-border-radius: 3px;
-            border-radius: 3px;
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+         -o-border-radius: 4px;
+            border-radius: 4px;
     color: #333;
     background-color: #fff;
     height: 30px;
@@ -2348,6 +2348,7 @@ table.coreui-table > thead {background-color: #FFF}
 table.coreui-table > tfoot,
 table.coreui-table > thead > .table-control-panel,
 table.coreui-table > thead > .search-container,
+table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
 
@@ -2377,7 +2378,10 @@ table.coreui-table > tfoot > tr > td {
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
 table.coreui-table > thead > tr.table-service-panel > td  {padding: 5px;}
-table.coreui-table > thead > tr.table-service-panel > td > .total  {padding: 5px 0;}
+table.coreui-table > thead > tr.table-service-panel > td > .total  {
+    padding: 5px 0;
+    line-height: 18px;
+}
 table.coreui-table > thead > tr > th:first-child,
 table.coreui-table > tbody > tr > th:first-child,
 table.coreui-table > thead > tr > td:first-child,
@@ -2397,17 +2401,22 @@ table.coreui-table > thead > tr > th {
 }
 table.coreui-table .pointer {cursor: pointer}
 table.coreui-table .table-header > th.pointer:hover > span {text-decoration: underline}
-table.coreui-table .search-controls {
+table.coreui-table .table-controls {
     padding: 4px 0;
     margin: 0;
 }
-table.coreui-table .search-controls .search-control {
+table.coreui-table .table-controls .table-control {
     display: inline-block;
     list-style: none;
     cursor:pointer;
     margin-right: 10px;
 }
-table.coreui-table .search-controls .search-control:hover span {text-decoration: underline}
+table.coreui-table .table-controls button {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+}
+table.coreui-table .table-controls .table-control:hover span {text-decoration: underline}
 table.coreui-table > .table-control-panel > td,
 table.coreui-table > .search-container > td,
 table.coreui-table > .table-service-panel > td {padding: 5px 10px}
@@ -2474,6 +2483,10 @@ table.coreui-table .search-container form label {
     margin-top: 5px;
     max-width: 100%;
 }
+table.coreui-table .search-container .control-type-number input {
+    width: 140px;
+    display: inline-block;
+}
 table.coreui-table .search-container .control-type-date input {
     width: 140px;
     display: inline-block;
@@ -2487,6 +2500,9 @@ table.coreui-table .search-container .control-type-text_strict input,
 table.coreui-table .search-container .control-type-select select,
 table.coreui-table .search-container .control-type-multiselect select {
     width: 180px;
+}
+table.coreui-table .column-switcher-container form  {
+     margin-bottom: 10px;
 }
 
 
@@ -2554,9 +2570,10 @@ table.coreui-table select.records-per-page {
     .searchContainer .searchRow div.ctrl-dpr {
         min-width: 360px;
     }
-    .password-control .password-repeat {
+    .password-control span.password-repeat {
         display: block;
         clear: both;
+        float: none;
     }
     .core-group-head {
         text-align: left;

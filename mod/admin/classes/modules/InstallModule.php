@@ -589,8 +589,8 @@ class InstallModule extends \Common {
             if ($this->checkSQL($sql)) {
                 //разбиваем запросы на отдельные
                 $sql = $this->SQLToQueriesArray($sql);
-                foreach ($sql as $qu) {
-                    $this->db->query($qu);//TODO исправить работу с last_insert_id()
+                foreach ($sql as $query) {
+                    $this->db->query($query);//TODO исправить работу с last_insert_id()
                 }
                 $this->addNotice($this->translate->tr("Таблицы модуля"), $this->translate->tr("Таблицы добавлены"), $this->translate->tr("Успешно"), "info");
             } else {
@@ -2474,20 +2474,21 @@ class InstallModule extends \Common {
 
     /**
      * разбиваем SQL на запросы и отдаем в массиве
-     *
      * @param $sql
-     *
      * @return mixed
      */
     private function SQLToQueriesArray($sql){
-        $sql = preg_split("~;\s*\n~", $sql);
-        $queries = array();
-        foreach ($sql as $qu) {
-            $qu = trim($qu);
-            if ($qu) {
-                $queries[] = $qu;
+
+        $sql     = preg_split("~;\s*\n~", $sql);
+        $queries = [];
+
+        foreach ($sql as $query) {
+            $query = trim($query);
+            if ($query && substr($query, 0, 3) !== "-- ") {
+                $queries[] = $query;
             }
         }
+
         return $queries;
     }
 

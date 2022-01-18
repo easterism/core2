@@ -1461,6 +1461,15 @@ class Login extends Db {
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');
         $tpl->assign('favicon.ico', isset($this->favicon['ico']) && is_file($this->favicon['ico']) ? $this->favicon['ico'] : '');
 
+
+        if ( ! empty($this->config->system) &&
+             ! empty($this->config->system->theme) &&
+             ! empty($this->config->system->theme->login_bg) &&
+            $tpl->issetBlock('theme_style')
+        ) {
+            $tpl->theme_style->assign("[LOGIN_BG]", $this->config->system->theme->login_bg);
+        }
+
         return $tpl->render();
     }
 }
