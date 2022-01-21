@@ -36,7 +36,6 @@ function captureScreen(callback) {
 }
 
 function stopRecordingCallback() {
-    if (!recorder) return;
     video.src = video.srcObject = null;
     video.src = URL.createObjectURL(recorder.getBlob());
 

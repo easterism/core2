@@ -13,8 +13,11 @@ var feedback = {
 			err.push('Введите текст сообщения');
 			this.feedbackError(err);
 		}
+		if (recorder && !video.src) {
+			err.push('Сначала остановите запись экрана.');
+			this.feedbackError(err);
+		}
 		if (!err.length) {
-			stopRecordingCallback();
 			var serializedFormData = new FormData(document.getElementById('feedback-form'));
 			serializedFormData.append('sendSupportForm', 1);
 			if (recorder) {
