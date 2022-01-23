@@ -155,6 +155,8 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_CHECKBOX:
+                        case self::SEARCH_MULTISELECT:
                         case self::SEARCH_SELECT:
                             $select->where("{$field} IN(?)", $value);
                             break;
