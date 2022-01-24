@@ -627,8 +627,7 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-	padding: 3px;
-    padding-right: 10px!important;
+    padding: 0 10px 3px 3px;
     width: 190px;
     box-sizing: border-box;
 }
