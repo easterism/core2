@@ -58,6 +58,7 @@ abstract class Table extends Acl {
     protected $date_mask      = "d.m.Y";
     protected $datetime_mask  = "d.m.Y H:i";
     protected $locutions      = [
+        'All'                                        => 'Все',
         'Add'                                        => 'Добавить',
         'Delete'                                     => 'Удалить',
         'Are you sure you want to delete this post?' => 'Вы действительно хотите удалить эту запись?',
@@ -133,7 +134,7 @@ abstract class Table extends Acl {
             }
         }
 
-        if (isset($this->session->table->records_per_page) && $this->session->table->records_per_page > 0) {
+        if (isset($this->session->table->records_per_page) && $this->session->table->records_per_page >= 0) {
             $this->records_per_page = $this->session->table->records_per_page;
             $this->records_per_page = $this->records_per_page === 0
                 ? 1000000000
@@ -697,43 +698,44 @@ abstract class Table extends Acl {
 
             // Pagination
             $count_pages = ceil($this->records_total / $this->records_per_page);
-            $tpl->footer->pages->assign('[CURRENT_PAGE]', $this->current_page);
-            $tpl->footer->pages->assign('[COUNT_PAGES]',  $count_pages);
 
             if ($count_pages > 1) {
                 $tpl->footer->pages->touchBlock('gotopage');
-
-                if ($this->current_page > 1) {
-                    $tpl->footer->pages->prev->assign('[PREV_PAGE]', $this->current_page - 1);
-                }
-                if ($this->current_page < $count_pages) {
-                    $tpl->footer->pages->next->assign('[NEXT_PAGE]', $this->current_page + 1);
-                }
-
-
-                $per_page_list = [
-                    '25'   => '25',
-                    '50'   => '50',
-                    '100'  => '100',
-                    '1000' => '1000',
-                ];
-
-                if ( ! isset($per_page_list[$this->records_per_page_default]) &&
-                    $this->records_per_page_default > 0
-                ) {
-                    $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
-                }
-
-                ksort($per_page_list);
-
-                $per_page_list[0] = $this->getLocution('All');
-
-                $tpl->footer->pages->per_page->fillDropDown(
-                    'records-per-page-[RESOURCE]',
-                    $per_page_list,
-                    $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
-                );
             }
+
+            $tpl->footer->pages->assign('[CURRENT_PAGE]', $this->current_page);
+            $tpl->footer->pages->assign('[COUNT_PAGES]',  $count_pages);
+
+            if ($this->current_page > 1) {
+                $tpl->footer->pages->prev->assign('[PREV_PAGE]', $this->current_page - 1);
+            }
+            if ($this->current_page < $count_pages) {
+                $tpl->footer->pages->next->assign('[NEXT_PAGE]', $this->current_page + 1);
+            }
+
+
+            $per_page_list = [
+                '25'   => '25',
+                '50'   => '50',
+                '100'  => '100',
+                '1000' => '1000',
+            ];
+
+            if ( ! isset($per_page_list[$this->records_per_page_default]) &&
+                $this->records_per_page_default > 0
+            ) {
+                $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
+            }
+
+            ksort($per_page_list);
+
+            $per_page_list[0] = $this->getLocution('All');
+
+            $tpl->footer->pages->per_page->fillDropDown(
+                'records-per-page-[RESOURCE]',
+                $per_page_list,
+                $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
+            );
         }
 
         return $tpl->render();
