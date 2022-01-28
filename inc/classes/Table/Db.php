@@ -19,6 +19,8 @@ class Db extends Table {
     protected $primary_key = '';
     protected $query        = '';
     protected $query_params = '';
+    protected $select       = null;
+    protected $query_parts  = [];
 
 
     /**
@@ -26,6 +28,24 @@ class Db extends Table {
      */
     public function __construct(string $resource) {
         parent::__construct($resource);
+    }
+
+
+    /**
+     * @return \Zend_Db_Select|null
+     */
+    public function getSelect():? \Zend_Db_Select {
+
+        return $this->select;
+    }
+
+
+    /**
+     * @return array|null
+     */
+    public function getQueryParts(): array {
+
+        return $this->query_parts;
     }
 
 
@@ -214,6 +234,8 @@ class Db extends Table {
             }
         }
 
+        $this->select = clone $select;
+
         $data_rows           = [];
         $data_result         = $this->db->fetchAll($select);
         $this->records_total = (int)$this->db->fetchRow('SELECT FOUND_ROWS() AS count')['count'];
@@ -348,6 +370,7 @@ class Db extends Table {
             $this->setTable($select->getTable());
         }
 
+        $this->query_parts = $select->getSqlParts();
 
         $sql = $select->getSql();
 
