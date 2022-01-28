@@ -25,8 +25,8 @@ body {
 	width: 100%;
 }
 table {
-	border:0px; 
-	border-collapse:collapse; 
+	border: 0;
+	border-collapse:collapse;
 	empty-cells: show;
 }
 table td {
@@ -637,7 +637,7 @@ table.editTable {
 }
 .newRulesSubModule {
 	text-decoration:underline;
-	cursor:pointer;	
+	cursor:pointer;
 }
 .newFieldEnum {
 	text-decoration:underline;
@@ -1131,11 +1131,11 @@ table.calendar {
 	color: #00f;
 }
 .helpHeaderDiv {
-	float:right; 
+	float:right;
 	display: inline;
 }
 .helpImg{
-	
+
 }
 
 /* simple modal */
@@ -1149,19 +1149,19 @@ table.calendar {
 	height:auto;
 	left:50%;
 	margin-left:-100px;
-	top:50%; 
+	top:50%;
 	margin-top: -270px;
 	background-color:#fff;
 	border:3px solid #ccc;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
-    padding: 0px;
+    padding: 0;
 }
 .simplemodal-wrap {overflow:auto !important}
 a.modalCloseImg {
 	background:url(../img/icon_delete.gif) no-repeat;
-	width:25px; 
+	width:25px;
 	height:26px;
 	display:inline;
 	z-index:3200;
@@ -1191,7 +1191,6 @@ a.modalCloseImg {
     position: absolute;
     width: 250px;
 	padding-left: 5px;
-		
 }
 /*Install Module*/
 .installError {color: red}
@@ -1201,7 +1200,7 @@ a.modalCloseImg {
 .feedBackOption {font-weight: bold}
 .feedBackSelect {width: 100%}
 .feedBackMessage {
-	width: 100%; 
+	width: 100%;
 	height: 120px;
 	overflow: auto;
     box-sizing: border-box;
@@ -2396,7 +2395,7 @@ table.coreui-table > tfoot > tr > td {
     font-size: 12px;
     border-top: 1px solid #DDDDDD;
     line-height: 1.42857;
-    padding: 5px;
+    padding: 2px 5px;
     vertical-align: middle;
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/

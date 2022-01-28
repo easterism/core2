@@ -2372,7 +2372,7 @@ table.coreui-table > tfoot > tr > td {
     font-size: 12px;
     border-top: 1px solid #DDDDDD;
     line-height: 1.42857;
-    padding: 5px;
+    padding: 2px 5px;
     vertical-align: middle;
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
