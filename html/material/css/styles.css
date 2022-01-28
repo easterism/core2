@@ -2374,6 +2374,8 @@ table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
 
+table.coreui-table > thead > .table-control-panel {height: 35px;}
+
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
 table.coreui-table > tbody > tr:hover > td,
@@ -2395,7 +2397,7 @@ table.coreui-table > tfoot > tr > td {
     font-size: 12px;
     border-top: 1px solid #DDDDDD;
     line-height: 1.42857;
-    padding: 2px 5px;
+    padding: 5px;
     vertical-align: middle;
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
@@ -2415,6 +2417,10 @@ table.coreui-table > tbody > tr > th:last-child,
 table.coreui-table > thead > tr > td:last-child,
 table.coreui-table > tbody > tr > td:last-child {
     padding-right: 10px;
+}
+table.coreui-table > tbody > tr > td .checked-row input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
 }
 table.coreui-table > thead > tr > th {
     border-bottom: 2px solid #D2D2D2;
