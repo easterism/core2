@@ -25,6 +25,10 @@ class Data extends Table {
 
             $this->records_total = count($this->data);
 
+            if ( ! empty($this->filter_controls) && ! empty($this->session->table->filter)) {
+                $this->data = $filter->filterData($this->data, $this->filter_controls, $this->session->table->filter);
+            }
+
             if ( ! empty($this->search_controls) && ! empty($this->session->table->search)) {
                 $this->data = $filter->searchData($this->data, $this->search_controls, $this->session->table->search);
             }

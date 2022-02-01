@@ -2,6 +2,7 @@
 namespace Core2\Classes;
 use Core2\Acl;
 use Core2\Classes\Table\Exception;
+use Core2\Classes\Table\Filter;
 use Core2\Classes\Table\Row;
 use Core2\Classes\Table\Button;
 use Core2\Classes\Table\Column;
@@ -16,6 +17,7 @@ require_once 'Table/Cell.php';
 require_once 'Table/Button.php';
 require_once 'Table/Column.php';
 require_once 'Table/Search.php';
+require_once 'Table/Filter.php';
 
 
 /**
@@ -26,9 +28,9 @@ abstract class Table extends Acl {
 
     protected $resource                 = '';
     protected $show_select_rows         = true;
-    protected $show_delete              = false;
-    protected $show_columns_switcher    = false;
-    protected $show_templates           = false;
+    protected $show_delete        = false;
+    protected $show_column_manage = false;
+    protected $show_templates     = false;
     protected $show_number_rows         = true;
     protected $show_service             = true;
     protected $show_header              = true;
@@ -40,6 +42,7 @@ abstract class Table extends Acl {
     protected $columns                  = [];
     protected $buttons                  = [];
     protected $search_controls          = [];
+    protected $filter_controls          = [];
     protected $records_total            = 0;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
@@ -74,6 +77,15 @@ abstract class Table extends Acl {
     const SEARCH_CHECKBOX    = 'checkbox';
     const SEARCH_RADIO       = 'radio';
     const SEARCH_MULTISELECT = 'multiselect';
+
+    const FILTER_SELECT      = 'select';
+    const FILTER_TEXT        = 'text';
+    const FILTER_TEXT_STRICT = 'text_strict';
+    const FILTER_DATE        = 'date';
+    const FILTER_DATETIME    = 'datetime';
+    const FILTER_NUMBER      = 'number';
+    const FILTER_CHECKBOX    = 'checkbox';
+    const FILTER_RADIO       = 'radio';
 
     const COLUMN_TEXT     = 'text';
     const COLUMN_HTML     = 'html';
@@ -111,6 +123,14 @@ abstract class Table extends Acl {
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
             $this->session->table->search = [];
+        }
+
+        // FILTER
+        if ( ! empty($_POST['filter']) && ! empty($_POST['filter'][$resource])) {
+            $this->session->table->filter = $_POST['filter'][$resource];
+        }
+        if ( ! empty($_POST['filter_clear_' . $this->resource])) {
+            $this->session->table->filter = [];
         }
 
 
@@ -304,18 +324,26 @@ abstract class Table extends Acl {
 
 
     /**
-     *
+     * @deprecated used showColumnManage()
      */
     public function showColumnsSwitcher() {
-        $this->show_columns_switcher = true;
+        $this->show_column_manage = true;
     }
 
 
     /**
      *
      */
-    public function hideColumnsSwitcher() {
-        $this->show_columns_switcher = false;
+    public function showColumnManage() {
+        $this->show_column_manage = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideColumnManage() {
+        $this->show_column_manage = false;
     }
 
 
@@ -512,8 +540,147 @@ abstract class Table extends Acl {
             }
         }
 
+        if ( ! empty($this->filter_controls)) {
+            $filter_value = ! empty($this->session->table) && ! empty($this->session->table->filter)
+                ? $this->session->table->filter
+                : [];
 
-        if ($this->show_columns_switcher) {
+            if ( ! empty($filter_value) && count($filter_value)) {
+                $tpl->filter_controls->touchBlock('filter_clear');
+            }
+
+            foreach ($this->filter_controls as $key => $filter) {
+                if ($filter instanceof Filter) {
+                    $control_value     = $filter_value[$key] ?? '';
+                    $filter_attributes = $filter->getAttributes();
+                    $attributes_str    = '';
+
+                    if ( ! empty($filter_attributes)) {
+                        $attributes = [];
+                        foreach ($filter_attributes as $attr => $value) {
+                            $attributes[] = "$attr=\"{$value}\"";
+                        }
+                        $implode_attributes = implode(' ', $attributes);
+                        $attributes_str     = $implode_attributes ? ' ' . $implode_attributes : '';
+                    }
+
+                    switch ($filter->getType()) {
+                        case self::FILTER_TEXT :
+                        case self::FILTER_TEXT_STRICT :
+                            $tpl->filter_controls->filter_control->text->assign("[KEY]",   $key);
+                            $tpl->filter_controls->filter_control->text->assign("[VALUE]", $control_value);
+                            $tpl->filter_controls->filter_control->text->assign("[TITLE]", $filter->getTitle());
+                            $tpl->filter_controls->filter_control->text->assign("[ATTR]",  $attributes_str);
+                        break;
+
+                        case self::FILTER_RADIO :
+                            $data = $filter->getData();
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->radio->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            if ( ! empty($data)) {
+                                foreach ($data as $radio_value => $radio_title) {
+                                    $is_checked = $control_value == $radio_value
+                                        ? 'checked="checked"'
+                                        : '';
+                                    $is_active = $control_value == $radio_value
+                                        ? 'active'
+                                        : '';
+
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[KEY]",        $key);
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[VALUE]",      $radio_value);
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[TITLE]",      $radio_title);
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[ATTR]",       $attributes_str);
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[IS_CHECKED]", $is_checked);
+                                    $tpl->filter_controls->filter_control->radio->item->assign("[IS_ACTIVE]",  $is_active);
+                                    $tpl->filter_controls->filter_control->radio->item->reassign();
+                                }
+                            }
+                            break;
+
+                        case self::FILTER_CHECKBOX :
+                            $data = $filter->getData();
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->checkbox->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            if ( ! empty($data)) {
+                                foreach ($data as $checkbox_value => $checkbox_title) {
+                                    $is_checked = is_array($control_value) && in_array($checkbox_value, $control_value)
+                                        ? 'checked="checked"'
+                                        : '';
+                                    $is_active = is_array($control_value) && in_array($checkbox_value, $control_value)
+                                        ? 'active'
+                                        : '';
+
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[KEY]",        $key);
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[VALUE]",      $checkbox_value);
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[TITLE]",      $checkbox_title);
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[ATTR]",       $attributes_str);
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[IS_CHECKED]", $is_checked);
+                                    $tpl->filter_controls->filter_control->checkbox->item->assign("[IS_ACTIVE]",  $is_active);
+                                    $tpl->filter_controls->filter_control->checkbox->item->reassign();
+                                }
+                            }
+                            break;
+
+                        case self::FILTER_NUMBER :
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->number->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            $tpl->filter_controls->filter_control->number->assign("[KEY]",         $key);
+                            $tpl->filter_controls->filter_control->number->assign("[VALUE_START]", $control_value[0] ?? '');
+                            $tpl->filter_controls->filter_control->number->assign("[VALUE_END]",   $control_value[1] ?? '');
+                            $tpl->filter_controls->filter_control->number->assign("[ATTR]",        $attributes_str);
+                            break;
+
+                        case self::FILTER_DATE :
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->date->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            $tpl->filter_controls->filter_control->date->assign("[KEY]",         $key);
+                            $tpl->filter_controls->filter_control->date->assign("[VALUE_START]", $control_value[0] ?? '');
+                            $tpl->filter_controls->filter_control->date->assign("[VALUE_END]",   $control_value[1] ?? '');
+                            $tpl->filter_controls->filter_control->date->assign("[ATTR]",        $attributes_str);
+                            break;
+
+                        case self::FILTER_DATETIME :
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->datetime->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            $tpl->filter_controls->filter_control->datetime->assign("[KEY]",         $key);
+                            $tpl->filter_controls->filter_control->datetime->assign("[VALUE_START]", $control_value[0] ?? '');
+                            $tpl->filter_controls->filter_control->datetime->assign("[VALUE_END]",   $control_value[1] ?? '');
+                            $tpl->filter_controls->filter_control->datetime->assign("[ATTR]",        $attributes_str);
+                            break;
+
+                        case self::FILTER_SELECT :
+                            $data    = $filter->getData();
+                            $options = ['' => ''] + $data;
+
+                            if ($filter->getTitle()) {
+                                $tpl->filter_controls->filter_control->select->title->assign('[TITLE]', $filter->getTitle());
+                            }
+
+                            $tpl->filter_controls->filter_control->select->assign("[KEY]",  $key);
+                            $tpl->filter_controls->filter_control->select->assign("[ATTR]", $attributes_str);
+                            $tpl->filter_controls->filter_control->select->fillDropDown("filter-[RESOURCE]-[KEY]", $options, $control_value);
+                            break;
+                    }
+
+                    $tpl->filter_controls->filter_control->assign("[#]",    $key);
+                    $tpl->filter_controls->filter_control->assign('[TYPE]', $filter->getType());
+                    $tpl->filter_controls->filter_control->reassign();
+                }
+            }
+        }
+
+
+        if ($this->show_column_manage) {
             $tpl->controls->touchBlock('column_switcher_control');
 
             foreach ($this->columns as $key => $column) {
@@ -749,6 +916,7 @@ abstract class Table extends Acl {
     public function toArray(): array {
 
         $toolbar   = [];
+        $filter    = [];
         $search    = [];
         $columns   = [];
         $records   = [];
@@ -808,6 +976,14 @@ abstract class Table extends Acl {
             }
         }
 
+        if ( ! empty($this->filter_controls)) {
+            foreach ($this->filter_controls as $filter_control) {
+                if ($filter_control instanceof Table\Filter) {
+                    $filter[] = $filter_control->toArray();
+                }
+            }
+        }
+
         $data = [
             'resource' => $this->resource,
             'show'     => [
@@ -816,7 +992,7 @@ abstract class Table extends Acl {
                 'footer'          => $this->show_footer,
                 'lineNumbers'     => $this->show_number_rows,
                 'selectRows'      => $this->show_select_rows,
-                'columnsSwitcher' => $this->show_columns_switcher,
+                'columnsSwitcher' => $this->show_column_manage,
                 'templates'       => $this->show_templates,
             ],
 
@@ -827,6 +1003,9 @@ abstract class Table extends Acl {
             'recordsPerPageList' => [ 25, 50, 100, 1000, ],
         ];
 
+        if ( ! empty($filter)) {
+            $data['filter'] = $filter;
+        }
         if ( ! empty($search)) {
             $data['search'] = $search;
         }
@@ -905,6 +1084,23 @@ abstract class Table extends Acl {
 
         $this->search_controls[] = $search;
         return $search;
+    }
+
+
+    /**
+     * Добавление поля для фильтрации
+     * @param string $field
+     * @param string $type
+     * @param string $title
+     * @return void
+     * @throws Exception
+     */
+    public function addFilter(string $field, string $type = self::FILTER_TEXT, string $title = ''): Filter {
+
+        $filter = new Filter($field, $type, $title);
+
+        $this->filter_controls[] = $filter;
+        return $filter;
     }
 
 

@@ -13,6 +13,119 @@ class Filter {
 
 
     /**
+     * Фильтрация
+     * @param array $data
+     * @param array $filter_rules
+     * @param array $filter_data
+     * @return array
+     */
+    public function filterData(array $data, array $filter_rules, array $filter_data): array {
+
+        foreach ($data as $key => $row) {
+
+            foreach ($filter_data as $key2 => $filter_value) {
+                $filter_column = $filter_rules[$key2];
+
+                if ($filter_column instanceof \Core2\Classes\Table\Filter) {
+                    if ($filter_value == '') {
+                        continue;
+                    }
+
+                    $filter_field = $filter_column->getField();
+
+                    if ( ! array_key_exists($filter_field, $row)) {
+                        continue;
+                    }
+
+                    switch ($filter_column->getType()) {
+                        case 'date':
+                            if (is_array($filter_value)) {
+                                if ($filter_value[0] && ! $filter_value[1]) {
+                                    if (strtotime($row[$filter_field]) < strtotime($filter_value[0])) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ( ! $filter_value[0] && $filter_value[1]) {
+                                    if (strtotime($row[$filter_field]) > strtotime($filter_value[1])) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ($filter_value[0] && $filter_value[1]) {
+                                    if (strtotime($row[$filter_field]) < strtotime($filter_value[0]) ||
+                                        strtotime($row[$filter_field]) > strtotime($filter_value[1])
+                                    ) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+                                }
+                            }
+                            break;
+
+                        case 'number':
+                            if (is_array($filter_value)) {
+                                if ($filter_value[0] && ! $filter_value[1]) {
+                                    if ($row[$filter_field] < $filter_value[0]) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ( ! $filter_value[0] && $filter_value[1]) {
+                                    if ($row[$filter_field] > $filter_value[1]) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ($filter_value[0] && $filter_value[1]) {
+                                    if ($row[$filter_field] < $filter_value[0] ||
+                                        $row[$filter_field] > $filter_value[1]
+                                    ) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+                                }
+                            }
+                            break;
+
+                        case 'radio':
+                        case 'select':
+                            if ($row[$filter_field] != $filter_value) {
+                                unset($data[$key]);
+                                continue 2;
+                            }
+                            break;
+
+                        case 'checkbox':
+                            if ( ! in_array('', $filter_value) && ! in_array($row[$filter_field], $filter_value)) {
+                                unset($data[$key]);
+                                continue 2;
+                            }
+                            break;
+
+                        case 'text':
+                            if (mb_stripos($row[$filter_field], $filter_value, null, 'utf8') === false) {
+                                unset($data[$key]);
+                                continue 2;
+                            }
+                            break;
+
+                        case 'text_strict':
+                            if ($row[$filter_field] !== $filter_value) {
+                                unset($data[$key]);
+                                continue 2;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+
+    /**
      * Поиск
      * @param array $data
      * @param array $search_rules

@@ -114,6 +114,70 @@ CoreUI.table = {
     },
 
 
+    filter: {
+
+        /**
+         * @param resource
+         * @param isAjax
+         */
+        clear : function(resource, isAjax) {
+
+            var post      = {};
+            var container = '';
+
+            post['filter_clear_' + resource] = 1;
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    // CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter_clear=1', post, container, function () {
+                        // CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                    });
+
+                } else {
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                    });
+                }
+            }
+        },
+
+
+        /**
+         * @param resource
+         * @param isAjax
+         */
+        submit : function(resource, isAjax) {
+
+            var allInputs = $("#filter-" + resource).find(":input");
+            var post      = {};
+            var container = '';
+
+            post = allInputs.serializeArray();
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    // CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
+                        // CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                    });
+
+                } else {
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                    });
+                }
+            }
+        }
+    },
+
+
     columnSwitcher: {
 
         /**

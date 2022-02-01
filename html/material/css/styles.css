@@ -2348,13 +2348,63 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 
 .coreui-table-wrapper {
     background-color: #ffffff;
-    border-color: #dddddd;
-    border-radius: 2px;
-    border-style: solid;
-    border-width: 1px;
     margin: 0;
     position: relative;
     overflow: auto;
+}
+.coreui-table-wrapper .filter-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+.coreui-table-wrapper .filter-controls .filter-control {
+    display: inline-block;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group {
+    display: table;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > .input-group-addon {
+    background-color: #f3f5f5;
+    color: #666;
+    font-size: 12px;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > * {
+    float: none;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-text input,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-select select {
+    width: 200px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input {
+    width: 100px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input {
+    width: 140px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input {
+    width: 175px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input:last-child {
+    margin-left: -1px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-radio .input-group-addon + .btn-group label:first-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-checkbox .input-group-addon + .btn-group label:first-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.coreui-table-wrapper .coreui-table-responsive {
+    width: 100%;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    border: 1px solid #ddd;
+    border-radius: 2px;
 }
 table.coreui-table {
     margin-bottom:0;
@@ -2475,7 +2525,6 @@ table.coreui-table > tfoot > tr > td:last-child {
 }
 
 table.coreui-table > tfoot form {margin-bottom: 0}
-
 table.coreui-table .search-container form {margin-top: 15px;}
 table.coreui-table .search-container form .search-table th,
 table.coreui-table .search-container form .search-table td {padding-bottom: 10px;}
