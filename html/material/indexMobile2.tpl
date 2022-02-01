@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="core2/html/material/css/font-awesome.min.css?_=2" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/material/css/menu.css?_=14" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/material/css/styles.css?_=23" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/material/css/styles.css?_=24" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/material/css/jquery.ui.theme.css" type="text/css"/>
@@ -39,7 +39,7 @@
     <script type="text/javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
     <script type="text/javascript" src="core2/html/material/js/coreui.notice.js?_=1"></script>
-    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=2"></script>
+    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=3"></script>
 
     <!--[if lte IE 10]>
     <script type="text/javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>

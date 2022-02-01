@@ -1967,3 +1967,51 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper *:after {
 	box-sizing: border-box;
 }
+.coreui-table-switch {
+	position: relative;
+	display: block;
+	width: 33px;
+	height: 18px;
+}
+.coreui-table-switch input {display:none;}
+.coreui-table-switch .coreui-table-switch-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .15s;
+	transition: .15s;
+	border-radius: 34px;
+}
+.coreui-table-switch-slider:before {
+	border-radius: 50%;
+}
+
+.coreui-table-switch .coreui-table-switch-slider:before {
+	position: absolute;
+	content: "";
+	height: 12px;
+	width: 12px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	-webkit-transition: .15s;
+	transition: .15s;
+}
+.coreui-table-switch.color-default input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #444;}
+.coreui-table-switch.color-primary input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #2196F3;}
+.coreui-table-switch.color-success input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #8bc34a;}
+.coreui-table-switch.color-info input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #3de0f5;}
+.coreui-table-switch.color-warning input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #FFC107;}
+.coreui-table-switch.color-danger input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #f44336;}
+.coreui-table-switch input:focus ~ .coreui-table-switch-slider {
+	box-shadow: 0 0 1px #2196F3;
+}
+.coreui-table-switch input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider:before {
+	-webkit-transform: translateX(16px);
+	-ms-transform: translateX(16px);
+	transform: translateX(16px);
+}

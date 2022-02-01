@@ -93,6 +93,7 @@ abstract class Table extends Acl {
     const COLUMN_DATETIME = 'datetime';
     const COLUMN_NUMBER   = 'number';
     const COLUMN_STATUS   = 'status';
+    const COLUMN_SWITCH   = 'switch';
 
 
     /**
@@ -785,28 +786,28 @@ abstract class Table extends Acl {
 
                         switch ($column->getType()) {
                             case self::COLUMN_TEXT:
-                                $tpl->row->col->assign('[VALUE]', htmlspecialchars($value));
+                                $tpl->row->col->default->assign('[VALUE]', htmlspecialchars($value));
                                 break;
 
                             case self::COLUMN_NUMBER:
                                 $value = strrev($value);
                                 $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
                                 $value = strrev($value);
-                                $tpl->row->col->assign('[VALUE]', $value);
+                                $tpl->row->col->default->assign('[VALUE]', $value);
                                 break;
 
                             case self::COLUMN_HTML:
-                                $tpl->row->col->assign('[VALUE]', $value);
+                                $tpl->row->col->default->assign('[VALUE]', $value);
                                 break;
 
                             case self::COLUMN_DATE:
                                 $date = $value ? date($this->date_mask, strtotime($value)) : '';
-                                $tpl->row->col->assign('[VALUE]', $date);
+                                $tpl->row->col->default->assign('[VALUE]', $date);
                                 break;
 
                             case self::COLUMN_DATETIME:
                                 $date = $value ? date($this->datetime_mask, strtotime($value)) : '';
-                                $tpl->row->col->assign('[VALUE]', $date);
+                                $tpl->row->col->default->assign('[VALUE]', $date);
                                 break;
 
                             case self::COLUMN_STATUS:
@@ -815,20 +816,38 @@ abstract class Table extends Acl {
                                 } else {
                                     $img = "<img src=\"{$this->theme_src}/list/img/lightbulb_off.png\" alt=\"_tr(выкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
                                 }
-                                $tpl->row->col->assign('[VALUE]', $img);
+                                $tpl->row->col->default->assign('[VALUE]', $img);
+                                break;
+
+                            case self::COLUMN_SWITCH:
+                                $cell->setAttr('onclick', "event.cancelBubble = true;");
+
+                                $options = $column->getOptions();
+                                $color   = ! empty($options['color']) ? "color-{$options['color']}" : 'color-primary';
+                                $value_y = $options['value_Y'] ?? 'Y';
+                                $value_n = $options['value_N'] ?? 'N';
+
+                                $tpl->row->col->switch->assign('[TABLE]',     $options['table'] ?? '');
+                                $tpl->row->col->switch->assign('[FIELD]',     $column->getField());
+                                $tpl->row->col->switch->assign('[NMBR]',      $row_number);
+                                $tpl->row->col->switch->assign('[CHECKED_Y]', $value == $value_y ? 'checked="checked"' : '');
+                                $tpl->row->col->switch->assign('[CHECKED_N]', $value == $value_n ? 'checked="checked"' : '');
+                                $tpl->row->col->switch->assign('[COLOR]',     $color);
+                                $tpl->row->col->switch->assign('[VALUE_Y]',   $value_y);
+                                $tpl->row->col->switch->assign('[VALUE_N]',   $value_n);
                                 break;
                         }
 
                         // Атрибуты ячейки
                         $column_attributes = $cell->getAttributes();
-                        $attributes        = array();
+                        $attributes        = [];
                         foreach ($column_attributes as $attr => $value) {
                             $attributes[] = "$attr=\"{$value}\"";
                         }
                         $implode_attributes = implode(' ', $attributes);
                         $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
 
-                        $tpl->row->col->assign('<td>', "<td{$implode_attributes}>");
+                        $tpl->row->col->assign('[ATTR]', $implode_attributes);
 
                         if (end($this->columns) != $column) $tpl->row->col->reassign();
                     }

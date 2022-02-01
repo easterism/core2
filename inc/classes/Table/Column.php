@@ -13,6 +13,7 @@ class Column {
     protected $field      = '';
     protected $type       = '';
     protected $attr       = [];
+    protected $options    = [];
     protected $is_sorting = true;
     protected $is_show    = true;
 
@@ -72,6 +73,16 @@ class Column {
      */
     public function getAttributes(): array {
         return $this->attr;
+    }
+
+
+    /**
+     * Получение опций
+     * @return array
+     */
+    public function getOptions(): array {
+
+        return $this->options;
     }
 
 
@@ -154,6 +165,17 @@ class Column {
 
 
     /**
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options): self {
+
+        $this->options = $options;
+        return $this;
+    }
+
+
+    /**
      * @param bool $is_sort
      * @return self
      */
@@ -213,6 +235,10 @@ class Column {
 
         if ( ! empty($this->attr)) {
             $data['attr'] = $this->attr;
+        }
+
+        if ( ! empty($this->options)) {
+            $data['options'] = $this->options;
         }
 
         return $data;

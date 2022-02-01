@@ -351,8 +351,18 @@
         <!-- END row_number -->
 
         <!-- BEGIN col -->
-        <td>[VALUE]</td>
+        <td [ATTR]>
+          <!-- BEGIN default -->[VALUE]<!-- END default -->
+          <!-- BEGIN switch -->
+          <div class="coreui-table-switch [COLOR]" onclick="CoreUI.table.switchToggle('[RESOURCE]', '[TABLE].[FIELD]', '[ID]', this)">
+            <input type="radio" class="coreui-table-switch-active" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_Y]" [CHECKED_Y]>
+            <input type="radio" class="coreui-table-switch-inactive" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_N]" [CHECKED_N]>
+            <span class="coreui-table-switch-slider"></span>
+          </div>
+          <!-- END switch -->
+        </td>
         <!-- END col -->
+
         <!-- BEGIN checkboxes -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
           <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
@@ -408,9 +418,6 @@
     </table>
   </div>
 </div>
-
-
-
 
 <script>
   if ( ! CoreUI.table) {

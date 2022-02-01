@@ -504,68 +504,54 @@ CoreUI.table = {
     },
 
 
-    switchActive: function(img, resource, rec_id) {
-        var src   = $(img).attr('src');
-        var value = $(img).data('value');
+    /**
+     * @param resource
+     * @param field
+     * @param id
+     * @param container
+     */
+    switchToggle: function (resource, field, id, container) {
 
-        if (value == 'Y' || value == '1') {
-            var new_value = value === 'Y' ? 'N' : 0;
-            var new_src   = src.replace("on.png", "off.png");
-            var msg       = "Деактивировать запись?";
-        } else {
-            var new_value = value === 'N' ? 'Y' : 1;
-            var new_src   = src.replace("off.png", "on.png");
-            var msg       = "Активировать запись?";
-        }
-        if (confirm(msg)) {
-            var preloader_src = src.substr(0, src.lastIndexOf('/')+1) + 'preloader_circle.gif';
-            $(img).attr('src', preloader_src);
+        var isActiveControl = $(container).find(':checked').hasClass('coreui-table-switch-active');
 
-            var token = $('#table-' + resource).data('csrf-token');
-            var url   = window.location.pathname + window.location.search;
+        swal({
+            title: isActiveControl ? "Деактивировать запись?" : "Активировать запись?",
+            type: isActiveControl ? "warning" : "info",
+            showCancelButton: true,
+            confirmButtonColor: isActiveControl ? '#f0ad4e' : '#5bc0de',
+            confirmButtonText: "Да",
+            cancelButtonText: "Нет"
+        }).then(
+            function(result) {
+                var value = isActiveControl
+                    ? $(container).find('.coreui-table-switch-inactive').val()
+                    : $(container).find('.coreui-table-switch-active').val();
 
-            $.ajax({
-                url: url,
-                type: 'POST',
-                dataType : 'json',
-                data : {
-                    rec_id: rec_id,
-                    new_value: new_value
-                },
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-CMB-CSRF-TOKEN', token)
-                        .setRequestHeader('X-CMB-RESOURCE',   resource)
-                        .setRequestHeader('X-CMB-PROCESS',    'status')
-                },
-                success: function(data, textStatus) {
-                    if (data.status == "success") {
-                        $(img).attr('src', new_src);
-                        $(img).data('value', new_value);
-                    } else {
-                        $(img).attr('src', src);
-                        if (data.message) {
-                            alert(data.message);
+                $.post('index.php?module=admin&action=switch&loc=core', {
+                        data:      field,
+                        is_active: value,
+                        value:     id
+                    }, function(data, textStatus) {
+                        if (textStatus === 'success' && data.status === "ok") {
+
+                            if (isActiveControl) {
+                                $(container).find('.coreui-table-switch-active').prop('checked', false);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', true);
+
+                            } else {
+                                $(container).find('.coreui-table-switch-active').prop('checked', true);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', false);
+                            }
+
+                        } else {
+                            if (data.status) {
+                                swal("Ошибка", data.status, 'error').catch(swal.noop);
+                            }
                         }
-                    }
-                },
-                error : function(xhr, textStatus) {
-                    if (xhr.status == 0) {
-                        alert('You are offline!\nCheck you network.');
-                    } else if (xhr.status == 404) {
-                        alert('404 - page not found');
-                    } else if (xhr.status == 500) {
-                        alert('500 - server error');
-                    } else if (textStatus == 'parsererror') {
-                        alert('parse error');
-                    } else if (textStatus == 'timeout') {
-                        alert('timeout');
-                    } else {
-                        alert(xhr.status + ' - ' + xhr.responseText);
-                    }
-                    $(img).attr('src', src);
-                }
-            });
-        }
+                    },
+                    'json');
+            }, function(dismiss) {}
+        );
     },
 
 
