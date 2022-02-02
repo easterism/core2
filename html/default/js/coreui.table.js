@@ -156,15 +156,49 @@ CoreUI.table = {
             var post      = {};
             var container = '';
 
-            post = allInputs.serializeArray();
+            $.each(allInputs, function(key, input) {
+                var name = $(input).attr('name');
+
+                if (name) {
+                    if (name.slice(-2) === '[]') {
+                        if ( ! post.hasOwnProperty(name)) {
+                            post[name] = [];
+                        }
+
+                        if ($(input).attr('type') === 'checkbox' && ! $(input).is(':checked')) {
+                            return true;
+                        }
+
+                        post[name].push($(input).val());
+
+                    } else {
+                        if ($(input).attr('type') === 'radio') {
+                            if ($(input).is(':checked')) {
+                                post[name] = $(input).val();
+                            }
+                        } else {
+                            post[name] = $(input).val();
+                        }
+                    }
+                }
+            });
+
+            $.each(post, function (name, value) {
+                if (name.slice(-2) === '[]' && typeof value === 'object' && value.length === 0) {
+                    post[name.substring(0, name.length - 2)] = '';
+                    delete post[name];
+                }
+            });
+
+            //post = allInputs.serializeArray();
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    // CoreUI.table.preloader.show(resource);
+                    CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
                     load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
-                        // CoreUI.table.preloader.hide(resource);
+                        CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 

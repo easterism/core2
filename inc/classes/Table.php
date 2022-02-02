@@ -116,7 +116,18 @@ abstract class Table extends Acl {
 
         // FILTER
         if ( ! empty($_POST['filter']) && ! empty($_POST['filter'][$resource])) {
-            $this->session->table->filter = $_POST['filter'][$resource];
+            $all_empty = true;
+            foreach ($_POST['filter'][$resource] as $filter) {
+                if ($filter !== '') {
+                    $all_empty = false;
+                    break;
+                }
+            }
+            if ($all_empty) {
+                $this->session->table->filter = [];
+            } else {
+                $this->session->table->filter = $_POST['filter'][$resource];
+            }
         }
         if ( ! empty($_POST['filter_clear_' . $this->resource])) {
             $this->session->table->filter = [];

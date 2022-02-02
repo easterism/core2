@@ -472,7 +472,7 @@ class Render extends Acl {
                             break;
 
                         case 'select' :
-                            $data    = $filter['date'] ?? [];
+                            $data    = $filter['data'] ?? [];
                             $options = ['' => ''] + $data;
 
                             if ( ! empty($filter['title'])) {
