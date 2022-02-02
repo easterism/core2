@@ -15,11 +15,12 @@ require_once 'Db/Select.php';
  */
 class Db extends Table {
 
-    protected $table       = '';
-    protected $primary_key = '';
+    protected $table        = '';
+    protected $primary_key  = '';
     protected $query        = '';
     protected $query_params = '';
     protected $select       = null;
+    protected $is_fetched   = false;
     protected $query_parts  = [];
 
 

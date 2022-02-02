@@ -91,7 +91,7 @@ class Column {
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttr(string $name, string $value) {
         if ((is_string($name) || is_numeric($name)) &&
@@ -110,7 +110,7 @@ class Column {
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttrPrepend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
