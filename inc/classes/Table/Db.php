@@ -15,13 +15,14 @@ require_once 'Db/Select.php';
  */
 class Db extends Table {
 
-    protected $table        = '';
-    protected $primary_key  = '';
-    protected $query        = '';
-    protected $query_params = '';
-    protected $select       = null;
-    protected $is_fetched   = false;
-    protected $query_parts  = [];
+    protected $table         = '';
+    protected $primary_key   = '';
+    protected $query         = '';
+    protected $query_params  = '';
+    protected $select        = null;
+    protected $is_fetched    = false;
+    protected $is_round_calc = false;
+    protected $query_parts   = [];
 
 
     /**
@@ -91,6 +92,17 @@ class Db extends Table {
     public function setQuery(string $query, array $params = []) {
         $this->query        = $query;
         $this->query_params = $params;
+    }
+
+
+    /**
+     * Использование примерного подсчета количества
+     * @param bool $is_round_calc
+     * @return void
+     */
+    public function setRoundCalc(bool $is_round_calc) {
+
+        $this->is_round_calc = $is_round_calc;
     }
 
 
@@ -351,10 +363,25 @@ class Db extends Table {
 
         $this->select = clone $select;
 
-        $data_rows           = [];
-        $data_result         = $this->db->fetchAll($select);
-        $this->records_total = (int)$this->db->fetchRow('SELECT FOUND_ROWS() AS count')['count'];
 
+        if ($this->is_round_calc) {
+            $explain = $this->db->fetchAll('EXPLAIN ' . $select);
+
+            foreach ($explain as $value) {
+                if ($value['rows'] > $this->records_total) {
+                    $this->records_total = $value['rows'];
+                };
+            }
+
+            $data_result = $this->db->fetchAll($select);
+
+        } else {
+            $data_result         = $this->db->fetchAll($select);
+            $this->records_total = (int)$this->db->fetchOne('SELECT FOUND_ROWS()');
+        }
+
+
+        $data_rows = [];
         if ( ! empty($data_result)) {
             foreach ($data_result as $row) {
                 $data_rows[] = new Row($row);
@@ -604,22 +631,23 @@ class Db extends Table {
 
         $sql = $select->getSql();
 
-        if ($this->round_record_count) {
+        if ($this->is_round_calc) {
             $explain = $this->db->fetchAll('EXPLAIN ' . $sql, $this->query_params);
-            $this->records_total = 0;
+
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total) {
                     $this->records_total = $value['rows'];
                 }
             }
             $result = $this->db->fetchAll($sql, $this->query_params);
+
         } else {
             $result = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($sql), 6), $this->query_params);
             $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");
         }
 
-        $data_rows = [];
 
+        $data_rows = [];
         if ( ! empty($result)) {
             foreach ($result as $key => $row) {
                 $data_rows[$key] = new Row($row);
