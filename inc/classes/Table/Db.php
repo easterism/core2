@@ -362,10 +362,14 @@ class Db extends Table {
         }
 
         $this->select = clone $select;
-
+        $select_sql   = (string)$select;
 
         if ($this->is_round_calc) {
-            $explain = $this->db->fetchAll('EXPLAIN ' . $select);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
+                $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
+            }
+
+            $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql);
 
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total) {
@@ -373,10 +377,14 @@ class Db extends Table {
                 };
             }
 
-            $data_result = $this->db->fetchAll($select);
+            $data_result = $this->db->fetchAll($select_sql);
 
         } else {
-            $data_result         = $this->db->fetchAll($select);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
+                $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
+            }
+
+            $data_result         = $this->db->fetchAll($select_sql);
             $this->records_total = (int)$this->db->fetchOne('SELECT FOUND_ROWS()');
         }
 
@@ -629,20 +637,28 @@ class Db extends Table {
 
         $this->query_parts = $select->getSqlParts();
 
-        $sql = $select->getSql();
+        $select_sql = $select->getSql();
 
         if ($this->is_round_calc) {
-            $explain = $this->db->fetchAll('EXPLAIN ' . $sql, $this->query_params);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
+                $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
+            }
+
+            $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql, $this->query_params);
 
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total) {
                     $this->records_total = $value['rows'];
                 }
             }
-            $result = $this->db->fetchAll($sql, $this->query_params);
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
 
         } else {
-            $result = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($sql), 6), $this->query_params);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
+                $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
+            }
+
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
             $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");
         }
 
@@ -678,7 +694,11 @@ class Db extends Table {
                     $alias = $this->db->quoteIdentifier($alias);
                 }
 
-                $name = $this->db->quoteIdentifier($column[0]) . '.' . $this->db->quoteIdentifier($column[1]);
+                if ($column[1] instanceof \Zend_Db_Expr) {
+                    $name = $this->db->quoteIdentifier($column[1]);
+                } else {
+                    $name = $this->db->quoteIdentifier($column[0]) . '.' . $this->db->quoteIdentifier($column[1]);
+                }
 
                 $result[$alias] = $name;
             }
