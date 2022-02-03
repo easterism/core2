@@ -27,6 +27,31 @@ class Select {
 
 
     /**
+     * Получение sql запроса разделенного на части
+     * @return array
+     */
+    public function getSqlParts(): array {
+
+        foreach ($this->sql as $key => $sql_part) {
+
+            if (empty($sql_part)) {
+                unset($this->sql[$key]);
+                continue;
+            }
+
+            if ( ! empty($this->sub_queries)) {
+                foreach ($this->sub_queries as $hash => $query) {
+                    $this->sql[$key] = str_replace($hash, $query, $this->sql[$key]);
+                }
+            }
+        }
+
+
+        return $this->sql;
+    }
+
+
+    /**
      * Получение колонок
      * @return array
      */

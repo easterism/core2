@@ -38,6 +38,23 @@ class SubModules extends Zend_Db_Table_Abstract {
         return $this->fetchAll($sel);
     }
 
+
+    /**
+     * @param int $module_id
+     * @return int
+     */
+    public function getCountByModuleId(int $module_id): int {
+
+        $select = $this->select()
+            ->from($this->_name, ['count' => 'COUNT(*)'])
+            ->where("m_id = ?", $module_id);
+
+        $row = $this->fetchRow($select);
+
+        return $row ? (int)$row['count'] : 0;
+    }
+
+
     public function getSubmodules($module) {
         $data = $this->_db->fetchPairs("
             SELECT sm_key, sm_name

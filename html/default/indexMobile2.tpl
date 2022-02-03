@@ -4,7 +4,7 @@
 <html>
 <head>
 	<title>{system_name}</title>
-	<link href="core2/html/default/style2.css?_=6" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/style2.css?_=8" type="text/css" rel="stylesheet"/>
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
@@ -22,7 +22,7 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=2"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=4"></script>

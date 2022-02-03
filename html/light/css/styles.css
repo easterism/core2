@@ -593,8 +593,7 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-	padding: 3px;
-    padding-right: 10px!important;
+    padding: 0 10px 3px 3px;
     width: 190px;
     box-sizing: border-box;
 }
@@ -2352,6 +2351,8 @@ table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
 
+table.coreui-table > thead > .table-control-panel {height: 35px;}
+
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
 table.coreui-table > tbody > tr:hover > td,
@@ -2393,6 +2394,10 @@ table.coreui-table > tbody > tr > th:last-child,
 table.coreui-table > thead > tr > td:last-child,
 table.coreui-table > tbody > tr > td:last-child {
     padding-right: 10px;
+}
+table.coreui-table > tbody > tr > td .checked-row input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
 }
 table.coreui-table > thead > tr > th {
     border-bottom: 2px solid #D2D2D2;
@@ -2460,6 +2465,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
     text-align: right;
+    vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {
@@ -2516,6 +2522,7 @@ table.coreui-table input.gotopage {
     height: 22px;
     width: 35px;
     outline: 0;
+    margin-right: 3px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;
@@ -2562,6 +2569,54 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper *:before,
 .coreui-table-wrapper *:after {
     box-sizing: border-box;
+}
+.coreui-table-switch {
+    position: relative;
+    display: block;
+    width: 33px;
+    height: 18px;
+}
+.coreui-table-switch input {display:none;}
+.coreui-table-switch .coreui-table-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .15s;
+    transition: .15s;
+    border-radius: 34px;
+}
+.coreui-table-switch-slider:before {
+    border-radius: 50%;
+}
+
+.coreui-table-switch .coreui-table-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .15s;
+    transition: .15s;
+}
+.coreui-table-switch.color-default input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #444;}
+.coreui-table-switch.color-primary input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #2196F3;}
+.coreui-table-switch.color-success input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #8bc34a;}
+.coreui-table-switch.color-info input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #3de0f5;}
+.coreui-table-switch.color-warning input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #FFC107;}
+.coreui-table-switch.color-danger input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #f44336;}
+.coreui-table-switch input:focus ~ .coreui-table-switch-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+.coreui-table-switch input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
 }
 
 
