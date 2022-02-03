@@ -658,6 +658,10 @@ class CoreController extends Common implements File {
 					$html .= '</small>';
 
                     $email = $this->createEmail();
+                    if (isset($_FILES) && ! empty($_FILES['video-blob'])) {
+                        $file = $_FILES['video-blob'];
+                        $email->attacheFile(file_get_contents($file['tmp_name']), "feedback.webm", $file['type'], $file['size']);
+                    }
 
                     if ( ! empty($dataUser['email'])) {
                         $email->from($dataUser['email']);
@@ -761,6 +765,7 @@ class CoreController extends Common implements File {
 			}
 		}
 		$this->printJs("core2/mod/admin/assets/js/feedback.js", true);
+		$this->printJs("core2/html/default/js/capture.js");
 		require_once 'classes/Templater2.php';
 		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
