@@ -49,7 +49,6 @@ abstract class Table extends Acl {
     protected $records_per_page_default = 25;
     protected $records_seq              = false;
     protected $current_page             = 1;
-    protected $round_record_count       = false;
     protected $is_ajax                  = false;
 
 
