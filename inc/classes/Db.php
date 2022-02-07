@@ -522,7 +522,7 @@ class Db {
 	 */
 	final public function isModuleActive($module_id) {
         $is = $this->isModuleInstalled($module_id);
-        return $is && $is['visible'] === 'Y' ? true : false;
+        return $is && isset($is['visible']) && $is['visible'] === 'Y' ? true : false;
 	}
 
 
@@ -615,7 +615,7 @@ class Db {
             $is = $this->cache->getItem($key);
         }
 
-        $is = isset($is[$module_id]) ? $is[$module_id] : 0;
+        $is = isset($is[$module_id]) ? $is[$module_id] : [];
 
         return $is;
 	}
