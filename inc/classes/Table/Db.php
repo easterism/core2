@@ -178,6 +178,7 @@ class Db extends Table {
 
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
+                        case self::SEARCH_SELECT:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -218,14 +219,13 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
-                        case self::SEARCH_SELECT:
-                        if (strpos($field, 'ADD_SEARCH') !== false) {
-                            $quoted_value = $this->db->quote($value);
-                            $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
+                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                                $quoted_value = $this->db->quote($value);
+                                $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
-                        } else {
-                            $select->where("{$field} IN(?)", $value);
-                        }
+                            } else {
+                                $select->where("{$field} IN(?)", $value);
+                            }
                             break;
                     }
                 }
@@ -362,10 +362,14 @@ class Db extends Table {
         }
 
         $this->select = clone $select;
-
+        $select_sql   = (string)$select;
 
         if ($this->is_round_calc) {
-            $explain = $this->db->fetchAll('EXPLAIN ' . $select);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
+                $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
+            }
+
+            $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql);
 
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total) {
@@ -373,10 +377,14 @@ class Db extends Table {
                 };
             }
 
-            $data_result = $this->db->fetchAll($select);
+            $data_result = $this->db->fetchAll($select_sql);
 
         } else {
-            $data_result         = $this->db->fetchAll($select);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
+                $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
+            }
+
+            $data_result         = $this->db->fetchAll($select_sql);
             $this->records_total = (int)$this->db->fetchOne('SELECT FOUND_ROWS()');
         }
 
@@ -416,6 +424,7 @@ class Db extends Table {
                     switch ($search_column->getType()) {
                         case self::SEARCH_DATE:
                         case self::SEARCH_DATETIME:
+                        case self::SEARCH_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                 $quoted_value1 = $this->db->quote($search_value[0]);
                                 $quoted_value2 = $this->db->quote($search_value[1]);
@@ -501,6 +510,7 @@ class Db extends Table {
                     switch ($filter_column->getType()) {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
+                        case self::FILTER_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                 $quoted_value1 = $this->db->quote($filter_value[0]);
                                 $quoted_value2 = $this->db->quote($filter_value[1]);
@@ -629,20 +639,28 @@ class Db extends Table {
 
         $this->query_parts = $select->getSqlParts();
 
-        $sql = $select->getSql();
+        $select_sql = $select->getSql();
 
         if ($this->is_round_calc) {
-            $explain = $this->db->fetchAll('EXPLAIN ' . $sql, $this->query_params);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
+                $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
+            }
+
+            $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql, $this->query_params);
 
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total) {
                     $this->records_total = $value['rows'];
                 }
             }
-            $result = $this->db->fetchAll($sql, $this->query_params);
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
 
         } else {
-            $result = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($sql), 6), $this->query_params);
+            if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
+                $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
+            }
+
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
             $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");
         }
 
@@ -678,7 +696,11 @@ class Db extends Table {
                     $alias = $this->db->quoteIdentifier($alias);
                 }
 
-                $name = $this->db->quoteIdentifier($column[0]) . '.' . $this->db->quoteIdentifier($column[1]);
+                if ($column[1] instanceof \Zend_Db_Expr) {
+                    $name = $this->db->quoteIdentifier($column[1]);
+                } else {
+                    $name = $this->db->quoteIdentifier($column[0]) . '.' . $this->db->quoteIdentifier($column[1]);
+                }
 
                 $result[$alias] = $name;
             }

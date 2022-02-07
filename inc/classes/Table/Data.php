@@ -97,6 +97,7 @@ class Data extends Table {
 
                     switch ($filter_column->getType()) {
                         case 'date':
+                        case 'datetime':
                             if (is_array($filter_value)) {
                                 if ($filter_value[0] && ! $filter_value[1]) {
                                     if (strtotime($row[$filter_field]) < strtotime($filter_value[0])) {
@@ -148,6 +149,7 @@ class Data extends Table {
 
                         case 'radio':
                         case 'select':
+                        case 'text_strict':
                             if ($row[$filter_field] != $filter_value) {
                                 unset($data[$key]);
                                 continue 2;
@@ -163,13 +165,6 @@ class Data extends Table {
 
                         case 'text':
                             if (mb_stripos($row[$filter_field], $filter_value, null, 'utf8') === false) {
-                                unset($data[$key]);
-                                continue 2;
-                            }
-                            break;
-
-                        case 'text_strict':
-                            if ($row[$filter_field] !== $filter_value) {
                                 unset($data[$key]);
                                 continue 2;
                             }
@@ -210,6 +205,7 @@ class Data extends Table {
 
                     switch ($search_column->getType()) {
                         case 'date':
+                        case 'datetime':
                             if (is_array($search_value)) {
                                 if ($search_value[0] && ! $search_value[1]) {
                                     if (strtotime($row[$search_field]) < strtotime($search_value[0])) {
@@ -261,6 +257,7 @@ class Data extends Table {
 
                         case 'radio':
                         case 'select':
+                        case 'text_strict':
                             if ($row[$search_field] != $search_value) {
                                 unset($data[$key]);
                                 continue 2;
@@ -277,13 +274,6 @@ class Data extends Table {
 
                         case 'text':
                             if (mb_stripos($row[$search_field], $search_value, null, 'utf8') === false) {
-                                unset($data[$key]);
-                                continue 2;
-                            }
-                            break;
-
-                        case 'text_strict':
-                            if ($row[$search_field] !== $search_value) {
                                 unset($data[$key]);
                                 continue 2;
                             }
