@@ -64,10 +64,11 @@ class Render extends Acl {
         }
 
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
-        $tpl->assign('[THEME_SRC]', $this->theme_src);
-        $tpl->assign('[RESOURCE]',  $this->table['resource']);
-        $tpl->assign('[IS_AJAX]',   (int)($this->table['isAjax'] ?? 0));
-        $tpl->assign('[LOCATION]',  ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
+        $tpl->assign('[THEME_SRC]',     $this->theme_src);
+        $tpl->assign('[RESOURCE]',      $this->table['resource']);
+        $tpl->assign('[IS_AJAX]',       (int)($this->table['isAjax'] ?? 0));
+        $tpl->assign('[IS_ROUND_CALC]', ! empty($this->table['isRoundCalc']) ? '~' : '');
+        $tpl->assign('[LOCATION]',      ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
 
 
         if ( ! empty($this->table['show'])) {
