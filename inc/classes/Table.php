@@ -50,6 +50,7 @@ abstract class Table extends Acl {
     protected $records_seq              = false;
     protected $current_page             = 1;
     protected $is_ajax                  = false;
+    protected $is_round_calc            = false;
 
 
     /**
@@ -239,6 +240,17 @@ abstract class Table extends Acl {
         if ( ! isset($this->session->table->records_per_page)) {
             $this->records_per_page = $count === 0 ? 1000000000 : $count;
         }
+    }
+
+
+    /**
+     * Использование примерного подсчета количества
+     * @param bool $is_round_calc
+     * @return void
+     */
+    public function setRoundCalc(bool $is_round_calc) {
+
+        $this->is_round_calc = $is_round_calc;
     }
 
 
@@ -457,6 +469,9 @@ abstract class Table extends Acl {
         }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;
+        }
+        if ( ! empty($this->is_round_calc)) {
+            $data['isRoundCalc'] = $this->is_round_calc;
         }
         if ( ! empty($filter)) {
             $data['filter'] = $filter;

@@ -21,7 +21,6 @@ class Db extends Table {
     protected $query_params  = '';
     protected $select        = null;
     protected $is_fetched    = false;
-    protected $is_round_calc = false;
     protected $query_parts   = [];
 
 
@@ -92,17 +91,6 @@ class Db extends Table {
     public function setQuery(string $query, array $params = []) {
         $this->query        = $query;
         $this->query_params = $params;
-    }
-
-
-    /**
-     * Использование примерного подсчета количества
-     * @param bool $is_round_calc
-     * @return void
-     */
-    public function setRoundCalc(bool $is_round_calc) {
-
-        $this->is_round_calc = $is_round_calc;
     }
 
 
@@ -178,6 +166,7 @@ class Db extends Table {
 
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
+                        case self::SEARCH_SELECT:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -218,14 +207,13 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
-                        case self::SEARCH_SELECT:
-                        if (strpos($field, 'ADD_SEARCH') !== false) {
-                            $quoted_value = $this->db->quote($value);
-                            $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
+                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                                $quoted_value = $this->db->quote($value);
+                                $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
-                        } else {
-                            $select->where("{$field} IN(?)", $value);
-                        }
+                            } else {
+                                $select->where("{$field} IN(?)", $value);
+                            }
                             break;
                     }
                 }
@@ -424,6 +412,7 @@ class Db extends Table {
                     switch ($search_column->getType()) {
                         case self::SEARCH_DATE:
                         case self::SEARCH_DATETIME:
+                        case self::SEARCH_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                 $quoted_value1 = $this->db->quote($search_value[0]);
                                 $quoted_value2 = $this->db->quote($search_value[1]);
@@ -509,6 +498,7 @@ class Db extends Table {
                     switch ($filter_column->getType()) {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
+                        case self::FILTER_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                 $quoted_value1 = $this->db->quote($filter_value[0]);
                                 $quoted_value2 = $this->db->quote($filter_value[1]);
