@@ -21,7 +21,6 @@ class Db extends Table {
     protected $query_params  = '';
     protected $select        = null;
     protected $is_fetched    = false;
-    protected $is_round_calc = false;
     protected $query_parts   = [];
 
 
@@ -92,17 +91,6 @@ class Db extends Table {
     public function setQuery(string $query, array $params = []) {
         $this->query        = $query;
         $this->query_params = $params;
-    }
-
-
-    /**
-     * Использование примерного подсчета количества
-     * @param bool $is_round_calc
-     * @return void
-     */
-    public function setRoundCalc(bool $is_round_calc) {
-
-        $this->is_round_calc = $is_round_calc;
     }
 
 
