@@ -707,6 +707,16 @@ CoreUI.table = {
 
 
     /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param columnNmbr
+     * @param url
+     */
+    toggleExpandColumn : function (columnNmbr, url) {
+
+    },
+
+
+    /**
      * @param resource
      * @param select
      * @param isAjax
