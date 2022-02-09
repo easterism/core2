@@ -567,6 +567,7 @@ class Db {
                 SELECT m.m_id, 
                        m_name, 
                        sm_path, 
+                       sm_name, 
                        m.module_id, 
                        is_system, 
                        sm.m_id AS sm_id
