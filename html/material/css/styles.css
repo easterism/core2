@@ -2514,6 +2514,10 @@ table.coreui-table > tfoot > tr > td:last-child {
     border-left:0;
     border-right:0;
 }
+table.coreui-table > tbody > tr.row-expand > td {
+    padding: 15px 15px 30px 15px;
+    background-color: #eee;
+}
 @media screen and (max-width: 767px) {
     .coreui-table-wrapper {
         width: 100%;
@@ -2621,7 +2625,7 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper > .preloader > .block {
     width: 175px;
     position: absolute;
-    top: 95px;
+    top: 40px;
     display: inline-block;
     text-align: left;
     padding: 10px 19px;

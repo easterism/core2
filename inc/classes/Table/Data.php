@@ -15,9 +15,20 @@ class Data extends Table {
 
 
     /**
+     * Получение данных.
      * @return array
      */
     public function fetchData(): array {
+
+        return $this->fetchRows();
+    }
+
+
+    /**
+     * Получение данных.
+     * @return array
+     */
+    public function fetchRows(): array {
 
         if ( ! $this->is_fetched && ! empty($this->data) && is_array($this->data)) {
             $this->is_fetched = true;

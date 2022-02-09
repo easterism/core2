@@ -39,7 +39,7 @@
     <script type="text/javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
     <script type="text/javascript" src="core2/html/material/js/coreui.notice.js?_=1"></script>
-    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=3"></script>
+    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=4"></script>
 
     <!--[if lte IE 10]>
     <script type="text/javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>

@@ -321,6 +321,22 @@ abstract class Table extends Acl {
     /**
      *
      */
+    public function showHeader() {
+        $this->show_header = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideHeader() {
+        $this->show_header = false;
+    }
+
+
+    /**
+     *
+     */
     public function showFooter() {
         $this->show_footer = true;
     }
@@ -585,6 +601,13 @@ abstract class Table extends Acl {
      * @return array
      */
     abstract public function fetchData(): array;
+
+
+    /**
+     * Получение данных.
+     * @return array
+     */
+    abstract public function fetchRows(): array;
 
 
     /**

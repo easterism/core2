@@ -530,6 +530,8 @@ CoreUI.table = {
                 preloader.callback();
             });
 
+            preloader.hide();
+
         } else {
             load(CoreUI.table.loc[resource], post, container, function () {
                 preloader.callback();
@@ -708,11 +710,91 @@ CoreUI.table = {
 
     /**
      * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
      * @param columnNmbr
      * @param url
+     * @param isAjax
      */
-    toggleExpandColumn : function (columnNmbr, url) {
+    toggleExpandColumn : function (resource, columnNmbr, url, isAjax) {
 
+        var urlHash = this.crc32(url);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(columnNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + urlHash);
+
+        if (row.hasClass('row-expanded')) {
+            row.removeClass('row-expanded');
+            row.next().hide('fast', function () {
+                $(this).remove();
+            })
+        }
+
+        if (isLoad) {
+            if (isAjax) {
+                CoreUI.table.preloader.show(resource);
+            } else {
+                preloader.show();
+            }
+
+            $.ajax({
+                method : 'get',
+                url    : url,
+                async  : false,
+                success: function (response) {
+                    row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
+                    row.addClass('row-expanded');
+                    row.next()
+                        .addClass('row-expand-name-' + urlHash)
+                        .show('fast');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                },
+                error  : function () {
+                    CoreUI.notice.create('Ошибка получения содержимого', 'danger');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                }
+            });
+        }
+    },
+
+
+    /**
+     * CRC32 hash
+     * @param str
+     * @param isNumber
+     * @returns {number}
+     */
+    crc32: function(str, isNumber) {
+
+        isNumber = typeof isNumber === 'undefined' ? false : !! isNumber;
+
+        for (var a, o = [], c = 0; c < 256; c++) {
+            a = c;
+            for (var f = 0; f < 8; f++) {
+                a = 1 & a ? 3988292384 ^ a >>> 1 : a >>> 1;
+            }
+            o[c] = a;
+        }
+
+        for (var n = -1, t = 0; t < str.length; t++) {
+            n = n >>> 8 ^ o[255 & (n ^ str.charCodeAt(t))];
+        }
+
+        var result = (-1 ^ n) >>> 0;
+
+        if ( ! isNumber) {
+            result = result.toString(16);
+        }
+
+        return result;
     },
 
 

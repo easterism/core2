@@ -101,6 +101,17 @@ class Db extends Table {
      */
     public function fetchData(): array {
 
+        return $this->fetchRows();
+    }
+
+
+    /**
+     * Получение данных из базы
+     * @return Row[]
+     * @throws \Zend_Db_Select_Exception
+     */
+    public function fetchRows(): array {
+
         if ( ! $this->is_fetched) {
             $this->is_fetched = true;
 

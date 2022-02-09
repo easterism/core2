@@ -494,7 +494,10 @@ class Render extends Acl {
         }
 
 
-        if ( ! empty($this->table['columns'])) {
+        if ( ! empty($this->table['columns']) &&
+             ! empty($this->table['show']) &&
+            $this->table['show']['header']
+        ) {
             foreach ($this->table['columns'] as $key => $column) {
                 if (is_array($column) && ! empty($column['show'])) {
                     if ( ! empty($column['sorting'])) {
@@ -550,6 +553,10 @@ class Render extends Acl {
                     if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
                         $tpl->row->row_number->assign('[#]', $row_number);
                     }
+
+                    $row['attr']['class'] = isset($row['attr']['class'])
+                        ? $row['attr']['class'] .= ' row-table'
+                        : 'row-table';
 
                     if ( ! empty($this->table['recordsEditUrl']) &&
                         ($this->checkAcl($this->table['resource'], 'edit_all') ||
@@ -684,7 +691,7 @@ class Render extends Acl {
             $tpl->touchBlock('no_rows');
         }
 
-        return $tpl->render();
+        return $this->minify($tpl->render());
     }
 
 
@@ -701,6 +708,31 @@ class Render extends Acl {
                 }
             }
         }
+    }
+
+
+    /**
+     * Сжатие Html
+     * @param string $html
+     * @return string
+     */
+    private function minify(string $html): string {
+
+        $search = [
+            '/\>[^\S ]+/s',     // strip whitespaces after tags, except space
+            '/[^\S ]+\</s',     // strip whitespaces before tags, except space
+            '/(\s)+/s',         // shorten multiple whitespace sequences
+            '/<!--(.|\s)*?-->/' // Remove HTML comments
+        ];
+
+        $replace = [
+            '>',
+            '<',
+            '\\1',
+            '',
+        ];
+
+        return preg_replace($search, $replace, $html);
     }
 
 
