@@ -1041,7 +1041,7 @@ table td.homeTD {
 	font-size: 14px;
 	font-weight: normal;
 	overflow: hidden;
-	padding: 5px 0 0;
+	padding: 6px 0 0;
 }
 
 .core-panel > .core-panel-body {
@@ -1861,6 +1861,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
 	text-align: right;
+	vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {

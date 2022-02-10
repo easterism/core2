@@ -25,8 +25,8 @@ body {
 	width: 100%;
 }
 table {
-	border:0px; 
-	border-collapse:collapse; 
+	border: 0;
+	border-collapse:collapse;
 	empty-cells: show;
 }
 table td {
@@ -627,8 +627,7 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-	padding: 3px;
-    padding-right: 10px!important;
+    padding: 0 10px 3px 3px;
     width: 190px;
     box-sizing: border-box;
 }
@@ -638,7 +637,7 @@ table.editTable {
 }
 .newRulesSubModule {
 	text-decoration:underline;
-	cursor:pointer;	
+	cursor:pointer;
 }
 .newFieldEnum {
 	text-decoration:underline;
@@ -1132,11 +1131,11 @@ table.calendar {
 	color: #00f;
 }
 .helpHeaderDiv {
-	float:right; 
+	float:right;
 	display: inline;
 }
 .helpImg{
-	
+
 }
 
 /* simple modal */
@@ -1150,19 +1149,19 @@ table.calendar {
 	height:auto;
 	left:50%;
 	margin-left:-100px;
-	top:50%; 
+	top:50%;
 	margin-top: -270px;
 	background-color:#fff;
 	border:3px solid #ccc;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
-    padding: 0px;
+    padding: 0;
 }
 .simplemodal-wrap {overflow:auto !important}
 a.modalCloseImg {
 	background:url(../img/icon_delete.gif) no-repeat;
-	width:25px; 
+	width:25px;
 	height:26px;
 	display:inline;
 	z-index:3200;
@@ -1192,7 +1191,6 @@ a.modalCloseImg {
     position: absolute;
     width: 250px;
 	padding-left: 5px;
-		
 }
 /*Install Module*/
 .installError {color: red}
@@ -1202,7 +1200,7 @@ a.modalCloseImg {
 .feedBackOption {font-weight: bold}
 .feedBackSelect {width: 100%}
 .feedBackMessage {
-	width: 100%; 
+	width: 100%;
 	height: 120px;
 	overflow: auto;
     box-sizing: border-box;
@@ -2376,6 +2374,8 @@ table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
 
+table.coreui-table > thead > .table-control-panel {height: 35px;}
+
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
 table.coreui-table > tbody > tr:hover > td,
@@ -2417,6 +2417,10 @@ table.coreui-table > tbody > tr > th:last-child,
 table.coreui-table > thead > tr > td:last-child,
 table.coreui-table > tbody > tr > td:last-child {
     padding-right: 10px;
+}
+table.coreui-table > tbody > tr > td .checked-row input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
 }
 table.coreui-table > thead > tr > th {
     border-bottom: 2px solid #D2D2D2;
@@ -2484,6 +2488,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
     text-align: right;
+    vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {
@@ -2540,6 +2545,7 @@ table.coreui-table input.gotopage {
     height: 22px;
     width: 35px;
     outline: 0;
+    margin-right: 3px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;
