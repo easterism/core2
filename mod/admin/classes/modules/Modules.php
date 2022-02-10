@@ -7,13 +7,18 @@ require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
 require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
 require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 require_once DOC_ROOT . 'core2/inc/classes/Templater2.php';
+require_once DOC_ROOT . 'core2/inc/classes/Table/Data.php';
+
+require_once "Gitlab.php";
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
+use Core2\Classes\Table;
 
 /**
  * Class Modules
- * @package Core2
+ * @property \SubModules $dataSubModules
+ * @property \Modules    $dataModules
  */
 class Modules extends \Common  {
 
@@ -29,44 +34,32 @@ class Modules extends \Common  {
     public function getAvailableEdit(Int $avail_id) {
         $edit = new \editTable('mod_available');
         /* Добавление нового модуля */
-        if (!$avail_id || $avail_id < 0) {
-            if (empty($this->config->php) || empty($this->config->php->path)) {
+        if ( ! $avail_id || $avail_id < 0) {
+            if (empty($this->config->php) ||
+                empty($this->config->php->path) ||
+                empty( exec('which php'))
+            ) {
                 $edit->error = " - В conf.ini не задан параметр php.path, проверка синтакса php файлов будет пропущена!";
             }
 
-            $edit->SQL = "SELECT id,
-                                     name
-                                FROM core_available_modules
-                               WHERE id = 0";
-            if ($avail_id < 0) {
+            $edit->SQL = "
+                SELECT id,
+                       name
+                FROM core_available_modules
+                WHERE id = 0
+            ";
 
-                $edit->addControl("GitLab релиз", "MODAL", array(
-                    'disabled' => 'disabled',
-                    'size' => '40',
-                    'options' => "{minHeight:450,
-                                   minWidth:830,
-                                   position: [350,'20%'],
-                        onShow: function (dialog) { 
-                            $('#modal_name').html('Загрузка...')
-                            gl.xxx={};
-                            $('#modal_name').load('index.php?module=admin&action=modules&__gitlab=1') 
-                        },
-                        onClose: function (dialog) {
-                            dialog.data.fadeOut('fast', function () {
-                                dialog.container.slideUp('fast', function () {
-                                    dialog.overlay.fadeOut('fast', function () {
-                                        if (gl.xxx.group) {
-                                            $('#main_mod_availablename').val(gl.xxx.group + '|' + gl.xxx.tag);
-                                            $('#main_mod_availablename_text').val(gl.xxx.group + ' ' + gl.xxx.tag);
-                                         }
-                                        gl.xxx={};
-                                        $.modal.close();
-                                    });
-                                });
-                            });
-                        }}"), "", "", true);
-            }
-            else {
+            if ($avail_id < 0) {
+                $modal_data = [
+                    'title'    => 'Gitlab репозиторий',
+                    'url'      => 'index.php?module=admin&action=modules&page=table_gitlab',
+                    'size'     => 'large',
+                    'text'     => '',
+                ];
+
+                $edit->addControl("GitLab релиз", "MODAL2", $modal_data, '', '', true);
+
+            } else {
                 $edit->addControl("Файл архива(.zip)", "XFILE_AUTO", "", "", "");
             }
 
@@ -163,22 +156,21 @@ class Modules extends \Common  {
         }
 
 
-        $copy_list = $this->db->fetchAll(
-            "SELECT id,
-                        `name`,
-                        module_id,
-                        module_group,
-                        descr,
-                        NULL AS deps,
-                        version,
-                        NULL AS author,
-                        NULL AS ia_sys_sw,
-                        install_info
-                   FROM core_available_modules
-                  WHERE 1=1
-                  {$where_search}
-               ORDER BY module_group, `name`"
-        );
+        $copy_list = $this->db->fetchAll("
+            SELECT id,
+                   `name`,
+                   module_id,
+                   module_group,
+                   descr,
+                   NULL AS deps,
+                   version,
+                   NULL AS author,
+                   NULL AS ia_sys_sw,
+                   install_info
+            FROM core_available_modules
+            WHERE 1=1 {$where_search}
+            ORDER BY module_group, `name`
+        ");
 
         if (!empty($copy_list)) {
             $allMods = array();
@@ -194,7 +186,7 @@ class Modules extends \Common  {
         $install = new InstallModule();
         foreach ($copy_list as $row) {
             $arr[0] = $row['id'];
-            $arr[1] = ($row['module_group'] ? "/" . $row['module_group'] : '') . $row['name'];
+            $arr[1] = ($row['module_group'] ? "<b>{$row['module_group']}</b> " : '') . $row['name'];
             $arr[2] = $row['module_id'];
             $arr[3] = $row['descr'];
             $mData = unserialize(htmlspecialchars_decode($row['install_info']));
@@ -373,7 +365,7 @@ class Modules extends \Common  {
      * Список установленных модулей
      * @throws \Exception
      */
-    public function getInstalled() {
+    public function getListInstalled() {
         $list = new \listTable('mod');
         $list->table = "core_modules";
         $list->SQL = "SELECT m_id,
@@ -439,42 +431,47 @@ class Modules extends \Common  {
 
 
     /**
-     * вывод
+     * Установленные модули
+     * @param int $refid
+     * @return string
+     * @throws \Zend_Db_Adapter_Exception
+     * @throws \Zend_Exception
      */
-    public function getInstalledEdit(Int $refid) {
+    public function getEditInstalled(int $refid = 0): string {
+
         $edit         = new \editTable('mod');
-        $selected_dep = array();
+        $selected_dep = [];
         $field        = '';
         $mod_list     = $this->db->fetchAll("
-                        SELECT module_id,
-                               m_name
-                        FROM core_modules
-                        WHERE m_id != ?
-                    ", $refid);
+            SELECT module_id,
+                   m_name
+            FROM core_modules
+            WHERE m_id != ?
+        ", $refid);
 
 
-        $dep_list = array();
+        $dep_list = [];
 
         if ($refid > 0) {
             $module           = $this->dataModules->find($refid)->current();
             $mod_dependencies = $module->dependencies;
-            $dep              = array();
+            $dep              = [];
 
             if ($mod_dependencies) {
                 $dep = base64_decode($mod_dependencies);
                 $dep = @unserialize($dep);
 
                 if (is_array($dep)) {
-                    $selected_dep = array();
+                    $selected_dep = [];
                     foreach ($dep as $variable) {
                         $selected_dep[] = $variable['module_id'];
                     }
                 } else {
-                    $dep = array();
+                    $dep = [];
                 }
             }
 
-            $availableModules = array();
+            $availableModules = [];
             foreach ($mod_list as $variable) {
                 $availableModules[] = $variable['module_id'];
             }
@@ -503,33 +500,9 @@ class Modules extends \Common  {
             }
         }
 
-        $edit->SQL  = "SELECT  m_id,
-                                       m_name,
-                                       module_id,
-                                       is_system,
-                                       is_public,
-                                       isset_home_page,
-                                       $field dependencies,
-                                       access_default,
-                                       access_add								   
-                                  FROM core_modules
-                                 WHERE m_id = '$refid'";
-        $edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
-        if ($refid > 0) {
-            $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
-        } else {
-            $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", " " . $this->_("маленикие латинские буквы или цифры"), "", true);
-        }
-        $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-        $edit->addControl($this->_("Системный:"), "RADIO", "", "", "N");
-        $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-        $edit->addControl($this->_("Отображаемый:"), "RADIO", "", "", "N");
-        $edit->selectSQL[] = array('Y' => 'да', 'N' => 'нет');
-        $edit->addControl($this->_("Есть главная страница:"), "RADIO", "", "", "Y");
-        $edit->selectSQL[] = $dep_list;
-        $edit->addControl($this->_("Зависит от модулей:"), "MULTISELECT2", "style=\"width:317px\"", "", $selected_dep);
-        $access_default 	= array();
-        $custom_access 		= '';
+        $access_default = [];
+        $custom_access  = '';
+
         if ($refid > 0) {
 
             $access_default = unserialize(base64_decode($module->access_default));
@@ -549,35 +522,64 @@ class Modules extends \Common  {
 
         $tpl = new \Templater2();
         $tpl->loadTemplate('core2/mod/admin/assets/html/access_default.html');
-        $tpl->assign(array(
+        $tpl->assign([
             '{preff}' => '',
 
-            '{access}' => (!empty($access_default['access']) ? $checked : ''),
+            '{access}' => (! empty($access_default['access']) ? $checked : ''),
 
-            '{list_all}' => (!empty($access_default['list_all']) ? $checked : ''),
-            '{list_all_list_owner}' => (!empty($access_default['list_all']) || !empty($access_default['list_owner']) ? $checked : ''),
-            '{list_all_disabled}' => (!empty($access_default['list_all']) ? $disabled : ''),
+            '{list_all}'            => (! empty($access_default['list_all']) ? $checked : ''),
+            '{list_all_list_owner}' => (! empty($access_default['list_all']) || ! empty($access_default['list_owner']) ? $checked : ''),
+            '{list_all_disabled}'   => (! empty($access_default['list_all']) ? $disabled : ''),
 
-            '{read_all}' => (!empty($access_default['read_all']) ? $checked : ''),
-            '{read_all_read_owner}' => (!empty($access_default['read_all']) || !empty($access_default['read_owner']) ?$checked : ''),
-            '{read_all_disabled}' => (!empty($access_default['read_all']) ? $disabled : ''),
+            '{read_all}'            => (! empty($access_default['read_all']) ? $checked : ''),
+            '{read_all_read_owner}' => (! empty($access_default['read_all']) || ! empty($access_default['read_owner']) ? $checked : ''),
+            '{read_all_disabled}'   => (! empty($access_default['read_all']) ? $disabled : ''),
 
-            '{edit_all}' => (!empty($access_default['edit_all']) ? $checked : ''),
-            '{edit_all_edit_owner}' => (!empty($access_default['edit_all']) || !empty($access_default['edit_owner']) ?$checked : ''),
-            '{edit_all_disabled}' => (!empty($access_default['edit_all']) ? $disabled : ''),
+            '{edit_all}'            => (! empty($access_default['edit_all']) ? $checked : ''),
+            '{edit_all_edit_owner}' => (! empty($access_default['edit_all']) || ! empty($access_default['edit_owner']) ? $checked : ''),
+            '{edit_all_disabled}'   => (! empty($access_default['edit_all']) ? $disabled : ''),
 
-            '{delete_all}' => (!empty($access_default['delete_all']) ? $checked : ''),
-            '{delete_all_delete_owner}' => (!empty($access_default['delete_all']) || !empty($access_default['delete_owner']) ?$checked : ''),
-            '{delete_all_disabled}' => (!empty($access_default['delete_all']) ? $disabled : ''),
-        ));
+            '{delete_all}'              => (! empty($access_default['delete_all']) ? $checked : ''),
+            '{delete_all_delete_owner}' => (! empty($access_default['delete_all']) || ! empty($access_default['delete_owner']) ? $checked : ''),
+            '{delete_all_disabled}'     => (! empty($access_default['delete_all']) ? $disabled : ''),
+        ]);
         $access = $tpl->parse();
-        $edit->addControl($this->_("Доступ по умолчанию:"), "CUSTOM", $access);
 
-        //CUSTOM ACCESS
-        $rules = '<div id="xxx">' . $custom_access . '</div>';
+        $rules  = "<div id=\"xxx\">{$custom_access}</div>";
         $rules .= '<div><span id="new_attr" class="newRulesModule" onclick="modules.newRule(\'xxx\')">Новое правило</span></div>';
+
+        $switch = ['Y' => 'да', 'N' => 'нет'];
+
+
+        $edit->SQL = $this->db->quoteInto("
+            SELECT m_id,
+                   m_name,
+                   module_id,
+                   is_system,
+                   is_public,
+                   isset_home_page,
+                   $field dependencies,
+                   access_default,
+                   access_add								   
+            FROM core_modules
+            WHERE m_id = ?
+        ", $refid);
+
+        $edit->addControl("Модуль:", "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
+        if ($refid > 0) {
+            $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
+        } else {
+            $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", " " . $this->_("маленикие латинские буквы или цифры"), "", true);
+        }
+        $edit->addControl($this->_("Системный:"),                      "RADIO", "", "", "N"); $edit->selectSQL[] = $switch;
+        $edit->addControl($this->_("Отображаемый:"),                   "RADIO", "", "", "N"); $edit->selectSQL[] = $switch;
+        $edit->addControl($this->_("Есть главная страница:"),          "RADIO", "", "", "Y"); $edit->selectSQL[] = $switch;
+        $edit->addControl($this->_("Зависит от модулей:"),             "MULTISELECT2", "style=\"width:317px\"", "", $selected_dep); $edit->selectSQL[] = $dep_list;
+        $edit->addControl($this->_("Доступ по умолчанию:"),            "CUSTOM", $access);
         $edit->addControl($this->_("Дополнительные правила доступа:"), "CUSTOM", $rules);
+
         $edit->addButtonSwitch('visible', 	$this->db->fetchOne("SELECT 1 FROM core_modules WHERE visible = 'Y' AND m_id=? LIMIT 1", $refid));
+
         /*if ($is_visible) {
             if (count($list_name_modules) > 0) {
                 $get_param = base64_encode(serialize($list_id_modules));
@@ -592,123 +594,281 @@ class Modules extends \Common  {
 
 
         $edit->back = $this->app;
-        $edit->addButton($this->_("Отмена"), "load('$this->app')");
         $edit->save("xajax_saveModule(xajax.getFormValues(this.id))");
-        $edit->showTable();
 
-        //----------------------------
-        // Субмодули
-        //---------------------------
-        $tabs = new \tabs("submods");
-        $tabs->beginContainer($this->_('Субмодули'));
-        if (isset($_GET['editsub']) && $_GET['editsub'] != '') {
-            $edit = new \editTable('submod');
-            $edit->SQL  = "SELECT  sm_id,
-                                           sm_name,
-                                           sm_key,
-                                           sm_path,
-                                           seq,
-                                           access_default,
-                                           access_add
-                                      FROM core_submodules
-                                     WHERE m_id = '$refid'
-                                       AND sm_id = '" . $_GET['editsub'] . "'";
-            $res = $this->db->fetchRow($edit->SQL);
+        return $edit->render();
+    }
 
-            $edit->addControl($this->_("Субмодуль:"), "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
 
-            if ($_GET['editsub'] > 0) {
-                $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
-            } else {
-                $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", $this->_(" маленикие латинские буквы или цифры"), "", true);
-            }
-            $edit->addControl($this->_("Адрес внешнего ресурса:"), "TEXT");
-            $seq = '1';
-            if (empty($_GET['editsub'])) {
-                $seq = $this->db->fetchOne("SELECT MAX(seq) + 5 FROM core_submodules WHERE m_id = ? LIMIT 1", $refid);
-                if (!$seq) $seq = '1';
-            }
-            $edit->addControl($this->_("Позиция в меню:"), "NUMBER", "size=\"2\"", "", $seq, true);
+    /**
+     * @param int $module_id
+     * @param int $submodule_id
+     * @return string
+     * @throws \Zend_Db_Adapter_Exception
+     * @throws \Zend_Exception
+     */
+    public function getEditSubmodule(int $module_id, int $submodule_id = 0): string {
 
-            $access_default 	= array();
-            $custom_access 		= '';
-            if ($_GET['editsub']) {
-                $res = $this->dataSubModules->find($_GET['editsub'])->current();
-                $access_default = unserialize(base64_decode($res->access_default));
-                $access_add 	= unserialize(base64_decode($res->access_add));
-                if (is_array($access_add) && count($access_add)) {
-                    foreach ($access_add as $key => $value) {
-                        $id = uniqid();
-                        $custom_access .= '<input type="text" class="input" name="addRules[' . $id . ']" value="' . $key . '"/>'.
-                            '<input type="checkbox" onchange="checkToAll(this)" id="access_' . $id . '_all" name="value_all[' . $id . ']" value="all" ' . ($value == 'all' ? 'checked="checked"' : '') . '/><label>Все</label>'.
-                            '<input type="checkbox" name="value_owner[' . $id . ']" id="access_' . $id . '_owner" value="owner" ' . (($value == 'all' || $value == 'owner') ? ' checked="checked"' : '') . ($value == 'all' ? ' disabled="disabled"' : '') . '/><label>Владелец</label><br>';
-                    }
+        $edit = new \editTable('submod');
+        $edit->SQL = $this->db->quoteInto("
+            SELECT  sm_id,
+                    sm_name,
+                    sm_key,
+                    sm_path,
+                    seq,
+                    access_default,
+                    access_add
+            FROM core_submodules
+            WHERE m_id = ?
+             AND sm_id = ?
+        ", $module_id, null, 1);
+        $edit->SQL = $this->db->quoteInto($edit->SQL, $submodule_id, null, 1);
+
+
+
+        $access_default 	= [];
+        $custom_access 		= '';
+        if ($submodule_id) {
+            $res = $this->dataSubModules->find($submodule_id)->current();
+            $access_default = unserialize(base64_decode($res->access_default));
+            $access_add 	= unserialize(base64_decode($res->access_add));
+            if (is_array($access_add) && count($access_add)) {
+                foreach ($access_add as $key => $value) {
+                    $id = uniqid();
+                    $custom_access .= '<input type="text" class="input" name="addRules[' . $id . ']" value="' . $key . '"/>'.
+                        '<input type="checkbox" onchange="checkToAll(this)" id="access_' . $id . '_all" name="value_all[' . $id . ']" value="all" ' . ($value == 'all' ? 'checked="checked"' : '') . '/><label>Все</label>'.
+                        '<input type="checkbox" name="value_owner[' . $id . ']" id="access_' . $id . '_owner" value="owner" ' . (($value == 'all' || $value == 'owner') ? ' checked="checked"' : '') . ($value == 'all' ? ' disabled="disabled"' : '') . '/><label>Владелец</label><br>';
                 }
             }
-            $tpl = new \Templater2();
-            $tpl->loadTemplate('core2/mod/admin/assets/html/access_default.html');
-            $tpl->assign(array(
-                '{preff}' => 'sub',
-
-                '{access}' => (!empty($access_default['access']) ? $checked : ''),
-
-                '{list_all}' => (!empty($access_default['list_all']) ? $checked : ''),
-                '{list_all_list_owner}' => (!empty($access_default['list_all']) || !empty($access_default['list_owner']) ? $checked : ''),
-                '{list_all_disabled}' => (!empty($access_default['list_all']) ? $disabled : ''),
-
-                '{read_all}' => (!empty($access_default['read_all']) ? $checked : ''),
-                '{read_all_read_owner}' => (!empty($access_default['read_all']) || !empty($access_default['read_owner']) ?  : ''),
-                '{read_all_disabled}' => (!empty($access_default['read_all']) ? $disabled : ''),
-
-                '{edit_all}' => (!empty($access_default['edit_all']) ? $checked : ''),
-                '{edit_all_edit_owner}' => (!empty($access_default['edit_all']) || !empty($access_default['edit_owner']) ? $checked : ''),
-                '{edit_all_disabled}' => (!empty($access_default['edit_all']) ? $disabled : ''),
-
-                '{delete_all}' => (!empty($access_default['delete_all']) ? $checked : ''),
-                '{delete_all_delete_owner}' => (!empty($access_default['delete_all']) || !empty($access_default['delete_owner']) ? $checked : ''),
-                '{delete_all_disabled}' => (!empty($access_default['delete_all']) ? $disabled : ''),
-            ));
-
-            $access = $tpl->parse();
-            $edit->addControl($this->_("Доступ по умолчанию:"), "CUSTOM", $access);
-
-            $rules = '<div id="xxxsub">' . $custom_access . '</div>';
-            $rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="modules.newRule(\'xxxsub\')">Новое правило</span></div>';
-            $edit->addControl($this->_("Дополнительные правила доступа:"), "CUSTOM", $rules);
-
-            $edit->addButtonSwitch('visible', $this->db->fetchOne("SELECT 1 FROM core_submodules WHERE visible = 'Y' AND sm_id=? LIMIT 1", $_GET['editsub']));
-
-            if (!$_GET['editsub']) $edit->setSessFormField('m_id', $refid);
-            $edit->back = $this->app . "&edit=" . $refid;
-            $edit->addButton($this->_("Отменить"), "load('{$this->app}&edit={$refid}')");
-            $edit->save("xajax_saveModuleSub(xajax.getFormValues(this.id))");
-
-            $edit->showTable();
         }
+
+
+        $checked  = 'checked="checked"';
+        $disabled = 'disabled="disabled"';
+
+        $tpl = new \Templater2();
+        $tpl->loadTemplate('core2/mod/admin/assets/html/access_default.html');
+        $tpl->assign([
+            '{preff}' => 'sub',
+
+            '{access}' => (! empty($access_default['access']) ? $checked : ''),
+
+            '{list_all}'            => (! empty($access_default['list_all']) ? $checked : ''),
+            '{list_all_list_owner}' => (! empty($access_default['list_all']) || ! empty($access_default['list_owner']) ? $checked : ''),
+            '{list_all_disabled}'   => (! empty($access_default['list_all']) ? $disabled : ''),
+
+            '{read_all}'            => (! empty($access_default['read_all']) ? $checked : ''),
+            '{read_all_read_owner}' => (! empty($access_default['read_all']) || ! empty($access_default['read_owner']) ?: ''),
+            '{read_all_disabled}'   => (! empty($access_default['read_all']) ? $disabled : ''),
+
+            '{edit_all}'            => (! empty($access_default['edit_all']) ? $checked : ''),
+            '{edit_all_edit_owner}' => (! empty($access_default['edit_all']) || ! empty($access_default['edit_owner']) ? $checked : ''),
+            '{edit_all_disabled}'   => (! empty($access_default['edit_all']) ? $disabled : ''),
+
+            '{delete_all}'              => (! empty($access_default['delete_all']) ? $checked : ''),
+            '{delete_all_delete_owner}' => (! empty($access_default['delete_all']) || ! empty($access_default['delete_owner']) ? $checked : ''),
+            '{delete_all_disabled}'     => (! empty($access_default['delete_all']) ? $disabled : ''),
+        ]);
+
+        $access = $tpl->parse();
+
+        $seq = '1';
+        if (empty($submodule_id)) {
+            $seq = $this->db->fetchOne("
+                SELECT MAX(seq) + 5 
+                FROM core_submodules 
+                WHERE m_id = ? 
+                LIMIT 1
+            ", $module_id);
+
+            if ( ! $seq) {
+                $seq = '1';
+            }
+        }
+
+        $rules  = "<div id=\"xxxsub\">{$custom_access}</div>";
+        $rules .= '<div><span id="new_attr" class="newRulesSubModule" onclick="modules.newRule(\'xxxsub\')">Новое правило</span></div>';
+
+
+
+
+        $edit->addControl($this->_("Субмодуль:"), "TEXT", "maxlength=\"60\" size=\"60\"", "", "", true);
+
+        if ($submodule_id > 0) {
+            $edit->addControl($this->_("Идентификатор:"), "PROTECTED");
+        } else {
+            $edit->addControl($this->_("Идентификатор:"), "TEXT", "maxlength=\"20\"", $this->_(" маленикие латинские буквы или цифры"), "", true);
+        }
+
+        $edit->addControl($this->_("Адрес внешнего ресурса:"),         "TEXT");
+        $edit->addControl($this->_("Позиция в меню:"),                 "NUMBER", "size=\"2\"", "", $seq, true);
+        $edit->addControl($this->_("Доступ по умолчанию:"),            "CUSTOM", $access);
+        $edit->addControl($this->_("Дополнительные правила доступа:"), "CUSTOM", $rules);
+
+        $edit->addButtonSwitch('visible', $this->db->fetchOne("
+            SELECT 1 
+            FROM core_submodules 
+            WHERE visible = 'Y' 
+              AND sm_id = ? 
+            LIMIT 1
+        ", $submodule_id));
+
+        if (empty($submodule_id)) {
+            $edit->setSessFormField('m_id', $module_id);
+        }
+
+        $edit->back = "{$this->app}&edit={$module_id}&tab=submodules";
+        $edit->addButton($this->_("Отменить"), "load('{$this->app}&edit={$module_id}&tab=submodules')");
+        $edit->save("xajax_saveModuleSub(xajax.getFormValues(this.id))");
+
+        return $edit->render();
+    }
+
+
+    /**
+     * Список субмодулей
+     * @param int $module_id
+     * @return string
+     */
+    public function getListSubmodules(int $module_id): string {
 
         $list = new \listTable('submod');
 
-        $list->SQL = "SELECT sm_id,
-                                     sm_name,
-                                     sm_path,
-                                     seq,
-                                     visible
-                                FROM core_submodules
-                                WHERE m_id = '$refid'
-                               ORDER BY seq, sm_name";
-        $list->addColumn($this->_("Субмодуль"), "", "TEXT");
-        $list->addColumn($this->_("Путь"), "", "TEXT");
-        $list->addColumn($this->_("Позиция"), "", "TEXT");
-        $list->addColumn("", "1%", "STATUS_INLINE", "core_submodules.visible");
+        $list->SQL = $this->db->quoteInto("
+            SELECT sm_id,
+                  sm_name,
+                  sm_key,
+                  sm_path,
+                  seq,
+                  visible
+            FROM core_submodules
+            WHERE m_id = ?
+            ORDER BY seq, sm_name
+        ", $module_id);
+
+        $list->addColumn($this->_("Субмодуль"),     "",    "TEXT");
+        $list->addColumn($this->_("Идентификатор"), "150", "TEXT");
+        $list->addColumn($this->_("Путь"),          "300", "TEXT");
+        $list->addColumn($this->_("Позиция"),       "80",  "TEXT");
+        $list->addColumn("",                        "1%", "STATUS_INLINE", "core_submodules.visible");
 
         $list->paintCondition	= "'TCOL_05' == 'N'";
         $list->paintColor		= "ffffee";
 
-        $list->addURL 			= $this->app . "&edit={$refid}&editsub=0";
-        $list->editURL 			= $this->app . "&edit={$refid}&editsub=TCOL_00";
-        $list->deleteKey		= "core_submodules.sm_id";
+        $list->addURL    = $this->app . "&edit={$module_id}&tab=submodules&editsub=0";
+        $list->editURL   = $this->app . "&edit={$module_id}&tab=submodules&editsub=TCOL_00";
+        $list->deleteKey = "core_submodules.sm_id";
 
-        $list->showTable();
-        $tabs->endContainer();
+        return $list->render();
+    }
+
+
+    /**
+     * Gitlab репозитории
+     * @return string
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Exception
+     */
+    public function getTableGitlab(): string {
+
+        $table = new Table\Data("{$this->resId}xxx_gitlab");
+        $table->hideCheckboxes();
+        $table->setAjax();
+
+        $modules = $this->getGitlabModules();
+        $table->setData($modules);
+
+        $table->addSearch($this->_("Модуль"), 'path');
+        $table->addSearch($this->_("Версия"), 'version');
+        $table->addSearch($this->_("Автор"),  'author');
+        $table->addSearch($this->_("Дата"),   'date', $table::SEARCH_DATE);
+
+
+        $table->addColumn($this->_("Модуль"), 'path',    $table::COLUMN_HTML);
+        $table->addColumn($this->_('Версия'), 'version', $table::COLUMN_TEXT, 100);
+        $table->addColumn($this->_("Автор"),  'author',  $table::COLUMN_TEXT, 250);
+        $table->addColumn($this->_("Дата"),   'date',    $table::COLUMN_DATETIME, 120);
+
+
+        $data = $table->fetchData();
+        if ( ! empty($data)) {
+            foreach ($data as $row) {
+
+                $row->module = $row->path->getValue();
+
+                $path       = $row->path->getValue();
+                $path_end   = mb_substr($path, mb_strrpos($path, '/') + 1);
+                $path_begin = mb_substr($path, 0, mb_strrpos($path, '/') + 1);
+                $row->path  = "<span class=\"text-muted\">{$path_begin}</span><b>{$path_end}</b>";
+            }
+        }
+
+        $update_table = $this->_('Обновить список');
+
+        $table->setEditUrl("javascript:edit.modal2.choose('TCOL_MODULE|TCOL_VERSION', 'TCOL_MODULE TCOL_VERSION');");
+        $table->addCustomControl("<button class=\"button btn btn-sm btn-default\" onclick=\"modules.updateTable('" . THEME . "')\">{$update_table}</button>");
+
+        return $table->render();
+    }
+
+
+    /**
+     * Очистка списка модулей из Gitlab
+     * @return bool
+     */
+    public function gitlabClean(): bool {
+
+        $gitlab_cache_key = 'gitlab_modules';
+
+        if ($this->cache->test($gitlab_cache_key)) {
+            $this->cache->clean($gitlab_cache_key);
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Получение списка модулей из Gitlab
+     * @return array|bool
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function getGitlabModules(): array {
+
+        $gitlab_cache_key = 'gitlab_modules';
+
+        if ($this->cache->test($gitlab_cache_key)) {
+            $modules = $this->cache->load($gitlab_cache_key);
+
+        } else {
+            $gitlab         = new Gitlab();
+            $gitlab_modules = $gitlab->getTags();
+            $modules        = [];
+
+            if ( ! empty($gitlab_modules)) {
+                foreach ($gitlab_modules as $module_id => $module) {
+
+                    if ( ! empty($module['tags'])) {
+                        foreach ($module['tags'] as $tag) {
+                            $modules[] = [
+                                'module_id' => $module_id,
+                                'path'      => $module['name'],
+                                'version'   => $tag['name'],
+                                'author'    => "{$tag['author_name']} ({$tag['author_email']})",
+                                'date'      => $tag['authored_date'],
+                            ];
+                        }
+                    }
+                }
+            }
+
+            if ( ! empty($modules)) {
+                $modules = \Tool::arrayMultisort($modules, 'date', SORT_DESC);
+            }
+
+            $this->cache->save($modules, $gitlab_cache_key);
+        }
+
+        return $modules ?: [];
     }
 }

@@ -8,7 +8,6 @@ require_once 'classes/Alert.php';
 require_once 'Interfaces/File.php';
 
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/Gitlab.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
@@ -17,11 +16,6 @@ require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
-
-use Core2\Settings as Settings;
-use Core2\Modules as Modules;
-use Core2\Roles as Roles;
-use Core2\Enum as Enum;
 use Core2\InstallModule as Install;
 
 
@@ -164,6 +158,48 @@ class CoreController extends Common implements File {
             throw new Exception(911);
         }
 
+        if (isset($_GET['data'])) {
+            try {
+                switch ($_GET['data']) {
+                    case 'cache_clean':
+                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                            throw new Exception('Некорректный http метод');
+                        }
+                        header("Content-Type: application/json");
+                        (new \Core2\Modules())->gitlabClean();
+                        return json_encode([
+                            'status' => 'success'
+                        ]);
+                        break;
+                }
+
+                throw new Exception($this->_('Некорректный адрес'));
+
+            } catch (Exception $e) {
+                header("Content-Type: application/json");
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => $e->getMessage()
+                ]);
+            }
+        }
+
+        if (isset($_GET['page'])) {
+            try {
+                switch ($_GET['page']) {
+                    case 'table_gitlab':
+                        return (new \Core2\Modules())->getTableGitlab();
+                        break;
+                }
+
+                throw new Exception($this->_('Некорректный адрес'));
+
+            } catch (Exception $e) {
+                return Alert::danger($e->getMessage());
+            }
+        }
+
+
         //проверка наличия обновлений для модулей
         if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
             header('Content-type: application/json; charset="utf-8"');
@@ -201,106 +237,103 @@ class CoreController extends Common implements File {
             return;
         }
 
-        if ( ! empty($_GET['__gitlab'])) {
-            $gitlab = new \Core2\Gitlab();
-            $tags   = $gitlab->getTags();
-
-            ob_start();
-
-            if ( ! empty($tags)) {
-                // FIXME вынести в шаблон
-                echo "<b>Репозитории</b>";
-                echo "<ol>";
-                foreach ($tags as $item) {
-                    echo "<li>{$item['name']}";
-                    echo "<ul>";
-
-                    if ( ! empty($item['tags'])) {
-                        foreach ($item['tags'] as $tag) {
-                            echo "
-                                <li>
-                                    <a href=\"#\" 
-                                       onclick=\"gl.selectTag('{$item['name']}','{$tag['name']}');$.modal.close();return false\">
-                                        {$tag['name']}
-                                    </a>
-                                    {$tag['author_name']} ({$tag['author_email']})
-                                </li>
-                            ";
-                        }
-                    } else {
-                        echo "<li>Нет тегов</li>";
-                    }
-
-                    echo "</ul></li>";
-                }
-                echo "</ol>";
-
-            } else {
-                echo $this->_("Репозитории не найдены. Проверьте правильность параметров");
+        if ( ! empty($_POST)) {
+            /* Обновление файлов модуля */
+            if (!empty($_POST['refreshFilesModule'])) {
+                $install = new Install();
+                return $install->mRefreshFiles($_POST['refreshFilesModule']);
             }
 
-            return ob_get_clean();
+            /* Обновление модуля */
+            if (!empty($_POST['updateModule'])) {
+                $install = new Install();
+                return $install->checkModUpdates($_POST['updateModule']);
+            }
+
+            // Деинсталяция модуля
+            if (isset($_POST['uninstall'])) {
+                $install = new Install();
+                return $install->mUninstall($_POST['uninstall']);
+            }
+
+            // Инсталяция модуля
+            if (!empty($_POST['install'])) {
+                $install = new Install();
+                return $install->mInstall($_POST['install']);
+            }
+
+            // Инсталяция модуля из репозитория
+            if (!empty($_POST['install_from_repo'])) {
+                $install = new Install();
+                return $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
+            }
         }
 
 
-        $mods = new Modules();
-        if (empty($_POST)) {
-            $this->printJs("core2/mod/admin/assets/js/mod.js");
-            $this->printJs("core2/mod/admin/assets/js/gl.js");
-        }
 
-        $panel = new \Panel('tab');
-        $panel->addTab($this->_("Установленные модули"), 'install',   "index.php?module=admin&action=modules");
-        $panel->addTab($this->_("Доступные модули"),	     'available', "index.php?module=admin&action=modules");
+        $this->printJs("core2/mod/admin/assets/js/mod.js");
+        $this->printJs("core2/mod/admin/assets/js/gl.js");
+
+        $base_url = "index.php?module=admin&action=modules";
+        $mods     = new Core2\Modules();
+        $panel    = new \Panel('tab');
         $panel->setTitle($this->_("Модули"));
+
         ob_start();
-        switch ($panel->getActiveTab()) {
-            case 'install':
-                if (!empty($_POST)) {
-                    /* Обновление файлов модуля */
-                    if (!empty($_POST['refreshFilesModule'])) {
-                        $install = new Install();
-                        return $install->mRefreshFiles($_POST['refreshFilesModule']);
+        if (isset($_GET['edit'])) {
+            if (empty($_GET['edit'])) {
+                $panel->setTitle($this->_("Добавление модуля"));
+                echo $mods->getEditInstalled();
+
+            } else {
+                $module = $this->dataModules->getRowById((int)$_GET['edit']);
+
+                if (empty($module)) {
+                    return Alert::danger($this->_('Указанный модуль не найден'));
+                }
+
+                $panel->setTitle(strip_tags($module->m_name), $module->module_id, $base_url);
+                $count_submodules = $this->dataSubModules->getCountByModuleId((int)$_GET['edit']);
+
+                $base_url .= "&edit={$module->m_id}";
+                $panel->addTab($this->_("Модуль"),                          'module',     $base_url);
+                $panel->addTab($this->_("Субмодули ({$count_submodules})"), 'submodules', $base_url);
+
+
+                $base_url .= "&tab=" . $panel->getActiveTab();
+                switch ($panel->getActiveTab()) {
+                    case 'module':
+                        echo $mods->getEditInstalled((int)$module->m_id);
+                        break;
+
+                    case 'submodules':
+                        if (isset($_GET['editsub'])) {
+                            echo $mods->getEditSubmodule((int)$module->m_id, (int)$_GET['editsub']);
+                        }
+
+                        echo $mods->getListSubmodules((int)$module->m_id);
+                        break;
+                }
+            }
+
+        } else {
+            $panel->addTab($this->_("Установленные модули"), 'install',   $base_url);
+            $panel->addTab($this->_("Доступные модули"),	 'available', $base_url);
+
+            switch ($panel->getActiveTab()) {
+                case 'install':
+                    $mods->getListInstalled();
+                    break;
+
+                case 'available':
+                    if (isset($_GET['add_mod'])) {
+                        $mods->getAvailableEdit((int) $_GET['add_mod']);
                     }
 
-                    /* Обновление модуля */
-                    if (!empty($_POST['updateModule'])) {
-                        $install = new Install();
-                        return $install->checkModUpdates($_POST['updateModule']);
-                    }
-
-                    //Деинсталяция модуля
-                    if (isset($_POST['uninstall'])) {
-                        $install = new Install();
-                        return $install->mUninstall($_POST['uninstall']);
-                    }
-                }
-                if (isset($_GET['edit']) && $_GET['edit'] != '') {
-                    $mods->getInstalledEdit((int) $_GET['edit']);
-                } else {
-                    $mods->getInstalled();
-                }
-                break;
-
-            case 'available':
-                // Инсталяция модуля
-                if (!empty($_POST['install'])) {
-                    $install = new Install();
-                    return $install->mInstall($_POST['install']);
-                }
-                // Инсталяция модуля из репозитория
-                if (!empty($_POST['install_from_repo'])) {
-                    $install = new Install();
-                    return $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
-                }
-                if (isset($_GET['add_mod'])) {
-                    $mods->getAvailableEdit((int) $_GET['add_mod']);
-                }
-
-                $mods->getAvailable();
-                $mods->getRepoModules();
-
-                break;
+                    $mods->getAvailable();
+                    $mods->getRepoModules();
+                    break;
+            }
         }
 
         $panel->setContent(ob_get_clean());
@@ -538,7 +571,7 @@ class CoreController extends Common implements File {
 	public function action_settings () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         $app = "index.php?module=admin&action=settings";
-        $settings = new Settings();
+        $settings = new Core2\Settings();
         $tab = new tabs('settings');
         $tab->addTab($this->translate->tr("Настройки системы"), 			$app, 130);
         $tab->addTab($this->translate->tr("Дополнительные параметры"), 		$app, 180);
@@ -625,6 +658,10 @@ class CoreController extends Common implements File {
 					$html .= '</small>';
 
                     $email = $this->createEmail();
+                    if (isset($_FILES) && ! empty($_FILES['video-blob'])) {
+                        $file = $_FILES['video-blob'];
+                        $email->attacheFile(file_get_contents($file['tmp_name']), "feedback.webm", $file['type'], $file['size']);
+                    }
 
                     if ( ! empty($dataUser['email'])) {
                         $email->from($dataUser['email']);
@@ -728,6 +765,7 @@ class CoreController extends Common implements File {
 			}
 		}
 		$this->printJs("core2/mod/admin/assets/js/feedback.js", true);
+		$this->printJs("core2/html/default/js/capture.js");
 		require_once 'classes/Templater2.php';
 		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
@@ -831,7 +869,7 @@ class CoreController extends Common implements File {
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$this->printCss($this->path . "assets/css/role.css");
-        $roles = new Roles();
+        $roles = new Core2\Roles();
         $roles->dispatch();
 	}
 
@@ -843,7 +881,7 @@ class CoreController extends Common implements File {
 	public function action_enum()
     {
         if (!$this->auth->ADMIN) throw new Exception(911);
-        $enum = new Enum();
+        $enum = new Core2\Enum();
         $tab = new tabs('enum');
 
         $title = $this->_("Справочники");

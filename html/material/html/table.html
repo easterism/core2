@@ -11,35 +11,48 @@
   <table width="100%" id="table-[RESOURCE]" class="coreui-table">
     <thead>
 
-    <!-- BEGIN search -->
+    <!-- BEGIN controls -->
     <tr class="table-control-panel">
       <td colspan="1000">
-        <ul class="search-controls">
-          <li class="search-control" onclick="CoreUI.table.search.toggle('[RESOURCE]')" >
-            <img title="_tr(Поиск)"
-                 src="[THEME_SRC]/list/img/view.png" alt="_tr(Поиск)"/>
-            <span>_tr(Поиск)</span>
+        <ul class="table-controls">
+
+          <!-- BEGIN search_control -->
+          <li class="table-control">
+            <button type="button" onclick="CoreUI.table.search.toggle('[RESOURCE]')">
+              <img src="[THEME_SRC]/list/img/view.png" alt="_tr(Поиск)"/>
+              <span>_tr(Поиск)</span>
+            </button>
           </li>
 
-          <!-- BEGIN clear -->
-          <li class="search-control">
-            <button type="button" onclick="CoreUI.table.search.clear('[RESOURCE]', [IS_AJAX])"
-                    style="border: 0;background-color: transparent;padding: 0;">
-              <img title="_tr(Поиск)"
-                   src="[THEME_SRC]/list/img/clearview.png" alt="_tr(Очистить)"/>
+          <!-- BEGIN search_clear -->
+          <li class="table-control">
+            <button type="button" onclick="CoreUI.table.search.clear('[RESOURCE]', [IS_AJAX])">
+              <img src="[THEME_SRC]/list/img/clearview.png" alt="_tr(Очистить)"/>
               <span>_tr(Очистить)</span>
             </button>
           </li>
-          <!-- END clear -->
+          <!-- END search_clear -->
+          <!-- END search_control -->
+
+          <!-- BEGIN column_switcher_control -->
+          <li class="table-control" title="_tr(Колонки)">
+            <button type="button" onclick="CoreUI.table.columnSwitcher.toggleContainer('[RESOURCE]')">
+              <img src="[THEME_SRC]/list/img/application_view_columns.png" alt="_tr(Колонки)"/>
+              <span>_tr(Колонки)</span>
+            </button>
+          </li>
+          <!-- END column_switcher_control -->
         </ul>
       </td>
     </tr>
+    <!-- END controls -->
 
+    <!-- BEGIN search_container -->
     <tr class="search-container" style="display:none" id="search-[RESOURCE]">
       <td colspan="1000">
         <form action="" method="post" onsubmit="CoreUI.table.search.submit('[RESOURCE]', this, [IS_AJAX]); return false">
           <table class="search-table">
-            <!-- BEGIN field -->
+            <!-- BEGIN search_field -->
             <tr>
               <th class="control-label">[CAPTION]</th>
               <td class="control control-type-[TYPE]">
@@ -61,6 +74,15 @@
                            name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                   </div>
                   <!-- END date -->
+
+                  <!-- BEGIN number -->
+                  <div [IN_TEXT]>
+                    <input type="number" id="search-[RESOURCE]-[KEY]-value-start"  class="form-control input-sm"
+                           name="search[[RESOURCE]][[KEY]][0]" value="[VALUE_START]"> -
+                    <input type="number" id="search-[RESOURCE]-[KEY]-value-end"  class="form-control input-sm"
+                           name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
+                  </div>
+                  <!-- END number -->
 
                   <!-- BEGIN text -->
                   <div>
@@ -103,7 +125,7 @@
                 <div class="out-text">[OUT_TEXT]</div>
               </td>
             </tr>
-            <!-- END field -->
+            <!-- END search_field -->
 
             <tr>
               <td></td>
@@ -115,7 +137,32 @@
         </form>
       </td>
     </tr>
-    <!-- END search -->
+    <!-- END search_container -->
+
+    <!-- BEGIN column_switcher_container -->
+    <tr class="column-switcher-container" style="display:none" id="column-switcher-[RESOURCE]">
+      <td colspan="1000">
+        <form onsubmit="CoreUI.table.columnSwitcher.submit('[RESOURCE]', [IS_AJAX]); return false;">
+          <div class="checkbox checkbox-all">
+            <label>
+              <input type="checkbox" onclick="CoreUI.table.columnSwitcher.toggleAllColumns('[RESOURCE]')" checked="checked">
+              _tr(Все)
+            </label>
+          </div>
+
+          <!-- BEGIN column_switcher_field -->
+          <div class="checkbox">
+            <label class="table-switch-column">
+              <input type="checkbox" value="[COLUMN]" [CHECKED]/> [TITLE]
+            </label>
+          </div>
+          <!-- END column_switcher_field -->
+
+          <input type="submit" class="btn btn-sm btn-primary" value="_tr(Применить)">
+        </form>
+      </td>
+    </tr>
+    <!-- END column_switcher_container -->
 
     <!-- BEGIN service -->
     <tr class="table-service-panel">
@@ -126,10 +173,10 @@
         <div class="pull-right">
           <div class="custom-buttons">[BUTTONS]</div>
           <!-- BEGIN add_button -->
-          <a  href="[URL]" class="btn btn-success btn-sm">_tr(Добавить)</a>
+          <a href="[URL]" class="btn btn-success btn-sm">[ADD_TEXT]</a>
           <!-- END add_button -->
           <!-- BEGIN del_button -->
-          <input type="button" class="btn btn-warning btn-sm" value="_tr(Удалить)"
+          <input type="button" class="btn btn-warning btn-sm" value="[DELETE_TEXT]"
                  onclick="CoreUI.table.deleteRows('[RESOURCE]', '[DELETE_MSG]', '[DELETE_NO_SELECT]', [IS_AJAX])"/>
           <!-- END del_button -->
         </div>

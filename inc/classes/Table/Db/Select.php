@@ -27,6 +27,15 @@ class Select {
 
 
     /**
+     * @return array
+     */
+    public function getSqlParts(): array {
+
+        return $this->sql;
+    }
+
+
+    /**
      * Получение колонок
      * @return array
      */

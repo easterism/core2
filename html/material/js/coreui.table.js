@@ -36,11 +36,18 @@ CoreUI.table = {
          * @param resource
          */
         toggle : function(resource) {
+
             var $search_container = $("#search-" + resource);
+            var columns           = $("#column-switcher-" + resource);
+
+            if (columns.is(":visible")) {
+                columns.hide();
+            }
+
             $search_container.toggle('fast');
 
-            var f = $search_container.find("form");
-            f[0].elements[0].focus();
+            var form = $search_container.find("form");
+            form[0].elements[0].focus();
         },
 
 
@@ -107,38 +114,71 @@ CoreUI.table = {
     },
 
 
-    filter: {
+    columnSwitcher: {
+
         /**
-         *
-         * @param id
+         * Переключение панели управления колонками
+         * @param resource
          */
-        show : function(id) {
-            $("#filterColumn" + id).toggle('fast');
+        toggleContainer : function(resource) {
+
+            var searchContainer  = $("#search-" + resource);
+            var columnsContainer = $("#column-switcher-" + resource);
+
+            if (searchContainer.is(":visible")) {
+                searchContainer.hide();
+            }
+
+            columnsContainer.toggle('fast');
         },
 
 
         /**
-         * @param id
+         * @param resource
+         */
+        toggleAllColumns : function(resource) {
+
+            var filterContainer = $("#column-switcher-" + resource + ' form');
+            var inputAll        = filterContainer.find('.checkbox-all input');
+
+            if (inputAll.is(":checked")) {
+                filterContainer.find('.checkbox input').prop("checked", true);
+            } else {
+                filterContainer.find('.checkbox input').prop("checked", false);
+            }
+        },
+
+
+        /**
+         * @param resource
          * @param isAjax
          */
-        submit : function(id, isAjax) {
-            var o = $('#filterColumn' + id + ' form').find(':checkbox:checked');
-            var l = o.length;
-            var post = {};
-            var t = [];
+        submit : function(resource, isAjax) {
 
-            for (var i = 0; i < l; i++) {
-                t.push(o[i].value);
+            var checkboxes = $('#column-switcher-' + resource + ' form').find('.table-switch-column :checkbox:checked');
+            var post       = {};
+            var columns    = [];
+            var container  = '';
+
+            for (var i = 0; i < checkboxes.length; i++) {
+                columns.push(checkboxes[i].value);
             }
-            post['column_' + id] = t;
-            var container = '';
+            post['columns_' + resource] = columns;
 
-            if (CoreUI.table.loc[id]) {
+            if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    container = document.getElementById("list" + id).parentNode;
-                    load(CoreUI.table.loc[id] + '&__filter=1', post, container);
+                    //CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
+                        //CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                    });
+
                 } else {
-                    load(CoreUI.table.loc[id], post, container);
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                    });
                 }
             }
         }

@@ -45,6 +45,20 @@ class Modules extends Zend_Db_Table_Abstract {
         return $data;
     }
 
+
+    /**
+     * Получение записи по Id
+     * @param int $id
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+    public function getRowById(int $id):? Zend_Db_Table_Row_Abstract {
+
+        $select = $this->select()->where("m_id = ?", $id);
+
+        return $this->fetchRow($select);
+    }
+
+
     /**
      * получаем список активных модулей
      * @return array

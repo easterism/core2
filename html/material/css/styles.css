@@ -25,8 +25,8 @@ body {
 	width: 100%;
 }
 table {
-	border:0px; 
-	border-collapse:collapse; 
+	border: 0;
+	border-collapse:collapse;
 	empty-cells: show;
 }
 table td {
@@ -627,8 +627,7 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-	padding: 3px;
-    padding-right: 10px!important;
+    padding: 0 10px 3px 3px;
     width: 190px;
     box-sizing: border-box;
 }
@@ -638,7 +637,7 @@ table.editTable {
 }
 .newRulesSubModule {
 	text-decoration:underline;
-	cursor:pointer;	
+	cursor:pointer;
 }
 .newFieldEnum {
 	text-decoration:underline;
@@ -1132,11 +1131,11 @@ table.calendar {
 	color: #00f;
 }
 .helpHeaderDiv {
-	float:right; 
+	float:right;
 	display: inline;
 }
 .helpImg{
-	
+
 }
 
 /* simple modal */
@@ -1150,19 +1149,19 @@ table.calendar {
 	height:auto;
 	left:50%;
 	margin-left:-100px;
-	top:50%; 
+	top:50%;
 	margin-top: -270px;
 	background-color:#fff;
 	border:3px solid #ccc;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
-    padding: 0px;
+    padding: 0;
 }
 .simplemodal-wrap {overflow:auto !important}
 a.modalCloseImg {
 	background:url(../img/icon_delete.gif) no-repeat;
-	width:25px; 
+	width:25px;
 	height:26px;
 	display:inline;
 	z-index:3200;
@@ -1192,7 +1191,6 @@ a.modalCloseImg {
     position: absolute;
     width: 250px;
 	padding-left: 5px;
-		
 }
 /*Install Module*/
 .installError {color: red}
@@ -1202,7 +1200,7 @@ a.modalCloseImg {
 .feedBackOption {font-weight: bold}
 .feedBackSelect {width: 100%}
 .feedBackMessage {
-	width: 100%; 
+	width: 100%;
 	height: 120px;
 	overflow: auto;
     box-sizing: border-box;
@@ -1281,10 +1279,7 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
-label {
-    font-weight: 500;
-    vertical-align: sub;
-}
+label {font-weight: 500;}
 label.control-label {font-weight: 700}
 .hide {display:none}
 .show {display:block}
@@ -2375,8 +2370,11 @@ table.coreui-table > thead {background-color: #FFF}
 table.coreui-table > tfoot,
 table.coreui-table > thead > .table-control-panel,
 table.coreui-table > thead > .search-container,
+table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
+
+table.coreui-table > thead > .table-control-panel {height: 35px;}
 
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
@@ -2404,7 +2402,10 @@ table.coreui-table > tfoot > tr > td {
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
 table.coreui-table > thead > tr.table-service-panel > td  {padding: 5px;}
-table.coreui-table > thead > tr.table-service-panel > td > .total  {padding: 5px 0;}
+table.coreui-table > thead > tr.table-service-panel > td > .total  {
+    padding: 5px 0;
+    line-height: 18px;
+}
 table.coreui-table > thead > tr > th:first-child,
 table.coreui-table > tbody > tr > th:first-child,
 table.coreui-table > thead > tr > td:first-child,
@@ -2417,6 +2418,10 @@ table.coreui-table > thead > tr > td:last-child,
 table.coreui-table > tbody > tr > td:last-child {
     padding-right: 10px;
 }
+table.coreui-table > tbody > tr > td .checked-row input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+}
 table.coreui-table > thead > tr > th {
     border-bottom: 2px solid #D2D2D2;
     vertical-align: middle;
@@ -2424,17 +2429,22 @@ table.coreui-table > thead > tr > th {
 }
 table.coreui-table .pointer {cursor: pointer}
 table.coreui-table .table-header > th.pointer:hover > span {text-decoration: underline}
-table.coreui-table .search-controls {
+table.coreui-table .table-controls {
     padding: 4px 0;
     margin: 0;
 }
-table.coreui-table .search-controls .search-control {
+table.coreui-table .table-controls .table-control {
     display: inline-block;
     list-style: none;
     cursor:pointer;
     margin-right: 10px;
 }
-table.coreui-table .search-controls .search-control:hover span {text-decoration: underline}
+table.coreui-table .table-controls button {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+}
+table.coreui-table .table-controls .table-control:hover span {text-decoration: underline}
 table.coreui-table > .table-control-panel > td,
 table.coreui-table > .search-container > td,
 table.coreui-table > .table-service-panel > td {padding: 5px 10px}
@@ -2478,6 +2488,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
     text-align: right;
+    vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {
@@ -2501,6 +2512,10 @@ table.coreui-table .search-container form label {
     margin-top: 5px;
     max-width: 100%;
 }
+table.coreui-table .search-container .control-type-number input {
+    width: 140px;
+    display: inline-block;
+}
 table.coreui-table .search-container .control-type-date input {
     width: 140px;
     display: inline-block;
@@ -2515,6 +2530,9 @@ table.coreui-table .search-container .control-type-select select,
 table.coreui-table .search-container .control-type-multiselect select {
     width: 180px;
 }
+table.coreui-table .column-switcher-container form  {
+     margin-bottom: 10px;
+}
 
 
 table.coreui-table select.multiselect {height: 85px}
@@ -2527,6 +2545,7 @@ table.coreui-table input.gotopage {
     height: 22px;
     width: 35px;
     outline: 0;
+    margin-right: 3px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;

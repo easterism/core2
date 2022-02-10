@@ -129,45 +129,23 @@ class Filter {
     /**
      * Сортировка
      * @param array  $data
-     * @param int    $order_num_column
+     * @param string $order_field
      * @param string $order_type
      * @return array
      */
-    public function orderData(array $data, int $order_num_column, string $order_type = 'ASC'): array {
+    public function orderData(array $data, string $order_field, string $order_type = 'ASC'): array {
 
-        $new_array      = [];
-        $sortable_array = [];
+        switch (strtoupper($order_type)) {
+            case 'ASC':
+                usort($data, function($a, $b) use ($order_field) {return strnatcasecmp($a[$order_field], $b[$order_field]);});
+                break;
 
-        if (count($data) > 0) {
-            foreach ($data as $k => $v) {
-                if (is_array($v)) {
-                    $i = 1;
-                    foreach ($v as $v2) {
-                        if ($i++ == $order_num_column) {
-                            $sortable_array[$k] = $v2;
-                        }
-                    }
-                } else {
-                    $sortable_array[$k] = $v;
-                }
-            }
-
-            switch ($order_type) {
-                case 'ASC':
-                    asort($sortable_array);
-                    break;
-
-                case 'DESC':
-                    arsort($sortable_array);
-                    break;
-            }
-
-            foreach ($sortable_array as $k => $v) {
-                $new_array[$k] = $data[$k];
-            }
+            case 'DESC':
+                usort($data, function($a, $b) use ($order_field) {return strnatcasecmp($b[$order_field], $a[$order_field]);});
+                break;
         }
 
-        return $new_array;
+        return $data;
     }
 
 
