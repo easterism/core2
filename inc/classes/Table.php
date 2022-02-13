@@ -406,6 +406,9 @@ abstract class Table extends Acl {
             foreach ($this->buttons as $button) {
                 if ($button instanceof Table\Button) {
                     $toolbar['buttons'][] = $button->toArray();
+
+                } elseif (is_string($button)) {
+                    $toolbar['buttons'][] = $button;
                 }
             }
         }
