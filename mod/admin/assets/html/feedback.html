@@ -18,7 +18,7 @@
             <br/>
             <textarea id="supportFormMessage" class="feedBackMessage" name="supportFormMessage"></textarea>
         </td>
-        <tr valign="top">
+        <tr valign="top" id="feedback-video">
         <td style="width:75px">
             <br/>
             Запись экрана:
@@ -34,14 +34,13 @@
                 var video = document.querySelector('video');
 
 
-                if (!navigator.getDisplayMedia && !navigator.mediaDevices.getDisplayMedia) {
+                if (!navigator.getDisplayMedia && !navigator.mediaDevices) {
                     var error = 'Your browser does NOT support the getDisplayMedia API.';
-                    document.querySelector('h1').innerHTML = error;
 
                     document.querySelector('video').style.display = 'none';
+                    document.getElementById('feedback-video').style.display = 'none';
                     document.getElementById('btn-start-recording').style.display = 'none';
                     document.getElementById('btn-stop-recording').style.display = 'none';
-                    throw new Error(error);
                 }
 
                 var recorder; // globally accessible

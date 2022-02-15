@@ -2,7 +2,7 @@
 namespace Core2;
 
 require_once "Cache.php";
-use Laminas\Cache\StorageFactory;
+use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 
 /**
@@ -92,15 +92,17 @@ class Db {
                     }
                 }
                 $options['namespace'] = "Core2";
-				$sf = StorageFactory::factory(array(
-                    'adapter' => array(
-                        'name' => $adapter,
-                        'options' => $options,
-                        'plugins' => ['serializer']
-                    )
-                ));
-                $sf->addPlugin(StorageFactory::pluginFactory('serializer'));
-                $v = new Cache($sf);
+                //$container = null; // can be any configured PSR-11 container
+				//$sf = $container->get(StorageAdapterFactoryInterface::class);
+                if ($adapter == 'Filesystem') {
+                    $adapter  = new Storage\Adapter\Filesystem($options);
+                }
+                $adapter->addPlugin(new Storage\Plugin\Serializer());
+                $plugin = new Storage\Plugin\ExceptionHandler();
+                $plugin->getOptions()->setThrowExceptions(false);
+                $adapter->addPlugin($plugin);
+
+                $v = new Cache($adapter);
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
