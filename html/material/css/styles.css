@@ -2621,6 +2621,7 @@ table.coreui-table select.records-per-page {
     height: 100%;
     background-color: #0000000d;
     cursor: wait;
+    z-index: 3;
 }
 .coreui-table-wrapper > .preloader > .block {
     width: 175px;

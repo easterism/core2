@@ -99,7 +99,7 @@ class Db extends Table {
      * @return Row[]
      * @throws \Zend_Db_Select_Exception
      */
-    public function fetchData(): array {
+    public function fetchRow(): array {
 
         return $this->fetchRows();
     }

@@ -761,6 +761,11 @@ class Render extends Acl {
                 $value = htmlspecialchars($cell['value'] ?? '');
                 $value = addslashes($value);
                 $str   = str_replace('[TCOL_' . strtoupper($field) . ']', $value, $str);
+            }
+
+            foreach ($row['cells'] as $field => $cell) {
+                $value = htmlspecialchars($cell['value'] ?? '');
+                $value = addslashes($value);
                 $str   = str_replace('TCOL_' . strtoupper($field), $value, $str);
             }
         }

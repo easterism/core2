@@ -417,7 +417,7 @@ abstract class Table extends Acl {
             $toolbar['addButton'] = $this->add_url;
         }
 
-        $rows = $this->fetchData();
+        $rows = $this->fetchRow();
 
         if ( ! empty($rows)) {
             foreach ($rows as $row) {
@@ -603,7 +603,7 @@ abstract class Table extends Acl {
      * Получение данных.
      * @return array
      */
-    abstract public function fetchData(): array;
+    abstract public function fetchRow(): array;
 
 
     /**
