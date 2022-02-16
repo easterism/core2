@@ -2599,6 +2599,7 @@ table.coreui-table input.gotopage {
     width: 35px;
     outline: 0;
     margin-right: 3px;
+    font-size: 12px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;
