@@ -384,7 +384,8 @@
         <table width="100%"><tr>
           <!-- BEGIN gotopage -->
           <td align="left">
-            <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"/>
+            <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"
+                   onkeyup="if (event.which === 13) CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"/>/>
           </td>
           <td align="left">
             <input class="paginButton btn btn-default btn-xs" type="button"

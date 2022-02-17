@@ -45,6 +45,8 @@ abstract class Table extends Acl {
     protected $search_controls          = [];
     protected $filter_controls          = [];
     protected $records_total            = 0;
+    protected $records_total_round      = 0;
+    protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
     protected $records_seq              = false;
@@ -321,6 +323,22 @@ abstract class Table extends Acl {
     /**
      *
      */
+    public function showHeader() {
+        $this->show_header = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideHeader() {
+        $this->show_header = false;
+    }
+
+
+    /**
+     *
+     */
     public function showFooter() {
         $this->show_footer = true;
     }
@@ -390,6 +408,9 @@ abstract class Table extends Acl {
             foreach ($this->buttons as $button) {
                 if ($button instanceof Table\Button) {
                     $toolbar['buttons'][] = $button->toArray();
+
+                } elseif (is_string($button)) {
+                    $toolbar['buttons'][] = $button;
                 }
             }
         }
@@ -398,7 +419,7 @@ abstract class Table extends Acl {
             $toolbar['addButton'] = $this->add_url;
         }
 
-        $rows = $this->fetchData();
+        $rows = $this->fetchRow();
 
         if ( ! empty($rows)) {
             foreach ($rows as $row) {
@@ -460,7 +481,9 @@ abstract class Table extends Acl {
             'countPages'         => $count_pages,
             'recordsPerPage'     => $this->records_per_page,
             'recordsTotal'       => $this->records_total,
+            'recordsTotalMore'   => $this->records_total_more,
             'recordsPerPageList' => $per_page_list,
+            'records'            => $records,
         ];
 
 
@@ -471,7 +494,8 @@ abstract class Table extends Acl {
             $data['isAjax'] = $this->is_ajax;
         }
         if ( ! empty($this->is_round_calc)) {
-            $data['isRoundCalc'] = $this->is_round_calc;
+            $data['isRoundCalc']       = $this->is_round_calc;
+            $data['recordsTotalRound'] = $this->records_total_round;
         }
         if ( ! empty($filter)) {
             $data['filter'] = $filter;
@@ -487,9 +511,6 @@ abstract class Table extends Acl {
         }
         if ( ! empty($columns)) {
             $data['columns'] = $columns;
-        }
-        if ( ! empty($records)) {
-            $data['records'] = $records;
         }
 
         return $data;
@@ -584,7 +605,14 @@ abstract class Table extends Acl {
      * Получение данных.
      * @return array
      */
-    abstract public function fetchData(): array;
+    abstract public function fetchRow(): array;
+
+
+    /**
+     * Получение данных.
+     * @return array
+     */
+    abstract public function fetchRows(): array;
 
 
     /**

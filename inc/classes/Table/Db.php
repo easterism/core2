@@ -99,7 +99,18 @@ class Db extends Table {
      * @return Row[]
      * @throws \Zend_Db_Select_Exception
      */
-    public function fetchData(): array {
+    public function fetchRow(): array {
+
+        return $this->fetchRows();
+    }
+
+
+    /**
+     * Получение данных из базы
+     * @return Row[]
+     * @throws \Zend_Db_Select_Exception
+     */
+    public function fetchRows(): array {
 
         if ( ! $this->is_fetched) {
             $this->is_fetched = true;
@@ -360,12 +371,21 @@ class Db extends Table {
             $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql);
 
             foreach ($explain as $value) {
-                if ($value['rows'] > $this->records_total) {
-                    $this->records_total = $value['rows'];
-                };
+                if ($value['rows'] > $this->records_total_round) {
+                    $this->records_total_round = $value['rows'];
+                }
             }
 
-            $data_result = $this->db->fetchAll($select_sql);
+            $data_result = $this->db->fetchAll($select_sql, $this->query_params);
+
+            if (count($data_result) > $this->records_per_page) {
+                $this->records_total      = $offset + $this->records_per_page;
+                $this->records_total_more = true;
+                unset($data_result[array_key_last($data_result)]);
+
+            } else {
+                $this->records_total = $offset + count($data_result);
+            }
 
         } else {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
@@ -613,13 +633,13 @@ class Db extends Table {
         }
 
 
-        if ($this->current_page == 1) {
-            $select->setLimit($this->records_per_page);
+        $records_per_page = $this->is_round_calc
+            ? $this->records_per_page + 1
+            : $this->records_per_page;
 
-        } elseif ($this->current_page > 1) {
-            $offset = ($this->current_page - 1) * $this->records_per_page;
-            $select->setLimit($this->records_per_page, $offset);
-        }
+        $offset = ($this->current_page - 1) * $this->records_per_page;
+        $select->setLimit($records_per_page, $offset);
+
 
         if ( ! $this->table) {
             $this->setTable($select->getTable());
@@ -637,11 +657,21 @@ class Db extends Table {
             $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql, $this->query_params);
 
             foreach ($explain as $value) {
-                if ($value['rows'] > $this->records_total) {
-                    $this->records_total = $value['rows'];
+                if ($value['rows'] > $this->records_total_round) {
+                    $this->records_total_round = $value['rows'];
                 }
             }
+
             $result = $this->db->fetchAll($select_sql, $this->query_params);
+
+            if (count($result) > $this->records_per_page) {
+                $this->records_total      = $offset + $this->records_per_page;
+                $this->records_total_more = true;
+                unset($result[array_key_last($result)]);
+
+            } else {
+                $this->records_total = $offset + count($result);
+            }
 
         } else {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {

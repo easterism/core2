@@ -64,16 +64,29 @@ class Render extends Acl {
         }
 
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
-        $tpl->assign('[THEME_SRC]',     $this->theme_src);
-        $tpl->assign('[RESOURCE]',      $this->table['resource']);
-        $tpl->assign('[IS_AJAX]',       (int)($this->table['isAjax'] ?? 0));
-        $tpl->assign('[IS_ROUND_CALC]', ! empty($this->table['isRoundCalc']) ? '~' : '');
-        $tpl->assign('[LOCATION]',      ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
+        $tpl->assign('[THEME_SRC]', $this->theme_src);
+        $tpl->assign('[RESOURCE]',  $this->table['resource']);
+        $tpl->assign('[IS_AJAX]',   (int)($this->table['isAjax'] ?? 0));
+        $tpl->assign('[LOCATION]',  ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
 
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
-                $tpl->service->assign('[TOTAL_RECORDS]', $this->table['recordsTotal']);
+
+                $total_records = $this->table['recordsTotal'] ?? 0;
+
+                if (isset($this->table['recordsTotalMore']) && $this->table['recordsTotalMore']) {
+                    $total_records .= '+';
+                }
+
+                if (isset($this->table['recordsTotalRound']) &&
+                    $this->table['recordsPerPage'] == count($this->table['records']) &&
+                    $this->table['recordsTotalRound'] > $this->table['recordsTotal']
+                ) {
+                    $total_records .= " <small>(~{$this->table['recordsTotalRound']})</small>";
+                }
+
+                $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
 
                 if ( ! empty($this->table['toolbar'])) {
 
@@ -180,17 +193,17 @@ class Render extends Acl {
                     ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
                     : 0;
 
-                if ($count_pages > 1) {
+                if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
                     $tpl->footer->pages->touchBlock('gotopage');
                 }
 
                 $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
-                $tpl->footer->pages->assign('[COUNT_PAGES]',  $count_pages);
+                $tpl->footer->pages->assign('[COUNT_PAGES]',  ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages);
 
                 if ($current_page > 1) {
                     $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
                 }
-                if ($current_page < $count_pages) {
+                if ($current_page < $count_pages || ! empty($this->table['recordsTotalMore'])) {
                     $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
                 }
 
@@ -198,11 +211,6 @@ class Render extends Acl {
                 $recordsPerPage = $this->table['recordsPerPage'] ?? 25;
                 $per_page_list  = [];
 
-//                if ( ! in_array($recordsPerPage, $this->table['recordsPerPageList']) &&
-//                    $recordsPerPage != 1000000000
-//                ) {
-//                    $per_page_list[$recordsPerPage] = $recordsPerPage;
-//                }
 
                 if ( ! empty($this->table['recordsPerPageList'])) {
                     foreach ($this->table['recordsPerPageList'] as $per_page_count) {
@@ -494,7 +502,10 @@ class Render extends Acl {
         }
 
 
-        if ( ! empty($this->table['columns'])) {
+        if ( ! empty($this->table['columns']) &&
+             ! empty($this->table['show']) &&
+            $this->table['show']['header']
+        ) {
             foreach ($this->table['columns'] as $key => $column) {
                 if (is_array($column) && ! empty($column['show'])) {
                     if ( ! empty($column['sorting'])) {
@@ -550,6 +561,10 @@ class Render extends Acl {
                     if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
                         $tpl->row->row_number->assign('[#]', $row_number);
                     }
+
+                    $row['attr']['class'] = isset($row['attr']['class'])
+                        ? $row['attr']['class'] .= ' row-table'
+                        : 'row-table';
 
                     if ( ! empty($this->table['recordsEditUrl']) &&
                         ($this->checkAcl($this->table['resource'], 'edit_all') ||
@@ -684,7 +699,7 @@ class Render extends Acl {
             $tpl->touchBlock('no_rows');
         }
 
-        return $tpl->render();
+        return $this->minify($tpl->render());
     }
 
 
@@ -701,6 +716,31 @@ class Render extends Acl {
                 }
             }
         }
+    }
+
+
+    /**
+     * Сжатие Html
+     * @param string $html
+     * @return string
+     */
+    private function minify(string $html): string {
+
+        $search = [
+            '/\>[^\S ]+/s',     // strip whitespaces after tags, except space
+            '/[^\S ]+\</s',     // strip whitespaces before tags, except space
+            '/(\s)+/s',         // shorten multiple whitespace sequences
+            '/<!--(.|\s)*?-->/' // Remove HTML comments
+        ];
+
+        $replace = [
+            '>',
+            '<',
+            '\\1',
+            '',
+        ];
+
+        return preg_replace($search, $replace, $html);
     }
 
 
@@ -729,6 +769,11 @@ class Render extends Acl {
                 $value = htmlspecialchars($cell['value'] ?? '');
                 $value = addslashes($value);
                 $str   = str_replace('[TCOL_' . strtoupper($field) . ']', $value, $str);
+            }
+
+            foreach ($row['cells'] as $field => $cell) {
+                $value = htmlspecialchars($cell['value'] ?? '');
+                $value = addslashes($value);
                 $str   = str_replace('TCOL_' . strtoupper($field), $value, $str);
             }
         }
