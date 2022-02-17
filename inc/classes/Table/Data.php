@@ -18,7 +18,7 @@ class Data extends Table {
      * Получение данных.
      * @return array
      */
-    public function fetchRow(): array {
+    public function fetchData(): array {
 
         return $this->fetchRows();
     }

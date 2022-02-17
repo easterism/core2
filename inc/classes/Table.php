@@ -605,7 +605,7 @@ abstract class Table extends Acl {
      * Получение данных.
      * @return array
      */
-    abstract public function fetchRow(): array;
+    abstract public function fetchData(): array;
 
 
     /**
