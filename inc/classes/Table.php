@@ -419,7 +419,7 @@ abstract class Table extends Acl {
             $toolbar['addButton'] = $this->add_url;
         }
 
-        $rows = $this->fetchRow();
+        $rows = $this->fetchRows();
 
         if ( ! empty($rows)) {
             foreach ($rows as $row) {
