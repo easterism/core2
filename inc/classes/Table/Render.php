@@ -638,12 +638,13 @@ class Render extends Acl {
                                 case 'switch':
                                     $cell['attr']['onclick'] = "event.cancelBubble = true;";
 
-                                    $options = $column['options'] ?? [];
-                                    $color   = ! empty($options['color']) ? "color-{$options['color']}" : 'color-primary';
-                                    $value_y = $options['value_Y'] ?? 'Y';
-                                    $value_n = $options['value_N'] ?? 'N';
+                                    $options    = $column['options'] ?? [];
+                                    $table_name = $this->table['tableName'] ?? '';
+                                    $color      = ! empty($options['color']) ? "color-{$options['color']}" : 'color-primary';
+                                    $value_y    = $options['value_Y'] ?? 'Y';
+                                    $value_n    = $options['value_N'] ?? 'N';
 
-                                    $tpl->row->col->switch->assign('[TABLE]',     $options['table'] ?? '');
+                                    $tpl->row->col->switch->assign('[TABLE]',     $options['table'] ?? $table_name);
                                     $tpl->row->col->switch->assign('[FIELD]',     $column['field']);
                                     $tpl->row->col->switch->assign('[NMBR]',      $row_number);
                                     $tpl->row->col->switch->assign('[CHECKED_Y]', $value == $value_y ? 'checked="checked"' : '');

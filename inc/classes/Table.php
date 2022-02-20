@@ -38,6 +38,7 @@ abstract class Table extends Acl {
     protected $show_footer              = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
+    protected $table_name               = '';
     protected $data                     = [];
     protected $data_rows                = [];
     protected $columns                  = [];
@@ -489,6 +490,9 @@ abstract class Table extends Acl {
 
         if ($this->edit_url) {
             $data['recordsEditUrl'] = $this->edit_url;
+        }
+        if ($this->table_name) {
+            $data['tableName'] = $this->table_name;
         }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;

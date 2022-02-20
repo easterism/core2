@@ -54,7 +54,8 @@ class Db extends Table {
      * @param string $table
      */
     public function setTable(string $table) {
-        $this->table = $table;
+        $this->table      = $table;
+        $this->table_name = $table;
 
         // Из class.list
         // Нужно для удаления
