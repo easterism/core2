@@ -306,14 +306,22 @@ class Data extends Table {
      * @return array
      */
     private function orderData(array $data, string $order_field, string $order_type = 'ASC'): array {
-
         switch (strtoupper($order_type)) {
             case 'ASC':
-                usort($data, function($a, $b) use ($order_field) {return strnatcasecmp($a[$order_field], $b[$order_field]);});
+                usort($data, function($a, $b) use ($order_field) {
+                    if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
+                        return $a[$order_field] <=> $b[$order_field];
+                    }
+                    return strnatcasecmp($a[$order_field], $b[$order_field]);});
                 break;
 
             case 'DESC':
-                usort($data, function($a, $b) use ($order_field) {return strnatcasecmp($b[$order_field], $a[$order_field]);});
+                usort($data, function($a, $b) use ($order_field) {
+                    if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
+                        return  $b[$order_field] <=> $a[$order_field];
+                    }
+                    return strnatcasecmp($b[$order_field], $a[$order_field]);
+                });
                 break;
         }
 
