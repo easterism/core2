@@ -15,12 +15,11 @@
     require_once("Log.php");
     require_once 'Zend_Registry.php'; //DEPRECATED
 
-    use Laminas\ServiceManager\ServiceManager;
-    use Laminas\Cache\StorageFactory;
     use Laminas\Session\Config\SessionConfig;
     use Laminas\Session\SessionManager;
     use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
     use Laminas\Session\Container as SessionContainer;
+    use Laminas\Cache\Storage;
 
     $conf_file = DOC_ROOT . "conf.ini";
 
@@ -99,11 +98,6 @@
         ini_set('display_errors', 0);
     }
 
-    // определяем путь к папке кеша
-    if (strpos($config->cache, '/') !== 0) {
-        $config->cache = DOC_ROOT . trim($config->cache, "/");
-    }
-
     //проверяем настройки для базы данных
     if ($config->database->adapter === 'Pdo_Mysql') {
         $config->database->params->adapterNamespace = 'Core_Db_Adapter';
@@ -148,41 +142,25 @@
 		define('THEME', 'default');
 	}
 
-	// DEPRECATED!!! MPDF PATH
-	define("_MPDF_TEMP_PATH", rtrim($config->cache, "/") . '/');
-	define("_MPDF_TTFONTDATAPATH", rtrim($config->cache, "/") . '/');
-
 	//сохраняем параметры сессии
     if ($config->session) {
-        $sessHandler = '';
+        $sess_config = new SessionConfig();
+        $sess_config->setOptions($config->session);
+        $sess_manager = new SessionManager($sess_config);
         if ($config->session->saveHandler) {
             $options = ['namespace' => 'phpsess'];
             if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
             if ($config->session->savePath) $options['server'] = $config->session->savePath;
 
-            if ($config->session->saveHandler === 'memcache') {
-                $cache = StorageFactory::factory(array(
-                    'adapter' => array(
-                        'name' => 'memcached',
-                        'options' => $options
-                    )
-                ));
-                $sessHandler = new SessionHandlerCache($cache);
+            if ($config->session->saveHandler === 'memcached') {
+                $adapter  = new Storage\Adapter\Memcached($options);
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
             elseif ($config->session->saveHandler === 'redis') {
-                $cache = StorageFactory::factory([
-                    'adapter' => [
-                        'name'    => 'redis',
-                        'options' => $options
-                    ]
-                ]);
-                $sessHandler = new SessionHandlerCache($cache);
+                $adapter  = new Storage\Adapter\Redis($options);
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
         }
-        $sess_config = new SessionConfig();
-        $sess_config->setOptions($config->session);
-        $sess_manager = new SessionManager($sess_config);
-        if ($sessHandler) $sess_manager->setSaveHandler($sessHandler);
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -738,8 +716,6 @@
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
             $xajax->processRequest();
-
-
 
             if (Tool::isMobileBrowser()) {
                 $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";

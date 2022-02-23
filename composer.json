@@ -23,7 +23,12 @@
   "require": {
     "php": ">=7.4",
     "laminas/laminas-session": "2.10.*",
-    "laminas/laminas-cache": "2.11.*",
+    "laminas/laminas-cache-storage-adapter-filesystem": "*",
+    "laminas/laminas-cache-storage-adapter-memcache": "*",
+    "laminas/laminas-cache-storage-adapter-memcached": "*",
+    "laminas/laminas-cache-storage-adapter-mongodb": "*",
+    "laminas/laminas-cache-storage-adapter-redis": "*",
+    "laminas/laminas-cache": "3.1.*",
     "laminas/laminas-serializer": "2.10.*",
     "laminas/laminas-validator": "2.14.*",
     "laminas/laminas-mail": "2.14.*",
@@ -47,21 +52,6 @@
     "ext-intl": "*",
     "ext-pdo": "*",
     "ext-xml": "*"
-  },
-  "replace": {
-    "laminas/laminas-cache-storage-adapter-apc": "*",
-    "laminas/laminas-cache-storage-adapter-apcu": "*",
-    "laminas/laminas-cache-storage-adapter-blackhole": "*",
-    "laminas/laminas-cache-storage-adapter-dba": "*",
-    "laminas/laminas-cache-storage-adapter-ext-mongodb": "*",
-    "laminas/laminas-cache-storage-adapter-memcache": "*",
-    "laminas/laminas-cache-storage-adapter-memcached": "*",
-    "laminas/laminas-cache-storage-adapter-mongodb": "*",
-    "laminas/laminas-cache-storage-adapter-redis": "*",
-    "laminas/laminas-cache-storage-adapter-session": "*",
-    "laminas/laminas-cache-storage-adapter-wincache": "*",
-    "laminas/laminas-cache-storage-adapter-xcache": "*",
-    "laminas/laminas-cache-storage-adapter-zend-server": "*"
   },
   "scripts": {
     "post-update-cmd": [

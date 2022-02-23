@@ -14,19 +14,24 @@
                 <br/>
                 Сообщение:
             </td>
-            <td width="240" class="feedback-control">
-                <br/>
-                <textarea id="supportFormMessage" class="feedBackMessage" name="supportFormMessage"></textarea>
-            </td>
-        </tr>
-        <tr style="vertical-align: top" class="screen-record">
-            <td style="width:75px">
-                <br/>
-                Запись экрана:
-            </td>
-            <td>
-                <br/>
-                <div class="error" style="display: none"></div>
+        <td width="240" class="feedback-control">
+            <br/>
+            <textarea id="supportFormMessage" class="feedBackMessage" name="supportFormMessage"></textarea>
+        </td>
+        <tr valign="top" id="feedback-video">
+        <td style="width:75px">
+            <br/>
+            Запись экрана:
+        </td>
+        <td>
+            <video controls autoplay playsinline style="max-width: 250px;display: none;"></video>
+            <script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+            <button class="buttonSmall" style="margin-top: 7px" id="btn-start-recording">
+                <img src="core2/html/default/img/monitor.png"/>
+            </button>
+            <button id="btn-stop-recording" style="display: none">Стоп</button>
+            <script>
+                var video = document.querySelector('video');
 
                 <video controls autoplay playsinline style="max-width: 250px;"></video>
                 <button class="buttonSmall" style="margin-top: 7px" id="btn-start-recording">
@@ -34,15 +39,14 @@
                 </button>
                 <button id="btn-stop-recording" style="display: none">Стоп</button>
 
-                <script src="https://www.webrtc-experiment.com/RecordRTC.min.js"></script>
-                <script>
-                    var video = document.querySelector('video');
+                if (!navigator.getDisplayMedia && !navigator.mediaDevices) {
+                    var error = 'Your browser does NOT support the getDisplayMedia API.';
 
-                    if ( ! navigator.getDisplayMedia &&
-                        ( ! navigator.mediaDevices || ! navigator.mediaDevices.getDisplayMedia)
-                    ) {
-                        var error = 'Your browser does NOT support the getDisplayMedia API.';
-                        //document.querySelector('h1').innerHTML = error;
+                    document.querySelector('video').style.display = 'none';
+                    document.getElementById('feedback-video').style.display = 'none';
+                    document.getElementById('btn-start-recording').style.display = 'none';
+                    document.getElementById('btn-stop-recording').style.display = 'none';
+                }
 
                         document.querySelector('.screen-record .error').style.display = 'block';
                         document.querySelector('.screen-record .error').textContent = error;
