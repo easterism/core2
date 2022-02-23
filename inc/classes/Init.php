@@ -98,11 +98,6 @@
         ini_set('display_errors', 0);
     }
 
-    // определяем путь к папке кеша
-    if (strpos($config->cache, '/') !== 0) {
-        $config->cache = DOC_ROOT . trim($config->cache, "/");
-    }
-
     //проверяем настройки для базы данных
     if ($config->database->adapter === 'Pdo_Mysql') {
         $config->database->params->adapterNamespace = 'Core_Db_Adapter';

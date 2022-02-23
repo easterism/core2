@@ -81,28 +81,33 @@ class Db {
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
-                $adapter = !empty($this->_core_config->cache->adapter) ? $this->_core_config->cache->adapter : 'Filesystem';
+                $adapter_name = !empty($this->_core_config->cache->adapter) ? $this->_core_config->cache->adapter : 'Filesystem';
                 if (isset($this->config->cache->adapter)) {
-                    $adapter = $this->config->cache->adapter;
-                    $options = $this->config->cache->options;
+                    $adapter_name = $this->config->cache->adapter;
+                    $options = $this->config->cache->options->toArray();
                 }
-                else {
-                    if ($adapter == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                else { //DEPRECATED
+                    if ($adapter_name == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
                         $options['cache_dir'] = $this->config->cache;
                     }
                 }
                 $options['namespace'] = "Core2";
                 //$container = null; // can be any configured PSR-11 container
 				//$sf = $container->get(StorageAdapterFactoryInterface::class);
-                if ($adapter == 'Filesystem') {
+                if ($adapter_name == 'Filesystem') {
                     $adapter  = new Storage\Adapter\Filesystem($options);
+                }
+                if ($adapter_name == 'Redis') {
+                    $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
+                    unset($options['cache_dir']);
+                    $adapter  = new Storage\Adapter\Redis($options);
                 }
                 $adapter->addPlugin(new Storage\Plugin\Serializer());
                 $plugin = new Storage\Plugin\ExceptionHandler();
                 $plugin->getOptions()->setThrowExceptions(false);
                 $adapter->addPlugin($plugin);
 
-                $v = new Cache($adapter);
+                $v = new Cache($adapter, $adapter_name);
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
