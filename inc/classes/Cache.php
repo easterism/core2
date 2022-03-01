@@ -58,7 +58,7 @@ class Cache
      * @return void
      */
     public function setTags($key, $tags) {
-        if (method_exists($this->adapter,'setTags')) return $this->adapter->setTags($key);
+        if (method_exists($this->adapter,'setTags')) return $this->adapter->setTags($key, $tags);
         //TODO сделать тэгирование
     }
 
