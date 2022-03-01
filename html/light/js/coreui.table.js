@@ -114,6 +114,104 @@ CoreUI.table = {
     },
 
 
+    filter: {
+
+        /**
+         * @param resource
+         * @param isAjax
+         */
+        clear : function(resource, isAjax) {
+
+            var post      = {};
+            var container = '';
+
+            post['filter_clear_' + resource] = 1;
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter_clear=1', post, container, function () {
+                        CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                    });
+
+                } else {
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                    });
+                }
+            }
+        },
+
+
+        /**
+         * @param resource
+         * @param isAjax
+         */
+        submit : function(resource, isAjax) {
+
+            var allInputs = $("#filter-" + resource).find(":input");
+            var post      = {};
+            var container = '';
+
+            $.each(allInputs, function(key, input) {
+                var name = $(input).attr('name');
+
+                if (name) {
+                    if (name.slice(-2) === '[]') {
+                        if ( ! post.hasOwnProperty(name)) {
+                            post[name] = [];
+                        }
+
+                        if ($(input).attr('type') === 'checkbox' && ! $(input).is(':checked')) {
+                            return true;
+                        }
+
+                        post[name].push($(input).val());
+
+                    } else {
+                        if ($(input).attr('type') === 'radio') {
+                            if ($(input).is(':checked')) {
+                                post[name] = $(input).val();
+                            }
+                        } else {
+                            post[name] = $(input).val();
+                        }
+                    }
+                }
+            });
+
+            $.each(post, function (name, value) {
+                if (name.slice(-2) === '[]' && typeof value === 'object' && value.length === 0) {
+                    post[name.substring(0, name.length - 2)] = '';
+                    delete post[name];
+                }
+            });
+
+            //post = allInputs.serializeArray();
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
+                        CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                    });
+
+                } else {
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                    });
+                }
+            }
+        }
+    },
+
+
     columnSwitcher: {
 
         /**
@@ -432,6 +530,8 @@ CoreUI.table = {
                 preloader.callback();
             });
 
+            preloader.hide();
+
         } else {
             load(CoreUI.table.loc[resource], post, container, function () {
                 preloader.callback();
@@ -440,68 +540,54 @@ CoreUI.table = {
     },
 
 
-    switchActive: function(img, resource, rec_id) {
-        var src   = $(img).attr('src');
-        var value = $(img).data('value');
+    /**
+     * @param resource
+     * @param field
+     * @param id
+     * @param container
+     */
+    switchToggle: function (resource, field, id, container) {
 
-        if (value == 'Y' || value == '1') {
-            var new_value = value === 'Y' ? 'N' : 0;
-            var new_src   = src.replace("on.png", "off.png");
-            var msg       = "Деактивировать запись?";
-        } else {
-            var new_value = value === 'N' ? 'Y' : 1;
-            var new_src   = src.replace("off.png", "on.png");
-            var msg       = "Активировать запись?";
-        }
-        if (confirm(msg)) {
-            var preloader_src = src.substr(0, src.lastIndexOf('/')+1) + 'preloader_circle.gif';
-            $(img).attr('src', preloader_src);
+        var isActiveControl = $(container).find(':checked').hasClass('coreui-table-switch-active');
 
-            var token = $('#table-' + resource).data('csrf-token');
-            var url   = window.location.pathname + window.location.search;
+        swal({
+            title: isActiveControl ? "Деактивировать запись?" : "Активировать запись?",
+            type: isActiveControl ? "warning" : "info",
+            showCancelButton: true,
+            confirmButtonColor: isActiveControl ? '#f0ad4e' : '#5bc0de',
+            confirmButtonText: "Да",
+            cancelButtonText: "Нет"
+        }).then(
+            function(result) {
+                var value = isActiveControl
+                    ? $(container).find('.coreui-table-switch-inactive').val()
+                    : $(container).find('.coreui-table-switch-active').val();
 
-            $.ajax({
-                url: url,
-                type: 'POST',
-                dataType : 'json',
-                data : {
-                    rec_id: rec_id,
-                    new_value: new_value
-                },
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-CMB-CSRF-TOKEN', token)
-                        .setRequestHeader('X-CMB-RESOURCE',   resource)
-                        .setRequestHeader('X-CMB-PROCESS',    'status')
-                },
-                success: function(data, textStatus) {
-                    if (data.status == "success") {
-                        $(img).attr('src', new_src);
-                        $(img).data('value', new_value);
-                    } else {
-                        $(img).attr('src', src);
-                        if (data.message) {
-                            alert(data.message);
+                $.post('index.php?module=admin&action=switch&loc=core', {
+                        data:      field,
+                        is_active: value,
+                        value:     id
+                    }, function(data, textStatus) {
+                        if (textStatus === 'success' && data.status === "ok") {
+
+                            if (isActiveControl) {
+                                $(container).find('.coreui-table-switch-active').prop('checked', false);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', true);
+
+                            } else {
+                                $(container).find('.coreui-table-switch-active').prop('checked', true);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', false);
+                            }
+
+                        } else {
+                            if (data.status) {
+                                swal("Ошибка", data.status, 'error').catch(swal.noop);
+                            }
                         }
-                    }
-                },
-                error : function(xhr, textStatus) {
-                    if (xhr.status == 0) {
-                        alert('You are offline!\nCheck you network.');
-                    } else if (xhr.status == 404) {
-                        alert('404 - page not found');
-                    } else if (xhr.status == 500) {
-                        alert('500 - server error');
-                    } else if (textStatus == 'parsererror') {
-                        alert('parse error');
-                    } else if (textStatus == 'timeout') {
-                        alert('timeout');
-                    } else {
-                        alert(xhr.status + ' - ' + xhr.responseText);
-                    }
-                    $(img).attr('src', src);
-                }
-            });
-        }
+                    },
+                    'json');
+            }, function(dismiss) {}
+        );
     },
 
 
@@ -619,6 +705,96 @@ CoreUI.table = {
             }
         }
         return;
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param columnNmbr
+     * @param url
+     * @param isAjax
+     */
+    toggleExpandColumn : function (resource, columnNmbr, url, isAjax) {
+
+        var urlHash = this.crc32(url);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(columnNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + urlHash);
+
+        if (row.hasClass('row-expanded')) {
+            row.removeClass('row-expanded');
+            row.next().hide('fast', function () {
+                $(this).remove();
+            })
+        }
+
+        if (isLoad) {
+            if (isAjax) {
+                CoreUI.table.preloader.show(resource);
+            } else {
+                preloader.show();
+            }
+
+            $.ajax({
+                method : 'get',
+                url    : url,
+                async  : false,
+                success: function (response) {
+                    row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
+                    row.addClass('row-expanded');
+                    row.next()
+                        .addClass('row-expand-name-' + urlHash)
+                        .show('fast');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                },
+                error  : function () {
+                    CoreUI.notice.create('Ошибка получения содержимого', 'danger');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                }
+            });
+        }
+    },
+
+
+    /**
+     * CRC32 hash
+     * @param str
+     * @param isNumber
+     * @returns {number}
+     */
+    crc32: function(str, isNumber) {
+
+        isNumber = typeof isNumber === 'undefined' ? false : !! isNumber;
+
+        for (var a, o = [], c = 0; c < 256; c++) {
+            a = c;
+            for (var f = 0; f < 8; f++) {
+                a = 1 & a ? 3988292384 ^ a >>> 1 : a >>> 1;
+            }
+            o[c] = a;
+        }
+
+        for (var n = -1, t = 0; t < str.length; t++) {
+            n = n >>> 8 ^ o[255 & (n ^ str.charCodeAt(t))];
+        }
+
+        var result = (-1 ^ n) >>> 0;
+
+        if ( ! isNumber) {
+            result = result.toString(16);
+        }
+
+        return result;
     },
 
 

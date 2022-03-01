@@ -13,6 +13,7 @@ class Column {
     protected $field      = '';
     protected $type       = '';
     protected $attr       = [];
+    protected $options    = [];
     protected $is_sorting = true;
     protected $is_show    = true;
 
@@ -76,11 +77,21 @@ class Column {
 
 
     /**
+     * Получение опций
+     * @return array
+     */
+    public function getOptions(): array {
+
+        return $this->options;
+    }
+
+
+    /**
      * Установка значения атрибута
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttr(string $name, string $value) {
         if ((is_string($name) || is_numeric($name)) &&
@@ -99,7 +110,7 @@ class Column {
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttrPrepend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
@@ -149,6 +160,17 @@ class Column {
         foreach ($attributes as $name => $value) {
             $this->setAttr($name, $value);
         }
+        return $this;
+    }
+
+
+    /**
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options): self {
+
+        $this->options = $options;
         return $this;
     }
 
@@ -213,6 +235,10 @@ class Column {
 
         if ( ! empty($this->attr)) {
             $data['attr'] = $this->attr;
+        }
+
+        if ( ! empty($this->options)) {
+            $data['options'] = $this->options;
         }
 
         return $data;

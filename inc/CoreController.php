@@ -89,7 +89,7 @@ class CoreController extends Common implements File {
         if ( ! $this->auth->ADMIN) {
             throw new Exception(911);
         }
-
+        session_write_close();
 
         if (isset($_GET['data'])) {
             try {

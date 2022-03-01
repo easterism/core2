@@ -242,14 +242,16 @@ function jsToHead(src) {
  * @param {string} id
  */
 function toAnchor(id){
-    setTimeout(function(){
-        if (id.indexOf('#') < 0) {
-            id = "#" + id;
-        }
-        var ofy = $(id);
-        if (ofy[0]) {
+    setTimeout(function() {
+		if (typeof id == 'string' && id.indexOf('#') < 0) {
+			id = "#" + id;
+		}
+
+		var element = $(id);
+
+        if (element && element[0]) {
             $('html,body').animate({
-                scrollTop : ofy.offset().top - $("#navbar-top").height() - 115
+                scrollTop : element.offset().top - $("#navbar-top").height() - 115
             }, 'fast');
         }
     }, 0);
@@ -289,9 +291,18 @@ var preloader = {
 				}
 				preloader.extraLoad = {};
 			}
-			$('html').animate({
-				scrollTop: 0
-			});
+
+			if (locData['loc'] &&
+				locData['id'] &&
+				locData['loc'].indexOf('&__') >= 0
+			) {
+				toAnchor(locData['id']);
+
+			} else {
+				$('html').animate({
+					scrollTop: 0
+				});
+			}
 		}
 		preloader.hide();
 		//resize();
@@ -432,7 +443,7 @@ var load = function (url, data, id, callback) {
 				preloader.oldHash['--root'] = r;
 			}
 			//Activate root menu
-			if (qs['module']) {
+			if (qs['module'] && url.indexOf('&__') < 0) {
 				changeRoot($('#module-' + qs['module'])[0], false, qs['action']);
 				if (qs['action']) {
 					changeSub($('#submodule-' + qs['module'] + '-' + qs['action'])[0])

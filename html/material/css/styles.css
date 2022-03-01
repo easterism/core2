@@ -2348,13 +2348,63 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 
 .coreui-table-wrapper {
     background-color: #ffffff;
-    border-color: #dddddd;
-    border-radius: 2px;
-    border-style: solid;
-    border-width: 1px;
     margin: 0;
     position: relative;
     overflow: auto;
+}
+.coreui-table-wrapper .filter-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+.coreui-table-wrapper .filter-controls .filter-control {
+    display: inline-block;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group {
+    display: table;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > .input-group-addon {
+    background-color: #f3f5f5;
+    color: #666;
+    font-size: 12px;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > * {
+    float: none;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-text input,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-select select {
+    width: 200px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input {
+    width: 100px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input {
+    width: 140px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input {
+    width: 175px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input:last-child {
+    margin-left: -1px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-radio .input-group-addon + .btn-group label:first-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-checkbox .input-group-addon + .btn-group label:first-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.coreui-table-wrapper .coreui-table-responsive {
+    width: 100%;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    border: 1px solid #ddd;
+    border-radius: 2px;
 }
 table.coreui-table {
     margin-bottom:0;
@@ -2464,6 +2514,10 @@ table.coreui-table > tfoot > tr > td:last-child {
     border-left:0;
     border-right:0;
 }
+table.coreui-table > tbody > tr.row-expand > td {
+    padding: 15px 15px 30px 15px;
+    background-color: #eee;
+}
 @media screen and (max-width: 767px) {
     .coreui-table-wrapper {
         width: 100%;
@@ -2475,7 +2529,6 @@ table.coreui-table > tfoot > tr > td:last-child {
 }
 
 table.coreui-table > tfoot form {margin-bottom: 0}
-
 table.coreui-table .search-container form {margin-top: 15px;}
 table.coreui-table .search-container form .search-table th,
 table.coreui-table .search-container form .search-table td {padding-bottom: 10px;}
@@ -2546,6 +2599,7 @@ table.coreui-table input.gotopage {
     width: 35px;
     outline: 0;
     margin-right: 3px;
+    font-size: 12px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;
@@ -2568,11 +2622,12 @@ table.coreui-table select.records-per-page {
     height: 100%;
     background-color: #0000000d;
     cursor: wait;
+    z-index: 3;
 }
 .coreui-table-wrapper > .preloader > .block {
     width: 175px;
     position: absolute;
-    top: 95px;
+    top: 40px;
     display: inline-block;
     text-align: left;
     padding: 10px 19px;
@@ -2593,7 +2648,54 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper *:after {
     box-sizing: border-box;
 }
+.coreui-table-switch {
+    position: relative;
+    display: block;
+    width: 33px;
+    height: 18px;
+}
+.coreui-table-switch input {display:none;}
+.coreui-table-switch .coreui-table-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .15s;
+    transition: .15s;
+    border-radius: 34px;
+}
+.coreui-table-switch-slider:before {
+    border-radius: 50%;
+}
 
+.coreui-table-switch .coreui-table-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .15s;
+    transition: .15s;
+}
+.coreui-table-switch.color-default input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #444;}
+.coreui-table-switch.color-primary input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #2196F3;}
+.coreui-table-switch.color-success input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #8bc34a;}
+.coreui-table-switch.color-info input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #3de0f5;}
+.coreui-table-switch.color-warning input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #FFC107;}
+.coreui-table-switch.color-danger input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #f44336;}
+.coreui-table-switch input:focus ~ .coreui-table-switch-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+.coreui-table-switch input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+}
 
 /* Mobile */
 @media(max-width:767px) {
