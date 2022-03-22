@@ -625,16 +625,37 @@ var edit = {
 						 'onclick="edit.fieldDataset.deleteItem($(\'#field-dataset-item-[ID]\'))"></td>' +
 				'</tr>';
 
-			var tplField = '<td>' +
-						       '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
-						   '</td>';
+			var tplFieldText =
+				'<td>' +
+				    '<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+			    '</td>';
+
+			var tplFieldDate =
+				'<td>' +
+				    '<input type="date" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+			    '</td>';
+
+			var tplFieldDatetime =
+				'<td>' +
+				    '<input type="datetime" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+			    '</td>';
+
+			var tplFieldNumber =
+				'<td>' +
+				    '<input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+			    '</td>';
 
 			var fields = [];
 			var key    = this.keygen();
 
 			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
 				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
-					var tplFieldCustom = tplField;
+					switch (field['type'] || 'text') {
+						case 'date':     var tplFieldCustom = tplFieldDate; break;
+						case 'datetime': var tplFieldCustom = tplFieldDatetime; break;
+						case 'number':   var tplFieldCustom = tplFieldNumber; break;
+						default:         var tplFieldCustom = tplFieldText; break;
+					}
 
 					if (field['code']) {
 						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
