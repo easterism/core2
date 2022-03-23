@@ -193,13 +193,15 @@ class Db extends Table {
                         case self::SEARCH_NUMBER:
                             if (is_array($value)) {
                                 if (strpos($field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value1 = $this->db->quote($value[0]);
-                                    $quoted_value2 = $this->db->quote($value[1]);
+                                    if ( ! empty($value[0]) || ! empty($value[1])) {
+                                        $quoted_value1 = $this->db->quote($value[0]);
+                                        $quoted_value2 = $this->db->quote($value[1]);
 
-                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
-                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+                                        $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
+                                        $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
 
-                                    $select->where($where);
+                                        $select->where($where);
+                                    }
 
                                 } else {
                                     if ($value[0] && $value[1]) {
@@ -274,13 +276,15 @@ class Db extends Table {
                         case self::FILTER_NUMBER:
                             if (is_array($value)) {
                                 if (strpos($field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value1 = $this->db->quote($value[0]);
-                                    $quoted_value2 = $this->db->quote($value[1]);
+                                    if ( ! empty($value[0]) || ! empty($value[1])) {
+                                        $quoted_value1 = $this->db->quote($value[0]);
+                                        $quoted_value2 = $this->db->quote($value[1]);
 
-                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
-                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+                                        $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
+                                        $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
 
-                                    $select->where($where);
+                                        $select->where($where);
+                                    }
 
                                 } else {
                                     if ($value[0] && $value[1]) {
@@ -435,13 +439,15 @@ class Db extends Table {
                         case self::SEARCH_DATETIME:
                         case self::SEARCH_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                $quoted_value1 = $this->db->quote($search_value[0]);
-                                $quoted_value2 = $this->db->quote($search_value[1]);
+                                if ( ! empty($value[0]) || ! empty($value[1])) {
+                                    $quoted_value1 = $this->db->quote($search_value[0]);
+                                    $quoted_value2 = $this->db->quote($search_value[1]);
 
-                                $where = str_replace("ADD_SEARCH1", $quoted_value1, $search_field);
-                                $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $search_field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
 
-                                $select->addWhere($where);
+                                    $select->addWhere($where);
+                                }
 
                             } else {
                                 if ( ! empty($search_value[0]) && empty($search_value[1])) {
@@ -521,13 +527,15 @@ class Db extends Table {
                         case self::FILTER_DATETIME:
                         case self::FILTER_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                $quoted_value1 = $this->db->quote($filter_value[0]);
-                                $quoted_value2 = $this->db->quote($filter_value[1]);
+                                if ( ! empty($value[0]) || ! empty($value[1])) {
+                                    $quoted_value1 = $this->db->quote($filter_value[0]);
+                                    $quoted_value2 = $this->db->quote($filter_value[1]);
 
-                                $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
-                                $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
 
-                                $select->addWhere($where);
+                                    $select->addWhere($where);
+                                }
 
                             } else {
                                 if ( ! empty($filter_value[0]) && empty($filter_value[1])) {

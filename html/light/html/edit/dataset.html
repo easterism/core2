@@ -15,11 +15,26 @@
 
         <!-- BEGIN item -->
         <tr class="field-dataset-item" id="field-dataset-item-[ID]">
-            <!-- BEGIN field -->
+            <!-- BEGIN field_text -->
             <td>
                 <input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
             </td>
-            <!-- END field -->
+            <!-- END field_text -->
+            <!-- BEGIN field_number -->
+            <td>
+                <input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
+            </td>
+            <!-- END field_number -->
+            <!-- BEGIN field_datetime -->
+            <td>
+                <input type="datetime-local" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
+            </td>
+            <!-- END field_datetime -->
+            <!-- BEGIN field_date -->
+            <td>
+                <input type="date" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
+            </td>
+            <!-- END field_date -->
             <!-- BEGIN field_readonly -->
             <td>
                 [VALUE]
@@ -39,7 +54,7 @@
 
     <!-- BEGIN edit_controls -->
     <button class="btn btn-link btn-sm"
-       onclick="edit.fieldDataset.addItem('[FIELD_ID]', '[FIELD]', '[THEME_PATH]'); return false">_tr(Добавить)</button>
+            onclick="edit.fieldDataset.addItem('[FIELD_ID]', '[FIELD]', '[THEME_PATH]'); return false">_tr(Добавить)</button>
 
     <script>
         edit.fieldDataset.data['[FIELD_ID]'] = [OPTIONS];

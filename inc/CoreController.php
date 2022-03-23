@@ -237,42 +237,7 @@ class CoreController extends Common implements File {
             return;
         }
 
-        if ( ! empty($_POST)) {
-            /* Обновление файлов модуля */
-            if (!empty($_POST['refreshFilesModule'])) {
-                $install = new Install();
-                return $install->mRefreshFiles($_POST['refreshFilesModule']);
-            }
 
-            /* Обновление модуля */
-            if (!empty($_POST['updateModule'])) {
-                $install = new Install();
-                return $install->checkModUpdates($_POST['updateModule']);
-            }
-
-            // Деинсталяция модуля
-            if (isset($_POST['uninstall'])) {
-                $install = new Install();
-                return $install->mUninstall($_POST['uninstall']);
-            }
-
-            // Инсталяция модуля
-            if (!empty($_POST['install'])) {
-                $install = new Install();
-                return $install->mInstall($_POST['install']);
-            }
-
-            // Инсталяция модуля из репозитория
-            if (!empty($_POST['install_from_repo'])) {
-                $install = new Install();
-                return $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
-            }
-        }
-
-
-
-        $this->printJs("core2/mod/admin/assets/js/mod.js");
-        $this->printJs("core2/mod/admin/assets/js/gl.js");
 
         $base_url = "index.php?module=admin&action=modules";
         $mods     = new Core2\Modules();
@@ -280,59 +245,95 @@ class CoreController extends Common implements File {
         $panel->setTitle($this->_("Модули"));
 
         ob_start();
-        if (isset($_GET['edit'])) {
-            if (empty($_GET['edit'])) {
-                $panel->setTitle($this->_("Добавление модуля"));
-                echo $mods->getEditInstalled();
+        if ( ! empty($_POST)) {
+            /* Обновление файлов модуля */
+            if ( ! empty($_POST['refreshFilesModule'])) {
+                $install = new Install();
+                echo $install->mRefreshFiles($_POST['refreshFilesModule']);
+            }
 
-            } else {
-                $module = $this->dataModules->getRowById((int)$_GET['edit']);
+            /* Обновление модуля */
+            if ( ! empty($_POST['updateModule'])) {
+                $install = new Install();
+                echo $install->checkModUpdates($_POST['updateModule']);
+            }
 
-                if (empty($module)) {
-                    return Alert::danger($this->_('Указанный модуль не найден'));
-                }
+            // Деинсталяция модуля
+            if (isset($_POST['uninstall'])) {
+                $install = new Install();
+                echo $install->mUninstall($_POST['uninstall']);
+            }
 
-                $panel->setTitle(strip_tags($module->m_name), $module->module_id, $base_url);
-                $count_submodules = $this->dataSubModules->getCountByModuleId((int)$_GET['edit']);
+            // Инсталяция модуля
+            if ( ! empty($_POST['install'])) {
+                $install = new Install();
+                echo $install->mInstall($_POST['install']);
+            }
 
-                $base_url .= "&edit={$module->m_id}";
-                $panel->addTab($this->_("Модуль"),                          'module',     $base_url);
-                $panel->addTab($this->_("Субмодули ({$count_submodules})"), 'submodules', $base_url);
-
-
-                $base_url .= "&tab=" . $panel->getActiveTab();
-                switch ($panel->getActiveTab()) {
-                    case 'module':
-                        echo $mods->getEditInstalled((int)$module->m_id);
-                        break;
-
-                    case 'submodules':
-                        if (isset($_GET['editsub'])) {
-                            echo $mods->getEditSubmodule((int)$module->m_id, (int)$_GET['editsub']);
-                        }
-
-                        echo $mods->getListSubmodules((int)$module->m_id);
-                        break;
-                }
+            // Инсталяция модуля из репозитория
+            if ( ! empty($_POST['install_from_repo'])) {
+                $install = new Install();
+                echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
             }
 
         } else {
-            $panel->addTab($this->_("Установленные модули"), 'install',   $base_url);
-            $panel->addTab($this->_("Доступные модули"),	 'available', $base_url);
+            $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/gl.js");
 
-            switch ($panel->getActiveTab()) {
-                case 'install':
-                    $mods->getListInstalled();
-                    break;
+            if (isset($_GET['edit'])) {
+                if (empty($_GET['edit'])) {
+                    $panel->setTitle($this->_("Добавление модуля"));
+                    echo $mods->getEditInstalled();
 
-                case 'available':
-                    if (isset($_GET['add_mod'])) {
-                        $mods->getAvailableEdit((int) $_GET['add_mod']);
+                } else {
+                    $module = $this->dataModules->getRowById((int)$_GET['edit']);
+
+                    if (empty($module)) {
+                        return Alert::danger($this->_('Указанный модуль не найден'));
                     }
 
-                    $mods->getAvailable();
-                    $mods->getRepoModules();
-                    break;
+                    $panel->setTitle(strip_tags($module->m_name), $module->module_id, $base_url);
+                    $count_submodules = $this->dataSubModules->getCountByModuleId((int)$_GET['edit']);
+
+                    $base_url .= "&edit={$module->m_id}";
+                    $panel->addTab($this->_("Модуль"),                          'module',     $base_url);
+                    $panel->addTab($this->_("Субмодули ({$count_submodules})"), 'submodules', $base_url);
+
+
+                    $base_url .= "&tab=" . $panel->getActiveTab();
+                    switch ($panel->getActiveTab()) {
+                        case 'module':
+                            echo $mods->getEditInstalled((int)$module->m_id);
+                            break;
+
+                        case 'submodules':
+                            if (isset($_GET['editsub'])) {
+                                echo $mods->getEditSubmodule((int)$module->m_id, (int)$_GET['editsub']);
+                            }
+
+                            echo $mods->getListSubmodules((int)$module->m_id);
+                            break;
+                    }
+                }
+
+            } else {
+                $panel->addTab($this->_("Установленные модули"), 'install',   $base_url);
+                $panel->addTab($this->_("Доступные модули"),	 'available', $base_url);
+
+                switch ($panel->getActiveTab()) {
+                    case 'install':
+                        $mods->getListInstalled();
+                        break;
+
+                    case 'available':
+                        if (isset($_GET['add_mod'])) {
+                            $mods->getAvailableEdit((int) $_GET['add_mod']);
+                        }
+
+                        $mods->getAvailable();
+                        $mods->getRepoModules();
+                        break;
+                }
             }
         }
 
