@@ -90,7 +90,11 @@ class MobileController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $mods = new Modules();
-        $mods->dispatch();
+        if (isset($_GET['edit'])) {
+            echo $mods->getEditInstalled();
+        } else {
+            echo $mods->getEditInstalled((int)$_GET['edit']);
+        }
 	}
 
 

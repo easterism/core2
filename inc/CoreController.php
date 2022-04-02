@@ -316,7 +316,8 @@ class CoreController extends Common implements File {
                     }
                 }
 
-            } else {
+            }
+            else {
                 $panel->addTab($this->_("Установленные модули"), 'install',   $base_url);
                 $panel->addTab($this->_("Доступные модули"),	 'available', $base_url);
 
