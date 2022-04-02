@@ -823,7 +823,7 @@
                         }
                         ob_clean();
                     }
-                } catch (\Exception) {
+                } catch (\Exception $e) {
                     //проблемы с загрузкой модуля
                     //TODO добавить в log
                 }
@@ -1307,7 +1307,7 @@
 	                    return (string)$result . PHP_EOL;
 	                }
 
-	            } catch (Exception $e) {
+	            } catch (\Exception $e) {
 	                $message = $e->getMessage();
 	                return $message . PHP_EOL;
 	            }
