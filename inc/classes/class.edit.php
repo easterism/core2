@@ -700,8 +700,9 @@ class editTable extends initEdit {
 
                                 switch ($options['size']) {
                                     case 'small': $size = 'modal-sm'; break;
-                                    case 'large': $size = 'modal-lg'; break;
-                                    case 'normal': default: $size = '';    break;
+                                    case 'normal': $size = ''; break;
+                                    case 'large':
+                                    default: $size = 'modal-lg'; break;
                                 }
 
                                 $url = strpos(trim($options['url']), 'function') !== false

@@ -61,7 +61,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=2"></script>
-	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=8"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=9"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" src="core2/html/material/js/main.js?_=7"></script>
     <!--[if IE]>
