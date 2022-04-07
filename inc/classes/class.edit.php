@@ -145,7 +145,7 @@ class editTable extends initEdit {
 	 * @param string $value - switch ON or OFF
 	 */
 	public function addButtonSwitch($field_name, $value) {
-		$tpl = new Templater("core2/html/" . THEME . "/edit/button_switch.tpl");
+		$tpl = new Templater2("core2/html/" . THEME . "/edit/button_switch.html");
 		if ($value) {
 			$tpl->assign('data-switch="off"', 'data-switch="off" class="hide"');
 			$valueInput = 'Y';
@@ -537,7 +537,7 @@ class editTable extends initEdit {
 								$insert = str_replace(array("dd", "mm", "yyyy"), array($day, $month, $year), strtolower($this->date_mask));
 								$insert = str_replace("yy", $year, $insert);
 
-								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.tpl');
+								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.html');
 								$tpl->assign('[dt]', $insert);
 								$tpl->assign('[prefix]', $prefix);
 								$tpl->assign('name=""', 'name="control[' . $field . ']"');
@@ -700,8 +700,9 @@ class editTable extends initEdit {
 
                                 switch ($options['size']) {
                                     case 'small': $size = 'modal-sm'; break;
-                                    case 'large': $size = 'modal-lg'; break;
-                                    case 'normal': default: $size = '';    break;
+                                    case 'normal': $size = ''; break;
+                                    case 'large':
+                                    default: $size = 'modal-lg'; break;
                                 }
 
                                 $url = strpos(trim($options['url']), 'function') !== false
@@ -1381,6 +1382,19 @@ class editTable extends initEdit {
                                                 }
                                             }
 
+                                            $type_name = $item_field['type'] ?? 'text';
+
+                                            if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                                $type_name = 'text';
+                                            }
+
+                                            if ($type_name == 'date') {
+                                                $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
+                                            }
+                                            if ($type_name == 'datetime') {
+                                                $field_value = $field_value ? date('d.m.Y H:i', strtotime($field_value)) : '';
+                                            }
+
 
                                             $tpl->item->field_readonly->assign('[VALUE]', $field_value);
                                             $tpl->item->field_readonly->reassign();
@@ -1431,12 +1445,19 @@ class editTable extends initEdit {
                                                 ? $item_field['attributes']
                                                 : '';
 
-                                            $tpl->item->field->assign('[FIELD]',      $field);
-                                            $tpl->item->field->assign('[NUM]',        $num);
-                                            $tpl->item->field->assign('[CODE]',       $item_field['code']);
-                                            $tpl->item->field->assign('[VALUE]',      $field_value);
-                                            $tpl->item->field->assign('[ATTRIBUTES]', $field_attributes);
-                                            $tpl->item->field->reassign();
+
+                                            $type_name = $item_field['type'] ?? 'text';
+
+                                            if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                                $type_name = 'text';
+                                            }
+
+                                            $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
+                                            $tpl->item->{"field_{$type_name}"}->assign('[NUM]',        $num);
+                                            $tpl->item->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
+                                            $tpl->item->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
+                                            $tpl->item->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
+                                            $tpl->item->{"field_{$type_name}"}->reassign();
                                         }
 
                                         $tpl->item->touchBlock('delete');
@@ -1451,12 +1472,18 @@ class editTable extends initEdit {
                                             ? $item_field['attributes']
                                             : '';
 
-                                        $tpl->item->field->assign('[FIELD]',      $field);
-                                        $tpl->item->field->assign('[NUM]',        1);
-                                        $tpl->item->field->assign('[CODE]',       $item_field['code']);
-                                        $tpl->item->field->assign('[VALUE]',      '');
-                                        $tpl->item->field->assign('[ATTRIBUTES]', $field_attributes);
-                                        $tpl->item->field->reassign();
+                                        $type_name = $item_field['type'] ?? 'text';
+
+                                        if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                            $type_name = 'text';
+                                        }
+
+                                        $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
+                                        $tpl->item->{"field_{$type_name}"}->assign('[NUM]',        1);
+                                        $tpl->item->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
+                                        $tpl->item->{"field_{$type_name}"}->assign('[VALUE]',      '');
+                                        $tpl->item->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
+                                        $tpl->item->{"field_{$type_name}"}->reassign();
                                     }
 
                                     $tpl->item->touchBlock('delete');
