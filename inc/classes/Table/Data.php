@@ -216,6 +216,32 @@ class Data extends Table {
 
                     switch ($search_column->getType()) {
                         case 'date':
+                            if (is_array($search_value)) {
+                                $search_date = substr($row[$search_field], 0, 10);
+
+                                if ($search_value[0] && ! $search_value[1]) {
+                                    if (strtotime($search_date) < strtotime($search_value[0])) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ( ! $search_value[0] && $search_value[1]) {
+                                    if (strtotime($search_date) > strtotime($search_value[1])) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+
+                                } elseif ($search_value[0] && $search_value[1]) {
+                                    if (strtotime($search_date) < strtotime($search_value[0]) ||
+                                        strtotime($search_date) > strtotime($search_value[1])
+                                    ) {
+                                        unset($data[$key]);
+                                        continue 2;
+                                    }
+                                }
+                            }
+                            break;
+
                         case 'datetime':
                             if (is_array($search_value)) {
                                 if ($search_value[0] && ! $search_value[1]) {
