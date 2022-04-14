@@ -259,16 +259,16 @@ abstract class Table extends Acl {
 
     /**
      * @param int|null $nmbr_control
-     * @return array|null
+     * @return mixed
      */
-    public function getSearch(int $nmbr_control = null): ?array {
+    public function getSearch(int $nmbr_control = null): mixed {
 
         $search = null;
 
         if (isset($this->session->table->search)) {
             $search = is_int($nmbr_control)
-                ? $this?->session?->table?->search[$nmbr_control]
-                : $this?->session?->table?->search;
+                ? $this->session->table->search[$nmbr_control] ?? null
+                : $this->session->table->search;
         }
 
         return $search ?: null;
@@ -277,16 +277,16 @@ abstract class Table extends Acl {
 
     /**
      * @param int|null $nmbr_control
-     * @return array|null
+     * @return mixed
      */
-    public function getFilters(int $nmbr_control = null): ?array {
+    public function getFilters(int $nmbr_control = null): mixed {
 
         $filter = null;
 
         if (isset($this->session->table->filter)) {
             $filter = is_int($nmbr_control)
-                ? $this?->session?->table?->filter[$nmbr_control]
-                : $this?->session?->table?->filter;
+                ? $this->session->table->filter[$nmbr_control] ?? null
+                : $this->session->table->filter;
         }
 
         return $filter ?: null;
