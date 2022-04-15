@@ -111,10 +111,12 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
-            $this->session->table->search = $_POST['search'][$resource];
+            foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
+                $this->setSearch($nmbr_field, $search_value);
+            }
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
-            $this->session->table->search = [];
+            $this->clearSearch();
         }
 
         // FILTER
@@ -127,13 +129,15 @@ abstract class Table extends Acl {
                 }
             }
             if ($all_empty) {
-                $this->session->table->filter = [];
+                $this->clearFilter();
             } else {
-                $this->session->table->filter = $_POST['filter'][$resource];
+                foreach ($_POST['filter'][$resource] as $nmbr_field => $search_value) {
+                    $this->setFilter($nmbr_field, $search_value);
+                }
             }
         }
         if ( ! empty($_POST['filter_clear_' . $this->resource])) {
-            $this->session->table->filter = [];
+            $this->clearFilter();
         }
 
 
@@ -254,6 +258,58 @@ abstract class Table extends Acl {
     public function setRoundCalc(bool $is_round_calc) {
 
         $this->is_round_calc = $is_round_calc;
+    }
+
+
+    /**
+     * Установка поисковых значений
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setSearch(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->search)) {
+            $this->session->table->search = [];
+        }
+
+        $this->session->table->search[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка значений фильтра
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setFilter(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->filter)) {
+            $this->session->table->filter = [];
+        }
+
+        $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Очистка поиска
+     * @return void
+     */
+    public function clearSearch() {
+
+        $this->session->table->search = [];
+    }
+
+
+    /**
+     * Очистка фильтров
+     * @return void
+     */
+    public function clearFilter() {
+
+        $this->session->table->filter = [];
     }
 
 
