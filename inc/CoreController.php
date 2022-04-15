@@ -276,7 +276,8 @@ class CoreController extends Common implements File {
                 echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
             }
 
-        } else {
+        }
+        else {
             $this->printJs("core2/mod/admin/assets/js/mod.js");
             $this->printJs("core2/mod/admin/assets/js/gl.js");
 
