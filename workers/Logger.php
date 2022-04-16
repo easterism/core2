@@ -19,6 +19,7 @@ class Logger
         \Zend_Registry::set('config', $config);
         \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
         define("DOC_ROOT", $workload->location);
+        $_SERVER = get_object_vars($workload->server);
 
         if (isset($config->log) &&
             $config->log &&

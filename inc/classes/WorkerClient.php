@@ -63,33 +63,65 @@ class WorkerClient {
         $this->location = $loc;
     }
 
+    /**
+     * Запускает выполнение задачи в фоновом режиме
+     * @param $worker
+     * @param $data
+     * @param $unique
+     * @return false|string
+     */
     public function doBackground($worker, $data, $unique = null) {
-        if ($this->module === 'Admin') {
-            $auth = new SessionContainer('Auth');
-            $data = ['location' => $this->location,
-                'config' => serialize(\Zend_Registry::get('config')),
-                'server' => $_SERVER['SERVER_NAME'],
-                'auth' => $auth->getArrayCopy(),
-                'payload' => $data];
-            $jh = $this->client->doBackground($worker, json_encode($data), $unique);
-            if ($this->client->returnCode() != GEARMAN_SUCCESS)
-            {
-                return false;
-            }
-            return $jh;
-        }
-        $data = ['module' => $this->module,
-            'location' => $this->location,
-            'config' => serialize(\Zend_Registry::get('config')),
-            'worker' => $worker,
-            'server' => $_SERVER['SERVER_NAME'],
-            'payload' => $data];
-        $jh = $this->client->doBackground("Workhorse", json_encode($data), $unique);
+        $workload = $this->getWorkload($worker, $data);
+        if ($this->module !== 'Admin') $worker = "Workhorse";
+        $jh = $this->client->doBackground($worker, $workload, $unique);
         if ($this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
         return $jh;
+    }
+
+    /**
+     * Запускает на выполнение с высоким приоритетом задачу в фоновом режиме
+     * @param $worker
+     * @param $data
+     * @param $unique
+     * @return false|string
+     */
+    public function doHighBackground($worker, $data, $unique = null) {
+        $workload = $this->getWorkload($worker, $data);
+        if ($this->module !== 'Admin') $worker = "Workhorse";
+        $jh = $this->client->doHighBackground($worker, $workload, $unique);
+        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        {
+            return false;
+        }
+        return $jh;
+    }
+
+    /**
+     * @param $worker
+     * @param $data
+     * @return false|string
+     */
+    private function getWorkload($worker, $data) {
+        $auth = new SessionContainer('Auth');
+        if ($this->module === 'Admin') {
+            $workload = ['location' => $this->location,
+                'config'    => serialize(\Zend_Registry::get('config')),
+                'server'    => $_SERVER,
+                'auth'      => $auth->getArrayCopy(),
+                'payload'   => $data];
+        } else {
+            $workload = ['module' => $this->module,
+                'location'  => $this->location,
+                'config'    => serialize(\Zend_Registry::get('config')),
+                'worker'    => $worker,
+                'server'    => $_SERVER,
+                'auth'      => $auth->getArrayCopy(),
+                'payload'   => $data];
+        }
+        return json_encode($workload);
     }
 
     public function jobStatus($job_handle) {

@@ -858,7 +858,7 @@ class WorkerManager {
 
             if (is_null($all_workers)) {
                 $all_workers = array();
-                foreach ($this->functions as $func=>$settings) {
+                foreach ($this->functions as $func => $settings) {
                     if (empty($settings["dedicated_only"])) {
                         $all_workers[] = $func;
                     }
@@ -1103,13 +1103,11 @@ class WorkerManager {
 
 
         $log_pid = str_pad($this->pid, 5, " ", STR_PAD_LEFT);
-
         if ($this->log_file_handle) {
-            if (!$this->_log) $this->_log = new Log("core2_worker");
             list($ts, $ms) = explode(".", sprintf("%f", microtime(true)));
             $ds = date("Y-m-d H:i:s").".".str_pad($ms, 6, 0);
             $prefix = "[$ds] $log_pid $label";
-            $this->_log->info($prefix." ".str_replace("\n", "\n$prefix ", trim($message)));
+            fwrite($this->log_file_handle, $prefix." ".str_replace("\n", "\n$prefix ", trim($message))."\n");
         } else {
             $prefix = "$log_pid $label";
             echo $prefix." ".str_replace("\n", "\n$prefix ", trim($message))."\n";
