@@ -5,12 +5,12 @@
     define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
     define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-    $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
-    if (!file_exists($conf_file)) {
+    $autoload = DOC_ROOT . "core2/vendor/autoload.php";
+    if (!file_exists($autoload)) {
         \Core2\Error::Exception("Composer autoload is missing.");
     }
 
-    require_once($conf_file);
+    require_once($autoload);
     require_once("Error.php");
     require_once("Log.php");
     require_once 'Zend_Registry.php'; //DEPRECATED

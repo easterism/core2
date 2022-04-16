@@ -17,6 +17,13 @@ use Laminas\Session\Container as SessionContainer;
  * @method slack($channel, $username)
  */
 class Log {
+
+    const LOG_LEVEL_INFO = 1;
+    const LOG_LEVEL_PROC_INFO = 2;
+    const LOG_LEVEL_WORKER_INFO = 3;
+    const LOG_LEVEL_DEBUG = 4;
+    const LOG_LEVEL_CRAZY = 5;
+
     private $log;
     private $config;
     private $writer;
@@ -69,7 +76,8 @@ class Log {
                     $this->log->pushHandler($stream);
                 }
             }
-        } else {
+        }
+        else {
             $this->config = \Zend_Registry::getInstance()->get('config');
             $this->log    = new Logger($name);
         }
@@ -141,10 +149,10 @@ class Log {
      * Журнал запросов
      * @param string $name
      */
-    public function access($name) {
+    public function access($name, $sid) {
         $this->setWriter();
         $this->log->pushProcessor(new WebProcessor());
-        $this->log->info($name, array('sid' => SessionContainer::getDefaultManager()->getId()));
+        $this->log->info($name, array('sid' => $sid));
     }
 
 

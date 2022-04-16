@@ -2,6 +2,9 @@
 namespace Core2;
 
 require_once "Cache.php";
+require_once "Log.php";
+require_once "WorkerClient.php";
+require_once 'Zend_Registry.php';
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 
@@ -134,6 +137,28 @@ class Db {
 			}
 			return $v;
 		}
+        // Получение экземпляра воркера
+        elseif (strpos($k, 'worker') === 0) {
+            if (array_key_exists('worker', $this->_s)) {
+                $v = $this->_s['worker'];
+            } else {
+                $v = new WorkerClient($this);
+                $this->_s['worker'] = $v;
+            }
+            $module     = substr($k, 6);
+            if ($module == 'Admin') {
+                $v->setModule($module);
+                $v->setLocation(DOC_ROOT . "core2/mod/admin");
+            }
+            elseif ($this->isModuleActive($module)) {
+                $v->setModule($module);
+                $v->setLocation($this->getModuleLocation($module));
+            }
+            else {
+                return new stdObject();
+            }
+            return $v;
+        }
 		// Получение экземпляра модели текущего модуля
 		elseif (strpos($k, 'data') === 0) {
 			if (array_key_exists($k, $this->_s)) {
@@ -144,7 +169,7 @@ class Db {
 				$model    = substr($module[0], 4);
 				$module   = !empty($module[1]) ? $module[1] : 'admin';
 				$location = $module == 'admin'
-					? DOC_ROOT . "core2/mod/admin"
+					? __DIR__ . "/../../mod/admin"
 					: $this->getModuleLocation($module);
                 $r = new \ReflectionClass(get_called_class());
                 $classLoc = $r->getFileName();
@@ -354,6 +379,11 @@ class Db {
                 'user_id'        => $auth->ID
             ];
 
+            $w = $this->workerAdmin->doBackground('Logger', array_merge($data, ['action' => $arr]));
+            if ($w) {
+                return;
+            }
+
             if (isset($this->config->log) &&
                 $this->config->log &&
                 isset($this->config->log->system->writer) &&
@@ -364,7 +394,7 @@ class Db {
                 }
 
                 $log = new Log('access');
-                $log->access($auth->NAME);
+                $log->access($auth->NAME, $data['sid']);
 
             } else {
                 if ($arr) {
@@ -760,7 +790,7 @@ class Db {
 
             $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
 
-            $conf_ext = $module_loc . "/conf.ext.ini";
+            $conf_ext = $module_loc . "/conf.workers.ini";
             if (file_exists($conf_ext)) {
                 $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
                 $extends_mod_ext = $config_mod_ext->getExtends();
