@@ -549,7 +549,7 @@ CoreUI.table = {
         var isActiveControl = $(container).find(':checked').hasClass('coreui-table-switch-active');
 
         swal({
-            title: isActiveControl ? "Деактивировать запись?" : "Активировать запись?",
+            title: isActiveControl ? "Деактивировать?" : "Активировать?",
             type: isActiveControl ? "warning" : "info",
             showCancelButton: true,
             confirmButtonColor: isActiveControl ? '#f0ad4e' : '#5bc0de',
