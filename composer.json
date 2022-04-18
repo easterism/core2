@@ -36,7 +36,6 @@
     "zf1/zend-acl": "~1.12",
     "belhard/zend-db": "dev-master",
     "belhard/xajax": "dev-master",
-    "belhard/floatthead": "dev-master",
     "belhard/simplemodal": "dev-master",
     "belhard/jquery-file-upload": "dev-master",
     "components/jquery": "2.1.4",

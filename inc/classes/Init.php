@@ -5,12 +5,12 @@
     define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
     define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-    $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
-    if (!file_exists($conf_file)) {
+    $autoload = DOC_ROOT . "core2/vendor/autoload.php";
+    if (!file_exists($autoload)) {
         \Core2\Error::Exception("Composer autoload is missing.");
     }
 
-    require_once($conf_file);
+    require_once($autoload);
     require_once("Error.php");
     require_once("Log.php");
     require_once 'Zend_Registry.php'; //DEPRECATED
@@ -785,42 +785,47 @@
                     continue;
                 }
 
-                $location      = $this->getModuleLocation($module_id); //получение расположения модуля
-                $modController = "Mod" . ucfirst($module_id) . "Controller";
-                $file_path     = $location . "/" . $modController . ".php";
+                try {
+                    $location = $this->getModuleLocation($module_id); //получение расположения модуля
+                    $modController = "Mod" . ucfirst($module_id) . "Controller";
+                    $file_path = $location . "/" . $modController . ".php";
 
-                if (file_exists($file_path)) {
-                    ob_start();
-                    $autoload = $location . "/vendor/autoload.php";
+                    if (file_exists($file_path)) {
+                        ob_start();
+                        $autoload = $location . "/vendor/autoload.php";
 
-                    if (file_exists($autoload)) {
-                        require_once $autoload;
+                        if (file_exists($autoload)) {
+                            require_once $autoload;
+                        }
+
+                        require_once $file_path;
+
+                        // подключаем класс модуля
+                        if (class_exists($modController)) {
+                            $this->setContext($module_id);
+                            $modController = new $modController();
+
+                            if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
+                                $module_js = $modController->topJs()
+                            ) {
+                                $modules_js = array_merge($modules_js, $module_js);
+                            }
+
+                            if ($modController instanceof TopCss &&
+                                $module_css = $modController->topCss()
+                            ) {
+                                $modules_css = array_merge($modules_css, $module_css);
+                            }
+
+                            if (THEME !== 'default') {
+                                $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
+                            }
+                        }
+                        ob_clean();
                     }
-
-                    require_once $file_path;
-
-                    // подключаем класс модуля
-                    if (class_exists($modController)) {
-                        $this->setContext($module_id);
-                        $modController = new $modController();
-
-                        if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
-                            $module_js = $modController->topJs()
-                        ) {
-                            $modules_js = array_merge($modules_js, $module_js);
-                        }
-
-                        if ($modController instanceof TopCss &&
-                            $module_css = $modController->topCss()
-                        ) {
-                            $modules_css = array_merge($modules_css, $module_css);
-                        }
-
-                        if (THEME !== 'default') {
-                            $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
-                        }
-                    }
-                    ob_clean();
+                } catch (\Exception $e) {
+                    //проблемы с загрузкой модуля
+                    //TODO добавить в log
                 }
             }
 
@@ -1302,7 +1307,7 @@
 	                    return (string)$result . PHP_EOL;
 	                }
 
-	            } catch (Exception $e) {
+	            } catch (\Exception $e) {
 	                $message = $e->getMessage();
 	                return $message . PHP_EOL;
 	            }

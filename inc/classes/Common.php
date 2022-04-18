@@ -128,6 +128,9 @@ class Common extends \Core2\Acl {
 		if (strpos($k, 'data') === 0) {
 			return parent::__get($k . "|" . $this->module);
 		}
+        if (strpos($k, 'worker') === 0) {
+            return parent::__get($k);
+        }
 
 		$v = NULL;
 

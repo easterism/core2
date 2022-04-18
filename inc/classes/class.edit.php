@@ -145,7 +145,7 @@ class editTable extends initEdit {
 	 * @param string $value - switch ON or OFF
 	 */
 	public function addButtonSwitch($field_name, $value) {
-		$tpl = new Templater("core2/html/" . THEME . "/edit/button_switch.tpl");
+		$tpl = new Templater2("core2/html/" . THEME . "/edit/button_switch.html");
 		if ($value) {
 			$tpl->assign('data-switch="off"', 'data-switch="off" class="hide"');
 			$valueInput = 'Y';
@@ -537,7 +537,7 @@ class editTable extends initEdit {
 								$insert = str_replace(array("dd", "mm", "yyyy"), array($day, $month, $year), strtolower($this->date_mask));
 								$insert = str_replace("yy", $year, $insert);
 
-								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.tpl');
+								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.html');
 								$tpl->assign('[dt]', $insert);
 								$tpl->assign('[prefix]', $prefix);
 								$tpl->assign('name=""', 'name="control[' . $field . ']"');
