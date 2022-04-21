@@ -34,7 +34,7 @@ class Logger
             $log->access($workload->auth->NAME, $workload->payload->sid);
 
         } else {
-            $data = $workload->payload;
+            $data = get_object_vars($workload->payload);
             if ($data['action']) {
                 $data['action'] = serialize($data['action']);
             }
