@@ -513,11 +513,11 @@ class WorkerManager {
             $this->check_code = true;
         }
 
-        $this->worker_dir = $this->config['worker_dir'];
+        $this->worker_dir = $this->config['worker_dir'] ? $this->config['worker_dir'] : __DIR__ . "/../workers";
         $dirs = is_array($this->worker_dir) ? $this->worker_dir : explode(",", $this->worker_dir);
         foreach ($dirs as &$dir) {
             $dir = trim($dir);
-            if (!file_exists($dir)) {
+            if (!is_dir($dir)) {
                 $this->show_help("Worker dir ".$dir." not found");
             }
         }
