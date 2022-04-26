@@ -414,6 +414,20 @@ class Email {
      */
     public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '') {
 
+        $w = $this->workerAdmin->doBackground('Mailer', [
+            'from'  => $from,
+            'to'    => $to,
+            'subj'  => $subj,
+            'body'  => $body,
+            'cc'    => $cc,
+            'bcc'   => $bcc,
+            'files' => serialize($files),
+            'reply' => $reply,
+        ]);
+        if ($w) {
+            return;
+        }
+
         $config = \Zend_Registry::get('config');
 
         $message = new Mail\Message();
