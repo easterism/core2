@@ -17,6 +17,7 @@ use Laminas\Session\Container as SessionContainer;
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
  * @property \Zend_Config_Ini          $core_config
+ * @property WorkerClient              $workerAdmin
  */
 class Db {
 
