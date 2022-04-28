@@ -376,8 +376,8 @@ abstract class Table extends Acl {
      */
     public function getOrderType(): ?string {
 
-        $order = isset($this->session->table->order_type)
-            ? $this?->session?->table?->order_type
+        $order = isset($this->session) && isset($this->session->table) && isset($this->session->table->order_type)
+            ? $this->session->table->order_type
             : null;
 
         return $order ?: null;
