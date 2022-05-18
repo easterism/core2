@@ -16,7 +16,7 @@ class Workhorse
                 $modWorker = "Mod" . ucfirst(strtolower($workload->module)) . "Worker";
                 \Zend_Registry::set('config', unserialize($workload->config));
                 \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
-                define("DOC_ROOT", $workload->location);
+                // define("DOC_ROOT", $workload->location); //определять в модулях
                 $modWorker = new $modWorker();
                 $action = $workload->worker;
 

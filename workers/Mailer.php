@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
+require_once __DIR__ . '/../inc/classes/Db.php';
 
 use Laminas\Mail;
 use Laminas\Mail\Transport;

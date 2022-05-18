@@ -115,6 +115,7 @@ class WorkerClient {
         } else {
             $workload = ['module' => $this->module,
                 'location'  => $this->location,
+                'context'   => serialize(\Zend_Registry::get('context')),
                 'config'    => serialize(\Zend_Registry::get('config')),
                 'worker'    => $worker,
                 'server'    => $_SERVER,
