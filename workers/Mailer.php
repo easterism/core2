@@ -16,7 +16,6 @@ class Mailer
         $workload = json_decode($job->workload());
         $job->sendData('start');
         $config = unserialize($workload->config);
-        $db = new \Core2\Db($config);
         \Zend_Registry::set('config', $config);
         \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
         $_SERVER = get_object_vars($workload->server);

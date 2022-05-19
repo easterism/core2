@@ -8,22 +8,27 @@ use Laminas\Session\Container as SessionContainer;
  * Class WorkerClient
  */
 class WorkerClient {
+
     private $client;
-    private $db;
     private $location;
     private $module;
 
-    public function __construct($db) {
+  public function __construct() {
 
-        $this->client = new \GearmanClient();
-
-        try {
-            $this->client->addServer('127.0.0.1', '4730');
-        } catch (\GearmanException $e) {
+        $cc = \Zend_Registry::get('core_config');
+        if ($cc->gearman->host) {
+            if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
+            $this->client = new \GearmanClient();
+            try {
+                $this->client->addServers($cc->gearman->host);
+            } catch (\GearmanException $e) {
+                return new \stdObject();
+            }
+        } else { //TODO другие воркеры?
             return new \stdObject();
         }
 
-        $this->db = $db;
+        return $this;
 
         //$stat = $client->jobStatus($job_handle);
         //echo "<PRE>Код: ";print_r($client->returnCode());echo "</PRE>";//die;
@@ -115,6 +120,7 @@ class WorkerClient {
             $workload = ['module' => $this->module,
                 'location'  => $this->location,
                 'config'    => serialize(\Zend_Registry::get('config')),
+                'context'   => \Zend_Registry::get('context'),
                 'worker'    => $worker,
                 'server'    => $_SERVER,
                 'auth'      => $auth->getArrayCopy(),
