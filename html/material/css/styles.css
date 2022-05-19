@@ -1536,7 +1536,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: transparent;
 }
 .fileinput-button {
-    line-height: 20px;
+    line-height: 18px;
 }
 .password-control .buttonSmall {
     -webkit-border-bottom-left-radius: 0;

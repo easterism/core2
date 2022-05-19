@@ -381,7 +381,7 @@ class Db extends Table {
                 }
             }
 
-            $data_result = $this->db->fetchAll($select_sql, $this->query_params);
+            $data_result = $this->db->fetchAll($select_sql);
 
             if (count($data_result) > $this->records_per_page) {
                 $this->records_total      = $offset + $this->records_per_page;

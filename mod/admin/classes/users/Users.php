@@ -72,6 +72,7 @@ class Users extends \Common {
         $authNamespace->ROLE   = $user['role'] ? $user['role'] : -1;
         $authNamespace->ROLEID = $user['role_id'] ? $user['role_id'] : 0;
         $authNamespace->LDAP   = false;
+        $authNamespace->LIVEID = NULL;
 
         return true;
     }

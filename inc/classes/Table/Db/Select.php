@@ -167,7 +167,7 @@ class Select {
 
         $sub_queries = [];
 
-        preg_match_all('~(\((?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
+        preg_match_all('~(\([^(](?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
 
         if ( ! empty($sub_queries[1])) {
             foreach ($sub_queries[1] as $sub_query) {
