@@ -98,9 +98,7 @@ class CoreController extends Common implements File {
                         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                             throw new Exception('Некорректный запрос');
                         }
-
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
-
                         return json_encode(['status' => 'success']);
                 }
 
