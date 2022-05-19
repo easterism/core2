@@ -140,10 +140,6 @@ class Db {
 		}
         // Получение экземпляра воркера
         elseif (strpos($k, 'worker') === 0) {
-            if ( ! class_exists("\GearmanClient")) {
-                return new \stdObject();
-            }
-
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
