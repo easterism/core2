@@ -16,6 +16,7 @@ class WorkerClient {
     public function __construct($db) {
 
         $this->client = new \GearmanClient();
+
         try {
             $this->client->addServer('127.0.0.1', '4730');
         } catch (\GearmanException $e) {
@@ -23,8 +24,6 @@ class WorkerClient {
         }
 
         $this->db = $db;
-
-        return $this;
 
         //$stat = $client->jobStatus($job_handle);
         //echo "<PRE>Код: ";print_r($client->returnCode());echo "</PRE>";//die;
