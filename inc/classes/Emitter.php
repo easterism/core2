@@ -18,7 +18,6 @@ class Emitter {
      * @param         $module_id
      */
     public function __construct(\Common $that, $module_id) {
-
         $this->module = $module_id;
         $this->that   = $that;
     }
@@ -55,15 +54,14 @@ class Emitter {
             }
 
             $location = $this->that->getModuleLocation($mod);
-            $autoload = $location . "/vendor/autoload.php";
-
-            if (file_exists($autoload)) {
-                require_once $autoload;
-            }
 
             $controller_path = $location . "/" . $modController . ".php";
 
             if (file_exists($controller_path)) {
+                $autoload = $location . "/vendor/autoload.php";
+                if (file_exists($autoload)) {
+                    require_once $autoload;
+                }
                 require_once $controller_path;
                 $iface = class_implements($modController);
 

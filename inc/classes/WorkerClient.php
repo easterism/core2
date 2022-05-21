@@ -13,7 +13,7 @@ class WorkerClient {
     private $location;
     private $module;
 
-  public function __construct() {
+    public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
         if ($cc->gearman->host) {
