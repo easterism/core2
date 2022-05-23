@@ -1222,7 +1222,7 @@ class WorkerManager {
         }
 
         foreach ($worker_list as $w) {
-            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : null);
+            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : 0);
             $this->toLog("Adding job $w ; timeout: " . $timeout, self::LOG_LEVEL_WORKER_INFO);
             $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
         }
