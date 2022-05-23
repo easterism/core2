@@ -40,7 +40,7 @@
     "belhard/jquery-file-upload": "dev-master",
     "components/jquery": "2.1.4",
     "monolog/monolog": "1.25.*",
-    "guzzlehttp/guzzle": "6.5.*",
+    "guzzlehttp/guzzle": "7.*",
     "phpseclib/phpseclib": "~2.0",
     "ext-json": "*",
     "ext-zip": "*",

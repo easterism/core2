@@ -653,14 +653,17 @@ class ModAjax extends ajaxFunc {
                 if ( ! $row) {
                     $row = $this->dataUsersProfile->createRow();
                     $save['user_id'] = $refid;
+                    $event = 'user_new';
                 } else {
                     $data['control']['u_login'] = $this->dataUsers->fetchRow(
                         $this->dataUsers->select()->where("u_id = ?", $refid)->limit(1)
                     )->u_login;
+                    $event = 'user_update';
                 }
 
                 $row->setFromArray($save);
                 $row->save();
+                $this->emit($event, $save);
             }
             if ($send_info_sw) {
                 $res = $this->sendUserInformation($data['control'], $update);
