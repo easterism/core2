@@ -3,6 +3,7 @@ require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Common.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
+require_once __DIR__ . '/../inc/classes/I18n.php';
 require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 
 class Workhorse
@@ -14,11 +15,14 @@ class Workhorse
             //$workload_size = $job->workloadSize();
             if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
                 $modWorker = $this->requireController($workload->module, $workload->location);
-                \Zend_Registry::set('config', unserialize($workload->config));
-                \Zend_Registry::set('context', $workload->context);
-                \Zend_Registry::set('auth', $workload->auth);
+
+                \Zend_Registry::set('config',      unserialize($workload->config));
+                \Zend_Registry::set('translate',   unserialize($workload->translate));
+                \Zend_Registry::set('context',     $workload->context);
+                \Zend_Registry::set('auth',        $workload->auth);
                 \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
-                // define("DOC_ROOT", $workload->location); //определять в модулях
+
+                define("DOC_ROOT", $workload->doc_root);
                 $modWorker = new $modWorker();
                 $action = $workload->worker;
 

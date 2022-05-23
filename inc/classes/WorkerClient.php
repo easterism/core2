@@ -13,7 +13,7 @@ class WorkerClient {
     private $location;
     private $module;
 
-    public function __construct() {
+  public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
         if ($cc->gearman->host) {
@@ -111,21 +111,27 @@ class WorkerClient {
     private function getWorkload($worker, $data) {
         $auth = new SessionContainer('Auth');
         if ($this->module === 'Admin') {
-            $workload = ['location' => $this->location,
-                'config'    => serialize(\Zend_Registry::get('config')),
-                'server'    => $_SERVER,
-                'auth'      => $auth->getArrayCopy(),
-                'payload'   => $data];
+            $workload = [
+                'location' => $this->location,
+                'config'   => serialize(\Zend_Registry::get('config')),
+                'server'   => $_SERVER,
+                'auth'     => $auth->getArrayCopy(),
+                'payload'  => $data
+            ];
+
         } else {
-            $workload = ['module' => $this->module,
+            $workload = [
+                'module'    => $this->module,
                 'location'  => $this->location,
-                'context'   => serialize(\Zend_Registry::get('context')),
+                'doc_root'  => DOC_ROOT,
                 'config'    => serialize(\Zend_Registry::get('config')),
                 'context'   => \Zend_Registry::get('context'),
+                'translate' => serialize(\Zend_Registry::get('translate')),
                 'worker'    => $worker,
                 'server'    => $_SERVER,
                 'auth'      => $auth->getArrayCopy(),
-                'payload'   => $data];
+                'payload'   => $data
+            ];
         }
         return json_encode($workload);
     }
