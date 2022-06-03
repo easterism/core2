@@ -342,10 +342,12 @@ class Db extends Table {
             }
         }
 
+        $records_per_page = $this->is_round_calc
+            ? $this->records_per_page + 1
+            : $this->records_per_page;
 
-        $offset = $this->current_page == 1 ? 0 : ($this->current_page - 1) * $this->records_per_page;
-        $select->limit((int)$this->records_per_page, (int)$offset);
-
+        $offset = ($this->current_page - 1) * $this->records_per_page;
+        $select->limit((int)$records_per_page, (int)$offset);
 
         if (isset($this->session->table->order) &&
             $this->session->table->order &&
