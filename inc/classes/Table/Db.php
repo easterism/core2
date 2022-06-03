@@ -513,6 +513,10 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
+                if ( ! isset($this->filter_controls[$key])) {
+                    continue;
+                }
+
                 $filter_column = $this->filter_controls[$key];
 
                 if ($filter_column instanceof Filter) {
