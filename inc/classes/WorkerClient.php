@@ -16,11 +16,14 @@ class WorkerClient {
     public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
-        if ($cc->gearman->host) {
+
+        if ($host = trim($cc->gearman->host)) {
             if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
             $this->client = new \GearmanClient();
+            //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
             try {
-                $this->client->addServers($cc->gearman->host);
+                //$this->assignCallbacks();
+                $this->client->addServers($host);
             } catch (\GearmanException $e) {
                 return new \stdObject();
             }
@@ -59,6 +62,12 @@ class WorkerClient {
         //}
     }
 
+    private function assignCallbacks() {
+        $this->client->setExceptionCallback(function (\GearmanTask $task) {
+            echo "<PRE>!!";print_r($task);echo "</PRE>";die;
+        });
+    }
+
     public function setModule($module) {
         $this->module = $module;
     }
@@ -75,8 +84,8 @@ class WorkerClient {
      * @return false|string
      */
     public function doBackground($worker, $data, $unique = null) {
+        $worker = $this->getWorkerName($worker);
         $workload = $this->getWorkload($worker, $data);
-        if ($this->module !== 'Admin') $worker = "Workhorse";
         $jh = $this->client->doBackground($worker, $workload, $unique);
         if ($this->client->returnCode() != GEARMAN_SUCCESS)
         {
@@ -93,8 +102,8 @@ class WorkerClient {
      * @return false|string
      */
     public function doHighBackground($worker, $data, $unique = null) {
+        $worker = $this->getWorkerName($worker);
         $workload = $this->getWorkload($worker, $data);
-        if ($this->module !== 'Admin') $worker = "Workhorse";
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
         if ($this->client->returnCode() != GEARMAN_SUCCESS)
         {
@@ -142,5 +151,12 @@ class WorkerClient {
 
     public function error() {
         return $this->client->getErrno();
+    }
+
+    private function getWorkerName($worker) {
+        $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(dirname(__DIR__))));
+        $dd = trim($dd, '-');
+        if ($this->module !== 'Admin') $worker = "Workhorse";
+        return $dd . "-" . $worker;
     }
 }
