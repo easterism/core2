@@ -99,9 +99,11 @@ class Db extends Table {
      * Получение данных из базы
      * @return Row[]
      * @throws \Zend_Db_Select_Exception
+     * @deprecated fetchRows
      */
     public function fetchData(): array {
 
+        $this->preFetchRows();
         return $this->fetchRows();
     }
 
@@ -112,6 +114,8 @@ class Db extends Table {
      * @throws \Zend_Db_Select_Exception
      */
     public function fetchRows(): array {
+
+        $this->preFetchRows();
 
         if ( ! $this->is_fetched) {
             $this->is_fetched = true;
