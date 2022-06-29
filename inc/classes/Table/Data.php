@@ -17,9 +17,11 @@ class Data extends Table {
     /**
      * Получение данных.
      * @return array
+     * @deprecated fetchRows
      */
     public function fetchData(): array {
 
+        $this->preFetchRows();
         return $this->fetchRows();
     }
 
@@ -29,6 +31,8 @@ class Data extends Table {
      * @return array
      */
     public function fetchRows(): array {
+
+        $this->preFetchRows();
 
         if ( ! $this->is_fetched && ! empty($this->data) && is_array($this->data)) {
             $this->is_fetched = true;

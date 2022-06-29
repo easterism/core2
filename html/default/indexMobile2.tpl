@@ -22,7 +22,7 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=3"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=4"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=5"></script>
