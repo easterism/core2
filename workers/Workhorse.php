@@ -22,12 +22,13 @@ class Workhorse
                 \Zend_Registry::set('auth',        $workload->auth);
                 \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
 
+
                 define("DOC_ROOT", $workload->doc_root);
                 $modWorker = new $modWorker();
                 $action = $workload->worker;
 
                 if (!method_exists($modWorker, $action)) {
-                    throw new Exception("Method does not exists: " . $action, 404);
+                    throw new Exception("Method does not exists: {$action}", 404);
                 }
 
                 //if ($modWorker instanceof Worker) {

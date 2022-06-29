@@ -342,10 +342,12 @@ class Db extends Table {
             }
         }
 
+        $records_per_page = $this->is_round_calc
+            ? $this->records_per_page + 1
+            : $this->records_per_page;
 
-        $offset = $this->current_page == 1 ? 0 : ($this->current_page - 1) * $this->records_per_page;
-        $select->limit((int)$this->records_per_page, (int)$offset);
-
+        $offset = ($this->current_page - 1) * $this->records_per_page;
+        $select->limit((int)$records_per_page, (int)$offset);
 
         if (isset($this->session->table->order) &&
             $this->session->table->order &&
@@ -513,6 +515,10 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
+                if ( ! isset($this->filter_controls[$key])) {
+                    continue;
+                }
+
                 $filter_column = $this->filter_controls[$key];
 
                 if ($filter_column instanceof Filter) {
