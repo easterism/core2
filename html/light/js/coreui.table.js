@@ -72,13 +72,13 @@ CoreUI.table = {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__clear=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -104,13 +104,13 @@ CoreUI.table = {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__search=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -137,13 +137,13 @@ CoreUI.table = {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__filter_clear=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -195,20 +195,19 @@ CoreUI.table = {
                 }
             });
 
-            //post = allInputs.serializeArray();
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -380,12 +379,12 @@ CoreUI.table = {
                     if (CoreUI.table.loc[resource]) {
                         if (isAjax) {
                             var container = document.getElementById("table-" + resource).parentNode;
-                            load(CoreUI.table.loc[resource], searchControls, container, function () {
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, container, function () {
                                 preloader.hide();
                             });
 
                         } else {
-                            load(CoreUI.table.loc[resource], searchControls, '', function () {
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, '', function () {
                                 preloader.hide();
                             });
                         }
@@ -464,12 +463,12 @@ CoreUI.table = {
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     var container = document.getElementById("table-" + resource).parentNode;
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.hide();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, '', function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, '', function () {
                         preloader.hide();
                     });
                 }
@@ -560,7 +559,7 @@ CoreUI.table = {
             CoreUI.table.preloader.show(resource);
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-            load(CoreUI.table.loc[resource] + '&__order=1', post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 CoreUI.table.preloader.hide(resource);
                 preloader.callback();
             });
@@ -568,7 +567,7 @@ CoreUI.table = {
             preloader.hide();
 
         } else {
-            load(CoreUI.table.loc[resource], post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                 preloader.callback();
             });
         }
@@ -626,6 +625,11 @@ CoreUI.table = {
     },
 
 
+    /**
+     * @param resource
+     * @param returnArray
+     * @returns {*[]|string|*}
+     */
     getChecked : function (resource, returnArray) {
         var j = 1;
         if (returnArray === true) {
@@ -652,8 +656,8 @@ CoreUI.table = {
         return val;
     },
 
+
     /**
-     *
      * @param resource
      * @param confirmMsg
      * @param noSelectMsg
@@ -849,7 +853,7 @@ CoreUI.table = {
 
         var post = {};
         post['count_' + resource] = select.value;
-        load(CoreUI.table.loc[resource], post, container, function () {
+        load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
             CoreUI.table.preloader.hide(resource);
             preloader.callback();
         });
