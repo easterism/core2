@@ -616,10 +616,9 @@ class WorkerManager {
 
             $this->toLog("Loading workers in ".$dir);
 
-            $worker_files = glob($dir."/*.php");
+            $worker_files = glob($dir . "/*.php");
 
             if (!empty($worker_files)) {
-
                 foreach ($worker_files as $file) {
 
                     $function = substr(basename($file), 0, -4);
@@ -1220,9 +1219,11 @@ class WorkerManager {
                 }
             }
         }
-
+        $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
+        $dd = trim($dd, '-');
         foreach ($worker_list as $w) {
-            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : null);
+            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : 0);
+            $w = $dd . "-" . $w;
             $this->toLog("Adding job $w ; timeout: " . $timeout, self::LOG_LEVEL_WORKER_INFO);
             $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
         }
@@ -1281,6 +1282,8 @@ class WorkerManager {
         $h = $job->handle();
         //TODO control handlers
         $job_name = $job->functionName();
+        $job_name = explode("-", $job_name);
+        $job_name = end($job_name);
 
         if ($this->prefix) {
             $func = $this->prefix.$job_name;
@@ -1382,6 +1385,9 @@ class WorkerManager {
     }
 
     private function validate_lib_workers() {
+
+        //$dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
+        //$dd = trim($dd, '-');
 
         foreach ($this->functions as $func => $props) {
             require_once $props["path"];

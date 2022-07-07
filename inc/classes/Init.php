@@ -145,22 +145,22 @@
 	//сохраняем параметры сессии
     if ($config->session) {
         $sess_config = new SessionConfig();
-        $sess_config->setOptions($config->session);
-        $sess_manager = new SessionManager($sess_config);
-        if ($config->session->saveHandler) {
+        if ($config->session->phpSaveHandler) {
             $options = ['namespace' => 'phpsess'];
             if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
             if ($config->session->savePath) $options['server'] = $config->session->savePath;
 
             if ($config->session->saveHandler === 'memcached') {
-                $adapter  = new Storage\Adapter\Memcached($options);
-                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                //$adapter  = new Storage\Adapter\Memcached($options);
+                //$sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
-            elseif ($config->session->saveHandler === 'redis') {
-                $adapter  = new Storage\Adapter\Redis($options);
-                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+            elseif ($config->session->phpSaveHandler === 'redis') {
+                //$adapter  = new Storage\Adapter\Redis($options);
+                //$sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
         }
+        $sess_config->setOptions($config->session);
+        $sess_manager = new SessionManager($sess_config);
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -248,7 +248,8 @@
                 Zend_Registry::set('auth', new StdClass());  //DEPRECATED
                 return;
             }
-
+            //echo "<PRE>";print_r(SessionContainer::getDefaultManager()->sessionExists());echo "</PRE>";die;
+            //echo 111; die;
             $this->auth = new SessionContainer('Auth');
             if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
