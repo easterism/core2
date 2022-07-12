@@ -10,10 +10,64 @@
 class Enum extends Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_enum';
-	private $_enum = array();
+	private $_enum   = [];
 
-	public function exists($expr, $var = array())
-	{
+
+    /**
+     * Добавление записи в справочник
+     * @param string $global_id
+     * @param string $value
+     * @param array  $custom
+     * @param array  $options
+     * @return int
+     * @throws Exception
+     */
+    public function createItem (string $global_id, string $value, array $custom = [], array $options = []) : int {
+
+        $select = $this->select()
+            ->where('global_id = ?', $global_id);
+        $enum = $this->fetchRow($select);
+
+        if (empty($enum)) {
+            throw new \Exception(sprintf('Справочник %s не найден', $global_id));
+        }
+
+        $custom_fields = [];
+
+        foreach ($custom as $key => $item) {
+            if (is_scalar($item)) {
+                $custom_fields[] = "{$key}::{$item}";
+            }
+        }
+
+
+        $select = $this->select()
+            ->from($this->_name, ['max_seq' => new \Zend_Db_Expr('MAX(seq)')])
+            ->where('parent_id = ?', $enum->id);
+
+        $items = $this->fetchRow($select);
+        $seq   = 1 + (int)($items ? $items->max_seq : 0);
+
+        $data = $this->createRow([
+            'parent_id'     => $enum->id,
+            'name'          => $value,
+            'is_default_sw' => $options['is_default'] ?? 'N',
+            'is_active_sw'  => $options['is_active_sw'] ?? 'Y',
+            'lastuser'      => $options['lastuser'] ?? null,
+            'seq'           => $seq,
+            'custom_field'  => $custom_fields ? implode(':::', $custom_fields) : null
+        ]);
+
+        return (int)$data->save();
+    }
+
+
+    /**
+     * @param $expr
+     * @param $var
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+	public function exists($expr, $var = []) {
 		$sel = $this->select()->where($expr, $var);
 		return $this->fetchRow($sel->limit(1));
 	}

@@ -645,16 +645,23 @@ var edit = {
 				    '<input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
 			    '</td>';
 
+			var tplFieldSelect =
+				'<td>' +
+					'<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+			    '</td>';
+
 			var fields = [];
 			var key    = this.keygen();
 
 			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
 				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
+					var tplFieldCustom = tplFieldText;
+
 					switch (field['type'] || 'text') {
-						case 'date':     var tplFieldCustom = tplFieldDate; break;
-						case 'datetime': var tplFieldCustom = tplFieldDatetime; break;
-						case 'number':   var tplFieldCustom = tplFieldNumber; break;
-						default:         var tplFieldCustom = tplFieldText; break;
+						case 'date':     tplFieldCustom = tplFieldDate; break;
+						case 'datetime': tplFieldCustom = tplFieldDatetime; break;
+						case 'number':   tplFieldCustom = tplFieldNumber; break;
+						case 'select':   tplFieldCustom = tplFieldSelect; break; // TODO доделать
 					}
 
 					if (field['code']) {
