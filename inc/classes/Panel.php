@@ -263,10 +263,15 @@ class Panel {
                         $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
                         $class = $this->active_tab == $tab['id'] ? 'active' : '';
 
-                        $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
-                        $tpl->tabs->elements->tab->assign('[CLASS]', $class);
-                        $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
-                        $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                        $onclick = isset($tab['options']['onclick']) && $tab['options']['onclick']
+                            ? $tab['options']['onclick']
+                            : "if (event.button === 0 && ! event.ctrlKey) load('{$url}');";
+
+                        $tpl->tabs->elements->tab->assign('[ID]',      $tab['id']);
+                        $tpl->tabs->elements->tab->assign('[CLASS]',   $class);
+                        $tpl->tabs->elements->tab->assign('[TITLE]',   $tab['title']);
+                        $tpl->tabs->elements->tab->assign('[ONCLICK]', $onclick);
+                        $tpl->tabs->elements->tab->assign('[URL]',     $url);
                     }
 
                 } else {
