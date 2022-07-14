@@ -84,8 +84,8 @@ class WorkerClient {
      * @return false|string
      */
     public function doBackground($worker, $data, $unique = null) {
-        $worker = $this->getWorkerName($worker);
         $workload = $this->getWorkload($worker, $data);
+        $worker = $this->getWorkerName($worker);
         $jh = $this->client->doBackground($worker, $workload, $unique);
         if ($this->client->returnCode() != GEARMAN_SUCCESS)
         {
@@ -102,8 +102,8 @@ class WorkerClient {
      * @return false|string
      */
     public function doHighBackground($worker, $data, $unique = null) {
-        $worker = $this->getWorkerName($worker);
         $workload = $this->getWorkload($worker, $data);
+        $worker = $this->getWorkerName($worker);
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
         if ($this->client->returnCode() != GEARMAN_SUCCESS)
         {
