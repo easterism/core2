@@ -161,6 +161,12 @@ class Render extends Acl {
             if ($this->table['show']['columnManage']) {
                 $tpl->controls->touchBlock('column_switcher_control');
 
+                if ( ! empty($this->table['show']['templates'])) {
+                    $tpl->column_switcher_container->touchBlock('column_btn_template');
+                } else {
+                    $tpl->column_switcher_container->touchBlock('column_btn');
+                }
+
                 if ( ! empty($this->table['columns'])) {
                     foreach ($this->table['columns'] as $key => $column) {
                         if (is_array($column)) {
@@ -242,6 +248,13 @@ class Render extends Acl {
             }
 
             $tpl->controls->touchBlock('search_control');
+
+
+            if ( ! empty($this->table['show']['templates'])) {
+                $tpl->search_container->touchBlock('search_btn_template');
+            } else {
+                $tpl->search_container->touchBlock('search_btn');
+            }
 
             foreach ($this->table['search'] as $key => $search) {
                 if (is_array($search)) {
@@ -541,6 +554,19 @@ class Render extends Acl {
             }
         }
 
+        // Шаблоны поиска
+        if ( ! empty($this->table['show']['templates']) && ! empty($this->table['templates'])) {
+
+            $tpl->controls->touchBlock('template_control');
+
+            $templates = array_reverse($this->table['templates']);
+
+            foreach ($templates as $template_id => $user_template) {
+                $tpl->templates_container->template_item->assign('[ID]',    $template_id);
+                $tpl->templates_container->template_item->assign('[TITLE]', $user_template['title']);
+                $tpl->templates_container->template_item->reassign();
+            }
+        }
 
         if ( ! empty($this->table['records'])) {
             $row_index  = 1;

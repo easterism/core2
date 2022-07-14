@@ -27,8 +27,8 @@
 
 	<link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=6" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=21" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=7" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=23" type="text/css"/>
 
 	<!--system_css-->
 
@@ -45,7 +45,9 @@
 	<script type="text/javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
 	<script type="text/javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
 	<script type="text/javascript" src="core2/html/material/js/coreui.notice.js?_=1"></script>
-	<script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=4"></script>
+	<script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=7"></script>
+	<script type="text/javascript" src="core2/html/material/js/coreui.panel.js?_=0"></script>
+	<script type="text/javascript" src="core2/html/material/js/coreui.tabs.js?_=0"></script>
 
 	<!--[if lte IE 10]>
 	<script type="text/javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>
@@ -60,10 +62,10 @@
 	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
-	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=2"></script>
-	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=9"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=3"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=10"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" src="core2/html/material/js/main.js?_=7"></script>
+	<script type="text/javascript" src="core2/html/material/js/main.js?_=8"></script>
     <!--[if IE]>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
     <![endif]-->

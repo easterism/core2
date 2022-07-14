@@ -17,26 +17,27 @@ class Panel {
     const TYPE_PILLS = 20;
     const TYPE_STEPS = 30;
 
-    protected $active_tab     = '';
-    protected $title          = '';
-    protected $tabs_width     = 0;
-    protected $description    = '';
-    protected $content        = '';
-    protected $resource       = '';
-    protected $tabs           = [];
-    protected $theme_src      = '';
-    protected $theme_location = '';
-    protected $back_url       = '';
-    protected $position       = self::POSITION_TOP;
-    protected $type           = self::TYPE_TABS;
+    protected $active_tab  = '';
+    protected $title       = '';
+    protected $tabs_width  = 0;
+    protected $description = '';
+    protected $content     = '';
+    protected $resource    = '';
+    protected $tabs        = [];
+    protected $back_url    = '';
+    protected $is_ajax    = false;
+    protected $position    = self::POSITION_TOP;
+    protected $type        = self::TYPE_TABS;
 
 
     /**
      * Panel constructor.
      * @param string $resource
      */
-    public function __construct($resource = '') {
+    public function __construct(string $resource = '') {
+
         $this->resource = $resource ?: crc32(time() . rand(0, 10000));
+
         if (isset($_GET[$this->resource])) {
             $this->active_tab = $_GET[$this->resource];
         }
@@ -45,10 +46,11 @@ class Panel {
 
     /**
      * Установка позиции
-     * @param  int $position
+     * @param int $position
      * @throws Exception
      */
-    public function setPosition($position) {
+    public function setPosition(int $position): void {
+
         $positions = [
             self::POSITION_TOP,
             self::POSITION_LEFT,
@@ -65,15 +67,17 @@ class Panel {
 
     /**
      * Установка типа для закладок
-     * @param  int $type
+     * @param int $type
      * @throws Exception
      */
-    public function setTypeTabs($type) {
+    public function setTypeTabs(int $type): void {
+
         $types = [
             self::TYPE_TABS,
             self::TYPE_PILLS,
             self::TYPE_STEPS
         ];
+
         if (in_array($type, $types)) {
             $this->type = $type;
         } else {
@@ -87,7 +91,7 @@ class Panel {
      * @param int $width
      * @throws Exception
      */
-    public function setWidthTabs($width) {
+    public function setWidthTabs(int $width): void {
 
         if ($width < 10) {
             throw new Exception('Invalid width');
@@ -98,14 +102,25 @@ class Panel {
 
 
     /**
-     * @param        $title
+     * @param string $title
      * @param string $description
      * @param string $back_url
+     * @return void
      */
-    public function setTitle($title, $description = '', $back_url = '') {
+    public function setTitle(string $title, string $description = '', string $back_url = ''): void {
+
         $this->title       = $title;
         $this->description = $description;
         $this->back_url    = str_replace('?', '#', $back_url);
+    }
+
+
+    /**
+     * @param bool $is_ajax
+     */
+    public function setAjax(bool $is_ajax = true): void {
+
+        $this->is_ajax = $is_ajax;
     }
 
 
@@ -116,7 +131,7 @@ class Panel {
      * @param string $url
      * @param array  $options
      */
-    public function addTab($title, $id, $url, $options = []) {
+    public function addTab(string $title, string $id, string $url, array $options = []): void {
 
         $tab_options = is_array($options) ? $options : [];
 
@@ -138,7 +153,7 @@ class Panel {
     /**
      * Добавление разделителя
      */
-    public function addDivider() {
+    public function addDivider(): void {
 
         $this->tabs[] = [
             'type' => 'divider'
@@ -150,7 +165,8 @@ class Panel {
      * Установка содержимого для контейнера
      * @param string $content
      */
-    public function setContent($content) {
+    public function setContent(string $content): void {
+
         $this->content = $content;
     }
 
@@ -159,7 +175,8 @@ class Panel {
      * Установка активного таба по умолчанию
      * @param string $tab_id
      */
-    public function setDefaultTab($tab_id) {
+    public function setDefaultTab(string $tab_id): void {
+
         if ( ! isset($_GET[$this->resource])) {
             $this->active_tab = $tab_id;
         }
@@ -170,7 +187,7 @@ class Panel {
      * Получение идентификатора активного таба
      * @return string
      */
-    public function getActiveTab() {
+    public function getActiveTab(): string {
 
         if ($this->active_tab == '' && ! empty($this->tabs)) {
             reset($this->tabs);
@@ -187,7 +204,7 @@ class Panel {
      * @return string
      * @throws Exception
      */
-    public function render() {
+    public function render(): string {
 
         $tpl = new Templater3(DOC_ROOT . "/core2/html/" . THEME . '/html/panel.html');
 
@@ -263,10 +280,22 @@ class Panel {
                         $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
                         $class = $this->active_tab == $tab['id'] ? 'active' : '';
 
-                        $tpl->tabs->elements->tab->assign('[ID]',    $tab['id']);
-                        $tpl->tabs->elements->tab->assign('[CLASS]', $class);
-                        $tpl->tabs->elements->tab->assign('[TITLE]', $tab['title']);
-                        $tpl->tabs->elements->tab->assign('[URL]',   $url);
+                        if (isset($tab['options']['onclick']) && $tab['options']['onclick']) {
+                            $onclick = $tab['options']['onclick'];
+
+                        } else {
+                            if ($this->is_ajax) {
+                                $onclick = "CoreUI.panel.loadContent('{$this->resource}', '{$tab['id']}', '{$url}', event);";
+                            } else {
+                                $onclick = "if (event.button === 0 && ! event.ctrlKey) load('{$url}');";
+                            }
+                        }
+
+                        $tpl->tabs->elements->tab->assign('[ID]',      $tab['id']);
+                        $tpl->tabs->elements->tab->assign('[CLASS]',   $class);
+                        $tpl->tabs->elements->tab->assign('[TITLE]',   $tab['title']);
+                        $tpl->tabs->elements->tab->assign('[ONCLICK]', $onclick);
+                        $tpl->tabs->elements->tab->assign('[URL]',     $url);
                     }
 
                 } else {

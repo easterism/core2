@@ -92,6 +92,7 @@ abstract class Table extends Acl {
 
     /**
      * @param string $resource
+     * @throws \Zend_Db_Adapter_Exception|Exception
      */
 	public function __construct(string $resource) {
 
@@ -523,6 +524,22 @@ abstract class Table extends Acl {
 
 
     /**
+     *
+     */
+    public function showTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
      * Рендеринг таблицы
      * @return string
      * @throws \Exception
@@ -538,6 +555,7 @@ abstract class Table extends Acl {
     /**
      * Получение данных по таблице
      * @return array
+     * @throws Exception
      */
     public function toArray(): array {
 
@@ -597,6 +615,11 @@ abstract class Table extends Acl {
                     $filter[] = $filter_control->toArray();
                 }
             }
+        }
+
+        if ($profile_controller = $this->getProfileController()) {
+            $hash      = $this->getUniqueHash();
+            $templates = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
         }
 
 
@@ -751,10 +774,60 @@ abstract class Table extends Acl {
 
 
     /**
-     * Получение данных.
-     * @return array
+     * @return void
+     * @throws Exception
+     * @throws \Zend_Db_Adapter_Exception
      */
-    abstract public function fetchData(): array;
+    public function preFetchRows(): void {
+
+        //TEMPLATES
+        if ( ! empty($_POST['template_create_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_title = $_POST['template_create_' . $this->resource];
+                $hash           = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+                $template[hash('crc32b', $template_title)] = [
+                    'title'  => $template_title,
+                    'search' => $this->session->table->search ?? [],
+                    'column' => $this->session->table->columns ?? [],
+                ];
+
+                $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+            }
+        }
+
+        if ( ! empty($_POST['template_remove_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_remove_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+                $template    = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template    = $template ?: [];
+
+
+                if (isset($template[$template_id])) {
+                    unset($template[$template_id]);
+                    $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+                }
+            }
+        }
+
+        if ( ! empty($_POST['template_select_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_select_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+
+                if (isset($template[$template_id])) {
+                    $this->session->table->search  = $template[$template_id]['search'];
+                    $this->session->table->columns = $template[$template_id]['column'];
+                }
+            }
+        }
+    }
 
 
     /**
@@ -773,5 +846,50 @@ abstract class Table extends Acl {
         if (isset($this->locutions[$locution])) {
             $this->locutions[$locution] = $text;
         }
+    }
+
+
+    /**
+     * Получение контроллера профиля
+     * @return \ModProfileController|null
+     * @throws Exception
+     * @throws \Exception
+     */
+    private function getProfileController(): ?\ModProfileController {
+
+        if ($this->isModuleInstalled('profile')) {
+            $profile_location = $this->getModuleLocation('profile');
+
+            if (file_exists("$profile_location/vendor/autoload.php")) {
+                require_once "$profile_location/vendor/autoload.php";
+            }
+
+            require_once "$profile_location/ModProfileController.php";
+
+            return new \ModProfileController();
+
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Получение хэша соответствующего текущему набору поисковых полей, колонок и имени
+     * @return string
+     */
+    private function getUniqueHash(): string {
+
+        $indicators = [];
+
+        foreach ($this->search_controls as $search) {
+            $indicators[] = $search->getType();
+        }
+
+        $indicators[] = $this->columns
+            ? count($this->columns)
+            : 0;
+
+        return hash('crc32b', $this->resource . implode('', $indicators));
     }
 }

@@ -19,6 +19,7 @@ class Db extends Table {
     protected $primary_key   = '';
     protected $query         = '';
     protected $query_params  = '';
+    protected $order         = null;
     protected $select        = null;
     protected $is_fetched    = false;
     protected $query_parts   = [];
@@ -96,12 +97,25 @@ class Db extends Table {
 
 
     /**
+     * Установка сортировки
+     * @param string      $order
+     * @return void
+     */
+    public function setOrder(string $order) {
+
+        $this->order = $order;
+    }
+
+
+    /**
      * Получение данных из базы
      * @return Row[]
      * @throws \Zend_Db_Select_Exception
+     * @deprecated fetchRows
      */
     public function fetchData(): array {
 
+        $this->preFetchRows();
         return $this->fetchRows();
     }
 
@@ -112,6 +126,8 @@ class Db extends Table {
      * @throws \Zend_Db_Select_Exception
      */
     public function fetchRows(): array {
+
+        $this->preFetchRows();
 
         if ( ! $this->is_fetched) {
             $this->is_fetched = true;
@@ -349,7 +365,12 @@ class Db extends Table {
         $offset = ($this->current_page - 1) * $this->records_per_page;
         $select->limit((int)$records_per_page, (int)$offset);
 
-        if (isset($this->session->table->order) &&
+        if (is_string($this->order) && $this->order !== '') {
+            $order_type = $this->session->table->order_type ?? 'ASC';
+            $select->reset('order');
+            $select->order("{$this->order} {$order_type}");
+
+        } elseif (isset($this->session->table->order) &&
             $this->session->table->order &&
             isset($this->columns[$this->session->table->order - 1])
         ) {
@@ -630,7 +651,11 @@ class Db extends Table {
         }
 
 
-        if (isset($this->session->table->order) &&
+        if (is_string($this->order) && $this->order !== '') {
+            $order_type = $this->session->table->order_type ?? 'ASC';
+            $select->setOrderBy("{$this->order} {$order_type}");
+
+        } elseif (isset($this->session->table->order) &&
             $this->session->table->order &&
             isset($this->columns[$this->session->table->order - 1])
         ) {
