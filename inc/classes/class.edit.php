@@ -818,7 +818,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>" : '';
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<div>" . nl2br(htmlspecialchars_decode($value['default'])) . "</div>" : '';
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
