@@ -606,8 +606,6 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'];
 
                             } else {
-                                $this->scripts['color'] = true;
-
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
