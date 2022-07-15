@@ -1313,9 +1313,9 @@ class WorkerManager {
             }
 
         }
+        $job_name_log = $this->getRealJobName($job_name);
 
-        $this->toLog("($h) Starting Job: $job_name", self::LOG_LEVEL_WORKER_INFO);
-
+        $this->toLog("($h) Starting Job: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
         $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
@@ -1324,14 +1324,14 @@ class WorkerManager {
          * Run the real function here
          */
         if (isset($objects[$job_name])) {
-            $this->toLog("($h) Calling object for $job_name.", self::LOG_LEVEL_DEBUG);
+            $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
 
             $result = $objects[$job_name]->run($job, $log);
         } elseif (function_exists($func)) {
-            $this->toLog("($h) Calling function for $job_name.", self::LOG_LEVEL_DEBUG);
+            $this->toLog("($h) Calling function for $job_name_log.", self::LOG_LEVEL_DEBUG);
             $result = $func($job, $log);
         } else {
-            $this->toLog("($h) FAILED to find a function or class for $job_name.", self::LOG_LEVEL_INFO);
+            $this->toLog("($h) FAILED to find a function or class for $job_name_log.", self::LOG_LEVEL_INFO);
         }
 
         if (!empty($log)) {
@@ -1400,5 +1400,11 @@ class WorkerManager {
             }
         }
 
+    }
+
+    private function getRealJobName($job_name) {
+        $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
+        $dd = trim($dd, '-');
+        return $dd . "-" . $job_name;
     }
 }
