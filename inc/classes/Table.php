@@ -50,6 +50,7 @@ abstract class Table extends Acl {
     protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
+    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
     protected $is_ajax                  = false;
@@ -252,6 +253,16 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param array $page_list
+     * @return int[]
+     */
+    public function setRecordsPerPageList(array $page_list): array {
+
+        return $this->records_per_page_list = $page_list;
+    }
+
+
+    /**
      * Использование примерного подсчета количества
      * @param bool $is_round_calc
      * @return void
@@ -400,6 +411,15 @@ abstract class Table extends Acl {
     public function getRecordsPerPage(): int {
 
         return (int)$this->records_per_page;
+    }
+
+
+    /**
+     * @return int[]
+     */
+    public function getRecordsPerPageList(): array {
+
+        return $this->records_per_page_list;
     }
 
 
@@ -623,7 +643,7 @@ abstract class Table extends Acl {
         }
 
 
-        $per_page_list = [ 25, 50, 100, 1000 ];
+        $per_page_list = $this->records_per_page_list;
 
         if ($this->records_per_page_default > 0 &&
             ! in_array($this->records_per_page_default, $per_page_list)

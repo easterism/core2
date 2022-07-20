@@ -220,14 +220,13 @@ class Render extends Acl {
 
                 if ( ! empty($this->table['recordsPerPageList'])) {
                     foreach ($this->table['recordsPerPageList'] as $per_page_count) {
-                        if (is_numeric($per_page_count) && $per_page_count > 0) {
-                            $per_page_list[$per_page_count] = $per_page_count;
+                        if (is_numeric($per_page_count)) {
+                            $per_page_list[$per_page_count] = $per_page_count == 0
+                                ? $this->getLocution('All')
+                                : $per_page_count;
                         }
                     }
                 }
-                ksort($per_page_list);
-
-                $per_page_list[0] = $this->getLocution('All');
 
                 $tpl->footer->pages->per_page->fillDropDown(
                     'records-per-page-[RESOURCE]',
