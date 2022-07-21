@@ -374,10 +374,31 @@ class Login extends Db {
                         $isset_phone = true;
                     }
 
-                    $tpl->field->assign('[NAME]',     $name);
-                    $tpl->field->assign('[TYPE]',     $type);
-                    $tpl->field->assign('[TITLE]',    ! empty($field['title']) ? htmlspecialchars($field['title']) : '');
-                    $tpl->field->assign('[REQUIRED]', ! empty($field['required']) ? 'required' : '');
+                    if ($type == 'select') {
+                        $tpl->field->select->assign('[NAME]',     $name);
+                        $tpl->field->select->assign('[TITLE]',    ! empty($field['title']) ? htmlspecialchars($field['title']) : '');
+                        $tpl->field->select->assign('[REQUIRED]', ! empty($field['required']) ? 'required' : '');
+
+                        if ( ! empty($field['options']) && is_array($field['options'])) {
+                            foreach ($field['options'] as $option_val => $option_title) {
+                                if (is_string($option_title)) {
+                                    $tpl->field->select->select_option->assign('[VALUE]', $option_val);
+                                    $tpl->field->select->select_option->assign('[TITLE]', $option_title);
+                                    $tpl->field->select->select_option->reassign();
+                                }
+                            }
+                        }
+
+                        $tpl->field->select->reassign();
+
+                    } else {
+                        $tpl->field->input->assign('[NAME]',     $name);
+                        $tpl->field->input->assign('[TYPE]',     $type);
+                        $tpl->field->input->assign('[TITLE]',    ! empty($field['title']) ? htmlspecialchars($field['title']) : '');
+                        $tpl->field->input->assign('[REQUIRED]', ! empty($field['required']) ? 'required' : '');
+                        $tpl->field->input->reassign();
+                    }
+
                     $tpl->field->reassign();
                 }
             }

@@ -15,8 +15,19 @@
 
         <!-- BEGIN field -->
         <div class="form-group">
-            <input type="[TYPE]" name="[NAME]" class="form-control"
-                   placeholder="[TITLE]" [REQUIRED]>
+            <!-- BEGIN input -->
+            <input type="[TYPE]" name="[NAME]" class="form-control" placeholder="[TITLE]" [REQUIRED]>
+            <!-- END input -->
+
+            <!-- BEGIN select -->
+            <select name="[NAME]" class="form-control" [REQUIRED]>
+                <option value="" disabled selected hidden>[TITLE]</option>
+
+                <!-- BEGIN select_option -->
+                <option value="[VALUE]">[TITLE]</option>
+                <!-- END select_option -->
+            </select>
+            <!-- END select -->
         </div>
         <!-- END field -->
 

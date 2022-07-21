@@ -19,10 +19,25 @@
 
                 <!-- BEGIN field -->
                 <tr>
+                    <!-- BEGIN input -->
                     <td align="right">[TITLE]</td>
                     <td align="left">
                         <input type="[TYPE]" name="[NAME]" class="form-control" [REQUIRED]>
                     </td>
+                    <!-- END input -->
+
+                    <!-- BEGIN select -->
+                    <td align="right">[TITLE]</td>
+                    <td align="left">
+                        <select name="[NAME]" class="form-control" [REQUIRED]>
+                            <option value="" disabled selected hidden></option>
+
+                            <!-- BEGIN select_option -->
+                            <option value="[VALUE]">[TITLE]</option>
+                            <!-- END select_option -->
+                        </select>
+                    </td>
+                    <!-- END select -->
                 </tr>
                 <!-- END field -->
 
