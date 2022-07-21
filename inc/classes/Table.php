@@ -651,7 +651,12 @@ abstract class Table extends Acl {
             $per_page_list[] = $this->records_per_page_default;
         }
 
-        ksort($per_page_list);
+        sort($per_page_list);
+
+        if (($all_key = array_search('0', $per_page_list)) !== false) {
+            unset($per_page_list[$all_key]);
+            $per_page_list[] = 0;
+        }
 
         $data = [
             'resource' => $this->resource,
