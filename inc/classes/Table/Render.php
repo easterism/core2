@@ -383,13 +383,12 @@ class Render extends Acl {
                         continue;
                     }
 
-                    $control_value     = $filter_value[$key] ?? '';
-                    $filter_attributes = $filter;
-                    $attributes_str    = '';
+                    $control_value  = $filter_value[$key] ?? '';
+                    $attributes_str = '';
 
                     if ( ! empty($filter['attr'])) {
                         $attributes = [];
-                        foreach ($filter_attributes as $attr => $value) {
+                        foreach ($filter['attr'] as $attr => $value) {
                             if (is_string($attr) && is_string($value)) {
                                 $attributes[] = "$attr=\"{$value}\"";
                             }
