@@ -39,6 +39,8 @@ abstract class Table extends Acl {
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $group_field              = '';
+    protected $group_options            = [];
     protected $data                     = [];
     protected $data_rows                = [];
     protected $columns                  = [];
@@ -302,6 +304,19 @@ abstract class Table extends Acl {
         }
 
         $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка группировки строк по полю
+     * @param string $field_name
+     * @param array  $options
+     * @return void
+     */
+    public function setGroupBy(string $field_name, array $options = []): void {
+
+        $this->group_field   = $field_name;
+        $this->group_options = $options;
     }
 
 
@@ -686,6 +701,10 @@ abstract class Table extends Acl {
         }
         if ($this->table_name) {
             $data['tableName'] = $this->table_name;
+        }
+        if ($this->group_field) {
+            $data['groupField']   = $this->group_field;
+            $data['groupOptions'] = $this->group_options;
         }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;
