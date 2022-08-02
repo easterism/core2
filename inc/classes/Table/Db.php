@@ -353,8 +353,20 @@ class Db extends Table {
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth = \Zend_Registry::get('auth');
-                $select->where("{$this->table}.author = ?", $auth->NAME);
+                $auth   = \Zend_Registry::get('auth');
+                $alias  = "{$this->table}.";
+                $tables = $select->getPart($select::FROM);
+
+                if ( ! empty($tables)) {
+                    foreach ($tables as $table_alias => $table) {
+                        if ($table['tableName'] == $this->table) {
+                            $alias = "`{$table_alias}`.";
+                            break;
+                        }
+                    }
+                }
+
+                $select->where("{$alias}author = ?", $auth->NAME);
             }
         }
 
@@ -646,7 +658,10 @@ class Db extends Table {
             ) {
                 $auth         = \Zend_Registry::get('auth');
                 $quoted_value = $this->db->quote($auth->NAME);
-                $select->addWhere("{$this->table}.author = {$quoted_value}");
+                $alias        = $select->getTableAlias();
+                $alias        = $alias ? "{$alias}." : "{$this->table}.";
+
+                $select->addWhere("{$alias}author = {$quoted_value}");
             }
         }
 

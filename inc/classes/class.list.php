@@ -356,8 +356,8 @@ class listTable extends initList {
             $this->sessData[$pagePOST] = (int)$_GET[$pagePOST];
             if (!$this->sessData[$pagePOST]) $this->sessData[$pagePOST] = 1;
         }
-        $ss->$ssi = $tmp;
-        $search = "";
+        $ss->$ssi  = $tmp;
+        $search    = "";
         $questions = array();
 
         //проверка наличия полей для последовательности и автора
@@ -383,7 +383,8 @@ class listTable extends initList {
                 } else {
                     $auth        = \Zend_Registry::get('auth');
                     $questions[] = $auth->NAME;
-                    $search      = " AND {$this->table}.author = ?";
+                    // FIXME Может быть случай, когда в запросе есть две таблицы с полем author. Нужно подставлять alias
+                    $search      = " AND author = ?";
                 }
             }
         }
