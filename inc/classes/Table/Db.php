@@ -354,7 +354,7 @@ class Db extends Table {
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
                 $auth = \Zend_Registry::get('auth');
-                $select->where("author = ?", $auth->NAME);
+                $select->where("{$this->table}.author = ?", $auth->NAME);
             }
         }
 
@@ -646,7 +646,7 @@ class Db extends Table {
             ) {
                 $auth         = \Zend_Registry::get('auth');
                 $quoted_value = $this->db->quote($auth->NAME);
-                $select->addWhere("author = {$quoted_value}");
+                $select->addWhere("{$this->table}.author = {$quoted_value}");
             }
         }
 

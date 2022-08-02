@@ -383,7 +383,7 @@ class listTable extends initList {
                 } else {
                     $auth        = \Zend_Registry::get('auth');
                     $questions[] = $auth->NAME;
-                    $search      = " AND author = ?";
+                    $search      = " AND {$this->table}.author = ?";
                 }
             }
         }
