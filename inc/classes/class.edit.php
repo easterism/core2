@@ -484,6 +484,27 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
+						elseif ($value['type'] == 'time') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'datetime_local') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"datetime-local\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'week') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
 						elseif ($value['type'] == 'number') { // только цифры
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
