@@ -26,14 +26,6 @@ class Db extends Table {
 
 
     /**
-     * @param string $resource
-     */
-    public function __construct(string $resource) {
-        parent::__construct($resource);
-    }
-
-
-    /**
      * @return \Zend_Db_Select|null
      */
     public function getSelect():? \Zend_Db_Select {
@@ -115,7 +107,6 @@ class Db extends Table {
      */
     public function fetchData(): array {
 
-        $this->preFetchRows();
         return $this->fetchRows();
     }
 

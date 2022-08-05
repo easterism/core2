@@ -625,6 +625,8 @@ class Render extends Acl {
                     ) {
 
                         $edit_url = $this->replaceTCOL($row, $this->table['recordsEditUrl']);
+                        $edit_url = str_replace('TCOL_#', $row_index - 1, $edit_url);
+
                         $row['attr']['class'] = isset($row['attr']['class'])
                             ? $row['attr']['class'] .= ' edit-row'
                             : 'edit-row';
