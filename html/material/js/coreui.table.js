@@ -807,7 +807,6 @@ CoreUI.table = {
             $.ajax({
                 method : 'get',
                 url    : url,
-                async  : false,
                 success: function (response) {
                     row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
                     row.addClass('row-expanded');

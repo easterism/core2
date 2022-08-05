@@ -2429,8 +2429,8 @@ table.coreui-table > thead > .table-control-panel {height: 35px;}
 
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
-table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > td,
-table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > th {background-color: #E1ECF1;}
+table.coreui-table > tbody > tr.row-table:not(.coreui-table-row-group):hover > td,
+table.coreui-table > tbody > tr.row-table:not(.coreui-table-row-group):hover > th {background-color: #E1ECF1;}
 
 table.coreui-table > caption + thead > tr:first-child > th,
 table.coreui-table > colgroup + thead > tr:first-child > th,
