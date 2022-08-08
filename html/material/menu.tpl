@@ -95,6 +95,7 @@
     #home-button > a { color: [TEXT_COLOR] }
 
     #main-content #sidebar-toggle { color: [TEXT_COLOR] }
+    #menu-modules .menu-module a, #menu-modules .menu-module-selected a { color: [TEXT_COLOR] }
 
     #menu-modules .menu-module:hover a,
     #menu-modules .menu-module a:hover,
