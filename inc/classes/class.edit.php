@@ -1437,7 +1437,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
-                                $tpl->assign('[OPTIONS]',    json_encode($value['in']));
+                                $tpl->assign('[OPTIONS]',    addslashes(json_encode($value['in'])));
 
                                 $tpl->touchBlock('delete_col');
                                 $tpl->touchBlock('edit_controls');

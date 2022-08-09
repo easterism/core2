@@ -601,16 +601,33 @@ var edit = {
 				'<input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
 				'</td>';
 
+			var tplFieldSelect =
+				'<td>' +
+				'<select class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>[OPTIONS]</select>' +
+				'</td>';
+
 			var fields = [];
 			var key    = this.keygen();
 
 			if (typeof edit.fieldDataset.data[fieldId] !== "undefined") {
 				$.each(edit.fieldDataset.data[fieldId], function (id, field) {
+					var tplFieldCustom = tplFieldText;
+
 					switch (field['type'] || 'text') {
-						case 'date':     var tplFieldCustom = tplFieldDate; break;
-						case 'datetime': var tplFieldCustom = tplFieldDatetime; break;
-						case 'number':   var tplFieldCustom = tplFieldNumber; break;
-						default:         var tplFieldCustom = tplFieldText; break;
+						case 'date':     tplFieldCustom = tplFieldDate; break;
+						case 'datetime': tplFieldCustom = tplFieldDatetime; break;
+						case 'number':   tplFieldCustom = tplFieldNumber; break;
+						case 'select':
+							var selectOptions = '';
+
+							$.each(field['options'], function (value, title) {
+								var selected = value === '' ? 'selected' : '';
+								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
+							});
+
+							tplFieldCustom = tplFieldSelect;
+							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
+							break;
 					}
 
 					if (field['code']) {

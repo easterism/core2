@@ -647,7 +647,7 @@ var edit = {
 
 			var tplFieldSelect =
 				'<td>' +
-					'<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
+					'<select class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>[OPTIONS]</select>' +
 			    '</td>';
 
 			var fields = [];
@@ -661,7 +661,17 @@ var edit = {
 						case 'date':     tplFieldCustom = tplFieldDate; break;
 						case 'datetime': tplFieldCustom = tplFieldDatetime; break;
 						case 'number':   tplFieldCustom = tplFieldNumber; break;
-						case 'select':   tplFieldCustom = tplFieldSelect; break; // TODO доделать
+						case 'select':
+							var selectOptions = '';
+
+							$.each(field['options'], function (value, title) {
+								var selected = value === '' ? 'selected' : '';
+								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
+							});
+
+							tplFieldCustom = tplFieldSelect;
+							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
+							break;
 					}
 
 					if (field['code']) {

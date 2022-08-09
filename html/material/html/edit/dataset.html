@@ -68,7 +68,11 @@
        onclick="edit.fieldDataset.addItem('[FIELD_ID]', '[FIELD]', '[THEME_PATH]'); return false">_tr(Добавить)</button>
 
     <script>
-        edit.fieldDataset.data['[FIELD_ID]'] = [OPTIONS];
+        try {
+            edit.fieldDataset.data['[FIELD_ID]'] = JSON.parse('[OPTIONS]');
+        } catch (e) {
+            // ignore
+        }
     </script>
     <!-- END edit_controls -->
 </div>
