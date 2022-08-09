@@ -665,7 +665,14 @@ var edit = {
 							var selectOptions = '';
 
 							$.each(field['options'], function (value, title) {
-								var selected = value === '' ? 'selected' : '';
+								var selected = '';
+
+								if (field['default_value']) {
+									selected = field['default_value'] === value ? 'selected' : '';
+								} else {
+									selected = value === '' ? 'selected' : ''
+								}
+
 								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
 							});
 
@@ -678,7 +685,7 @@ var edit = {
 						tplFieldCustom = tplFieldCustom.replace(/\[FIELD\]/g,      fieldName);
 						tplFieldCustom = tplFieldCustom.replace(/\[NUM\]/g,        key);
 						tplFieldCustom = tplFieldCustom.replace(/\[CODE\]/g,       field['code']);
-						tplFieldCustom = tplFieldCustom.replace(/\[VALUE\]/g,      '');
+						tplFieldCustom = tplFieldCustom.replace(/\[VALUE\]/g,      field['default_value'] || '');
 						tplFieldCustom = tplFieldCustom.replace(/\[ATTRIBUTES\]/g, field['attributes'] || '');
 
 						fields.push(tplFieldCustom);

@@ -1515,9 +1515,13 @@ class editTable extends initEdit {
 
                                         if ($type_name == 'select' && ! empty($item_field['options'])) {
                                             foreach ($item_field['options'] as $option_value => $option_title) {
+                                                $selected = isset($item_field['default_value']) && $item_field['default_value'] == $option_value
+                                                    ? 'selected'
+                                                    : '';
+
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', '');
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $selected);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                             }
                                         }
@@ -1525,7 +1529,7 @@ class editTable extends initEdit {
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        1);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      '');
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $item_field['default_value'] ?? '');
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
                                         $tpl->item->field->reassign();
                                     }
