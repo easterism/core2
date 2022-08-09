@@ -42,7 +42,7 @@ class Common extends \Core2\Acl {
         if ($child_class_name == 'CoreController') {
             $child_class_name = 'admin';
         } else {
-            $child_class_name = preg_match('~^Mod[A-z0-9\_]+Controller$~', $child_class_name)
+            $child_class_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli)$~', $child_class_name)
                 ? substr($child_class_name, 3, -10)
                 : '';
         }

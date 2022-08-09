@@ -326,7 +326,7 @@
 
       <!-- BEGIN templates_container -->
       <tr class="templates-container" style="display:none" id="templates-[RESOURCE]">
-        <td colspan="100">
+        <td colspan="1000">
           <div class="coreui-table-template-items">
             <!-- BEGIN template_item -->
             <div class="coreui-table-template-item">
@@ -401,36 +401,48 @@
       </thead>
       <tbody>
 
-      <!-- BEGIN row -->
+      <!-- BEGIN rows -->
       <tr>
-        <!-- BEGIN row_number -->
-        <td title="[ID]" class="number-row">[#]</td>
-        <!-- END row_number -->
+        <!-- BEGIN group -->
+        <td colspan="[COLS]" class="coreui-table-row-group" [ATTR]>[VALUE]</td>
 
-        <!-- BEGIN col -->
-        <td [ATTR]>
-          <!-- BEGIN default -->[VALUE]<!-- END default -->
-          <!-- BEGIN switch -->
-          <div class="coreui-table-switch [COLOR]" onclick="CoreUI.table.switchToggle('[RESOURCE]', '[TABLE].[FIELD]', '[ID]', this)">
-            <input type="radio" class="coreui-table-switch-active" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_Y]" [CHECKED_Y]>
-            <input type="radio" class="coreui-table-switch-inactive" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_N]" [CHECKED_N]>
-            <span class="coreui-table-switch-slider"></span>
-          </div>
-          <!-- END switch -->
-        </td>
-        <!-- END col -->
-
-        <!-- BEGIN checkboxes -->
+        <!-- BEGIN group_checkbox -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
-          <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+          <input type="checkbox" onclick="CoreUI.table.checkGroup(this)"/>
         </td>
-        <!-- END checkboxes -->
+        <!-- END group_checkbox -->
+        <!-- END group -->
+
+        <!-- BEGIN row -->
+          <!-- BEGIN row_number -->
+          <td title="[ID]" class="number-row">[#]</td>
+          <!-- END row_number -->
+
+          <!-- BEGIN col -->
+          <td [ATTR]>
+            <!-- BEGIN default -->[VALUE]<!-- END default -->
+            <!-- BEGIN switch -->
+            <div class="coreui-table-switch [COLOR]" onclick="CoreUI.table.switchToggle('[RESOURCE]', '[TABLE].[FIELD]', '[ID]', this)">
+              <input type="radio" class="coreui-table-switch-active" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_Y]" [CHECKED_Y]>
+              <input type="radio" class="coreui-table-switch-inactive" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_N]" [CHECKED_N]>
+              <span class="coreui-table-switch-slider"></span>
+            </div>
+            <!-- END switch -->
+          </td>
+          <!-- END col -->
+
+          <!-- BEGIN checkboxes -->
+          <td class="checked-row" onclick="event.cancelBubble=true;">
+            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+          </td>
+          <!-- END checkboxes -->
+        <!-- END row -->
       </tr>
-      <!-- END row -->
+      <!-- END rows -->
 
       <!-- BEGIN no_rows -->
       <tr>
-        <td align="center" colspan="100">_tr(Нет записей)</td>
+        <td align="center" colspan="1000">_tr(Нет записей)</td>
       </tr>
       <!-- END no_rows -->
 
@@ -438,7 +450,7 @@
       <!-- BEGIN footer -->
       <tfoot><tr><td colspan="1000">
         <!-- BEGIN pages -->
-        <table width="100%"><tr>
+        <table style="width:100%"><tr>
           <!-- BEGIN gotopage -->
           <td align="left">
             <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"

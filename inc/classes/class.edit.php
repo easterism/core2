@@ -484,6 +484,27 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
+						elseif ($value['type'] == 'time') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'datetime_local') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"datetime-local\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'week') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
 						elseif ($value['type'] == 'number') { // только цифры
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
@@ -606,8 +627,6 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'];
 
                             } else {
-                                $this->scripts['color'] = true;
-
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -818,7 +837,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>" : '';
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<div>" . nl2br(htmlspecialchars_decode($value['default'])) . "</div>" : '';
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
