@@ -85,7 +85,7 @@ CoreLogin.authSocial = function (socialName, code) {
             if (errorMessage !== '') {
                 $('.form-main .text-danger').text(errorMessage);
             } else {
-                location.reload();
+                location.href = "index.php";
             }
         });
 };
