@@ -633,7 +633,7 @@ $(document).ready(function(){
             return false;
 
         } else {
-            $('.datepicker-container, .datetimepicker-container').hide('fast');
+            $('.coreui-table-wrapper .datepicker-container, .coreui-table-wrapper .datetimepicker-container').hide('fast');
         }
     });
 
