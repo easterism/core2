@@ -130,7 +130,11 @@ class Render extends Acl {
                         ($this->checkAcl($this->table['resource'], 'read_all') ||
                          $this->checkAcl($this->table['resource'], 'read_owner'))
                     ) {
-                        $tpl->service->add_button->assign('[URL]',      str_replace('?', '#', $this->table['toolbar']['addButton']));
+                        $url = strpos($this->table['toolbar']['addButton'], 'javascript:') === 0
+                            ? $this->table['toolbar']['addButton']
+                            : str_replace('?', '#', $this->table['toolbar']['addButton']);
+
+                        $tpl->service->add_button->assign('[URL]',      $url);
                         $tpl->service->add_button->assign('[ADD_TEXT]', $this->getLocution('Add'));
                     }
 

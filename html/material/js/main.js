@@ -598,6 +598,48 @@ function removePDF() {
 /**
  * @param url
  */
+var loadScreen = function (url) {
+	preloader.show();
+
+	$("#main_body").prepend(
+		'<div class="screen-panel hidden">' +
+			'<div class="screen-tool">' +
+				'<button class="btn btn-sm btn-default" onclick="removeScreen();">Закрыть</button>' +
+			'</div>' +
+			'<div class="screen-content"></div>' +
+		'</div>'
+
+	);
+
+	$(".screen-panel .screen-content").load(url, function() {
+		$("body").addClass("screen-open");
+
+		$("#main_body .screen-content").css({
+			'height': ($("body").height() - ($("#navbar-top").height()) - 40)
+		});
+
+		preloader.hide();
+		$('.screen-panel').removeClass('hidden');
+		$(window).hashchange( function() {
+			$("body").removeClass("screen-open");
+		});
+	});
+};
+
+
+/**
+ *
+ */
+function removeScreen() {
+	$('#main_body > .screen-panel').remove();
+	$('body').removeClass('screen-open');
+}
+
+
+
+/**
+ * @param url
+ */
 var loadExt = function (url) {
 	preloader.show();
 	$("#main_body").prepend(
