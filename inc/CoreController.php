@@ -740,7 +740,7 @@ class CoreController extends Common implements File {
 				}
 
                 $value['m_name']  = strip_tags($value['m_name']);
-                $value['sm_name'] = strip_tags($value['sm_name']);
+                $value['sm_name'] = strip_tags($value['sm_name'] ?? '');
 
 				if (!isset($currentMod[$value['m_name']])) {
 					$currentMod[$value['m_name']] = array();

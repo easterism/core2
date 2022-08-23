@@ -741,7 +741,7 @@
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
             $tpl_menu->assign('<!--CURRENT_USER_FN-->',    htmlspecialchars($this->auth->FN));
             $tpl_menu->assign('<!--CURRENT_USER_LN-->',    htmlspecialchars($this->auth->LN));
-            $tpl_menu->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
+            $tpl_menu->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))));
 
 
             $modules_js     = [];
