@@ -327,7 +327,12 @@
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 // LOG USER ACTIVITY
-                $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                $logExclude = array(
+                    'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                    'module=profile&sse=open', //Запросы на установку sse
+                    'module=profile&action=messages&data=sse', //Отправка данных для sse
+                );
+
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 

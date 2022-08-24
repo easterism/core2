@@ -39,6 +39,8 @@ abstract class Table extends Acl {
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $group_field              = '';
+    protected $group_options            = [];
     protected $data                     = [];
     protected $data_rows                = [];
     protected $columns                  = [];
@@ -50,6 +52,7 @@ abstract class Table extends Acl {
     protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
+    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
     protected $is_ajax                  = false;
@@ -252,6 +255,16 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param array $page_list
+     * @return int[]
+     */
+    public function setRecordsPerPageList(array $page_list): array {
+
+        return $this->records_per_page_list = $page_list;
+    }
+
+
+    /**
      * Использование примерного подсчета количества
      * @param bool $is_round_calc
      * @return void
@@ -291,6 +304,19 @@ abstract class Table extends Acl {
         }
 
         $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка группировки строк по полю
+     * @param string $field_name
+     * @param array  $options
+     * @return void
+     */
+    public function setGroupBy(string $field_name, array $options = []): void {
+
+        $this->group_field   = $field_name;
+        $this->group_options = $options;
     }
 
 
@@ -400,6 +426,15 @@ abstract class Table extends Acl {
     public function getRecordsPerPage(): int {
 
         return (int)$this->records_per_page;
+    }
+
+
+    /**
+     * @return int[]
+     */
+    public function getRecordsPerPageList(): array {
+
+        return $this->records_per_page_list;
     }
 
 
@@ -623,7 +658,7 @@ abstract class Table extends Acl {
         }
 
 
-        $per_page_list = [ 25, 50, 100, 1000 ];
+        $per_page_list = $this->records_per_page_list;
 
         if ($this->records_per_page_default > 0 &&
             ! in_array($this->records_per_page_default, $per_page_list)
@@ -631,7 +666,12 @@ abstract class Table extends Acl {
             $per_page_list[] = $this->records_per_page_default;
         }
 
-        ksort($per_page_list);
+        sort($per_page_list);
+
+        if (($all_key = array_search('0', $per_page_list)) !== false) {
+            unset($per_page_list[$all_key]);
+            $per_page_list[] = 0;
+        }
 
         $data = [
             'resource' => $this->resource,
@@ -661,6 +701,10 @@ abstract class Table extends Acl {
         }
         if ($this->table_name) {
             $data['tableName'] = $this->table_name;
+        }
+        if ($this->group_field) {
+            $data['groupField']   = $this->group_field;
+            $data['groupOptions'] = $this->group_options;
         }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;

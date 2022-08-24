@@ -734,12 +734,42 @@ CoreUI.table = {
     },
 
 
+    /**
+     * @param obj
+     * @param resource
+     */
     checkAll : function (obj, resource) {
-        var j = 1;
-        var check = !! obj.checked;
+
+        var j       = 1;
+        var checked = !! obj.checked;
+
         for (var i = 0; i < j; i++) {
             if (document.getElementById("check-" + resource + '-' + j)) {
-                document.getElementById("check-" + resource + '-' + j).checked = check;
+                document.getElementById("check-" + resource + '-' + j).checked = checked;
+                j++;
+            }
+        }
+
+        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
+
+        return;
+    },
+
+
+    /**
+     * @param obj
+     */
+    checkGroup : function (obj) {
+
+        var j       = 1;
+        var checked = !! obj.checked;
+        var row     = $(obj).parent().parent();
+
+        for (var i = 0; i < j; i++) {
+            row = row.next('tr');
+
+            if (row.hasClass('row-table')) {
+                row.find('.checked-row input').prop('checked', checked);
                 j++;
             }
         }

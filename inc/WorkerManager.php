@@ -1315,7 +1315,7 @@ class WorkerManager {
         }
         $job_name_log = $this->getRealJobName($job_name);
 
-        $this->toLog("($h) Starting Job: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
+        $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
         $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
@@ -1325,8 +1325,11 @@ class WorkerManager {
          */
         if (isset($objects[$job_name])) {
             $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
-
-            $result = $objects[$job_name]->run($job, $log);
+            try {
+                $result = $objects[$job_name]->run($job, $log);
+            } catch (\Exception $e) {
+                $this->toLog($e->getMessage(), self::LOG_LEVEL_INFO);
+            }
         } elseif (function_exists($func)) {
             $this->toLog("($h) Calling function for $job_name_log.", self::LOG_LEVEL_DEBUG);
             $result = $func($job, $log);

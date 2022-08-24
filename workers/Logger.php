@@ -16,12 +16,12 @@ class Logger
         $job->sendData('start');
         $config = unserialize($workload->config);
 
-        $db = new \Core2\Db($config);
-
         \Zend_Registry::set('config', $config);
         \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
         define("DOC_ROOT", $workload->location);
         $_SERVER = get_object_vars($workload->server);
+
+        $data = []; //данные для сохранения в базу
 
         if (isset($config->log) &&
             $config->log &&
@@ -31,29 +31,40 @@ class Logger
             if ( ! $config->log->system->file) {
                 throw new \Exception('Не задан файл журнала запросов');
             }
+            $log[] = "Запись в файл " . $config->log->system->file;
 
-            $log = new Log('access');
-            $log->access($workload->auth->NAME, $workload->payload->sid);
+            $corelog = new Log('access');
+            $corelog->access($workload->auth->NAME, $workload->payload->sid);
 
         } else {
             $data = get_object_vars($workload->payload);
             if ($data['action']) {
                 $data['action'] = serialize($data['action']);
             }
-            $db->db->insert('core_log', $data);
-
         }
 
         // обновление записи о последней активности
-        if ($workload->auth->LIVEID) {
-            $row = $db->dataSession->find($workload->auth->LIVEID)->current();
-
-            if ($row) {
-                $row->last_activity = new \Zend_Db_Expr('NOW()');
-                $row->save();
+        if ($workload->auth->LIVEID || $data) {
+            $log[] = "Запись в базу данных о последней активности";
+            $db = new \Core2\Db($config);
+            //$log[] = "Соединяемся с базой...";
+            $mysql = $db->db;
+            try {
+                if ($data) $mysql->insert('core_log', $data);
+                $row = $db->dataSession->find($workload->auth->LIVEID)->current();
+                if ($row) {
+                    $row->last_activity = new \Zend_Db_Expr('NOW()');
+                    $row->save();
+                }
+                $log[] = "закрываем соединение...";
+                $mysql->closeConnection();
+            } catch (\Exception $e) {
+                // игнорируем исключение
+                $log[] = $e->getMessage();
+                $mysql->closeConnection();
             }
         }
-        $db->db->closeConnection();
         $job->sendComplete('done');
+        return;
     }
 }

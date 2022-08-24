@@ -220,14 +220,13 @@ class Render extends Acl {
 
                 if ( ! empty($this->table['recordsPerPageList'])) {
                     foreach ($this->table['recordsPerPageList'] as $per_page_count) {
-                        if (is_numeric($per_page_count) && $per_page_count > 0) {
-                            $per_page_list[$per_page_count] = $per_page_count;
+                        if (is_numeric($per_page_count)) {
+                            $per_page_list[$per_page_count] = $per_page_count == 0
+                                ? $this->getLocution('All')
+                                : $per_page_count;
                         }
                     }
                 }
-                ksort($per_page_list);
-
-                $per_page_list[0] = $this->getLocution('All');
 
                 $tpl->footer->pages->per_page->fillDropDown(
                     'records-per-page-[RESOURCE]',
@@ -236,7 +235,6 @@ class Render extends Acl {
                 );
             }
         }
-
 
         if ( ! empty($this->table['search'])) {
             $search_value = ! empty($this->session->table) && ! empty($this->session->table->search)
@@ -384,13 +382,12 @@ class Render extends Acl {
                         continue;
                     }
 
-                    $control_value     = $filter_value[$key] ?? '';
-                    $filter_attributes = $filter;
-                    $attributes_str    = '';
+                    $control_value  = $filter_value[$key] ?? '';
+                    $attributes_str = '';
 
                     if ( ! empty($filter['attr'])) {
                         $attributes = [];
-                        foreach ($filter_attributes as $attr => $value) {
+                        foreach ($filter['attr'] as $attr => $value) {
                             if (is_string($attr) && is_string($value)) {
                                 $attributes[] = "$attr=\"{$value}\"";
                             }
@@ -514,7 +511,6 @@ class Render extends Acl {
             }
         }
 
-
         if ( ! empty($this->table['columns']) &&
              ! empty($this->table['show']) &&
             $this->table['show']['header']
@@ -575,6 +571,8 @@ class Render extends Acl {
                           $this->table['currentPage'] > 1
                 ? (($this->table['currentPage'] - 1) * $this->table['recordsPerPage']) + 1
                 : 1;
+            $group_field = $this->table['groupField'] ?? null;
+            $group_value = null;
 
             foreach ($this->table['records'] as $row) {
                 if (is_array($row) && ! empty($row['cells'])) {
@@ -582,10 +580,37 @@ class Render extends Acl {
                         ? $row['cells']['id']['value']
                         : 0;
 
-                    $tpl->row->assign('[ID]', $row_id);
+
+                    if ($group_field &&
+                        ! empty($row['cells'][$group_field]) &&
+                        array_key_exists('value', $row['cells'][$group_field]) &&
+                        $group_value !== $row['cells'][$group_field]['value']
+                    ) {
+                        $group_value = $row['cells'][$group_field]['value'];
+                        $count_cols  = 1;
+
+                        $tpl->rows->assign('<tr', '<tr class="coreui-table-row-group"');
+
+                        if ( ! empty($this->table['show']) && ! empty($this->table['show']['selectRows'])) {
+                            $tpl->rows->group->touchBlock('group_checkbox');
+                            $count_cols -= 1;
+                        }
+
+                        if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
+                            $count_cols += 1;
+                        }
+
+                        $tpl->rows->group->assign('[COLS]',  count($this->table['columns']) + $count_cols);
+                        $tpl->rows->group->assign('[ATTR]',  '');
+                        $tpl->rows->group->assign('[VALUE]', $group_value);
+                        $tpl->rows->reassign();
+                    }
+
+                    $tpl->rows->assign('<tr', '<tr');
+                    $tpl->rows->row->assign('[ID]', $row_id);
 
                     if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
-                        $tpl->row->row_number->assign('[#]', $row_number);
+                        $tpl->rows->row->row_number->assign('[#]', $row_number);
                     }
 
                     $row['attr']['class'] = isset($row['attr']['class'])
@@ -600,6 +625,8 @@ class Render extends Acl {
                     ) {
 
                         $edit_url = $this->replaceTCOL($row, $this->table['recordsEditUrl']);
+                        $edit_url = str_replace('TCOL_#', $row_index - 1, $edit_url);
+
                         $row['attr']['class'] = isset($row['attr']['class'])
                             ? $row['attr']['class'] .= ' edit-row'
                             : 'edit-row';
@@ -628,28 +655,28 @@ class Render extends Acl {
 
                             switch ($column['type']) {
                                 case 'text':
-                                    $tpl->row->col->default->assign('[VALUE]', htmlspecialchars($value));
+                                    $tpl->rows->row->col->default->assign('[VALUE]', htmlspecialchars($value));
                                     break;
 
                                 case 'number':
                                     $value = strrev($value);
                                     $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
                                     $value = strrev($value);
-                                    $tpl->row->col->default->assign('[VALUE]', $value);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $value);
                                     break;
 
                                 case 'html':
-                                    $tpl->row->col->default->assign('[VALUE]', $value);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $value);
                                     break;
 
                                 case 'date':
                                     $date = $value ? date($this->date_mask, strtotime($value)) : '';
-                                    $tpl->row->col->default->assign('[VALUE]', $date);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $date);
                                     break;
 
                                 case 'datetime':
                                     $date = $value ? date($this->datetime_mask, strtotime($value)) : '';
-                                    $tpl->row->col->default->assign('[VALUE]', $date);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $date);
                                     break;
 
                                 case 'status':
@@ -658,7 +685,7 @@ class Render extends Acl {
                                     } else {
                                         $img = "<img src=\"{$this->theme_src}/list/img/lightbulb_off.png\" alt=\"_tr(выкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
                                     }
-                                    $tpl->row->col->default->assign('[VALUE]', $img);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $img);
                                     break;
 
                                 case 'switch':
@@ -670,14 +697,14 @@ class Render extends Acl {
                                     $value_y    = $options['value_Y'] ?? 'Y';
                                     $value_n    = $options['value_N'] ?? 'N';
 
-                                    $tpl->row->col->switch->assign('[TABLE]',     $options['table'] ?? $table_name);
-                                    $tpl->row->col->switch->assign('[FIELD]',     $column['field']);
-                                    $tpl->row->col->switch->assign('[NMBR]',      $row_number);
-                                    $tpl->row->col->switch->assign('[CHECKED_Y]', $value == $value_y ? 'checked="checked"' : '');
-                                    $tpl->row->col->switch->assign('[CHECKED_N]', $value == $value_n ? 'checked="checked"' : '');
-                                    $tpl->row->col->switch->assign('[COLOR]',     $color);
-                                    $tpl->row->col->switch->assign('[VALUE_Y]',   $value_y);
-                                    $tpl->row->col->switch->assign('[VALUE_N]',   $value_n);
+                                    $tpl->rows->row->col->switch->assign('[TABLE]',     $options['table'] ?? $table_name);
+                                    $tpl->rows->row->col->switch->assign('[FIELD]',     $column['field']);
+                                    $tpl->rows->row->col->switch->assign('[NMBR]',      $row_number);
+                                    $tpl->rows->row->col->switch->assign('[CHECKED_Y]', $value == $value_y ? 'checked="checked"' : '');
+                                    $tpl->rows->row->col->switch->assign('[CHECKED_N]', $value == $value_n ? 'checked="checked"' : '');
+                                    $tpl->rows->row->col->switch->assign('[COLOR]',     $color);
+                                    $tpl->rows->row->col->switch->assign('[VALUE_Y]',   $value_y);
+                                    $tpl->rows->row->col->switch->assign('[VALUE_N]',   $value_n);
                                     break;
                             }
 
@@ -693,9 +720,9 @@ class Render extends Acl {
                             $implode_attributes = implode(' ', $attributes);
                             $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
 
-                            $tpl->row->col->assign('[ATTR]', $implode_attributes);
+                            $tpl->rows->row->col->assign('[ATTR]', $implode_attributes);
 
-                            if (end($this->table['columns']) != $column) $tpl->row->col->reassign();
+                            if (end($this->table['columns']) != $column) $tpl->rows->row->col->reassign();
                         }
                     }
 
@@ -707,18 +734,18 @@ class Render extends Acl {
                                 $attribs_string .= " {$name}=\"{$attr}\"";
                             }
                         }
-                        $tpl->row->assign('<tr', '<tr ' . $attribs_string);
+                        $tpl->rows->assign('<tr', '<tr ' . $attribs_string);
                     }
 
                     if ( ! empty($this->table['show']) && ! empty($this->table['show']['selectRows'])) {
-                        $tpl->row->checkboxes->assign('[ID]', $row_id);
-                        $tpl->row->checkboxes->assign('[#]',  $row_index);
+                        $tpl->rows->row->checkboxes->assign('[ID]', $row_id);
+                        $tpl->rows->row->checkboxes->assign('[#]',  $row_index);
                         $row_index++;
                     }
 
                     $row_number++;
 
-                    $tpl->row->reassign();
+                    $tpl->rows->reassign();
                 }
             }
 

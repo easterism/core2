@@ -8,5 +8,3 @@ mod/admin/conf.ext.ini
 \.idea/
 
 composer\.phar
-
-mod/
