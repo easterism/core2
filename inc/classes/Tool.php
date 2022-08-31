@@ -412,7 +412,7 @@ class Tool {
     /**
      * Добавляет hash в адрес к скриптам или стилям
      * @param string $src
-     * @return array
+     * @return string
      */
     public static function addSrcHash(string $src): string {
 
