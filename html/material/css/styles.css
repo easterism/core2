@@ -2305,10 +2305,12 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 :-ms-input-placeholder      {color:#aaa;}
 
 .ext-open,
+.screen-open,
 .pdf-open {
     overflow: hidden;
 }
 .pdf-panel,
+.screen-panel,
 .ext-panel {
     position: fixed;
     z-index: 10;
@@ -2320,22 +2322,31 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
          -o-transition: left 0.3s ease-in-out;
             transition: left 0.3s ease-in-out;
 }
+.screen-tool,
 .pdf-tool-panel {
     height: 40px;
     background-color: #9e9e9e;
     padding: 7px;
 }
+.screen-tool .btn-default,
 .pdf-tool-panel .btn-default {
     border-color: #fff;
 }
+.screen-tool .btn-default:hover,
 .pdf-tool-panel .btn-default:hover {
     border-color: #e6e6e6;
 }
+.screen-content,
 .pdf-main-panel,
 .ext-main-panel {
     overflow: hidden;
     background-color: #e5e5e5;
 }
+.screen-content {
+    overflow: auto;
+    padding: 20px;
+}
+.screen-tool button,
 .pdf-tool-panel button {
     float: right;
     margin-right: 15px;

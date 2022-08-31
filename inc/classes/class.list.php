@@ -676,7 +676,7 @@ class listTable extends initList {
                         //
                     } else {
                         if (isset($this->table_column[$this->main_table_id][$x])) {
-                            $sql_value = htmlspecialchars($sql_value);
+                            $sql_value = htmlspecialchars($sql_value ?? '');
                         }
                     }
                     $this->data[$k][] = $sql_value;

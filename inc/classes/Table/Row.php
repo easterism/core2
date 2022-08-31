@@ -157,24 +157,24 @@ class Row implements \Iterator {
     }
 
 
-    public function rewind() {
-        return reset($this->cells);
+    public function rewind(): void {
+        reset($this->cells);
     }
 
-    public function key() {
+    public function key(): mixed {
         return key($this->cells);
     }
 
-    public function current() {
+    public function current(): mixed {
         return current($this->cells);
     }
 
-    public function valid() {
+    public function valid(): bool {
         return key($this->cells) !== null;
     }
 
-    public function next() {
-        return next($this->cells);
+    public function next(): void {
+        next($this->cells);
     }
 
 

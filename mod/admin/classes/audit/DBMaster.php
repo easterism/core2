@@ -348,7 +348,7 @@ class DBMaster {
 				$str .= " DEFAULT $default";
 			}
 		}
-		if (empty($inArr["DEFAULT"]) && $inArr['DEFAULT'] != $inCurArr['DEFAULT']) {
+		if ( ! empty($inArr["DEFAULT"]) && $inArr['DEFAULT'] != $inCurArr['DEFAULT']) {
 			$add_drop_default = "<!--NEW_LINE_FOR_DB_CORRECT_SCRIPT--> ALTER TABLE $inTable  ALTER $inColumn DROP DEFAULT;";
 		}
 		
@@ -356,7 +356,7 @@ class DBMaster {
 	}
 	
 	private function prepareDefault($inArr) {
-		$def = $inArr['DEFAULT'];
+		$def = $inArr['DEFAULT'] ?? '';
 		
 		if (strtoupper($def) == 'CURRENT_TIMESTAMP' and strtoupper($inArr['TYPE']) == 'DATETIME') {return $def;}
 		if (strtoupper($def) == 'CURRENT_TIMESTAMP' and strtoupper($inArr['TYPE']) == 'TIMESTAMP') {return $def;}
@@ -420,9 +420,9 @@ class DBMaster {
 		$rows = $this->db->fetchAll($strSQL, array($this->current_db_name, $this->current_db_name));
 
         foreach ($rows as $val) {
-            $table_name = $val['table_name'];
-            $a_reffers[$table_name][$val['referenced_table_name']] = 1;
-            $a_ref_cols[$table_name][$val['constraint_name']] = $val;
+            $table_name = $val['table_name'] ?? '';
+            $a_reffers[$table_name][$val['referenced_table_name'] ?? ''] = 1;
+            $a_ref_cols[$table_name][$val['constraint_name'] ?? ''] = $val;
             $a_comments[$table_name] = isset($val['table_comment']) ? $val['table_comment'] : '';
         }
 

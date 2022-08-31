@@ -173,7 +173,7 @@ class View extends \Common {
 
 
         $certificate = $user
-            ? htmlspecialchars($user->certificate)
+            ? htmlspecialchars($user->certificate ?? '')
             : '';
 
         $description_admin = "<br><small class=\"text-muted\">полный доступ</small>";

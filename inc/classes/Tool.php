@@ -381,35 +381,44 @@ class Tool {
 
     /**
      * Print link to CSS file
-     *
-     * @param string $href - CSS filename
+     * @param string $src - CSS filename
      */
-    public static function printCss($href) {
-        if (strpos($href, '?')) {
-            $explode_href = explode('?', $href, 2);
-            $href .= file_exists(DOC_ROOT . $explode_href[0])
-                    ? '&_=' . crc32(md5_file(DOC_ROOT . $explode_href[0]))
-                    : '';
-        } else {
-            $href .= file_exists(DOC_ROOT . $href)
-                    ? '?_=' . crc32(md5_file(DOC_ROOT . $href))
-                    : '';
-        }
-        echo '<link href="' . $href . '" type="text/css" rel="stylesheet" />';
+    public static function printCss(string $src): void {
+
+        $src = self::addSrcHash($src);
+
+        echo '<link href="' . $src . '" type="text/css" rel="stylesheet" />';
     }
 
 
     /**
      * Print link to JS file
-     *
      * @param string $src - JS filename
      * @param bool   $chachable
      */
-    public static function printJs($src, $chachable = false) {
+    public static function printJs(string $src, $chachable = false): void {
+
+        $src = self::addSrcHash($src);
+
+        if ($chachable) {
+            //помещаем скрипт в head
+            echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
+        } else {
+            echo '<script type="text/javascript" src="' . $src . '"></script>';
+        }
+    }
+
+
+    /**
+     * Добавляет hash в адрес к скриптам или стилям
+     * @param string $src
+     * @return string
+     */
+    public static function addSrcHash(string $src): string {
 
         if (strpos($src, '?')) {
             $explode_src = explode('?', $src, 2);
-            $src        .= file_exists(DOC_ROOT . $explode_src[0])
+            $src .= file_exists(DOC_ROOT . $explode_src[0])
                 ? '&_=' . crc32(md5_file(DOC_ROOT . $explode_src[0]))
                 : '';
         } else {
@@ -418,13 +427,7 @@ class Tool {
                 : '';
         }
 
-
-        if ($chachable) {
-            //помещаем скрипт в head
-            echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
-        } else {
-            echo '<script type="text/javascript" src="' . $src . '"></script>';
-        }
+        return $src;
     }
 
 
@@ -498,7 +501,7 @@ class Tool {
             return $f5;
         };
 
-        list($rub, $kop) = explode('.', sprintf("%015.2f", floatval($num)));
+        [$rub, $kop] = explode('.', sprintf("%015.2f", floatval($num)));
         $out = array();
         if (intval($rub) > 0) {
             foreach (str_split($rub, 3) as $uk => $v) { // by 3 symbols
@@ -509,7 +512,7 @@ class Tool {
                 } else {
                     $gender = isset($integer_arr[3]) ? $integer_arr[3] : "0";
                 }
-                list($i1, $i2, $i3) = array_map('intval', str_split($v, 1));
+                [$i1, $i2, $i3] = array_map('intval', str_split($v, 1));
                 // mega-logic
                 $out[] = $hundred[$i1]; # 1xx-9xx
                 if ($i2 > 1) $out[]= $tens[$i2] . ' ' . $ten[$gender][$i3]; # 20-99
