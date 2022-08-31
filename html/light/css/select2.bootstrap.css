@@ -12,14 +12,14 @@
 .select2-container--bootstrap .select2-results__option[aria-disabled=true]{color:#777;cursor:not-allowed}
 .select2-container--bootstrap .select2-results__option[aria-selected=true]{background-color:#E0E0E0;color:#262626}
 .select2-container--bootstrap .select2-results__option--highlighted[aria-selected]{background-color:#337ab7;color:#fff}
-.select2-container--bootstrap .select2-results__option .select2-results__option{padding:6px 12px 6px 25px}
+.select2-container--bootstrap .select2-results__option .select2-results__option{padding:6px 12px 6px 25px;border-bottom: 1px solid #ddd;}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__group{padding-left:0}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__option{margin-left:-12px;padding-left:24px}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__option .select2-results__option{margin-left:-24px;padding-left:36px}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option{margin-left:-36px;padding-left:48px}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option{margin-left:-48px;padding-left:60px}
 .select2-container--bootstrap .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option .select2-results__option{margin-left:-60px;padding-left:72px}
-.select2-container--bootstrap .select2-results__group{color:#151515;display:block;padding:6px 12px;font-size:12px;line-height:1.42857143;white-space:nowrap}
+.select2-container--bootstrap .select2-results__group{color:#151515;display:block;padding:6px 12px;font-size:12px;line-height:1.42857143;}
 .select2-container--bootstrap.select2-container--focus .select2-selection,.select2-container--bootstrap.select2-container--open .select2-selection{-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(102,175,233,0.6);box-shadow:inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(102,175,233,0.6);-webkit-transition:border-color ease-in-out 0.15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out 0.15s,box-shadow ease-in-out .15s;-webkit-transition:border-color ease-in-out 0.15s,-webkit-box-shadow ease-in-out .15s;transition:border-color ease-in-out 0.15s,-webkit-box-shadow ease-in-out .15s;transition:border-color ease-in-out 0.15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out 0.15s,box-shadow ease-in-out 0.15s,-webkit-box-shadow ease-in-out .15s;border-color:#66afe9}
 .select2-container--bootstrap.select2-container--open .select2-selection .select2-selection__arrow b{border-color:transparent transparent #999;border-width:0 4px 4px}
 .select2-container--bootstrap.select2-container--open.select2-container--below .select2-selection{border-bottom-right-radius:0;border-bottom-left-radius:0;border-bottom-color:transparent}
