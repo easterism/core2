@@ -327,7 +327,12 @@
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 // LOG USER ACTIVITY
-                $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                $logExclude = array(
+                    'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                    'module=profile&sse=open', //Запросы на установку sse
+                    'module=profile&action=messages&data=sse', //Отправка данных для sse
+                );
+
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
@@ -807,15 +812,21 @@
                             $modController = new $modController();
 
                             if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
-                                $module_js = $modController->topJs()
+                                $module_js_list = $modController->topJs()
                             ) {
-                                $modules_js = array_merge($modules_js, $module_js);
+                                foreach ($module_js_list as $k => $module_js) {
+                                    $module_js_list[$k] = \Tool::addSrcHash($module_js);
+                                }
+                                $modules_js = array_merge($modules_js, $module_js_list);
                             }
 
                             if ($modController instanceof TopCss &&
-                                $module_css = $modController->topCss()
+                                $module_css_list = $modController->topCss()
                             ) {
-                                $modules_css = array_merge($modules_css, $module_css);
+                                foreach ($module_css_list as $k => $module_css) {
+                                    $module_css_list[$k] = \Tool::addSrcHash($module_css);
+                                }
+                                $modules_css = array_merge($modules_css, $module_css_list);
                             }
 
                             if (THEME !== 'default') {
