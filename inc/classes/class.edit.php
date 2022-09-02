@@ -1370,12 +1370,18 @@ class editTable extends initEdit {
 
 						}
 						elseif ($value['type'] == 'dataset') {
-                            if (empty($value['in']) || ! is_string($value['default'])) {
+                            if (empty($value['in']) ||
+                                ( ! is_string($value['default']) && ! is_array($value['default']))
+                            ) {
                                 throw new Exception('Некорректно заполнены настройки формы');
                             }
 
-                            $json_string = html_entity_decode($value['default']);
-                            $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                            if (is_array($value['default'])) {
+                                $datasets = $value['default'];
+                            } else {
+                                $json_string = html_entity_decode($value['default']);
+                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                            }
 
                             if ($this->readOnly) {
                                 if ( ! empty($datasets)) {
@@ -1403,7 +1409,7 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
@@ -1415,6 +1421,12 @@ class editTable extends initEdit {
 
                                             } elseif ($type_name == 'datetime') {
                                                 $field_value = $field_value ? date('d.m.Y H:i', strtotime($field_value)) : '';
+
+                                            } elseif ($type_name == 'switch') {
+                                                $field_value = $field_value == 'Y' ? 'Вкл' : 'Выкл';
+
+                                            } elseif ($type_name == 'hidden') {
+                                                $field_value = '';
                                             }
 
 
@@ -1443,8 +1455,10 @@ class editTable extends initEdit {
                                 $tpl->touchBlock('edit_controls');
 
                                 foreach ($value['in'] as $item_field) {
-                                    $tpl->title->assign('[TITLE]', $item_field['title']);
-                                    $tpl->title->reassign();
+                                    if (empty($item_field['type']) || $item_field['type'] != 'hidden') {
+                                        $tpl->title->assign('[TITLE]', $item_field['title'] ?? '');
+                                        $tpl->title->reassign();
+                                    }
                                 }
 
 
@@ -1474,25 +1488,29 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select' && ! empty($item_field['options'])) {
                                                 foreach ($item_field['options'] as $option_value => $option_title) {
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
-                                                    $tpl->item->{"field_{$type_name}"}->option->reassign();
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }
+                                            if ($type_name == 'switch') {
+                                                $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_Y]', $field_value == 'Y' ? 'checked="checked"' : '');
+                                                $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_N]', $field_value == 'N' ? 'checked="checked"' : '');
+                                            }
 
-                                            $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[NUM]',        $num);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
-                                            $tpl->item->{"field_{$type_name}"}->reassign();
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        $num);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
+                                            $tpl->item->field->{"field_{$type_name}"}->reassign();
                                         }
 
                                         $tpl->item->touchBlock('delete');
@@ -1509,7 +1527,7 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                             $type_name = 'text';
                                         }
 
@@ -1524,6 +1542,10 @@ class editTable extends initEdit {
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $selected);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                             }
+                                        }
+                                        if ($type_name == 'switch') {
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_Y]', $item_field['default_value'] == 'Y' ? 'checked="checked"' : '');
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_N]', $item_field['default_value'] == 'N' ? 'checked="checked"' : '');
                                         }
 
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);

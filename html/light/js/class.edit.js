@@ -601,6 +601,21 @@ var edit = {
 				'<input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
 				'</td>';
 
+			var tplFieldHidden =
+				'<input type="hidden" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]">';
+
+			var tplFieldSwitch =
+				'<td>' +
+					'<div class="core-switch color-primary" ' +
+						'onclick="edit.switchToggle(this)">' +
+						'<input type="radio" class="core-switch-active" ' +
+							'name="control[[FIELD]][[NUM]][[CODE]]" value="Y" [CHECKED_Y]>' +
+						'<input type="radio" class="core-switch-inactive" ' +
+							'name="control[[FIELD]][[NUM]][[CODE]]" value="N" [CHECKED_N]>' +
+						'<span class="core-slider"></span>' +
+					'</div>' +
+				'</td>';
+
 			var tplFieldSelect =
 				'<td>' +
 				'<select class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>[OPTIONS]</select>' +
@@ -617,6 +632,7 @@ var edit = {
 						case 'date':     tplFieldCustom = tplFieldDate; break;
 						case 'datetime': tplFieldCustom = tplFieldDatetime; break;
 						case 'number':   tplFieldCustom = tplFieldNumber; break;
+						case 'hidden':   tplFieldCustom = tplFieldHidden; break;
 						case 'select':
 							var selectOptions = '';
 
@@ -634,6 +650,12 @@ var edit = {
 
 							tplFieldCustom = tplFieldSelect;
 							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
+							break;
+
+						case 'switch':
+							tplFieldCustom = tplFieldSwitch;
+							tplFieldCustom = tplFieldCustom.replace(/\[CHECKED_Y\]/g, field['default_value'] === "Y" ? 'checked="checked"' : '');
+							tplFieldCustom = tplFieldCustom.replace(/\[CHECKED_N\]/g, field['default_value'] === "N" ? 'checked="checked"' : '');
 							break;
 					}
 

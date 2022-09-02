@@ -45,6 +45,23 @@
                 <input type="date" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
             </td>
             <!-- END field_date -->
+            <!-- BEGIN field_switch -->
+            <td>
+                <div class="core-switch color-primary"
+                     onclick="edit.switchToggle(this)">
+
+                    <input type="radio" class="core-switch-active"
+                           name="control[[FIELD]][[NUM]][[CODE]]" value="Y" [CHECKED_Y]>
+                    <input type="radio" class="core-switch-inactive"
+                           name="control[[FIELD]][[NUM]][[CODE]]" value="N" [CHECKED_N]>
+
+                    <span class="core-slider"></span>
+                </div>
+            </td>
+            <!-- END field_switch -->
+            <!-- BEGIN field_hidden -->
+            <input type="hidden" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]">
+            <!-- END field_hidden -->
             <!-- END field -->
             <!-- BEGIN field_readonly -->
             <td>
