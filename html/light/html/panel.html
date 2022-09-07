@@ -10,9 +10,34 @@
         <!-- BEGIN description -->
         <div class="core-panel-subtitle">[DESCRIPTION]</div>
         <!-- END description -->
+        <!-- BEGIN panel_controls -->
+        <div class="core-panel-controls pull-right">
+
+            <!-- BEGIN controls -->
+            <!-- BEGIN controls_button -->
+            <div><button id="control-[ID]" onclick="[ACTION_ONCLICK]" class="control-button btn btn-default btn-sm ">
+                [CONTROL_CONTENT]
+            </button></div>
+            <!-- END controls_button -->
+            <!-- BEGIN controls_custom -->
+            <div>[CONTROLS_CUSTOM]</div>
+            <!-- END controls_custom -->
+            <!-- END controls -->
+
+            <!-- BEGIN collapse -->
+            <div>
+                <button class="control-button btn btn-default btn-sm " data-toggle="collapse"
+                        data-target="#core-panel-[RESOURCE] > div.core-panel-body">
+
+                    <span title="Свернуть" class="glyphicon glyphicon-resize-small"></span>
+                </button>
+            </div>
+            <!-- END collapse -->
+        </div>
+        <!-- END panel_controls -->
     </div>
     <!-- END title -->
-    <div class="core-panel-body">
+    <div class="core-panel-body collapse in">
         <!-- BEGIN content_top -->
         <div class="core-panel-content">
             [CONTENT]
