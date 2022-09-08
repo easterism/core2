@@ -9,12 +9,12 @@ require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 class Workhorse
 {
     public function run($job, &$log) {
-        $job->sendData('start');
+        $job->sendData('start'); //only works for addTask
         $workload = json_decode($job->workload());
         try {
             //$workload_size = $job->workloadSize();
             if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
-                $modWorker = $this->requireController($workload->module, $workload->location);
+                $controller = $this->requireController($workload->module, $workload->location);
 
                 \Zend_Registry::set('config',      unserialize($workload->config));
                 \Zend_Registry::set('translate',   unserialize($workload->translate));
@@ -24,26 +24,28 @@ class Workhorse
 
 
                 define("DOC_ROOT", $workload->doc_root);
-                $modWorker = new $modWorker();
+                $modWorker = new $controller();
                 $action = $workload->worker;
 
                 if (!method_exists($modWorker, $action)) {
                     throw new Exception("Method does not exists: {$action}", 404);
                 }
+                $log[] = "Run $controller->$action";
 
+                //echo "<PRE>";print_r($workload->payload);echo "</PRE>";die;
                 //if ($modWorker instanceof Worker) {
 
                 $out = $modWorker->$action($job, $workload->payload);
                 $job->sendComplete($out);
-
+                $log[] = "Finish $controller->$action";
                 return $out;
                 //}
                 //throw new Exception("Worker is broken: " . $action, 500);
             }
         } catch (\Exception $e) {
-            $job->sendException($e->getMessage());
-            echo $e->getMessage();
-            $log[] = $e->getMessage();
+            $msg = $e->getMessage();
+            $job->sendException($msg);
+            $log[] = "Exception: " . $msg;
         }
         return;
     }

@@ -1,0 +1,25 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: core2.profile\n"
+"POT-Creation-Date: 2015-12-26 18:11+0300\n"
+"PO-Revision-Date: 2015-12-26 18:13+0300\n"
+"Last-Translator: easter <easter.by@gmail.com>\n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.6\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: $this->translate->tr;tr;_tr\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: ModProfileController.php:72
+msgid "Личные данные"
+msgstr "Personal info"
+
+#: ModProfileController.php:74
+msgid "Персональные настройки"
+msgstr ""

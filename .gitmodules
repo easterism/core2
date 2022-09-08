@@ -43,3 +43,27 @@
 [submodule "mod/webservice/v3.0.0"]
 	path = mod/webservice/v3.0.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/cron/v3.0.0"]
+    path = mod/cron/v3.0.0
+    url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "mod/profile/v1.10.0"]
+    path = mod/profile/v1.10.0
+    url = git@git.rdo.belhard.com:core2/modules/profile.git
+[submodule "mod/repo/v1.4.0"]
+	path = mod/repo/v1.4.0
+	url = git@git.rdo.belhard.com:core2/modules/repo.git
+[submodule "mod/webservice/v1.10.0"]
+	path = mod/webservice/v1.10.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v1.7.1"]
+	path = mod/webservice/v1.7.1
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v1.7.2"]
+	path = mod/webservice/v1.7.2
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v1.8.0"]
+	path = mod/webservice/v1.8.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/webservice/v1.9.0"]
+	path = mod/webservice/v1.9.0
+	url = git@git.rdo.belhard.com:core2/modules/webservice.git

@@ -1636,6 +1636,14 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     overflow: hidden;
     padding: 5px 0 0;
 }
+
+.core-panel > .core-panel-heading > .core-panel-controls {
+    display:-webkit-box;
+}
+.core-panel > .core-panel-heading > .core-panel-controls div{
+    margin-left: 1px;
+}
+
 .core-panel > .core-panel-body {
     padding: 25px 20px;
 }
