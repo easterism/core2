@@ -4,6 +4,10 @@ var CoreUI = typeof CoreUI !== 'undefined' ? CoreUI : {};
 CoreUI.table = {
 
     loc: {},
+    _events: {
+        checked: [],
+        reload: [],
+    },
 
     preloader : {
         show : function(resource) {
@@ -75,11 +79,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -107,11 +113,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -140,11 +148,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -204,11 +214,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -280,11 +292,15 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
                         //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
+
+
 
                 } else {
                     load(CoreUI.table.loc[resource], post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -381,11 +397,13 @@ CoreUI.table = {
                             var container = document.getElementById("table-" + resource).parentNode;
                             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
                             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -428,11 +446,13 @@ CoreUI.table = {
                             var container = document.getElementById("table-" + resource).parentNode;
                             load(CoreUI.table.loc[resource], post, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
                             load(CoreUI.table.loc[resource], post, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -465,11 +485,13 @@ CoreUI.table = {
                     var container = document.getElementById("table-" + resource).parentNode;
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, '', function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             } else {
@@ -504,11 +526,15 @@ CoreUI.table = {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     CoreUI.table.preloader.hide(resource);
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
-        } else load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
-            preloader.callback();
-        });
+        } else {
+            load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
+                preloader.callback();
+                CoreUI.table._callEventReload(resource);
+            });
+        }
     },
 
 
@@ -532,12 +558,14 @@ CoreUI.table = {
             } else {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
 
         } else {
             load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
@@ -562,6 +590,7 @@ CoreUI.table = {
             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 CoreUI.table.preloader.hide(resource);
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
 
             preloader.hide();
@@ -569,6 +598,7 @@ CoreUI.table = {
         } else {
             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
@@ -698,6 +728,7 @@ CoreUI.table = {
                                 if (data === true) {
                                     load(CoreUI.table.loc[resource], '', container, function () {
                                         preloader.callback();
+                                        CoreUI.table._callEventReload(resource);
                                     });
 
                                 } else {
@@ -713,6 +744,7 @@ CoreUI.table = {
                                         if (data.loc) {
                                             load(data.loc, '', container, function () {
                                                 preloader.callback();
+                                                CoreUI.table._callEventReload(resource);
                                             });
                                         }
                                     }
@@ -735,31 +767,27 @@ CoreUI.table = {
 
 
     /**
+     * Выделение всех строк
      * @param obj
      * @param resource
      */
     checkAll : function (obj, resource) {
 
-        var j       = 1;
         var checked = !! obj.checked;
 
-        for (var i = 0; i < j; i++) {
-            if (document.getElementById("check-" + resource + '-' + j)) {
-                document.getElementById("check-" + resource + '-' + j).checked = checked;
-                j++;
-            }
-        }
-
+        $('#table-' + resource + ' .row-table .checked-row input').prop('checked', checked);
         $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
 
-        return;
+        CoreUI.table._callEventChecked(resource);
     },
 
 
     /**
+     * Выделение группы строк
      * @param obj
+     * @param resource
      */
-    checkGroup : function (obj) {
+    checkGroup : function (obj, resource) {
 
         var j       = 1;
         var checked = !! obj.checked;
@@ -773,8 +801,89 @@ CoreUI.table = {
                 j++;
             }
         }
-        return;
+
+        CoreUI.table._callEventChecked(resource);
     },
+
+
+    /**
+     Выделение строки
+     * @param obj
+     * @param resource
+     */
+    checkRow: function (obj, resource) {
+
+        CoreUI.table._callEventChecked(resource);
+    },
+
+
+    /**
+     * Событие выполняемое при массовом выделении строк
+     * @param resource
+     * @param callback
+     */
+    onChecked: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.checked.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Событие выполняемое при перезагрузке содержимого
+     * @param resource
+     * @param callback
+     */
+    onReload: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.reload.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Выполнение событий выделения
+     * @param resource
+     * @private
+     */
+    _callEventChecked: function (resource) {
+
+        if (CoreUI.table._events.checked.length > 0) {
+            $.each(CoreUI.table._events.checked, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback();
+                }
+            })
+        }
+    },
+
+
+    /**
+     * Выполнение событий перезагрузки
+     * @param resource
+     * @private
+     */
+    _callEventReload: function (resource) {
+
+        if (CoreUI.table._events.reload.length > 0) {
+            $.each(CoreUI.table._events.reload, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback();
+                }
+            })
+        }
+    },
+
 
 
     /**
@@ -885,6 +994,7 @@ CoreUI.table = {
         load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
             CoreUI.table.preloader.hide(resource);
             preloader.callback();
+            CoreUI.table._callEventReload(resource);
         });
     }
 };

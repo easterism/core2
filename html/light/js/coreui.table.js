@@ -743,13 +743,7 @@ CoreUI.table = {
         var j       = 1;
         var checked = !! obj.checked;
 
-        for (var i = 0; i < j; i++) {
-            if (document.getElementById("check-" + resource + '-' + j)) {
-                document.getElementById("check-" + resource + '-' + j).checked = checked;
-                j++;
-            }
-        }
-
+        $('#table-' + resource + ' .row-table .checked-row input').prop('checked', checked);
         $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
 
         return;

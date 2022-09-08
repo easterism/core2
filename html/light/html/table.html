@@ -408,7 +408,7 @@
 
         <!-- BEGIN group_checkbox -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
-          <input type="checkbox" onclick="CoreUI.table.checkGroup(this)"/>
+          <input type="checkbox" onclick="CoreUI.table.checkGroup(this, '[RESOURCE]')"/>
         </td>
         <!-- END group_checkbox -->
         <!-- END group -->
@@ -433,7 +433,7 @@
 
           <!-- BEGIN checkboxes -->
           <td class="checked-row" onclick="event.cancelBubble=true;">
-            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]" onclick="CoreUI.table.checkRow(this, '[RESOURCE]')">
           </td>
           <!-- END checkboxes -->
         <!-- END row -->
