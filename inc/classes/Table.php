@@ -359,6 +359,15 @@ abstract class Table extends Acl {
 
 
     /**
+     * @return string
+     */
+    public function getResource(): string {
+
+        return $this->resource;
+    }
+
+
+    /**
      * @param int|null $nmbr_control
      * @return mixed
      */
