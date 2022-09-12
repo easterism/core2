@@ -330,6 +330,12 @@ class Render extends Acl {
                             $tpl->search_container->search_field->number->assign("[IN_TEXT]",     $attributes_str);
                             break;
 
+                        case 'date_one' :
+                            $tpl->search_container->search_field->date_one->assign("[KEY]",     $key);
+                            $tpl->search_container->search_field->date_one->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->date_one->assign("[IN_TEXT]", $attributes_str);
+                            break;
+
                         case 'date' :
                             $tpl->search_container->search_field->date->assign("[KEY]",         $key);
                             $tpl->search_container->search_field->date->assign("[VALUE_START]", $control_value[0] ?? '');
@@ -470,6 +476,16 @@ class Render extends Acl {
                             $tpl->filter_controls->filter_control->number->assign("[VALUE_START]", $control_value[0] ?? '');
                             $tpl->filter_controls->filter_control->number->assign("[VALUE_END]",   $control_value[1] ?? '');
                             $tpl->filter_controls->filter_control->number->assign("[ATTR]",        $attributes_str);
+                            break;
+
+                        case 'date_one' :
+                            if ( ! empty($filter['title'])) {
+                                $tpl->filter_controls->filter_control->date_one->title->assign('[TITLE]', $filter['title']);
+                            }
+
+                            $tpl->filter_controls->filter_control->date_one->assign("[KEY]",   $key);
+                            $tpl->filter_controls->filter_control->date_one->assign("[VALUE]", $control_value);
+                            $tpl->filter_controls->filter_control->date_one->assign("[ATTR]",  $attributes_str);
                             break;
 
                         case 'date' :

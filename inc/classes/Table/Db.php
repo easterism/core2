@@ -183,6 +183,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
@@ -266,6 +267,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
@@ -492,6 +494,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
@@ -584,6 +587,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:

@@ -53,6 +53,17 @@
       </div>
       <!-- END date -->
 
+      <!-- BEGIN date_one -->
+      <div class="input-group">
+        <!-- BEGIN title -->
+        <div class="input-group-addon">[TITLE]</div>
+        <!-- END title -->
+        <input type="date" class="form-control input-sm"
+               name="filter[[RESOURCE]][[KEY]]" value="[VALUE]"
+               onchange="CoreUI.table.filter.submit('[RESOURCE]', [IS_AJAX]);" [ATTR]>
+      </div>
+      <!-- END date_one -->
+
       <!-- BEGIN number -->
       <div class="input-group">
         <!-- BEGIN title -->
@@ -204,6 +215,13 @@
                              name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                     </div>
                     <!-- END date -->
+
+                    <!-- BEGIN date_one -->
+                    <div [IN_TEXT]>
+                      <input type="date" id="search-[RESOURCE]-[KEY]-value"  class="form-control input input-sm"
+                             name="search[[RESOURCE]][[KEY]]" value="[VALUE]">
+                    </div>
+                    <!-- END date_one -->
 
                     <!-- BEGIN number -->
                     <div [IN_TEXT]>
@@ -391,7 +409,7 @@
         <!-- END no_sort -->
         <!-- END cell -->
         <!-- BEGIN checkboxes -->
-        <th width="1%">
+        <th style="width: 1px">
           <input type="checkbox" onclick="CoreUI.table.checkAll(this, '[RESOURCE]')"/>
         </th>
         <!-- END checkboxes -->
@@ -404,7 +422,7 @@
       <!-- BEGIN rows -->
       <tr>
         <!-- BEGIN group -->
-        <td colspan="[COLS]" class="coreui-table-row-group" [ATTR]>[VALUE]</td>
+        <td colspan="[COLS]" [ATTR]>[VALUE]</td>
 
         <!-- BEGIN group_checkbox -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
