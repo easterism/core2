@@ -25,9 +25,11 @@ class Panel {
     protected $resource    = '';
     protected $tabs        = [];
     protected $back_url    = '';
-    protected $is_ajax    = false;
+    protected $is_ajax     = false;
+    protected $is_collapsible = false;
     protected $position    = self::POSITION_TOP;
     protected $type        = self::TYPE_TABS;
+    protected $controls    = [];
 
 
     /**
@@ -147,6 +149,46 @@ class Panel {
             'url'     => str_replace('?', '#', $url),
             'options' => $tab_options
         ];
+    }
+
+    /**
+     * Добавляем кнопку в правой части заголовка панели
+     * @param string $id
+     * @param string $content
+     * @param string $action_on_click
+     * @return void
+     */
+    public function addControls(string $id, string $content, string $action_on_click): void
+    {
+        $this->controls[] = [
+            'id' => $id,
+            'content' => htmlspecialchars($content),
+            'action_on_click' => $action_on_click,
+            'type' => 'button'
+        ];
+    }
+
+    /**
+     * Добавляем кастомный html в правой части заголовка панели
+     * @param string $content
+     * @return void
+     */
+    public function addControlsCustom(string $content): void
+    {
+        $this->controls[] = [
+            'content' => htmlspecialchars($content),
+            'type' => 'custom'
+        ];
+    }
+
+    /**
+     * Добавляем кнопку коллапса тела панели
+     * @param bool $is_collapsible
+     * @return void
+     */
+    public function setCollapse(bool $is_collapsible = true): void
+    {
+        $this->is_collapsible = $is_collapsible;
     }
 
 
@@ -308,6 +350,33 @@ class Panel {
 
                 $tpl->tabs->elements->reassign();
             }
+        }
+        if ( ! empty($this->controls)) {
+
+            $tpl->title->assign('[TITLE]', $this->title ?: '');
+
+            foreach ($this->controls as $control) {
+                switch ($control['type']) {
+                    case 'button' :
+                        $tpl->title->panel_controls->controls->controls_button->assign('[ID]', $control['id']);
+                        $tpl->title->panel_controls->controls->controls_button->assign('[ACTION_ONCLICK]', $control['action_on_click']);
+                        $tpl->title->panel_controls->controls->controls_button->assign('[CONTROL_CONTENT]', htmlspecialchars_decode($control['content']));
+                        break;
+
+                    case 'custom' :
+                        $tpl->title->panel_controls->controls->controls_custom->assign('[CONTROLS_CUSTOM]', htmlspecialchars_decode($control['content']));
+                        break;
+
+                    default:
+                        throw new Exception('Нет такого типа для controls ' . $control['type']);
+
+                }
+
+                $tpl->title->panel_controls->controls->reassign();
+            }
+        }
+        if ($this->is_collapsible) {
+            $tpl->title->panel_controls->collapse->assign('[RESOURCE]', $this->resource);
         }
 
         return $tpl->render();
