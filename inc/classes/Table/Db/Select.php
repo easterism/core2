@@ -145,7 +145,7 @@ class Select {
         $alias   = null;
         $matches = [];
         preg_match(
-            '~^(?:`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)\s+(?:AS|)\s*(?<alyce>`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)~i',
+            '~^(?:`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)\s+(?:AS|)\s*(?<alias>`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)~i',
             trim($this->sql['FROM']),
             $matches
         );

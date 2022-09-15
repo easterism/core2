@@ -631,6 +631,11 @@ class Db extends Table {
             }
         }
 
+
+        if (empty($this->table)) {
+            $this->table = $select->getTable();
+        }
+
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
             $table_columns = $this->db->fetchCol("
