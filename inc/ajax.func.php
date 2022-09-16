@@ -304,7 +304,7 @@ class ajaxFunc extends Common {
 	 */
 	protected function getSessFormField($form_id, $id) {
 		$this->getSessForm($form_id);
-		return $this->orderFields[$id];
+		return $this->orderFields[$id] ?? null;
 	}
 
 
