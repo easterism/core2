@@ -110,6 +110,8 @@ class Roles extends \Common {
                 $edit->addControl($this->translate->tr("Доступ к модулям:"), "CUSTOM", $html);
 
                 $edit->back = $this->app;
+                $edit->addParams('is_copy', 0);
+                $edit->addButton($this->_('Копировать'), "$('[name=is_copy]').val(1);this.form.onsubmit();$('[name=is_copy]').val(0)");
                 $edit->save("xajax_saveRole(xajax.getFormValues(this.id))");
 
                 $edit->showTable();
