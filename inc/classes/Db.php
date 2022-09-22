@@ -143,6 +143,7 @@ class Db {
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
+                $this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
             }

@@ -388,7 +388,7 @@
                     if (method_exists($core, $action)) {
                         return $core->$action();
                     } else {
-                        throw new Exception($this->translate->tr("Субмодуль не существует") . ": " . $action);
+                        throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
                     }
 
                 } else {
