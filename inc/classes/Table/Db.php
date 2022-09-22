@@ -559,7 +559,7 @@ class Db extends Table {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
                         case self::FILTER_NUMBER:
-                            if (strpos($search_field, 'ADD_SEARCH') !== false) {
+                            if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($value[0]) || ! empty($value[1])) {
                                     $quoted_value1 = $this->db->quote($filter_value[0]);
                                     $quoted_value2 = $this->db->quote($filter_value[1]);
