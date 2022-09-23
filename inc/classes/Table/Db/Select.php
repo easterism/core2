@@ -192,7 +192,7 @@ class Select {
 
         if ( ! empty($sub_queries[1])) {
             foreach ($sub_queries[1] as $sub_query) {
-                if (preg_match('~^[\(\s]*SELECT\s~i', $sub_query)) {
+                if (preg_match('~[\(\s]*SELECT\s~i', $sub_query)) {
                     $query_hash = hash('crc32b', $sub_query);
                     $query_hash = "[{$query_hash}]";
                     $sql = str_replace($sub_query, $query_hash, $sql);
