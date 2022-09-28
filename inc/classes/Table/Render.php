@@ -594,6 +594,13 @@ class Render extends Acl {
             $group_field = $this->table['groupField'] ?? null;
             $group_value = null;
 
+            $show_column = 0;
+            foreach($this->table['columns'] as $column) {
+                if ($column['show']) {
+                    $show_column++;
+                }
+            }
+
             foreach ($this->table['records'] as $row) {
                 if (is_array($row) && ! empty($row['cells'])) {
                     $row_id = ! empty($row['cells']['id']) && ! empty($row['cells']['id']['value'])
@@ -620,7 +627,7 @@ class Render extends Acl {
                             $count_cols += 1;
                         }
 
-                        $tpl->rows->group->assign('[COLS]',  count($this->table['columns']) + $count_cols);
+                        $tpl->rows->group->assign('[COLS]',  $show_column + $count_cols);
                         $tpl->rows->group->assign('[ATTR]',  '');
                         $tpl->rows->group->assign('[VALUE]', $group_value);
                         $tpl->rows->reassign();
