@@ -34,6 +34,7 @@ class Db {
     private $_s         = array();
     private $_settings  = array();
     private $_locations = array();
+    private $_modules = array();
     private string $schemaName = 'public';
 
     /**
@@ -576,12 +577,9 @@ class Db {
 	 * @return string
 	 */
 	final public function isSubModuleActive($submodule_id) {
-		$id = explode("_", $submodule_id);
-		if (isset($id[1]) && $this->isModuleActive($id[0])) {
-			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
-										INNER JOIN core_submodules AS s ON s.m_id=m.m_id
-									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'",
-				$id);
+        $mod = $this->getSubModule($submodule_id);
+		if ($mod) {
+			$is = 1;
 		} else {
 			$is = 0;
 		}
@@ -596,42 +594,25 @@ class Db {
 	 * @return bool|false|mixed
 	 */
 	public function getSubModule($submodule_id) {
-
-        $key = "is_active_" . $this->config->database->params->dbname . "_" . $submodule_id;
+        $this->getAllModules();
         $id  = explode("_", $submodule_id);
-
 		if (empty($id[1])) {
 			return false;
 		}
-
-		if ( ! ($this->cache->hasItem($key))) {
-			$mods = $this->db->fetchRow("
-                SELECT m.m_id, 
-                       m_name, 
-                       sm_path, 
-                       sm_name, 
-                       m.module_id, 
-                       is_system, 
-                       sm.m_id AS sm_id
-                FROM core_modules AS m
-                    LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-                WHERE m.visible = 'Y'
-                  AND m.module_id = ?
-                  AND sm_key = ?
-                ORDER BY sm.seq
-            ", [
-                $id[0],
-                $id[1]
-            ]);
-
-			$this->cache->setItem($key, $mods);
-            $this->cache->setTags($key, ['is_active_core_modules']);
-
-		} else {
-			$mods = $this->cache->getItem($key);
-		}
-
-		return $mods;
+        if (!isset($this->_modules[$id[0]])) return false;
+        if ($this->_modules[$id[0]]['visible'] !== 'Y') return false;
+        if (!isset($this->_modules[$id[0]]['submodules'][$id[1]])) return false;
+        if ($this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+        $sub = $this->_modules[$id[0]]['submodules'][$id[1]];
+        $mod = ['m_id'  => $this->_modules[$id[0]]['m_id'],
+               'm_name' => $this->_modules[$id[0]]['m_name'],
+               'sm_path' => $sub['sm_path'],
+               'sm_name' => $sub['sm_name'],
+               'module_id' => $id[0],
+               'is_system' => $this->_modules[$id[0]]['is_system'],
+               'sm_id'  => $id[1]
+        ];
+        return $mod;
 	}
 
 
@@ -641,25 +622,8 @@ class Db {
 	 * @return string
 	 */
 	final public function isModuleInstalled($module_id) {
-
-        $module_id = trim(strtolower($module_id));
-        $key       = "is_installed_" . $this->config->database->params->dbname;
-
-        if ( ! $this->cache->hasItem($key)) {
-            $res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules");
-            $is  = [];
-            foreach ($res as $item) {
-                $is[$item['module_id']] = $item;
-            }
-            $this->cache->setItem($key, $is);
-            $this->cache->setTags($key, ['is_active_core_modules']);
-
-        } else {
-            $is = $this->cache->getItem($key);
-        }
-
-        $is = isset($is[$module_id]) ? $is[$module_id] : [];
-
+        $this->getAllModules();
+        $is = isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
         return $is;
 	}
 
@@ -682,12 +646,9 @@ class Db {
 	 * @return string
 	 */
 	final public function getModuleVersion($module_id) {
-
-		return $this->db->fetchOne("
-            SELECT version
-            FROM core_modules
-            WHERE module_id = ?
-        ", $module_id);
+        $this->getAllModules();
+        $version = isset($this->_modules[$module_id]) ? $this->_modules[$module_id]['version'] : '';
+		return $version;
 	}
 
 
@@ -819,15 +780,15 @@ class Db {
 
 
 	/**
-	 * Получение всех настроек системы
+	 * Получение всех включенных настроек системы
 	 */
 	private function getAllSettings(): void {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
-			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
-			$is = array();
-			foreach ($res as $item) {
-				$is[$item['code']] = array(
+			$res = $this->dataSettings->fetchAll($this->dataSettings->select()->where("visible='Y'"))->toArray();
+            $is = array();
+            foreach ($res as $item) {
+                $is[$item['code']] = array(
 					'value' => $item['value'],
 					'is_custom_sw' => $item['is_custom_sw'],
 					'is_personal_sw' => $item['is_personal_sw']
@@ -839,5 +800,33 @@ class Db {
 		}
 		$this->_settings = $is;
 	}
+
+    /**
+     * Список всех модулей
+     *
+     * @return void
+     */
+    private function getAllModules(): void {
+        if ($this->_modules) return;
+        $key = "all_modules_" . $this->config->database->params->dbname;
+        if (!($this->cache->hasItem($key))) {
+            $res = $this->dataModules->fetchAll($this->dataModules->select()->order('seq'));
+            $sub = $this->dataSubModules->fetchAll($this->dataSubModules->select()->order('seq'));
+            $data = [];
+            foreach ($res as $val) {
+                $item = $val->toArray();
+                unset($item['uninstall']); //чтоб не смущал
+                $item['submodules'] = [];
+                foreach ($sub as $item2) {
+                    if ($item2->m_id == $val->m_id) $item['submodules'][$item2->sm_key] = $item2->toArray();
+                }
+                $data[$val->module_id] = $item;
+            }
+            $this->cache->setItem($key, $data);
+        } else {
+            $data = $this->cache->getItem($key);
+        }
+        $this->_modules = $data;
+    }
 
 }
