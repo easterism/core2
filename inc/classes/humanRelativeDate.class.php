@@ -1,5 +1,8 @@
 <?php
 
+require_once 'Tool.php';
+
+
 /*
 
 Human Friendly dates by Invent Partners
@@ -9,84 +12,102 @@ http://www.inventpartners.com
 
 */
 
+/**
+ *
+ */
 class HumanRelativeDate{
 
-	private $current_timestamp;
-	private $current_timestamp_day;
-	private $event_timestamp;
-	private $event_timestamp_day;
-	private $calc_time = false;   // Are we going to do times, or just dates?
-	private $string = 'now';
-	
-	private $magic_5_mins = 300;
-	private $magic_15_mins = 900;
-	private $magic_30_mins = 1800;
-	private $magic_1_hour = 3600;
-	private $magic_1_day = 86400;
-	private $magic_1_week = 604800;
-	
-	public function __construct(){
-	
-		$this->current_timestamp = time();
-		$this->current_timestamp_day = mktime(0,  0 ,  0 , $month = date("n") , $day = date("j") , date("Y"));
-	
+    private $current_timestamp;
+    private $current_timestamp_day;
+    private $event_timestamp;
+    private $event_timestamp_day;
+    private $calc_time = false;   // Are we going to do times, or just dates?
+    private $string = 'now';
+
+    private $magic_5_mins = 300;
+    private $magic_15_mins = 900;
+    private $magic_30_mins = 1800;
+    private $magic_1_hour = 3600;
+    private $magic_1_day = 86400;
+    private $magic_1_week = 604800;
+
+
+    /**
+     *
+     */
+	public function __construct() {
+
+        $this->current_timestamp     = time();
+        $this->current_timestamp_day = mktime(0, 0, 0, $month = date("n"), $day = date("j"), date("Y"));
 	}
-	
-	public function getTextForSQLDate($sql_date){
-		if (!$sql_date) {
+
+
+    /**
+     * @param $sql_date
+     * @return string
+     */
+	public function getTextForSQLDate($sql_date) {
+
+        if ( ! $sql_date) {
             $this->string = 'неверная дата';
             return $this->string;
         }
-		// Split SQL date into date / time
-		@list($date , $time) = explode(' ' , $sql_date);
-		// Split date in Y,m,d
-		@list($Y,$m,$d) = explode('-' , $date);
-		// Check that this is actually a valid date!
-		if (@checkdate($m , $d , $Y)){
-			// If we have a time, then we can show relative time calcs!
-			if(isset($time) && $time){
-				$this->calc_time = true;
-				// Split tim in H,i,s
-				@list($H,$i,$s) = explode(':' , $time);
-			} else {
-				$this->calc_time = false;
-				$H=12;
-				$i=0;
-				$s=0;
-			}
-			// Set the event timestamp
-			$this->event_timestamp = mktime($H, $i , $s , $m , $d , $Y);
-			$this->event_timestamp_day = mktime(0 , 0 , 0 , $m , $d , $Y);
-			
-			//Get the string
-			$this->getString();
-		} else {
-			$this->string = 'неверная дата';
-		}
-		
-		return $this->string;
-		
-	}
-	
-	public function getString(){
-		
-		// Is this today
-		if($this->event_timestamp_day == $this->current_timestamp_day){
-			if($this->calc_time){
-				$this->calcTimeDiffString();
-				return true;
-			} else {
-				$this->string = 'сегодня';
-				return true;
-			}
-		} else {
-			$this->calcDateDiffString();
-			return true;
-		}
-	
+        // Split SQL date into date / time
+        @list($date, $time) = explode(' ', $sql_date);
+        // Split date in Y,m,d
+        @list($Y, $m, $d) = explode('-', $date);
+        // Check that this is actually a valid date!
+        if (@checkdate($m, $d, $Y)) {
+            // If we have a time, then we can show relative time calcs!
+            if (isset($time) && $time) {
+                $this->calc_time = true;
+                // Split tim in H,i,s
+                @list($H, $i, $s) = explode(':', $time);
+            } else {
+                $this->calc_time = false;
+                $H               = 12;
+                $i               = 0;
+                $s               = 0;
+            }
+            // Set the event timestamp
+            $this->event_timestamp     = mktime($H, $i, $s, $m, $d, $Y);
+            $this->event_timestamp_day = mktime(0, 0, 0, $m, $d, $Y);
+
+            //Get the string
+            $this->getString();
+        } else {
+            $this->string = 'неверная дата';
+        }
+
+        return $this->string;
 	}
 
-	protected function calcTimeDiffString(){
+
+    /**
+     * @return bool
+     */
+	public function getString() {
+
+        // Is this today
+        if ($this->event_timestamp_day == $this->current_timestamp_day) {
+            if ($this->calc_time) {
+                $this->calcTimeDiffString();
+                return true;
+            } else {
+                $this->string = 'сегодня';
+                return true;
+            }
+        } else {
+            $this->calcDateDiffString();
+            return true;
+        }
+    }
+
+
+    /**
+     * @return void
+     */
+	protected function calcTimeDiffString() {
 	
 		$diff = $this->event_timestamp - $this->current_timestamp;
 	
@@ -118,15 +139,19 @@ class HumanRelativeDate{
 			} else  if ($diff < ($this->magic_1_hour * 2)){
 				$this->string = 'больше часа назад';
 			} else {
-				$this->string = floor($diff / $this->magic_1_hour) . ' часов назад';
-				//$this->string = 'today at ' . date('H:i' , $this->event_timestamp);
+                $hours      = floor($diff / $this->magic_1_hour);
+                $hours_text = Tool::declNum($hours, ['час', 'часа', 'часов'], true);
+
+				$this->string = "{$hours} {$hours_text} назад";
 			}
-		
 		}
-	
 	}
-	
-	protected function calcDateDiffString(){
+
+
+    /**
+     * @return bool|void
+     */
+	protected function calcDateDiffString() {
 	
 		$diff = $this->event_timestamp_day - $this->current_timestamp_day;
 	
@@ -187,13 +212,16 @@ class HumanRelativeDate{
 				$month_diff = $this->calcMonthDiff();
 				if ($month_diff == 0) {
 					$this->string = 'в начале месяца';
-				} else if ($month_diff == 1){
+                } elseif ($month_diff == 1) {
 					$this->string = 'в прошлом месяце';
 				} else {
-					if($month_diff > 12){
+                    if ($month_diff > 12) {
 						$this->string = 'больше года назад';
 					} else {
-						$this->string = $month_diff . ' месяцев назад';
+                        $month_text = Tool::declNum($month_diff, ['месяц', 'месяца', 'месяцев'], true);
+
+
+                        $this->string = "{$month_diff} {$month_text} назад";
 					}
 				}
 			}
@@ -201,14 +229,17 @@ class HumanRelativeDate{
 		}
 	
 	}
-	
-	protected function calcMonthDiff(){
-		
-		$event_month = intval( (date('Y' , $this->event_timestamp_day) * 12) + date('m' , $this->event_timestamp_day));
-		$current_month = intval( (date('Y' , $this->current_timestamp_day) * 12) + date('m' , $this->current_timestamp_day));
-		$month_diff = abs($event_month - $current_month);
-		return $month_diff;
-	
-	}
 
+
+    /**
+     * @return float|int
+     */
+	protected function calcMonthDiff() {
+
+        $event_month   = intval((date('Y', $this->event_timestamp_day) * 12) + date('m', $this->event_timestamp_day));
+        $current_month = intval((date('Y', $this->current_timestamp_day) * 12) + date('m', $this->current_timestamp_day));
+        $month_diff    = abs($event_month - $current_month);
+
+		return $month_diff;
+	}
 }
