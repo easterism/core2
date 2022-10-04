@@ -432,8 +432,11 @@ class editTable extends initEdit {
 						}
 
 						//присвоение значения из запроса, если запрос вернул результат
-						if (isset($arr[0]) && isset($arr[0][0]) && isset($arr[0][$sqlKey])) {
-							//$value['default'] = htmlspecialchars(stripslashes($arr[0][$sqlKey]));
+						if (isset($arr[0]) &&
+                            isset($arr[0][0]) &&
+                            isset($arr[0][$sqlKey]) &&
+                            is_scalar($arr[0][$sqlKey])
+                        ) {
 							$value['default'] = htmlspecialchars($arr[0][$sqlKey]);
 						}
 
