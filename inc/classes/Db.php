@@ -144,6 +144,9 @@ class Db {
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
+                if ($this->db->getTransactionLevel()) {
+                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
+                }
                 $this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
@@ -187,9 +190,10 @@ class Db {
                     $location  = $this->getModuleLocation($module);
                 }
 				if (!file_exists($location . "/Model/$model.php")) {
-                    throw new \Exception($this->translate->tr('Модель не найдена.'));
+                    throw new \Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
+                if ($module == 'admin') $model = "\Core2\Model\\$model";
                 $v            = new $model();
                 $this->_s[$k] = $v;
 			}
@@ -785,7 +789,9 @@ class Db {
 	private function getAllSettings(): void {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
-			$res = $this->dataSettings->fetchAll($this->dataSettings->select()->where("visible='Y'"))->toArray();
+            require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
+            $v            = new Model\Settings($this->db);
+			$res = $v->fetchAll($v->select()->where("visible='Y'"))->toArray();
             $is = array();
             foreach ($res as $item) {
                 $is[$item['code']] = array(
@@ -810,8 +816,12 @@ class Db {
         if ($this->_modules) return;
         $key = "all_modules_" . $this->config->database->params->dbname;
         if (!($this->cache->hasItem($key))) {
-            $res = $this->dataModules->fetchAll($this->dataModules->select()->order('seq'));
-            $sub = $this->dataSubModules->fetchAll($this->dataSubModules->select()->order('seq'));
+            require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
+            require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
+            $m            = new Model\Modules($this->db);
+            $sm            = new Model\SubModules($this->db);
+            $res = $m->fetchAll($m->select()->order('seq'));
+            $sub = $sm->fetchAll($sm->select()->order('seq'));
             $data = [];
             foreach ($res as $val) {
                 $item = $val->toArray();

@@ -6,8 +6,9 @@
  * Time: 17:04
  * To change this template use File | Settings | File Templates.
  */
+namespace Core2\Model;
 
-class Enum extends Zend_Db_Table_Abstract {
+class Enum extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_enum';
 	private $_enum   = [];
@@ -20,7 +21,7 @@ class Enum extends Zend_Db_Table_Abstract {
      * @param array  $custom
      * @param array  $options
      * @return int
-     * @throws Exception
+     * @throws \Exception
      */
     public function createItem (string $global_id, string $value, array $custom = [], array $options = []) : int {
 
@@ -65,7 +66,7 @@ class Enum extends Zend_Db_Table_Abstract {
     /**
      * @param $expr
      * @param $var
-     * @return Zend_Db_Table_Row_Abstract|null
+     * @return \Zend_Db_Table_Row_Abstract|null
      */
 	public function exists($expr, $var = []) {
 		$sel = $this->select()->where($expr, $var);
