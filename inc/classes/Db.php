@@ -627,7 +627,7 @@ class Db {
 	 */
 	final public function isModuleInstalled($module_id) {
         $this->getAllModules();
-        $is = isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
+        $is = isset($this->_modules[strtolower($module_id)]) ? $this->_modules[strtolower($module_id)] : [];
         return $is;
 	}
 
