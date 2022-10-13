@@ -308,6 +308,8 @@ class editTable extends initEdit {
 				if ($access_edit == 'owner' || $access_read == 'owner') {
 					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
 					if (!isset($res['author'])) {
+                        // Это условие кажется нелогичным.
+                        // Если у пользователя есть доступ на чтение = 'all', то почему нельзя показывать форму в виде $this->readOnly = true;
 						$this->noAccess();
 						return;
 					} elseif ($authNamespace->NAME !== $res['author']) {
