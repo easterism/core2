@@ -587,7 +587,7 @@ class Db extends Table {
                             }
                             break;
 
-                        case self::SEARCH_DATE_ONE:
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
