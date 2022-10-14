@@ -222,11 +222,11 @@ class ModAjax extends ajaxFunc {
             return $this->response;
         }
 
-        if ( ! empty($data['access'])) {
-            $data['control']['access_default'] = base64_encode(serialize($data['access']));
-        }
+        $access = ! empty($data['access']) ? $data['access'] : [];
 
-        $data['control']['access_add'] = '';
+        $data['control']['access_default'] = base64_encode(serialize($access));
+        $data['control']['access_add']     = '';
+
         if ( ! empty($data['addRules'])) {
             $rules = [];
             foreach ($data['addRules'] as $id => $value) {
