@@ -608,12 +608,14 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'switch') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? $this->_('да') : $this->_('нет');
 
                             } else {
                                 $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
                                 $value_y = isset($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
                                 $value_n = isset($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                                $value['default'] = ! empty($value['default']) ? $value['default'] : $value_n;
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
