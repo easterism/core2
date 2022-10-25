@@ -684,7 +684,6 @@ class Db extends Table {
             : $this->records_per_page;
 
         $offset = ($this->current_page - 1) * $this->records_per_page;
-        $select->setLimit($records_per_page, $offset);
 
 
         if ( ! $this->table) {
@@ -708,16 +707,21 @@ class Db extends Table {
                 }
             }
 
+            $select->setLimit($records_per_page, $offset);
+            $select_sql = $select->getSql();
             $result = $this->db->fetchAll($select_sql, $this->query_params);
 
-            if (count($result) > $this->records_per_page) {
-                $this->records_total      = $offset + $this->records_per_page;
-                $this->records_total_more = true;
-                unset($result[array_key_last($result)]);
+            // если к-во записей примерное, то и к-во страниц примерное
 
-            } else {
-                $this->records_total = $offset + count($result);
-            }
+//            if (count($result) > $this->records_per_page) {
+//                $this->records_total      = $offset + $this->records_per_page;
+//                //$this->records_total_more = true;
+//                unset($result[array_key_last($result)]);
+//
+//            } else {
+//                $this->records_total = $offset + count($result);
+//            }
+
 
         } else {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
