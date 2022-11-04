@@ -103,7 +103,7 @@ class User extends \Common {
             return;
         }
 
-        $row = $this->modAdmin->dataUsers->getUserById($user_id);
+        $row = $user_id ? $this->modAdmin->dataUsers->find($user_id)->current() : null;
 
         if ($row) {
             $this->_data = $row;
