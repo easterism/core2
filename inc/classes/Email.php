@@ -1,7 +1,7 @@
 <?php
 namespace Core2;
 
-require_once DOC_ROOT . "core2/inc/classes/Db.php";
+require_once 'Db.php';
 
 use Laminas\Mail;
 use Laminas\Mail\Transport;
@@ -278,15 +278,11 @@ class Email extends Db {
                     }
 
 
-                    $this->db->beginTransaction();
                     $mail_id = $queue->save();
 
                     if ( ! $mail_id || $mail_id <= 0) {
-                        $this->db->rollback();
                         throw new \Exception('Ошибка добавления сообщения в очередь');
-
                     }
-                    $this->db->commit();
 
                     if ($immediately) {
                         $is_send = $this->zendSend(
@@ -305,7 +301,9 @@ class Email extends Db {
                         }
                     }
 
-                } elseif (version_compare($version, '1.5.0', '<=')) {
+                }
+                elseif (version_compare($version, '1.5.0', '<=')) {
+                    //DEPRECATED
                     $queue = new \modQueueController();
 
                     $this->mail_data['date_send'] = $immediately
@@ -331,11 +329,11 @@ class Email extends Db {
                         }
                     }
 
-                } else {
+                }
+                else {
                     $queue = new \modQueueController();
                     $queue->createMail($this->mail_data, $immediately);
                 }
-
             }
             else {
                 $is_send = $this->zendSend(

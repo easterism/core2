@@ -13,7 +13,7 @@ class Logger
     public function run($job, &$log) {
 
         $workload = json_decode($job->workload());
-        $job->sendData('start');
+
         $config = unserialize($workload->config);
 
         \Zend_Registry::set('config', $config);
@@ -22,7 +22,6 @@ class Logger
         $_SERVER = get_object_vars($workload->server);
 
         $data = []; //данные для сохранения в базу
-
         if (isset($config->log) &&
             $config->log &&
             isset($config->log->system->writer) &&
@@ -45,7 +44,7 @@ class Logger
 
         // обновление записи о последней активности
         if ($workload->auth->LIVEID || $data) {
-            $log[] = "Запись в базу данных о последней активности";
+            $log[] = "Запись в базу сведений о последней активности";
             $db = new \Core2\Db($config);
             //$log[] = "Соединяемся с базой...";
             $mysql = $db->db;
@@ -62,9 +61,9 @@ class Logger
                 // игнорируем исключение
                 $log[] = $e->getMessage();
                 $mysql->closeConnection();
+                throw new \Exception($e->getMessage(), $e->getCode());
             }
         }
-        $job->sendComplete('done');
         return;
     }
 }

@@ -67,3 +67,6 @@
 [submodule "mod/webservice/v1.9.0"]
 	path = mod/webservice/v1.9.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/search/v1.0.0"]
+	path = mod/search/v1.0.0
+	url = git@git.rdo.belhard.com:core2/modules/search.git
