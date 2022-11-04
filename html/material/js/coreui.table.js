@@ -23,11 +23,13 @@ CoreUI.table = {
 
         hide : function(resource) {
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
-            var nodes   = wrapper.childNodes;
-            for (var i = 0; i < nodes.length; i++) {
-                if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
-                    nodes[i].style.display = 'none';
-                    break;
+            if (wrapper) {
+                var nodes = wrapper.childNodes;
+                for (var i = 0; i < nodes.length; i++) {
+                    if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
+                        nodes[i].style.display = 'none';
+                        break;
+                    }
                 }
             }
         }
