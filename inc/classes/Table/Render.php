@@ -79,11 +79,11 @@ class Render extends Acl {
                     $total_records .= '+';
                 }
 
-                if (isset($this->table['recordsTotalRound'])
-                    //&& $this->table['recordsPerPage'] == count($this->table['records'])
-                    //&& $this->table['recordsTotalRound'] > $this->table['recordsTotal']
+                if (isset($this->table['recordsTotalRound']) &&
+                    $this->table['recordsPerPage'] == count($this->table['records']) &&
+                    $this->table['recordsTotalRound'] > $this->table['recordsTotal']
                 ) {
-                    $total_records = " <i>~{$this->table['recordsTotalRound']}</i>";
+                    $total_records .= " <small>(~{$this->table['recordsTotalRound']})</small>";
                 }
 
                 $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
@@ -138,8 +138,7 @@ class Render extends Acl {
                         $tpl->service->add_button->assign('[ADD_TEXT]', $this->getLocution('Add'));
                     }
 
-                }
-                else {
+                } else {
                     $tpl->service->assign('[BUTTONS]', '');
                 }
 
@@ -203,17 +202,13 @@ class Render extends Acl {
                 $count_pages  = ! empty($this->table['recordsTotal']) && ! empty($this->table['recordsPerPage'])
                     ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
                     : 0;
-                $tpl_count_pages = ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages;
-                if (isset($this->table['recordsTotalRound'])) {
-                    $count_pages  = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
-                    $tpl_count_pages = "~" . $count_pages;
-                }
+
                 if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
                     $tpl->footer->pages->touchBlock('gotopage');
                 }
 
                 $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
-                $tpl->footer->pages->assign('[COUNT_PAGES]', $tpl_count_pages);
+                $tpl->footer->pages->assign('[COUNT_PAGES]',  ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages);
 
                 if ($current_page > 1) {
                     $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);

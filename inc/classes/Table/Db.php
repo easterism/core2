@@ -694,16 +694,11 @@ class Db extends Table {
 
         $offset = ($this->current_page - 1) * $this->records_per_page;
 
-
-        if ( ! $this->table) {
-            $this->setTable($select->getTable());
-        }
-
         $this->query_parts = $select->getSqlParts();
 
-        $select_sql = $select->getSql();
-
         if ($this->is_round_calc) {
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
                 $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
             }
@@ -718,21 +713,21 @@ class Db extends Table {
 
             $select->setLimit($records_per_page, $offset);
             $select_sql = $select->getSql();
-            $result = $this->db->fetchAll($select_sql, $this->query_params);
+            $result     = $this->db->fetchAll($select_sql, $this->query_params);
 
-            // если к-во записей примерное, то и к-во страниц примерное
+            if (count($result) > $this->records_per_page) {
+                $this->records_total      = $offset + $this->records_per_page;
+                $this->records_total_more = true;
+                unset($result[array_key_last($result)]);
 
-//            if (count($result) > $this->records_per_page) {
-//                $this->records_total      = $offset + $this->records_per_page;
-//                //$this->records_total_more = true;
-//                unset($result[array_key_last($result)]);
-//
-//            } else {
-//                $this->records_total = $offset + count($result);
-//            }
-
+            } else {
+                $this->records_total = $offset + count($result);
+            }
 
         } else {
+            $select->setLimit($records_per_page, $offset);
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
