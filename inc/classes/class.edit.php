@@ -1482,7 +1482,7 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if ($item_field['type'] == 'select') {
+                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
                                                         $field_value = $item_field['options'][$field_value] ?? $field_value;
                                                     }
                                                 }
