@@ -630,8 +630,8 @@ class Modules extends \Common  {
         $custom_access 		= '';
         if ($submodule_id) {
             $res = $this->dataSubModules->find($submodule_id)->current();
-            $access_default = unserialize(base64_decode($res->access_default));
-            $access_add 	= unserialize(base64_decode($res->access_add));
+            $access_default = $res->access_default ? unserialize(base64_decode($res->access_default)) : [];
+            $access_add 	= $res->access_add ? unserialize(base64_decode($res->access_add)) : [];
             if (is_array($access_add) && count($access_add)) {
                 foreach ($access_add as $key => $value) {
                     $id = uniqid();
