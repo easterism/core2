@@ -453,7 +453,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
-                $search_column = $this->search_controls[$key];
+                $search_column = $this->search_controls[$key] ?? null;
 
                 if ($search_column instanceof Search) {
                     $search_field = $search_column->getField();
@@ -542,11 +542,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
-                if ( ! isset($this->filter_controls[$key])) {
-                    continue;
-                }
-
-                $filter_column = $this->filter_controls[$key];
+                $filter_column = $this->filter_controls[$key] ?? null;
 
                 if ($filter_column instanceof Filter) {
                     $filter_field = $filter_column->getField();
