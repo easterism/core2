@@ -517,6 +517,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\">";
 							}
 						}
+						elseif ($value['type'] == 'number_range') { // только цифры
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-start\" type=\"text\" name=\"control[$field][0]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\" placeholder=\"от\"> - ";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-end\" type=\"text\" name=\"control[$field][1]\" {$attrs} value=\"\" onkeypress=\"return checkInt(event);\" placeholder=\"до\">";
+							}
+						}
 						elseif ($value['type'] == 'money') {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= Tool::commafy($value['default']);
