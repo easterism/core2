@@ -147,7 +147,7 @@ class Db {
                 if ($this->db->getTransactionLevel()) {
                     throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
                 }
-                $this->db->closeConnection();
+                //$this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
             }
