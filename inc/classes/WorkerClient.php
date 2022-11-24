@@ -15,8 +15,8 @@ class WorkerClient {
     public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
-
-        if ($host = trim($cc->gearman->host)) {
+        $host = $cc->gearman->host;
+        if ($host && trim($host)) {
             if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
             $this->client = new \GearmanClient();
             //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
@@ -96,10 +96,6 @@ class WorkerClient {
      * @return false|string
      */
     public function doBackground($worker, $data, $unique = null) {
-
-        if (empty($this->client)) {
-            return false;
-        }
 
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
