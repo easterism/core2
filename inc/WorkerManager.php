@@ -351,7 +351,7 @@ class WorkerManager {
     protected function getopt() {
         $this->config = [];
 
-        $opts = getopt("ac:dD:h:Hl:o:p:P:u:v::w:r:x:Z");
+        $opts = getopt("ac:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L");
 
         if (isset($opts["H"])) {
             $this->show_help();
@@ -513,7 +513,7 @@ class WorkerManager {
             $this->check_code = true;
         }
 
-        $this->worker_dir = $this->config['worker_dir'] ? $this->config['worker_dir'] : __DIR__ . "/../workers";
+        $this->worker_dir = !empty($this->config['worker_dir']) ? $this->config['worker_dir'] : __DIR__ . "/../workers";
         $dirs = is_array($this->worker_dir) ? $this->worker_dir : explode(",", $this->worker_dir);
         foreach ($dirs as &$dir) {
             $dir = trim($dir);
@@ -1189,6 +1189,7 @@ class WorkerManager {
         echo "  -t SECONDS     Maximum number of seconds gearmand server should wait for a worker to complete work before timing out and reissuing work to another worker.\n";
         echo "  -x SECONDS     Maximum seconds for a worker to live\n";
         echo "  -Z             Parse the command line and config file then dump it to the screen and exit.\n";
+        echo "  -L LABEL       Label worker process to easy find in process list.\n";
         echo "\n";
         exit();
     }
@@ -1315,7 +1316,7 @@ class WorkerManager {
         }
         $job_name_log = $this->getRealJobName($job_name);
 
-        $this->toLog("($h) Starting Job: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
+        $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
         $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
@@ -1325,8 +1326,16 @@ class WorkerManager {
          */
         if (isset($objects[$job_name])) {
             $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
-
-            $result = $objects[$job_name]->run($job, $log);
+            try {
+                $job->sendData('start');
+                $result = $objects[$job_name]->run($job, $log);
+                $job->sendComplete('done');
+                $log[] = "Finish Job: $job_name_log";
+            } catch (\Exception $e) {
+                $this->toLog($e->getMessage(), self::LOG_LEVEL_WORKER_INFO);
+                $job->sendException($e->getMessage());
+                $job->sendFail();
+            }
         } elseif (function_exists($func)) {
             $this->toLog("($h) Calling function for $job_name_log.", self::LOG_LEVEL_DEBUG);
             $result = $func($job, $log);
@@ -1376,7 +1385,6 @@ class WorkerManager {
          */
         $type = gettype($result);
         settype($result, $type);
-
 
         $this->job_execution_count++;
 

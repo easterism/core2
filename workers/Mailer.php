@@ -14,7 +14,6 @@ class Mailer
     public function run($job, &$log) {
 
         $workload = json_decode($job->workload());
-        $job->sendData('start');
         $config = unserialize($workload->config);
         \Zend_Registry::set('config', $config);
         \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
@@ -212,6 +211,5 @@ class Mailer
         $message->setFrom($from_email, $from_name);
         $transport->send($message);
 
-        $job->sendComplete('done');
     }
 }

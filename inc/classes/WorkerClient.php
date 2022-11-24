@@ -9,7 +9,6 @@ use Laminas\Session\Container as SessionContainer;
  */
 class WorkerClient {
 
-    private $client;
     private $location;
     private $module;
 
@@ -61,6 +60,19 @@ class WorkerClient {
         //    exit;
         //}
     }
+
+    public function __get(string $name)
+    {
+        if ($name == 'client') { //не задан конфиг для воркера
+            return (new class {
+                public function __call(string $name, array $arguments)
+                {
+                    return false;
+                }
+            });
+        }
+    }
+
 
     private function assignCallbacks() {
         $this->client->setExceptionCallback(function (\GearmanTask $task) {
