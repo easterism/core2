@@ -144,10 +144,10 @@ class Db {
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
-                if ($this->db->getTransactionLevel()) {
-                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
-                }
-                //$this->db->closeConnection();
+//                if ($this->db->getTransactionLevel()) {
+//                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
+//                }
+//                $this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
             }
