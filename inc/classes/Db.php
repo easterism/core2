@@ -144,10 +144,10 @@ class Db {
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
-                if ($this->db->getTransactionLevel()) {
-                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
-                }
-                $this->db->closeConnection();
+//                if ($this->db->getTransactionLevel()) {
+//                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
+//                }
+//                $this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
             }
@@ -684,7 +684,7 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "is_installed_" . $this->config->database->params->dbname;
+            $key = "all_modules_" . $this->config->database->params->dbname;
 
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";

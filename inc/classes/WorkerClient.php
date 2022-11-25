@@ -104,10 +104,6 @@ class WorkerClient {
      */
     public function doBackground($worker, $data, $unique = null) {
 
-        if (empty($this->client)) {
-            return false;
-        }
-
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
 
