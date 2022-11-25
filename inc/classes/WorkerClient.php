@@ -108,7 +108,7 @@ class WorkerClient {
         $worker = $this->getWorkerName($worker);
 
         $jh = $this->client->doBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (defined('GEARMAN_SUCCESS') && $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
@@ -126,7 +126,7 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (defined('GEARMAN_SUCCESS') && $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
