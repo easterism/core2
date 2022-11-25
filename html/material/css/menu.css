@@ -54,7 +54,7 @@ a {color: #337AB7}
     width: 240px;
     overflow: auto;
     background-color: #3e5a70;
-    box-shadow: inset -1px 0 3px 0 #444;
+    box-shadow: inset -1px 0 3px 0 #00000059;
     direction: rtl;
     -webkit-transition: all 0.3s ease-in-out;
        -moz-transition: all 0.3s ease-in-out;

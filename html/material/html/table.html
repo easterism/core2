@@ -53,6 +53,17 @@
       </div>
       <!-- END date -->
 
+      <!-- BEGIN date_one -->
+      <div class="input-group">
+        <!-- BEGIN title -->
+        <div class="input-group-addon">[TITLE]</div>
+        <!-- END title -->
+        <input type="date" class="form-control input-sm"
+               name="filter[[RESOURCE]][[KEY]]" value="[VALUE]"
+               onchange="CoreUI.table.filter.submit('[RESOURCE]', [IS_AJAX]);" [ATTR]>
+      </div>
+      <!-- END date_one -->
+
       <!-- BEGIN number -->
       <div class="input-group">
         <!-- BEGIN title -->
@@ -117,7 +128,7 @@
 
     <!-- BEGIN filter_clear -->
     <li class="filter-clear">
-      <button type="button" class="btn btn-sm btn-default"
+      <button type="button" class="btn btn-sm btn-info"
               onclick="CoreUI.table.filter.clear('[RESOURCE]', [IS_AJAX]);">
         <i class="fa fa-times"></i> _tr(Отменить)
       </button>
@@ -204,6 +215,13 @@
                              name="search[[RESOURCE]][[KEY]][1]" value="[VALUE_END]">
                     </div>
                     <!-- END date -->
+
+                    <!-- BEGIN date_one -->
+                    <div [IN_TEXT]>
+                      <input type="date" id="search-[RESOURCE]-[KEY]-value"  class="form-control input-sm"
+                             name="search[[RESOURCE]][[KEY]]" value="[VALUE]">
+                    </div>
+                    <!-- END date_one -->
 
                     <!-- BEGIN number -->
                     <div [IN_TEXT]>
@@ -408,7 +426,7 @@
 
         <!-- BEGIN group_checkbox -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
-          <input type="checkbox" onclick="CoreUI.table.checkGroup(this)"/>
+          <input type="checkbox" onclick="CoreUI.table.checkGroup(this, '[RESOURCE]')"/>
         </td>
         <!-- END group_checkbox -->
         <!-- END group -->
@@ -433,7 +451,7 @@
 
           <!-- BEGIN checkboxes -->
           <td class="checked-row" onclick="event.cancelBubble=true;">
-            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]" onclick="CoreUI.table.checkRow(this, '[RESOURCE]')">
           </td>
           <!-- END checkboxes -->
         <!-- END row -->

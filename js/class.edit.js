@@ -649,40 +649,106 @@ var edit = {
 	 *
 	 */
     modal2: {
-        key: '',
+		key: '',
 
-        load: function(theme_src, key, url) {
-            this.key            = key;
-            var modal_container = $('#' + this.key + '-modal').appendTo('#main_body');
-            var $body_container = $('.modal-dialog>.modal-content>.modal-body', modal_container);
-
-            $body_container.html(
-                '<div style="text-align:center">' +
-                    '<img src="' + theme_src + '/img/load.gif" alt="loading">' +
-                    ' Загрузка' +
-                '</div>'
-            );
-
-            $body_container.load(url);
+		options: [],
 
 
-            $('#' + this.key + '-modal').modal('show');
-        },
+		/**
+		 * @param theme_src
+		 * @param key
+		 * @param url
+		 * @return {boolean}
+		 */
+		load: function(theme_src, key, url) {
 
-        clear: function(key) {
-            $('#' + key).val('');
-            $('#' + key + '-title').val('');
-        },
+			if (typeof url === 'function') {
+				url = url();
+			}
 
-        hide: function() {
-            $('#' + this.key + '-modal').modal('hide');
-        },
+			if ( ! url || ! edit.modal2.options.hasOwnProperty(key)) {
+				return false;
+			}
 
-        choose: function(value, title) {
-            $('#' + this.key).val(value);
-            $('#' + this.key + '-title').val(title);
-            this.hide();
-        }
+			edit.modal2.key = key;
+
+			var title = edit.modal2.options[key].title || '';
+			var size  = edit.modal2.options[key].size || '' ;
+
+			$('#main_body').append(
+				'<div class="modal fade" tabindex="-1" id="' + key + '-modal">' +
+					'<div class="modal-dialog ' + size + '">' +
+						'<div class="modal-content">' +
+							'<div class="modal-header">' +
+								'<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>' +
+								'<h4 class="modal-title">' + title + '</h4>' +
+							'</div>' +
+							'<div class="modal-body">' +
+								'<div style="text-align:center">' +
+								'	<img src="' + theme_src + '/img/load.gif" alt="loading"> Загрузка' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</div>' +
+				'</div>'
+			);
+
+
+			var modal = $('#' + key + '-modal');
+
+			$('.modal-dialog > .modal-content > .modal-body', modal)
+				.load(url);
+
+			modal.modal('show');
+			modal.on('hidden.bs.modal', function (e) {
+
+				if (edit.modal2.options[key] &&
+					typeof edit.modal2.options[key].onHidden === 'function'
+				) {
+					edit.modal2.options[key].onHidden();
+				}
+
+				modal.remove();
+			});
+		},
+
+
+		/**
+		 * @param key
+		 */
+		clear: function(key) {
+
+			$('#' + key).val('');
+			$('#' + key + '-title').val('');
+
+
+			if (this.options[key] && typeof this.options[key].onClear === 'function') {
+				this.options[key].onClear();
+			}
+		},
+
+
+		/**
+		 *
+		 */
+		hide: function() {
+			$('#' + this.key + '-modal').modal('hide');
+		},
+
+
+		/**
+		 * @param value
+		 * @param title
+		 */
+		choose: function(value, title) {
+			$('#' + this.key).val(value);
+			$('#' + this.key + '-title').val(title);
+			this.hide();
+
+			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
+				this.options[this.key].onChoose(value, title);
+			}
+		}
     },
 
     /**

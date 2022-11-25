@@ -21,7 +21,6 @@ class Data extends Table {
      */
     public function fetchData(): array {
 
-        $this->preFetchRows();
         return $this->fetchRows();
     }
 
@@ -162,6 +161,7 @@ class Data extends Table {
                             }
                             break;
 
+                        case 'date_one':
                         case 'radio':
                         case 'select':
                         case 'text_strict':
@@ -296,6 +296,7 @@ class Data extends Table {
                             }
                             break;
 
+                        case 'date_one':
                         case 'radio':
                         case 'select':
                         case 'text_strict':

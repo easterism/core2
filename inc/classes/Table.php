@@ -68,6 +68,7 @@ abstract class Table extends Acl {
     const SEARCH_SELECT      = 'select';
     const SEARCH_TEXT        = 'text';
     const SEARCH_TEXT_STRICT = 'text_strict';
+    const SEARCH_DATE_ONE    = 'date_one';
     const SEARCH_DATE        = 'date';
     const SEARCH_DATETIME    = 'datetime';
     const SEARCH_NUMBER      = 'number';
@@ -78,6 +79,7 @@ abstract class Table extends Acl {
     const FILTER_SELECT      = 'select';
     const FILTER_TEXT        = 'text';
     const FILTER_TEXT_STRICT = 'text_strict';
+    const FILTER_DATE_ONE    = 'date_one';
     const FILTER_DATE        = 'date';
     const FILTER_DATETIME    = 'datetime';
     const FILTER_NUMBER      = 'number';
@@ -355,6 +357,15 @@ abstract class Table extends Acl {
         }
 
         return $search ?: null;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getResource(): string {
+
+        return $this->resource;
     }
 
 
@@ -797,7 +808,7 @@ abstract class Table extends Acl {
      * @param string $field
      * @param string $type
      * @param string $title
-     * @return void
+     * @return Filter
      * @throws Exception
      */
     public function addFilter(string $field, string $type = self::FILTER_TEXT, string $title = ''): Filter {

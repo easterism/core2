@@ -630,14 +630,14 @@ class Modules extends \Common  {
         $custom_access 		= '';
         if ($submodule_id) {
             $res = $this->dataSubModules->find($submodule_id)->current();
-            $access_default = unserialize(base64_decode($res->access_default));
-            $access_add 	= unserialize(base64_decode($res->access_add));
+            $access_default = $res->access_default ? unserialize(base64_decode($res->access_default)) : [];
+            $access_add 	= $res->access_add ? unserialize(base64_decode($res->access_add)) : [];
             if (is_array($access_add) && count($access_add)) {
                 foreach ($access_add as $key => $value) {
                     $id = uniqid();
                     $custom_access .= '<input type="text" class="input" name="addRules[' . $id . ']" value="' . $key . '"/>'.
-                        '<input type="checkbox" onchange="checkToAll(this)" id="access_' . $id . '_all" name="value_all[' . $id . ']" value="all" ' . ($value == 'all' ? 'checked="checked"' : '') . '/><label>Все</label>'.
-                        '<input type="checkbox" name="value_owner[' . $id . ']" id="access_' . $id . '_owner" value="owner" ' . (($value == 'all' || $value == 'owner') ? ' checked="checked"' : '') . ($value == 'all' ? ' disabled="disabled"' : '') . '/><label>Владелец</label><br>';
+                        '<label><input type="checkbox" onchange="checkToAll(this)" id="access_' . $id . '_all" name="value_all[' . $id . ']" value="all" ' . ($value == 'all' ? 'checked="checked"' : '') . '/> Все</label>'.
+                        '<label><input type="checkbox" name="value_owner[' . $id . ']" id="access_' . $id . '_owner" value="owner" ' . (($value == 'all' || $value == 'owner') ? ' checked="checked"' : '') . ($value == 'all' ? ' disabled="disabled"' : '') . '/> Владелец</label><br>';
                 }
             }
         }

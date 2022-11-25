@@ -308,6 +308,8 @@ class editTable extends initEdit {
 				if ($access_edit == 'owner' || $access_read == 'owner') {
 					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
 					if (!isset($res['author'])) {
+                        // Это условие кажется нелогичным.
+                        // Если у пользователя есть доступ на чтение = 'all', то почему нельзя показывать форму в виде $this->readOnly = true;
 						$this->noAccess();
 						return;
 					} elseif ($authNamespace->NAME !== $res['author']) {
@@ -432,8 +434,11 @@ class editTable extends initEdit {
 						}
 
 						//присвоение значения из запроса, если запрос вернул результат
-						if (isset($arr[0]) && isset($arr[0][0]) && isset($arr[0][$sqlKey])) {
-							//$value['default'] = htmlspecialchars(stripslashes($arr[0][$sqlKey]));
+						if (isset($arr[0]) &&
+                            isset($arr[0][0]) &&
+                            isset($arr[0][$sqlKey]) &&
+                            is_scalar($arr[0][$sqlKey])
+                        ) {
 							$value['default'] = htmlspecialchars($arr[0][$sqlKey]);
 						}
 
@@ -510,6 +515,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\">";
+							}
+						}
+						elseif ($value['type'] == 'number_range') { // только цифры
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-start\" type=\"text\" name=\"control[$field][0]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\" placeholder=\"от\"> - ";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-end\" type=\"text\" name=\"control[$field][1]\" {$attrs} value=\"\" onkeypress=\"return checkInt(event);\" placeholder=\"до\">";
 							}
 						}
 						elseif ($value['type'] == 'money') {
@@ -603,12 +616,14 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'switch') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? $this->_('да') : $this->_('нет');
 
                             } else {
                                 $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
                                 $value_y = isset($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
                                 $value_n = isset($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                                $value['default'] = ! empty($value['default']) ? $value['default'] : $value_n;
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
@@ -1475,7 +1490,7 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if ($item_field['type'] == 'select') {
+                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
                                                         $field_value = $item_field['options'][$field_value] ?? $field_value;
                                                     }
                                                 }

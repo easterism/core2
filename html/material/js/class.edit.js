@@ -282,29 +282,48 @@ var edit = {
 				url = url();
 			}
 
-        	if ( ! url) {
+        	if ( ! url || ! edit.modal2.options.hasOwnProperty(key)) {
         		return false;
 			}
 
-            this.key            = key;
-            var modal_container = $('#' + this.key + '-modal').appendTo('#main_body');
-            var $body_container = $('.modal-dialog>.modal-content>.modal-body', modal_container);
+			edit.modal2.key = key;
 
-            $body_container.html(
-                '<div style="text-align:center">' +
-                    '<img src="' + theme_src + '/img/load.gif" alt="loading">' +
-                    ' Загрузка' +
-                '</div>'
-            );
+			var title = edit.modal2.options[key].title || '';
+			var size  = edit.modal2.options[key].size || '' ;
 
-			$body_container.load(url);
+			$('#main_body').append(
+				'<div class="modal fade" tabindex="-1" id="' + key + '-modal">' +
+					'<div class="modal-dialog ' + size + '">' +
+						'<div class="modal-content">' +
+							'<div class="modal-header">' +
+								'<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>' +
+								'<h4 class="modal-title">' + title + '</h4>' +
+							'</div>' +
+							'<div class="modal-body">' +
+								'<div style="text-align:center">' +
+									'<img src="' + theme_src + '/img/load.gif" alt="loading"> Загрузка' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</div>' +
+				'</div>'
+			);
 
-            $('#' + this.key + '-modal').modal('show');
 
+			var modal = $('#' + key + '-modal');
 
-			if (this.options[key] && typeof this.options[key].onHidden === 'function') {
-				$('#' + this.key + '-modal').on('hidden.bs.modal', this.options[key].onHidden);
-			}
+			$('.modal-dialog > .modal-content > .modal-body', modal)
+				.load(url);
+
+			modal.modal('show');
+			modal.on('hidden.bs.modal', function (e) {
+
+				if (typeof edit.modal2.options[key].onHidden === 'function') {
+					edit.modal2.options[key].onHidden();
+				}
+
+				modal.remove();
+			});
         },
 
 

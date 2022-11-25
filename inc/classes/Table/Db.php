@@ -183,6 +183,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
@@ -266,6 +267,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
@@ -451,7 +453,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
-                $search_column = $this->search_controls[$key];
+                $search_column = $this->search_controls[$key] ?? null;
 
                 if ($search_column instanceof Search) {
                     $search_field = $search_column->getField();
@@ -492,6 +494,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
@@ -539,11 +542,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
-                if ( ! isset($this->filter_controls[$key])) {
-                    continue;
-                }
-
-                $filter_column = $this->filter_controls[$key];
+                $filter_column = $this->filter_controls[$key] ?? null;
 
                 if ($filter_column instanceof Filter) {
                     $filter_field = $filter_column->getField();
@@ -556,7 +555,7 @@ class Db extends Table {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
                         case self::FILTER_NUMBER:
-                            if (strpos($search_field, 'ADD_SEARCH') !== false) {
+                            if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($value[0]) || ! empty($value[1])) {
                                     $quoted_value1 = $this->db->quote($filter_value[0]);
                                     $quoted_value2 = $this->db->quote($filter_value[1]);
@@ -584,6 +583,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
@@ -625,6 +625,11 @@ class Db extends Table {
                     }
                 }
             }
+        }
+
+
+        if (empty($this->table)) {
+            $this->table = $select->getTable();
         }
 
         //проверка наличия полей для последовательности и автора
@@ -685,16 +690,11 @@ class Db extends Table {
 
         $offset = ($this->current_page - 1) * $this->records_per_page;
 
-
-        if ( ! $this->table) {
-            $this->setTable($select->getTable());
-        }
-
         $this->query_parts = $select->getSqlParts();
 
-        $select_sql = $select->getSql();
-
         if ($this->is_round_calc) {
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
                 $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
             }
@@ -709,21 +709,21 @@ class Db extends Table {
 
             $select->setLimit($records_per_page, $offset);
             $select_sql = $select->getSql();
-            $result = $this->db->fetchAll($select_sql, $this->query_params);
+            $result     = $this->db->fetchAll($select_sql, $this->query_params);
 
-            // если к-во записей примерное, то и к-во страниц примерное
+            if (count($result) > $this->records_per_page) {
+                $this->records_total      = $offset + $this->records_per_page;
+                $this->records_total_more = true;
+                unset($result[array_key_last($result)]);
 
-//            if (count($result) > $this->records_per_page) {
-//                $this->records_total      = $offset + $this->records_per_page;
-//                //$this->records_total_more = true;
-//                unset($result[array_key_last($result)]);
-//
-//            } else {
-//                $this->records_total = $offset + count($result);
-//            }
-
+            } else {
+                $this->records_total = $offset + count($result);
+            }
 
         } else {
+            $select->setLimit($records_per_page, $offset);
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
