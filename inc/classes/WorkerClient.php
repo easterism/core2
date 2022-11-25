@@ -12,11 +12,17 @@ class WorkerClient {
     private $location;
     private $module;
 
+
+    /**
+     * @throws \Exception
+     */
     public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
 
-        if ($host = trim($cc->gearman->host)) {
+        if ($cc->gearman && $cc->gearman->hist) {
+            $host = trim($cc->gearman->host);
+
             if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
             $this->client = new \GearmanClient();
             //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
@@ -26,6 +32,7 @@ class WorkerClient {
             } catch (\GearmanException $e) {
                 return new \stdObject();
             }
+
         } else { //TODO другие воркеры?
             return new \stdObject();
         }
