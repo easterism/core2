@@ -685,7 +685,6 @@ class Db {
 
         if ( ! isset($module['location'])) {
             $key = "all_modules_" . $this->config->database->params->dbname;
-
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {

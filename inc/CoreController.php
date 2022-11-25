@@ -1204,4 +1204,19 @@ class CoreController extends Common implements File {
 			return array('body' => $data2, 'count_lines' => $count_lines);
 		}
 	}
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function action_workhorse() {
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        try {
+            require_once __DIR__ . "/../mod/admin/classes/workhorse/View.php";
+            $view  = new Admin\Workhorse\View();
+
+        } catch (Exception $e) {
+            echo Alert::danger($e->getMessage());
+        }
+    }
 }
