@@ -40,22 +40,13 @@ class Logger
             if ($data['action']) {
                 $data['action'] = serialize($data['action']);
             }
-        }
-
-        // обновление записи о последней активности
-        if ($workload->auth->LIVEID || $data) {
-            $log[] = "Запись в базу сведений о последней активности";
             $db = new \Core2\Db($config);
             //$log[] = "Соединяемся с базой...";
             $mysql = $db->db;
             try {
-                if ($data) $mysql->insert('core_log', $data);
-                $row = $db->dataSession->find($workload->auth->LIVEID)->current();
-                if ($row) {
-                    $row->last_activity = new \Zend_Db_Expr('NOW()');
-                    $row->save();
-                }
-                $log[] = "закрываем соединение...";
+                $mysql->insert('core_log', $data);
+
+                //$log[] = "закрываем соединение...";
                 $mysql->closeConnection();
             } catch (\Exception $e) {
                 // игнорируем исключение
