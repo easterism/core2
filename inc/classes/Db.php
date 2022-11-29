@@ -389,6 +389,16 @@ class Db {
                 'user_id'        => $auth->ID
             ];
 
+            // обновление записи о последней активности
+            if ($auth->LIVEID) {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                if ($row) {
+                    $row->last_activity = new \Zend_Db_Expr('NOW()');
+                    $row->save();
+                }
+            }
+
+            // запись данных запроса в лог
             $w = $this->workerAdmin->doBackground('Logger', array_merge($data, ['action' => $arr]));
             if ($w) {
                 return;
@@ -411,16 +421,6 @@ class Db {
                     $data['action'] = serialize($arr);
                 }
                 $this->db->insert('core_log', $data);
-            }
-
-            // обновление записи о последней активности
-            if ($auth->LIVEID) {
-                $row = $this->dataSession->find($auth->LIVEID)->current();
-
-                if ($row) {
-                    $row->last_activity = new \Zend_Db_Expr('NOW()');
-                    $row->save();
-                }
             }
         }
     }
