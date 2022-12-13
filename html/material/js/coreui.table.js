@@ -607,6 +607,33 @@ CoreUI.table = {
 
 
     /**
+     * Перезагрузка таблицы
+     * @param resource
+     * @param isAjax
+     */
+    reload: function (resource, isAjax) {
+
+        if (isAjax) {
+            CoreUI.table.preloader.show(resource);
+
+            let container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+            load(CoreUI.table.loc[resource], {}, container, function () {
+                CoreUI.table.preloader.hide(resource);
+                preloader.callback();
+                CoreUI.table._callEventReload(resource);
+            });
+
+        } else {
+            load(CoreUI.table.loc[resource], {}, '', function () {
+                preloader.callback();
+                CoreUI.table._callEventReload(resource);
+            });
+        }
+    },
+
+
+    /**
      * @param resource
      * @param field
      * @param id

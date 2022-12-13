@@ -12,11 +12,17 @@ class WorkerClient {
     private $location;
     private $module;
 
+
+    /**
+     * @throws \Exception
+     */
     public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
 
-        if ($host = trim($cc->gearman->host)) {
+        if ($cc->gearman && $cc->gearman->hist) {
+            $host = trim($cc->gearman->host);
+
             if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
             $this->client = new \GearmanClient();
             //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
@@ -26,6 +32,7 @@ class WorkerClient {
             } catch (\GearmanException $e) {
                 return new \stdObject();
             }
+
         } else { //TODO другие воркеры?
             return new \stdObject();
         }
@@ -97,15 +104,11 @@ class WorkerClient {
      */
     public function doBackground($worker, $data, $unique = null) {
 
-        if (empty($this->client)) {
-            return false;
-        }
-
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
 
         $jh = $this->client->doBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (defined('GEARMAN_SUCCESS') && $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
@@ -123,7 +126,7 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (defined('GEARMAN_SUCCESS') && $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }

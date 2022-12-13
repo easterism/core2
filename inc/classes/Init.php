@@ -818,6 +818,10 @@
                                 foreach ($module_js_list as $k => $module_js) {
                                     $modules_js[] = \Tool::addSrcHash($module_js);
                                 }
+                                foreach ($module_js_list as $k => $module_js) {
+                                    $module_js_list[$k] = \Tool::addSrcHash($module_js);
+                                }
+                                $modules_js = array_merge($modules_js, $module_js_list);
                             }
 
                             if ($modController instanceof TopCss &&
@@ -826,6 +830,10 @@
                                 foreach ($module_css_list as $k => $module_css) {
                                     $modules_css[] = \Tool::addSrcHash($module_css);
                                 }
+                                foreach ($module_css_list as $k => $module_css) {
+                                    $module_css_list[$k] = \Tool::addSrcHash($module_css);
+                                }
+                                $modules_css = array_merge($modules_css, $module_css_list);
                             }
 
                             if (THEME !== 'default') {
