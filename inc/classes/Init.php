@@ -145,22 +145,23 @@
 	//сохраняем параметры сессии
     if ($config->session) {
         $sess_config = new SessionConfig();
+        $sess_config->setOptions($config->session);
+        $sess_manager = new SessionManager($sess_config);
         if ($config->session->phpSaveHandler) {
-            $options = ['namespace' => 'phpsess'];
+            $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
             if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
             if ($config->session->savePath) $options['server'] = $config->session->savePath;
 
             if ($config->session->saveHandler === 'memcached') {
-                //$adapter  = new Storage\Adapter\Memcached($options);
-                //$sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                $adapter  = new Storage\Adapter\Memcached($options);
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
             elseif ($config->session->phpSaveHandler === 'redis') {
-                //$adapter  = new Storage\Adapter\Redis($options);
-                //$sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                $adapter  = new Storage\Adapter\Redis($options);
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
         }
-        $sess_config->setOptions($config->session);
-        $sess_manager = new SessionManager($sess_config);
+
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -273,7 +274,7 @@
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
-            //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
+            //if ($_SERVER['REQUEST_METHOD'] === 'GET') $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
 
@@ -815,18 +816,16 @@
                                 $module_js_list = $modController->topJs()
                             ) {
                                 foreach ($module_js_list as $k => $module_js) {
-                                    $module_js_list[$k] = \Tool::addSrcHash($module_js);
+                                    $modules_js[] = \Tool::addSrcHash($module_js);
                                 }
-                                $modules_js = array_merge($modules_js, $module_js_list);
                             }
 
                             if ($modController instanceof TopCss &&
                                 $module_css_list = $modController->topCss()
                             ) {
                                 foreach ($module_css_list as $k => $module_css) {
-                                    $module_css_list[$k] = \Tool::addSrcHash($module_css);
+                                    $modules_css[] = \Tool::addSrcHash($module_css);
                                 }
-                                $modules_css = array_merge($modules_css, $module_css_list);
                             }
 
                             if (THEME !== 'default') {
@@ -900,13 +899,13 @@
 
             if ( ! empty($modules_css)) {
                 foreach ($modules_css as $src) {
-                    $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
+                    if ($src) $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                 }
             }
 
             if ( ! empty($modules_js)) {
                 foreach ($modules_js as $src) {
-                    $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                    if ($src) $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
             }
 
@@ -1501,6 +1500,15 @@
                 $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
                 if ( ! file_exists($location . "/$modController.php")) {
                     unset($modsList[$k]);
+                } else {
+                    require_once $location . "/$modController.php";
+                    $r = new \ReflectionClass($modController);
+                    foreach ($data['submodules'] as $s => $submodule) {
+                        $method = 'action_' . $submodule['sm_key'];
+                        if (!$r->hasMethod($method)) {
+                            unset($modsList[$k]['submodules'][$s]);
+                        }
+                    }
                 }
             }
             $data = [
@@ -1511,6 +1519,10 @@
                 'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
                 'modules'     => $modsList
             ];
+            if ($this->config->mobile) { //Настройки для Core2m
+                if ($this->config->mobile->required && $this->config->mobile->required->location) $data['required_location'] = true;
+            }
+
 
             return json_encode([
                 'status' => 'success',

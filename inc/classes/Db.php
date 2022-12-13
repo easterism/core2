@@ -144,10 +144,10 @@ class Db {
             if (array_key_exists('worker', $this->_s)) {
                 $v = $this->_s['worker'];
             } else {
-                if ($this->db->getTransactionLevel()) {
-                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
-                }
-                $this->db->closeConnection();
+//                if ($this->db->getTransactionLevel()) {
+//                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
+//                }
+//                $this->db->closeConnection();
                 $v = new WorkerClient();
                 $this->_s['worker'] = $v;
             }
@@ -389,6 +389,16 @@ class Db {
                 'user_id'        => $auth->ID
             ];
 
+            // обновление записи о последней активности
+            if ($auth->LIVEID) {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                if ($row) {
+                    $row->last_activity = new \Zend_Db_Expr('NOW()');
+                    $row->save();
+                }
+            }
+
+            // запись данных запроса в лог
             $w = $this->workerAdmin->doBackground('Logger', array_merge($data, ['action' => $arr]));
             if ($w) {
                 return;
@@ -411,16 +421,6 @@ class Db {
                     $data['action'] = serialize($arr);
                 }
                 $this->db->insert('core_log', $data);
-            }
-
-            // обновление записи о последней активности
-            if ($auth->LIVEID) {
-                $row = $this->dataSession->find($auth->LIVEID)->current();
-
-                if ($row) {
-                    $row->last_activity = new \Zend_Db_Expr('NOW()');
-                    $row->save();
-                }
             }
         }
     }
@@ -684,7 +684,7 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "is_installed_" . $this->config->database->params->dbname;
+            $key = "all_modules_" . $this->config->database->params->dbname;
 
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
@@ -703,7 +703,6 @@ class Db {
             $fromCache[$module_id]['location'] = $loc;
             $this->cache->setItem($key, $fromCache);
             $this->cache->setTags($key, ['is_active_core_modules']);
-
         } else {
             $loc = $module['location'];
         }
