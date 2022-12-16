@@ -38,7 +38,7 @@
     "belhard/simplemodal": "dev-master",
     "belhard/jquery-file-upload": "dev-master",
     "components/jquery": "2.1.4",
-    "monolog/monolog": "1.25.*",
+    "monolog/monolog": "2.3.3",
     "guzzlehttp/guzzle": "7.*",
     "phpseclib/phpseclib": "~2.0",
     "ext-json": "*",
