@@ -830,7 +830,7 @@ var listx = {
 
                     preloader.show();
 
-                    let post = [{
+                    var post = [{
                         'name' : 'template_remove_' + resource,
                         'value': id,
                     }];
@@ -867,7 +867,7 @@ var listx = {
 
             preloader.show();
 
-            let post = [{
+            var post = [{
                 'name' : 'template_select_' + resource,
                 'value': id,
             }];

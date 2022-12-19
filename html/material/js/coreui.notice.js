@@ -21,16 +21,16 @@ CoreUI.notice = {
             options.icon = icon || '';
         }
 
-        let limit = 3;
-        let container = document.getElementById("coreui-notice-container");
+        var limit = 3;
+        var container = document.getElementById("coreui-notice-container");
 
         if ( ! container) {
-            const container = document.createElement("div");
+            var container = document.createElement("div");
             container.id = "coreui-notice-container";
             document.body.appendChild(container);
         }
 
-        const toast = document.createElement("div");
+        var toast = document.createElement("div");
         toast.id = ++this.__autoincrement;
         toast.id = "toast-" + toast.id;
         if (options.animationIn) {
@@ -39,21 +39,21 @@ CoreUI.notice = {
             toast.className = "coreui-notice animated fadeIn";
         }
 
-        const containertoast = document.createElement("div");
+        var containertoast = document.createElement("div");
         containertoast.className = "vh";
         toast.appendChild(containertoast);
 
         //imagen
         if (options.image) {
-            const containerimage = document.createElement("span");
+            var containerimage = document.createElement("span");
             containerimage.className = "b4cimg";
             containertoast.appendChild(containerimage);
-            const img = document.createElement("img");
+            var img = document.createElement("img");
             img.src = options.image;
             img.className = "bAimg";
             containerimage.appendChild(img);
             if (options.important) {
-                const important = document.createElement("i");
+                var important = document.createElement("i");
                 important.className = "important";
                 containerimage.appendChild(important);
             }
@@ -61,21 +61,21 @@ CoreUI.notice = {
 
         //add icon
         if (options.icon) {
-            const containericono = document.createElement("span");
+            var containericono = document.createElement("span");
             containericono.className = "b4cicon";
             containertoast.appendChild(containericono);
-            const icono = document.createElement("i");
+            var icono = document.createElement("i");
             icono.className = options.icon;
             containericono.appendChild(icono);
             if (options.important) {
-                const importanticon = document.createElement("i");
+                var importanticon = document.createElement("i");
                 importanticon.className = "important";
                 containericono.appendChild(importanticon);
             }
         }
 
         // descripcion texto
-        const p = document.createElement("span");
+        var p = document.createElement("span");
         p.className = "bAq";
         if (options.text) {
             p.innerHTML = options.text;
@@ -84,14 +84,14 @@ CoreUI.notice = {
         }
         containertoast.appendChild(p);
 
-        const buttoncontainer = document.createElement("span");
+        var buttoncontainer = document.createElement("span");
         buttoncontainer.className = "bAo";
         containertoast.appendChild(buttoncontainer);
 
         //button ok
 
         if (typeof options.callbackOk === "function") {
-            const buttonOK = document.createElement("span");
+            var buttonOK = document.createElement("span");
             if (options.buttonOk) {
                 buttonOK.innerHTML = options.buttonOk;
             } else {
@@ -109,7 +109,7 @@ CoreUI.notice = {
         //botton cancelar
 
         if (typeof options.callbackCancel === "function") {
-            const buttonCancel = document.createElement("span");
+            var buttonCancel = document.createElement("span");
             if (options.buttonCancel) {
                 buttonCancel.innerHTML = options.buttonCancel;
             } else {
@@ -127,11 +127,11 @@ CoreUI.notice = {
 
 
         //botton cerrar notificacion
-        const contenedorClose = document.createElement("div");
+        var contenedorClose = document.createElement("div");
         contenedorClose.className = "bBe";
         containertoast.appendChild(contenedorClose);
 
-        const buttonClose = document.createElement("div");
+        var buttonClose = document.createElement("div");
         buttonClose.className = "bBf";
         contenedorClose.appendChild(buttonClose);
 
@@ -189,7 +189,7 @@ CoreUI.notice = {
             }
         }
 
-        const removeSnackbar = function() {
+        var removeSnackbar = function() {
             if (options.animationIn) {
                 toast.classList.remove(options.animationIn);
             } else {

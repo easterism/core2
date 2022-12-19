@@ -438,7 +438,7 @@ CoreUI.table = {
 
                     preloader.show();
 
-                    let post = [{
+                    var post = [{
                         'name' : 'template_remove_' + resource,
                         'value': id,
                     }];
@@ -477,7 +477,7 @@ CoreUI.table = {
 
             preloader.show();
 
-            let post = [{
+            var post = [{
                 'name' : 'template_select_' + resource,
                 'value': id,
             }];
@@ -616,7 +616,7 @@ CoreUI.table = {
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
 
-            let container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
             load(CoreUI.table.loc[resource], {}, container, function () {
                 CoreUI.table.preloader.hide(resource);
