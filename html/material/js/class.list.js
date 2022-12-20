@@ -768,7 +768,7 @@ var listx = {
                 confirmButtonColor: '#5bc0de',
                 confirmButtonText: "Сохранить",
                 cancelButtonText: "Отмена",
-                preConfirm: (templateTitle) => {
+                preConfirm: function (templateTitle) {
 
                     return new Promise(function (resolve, reject) {
                         if ( ! templateTitle || $.trim(templateTitle) === '') {
@@ -830,7 +830,7 @@ var listx = {
 
                     preloader.show();
 
-                    let post = [{
+                    var post = [{
                         'name' : 'template_remove_' + resource,
                         'value': id,
                     }];
@@ -867,7 +867,7 @@ var listx = {
 
             preloader.show();
 
-            let post = [{
+            var post = [{
                 'name' : 'template_select_' + resource,
                 'value': id,
             }];
