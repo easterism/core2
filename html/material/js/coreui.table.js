@@ -374,7 +374,7 @@ CoreUI.table = {
                 confirmButtonColor: '#5bc0de',
                 confirmButtonText: "Сохранить",
                 cancelButtonText: "Отмена",
-                preConfirm: (templateTitle) => {
+                preConfirm: function (templateTitle) {
 
                     return new Promise(function (resolve, reject) {
                         if ( ! templateTitle || $.trim(templateTitle) === '') {
