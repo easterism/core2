@@ -752,7 +752,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       crc32(microtime(true)));
+                                $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
 
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
