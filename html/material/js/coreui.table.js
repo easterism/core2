@@ -802,12 +802,18 @@ CoreUI.table = {
      */
     checkAll : function (obj, resource) {
 
-        var checked = !! obj.checked;
+        var rowsId        = [];
+        var state         = $(obj).is(":checked");
+        var checkedInputs = $('#table-' + resource + ' .row-table .checked-row input');
 
-        $('#table-' + resource + ' .row-table .checked-row input').prop('checked', checked);
-        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
+        checkedInputs.prop('checked', state);
+        checkedInputs.each(function (key, checked) {
+            rowsId.push($(checked).val());
+        });
 
-        CoreUI.table._callEventChecked(resource);
+        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', state);
+
+        CoreUI.table._callEventChecked(resource, rowsId, state);
     },
 
 
@@ -819,19 +825,24 @@ CoreUI.table = {
     checkGroup : function (obj, resource) {
 
         var j       = 1;
-        var checked = !! obj.checked;
         var row     = $(obj).parent().parent();
+        var rowsId = [];
+        var state  = $(obj).is(":checked");
 
         for (var i = 0; i < j; i++) {
             row = row.next('tr');
 
             if (row.hasClass('row-table')) {
-                row.find('.checked-row input').prop('checked', checked);
+                var checked = row.find('.checked-row input');
+                checked.prop('checked', state);
+
+                rowsId.push(checked.val());
+
                 j++;
             }
         }
 
-        CoreUI.table._callEventChecked(resource);
+        CoreUI.table._callEventChecked(resource, rowsId, state);
     },
 
 
@@ -842,7 +853,10 @@ CoreUI.table = {
      */
     checkRow: function (obj, resource) {
 
-        CoreUI.table._callEventChecked(resource);
+        var rowId = $(obj).val();
+        var state = $(obj).is(":checked");
+
+        CoreUI.table._callEventChecked(resource, [ rowId ], state);
     },
 
 
@@ -879,16 +893,18 @@ CoreUI.table = {
     /**
      * Выполнение событий выделения
      * @param resource
+     * @param rowsId
+     * @param state
      * @private
      */
-    _callEventChecked: function (resource) {
+    _callEventChecked: function (resource, rowsId, state) {
 
         if (CoreUI.table._events.checked.length > 0) {
             $.each(CoreUI.table._events.checked, function () {
                 if (this.resource === resource &&
                     typeof this.callback === 'function'
                 ) {
-                    this.callback();
+                    this.callback(rowsId, state);
                 }
             })
         }
@@ -912,7 +928,6 @@ CoreUI.table = {
             })
         }
     },
-
 
 
     /**

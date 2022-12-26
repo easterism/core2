@@ -1591,6 +1591,30 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .reqField[disabled] {
     background-color: #EEEEEE;
 }
+.modal-list__control {
+    margin: 0;
+    padding: 0;
+}
+.modal-list__control .modal-list__item {
+    border-bottom: 1px solid #ddd;
+    list-style: none;
+    min-width: 400px;
+    white-space: nowrap;
+    padding: 10px 35px 10px 0;
+    position: relative;
+}
+.modal-list__control .modal-list__item:first-child {
+    padding-top: 0;
+}
+.modal-list__control .modal-list__item .modal-list__item-delete {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    cursor: pointer;
+}
+.modal-list__control .modal-list__item:first-child .modal-list__item-delete {
+    top: 4px;
+}
 .core-panel {
     margin-bottom: 20px;
     background-color: #fff;
