@@ -134,33 +134,30 @@ class WorkerClient {
     }
 
     /**
+     * create payload to send to external worker
+     *
      * @param $worker
      * @param $data
      * @return false|string
      */
     private function getWorkload($worker, $data) {
         $auth = new SessionContainer('Auth');
-        if ($this->module === 'Admin') {
-            $workload = [
-                'location' => $this->location,
-                'config'   => serialize(\Zend_Registry::get('config')),
-                'server'   => $_SERVER,
-                'auth'     => $auth->getArrayCopy(),
-                'payload'  => $data
-            ];
-
-        } else {
+        $dt = new \DateTime();
+        $workload = [
+            'timestamp' => $dt->format('U'),
+            'location' => $this->location,
+            'config'   => serialize(\Zend_Registry::get('config')),
+            'server'   => $_SERVER,
+            'auth'     => $auth->getArrayCopy(),
+            'payload'  => $data,
+        ];
+        if ($this->module !== 'Admin') {
             $workload = [
                 'module'    => $this->module,
-                'location'  => $this->location,
                 'doc_root'  => DOC_ROOT,
-                'config'    => serialize(\Zend_Registry::get('config')),
                 'context'   => \Zend_Registry::get('context'),
                 'translate' => serialize(\Zend_Registry::get('translate')),
-                'worker'    => $worker,
-                'server'    => $_SERVER,
-                'auth'      => $auth->getArrayCopy(),
-                'payload'   => $data
+                'worker'    => $worker
             ];
         }
         return json_encode($workload);

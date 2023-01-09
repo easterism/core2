@@ -1488,7 +1488,20 @@ class Login extends Db {
              ! empty($this->config->system->theme->login_bg) &&
             $tpl->issetBlock('theme_style')
         ) {
-            $tpl->theme_style->assign("[LOGIN_BG]", $this->config->system->theme->login_bg);
+            $path_parts = pathinfo($this->config->system->theme->login_bg);
+            if ($path_parts['extension'] == 'mp4') {
+                $tpl->theme_style->assign("[LOGIN_BG]", "");
+                $tpl->assign("<!--index -->", "<video autoplay muted loop style=\"position: fixed;
+                        right: 0;
+                        bottom: 0;
+                        min-width: 100%;
+                        min-height: 100%;
+                        z-index: -1000;\">
+                    <source src=\"{$this->config->system->theme->login_bg}\" type=\"video/mp4\">
+                </video><!--index -->");
+            } else {
+                $tpl->theme_style->assign("[LOGIN_BG]", $this->config->system->theme->login_bg);
+            }
         }
 
         return $tpl->render();
