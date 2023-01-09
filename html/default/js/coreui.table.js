@@ -656,7 +656,7 @@ CoreUI.table = {
                     ? $(container).find('.coreui-table-switch-inactive').val()
                     : $(container).find('.coreui-table-switch-active').val();
 
-                $.post('index.php?module=admin&action=switch&loc=core', {
+                $.post('index.php?module=admin&action=switch&loc=core&resource=' + resource, {
                         data:      field,
                         is_active: value,
                         value:     id

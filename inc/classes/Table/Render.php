@@ -724,16 +724,17 @@ class Render extends Acl {
                                     $color      = ! empty($options['color']) ? "color-{$options['color']}" : 'color-primary';
                                     $value_y    = $options['value_Y'] ?? 'Y';
                                     $value_n    = $options['value_N'] ?? 'N';
+                                    $table      = $options['table'] ?? $table_name;
 
                                     if ($this->checkAcl($this->table['resource'], 'edit_all')) {
-                                        $tpl->rows->row->col->switch->assign('[TABLE]',     $options['table'] ?? $table_name);
-                                        $tpl->rows->row->col->switch->assign('[FIELD]',     $column['field']);
-                                        $tpl->rows->row->col->switch->assign('[NMBR]',      $row_number);
-                                        $tpl->rows->row->col->switch->assign('[CHECKED_Y]', $value == $value_y ? 'checked="checked"' : '');
-                                        $tpl->rows->row->col->switch->assign('[CHECKED_N]', $value == $value_n ? 'checked="checked"' : '');
-                                        $tpl->rows->row->col->switch->assign('[COLOR]',     $color);
-                                        $tpl->rows->row->col->switch->assign('[VALUE_Y]',   $value_y);
-                                        $tpl->rows->row->col->switch->assign('[VALUE_N]',   $value_n);
+                                        $tpl->rows->row->col->switch->assign('[FIELD]',       $column['field']);
+                                        $tpl->rows->row->col->switch->assign('[TABLE_FIELD]', $table ? "{$table}.{$column['field']}" : $column['field']);
+                                        $tpl->rows->row->col->switch->assign('[NMBR]',        $row_number);
+                                        $tpl->rows->row->col->switch->assign('[CHECKED_Y]',   $value == $value_y ? 'checked="checked"' : '');
+                                        $tpl->rows->row->col->switch->assign('[CHECKED_N]',   $value == $value_n ? 'checked="checked"' : '');
+                                        $tpl->rows->row->col->switch->assign('[COLOR]',       $color);
+                                        $tpl->rows->row->col->switch->assign('[VALUE_Y]',     $value_y);
+                                        $tpl->rows->row->col->switch->assign('[VALUE_N]',     $value_n);
                                     } else {
                                         $tpl->rows->row->col->default->assign('[VALUE]', $value == $value_y ? $this->_("Вкл.") : $this->_("Выкл."));
                                     }
