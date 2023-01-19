@@ -573,7 +573,7 @@ var edit = {
 						});
 
 						if ( ! issetKey) {
-							var row = $('#table-' + tableName + ' td[title="' + rowIdNew + '"]').parent();
+							var row = $('#table-' + tableName + ' td.checked-row input[value="' + rowIdNew + '"]').parent().parent();
 
 							selectRows.push({
 								id : rowIdNew,
