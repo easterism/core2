@@ -507,6 +507,7 @@ $(function(){
 		load(url);
 
 		$('body > .modal-backdrop').fadeOut(function () {
+			$('body').removeClass('modal-open');
 			$(this).remove();
 		});
 	});
