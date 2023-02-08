@@ -381,22 +381,38 @@ class CoreController extends Common implements File {
 	 * @return bool
 	 * @throws Exception
 	 */
-    public function action_delete(Array $params)
+    public function action_delete(array $params)
     {
-        $sess       = new SessionContainer('List');
-        $resource   = $params['res'];
-        if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
-        if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
-        $ids        = explode(",", $params['id']);
-		$sessData   = $sess->$resource;
-        $deleteKey  = $sessData['deleteKey'];
-        if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        $resource = $params['res'];
+
+        if ( ! $resource) {
+            throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
+        }
+
+        if ( ! $params['id']) {
+            throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
+        }
+
+        $sess      = new SessionContainer('List');
+        $sessData  = $sess->$resource;
+        $deleteKey = $sessData['deleteKey'];
+        $ids       = explode(",", $params['id']);
+
+        if ( ! $deleteKey) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
         [$table, $refid] = explode(".", $deleteKey);
-        if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+
+        if ( ! $table || ! $refid) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
+        // TODO В случае, когда нужно удалить что-то на главной странице - это нельзя будет сделать, так как у обычного юзера нет доступа к модулю админ
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
-            if ($this->checkAcl($resource, 'delete_owner') && !$this->checkAcl($resource, 'delete_all')) {
+            if ($this->checkAcl($resource, 'delete_owner') && ! $this->checkAcl($resource, 'delete_all')) {
                 $authorOnly = true;
             }
             $this->db->beginTransaction();

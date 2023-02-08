@@ -648,38 +648,53 @@
          * @throws Exception
          */
         private function deleteAction() {
-            if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') return false;
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+                return false;
+            }
+
             parse_str($_SERVER['QUERY_STRING'], $params);
-            if (!empty($params['res']) && !empty($params['id'])) {
+
+            if ( ! empty($params['res']) && ! empty($params['id'])) {
                 header('Content-type: application/json; charset="utf-8"');
-                $sess       = new SessionContainer('List');
-                $resource   = $params['res'];
-                $sessData   = $sess->$resource;
-                $loc = isset($sessData['loc']) ? $sessData['loc'] : '';
-                if (!$loc) throw new Exception($this->translate->tr("Не удалось определить местоположение данных."), 13);
+                $sess     = new SessionContainer('List');
+                $resource = $params['res'];
+                $sessData = $sess->$resource;
+                $loc      = isset($sessData['loc']) ? $sessData['loc'] : '';
+
+                if ( ! $loc) {
+                    throw new Exception($this->translate->tr("Не удалось определить местоположение данных."), 13);
+                }
+
                 parse_str($loc, $temp);
                 $this->setContext($temp['module']);
+
                 if ($temp['module'] !== 'admin') {
-                    $module          = $temp['module'];
-                    $location        = $this->getModuleLocation($module); //определяем местоположение модуля
-                    $modController   = "Mod" . ucfirst(strtolower($module)) . "Controller";
+                    $module        = $temp['module'];
+                    $location      = $this->getModuleLocation($module); //определяем местоположение модуля
+                    $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                     $this->requireController($location, $modController);
                     $modController = new $modController();
+
                     if ($modController instanceof Delete) {
                         ob_start();
                         $res = $modController->action_delete($params['res'], $params['id']);
                         ob_clean();
+
                         if ($res) {
                             echo json_encode($res);
                             return true;
                         }
                     }
                 }
+
                 require_once 'core2/inc/CoreController.php';
                 $core = new CoreController();
                 echo json_encode($core->action_delete($params));
+
                 return true;
             }
+
             return false;
         }
 
