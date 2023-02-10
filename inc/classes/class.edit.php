@@ -716,8 +716,8 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'modal2') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= ! empty($value['default'])
-                                    ? isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : ''
+                                $controlGroups[$cellId]['html'][$key] .= isset($value['in']['text'])
+                                    ? htmlspecialchars($value['in']['text'])
                                     : '';
                             } else {
                                 $this->scripts['modal2'] = true;
