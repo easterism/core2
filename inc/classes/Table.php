@@ -39,6 +39,8 @@ abstract class Table extends Acl {
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $group_field              = '';
+    protected $group_options            = [];
     protected $data                     = [];
     protected $data_rows                = [];
     protected $columns                  = [];
@@ -50,6 +52,7 @@ abstract class Table extends Acl {
     protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
+    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
     protected $is_ajax                  = false;
@@ -92,6 +95,7 @@ abstract class Table extends Acl {
 
     /**
      * @param string $resource
+     * @throws \Zend_Db_Adapter_Exception|Exception
      */
 	public function __construct(string $resource) {
 
@@ -111,10 +115,12 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
-            $this->session->table->search = $_POST['search'][$resource];
+            foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
+                $this->setSearch($nmbr_field, $search_value);
+            }
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
-            $this->session->table->search = [];
+            $this->clearSearch();
         }
 
         // FILTER
@@ -127,13 +133,15 @@ abstract class Table extends Acl {
                 }
             }
             if ($all_empty) {
-                $this->session->table->filter = [];
+                $this->clearFilter();
             } else {
-                $this->session->table->filter = $_POST['filter'][$resource];
+                foreach ($_POST['filter'][$resource] as $nmbr_field => $search_value) {
+                    $this->setFilter($nmbr_field, $search_value);
+                }
             }
         }
         if ( ! empty($_POST['filter_clear_' . $this->resource])) {
-            $this->session->table->filter = [];
+            $this->clearFilter();
         }
 
 
@@ -247,6 +255,16 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param array $page_list
+     * @return int[]
+     */
+    public function setRecordsPerPageList(array $page_list): array {
+
+        return $this->records_per_page_list = $page_list;
+    }
+
+
+    /**
      * Использование примерного подсчета количества
      * @param bool $is_round_calc
      * @return void
@@ -254,6 +272,169 @@ abstract class Table extends Acl {
     public function setRoundCalc(bool $is_round_calc) {
 
         $this->is_round_calc = $is_round_calc;
+    }
+
+
+    /**
+     * Установка поисковых значений
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setSearch(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->search)) {
+            $this->session->table->search = [];
+        }
+
+        $this->session->table->search[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка значений фильтра
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setFilter(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->filter)) {
+            $this->session->table->filter = [];
+        }
+
+        $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка группировки строк по полю
+     * @param string $field_name
+     * @param array  $options
+     * @return void
+     */
+    public function setGroupBy(string $field_name, array $options = []): void {
+
+        $this->group_field   = $field_name;
+        $this->group_options = $options;
+    }
+
+
+    /**
+     * Очистка поиска
+     * @return void
+     */
+    public function clearSearch() {
+
+        $this->session->table->search = [];
+    }
+
+
+    /**
+     * Очистка фильтров
+     * @return void
+     */
+    public function clearFilter() {
+
+        $this->session->table->filter = [];
+    }
+
+
+    /**
+     * @param int|null $nmbr_control
+     * @return mixed
+     */
+    public function getSearch(int $nmbr_control = null): mixed {
+
+        $search = null;
+
+        if (isset($this->session->table->search)) {
+            $search = is_int($nmbr_control)
+                ? $this->session->table->search[$nmbr_control] ?? null
+                : $this->session->table->search;
+        }
+
+        return $search ?: null;
+    }
+
+
+    /**
+     * @param int|null $nmbr_control
+     * @return mixed
+     */
+    public function getFilters(int $nmbr_control = null): mixed {
+
+        $filter = null;
+
+        if (isset($this->session->table->filter)) {
+            $filter = is_int($nmbr_control)
+                ? $this->session->table->filter[$nmbr_control] ?? null
+                : $this->session->table->filter;
+        }
+
+        return $filter ?: null;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getOrder(): ?string {
+
+        $order_field = null;
+
+        if (isset($this->session->table->order) &&
+            $this->session->table->order &&
+            isset($this->columns[$this->session->table->order - 1])
+        ) {
+            $column = $this->columns[$this->session->table->order - 1];
+
+            if ($column instanceof Column && $column->isSorting()) {
+                $order_field = $column->getField();
+            }
+        }
+
+        return $order_field;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getOrderType(): ?string {
+
+        $order = isset($this->session) && isset($this->session->table) && isset($this->session->table->order_type)
+            ? $this->session->table->order_type
+            : null;
+
+        return $order ?: null;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getPage(): int {
+
+        return (int)$this->current_page;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getRecordsPerPage(): int {
+
+        return (int)$this->records_per_page;
+    }
+
+
+    /**
+     * @return int[]
+     */
+    public function getRecordsPerPageList(): array {
+
+        return $this->records_per_page_list;
     }
 
 
@@ -378,6 +559,22 @@ abstract class Table extends Acl {
 
 
     /**
+     *
+     */
+    public function showTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
      * Рендеринг таблицы
      * @return string
      * @throws \Exception
@@ -393,6 +590,7 @@ abstract class Table extends Acl {
     /**
      * Получение данных по таблице
      * @return array
+     * @throws Exception
      */
     public function toArray(): array {
 
@@ -454,8 +652,13 @@ abstract class Table extends Acl {
             }
         }
 
+        if ($profile_controller = $this->getProfileController()) {
+            $hash      = $this->getUniqueHash();
+            $templates = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+        }
 
-        $per_page_list = [ 25, 50, 100, 1000 ];
+
+        $per_page_list = $this->records_per_page_list;
 
         if ($this->records_per_page_default > 0 &&
             ! in_array($this->records_per_page_default, $per_page_list)
@@ -463,7 +666,12 @@ abstract class Table extends Acl {
             $per_page_list[] = $this->records_per_page_default;
         }
 
-        ksort($per_page_list);
+        sort($per_page_list);
+
+        if (($all_key = array_search('0', $per_page_list)) !== false) {
+            unset($per_page_list[$all_key]);
+            $per_page_list[] = 0;
+        }
 
         $data = [
             'resource' => $this->resource,
@@ -494,12 +702,17 @@ abstract class Table extends Acl {
         if ($this->table_name) {
             $data['tableName'] = $this->table_name;
         }
+        if ($this->group_field) {
+            $data['groupField']   = $this->group_field;
+            $data['groupOptions'] = $this->group_options;
+        }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;
         }
         if ( ! empty($this->is_round_calc)) {
             $data['isRoundCalc']       = $this->is_round_calc;
             $data['recordsTotalRound'] = $this->records_total_round;
+            $data['countPages']         = ceil($this->records_total_round / $this->records_per_page);
         }
         if ( ! empty($filter)) {
             $data['filter'] = $filter;
@@ -606,10 +819,60 @@ abstract class Table extends Acl {
 
 
     /**
-     * Получение данных.
-     * @return array
+     * @return void
+     * @throws Exception
+     * @throws \Zend_Db_Adapter_Exception
      */
-    abstract public function fetchData(): array;
+    public function preFetchRows(): void {
+
+        //TEMPLATES
+        if ( ! empty($_POST['template_create_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_title = $_POST['template_create_' . $this->resource];
+                $hash           = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+                $template[hash('crc32b', $template_title)] = [
+                    'title'  => $template_title,
+                    'search' => $this->session->table->search ?? [],
+                    'column' => $this->session->table->columns ?? [],
+                ];
+
+                $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+            }
+        }
+
+        if ( ! empty($_POST['template_remove_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_remove_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+                $template    = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template    = $template ?: [];
+
+
+                if (isset($template[$template_id])) {
+                    unset($template[$template_id]);
+                    $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+                }
+            }
+        }
+
+        if ( ! empty($_POST['template_select_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_select_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+
+                if (isset($template[$template_id])) {
+                    $this->session->table->search  = $template[$template_id]['search'];
+                    $this->session->table->columns = $template[$template_id]['column'];
+                }
+            }
+        }
+    }
 
 
     /**
@@ -628,5 +891,50 @@ abstract class Table extends Acl {
         if (isset($this->locutions[$locution])) {
             $this->locutions[$locution] = $text;
         }
+    }
+
+
+    /**
+     * Получение контроллера профиля
+     * @return \ModProfileController|null
+     * @throws Exception
+     * @throws \Exception
+     */
+    private function getProfileController(): ?\ModProfileController {
+
+        if ($this->isModuleInstalled('profile')) {
+            $profile_location = $this->getModuleLocation('profile');
+
+            if (file_exists("$profile_location/vendor/autoload.php")) {
+                require_once "$profile_location/vendor/autoload.php";
+            }
+
+            require_once "$profile_location/ModProfileController.php";
+
+            return new \ModProfileController();
+
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Получение хэша соответствующего текущему набору поисковых полей, колонок и имени
+     * @return string
+     */
+    private function getUniqueHash(): string {
+
+        $indicators = [];
+
+        foreach ($this->search_controls as $search) {
+            $indicators[] = $search->getType();
+        }
+
+        $indicators[] = $this->columns
+            ? count($this->columns)
+            : 0;
+
+        return hash('crc32b', $this->resource . implode('', $indicators));
     }
 }

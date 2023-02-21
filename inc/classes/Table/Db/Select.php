@@ -137,6 +137,27 @@ class Select {
     }
 
 
+    /**
+     * @return string|null
+     */
+    public function getTableAlias(): ?string {
+
+        $alias   = null;
+        $matches = [];
+        preg_match(
+            '~^(?:`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)\s+(?:AS|)\s*(?<alyce>`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)~i',
+            trim($this->sql['FROM']),
+            $matches
+        );
+
+
+        if ( ! empty($matches['alias'])) {
+            $alias = trim($matches['alias'], '`');
+        }
+
+        return $alias;
+    }
+
 
     /**
      * @return string
@@ -167,7 +188,7 @@ class Select {
 
         $sub_queries = [];
 
-        preg_match_all('~(\((?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
+        preg_match_all('~(\([^(](?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
 
         if ( ! empty($sub_queries[1])) {
             foreach ($sub_queries[1] as $sub_query) {

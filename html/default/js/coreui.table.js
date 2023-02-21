@@ -38,10 +38,15 @@ CoreUI.table = {
         toggle : function(resource) {
 
             var $search_container = $("#search-" + resource);
+            var templateContainer = $("#templates-" + resource);
             var columns           = $("#column-switcher-" + resource);
 
             if (columns.is(":visible")) {
                 columns.hide();
+            }
+
+            if (templateContainer.is(":visible")) {
+                templateContainer.hide();
             }
 
             $search_container.toggle('fast');
@@ -67,13 +72,13 @@ CoreUI.table = {
                     //CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__clear=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -99,13 +104,13 @@ CoreUI.table = {
                     //CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__search=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -132,13 +137,13 @@ CoreUI.table = {
                     // CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__filter_clear=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
                         // CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
                     });
                 }
@@ -190,7 +195,6 @@ CoreUI.table = {
                 }
             });
 
-            //post = allInputs.serializeArray();
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
@@ -220,11 +224,16 @@ CoreUI.table = {
          */
         toggleContainer : function(resource) {
 
-            var searchContainer  = $("#search-" + resource);
-            var columnsContainer = $("#column-switcher-" + resource);
+            var searchContainer   = $("#search-" + resource);
+            var templateContainer = $("#templates-" + resource);
+            var columnsContainer  = $("#column-switcher-" + resource);
 
             if (searchContainer.is(":visible")) {
                 searchContainer.hide();
+            }
+
+            if (templateContainer.is(":visible")) {
+                templateContainer.hide();
             }
 
             columnsContainer.toggle('fast');
@@ -286,26 +295,51 @@ CoreUI.table = {
     template: {
 
         /**
+         * Переключение панели
+         * @param resource
+         */
+        toggleContainer : function(resource) {
+
+            var searchContainer   = $("#search-" + resource);
+            var columnsContainer  = $("#column-switcher-" + resource);
+            var templateContainer = $("#templates-" + resource);
+
+            if (searchContainer.is(":visible")) {
+                searchContainer.hide();
+            }
+
+            if (columnsContainer.is(":visible")) {
+                columnsContainer.hide();
+            }
+
+            templateContainer.toggle('fast');
+        },
+
+
+        /**
          * Создание критерия поиска
          * @param resource
          * @param isAjax
          */
         create: function (resource, isAjax) {
 
-            var post = $("#filter" + resource).find(":input").serializeArray();
+            var searchControls = $("#search-" + resource).find(":input").serializeArray();
 
-            if ($('#filterColumn' + resource)[0]) {
-                var columnsCheckboxes = $('#filterColumn' + resource + ' form').find(':checkbox:checked');
+            if ($('#column-switcher-' + resource)[0]) {
+                var columnsCheckboxes = $("#column-switcher-" + resource).find(':checkbox:checked');
 
                 for (var i = 0; i < columnsCheckboxes.length; i++) {
-                    post.push({
-                        'name' : 'column_' + resource + '[]',
-                        'value': columnsCheckboxes[i].value
-                    });
+                    if (columnsCheckboxes[i].value !== 'on') {
+                        searchControls.push({
+                            'name': 'columns_' + resource + '[]',
+                            'value': columnsCheckboxes[i].value
+                        });
+                    }
                 }
             }
 
-            if ( ! post || post.length === 0) {
+
+            if ( ! searchControls || searchControls.length === 0) {
                 swal('Не заполнены критерии для сохранения', '', 'warning').catch(swal.noop);
                 return false;
             }
@@ -337,20 +371,20 @@ CoreUI.table = {
 
                     preloader.show();
 
-                    post.push({
+                    searchControls.push({
                         'name' : 'template_create_' + resource,
                         'value': templateTitle,
                     });
 
-                    if (listx.loc[resource]) {
+                    if (CoreUI.table.loc[resource]) {
                         if (isAjax) {
-                            var container = document.getElementById("list" + resource).parentNode;
-                            load(listx.loc[resource] + '&__template_create=1', post, container, function () {
+                            var container = document.getElementById("table-" + resource).parentNode;
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, container, function () {
                                 preloader.hide();
                             });
 
                         } else {
-                            load(listx.loc[resource] + '&__template_create=1', post, '', function () {
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, '', function () {
                                 preloader.hide();
                             });
                         }
@@ -389,15 +423,15 @@ CoreUI.table = {
                         'value': id,
                     }];
 
-                    if (listx.loc[resource]) {
+                    if (CoreUI.table.loc[resource]) {
                         if (isAjax) {
-                            var container = document.getElementById("list" + resource).parentNode;
-                            load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
+                            var container = document.getElementById("table-" + resource).parentNode;
+                            load(CoreUI.table.loc[resource], post, container, function () {
                                 preloader.hide();
                             });
 
                         } else {
-                            load(listx.loc[resource] + '&__template_remove=1', post, '', function () {
+                            load(CoreUI.table.loc[resource], post, '', function () {
                                 preloader.hide();
                             });
                         }
@@ -426,15 +460,15 @@ CoreUI.table = {
                 'value': id,
             }];
 
-            if (listx.loc[resource]) {
+            if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    var container = document.getElementById("list" + resource).parentNode;
-                    load(listx.loc[resource] + '&__template_select=1', post, container, function () {
+                    var container = document.getElementById("table-" + resource).parentNode;
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.hide();
                     });
 
                 } else {
-                    load(listx.loc[resource] + '&__template_select=1', post, '', function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, '', function () {
                         preloader.hide();
                     });
                 }
@@ -525,13 +559,13 @@ CoreUI.table = {
             //CoreUI.table.preloader.show(resource);
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-            load(CoreUI.table.loc[resource] + '&__order=1', post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 //CoreUI.table.preloader.hide(resource);
                 preloader.callback();
             });
 
         } else {
-            load(CoreUI.table.loc[resource], post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                 preloader.callback();
             });
         }
@@ -549,7 +583,7 @@ CoreUI.table = {
         var isActiveControl = $(container).find(':checked').hasClass('coreui-table-switch-active');
 
         swal({
-            title: isActiveControl ? "Деактивировать запись?" : "Активировать запись?",
+            title: isActiveControl ? "Деактивировать?" : "Активировать?",
             type: isActiveControl ? "warning" : "info",
             showCancelButton: true,
             confirmButtonColor: isActiveControl ? '#f0ad4e' : '#5bc0de',
@@ -589,6 +623,11 @@ CoreUI.table = {
     },
 
 
+    /**
+     * @param resource
+     * @param returnArray
+     * @returns {*[]|string|*}
+     */
     getChecked : function (resource, returnArray) {
         var j = 1;
         if (returnArray === true) {
@@ -615,8 +654,8 @@ CoreUI.table = {
         return val;
     },
 
+
     /**
-     *
      * @param resource
      * @param confirmMsg
      * @param noSelectMsg
@@ -693,12 +732,42 @@ CoreUI.table = {
     },
 
 
+    /**
+     * @param obj
+     * @param resource
+     */
     checkAll : function (obj, resource) {
-        var j = 1;
-        var check = !! obj.checked;
+
+        var j       = 1;
+        var checked = !! obj.checked;
+
         for (var i = 0; i < j; i++) {
             if (document.getElementById("check-" + resource + '-' + j)) {
-                document.getElementById("check-" + resource + '-' + j).checked = check;
+                document.getElementById("check-" + resource + '-' + j).checked = checked;
+                j++;
+            }
+        }
+
+        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
+
+        return;
+    },
+
+
+    /**
+     * @param obj
+     */
+    checkGroup : function (obj) {
+
+        var j       = 1;
+        var checked = !! obj.checked;
+        var row     = $(obj).parent().parent();
+
+        for (var i = 0; i < j; i++) {
+            row = row.next('tr');
+
+            if (row.hasClass('row-table')) {
+                row.find('.checked-row input').prop('checked', checked);
                 j++;
             }
         }
@@ -722,7 +791,7 @@ CoreUI.table = {
 
         var post = {};
         post['count_' + resource] = select.value;
-        load(CoreUI.table.loc[resource], post, container, function () {
+        load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
             //CoreUI.table.preloader.hide(resource);
             preloader.callback();
         });

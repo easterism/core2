@@ -5,12 +5,12 @@
     define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
     define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-    $conf_file = DOC_ROOT . "core2/vendor/autoload.php";
-    if (!file_exists($conf_file)) {
+    $autoload = DOC_ROOT . "core2/vendor/autoload.php";
+    if (!file_exists($autoload)) {
         \Core2\Error::Exception("Composer autoload is missing.");
     }
 
-    require_once($conf_file);
+    require_once($autoload);
     require_once("Error.php");
     require_once("Log.php");
     require_once 'Zend_Registry.php'; //DEPRECATED
@@ -147,8 +147,8 @@
         $sess_config = new SessionConfig();
         $sess_config->setOptions($config->session);
         $sess_manager = new SessionManager($sess_config);
-        if ($config->session->saveHandler) {
-            $options = ['namespace' => 'phpsess'];
+        if ($config->session->phpSaveHandler) {
+            $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
             if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
             if ($config->session->savePath) $options['server'] = $config->session->savePath;
 
@@ -156,11 +156,12 @@
                 $adapter  = new Storage\Adapter\Memcached($options);
                 $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
-            elseif ($config->session->saveHandler === 'redis') {
+            elseif ($config->session->phpSaveHandler === 'redis') {
                 $adapter  = new Storage\Adapter\Redis($options);
                 $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
         }
+
         //сохраняем менеджер сессий
         SessionContainer::setDefaultManager($sess_manager);
     }
@@ -248,7 +249,8 @@
                 Zend_Registry::set('auth', new StdClass());  //DEPRECATED
                 return;
             }
-
+            //echo "<PRE>";print_r(SessionContainer::getDefaultManager()->sessionExists());echo "</PRE>";die;
+            //echo 111; die;
             $this->auth = new SessionContainer('Auth');
             if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
                 //is user active right now
@@ -272,7 +274,7 @@
                 $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
-            //if (empty($_POST)) $this->auth->getManager()->writeClose(); // закрываем сессию для записи
+            //if ($_SERVER['REQUEST_METHOD'] === 'GET') $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
 
@@ -326,7 +328,12 @@
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 // LOG USER ACTIVITY
-                $logExclude = array('module=profile&unread=1'); //TODO Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                $logExclude = array(
+                    'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                    'module=profile&sse=open', //Запросы на установку sse
+                    'module=profile&action=messages&data=sse', //Отправка данных для sse
+                );
+
                 $this->logActivity($logExclude);
                 //TODO CHECK DIRECT REQUESTS except iframes
 
@@ -382,7 +389,7 @@
                     if (method_exists($core, $action)) {
                         return $core->$action();
                     } else {
-                        throw new Exception($this->translate->tr("Субмодуль не существует") . ": " . $action);
+                        throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
                     }
 
                 } else {
@@ -740,7 +747,7 @@
             $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
             $tpl_menu->assign('<!--CURRENT_USER_FN-->',    htmlspecialchars($this->auth->FN));
             $tpl_menu->assign('<!--CURRENT_USER_LN-->',    htmlspecialchars($this->auth->LN));
-            $tpl_menu->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))));
+            $tpl_menu->assign('[GRAVATAR_URL]',            "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))));
 
 
             $modules_js     = [];
@@ -806,15 +813,19 @@
                             $modController = new $modController();
 
                             if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
-                                $module_js = $modController->topJs()
+                                $module_js_list = $modController->topJs()
                             ) {
-                                $modules_js = array_merge($modules_js, $module_js);
+                                foreach ($module_js_list as $k => $module_js) {
+                                    $modules_js[] = \Tool::addSrcHash($module_js);
+                                }
                             }
 
                             if ($modController instanceof TopCss &&
-                                $module_css = $modController->topCss()
+                                $module_css_list = $modController->topCss()
                             ) {
-                                $modules_css = array_merge($modules_css, $module_css);
+                                foreach ($module_css_list as $k => $module_css) {
+                                    $modules_css[] = \Tool::addSrcHash($module_css);
+                                }
                             }
 
                             if (THEME !== 'default') {
@@ -888,13 +899,13 @@
 
             if ( ! empty($modules_css)) {
                 foreach ($modules_css as $src) {
-                    $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
+                    if ($src) $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
                 }
             }
 
             if ( ! empty($modules_js)) {
                 foreach ($modules_js as $src) {
-                    $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
+                    if ($src) $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
                 }
             }
 
@@ -1489,6 +1500,15 @@
                 $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
                 if ( ! file_exists($location . "/$modController.php")) {
                     unset($modsList[$k]);
+                } else {
+                    require_once $location . "/$modController.php";
+                    $r = new \ReflectionClass($modController);
+                    foreach ($data['submodules'] as $s => $submodule) {
+                        $method = 'action_' . $submodule['sm_key'];
+                        if (!$r->hasMethod($method)) {
+                            unset($modsList[$k]['submodules'][$s]);
+                        }
+                    }
                 }
             }
             $data = [
@@ -1499,6 +1519,10 @@
                 'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
                 'modules'     => $modsList
             ];
+            if ($this->config->mobile) { //Настройки для Core2m
+                if ($this->config->mobile->required && $this->config->mobile->required->location) $data['required_location'] = true;
+            }
+
 
             return json_encode([
                 'status' => 'success',

@@ -484,6 +484,27 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
+						elseif ($value['type'] == 'time') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'datetime_local') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"datetime-local\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == 'week') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
 						elseif ($value['type'] == 'number') { // только цифры
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
@@ -606,8 +627,6 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'];
 
                             } else {
-                                $this->scripts['color'] = true;
-
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -818,7 +837,7 @@ class editTable extends initEdit {
 						}
 						elseif ($value['type'] == 'textarea') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<pre>" . htmlspecialchars_decode($value['default']) . "</pre>" : '';
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? "<div>" . nl2br(htmlspecialchars_decode($value['default'])) . "</div>" : '';
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $fieldId . "\" name=\"control[$field]\" ".$attrs.">{$value['default']}</textarea>";
 							}
@@ -1384,14 +1403,17 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'date') {
+                                            if ($type_name == 'select') {
+                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+
+                                            } elseif ($type_name == 'date') {
                                                 $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
-                                            }
-                                            if ($type_name == 'datetime') {
+
+                                            } elseif ($type_name == 'datetime') {
                                                 $field_value = $field_value ? date('d.m.Y H:i', strtotime($field_value)) : '';
                                             }
 
@@ -1438,6 +1460,10 @@ class editTable extends initEdit {
                                                     $field_value = is_string($dataset[$item_field['code']])
                                                         ? $dataset[$item_field['code']]
                                                         : '';
+
+                                                    if ($item_field['type'] == 'select') {
+                                                        $field_value = $item_field['options'][$field_value] ?? $field_value;
+                                                    }
                                                 }
                                             }
 
@@ -1448,8 +1474,17 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
                                                 $type_name = 'text';
+                                            }
+
+                                            if ($type_name == 'select' && ! empty($item_field['options'])) {
+                                                foreach ($item_field['options'] as $option_value => $option_title) {
+                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
+                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                                    $tpl->item->{"field_{$type_name}"}->option->reassign();
+                                                }
                                             }
 
                                             $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
@@ -1474,16 +1509,25 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'date', 'datetime', 'number'])) {
+                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
                                             $type_name = 'text';
                                         }
 
-                                        $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
-                                        $tpl->item->{"field_{$type_name}"}->assign('[NUM]',        1);
-                                        $tpl->item->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                        $tpl->item->{"field_{$type_name}"}->assign('[VALUE]',      '');
-                                        $tpl->item->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
-                                        $tpl->item->{"field_{$type_name}"}->reassign();
+                                        if ($type_name == 'select' && ! empty($item_field['options'])) {
+                                            foreach ($item_field['options'] as $option_value => $option_title) {
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', '');
+                                                $tpl->item->field->{"field_{$type_name}"}->option->reassign();
+                                            }
+                                        }
+
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        1);
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      '');
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
+                                        $tpl->item->field->reassign();
                                     }
 
                                     $tpl->item->touchBlock('delete');
@@ -1495,7 +1539,7 @@ class editTable extends initEdit {
 
                         }
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
-							list($module, $action) = Zend_Registry::get('context');
+							[$module, $action] = Zend_Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("
                                     SELECT id, 

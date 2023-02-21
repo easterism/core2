@@ -585,7 +585,6 @@ class ModAjax extends ajaxFunc {
             return $this->response;
         }
 
-
         $this->db->beginTransaction();
 
         try {
@@ -601,6 +600,8 @@ class ModAjax extends ajaxFunc {
             if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
                 $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
             }
+
+            $mail = [];
 
             if ($refid == 0) {
                 $update                     = false;
@@ -618,7 +619,7 @@ class ModAjax extends ajaxFunc {
                 $refid = $this->db->lastInsertId('core_users');
 
                 $who = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
-                $this->modAdmin->createEmail()
+                $mail = $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
                     ->to("easter.by@gmail.com")
                     ->subject("Зарегистрирован новый $who")
@@ -653,25 +654,31 @@ class ModAjax extends ajaxFunc {
                 if ( ! $row) {
                     $row = $this->dataUsersProfile->createRow();
                     $save['user_id'] = $refid;
+                    $event = 'user_new';
                 } else {
                     $data['control']['u_login'] = $this->dataUsers->fetchRow(
                         $this->dataUsers->select()->where("u_id = ?", $refid)->limit(1)
                     )->u_login;
+                    $event = 'user_update';
                 }
 
                 $row->setFromArray($save);
                 $row->save();
+                $this->emit($event, $save);
             }
             if ($send_info_sw) {
                 $res = $this->sendUserInformation($data['control'], $update);
                 if (isset($res['error'])) {
-                    $this->response->script("alertify.warning('Не удалось отправить уведомление');");
+                    $this->response->script("alertify.error('Не удалось отправить уведомление');");
                 }
+            }
+            if (isset($mail['error'])) {
+                $this->response->script("alertify.error('Не удалось отправить уведомление о создании пользователя');");
             }
 
             $this->db->commit();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->db->rollback();
             $this->error[] = $e->getMessage();
         }

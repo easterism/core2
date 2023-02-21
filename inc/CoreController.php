@@ -98,9 +98,7 @@ class CoreController extends Common implements File {
                         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                             throw new Exception('Некорректный запрос');
                         }
-
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
-
                         return json_encode(['status' => 'success']);
                 }
 
@@ -245,36 +243,30 @@ class CoreController extends Common implements File {
         $panel->setTitle($this->_("Модули"));
 
         ob_start();
-        if ( ! empty($_POST)) {
-            /* Обновление файлов модуля */
-            if ( ! empty($_POST['refreshFilesModule'])) {
-                $install = new Install();
-                echo $install->mRefreshFiles($_POST['refreshFilesModule']);
-            }
+        /* Обновление файлов модуля */
+        if ( ! empty($_POST['refreshFilesModule'])) {
+            $install = new Install();
+            echo $install->mRefreshFiles($_POST['refreshFilesModule']);
 
-            /* Обновление модуля */
-            if ( ! empty($_POST['updateModule'])) {
-                $install = new Install();
-                echo $install->checkModUpdates($_POST['updateModule']);
-            }
+        /* Обновление модуля */
+        } elseif ( ! empty($_POST['updateModule'])) {
+            $install = new Install();
+            echo $install->checkModUpdates($_POST['updateModule']);
 
-            // Деинсталяция модуля
-            if (isset($_POST['uninstall'])) {
-                $install = new Install();
-                echo $install->mUninstall($_POST['uninstall']);
-            }
+        // Деинсталяция модуля
+        } elseif (isset($_POST['uninstall'])) {
+            $install = new Install();
+            echo $install->mUninstall($_POST['uninstall']);
 
-            // Инсталяция модуля
-            if ( ! empty($_POST['install'])) {
-                $install = new Install();
-                echo $install->mInstall($_POST['install']);
-            }
+        // Инсталяция модуля
+        } elseif ( ! empty($_POST['install'])) {
+            $install = new Install();
+            echo $install->mInstall($_POST['install']);
 
-            // Инсталяция модуля из репозитория
-            if ( ! empty($_POST['install_from_repo'])) {
-                $install = new Install();
-                echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
-            }
+        // Инсталяция модуля из репозитория
+        } elseif ( ! empty($_POST['install_from_repo'])) {
+            $install = new Install();
+            echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
 
         } else {
             $this->printJs("core2/mod/admin/assets/js/mod.js");

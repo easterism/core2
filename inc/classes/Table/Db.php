@@ -19,17 +19,10 @@ class Db extends Table {
     protected $primary_key   = '';
     protected $query         = '';
     protected $query_params  = '';
+    protected $order         = null;
     protected $select        = null;
     protected $is_fetched    = false;
     protected $query_parts   = [];
-
-
-    /**
-     * @param string $resource
-     */
-    public function __construct(string $resource) {
-        parent::__construct($resource);
-    }
 
 
     /**
@@ -96,9 +89,21 @@ class Db extends Table {
 
 
     /**
+     * Установка сортировки
+     * @param string      $order
+     * @return void
+     */
+    public function setOrder(string $order) {
+
+        $this->order = $order;
+    }
+
+
+    /**
      * Получение данных из базы
      * @return Row[]
      * @throws \Zend_Db_Select_Exception
+     * @deprecated fetchRows
      */
     public function fetchData(): array {
 
@@ -112,6 +117,8 @@ class Db extends Table {
      * @throws \Zend_Db_Select_Exception
      */
     public function fetchRows(): array {
+
+        $this->preFetchRows();
 
         if ( ! $this->is_fetched) {
             $this->is_fetched = true;
@@ -337,17 +344,36 @@ class Db extends Table {
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth = \Zend_Registry::get('auth');
-                $select->where("author = ?", $auth->NAME);
+                $auth   = \Zend_Registry::get('auth');
+                $alias  = "{$this->table}.";
+                $tables = $select->getPart($select::FROM);
+
+                if ( ! empty($tables)) {
+                    foreach ($tables as $table_alias => $table) {
+                        if ($table['tableName'] == $this->table) {
+                            $alias = "`{$table_alias}`.";
+                            break;
+                        }
+                    }
+                }
+
+                $select->where("{$alias}author = ?", $auth->NAME);
             }
         }
 
+        $records_per_page = $this->is_round_calc
+            ? $this->records_per_page + 1
+            : $this->records_per_page;
 
-        $offset = $this->current_page == 1 ? 0 : ($this->current_page - 1) * $this->records_per_page;
-        $select->limit((int)$this->records_per_page, (int)$offset);
+        $offset = ($this->current_page - 1) * $this->records_per_page;
+        $select->limit((int)$records_per_page, (int)$offset);
 
+        if (is_string($this->order) && $this->order !== '') {
+            $order_type = $this->session->table->order_type ?? 'ASC';
+            $select->reset('order');
+            $select->order("{$this->order} {$order_type}");
 
-        if (isset($this->session->table->order) &&
+        } elseif (isset($this->session->table->order) &&
             $this->session->table->order &&
             isset($this->columns[$this->session->table->order - 1])
         ) {
@@ -381,7 +407,7 @@ class Db extends Table {
                 }
             }
 
-            $data_result = $this->db->fetchAll($select_sql, $this->query_params);
+            $data_result = $this->db->fetchAll($select_sql);
 
             if (count($data_result) > $this->records_per_page) {
                 $this->records_total      = $offset + $this->records_per_page;
@@ -513,6 +539,10 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
+                if ( ! isset($this->filter_controls[$key])) {
+                    continue;
+                }
+
                 $filter_column = $this->filter_controls[$key];
 
                 if ($filter_column instanceof Filter) {
@@ -619,12 +649,19 @@ class Db extends Table {
             ) {
                 $auth         = \Zend_Registry::get('auth');
                 $quoted_value = $this->db->quote($auth->NAME);
-                $select->addWhere("author = {$quoted_value}");
+                $alias        = $select->getTableAlias();
+                $alias        = $alias ? "{$alias}." : "{$this->table}.";
+
+                $select->addWhere("{$alias}author = {$quoted_value}");
             }
         }
 
 
-        if (isset($this->session->table->order) &&
+        if (is_string($this->order) && $this->order !== '') {
+            $order_type = $this->session->table->order_type ?? 'ASC';
+            $select->setOrderBy("{$this->order} {$order_type}");
+
+        } elseif (isset($this->session->table->order) &&
             $this->session->table->order &&
             isset($this->columns[$this->session->table->order - 1])
         ) {
@@ -647,7 +684,6 @@ class Db extends Table {
             : $this->records_per_page;
 
         $offset = ($this->current_page - 1) * $this->records_per_page;
-        $select->setLimit($records_per_page, $offset);
 
 
         if ( ! $this->table) {
@@ -671,16 +707,21 @@ class Db extends Table {
                 }
             }
 
+            $select->setLimit($records_per_page, $offset);
+            $select_sql = $select->getSql();
             $result = $this->db->fetchAll($select_sql, $this->query_params);
 
-            if (count($result) > $this->records_per_page) {
-                $this->records_total      = $offset + $this->records_per_page;
-                $this->records_total_more = true;
-                unset($result[array_key_last($result)]);
+            // если к-во записей примерное, то и к-во страниц примерное
 
-            } else {
-                $this->records_total = $offset + count($result);
-            }
+//            if (count($result) > $this->records_per_page) {
+//                $this->records_total      = $offset + $this->records_per_page;
+//                //$this->records_total_more = true;
+//                unset($result[array_key_last($result)]);
+//
+//            } else {
+//                $this->records_total = $offset + count($result);
+//            }
+
 
         } else {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {

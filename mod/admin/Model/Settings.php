@@ -1,10 +1,10 @@
 <?php
-
+namespace Core2\Model;
 
 /**
  * Class Users
  */
-class Settings extends Zend_Db_Table_Abstract {
+class Settings extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_settings';
 
@@ -30,7 +30,7 @@ class Settings extends Zend_Db_Table_Abstract {
     /**
      * @param $expr
      * @param array $var
-     * @return null|Zend_Db_Table_Row_Abstract
+     * @return null|\Zend_Db_Table_Row_Abstract
      */
     public function exists($expr, $var = array()) {
         $sel = $this->select()->where($expr, $var);

@@ -163,6 +163,15 @@
               </button>
             </li>
             <!-- END column_switcher_control -->
+
+            <!-- BEGIN template_control -->
+            <li class="table-control" title="_tr(Колонки)">
+              <button type="button" onclick="CoreUI.table.template.toggleContainer('[RESOURCE]')">
+                <i class="icon-template"></i>
+                <span>_tr(Шаблоны)</span>
+              </button>
+            </li>
+            <!-- END template_control -->
           </ul>
         </td>
       </tr>
@@ -251,7 +260,21 @@
               <tr>
                 <td></td>
                 <td class="control">
+                  <!-- BEGIN search_btn -->
                   <input type="submit" class="btn btn-primary btn-sm" value="_tr(Поиск)">
+                  <!-- END search_btn -->
+
+                  <!-- BEGIN search_btn_template -->
+                  <div class="btn-group">
+                    <button type="submit" class="btn btn-sm btn-primary">_tr(Искать)</button>
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-left">
+                      <li><a href="#" onclick="CoreUI.table.template.create('[RESOURCE]', [IS_AJAX]);return false;">_tr(Сохранить шаблон)</a></li>
+                    </ul>
+                  </div>
+                  <!-- END search_btn_template -->
                 </td>
               </tr>
             </table>
@@ -279,17 +302,51 @@
             </div>
             <!-- END column_switcher_field -->
 
+
+            <!-- BEGIN column_btn -->
             <input type="submit" class="btn btn-sm btn-primary" value="_tr(Применить)">
+            <!-- END column_btn -->
+
+            <!-- BEGIN column_btn_template -->
+            <div class="btn-group">
+              <button type="submit" class="btn btn-sm btn-primary">_tr(Применить)</button>
+              <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-left">
+                <li><a href="#" onclick="CoreUI.table.template.create('[RESOURCE]', [IS_AJAX]);return false;">_tr(Сохранить шаблон)</a></li>
+              </ul>
+            </div>
+            <!-- END column_btn_template -->
           </form>
         </td>
       </tr>
       <!-- END column_switcher_container -->
 
+
+      <!-- BEGIN templates_container -->
+      <tr class="templates-container" style="display:none" id="templates-[RESOURCE]">
+        <td colspan="1000">
+          <div class="coreui-table-template-items">
+            <!-- BEGIN template_item -->
+            <div class="coreui-table-template-item">
+              <button type="button" class="btn btn-sm btn-default coreui-table-template-item-select"
+                      onclick="CoreUI.table.template.select('[RESOURCE]', '[ID]', [IS_AJAX])">[TITLE]</button>
+              <button type="button" class="btn btn-sm btn-default coreui-table-template-item-remove"
+                      onclick="CoreUI.table.template.remove('[RESOURCE]', '[ID]', [IS_AJAX])"><i class="fa fa-times"></i></button>
+              <div class="clearfix"></div>
+            </div>
+            <!-- END template_item -->
+          </div>
+        </td>
+      </tr>
+      <!-- END templates_container -->
+
       <!-- BEGIN service -->
       <tr class="table-service-panel">
         <td colspan="1000">
           <div class="total pull-left">
-            _tr(Всего): [IS_ROUND_CALC][TOTAL_RECORDS]
+            _tr(Всего): [TOTAL_RECORDS]
           </div>
           <div class="pull-right">
             <div class="custom-buttons">[BUTTONS]</div>
@@ -344,36 +401,48 @@
       </thead>
       <tbody>
 
-      <!-- BEGIN row -->
+      <!-- BEGIN rows -->
       <tr>
-        <!-- BEGIN row_number -->
-        <td title="[ID]" class="number-row">[#]</td>
-        <!-- END row_number -->
+        <!-- BEGIN group -->
+        <td colspan="[COLS]" class="coreui-table-row-group" [ATTR]>[VALUE]</td>
 
-        <!-- BEGIN col -->
-        <td [ATTR]>
-          <!-- BEGIN default -->[VALUE]<!-- END default -->
-          <!-- BEGIN switch -->
-          <div class="coreui-table-switch [COLOR]" onclick="CoreUI.table.switchToggle('[RESOURCE]', '[TABLE].[FIELD]', '[ID]', this)">
-            <input type="radio" class="coreui-table-switch-active" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_Y]" [CHECKED_Y]>
-            <input type="radio" class="coreui-table-switch-inactive" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_N]" [CHECKED_N]>
-            <span class="coreui-table-switch-slider"></span>
-          </div>
-          <!-- END switch -->
-        </td>
-        <!-- END col -->
-
-        <!-- BEGIN checkboxes -->
+        <!-- BEGIN group_checkbox -->
         <td class="checked-row" onclick="event.cancelBubble=true;">
-          <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+          <input type="checkbox" onclick="CoreUI.table.checkGroup(this)"/>
         </td>
-        <!-- END checkboxes -->
+        <!-- END group_checkbox -->
+        <!-- END group -->
+
+        <!-- BEGIN row -->
+          <!-- BEGIN row_number -->
+          <td title="[ID]" class="number-row">[#]</td>
+          <!-- END row_number -->
+
+          <!-- BEGIN col -->
+          <td [ATTR]>
+            <!-- BEGIN default -->[VALUE]<!-- END default -->
+            <!-- BEGIN switch -->
+            <div class="coreui-table-switch [COLOR]" onclick="CoreUI.table.switchToggle('[RESOURCE]', '[TABLE].[FIELD]', '[ID]', this)">
+              <input type="radio" class="coreui-table-switch-active" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_Y]" [CHECKED_Y]>
+              <input type="radio" class="coreui-table-switch-inactive" name="switch-[RESOURCE]-[NMBR]-[FIELD]" value="[VALUE_N]" [CHECKED_N]>
+              <span class="coreui-table-switch-slider"></span>
+            </div>
+            <!-- END switch -->
+          </td>
+          <!-- END col -->
+
+          <!-- BEGIN checkboxes -->
+          <td class="checked-row" onclick="event.cancelBubble=true;">
+            <input id="check-[RESOURCE]-[#]" type="checkbox" value="[ID]">
+          </td>
+          <!-- END checkboxes -->
+        <!-- END row -->
       </tr>
-      <!-- END row -->
+      <!-- END rows -->
 
       <!-- BEGIN no_rows -->
       <tr>
-        <td align="center" colspan="100">_tr(Нет записей)</td>
+        <td class="text-center" colspan="1000">_tr(Нет записей)</td>
       </tr>
       <!-- END no_rows -->
 
@@ -381,19 +450,19 @@
       <!-- BEGIN footer -->
       <tfoot><tr><td colspan="1000">
         <!-- BEGIN pages -->
-        <table width="100%"><tr>
+        <table style="width:100%"><tr>
           <!-- BEGIN gotopage -->
-          <td align="left">
+          <td class="text-left">
             <input type="text" id="table-[RESOURCE]-gotopage" class="gotopage"
-                   onkeyup="if (event.which === 13) CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"/>/>
+                   onkeyup="if (event.which === 13) CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"/>
           </td>
-          <td align="left">
+          <td class="text-left">
             <input class="btn btn-default btn-xs" type="button"
                    onclick="CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"
                    value="&raquo;"/>
           </td>
           <!-- END gotopage -->
-          <td align="center" width="100%">
+          <td class="text-center" style="width:100%">
             <!-- BEGIN prev -->
             <input class="btn btn-default btn-xs" type="button"
                    onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[PREV_PAGE]"
@@ -407,7 +476,7 @@
             <!-- END next -->
           </td>
           <!-- BEGIN per_page -->
-          <td align="right">
+          <td class="text-right">
             <select id="records-per-page-[RESOURCE]" class="records-per-page"
                     onchange="CoreUI.table.recordsPerPage('[RESOURCE]', this, [IS_AJAX])"></select>
           </td>
@@ -419,9 +488,6 @@
     </table>
   </div>
 </div>
-
-
-
 
 <script>
   if ( ! CoreUI.table) {

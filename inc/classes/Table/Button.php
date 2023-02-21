@@ -11,7 +11,7 @@ class Button {
     protected $content = '';
     protected $attr    = [
         'type'  => 'button',
-        'class' => 'btn btn-default',
+        'class' => 'btn btn-sm btn-default',
     ];
 
 
