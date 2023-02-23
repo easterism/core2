@@ -505,6 +505,11 @@ $(function(){
 		var hash = location.hash;
 		var url = preloader.prepare(hash.substr(1));
 		load(url);
+
+		$('body > .modal-backdrop').fadeOut(function () {
+			$('body').removeClass('modal-open');
+			$(this).remove();
+		});
 	});
 	// Since the event is only triggered when the hash changes, we need to trigger
 	// the event now, to handle the hash the page may have loaded with.

@@ -716,8 +716,8 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'modal2') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= ! empty($value['default'])
-                                    ? isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : ''
+                                $controlGroups[$cellId]['html'][$key] .= isset($value['in']['text'])
+                                    ? htmlspecialchars($value['in']['text'])
                                     : '';
                             } else {
                                 $this->scripts['modal2'] = true;
@@ -752,7 +752,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       crc32(microtime(true)));
+                                $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
 
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
@@ -776,6 +776,83 @@ class editTable extends initEdit {
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');
                                 }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                        }
+						elseif ($value['type'] == 'modal_list') {
+                            if ($this->readOnly) {
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl->assign('[CONTROL]', $field);
+
+                                if ( ! empty($value['in']['list'])) {
+                                    foreach ($value['in']['list'] as $item) {
+                                        $tpl->item->assign('[TEXT]', $item['text'] ?? '-');
+                                        $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
+                                        $tpl->item->reassign();
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+
+                            } else {
+                                $this->scripts['modal_list'] = true;
+
+                                $options             = [];
+                                $options['size']     = isset($value['in']['size']) ? $value['in']['size'] : '';
+                                $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
+                                $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
+                                $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
+
+                                switch ($options['size']) {
+                                    case 'small': $size = 'modal-sm'; break;
+                                    case 'normal': $size = ''; break;
+                                    case 'large':
+                                    default: $size = 'modal-lg'; break;
+                                }
+
+                                $url = strpos(trim($options['url']), 'function') !== false
+                                    ? $options['url']
+                                    : "'{$options['url']}'";
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
+                                $tpl->assign('[TITLE]',     $options['title']);
+                                $tpl->assign('[VALUE]',     $options['value']);
+                                $tpl->assign('[URL]',       $url);
+                                $tpl->assign('[NAME]',      'control[' . $field . ']');
+                                $tpl->assign('[SIZE]',      $size);
+                                $tpl->assign('[CONTROL]',   $field);
+
+
+                                if ( ! empty($value['in']['list'])) {
+                                    foreach ($value['in']['list'] as $item) {
+                                        $tpl->item->assign('[TEXT]', $item['text'] ?? '-');
+                                        $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
+
+                                        $tpl->item->edit_item->assign('[ID]', $item['id'] ?? '');
+                                        $tpl->item->reassign();
+                                    }
+                                }
+
+                                $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
+                                    ? trim($options['onHidden'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_HIDDEN]', $on_hidden);
+
+
+                                $on_delete = ! empty($options['onDelete']) && strpos(trim($options['onDelete']), 'function') !== false
+                                    ? trim($options['onDelete'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_DELETE]', $on_delete);
+
+
+                                $on_add = ! empty($options['onAdd']) && strpos(trim($options['onAdd']), 'function') !== false
+                                    ? trim($options['onAdd'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_ADD]', $on_add);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }

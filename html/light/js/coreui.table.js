@@ -4,6 +4,10 @@ var CoreUI = typeof CoreUI !== 'undefined' ? CoreUI : {};
 CoreUI.table = {
 
     loc: {},
+    _events: {
+        checked: [],
+        reload: [],
+    },
 
     preloader : {
         show : function(resource) {
@@ -19,11 +23,13 @@ CoreUI.table = {
 
         hide : function(resource) {
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
-            var nodes   = wrapper.childNodes;
-            for (var i = 0; i < nodes.length; i++) {
-                if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
-                    nodes[i].style.display = 'none';
-                    break;
+            if (wrapper) {
+                var nodes = wrapper.childNodes;
+                for (var i = 0; i < nodes.length; i++) {
+                    if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
+                        nodes[i].style.display = 'none';
+                        break;
+                    }
                 }
             }
         }
@@ -75,11 +81,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -107,11 +115,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -140,11 +150,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -204,11 +216,13 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -280,11 +294,15 @@ CoreUI.table = {
                     load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
                         //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
+
+
 
                 } else {
                     load(CoreUI.table.loc[resource], post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -356,7 +374,7 @@ CoreUI.table = {
                 confirmButtonColor: '#5bc0de',
                 confirmButtonText: "Сохранить",
                 cancelButtonText: "Отмена",
-                preConfirm: (templateTitle) => {
+                preConfirm: function (templateTitle) {
 
                     return new Promise(function (resolve, reject) {
                         if ( ! templateTitle || $.trim(templateTitle) === '') {
@@ -381,11 +399,13 @@ CoreUI.table = {
                             var container = document.getElementById("table-" + resource).parentNode;
                             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
                             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -418,7 +438,7 @@ CoreUI.table = {
 
                     preloader.show();
 
-                    let post = [{
+                    var post = [{
                         'name' : 'template_remove_' + resource,
                         'value': id,
                     }];
@@ -428,11 +448,13 @@ CoreUI.table = {
                             var container = document.getElementById("table-" + resource).parentNode;
                             load(CoreUI.table.loc[resource], post, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
                             load(CoreUI.table.loc[resource], post, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -455,7 +477,7 @@ CoreUI.table = {
 
             preloader.show();
 
-            let post = [{
+            var post = [{
                 'name' : 'template_select_' + resource,
                 'value': id,
             }];
@@ -465,11 +487,13 @@ CoreUI.table = {
                     var container = document.getElementById("table-" + resource).parentNode;
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, '', function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             } else {
@@ -504,11 +528,15 @@ CoreUI.table = {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     CoreUI.table.preloader.hide(resource);
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
-        } else load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
-            preloader.callback();
-        });
+        } else {
+            load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
+                preloader.callback();
+                CoreUI.table._callEventReload(resource);
+            });
+        }
     },
 
 
@@ -532,12 +560,14 @@ CoreUI.table = {
             } else {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
 
         } else {
             load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
@@ -562,6 +592,7 @@ CoreUI.table = {
             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 CoreUI.table.preloader.hide(resource);
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
 
             preloader.hide();
@@ -569,6 +600,7 @@ CoreUI.table = {
         } else {
             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
@@ -584,7 +616,7 @@ CoreUI.table = {
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
 
-            let container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
             load(CoreUI.table.loc[resource], {}, container, function () {
                 CoreUI.table.preloader.hide(resource);
@@ -624,7 +656,7 @@ CoreUI.table = {
                     ? $(container).find('.coreui-table-switch-inactive').val()
                     : $(container).find('.coreui-table-switch-active').val();
 
-                $.post('index.php?module=admin&action=switch&loc=core', {
+                $.post('index.php?module=admin&action=switch&loc=core&resource=' + resource, {
                         data:      field,
                         is_active: value,
                         value:     id
@@ -725,6 +757,7 @@ CoreUI.table = {
                                 if (data === true) {
                                     load(CoreUI.table.loc[resource], '', container, function () {
                                         preloader.callback();
+                                        CoreUI.table._callEventReload(resource);
                                     });
 
                                 } else {
@@ -740,6 +773,7 @@ CoreUI.table = {
                                         if (data.loc) {
                                             load(data.loc, '', container, function () {
                                                 preloader.callback();
+                                                CoreUI.table._callEventReload(resource);
                                             });
                                         }
                                     }
@@ -762,39 +796,137 @@ CoreUI.table = {
 
 
     /**
+     * Выделение всех строк
      * @param obj
      * @param resource
      */
     checkAll : function (obj, resource) {
 
-        var j       = 1;
-        var checked = !! obj.checked;
+        var rowsId        = [];
+        var state         = $(obj).is(":checked");
+        var checkedInputs = $('#table-' + resource + ' .row-table .checked-row input');
 
-        $('#table-' + resource + ' .row-table .checked-row input').prop('checked', checked);
-        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', checked);
+        checkedInputs.prop('checked', state);
+        checkedInputs.each(function (key, checked) {
+            rowsId.push($(checked).val());
+        });
 
-        return;
+        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', state);
+
+        CoreUI.table._callEventChecked(resource, rowsId, state);
     },
 
 
     /**
+     * Выделение группы строк
      * @param obj
+     * @param resource
      */
-    checkGroup : function (obj) {
+    checkGroup : function (obj, resource) {
 
         var j       = 1;
-        var checked = !! obj.checked;
         var row     = $(obj).parent().parent();
+        var rowsId = [];
+        var state  = $(obj).is(":checked");
 
         for (var i = 0; i < j; i++) {
             row = row.next('tr');
 
             if (row.hasClass('row-table')) {
-                row.find('.checked-row input').prop('checked', checked);
+                var checked = row.find('.checked-row input');
+                checked.prop('checked', state);
+
+                rowsId.push(checked.val());
+
                 j++;
             }
         }
-        return;
+
+        CoreUI.table._callEventChecked(resource, rowsId, state);
+    },
+
+
+    /**
+     Выделение строки
+     * @param obj
+     * @param resource
+     */
+    checkRow: function (obj, resource) {
+
+        var rowId = $(obj).val();
+        var state = $(obj).is(":checked");
+
+        CoreUI.table._callEventChecked(resource, [ rowId ], state);
+    },
+
+
+    /**
+     * Событие выполняемое при массовом выделении строк
+     * @param resource
+     * @param callback
+     */
+    onChecked: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.checked.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Событие выполняемое при перезагрузке содержимого
+     * @param resource
+     * @param callback
+     */
+    onReload: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.reload.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Выполнение событий выделения
+     * @param resource
+     * @param rowsId
+     * @param state
+     * @private
+     */
+    _callEventChecked: function (resource, rowsId, state) {
+
+        if (CoreUI.table._events.checked.length > 0) {
+            $.each(CoreUI.table._events.checked, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback(rowsId, state);
+                }
+            })
+        }
+    },
+
+
+    /**
+     * Выполнение событий перезагрузки
+     * @param resource
+     * @private
+     */
+    _callEventReload: function (resource) {
+
+        if (CoreUI.table._events.reload.length > 0) {
+            $.each(CoreUI.table._events.reload, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback();
+                }
+            })
+        }
     },
 
 
@@ -828,7 +960,6 @@ CoreUI.table = {
             $.ajax({
                 method : 'get',
                 url    : url,
-                async  : false,
                 success: function (response) {
                     row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
                     row.addClass('row-expanded');
@@ -907,6 +1038,7 @@ CoreUI.table = {
         load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
             CoreUI.table.preloader.hide(resource);
             preloader.callback();
+            CoreUI.table._callEventReload(resource);
         });
     }
 };

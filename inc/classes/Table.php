@@ -118,6 +118,20 @@ abstract class Table extends Acl {
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
             foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
+                if (is_array($search_value)) {
+                    $isset_value = false;
+                    foreach ($search_value as $search_item) {
+                        if ($search_item) {
+                            $isset_value = true;
+                            break;
+                        }
+                    }
+
+                    if ( ! $isset_value) {
+                        $search_value = null;
+                    }
+                }
+
                 $this->setSearch($nmbr_field, $search_value);
             }
         }
@@ -137,8 +151,22 @@ abstract class Table extends Acl {
             if ($all_empty) {
                 $this->clearFilter();
             } else {
-                foreach ($_POST['filter'][$resource] as $nmbr_field => $search_value) {
-                    $this->setFilter($nmbr_field, $search_value);
+                foreach ($_POST['filter'][$resource] as $nmbr_field => $filter_value) {
+                    if (is_array($filter_value)) {
+                        $isset_value = false;
+                        foreach ($filter_value as $filter_item) {
+                            if ($filter_item) {
+                                $isset_value = true;
+                                break;
+                            }
+                        }
+
+                        if ( ! $isset_value) {
+                            $filter_value = null;
+                        }
+                    }
+
+                    $this->setFilter($nmbr_field, $filter_value);
                 }
             }
         }

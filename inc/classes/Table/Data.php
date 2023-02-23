@@ -96,7 +96,7 @@ class Data extends Table {
         foreach ($data as $key => $row) {
 
             foreach ($filter_data as $key2 => $filter_value) {
-                $filter_column = $filter_rules[$key2];
+                $filter_column = $filter_rules[$key2] ?? null;
 
                 if ($filter_column instanceof Filter) {
                     if ($filter_value == '') {
@@ -205,7 +205,7 @@ class Data extends Table {
         foreach ($data as $key => $row) {
 
             foreach ($search_data as $key2 => $search_value) {
-                $search_column = $search_rules[$key2];
+                $search_column = $search_rules[$key2] ?? null;
 
                 if ($search_column instanceof Search) {
                     if ($search_value == '') {

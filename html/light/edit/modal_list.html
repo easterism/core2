@@ -1,0 +1,28 @@
+<ul class="modal-list__control modal-list__control-[CONTROL]">
+  <!-- BEGIN item -->
+  <li class="modal-list__item modal-list__item-[CONTROL]-[KEY]" data-key="[KEY]">
+    <span>[TEXT]</span>
+
+    <!-- BEGIN edit_item -->
+    <input type="hidden" class="modal-list__item-id" name="control[[CONTROL]][[KEY]][id]" value="[ID]">
+    <img src="[THEME_DIR]/img/delete.png" class="modal-list__item-delete" onclick="edit.modalList.deleteItem('[CONTROL]', '[KEY]')"/>
+    <!-- END edit_item -->
+  </li>
+  <!-- END item -->
+</ul>
+
+<!-- BEGIN add_items-->
+<button type="button" class="btn btn-sm btn-link"
+        onclick="edit.modalList.showModal('[CONTROL]', [URL])">Добавить</button>
+
+<script>
+  edit.modalList.themeSrc = '[THEME_DIR]';
+  edit.modalList.options['[CONTROL]'] = {
+    'title': '[TITLE]',
+    'size': '[SIZE]',
+    'onHidden': [ON_HIDDEN],
+    'onDelete': [ON_DELETE],
+    'onAdd': [ON_ADD]
+  };
+</script>
+<!-- END add_items -->

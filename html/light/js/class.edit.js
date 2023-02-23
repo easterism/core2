@@ -341,7 +341,347 @@ var edit = {
         }
     },
 
-    /**
+
+	modalList: {
+
+		themeSrc: '',
+		control: '',
+		selectRows: {},
+		options: [],
+
+
+		/**
+		 * @param control
+		 * @param url
+		 * @return {boolean}
+		 */
+		showModal: function(control, url) {
+
+			if (typeof url === 'function') {
+				url = url();
+			}
+
+			edit.modalList.control = control;
+
+			if ( ! url || ! edit.modalList.options.hasOwnProperty(control)) {
+				return false;
+			}
+
+			var title = edit.modalList.options[control].title || '';
+			var size  = edit.modalList.options[control].size || 'modal-lg' ;
+
+			$('#main_body').append(
+				'<div class="modal fade" tabindex="-1" id="modal-list__' + control + '-modal">' +
+				'<div class="modal-dialog ' + size + '">' +
+				'<div class="modal-content">' +
+				'<div class="modal-header">' +
+				'<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>' +
+				'<h4 class="modal-title">' + title + '</h4>' +
+				'</div>' +
+				'<div class="modal-body">' +
+				'<div style="text-align:center">' +
+				'<img src="' + edit.modalList.themeSrc + '/img/load.gif" alt="loading"> Загрузка' +
+				'</div>' +
+				'</div>' +
+				'</div>' +
+				'</div>' +
+				'</div>'
+			);
+
+
+			var modal = $('#modal-list__' + control + '-modal');
+
+			$('.modal-dialog > .modal-content > .modal-body', modal)
+				.load(url);
+
+			modal.modal('show');
+			modal.on('hidden.bs.modal', function (e) {
+
+				if (typeof edit.modalList.options[control].onHidden === 'function') {
+					edit.modalList.options[control].onHidden();
+				}
+
+				modal.remove();
+			});
+		},
+
+
+		/**
+		 *
+		 */
+		hideModal: function() {
+			$('.modal.in').modal('hide');
+		},
+
+
+		/**
+		 * @param items
+		 */
+		choose: function(items) {
+
+			if (typeof items !== 'object') {
+				return false;
+			}
+
+			$.each(items, function (key, item) {
+				edit.modalList.addItem(edit.modalList.control, item.id || null, item.text || null);
+			});
+
+			this.hideModal();
+		},
+
+
+		/**
+		 *
+		 * @param control
+		 * @param key
+		 */
+		deleteItem: function(control, key) {
+
+			var item   = $('.modal-list__item-' + control + '-' + key);
+			var itemId = $('.modal-list__item-id', item).val();
+
+			item.fadeOut('fast', function () {
+				$(this).remove();
+			});
+
+			if (this.options[control] && typeof this.options[control].onDelete === 'function') {
+				this.options[control].onDelete(key, itemId);
+			}
+		},
+
+
+		/**
+		 *
+		 * @param control
+		 */
+		deleteAll: function(control) {
+
+			$('.modal-list__item-' + control + ' .modal-list__item').each(function (item) {
+				var key = item.data('key');
+
+				edit.modalList.deleteItem(control, key)
+			});
+		},
+
+
+		/**
+		 * @param control
+		 * @param id
+		 * @param text
+		 */
+		addItem: function (control, id, text) {
+
+			// Уже есть запись с таким ID
+			var issetId = false;
+			$('.modal-list__control-' + control + ' .modal-list__item-id').each(function (key, input) {
+				if ($(input).val() === id.toString()) {
+					issetId = true;
+					return false;
+				}
+			});
+
+			if (issetId) {
+				return false;
+			}
+
+			var key = edit.modalList.keygen();
+
+			$('.modal-list__control-' + control)
+				.append(
+					$('<li class="modal-list__item modal-list__item-' + control + '-' + key + '" data-key="' + key + '" style="display: none">' +
+						'<span>' + text + '</span>' +
+						'<input type="hidden" class="modal-list__item-id" name="control[' + control + '][' + key + '][id]" value="' + id + '">' +
+						'<img src="' + edit.modalList.themeSrc + '/img/delete.png" ' +
+						'class="modal-list__item-delete" onclick="edit.modalList.deleteItem(\'' + control + '\', \'' + key + '\')"/>' +
+						'</li>'));
+
+			$('.modal-list__item-' + control + '-' + key).fadeIn('fast');
+
+
+			if (this.options[control] && typeof this.options[this.control].onAdd === 'function') {
+				this.options[control].onAdd(key, id, text);
+			}
+		},
+
+
+		/**
+		 * @param tableName
+		 * @param row
+		 */
+		rowToggle: function (tableName, row) {
+
+			var checkbox = $('.checked-row input[type="checkbox"]', row);
+
+			if (checkbox[0]) {
+				checkbox.prop('checked', ! checkbox.prop('checked'));
+
+				CoreUI.table.checkRow(checkbox, tableName);
+			}
+		},
+
+
+		/**
+		 * @param tableName
+		 * @param btnAdd
+		 * @param btnClear
+		 */
+		addItemsTable: function (tableName, btnAdd, btnClear) {
+
+			var selectRows = edit.modalList.selectRows[tableName] || [];
+			var buttonText = $(btnAdd).text();
+
+			/**
+			 * Обновление выбранных строк
+			 */
+			function updateChecked(rowsId, state) {
+
+				// Добавление новых записей
+				if (state) {
+					$.each(rowsId, function (key, rowIdNew) {
+						var issetKey = false;
+
+						$.each(selectRows, function (key, row) {
+							if (row.id === rowIdNew) {
+								issetKey = true;
+								return false;
+							}
+						});
+
+						if ( ! issetKey) {
+							var row = $('#table-' + tableName + ' td.checked-row input[value="' + rowIdNew + '"]').parent().parent();
+
+							selectRows.push({
+								id : rowIdNew,
+								text : row[0] ? row.data('text') : '-',
+							})
+						}
+					});
+
+					// Удаление записей
+				} else {
+					var selectRowsNew = [];
+
+					$.each(selectRows, function (key, row) {
+						var issetKey = false;
+
+						$.each(rowsId, function (key2, rowId) {
+							if (row.id === rowId) {
+								issetKey = true;
+								return false;
+							}
+						});
+
+						if ( ! issetKey) {
+							selectRowsNew.push(row);
+						}
+					});
+
+					selectRows = selectRowsNew;
+				}
+
+
+				edit.modalList.selectRows[tableName] = selectRows;
+
+				refreshStateBtn();
+			}
+
+
+			/**
+			 * Обновление состояния услуг в списке (чекбоксы и кнопка)
+			 */
+			function refreshState() {
+
+				$('#table-' + tableName + ' > tbody tr').each(function (key, tr) {
+					var isChecked = false;
+					var rowId     = $('.checked-row input[type="checkbox"]', tr).val();
+
+					$.each(selectRows, function (key, row) {
+						if (row.id === rowId) {
+							isChecked = true;
+							return false;
+						}
+					});
+
+					if (isChecked) {
+						$('.checked-row input[type="checkbox"]', tr).prop('checked', 'checked');
+					} else {
+						$('.checked-row input[type="checkbox"]', tr).prop('checked', false);
+					}
+				});
+
+				refreshStateBtn();
+			}
+
+
+			/**
+			 *
+			 */
+			function clearSelected() {
+
+				edit.modalList.selectRows[tableName] = [];
+				selectRows                           = [];
+				$('#table-' + tableName + ' > tbody tr .checked-row input[type="checkbox"]').prop('checked', false);
+				refreshStateBtn();
+			}
+
+
+			/**
+			 *
+			 */
+			function refreshStateBtn() {
+
+				if ($(btnAdd).prop("tagName") === 'INPUT') {
+					$(btnAdd).val(buttonText + ' ' + selectRows.length);
+				} else {
+					$(btnAdd).text(buttonText + ' ' + selectRows.length);
+				}
+			}
+
+
+			$(btnAdd).click(function () {
+				if (selectRows.length <= 0) {
+					swal('Выберите хотя бы одну запись', '', 'warning').catch(swal.noop);
+					return false;
+				}
+
+				$.each(selectRows, function (key, row) {
+					edit.modalList.addItem(edit.modalList.control, row.id, row.text);
+				});
+
+				clearSelected();
+				edit.modalList.hideModal();
+			});
+
+			if (btnClear) {
+				$(btnClear).click(clearSelected);
+			}
+
+			refreshState();
+
+			CoreUI.table.onChecked(tableName, updateChecked);
+			CoreUI.table.onReload(tableName, refreshState);
+		},
+
+
+		/**
+		 * Генератор случайного ключа
+		 * @param extInt
+		 * @returns {*}
+		 */
+		keygen : function(extInt) {
+			var d = new Date();
+			var v1 = d.getTime();
+			var v2 = d.getMilliseconds();
+			var v3 = Math.floor((Math.random() * 1000) + 1);
+			var v4 = extInt ? extInt : 0;
+
+			return 'A' + v1 + v2 + v3 + v4;
+		}
+	},
+
+
+	/**
      * @param toggleObject
      */
     toggleGroup: function(toggleObject) {
