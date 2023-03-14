@@ -20,14 +20,13 @@ use Core2\InstallModule as Install;
 
 
 /**
- * Class CoreController
- * @property Users         $dataUsers
- * @property Enum          $dataEnum
- * @property Modules       $dataModules
- * @property Roles         $dataRoles
- * @property SubModules    $dataSubModules
- * @property UsersProfile  $dataUsersProfile
- * @property ModProfileApi $apiProfile
+ * @property Core2\Model\Users        $dataUsers
+ * @property Core2\Model\Enum         $dataEnum
+ * @property Core2\Model\Modules      $dataModules
+ * @property Core2\Model\Roles        $dataRoles
+ * @property Core2\Model\SubModules   $dataSubModules
+ * @property Core2\Model\UsersProfile $dataUsersProfile
+ * @property ModProfileApi            $apiProfile
  */
 class CoreController extends Common implements File {
 
@@ -98,7 +97,9 @@ class CoreController extends Common implements File {
                         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                             throw new Exception('Некорректный запрос');
                         }
+
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
+
                         return json_encode(['status' => 'success']);
                 }
 
@@ -171,7 +172,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 header("Content-Type: application/json");
@@ -190,7 +191,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 return Alert::danger($e->getMessage());
