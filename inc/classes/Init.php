@@ -41,7 +41,7 @@
                 'charset' => 'utf8',
             ],
             'driver_options'=> [
-                \PDO::ATTR_TIMEOUT => 3,
+                \PDO::ATTR_TIMEOUT => 5,
             ],
             'isDefaultTableAdapter' => true,
             'profiler'              => [
@@ -271,7 +271,7 @@
                 Zend_Registry::set('auth', $this->auth);
             }
             else {
-                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
+                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
             }
             Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
             //if ($_SERVER['REQUEST_METHOD'] === 'GET') $this->auth->getManager()->writeClose(); // закрываем сессию для записи
