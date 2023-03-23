@@ -124,7 +124,7 @@ TOP MENU
 	z-index: 1000;
 }
 #menuContainer .menu_back {
-	background-image: url("img/menu_background.gif");
+	background-image: url("img/winter.gif");
 	width:100%;
 }
 .menu_items, .menu_items_selected {
@@ -1070,8 +1070,8 @@ table td.homeTD {
 	position: relative;
 	display: block;
 	float: left;
-	margin-top: -1px;
-	margin-bottom: -1px;
+	margin-top: -2px;
+	margin-bottom: -2px;
 }
 
 .core-panel > .core-panel-body > .core-panel-tabs > li > a {
@@ -2023,4 +2023,14 @@ table.coreui-table .coreui-table-row-group {
 	-webkit-transform: translateX(16px);
 	-ms-transform: translateX(16px);
 	transform: translateX(16px);
+}
+
+#backVideo {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	min-width: 100%;
+	min-height: 100%;
+	z-index: -1000;
+	opacity: 0.3;
 }

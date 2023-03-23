@@ -10,7 +10,7 @@
 	<meta name="description" content="CORE2">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="stylesheet" href="core2/html/default/style2.css?_=13" type="text/css" />
+	<link rel="stylesheet" href="core2/html/default/style2.css?_=16" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
 	<!--system_css-->
@@ -55,7 +55,10 @@
 </head>
 <body>
 <div id="rootContainer">
-<!--index-->
+	<!-- video autoplay muted loop id="backVideo">
+		<source src="core2/html/default/videvostock009.mp4" type="video/mp4">
+	</video -->
+	<!--index-->
 </div>
 <!--system_js-->
 </body>
