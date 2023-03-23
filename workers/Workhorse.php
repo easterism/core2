@@ -10,6 +10,10 @@ class Workhorse
 {
     public function run($job, &$log) {
         $workload = json_decode($job->workload());
+        if (\JSON_ERROR_NONE !== json_last_error()) {
+            throw new \InvalidArgumentException(json_last_error_msg());
+            return;
+        }
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             $controller = $this->requireController($workload->module, $workload->location);

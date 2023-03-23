@@ -21,6 +21,10 @@ class Error {
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
 			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
+			if (!$code) $code == 200;
+            if ($code == 403) {
+                header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+            }
 			if ($code == 13) { //ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
 			} else {
@@ -82,12 +86,12 @@ class Error {
 			self::Exception($text, $code);
 
 		} elseif ($message == '404') {
-            header("HTTP/1.1 404 Page not found");
+            header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
 			self::Exception('Нет такой страницы', $code);
 
 		} elseif ($message == 'expired') {
             setcookie($cnf->session->name, false);
-			header("HTTP/1.1 403 Forbidden");
+			header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
 			die();
 		}
 
@@ -174,16 +178,16 @@ class Error {
 	    if (!$out) $out = [];
 
 		if ($code == 400) {
-			header("HTTP/1.1 400 Bad Request");
+			header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
 
 		} elseif ($code == 403) {
-			header("HTTP/1.1 403 Forbidden");
+			header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
 
 		} elseif ($code == 500) {
-			header("HTTP/1.1 500 Internal Server Error");
+			header("{$_SERVER['SERVER_PROTOCOL']} 500 Internal Server Error");
 
 		} elseif ($code == 503) {
-			header("HTTP/1.1 503 Service Unavailable");
+			header("{$_SERVER['SERVER_PROTOCOL']} 503 Service Unavailable");
 		}
 
 

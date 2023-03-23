@@ -1,187 +1,187 @@
 <?php
-    header('Content-Type: text/html; charset=utf-8');
+header('Content-Type: text/html; charset=utf-8');
 
-    // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-    define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
-    define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+// Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
+define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-    $autoload = DOC_ROOT . "core2/vendor/autoload.php";
-    if (!file_exists($autoload)) {
-        \Core2\Error::Exception("Composer autoload is missing.");
-    }
+$autoload = DOC_ROOT . "core2/vendor/autoload.php";
+if (!file_exists($autoload)) {
+    \Core2\Error::Exception("Composer autoload is missing.");
+}
 
-    require_once($autoload);
-    require_once("Error.php");
-    require_once("Log.php");
-    require_once 'Zend_Registry.php'; //DEPRECATED
+require_once($autoload);
+require_once("Error.php");
+require_once("Log.php");
+require_once 'Zend_Registry.php'; //DEPRECATED
 
-    use Laminas\Session\Config\SessionConfig;
-    use Laminas\Session\SessionManager;
-    use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
-    use Laminas\Session\Container as SessionContainer;
-    use Laminas\Cache\Storage;
+use Laminas\Session\Config\SessionConfig;
+use Laminas\Session\SessionManager;
+use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
+use Laminas\Session\Container as SessionContainer;
+use Laminas\Cache\Storage;
 
-    $conf_file = DOC_ROOT . "conf.ini";
+$conf_file = DOC_ROOT . "conf.ini";
 
-    if (!file_exists($conf_file)) {
-        \Core2\Error::Exception("conf.ini is missing.");
-    }
-    $config = [
-        'system'       => ['name' => 'CORE2'],
-        'include_path' => '',
-        'temp'         => getenv('TMP'),
-        'debug'        => ['on' => false],
-        'session'      => [
-            'cookie_httponly'  => true,
-            'use_only_cookies' => true,
+if (!file_exists($conf_file)) {
+    \Core2\Error::Exception("conf.ini is missing.");
+}
+$config = [
+    'system'       => ['name' => 'CORE2'],
+    'include_path' => '',
+    'temp'         => getenv('TMP'),
+    'debug'        => ['on' => false],
+    'session'      => [
+        'cookie_httponly'  => true,
+        'use_only_cookies' => true,
+    ],
+    'database' => [
+        'adapter' => 'Pdo_Mysql',
+        'params'  => [
+            'charset' => 'utf8',
         ],
-        'database' => [
-            'adapter' => 'Pdo_Mysql',
-            'params'  => [
-                'charset' => 'utf8',
-            ],
-            'driver_options'=> [
-                \PDO::ATTR_TIMEOUT => 3,
-            ],
-            'isDefaultTableAdapter' => true,
-            'profiler'              => [
-                'enabled' => false,
-                'class'   => 'Zend_Db_Profiler_Firebug',
-            ],
-            'caseFolding'                => true,
-            'autoQuoteIdentifiers'       => true,
-            'allowSerialization'         => true,
-            'autoReconnectOnUnserialize' => true,
+        'driver_options'=> [
+            \PDO::ATTR_TIMEOUT => 3,
         ],
-    ];
-    // определяем путь к темповой папке
+        'isDefaultTableAdapter' => true,
+        'profiler'              => [
+            'enabled' => false,
+            'class'   => 'Zend_Db_Profiler_Firebug',
+        ],
+        'caseFolding'                => true,
+        'autoQuoteIdentifiers'       => true,
+        'allowSerialization'         => true,
+        'autoReconnectOnUnserialize' => true,
+    ],
+];
+// определяем путь к темповой папке
+if (empty($config['temp'])) {
+    $config['temp'] = sys_get_temp_dir();
     if (empty($config['temp'])) {
-        $config['temp'] = sys_get_temp_dir();
-        if (empty($config['temp'])) {
-            $config['temp'] = "/tmp";
+        $config['temp'] = "/tmp";
+    }
+}
+
+//обрабатываем общий конфиг
+try {
+    $config = new Zend_Config($config, true);
+
+    if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
+        $options = getopt('m:a:p:s:', array(
+            'module:',
+            'action:',
+            'param:',
+            'section:'
+        ));
+        if (( ! empty($options['section']) && is_string($options['section'])) || ( ! empty($options['s']) && is_string($options['s']))) {
+            $_SERVER['SERVER_NAME'] = ! empty($options['section']) ? $options['section'] : $options['s'];
         }
     }
 
-    //обрабатываем общий конфиг
-    try {
-        $config = new Zend_Config($config, true);
+    $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+    $config2 = new Zend_Config_Ini($conf_file, $section);
+    $conf_d = DOC_ROOT . "conf.ext.ini";
+    if (file_exists($conf_d)) {
+        $config2->merge(new Zend_Config_Ini($conf_d, $section));
+    }
+    $config->merge($config2);
+}
+catch (Zend_Config_Exception $e) {
+    \Core2\Error::Exception($e->getMessage());
+}
 
-        if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
-            $options = getopt('m:a:p:s:', array(
-                'module:',
-                'action:',
-                'param:',
-                'section:'
-            ));
-            if (( ! empty($options['section']) && is_string($options['section'])) || ( ! empty($options['s']) && is_string($options['s']))) {
-                $_SERVER['SERVER_NAME'] = ! empty($options['section']) ? $options['section'] : $options['s'];
-            }
+// отладка приложения
+if ($config->debug->on) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    ini_set('display_errors', 0);
+}
+
+//проверяем настройки для базы данных
+if ($config->database->adapter === 'Pdo_Mysql') {
+    $config->database->params->adapterNamespace = 'Core_Db_Adapter';
+    //подключаем собственный адаптер базы данных
+    require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+} elseif ($config->database->adapter === 'Pdo_Pgsql') {
+    $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
+    $config->database->schema = $config->database->params->dbname;
+    $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+}
+
+//конфиг стал только для чтения
+$config->setReadOnly();
+
+if (isset($config->include_path) && $config->include_path) {
+    set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
+}
+
+//подключаем мультиязычность
+require_once 'I18n.php';
+$translate = new \Core2\I18n($config);
+
+if (isset($config->auth) && $config->auth->on) {
+    $realm = $config->auth->params->realm;
+    $users = $config->auth->params->users;
+    if ($code = Tool::httpAuth($realm, $users)) {
+        if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
+        if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
+    }
+}
+
+//устанавливаем шкурку
+if ( ! empty($config->theme)) {
+    define('THEME', $config->theme);
+
+} elseif ( ! empty($config->system->theme) &&
+           ! empty($config->system->theme->name)
+) {
+    define('THEME', $config->system->theme->name);
+
+} else {
+    define('THEME', 'default');
+}
+
+//сохраняем параметры сессии
+if ($config->session) {
+    $sess_config = new SessionConfig();
+    $sess_config->setOptions($config->session);
+    $sess_manager = new SessionManager($sess_config);
+    if ($config->session->phpSaveHandler) {
+        $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
+        if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
+        if ($config->session->savePath) $options['server'] = $config->session->savePath;
+
+        if ($config->session->saveHandler === 'memcached') {
+            $adapter  = new Storage\Adapter\Memcached($options);
+            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
         }
-
-        $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
-        $config2 = new Zend_Config_Ini($conf_file, $section);
-        $conf_d = DOC_ROOT . "conf.ext.ini";
-        if (file_exists($conf_d)) {
-            $config2->merge(new Zend_Config_Ini($conf_d, $section));
+        elseif ($config->session->phpSaveHandler === 'redis') {
+            $adapter  = new Storage\Adapter\Redis($options);
+            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
         }
-        $config->merge($config2);
-    }
-    catch (Zend_Config_Exception $e) {
-        \Core2\Error::Exception($e->getMessage());
     }
 
-    // отладка приложения
-    if ($config->debug->on) {
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-    } else {
-        ini_set('display_errors', 0);
-    }
+    //сохраняем менеджер сессий
+    SessionContainer::setDefaultManager($sess_manager);
+}
 
-    //проверяем настройки для базы данных
-    if ($config->database->adapter === 'Pdo_Mysql') {
-        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
-        //подключаем собственный адаптер базы данных
-        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
-    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
-        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
-        $config->database->schema = $config->database->params->dbname;
-        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
-    }
+//сохраняем конфиг
+Zend_Registry::set('config', $config);
 
-    //конфиг стал только для чтения
-    $config->setReadOnly();
+//обрабатываем конфиг ядра
+$core_conf_file = __DIR__ . "/../../conf.ini";
+if (file_exists($core_conf_file)) {
+    $core_config = new Zend_Config_Ini($core_conf_file, 'production');
+    Zend_Registry::set('core_config', $core_config);
+}
 
-    if (isset($config->include_path) && $config->include_path) {
-        set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
-    }
-
-    //подключаем мультиязычность
-    require_once 'I18n.php';
-    $translate = new \Core2\I18n($config);
-
-	if (isset($config->auth) && $config->auth->on) {
-		$realm = $config->auth->params->realm;
-		$users = $config->auth->params->users;
-		if ($code = Tool::httpAuth($realm, $users)) {
-			if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
-			if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
-		}
-	}
-
-	//устанавливаем шкурку
-	if ( ! empty($config->theme)) {
-        define('THEME', $config->theme);
-
-    } elseif ( ! empty($config->system->theme) &&
-               ! empty($config->system->theme->name)
-    ) {
-        define('THEME', $config->system->theme->name);
-
-	} else {
-		define('THEME', 'default');
-	}
-
-	//сохраняем параметры сессии
-    if ($config->session) {
-        $sess_config = new SessionConfig();
-        $sess_config->setOptions($config->session);
-        $sess_manager = new SessionManager($sess_config);
-        if ($config->session->phpSaveHandler) {
-            $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
-            if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
-            if ($config->session->savePath) $options['server'] = $config->session->savePath;
-
-            if ($config->session->saveHandler === 'memcached') {
-                $adapter  = new Storage\Adapter\Memcached($options);
-                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-            }
-            elseif ($config->session->phpSaveHandler === 'redis') {
-                $adapter  = new Storage\Adapter\Redis($options);
-                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-            }
-        }
-
-        //сохраняем менеджер сессий
-        SessionContainer::setDefaultManager($sess_manager);
-    }
-
-	//сохраняем конфиг
-	Zend_Registry::set('config', $config);
-
-    //обрабатываем конфиг ядра
-    $core_conf_file = __DIR__ . "/../../conf.ini";
-    if (file_exists($core_conf_file)) {
-        $core_config = new Zend_Config_Ini($core_conf_file, 'production');
-        Zend_Registry::set('core_config', $core_config);
-    }
-
-	require_once 'Db.php';
-	require_once 'Common.php';
-	require_once 'Templater.php'; //DEPRECATED
-	require_once 'Templater2.php'; //DEPRECATED
-	require_once 'Templater3.php';
-	require_once 'Login.php';
+require_once 'Db.php';
+require_once 'Common.php';
+require_once 'Templater.php'; //DEPRECATED
+require_once 'Templater2.php'; //DEPRECATED
+require_once 'Templater3.php';
+require_once 'Login.php';
 
 
 	/**
@@ -229,7 +229,7 @@
          */
         public function checkAuth() {
 
-            // проверяем, есть ли в запросе токен
+            // проверяем, есть ли в запросе токен авторизации
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
@@ -249,7 +249,7 @@
                 Zend_Registry::set('auth', new StdClass());  //DEPRECATED
                 return;
             }
-            //echo "<PRE>";print_r(SessionContainer::getDefaultManager()->sessionExists());echo "</PRE>";die;
+            //$s = SessionContainer::getDefaultManager()->sessionExists();
             //echo 111; die;
             $this->auth = new SessionContainer('Auth');
             if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
@@ -270,11 +270,6 @@
                 }
                 Zend_Registry::set('auth', $this->auth);
             }
-            else {
-                $this->auth->TOKEN = md5($_SERVER['HTTP_HOST'] . $_SERVER['HTTP_USER_AGENT']);
-            }
-            Zend_Registry::set('auth', $this->auth); // сохранение сессии в реестре   //DEPRECATED
-            //if ($_SERVER['REQUEST_METHOD'] === 'GET') $this->auth->getManager()->writeClose(); // закрываем сессию для записи
         }
 
 
@@ -342,7 +337,9 @@
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
                 require_once 'core2/inc/Interfaces/Subscribe.php';
-                // SETUP ACL
+
+                // TODO move ACL to auth
+                // найти способ для запросов с токеном без пользователя
                 $this->acl = new \Core2\Acl();
                 $this->acl->setupAcl();
 
@@ -362,6 +359,9 @@
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
+                if ($this->auth->MOBILE) {
+                    return $this->getMenuMobile();
+                }
                 return $this->getMenu();
             } else {
                 if ($this->deleteAction()) return '';
@@ -428,10 +428,9 @@
                         $action = "action_" . $action;
                         if (method_exists($modController, $action)) {
                             $out = $modController->$action();
-
                             return $out;
                         } else {
-                            throw new Exception(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
+                            throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                         }
                     } else {
                         return "<script>loadExt('{$mods['sm_path']}')</script>";
@@ -537,33 +536,30 @@
 
 
         /**
-         * Проверка наличия токена в запросе
-         * Только для запросов с авторизацией по токену!
+         * Проверка наличия токена авторизации в запросе
          * @return StdClass|void
          */
         private function checkToken() {
 
             $token = '';
-
             if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                if (strpos('Bearer', $_SERVER['HTTP_AUTHORIZATION']) !== 0) {
-                    return;
+                if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer') === 0) {
+                    $token = $_SERVER['HTTP_AUTHORIZATION'];
                 }
-
-                $token = $_SERVER['HTTP_AUTHORIZATION'];
-
-            } elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
-                $token = $_SERVER['HTTP_CORE2M'];
+                //TODO сделать поддержку других видов авторизации
             }
-
-            if ($token) {
-                $this->setContext('webservice');
-
-                $this->checkWebservice();
-
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchWebToken($token);
+            elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
+                if (strpos($_SERVER['HTTP_CORE2M'], 'Bearer') === 0) {
+                    $token = $_SERVER['HTTP_CORE2M'];
+                }
             }
+            if (!$token) return;
+            //TODO заменить модуль webservice на модуль auth
+            $this->setContext('webservice');
+            $this->checkWebservice();
+            $webservice_controller = new ModWebserviceController();
+            return $webservice_controller->dispatchJwtToken($token);
+
         }
 
 
@@ -713,11 +709,6 @@
          * @throws Exception
          */
         private function getMenu() {
-
-            //если core2m
-            if ($this->auth->MOBILE) {
-                return $this->getMenuMobile();
-            }
 
             $xajax = new xajax();
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
@@ -1499,16 +1490,17 @@
                 $location      = $this->getModuleLocation($data['module_id']);
                 $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
                 if ( ! file_exists($location . "/$modController.php")) {
-                    unset($modsList[$k]);
+                    unset($modsList[$k]); //FIXME если это не выполнится, core2m не будет работать!
                 } else {
                     require_once $location . "/$modController.php";
                     $r = new \ReflectionClass($modController);
+                    $submodules = []; //должен быть массивом!
                     foreach ($data['submodules'] as $s => $submodule) {
                         $method = 'action_' . $submodule['sm_key'];
-                        if (!$r->hasMethod($method)) {
-                            unset($modsList[$k]['submodules'][$s]);
-                        }
+                        if (!$r->hasMethod($method)) continue;
+                        $submodules[] = $submodule;
                     }
+                    $modsList[$k]['submodules'] = $submodules;
                 }
             }
             $data = [
@@ -1517,12 +1509,14 @@
                 'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
                 'login'       => $this->auth->NAME,
                 'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'required_location' => false,
                 'modules'     => $modsList
             ];
             if ($this->config->mobile) { //Настройки для Core2m
-                if ($this->config->mobile->required && $this->config->mobile->required->location) $data['required_location'] = true;
+                if ($this->config->mobile->required && $this->config->mobile->required->location) {
+                    $data['required_location'] = true; //требовать геолокацию для работы
+                }
             }
-
 
             return json_encode([
                 'status' => 'success',
@@ -1641,7 +1635,7 @@
                     \Core2\Error::catchXajax($e, $res);
                 }
             } else {
-                throw new Exception($translate->tr("Метод не найден"), 60);
+                throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
             }
 
         } else {
@@ -1677,7 +1671,7 @@
                         \Core2\Error::catchXajax($e, $res);
                     }
                 } else {
-                    throw new Exception($translate->tr("Метод не найден"), 60);
+                    throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
                 }
             }
         }

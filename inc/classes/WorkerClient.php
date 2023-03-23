@@ -1,9 +1,6 @@
 <?php
 namespace Core2;
 
-use Laminas\Session\Container as SessionContainer;
-
-
 /**
  * Class WorkerClient
  */
@@ -99,7 +96,7 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
         $jh = $this->client->doBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (!defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
@@ -117,7 +114,7 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker = $this->getWorkerName($worker);
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
+        if (!defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS)
         {
             return false;
         }
@@ -132,14 +129,14 @@ class WorkerClient {
      * @return false|string
      */
     private function getWorkload($worker, $data) {
-        $auth = new SessionContainer('Auth');
+        $auth = \Zend_Registry::get('auth');
         $dt = new \DateTime();
         $workload = [
             'timestamp' => $dt->format('U'),
             'location' => $this->location,
             'config'   => serialize(\Zend_Registry::get('config')),
             'server'   => $_SERVER,
-            'auth'     => $auth->getArrayCopy(),
+            'auth'     => $auth->MOBILE ? get_object_vars($auth) : $auth->getArrayCopy(),
             'payload'  => $data,
         ];
         if ($this->module !== 'Admin') {

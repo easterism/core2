@@ -199,7 +199,6 @@ class Db {
 			}
 			return $v;
 		}
-
 		return null;
 	}
 
@@ -364,9 +363,9 @@ class Db {
 	 */
 	public function logActivity($exclude = array()): void {
 
-        $auth = new SessionContainer('Auth');
+        $auth = \Zend_Registry::get('auth');
 
-        if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+        if ($auth->ID && $auth->ID > 0) {
             if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {
                 return;
             }
@@ -382,7 +381,6 @@ class Db {
 
             $data = [
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => $auth->getManager()->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
@@ -391,11 +389,16 @@ class Db {
 
             // обновление записи о последней активности
             if ($auth->LIVEID) {
+                // у юзера есть сессия
+                $data['sid'] = $auth->getManager()->getId();
                 $row = $this->dataSession->find($auth->LIVEID)->current();
                 if ($row) {
                     $row->last_activity = new \Zend_Db_Expr('NOW()');
                     $row->save();
                 }
+            } else {
+                // сессии нет, авторизовывается каждый запрос
+                $data['sid'] = ""; //TODO сохранить метод авторизации
             }
 
             // запись данных запроса в лог
@@ -817,7 +820,7 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $m            = new Model\Modules($this->db);
-            $sm            = new Model\SubModules($this->db);
+            $sm           = new Model\SubModules($this->db);
             $res = $m->fetchAll($m->select()->order('seq'));
             $sub = $sm->fetchAll($sm->select()->order('seq'));
             $data = [];
