@@ -104,6 +104,7 @@ class Db {
                 }
                 if ($adapter_name == 'Redis') {
                     $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
+                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
                     unset($options['cache_dir']);
                     $adapter  = new Storage\Adapter\Redis($options);
                 }
