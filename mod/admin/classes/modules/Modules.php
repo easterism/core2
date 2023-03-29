@@ -790,7 +790,7 @@ class Modules extends \Common  {
         $table->addColumn($this->_("Дата"),   'date',    $table::COLUMN_DATETIME, 120);
 
 
-        $data = $table->fetchData();
+        $data = $table->fetchRows();
         if ( ! empty($data)) {
             foreach ($data as $row) {
 
