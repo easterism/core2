@@ -218,23 +218,37 @@ class Common extends \Core2\Acl {
 
 			// Получение экземпляра api класса указанного модуля
 			elseif (strpos($k, 'api') === 0) {
-                $module     = substr($k, 3);
-                if ($k == 'api') $module = $this->module;
+                $module = substr($k, 3);
+                if ($k == 'api') {
+                    $module = $this->module;
+                }
+
                 if ($this->isModuleActive($module)) {
                     $location = $module == 'Admin'
-                            ? DOC_ROOT . "core2/mod/admin"
-                            : $this->getModuleLocation($module);
-                    $module = ucfirst($module);
+                        ? DOC_ROOT . "core2/mod/admin"
+                        : $this->getModuleLocation($module);
+
+                    $module     = ucfirst($module);
                     $module_api = "Mod{$module}Api";
-                    if (!file_exists($location . "/{$module_api}.php")) {
+
+                    if ( ! file_exists("{$location}/{$module_api}.php")) {
                         return new stdObject();
+
                     } else {
+                        $autoload_file = $location . "/vendor/autoload.php";
+
+                        if (file_exists($autoload_file)) {
+                            require_once($autoload_file);
+                        }
+
                         require_once "CommonApi.php";
-                        require_once $location . "/{$module_api}.php";
+                        require_once "{$location}/{$module_api}.php";
+
                         $api = new $module_api();
-                        if (!is_subclass_of($api, 'CommonApi')) {
+                        if ( ! is_subclass_of($api, 'CommonApi')) {
                             return new stdObject();
                         }
+
                         $v = $this->{$k} = $api;
                     }
                 } else {
