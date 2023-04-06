@@ -503,11 +503,23 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"datetime-local\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'week') {
+						elseif ($value['type'] == 'date_week') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? date('Y.m неделя W', strtotime($value['default'])) : '';
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+                                $input_year  = $value['default'] ? date('Y', strtotime($value['default'])) : '';
+                                $input_week  = $value['default'] ? date('W', strtotime($value['default'])) : '';
+                                $input_value = $input_year ? "{$input_year}-W{$input_week}" : '';
+
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$input_value}\">";
+							}
+						}
+						elseif ($value['type'] == 'date_month') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? date('Y.m', strtotime($value['default'])) : '';
+							} else {
+                                $input_value = $value['default'] ? date('Y-m', strtotime($value['default'])) : '';
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"month\" name=\"control[$field]\" {$attrs} value=\"{$input_value}\">";
 							}
 						}
 						elseif ($value['type'] == 'number') { // только цифры
