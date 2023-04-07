@@ -113,7 +113,7 @@ class Panel {
 
         $this->title       = $title;
         $this->description = $description;
-        $this->back_url    = str_replace('?', '#', $back_url);
+        $this->back_url    = str_replace('?', '#', (string)$back_url);
     }
 
 
