@@ -1279,6 +1279,19 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
+
+@media (min-width: 992px) {
+    .modal-xl {
+        width: 900px;
+    }
+}
+@media (min-width: 1200px) {
+    .modal-xl {
+        width: 1140px;
+    }
+}
+
+
 label {font-weight: 500;}
 label.control-label {font-weight: 700}
 .hide {display:none}

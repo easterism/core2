@@ -745,7 +745,8 @@ class editTable extends initEdit {
                                 $options['onChoose'] = isset($value['in']['onChoose']) ? $value['in']['onChoose'] : '';
 
                                 switch ($options['size']) {
-                                    case 'small': $size = 'modal-sm'; break;
+                                    case 'xl':     $size = 'modal-xl'; break;
+                                    case 'small':  $size = 'modal-sm'; break;
                                     case 'normal': $size = ''; break;
                                     case 'large':
                                     default: $size = 'modal-lg'; break;
@@ -818,7 +819,8 @@ class editTable extends initEdit {
                                 $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
 
                                 switch ($options['size']) {
-                                    case 'small': $size = 'modal-sm'; break;
+                                    case 'xl':     $size = 'modal-xl'; break;
+                                    case 'small':  $size = 'modal-sm'; break;
                                     case 'normal': $size = ''; break;
                                     case 'large':
                                     default: $size = 'modal-lg'; break;
