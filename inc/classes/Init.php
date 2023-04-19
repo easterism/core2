@@ -19,6 +19,7 @@ use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
+use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -147,6 +148,7 @@ if ($config->session) {
     $sess_config = new SessionConfig();
     $sess_config->setOptions($config->session);
     $sess_manager = new SessionManager($sess_config);
+    $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
     if ($config->session->phpSaveHandler) {
         $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
         if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
@@ -184,11 +186,11 @@ require_once 'Templater3.php';
 require_once 'Login.php';
 
 
-	/**
-	 * Class Init
-     * @property Modules $dataModules
-     */
-    class Init extends \Core2\Db {
+/**
+ * Class Init
+ * @property Modules $dataModules
+ */
+class Init extends \Core2\Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -250,9 +252,12 @@ require_once 'Login.php';
                 return;
             }
             //$s = SessionContainer::getDefaultManager()->sessionExists();
-            //echo 111; die;
             $this->auth = new SessionContainer('Auth');
+
             if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
+                if (!$this->auth->getManager()->isValid()) {
+                    $this->closeSession('Y');
+                }
                 //is user active right now
                 if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
                     if ($this->auth->LIVEID) {
@@ -268,8 +273,8 @@ require_once 'Login.php';
                 } else {
                     $this->closeSession('Y');
                 }
-                Zend_Registry::set('auth', $this->auth);
             }
+            Zend_Registry::set('auth', $this->auth);
         }
 
 
@@ -1590,18 +1595,18 @@ require_once 'Login.php';
     }
 
 
-    /**
-     * Какой-то пост
-     *
-     * @param string $func
-     * @param string $loc
-     * @param array  $data
-     *
-     * @return xajaxResponse
-     * @throws Exception
-     * @throws Zend_Exception
-     */
-    function post($func, $loc, $data) {
+/**
+ * Обработчик POST запросов от xajax
+ *
+ * @param string $func
+ * @param string $loc
+ * @param array  $data
+ *
+ * @return xajaxResponse
+ * @throws Exception
+ * @throws Zend_Exception
+ */
+function post($func, $loc, $data) {
 
         $translate = Zend_Registry::get('translate');
         $res       = new xajaxResponse();
