@@ -535,7 +535,6 @@ class CoreController extends Common implements File {
                 if (empty($_GET['edit'])) {
                     $panel->setTitle($this->_("Создание нового пользователя"), '', $app);
                     echo $view->getEdit($app);
-
                 } else {
                     $user = new Admin\Users\User($_GET['edit']);
                     $panel->setTitle($user->u_login, $this->_('Редактирование пользователя'), $app);
@@ -974,7 +973,7 @@ class CoreController extends Common implements File {
                 $upload_handler->delete();
                 break;
             default:
-                header('HTTP/1.0 405 Method Not Allowed');
+                header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
         }
 	}
 
@@ -1204,4 +1203,19 @@ class CoreController extends Common implements File {
 			return array('body' => $data2, 'count_lines' => $count_lines);
 		}
 	}
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function action_workhorse() {
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        try {
+            require_once __DIR__ . "/../mod/admin/classes/workhorse/View.php";
+            $view  = new Admin\Workhorse\View();
+
+        } catch (Exception $e) {
+            echo Alert::danger($e->getMessage());
+        }
+    }
 }
