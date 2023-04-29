@@ -665,7 +665,7 @@ class Render extends Acl {
                                 : substr($edit_url, 11);
 
                         } else {
-                            $edit_url = str_replace('?', '#', $edit_url);
+                            //$edit_url = str_replace('?', '#', $edit_url);
                             $row['attr']['onclick'] = isset($row['attr']['onclick'])
                                 ? $row['attr']['onclick'] .= " load('{$edit_url}');"
                                 : "load('{$edit_url}');";

@@ -29,13 +29,6 @@ class Acl extends Db {
 			'delete_default'
 		);
 
-	/**
-	 *
-	 */
-	function __construct() {
-		parent::__construct();
-	}
-
 
     /**
      * @throws \Zend_Acl_Exception

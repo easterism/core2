@@ -18,12 +18,18 @@ body {
 #rootContainer .form-container {
 	position: absolute;
 	width: 260px;
-	height: 200px;
 	top: 40%;
 	left: 50%;
-	margin-left: -100px;
+	margin-left: -140px;
 	margin-top: -100px;
 	text-align: center;
+	background-color: white;
+	padding: 20px 10px;
+	-webkit-box-shadow: 0 0 50px rgb(0 0 0 / 20%);
+	box-shadow: 0 0 50px rgb(0 0 0 / 20%);
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	border-radius: 8px;
 }
 #rootContainer .form-footer {
 	padding: 0 15px;
@@ -117,4 +123,13 @@ PRELOADERS
 }
 .auth-social a {
 	margin-right: 6px;
+}
+#backVideo {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	min-width: 100%;
+	min-height: 100%;
+	z-index: -1000;
+	opacity: 0.3;
 }
