@@ -2372,7 +2372,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: #ffffff;
     margin: 0;
     position: relative;
-    overflow: auto;
+    /*overflow: auto;*/
 }
 .coreui-table-wrapper .filter-controls {
     display: flex;
