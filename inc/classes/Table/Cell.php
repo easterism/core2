@@ -45,6 +45,14 @@ class Cell {
 
 
     /**
+     * @return string
+     */
+    public function val(): string {
+        return $this->value;
+    }
+
+
+    /**
      * Установка значения атрибута
      * @param string $name
      * @param string $value
