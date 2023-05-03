@@ -615,10 +615,10 @@ table.editTable > tbody > tr > td {
 	border:0;
 	vertical-align:top;
 }
-table.editTable td > table > tbody > tr > td {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td {
     padding: 0;
 }
-table.editTable td > table > tbody > tr > td > .input[disabled] {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td > .input[disabled] {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
