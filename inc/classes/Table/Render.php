@@ -537,6 +537,17 @@ class Render extends Acl {
         ) {
             foreach ($this->table['columns'] as $key => $column) {
                 if (is_array($column) && ! empty($column['show'])) {
+
+                    $column_attributes = [];
+                    if ( ! empty($column['attr'])) {
+                        foreach ($column['attr'] as $attr => $value) {
+                            if (is_string($attr) && is_string($value)) {
+                                $column_attributes[] = "$attr=\"{$value}\"";
+                            }
+                        }
+                    }
+                    $column_attributes = implode(' ', $column_attributes);
+
                     if ( ! empty($column['sorting'])) {
                         if (isset($this->session->table->order) && $this->session->table->order == $key + 1) {
                             if ($this->session->table->order_type == "asc") {
@@ -546,16 +557,16 @@ class Render extends Acl {
                             }
                         }
 
-                        if ( ! empty($column['attr']) && ! empty($column['attr']['width'])) {
-                            $tpl->header->cell->sort->assign('<th', "<th width=\"{$column['attr']['width']}\"");
+                        if ( ! empty($column_attributes)) {
+                            $tpl->header->cell->sort->assign('<th', "<th {$column_attributes}\"");
                         }
 
                         $tpl->header->cell->sort->assign('[COLUMN_NUMBER]', ($key + 1));
                         $tpl->header->cell->sort->assign('[CAPTION]',       $column['title'] ?? '');
 
                     } else {
-                        if ( ! empty($column['attr']) && ! empty($column['attr']['width'])) {
-                            $tpl->header->cell->no_sort->assign('<th', "<th width=\"{$column['attr']['width']}\"");
+                        if ( ! empty($column_attributes)) {
+                            $tpl->header->cell->no_sort->assign('<th', "<th {$column_attributes}");
                         }
                         $tpl->header->cell->no_sort->assign('[CAPTION]', $column['title'] ?? '');
                     }
