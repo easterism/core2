@@ -25,7 +25,7 @@ class ajaxFunc extends Common {
 	protected $response;
 	protected $script;
 	protected $userId;
-	private $orderFields;
+	private $orderFields = [];
 
 
     /**
@@ -67,7 +67,11 @@ class ajaxFunc extends Common {
 	protected function ajaxValidate($data, $fields) {
 
 		$order_fields = $this->getSessForm($data['class_id']);
-
+        if (!isset($order_fields['mainTableId'])) {
+            $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
+            $this->response->script("CoreUI.error.create('$msg');");
+            return true;
+        }
 		$control  = $data['control']; //данные полей формы
 		$script   = "for(var i = 0; i < document.getElementById('{$order_fields['mainTableId']}_mainform').elements.length; i++){document.getElementById('{$order_fields['mainTableId']}_mainform').elements[i].classList.remove('reqField')};";
 		$req      = array();
@@ -278,11 +282,9 @@ class ajaxFunc extends Common {
             //тогда id элемента для вывода ошибок можно задать вручную
             $mainTableId = $data['class_id'];
         }
-
-    	$this->response->assign("{$mainTableId}_error", "innerHTML",     implode("<br/>", $this->error));
-        $this->response->assign("{$mainTableId}_error", "style.display", 'block');
-        $this->response->script("toAnchor('{$mainTableId}_error')");
-        $this->response->script("animatedElement('{$mainTableId}_error', 'headShake')");
+    	$this->response->assign($mainTableId . "_error", "innerHTML", '<a name="' . $mainTableId . '_error"> </a>' . implode("<br/>", $this->error));
+		$this->response->assign($mainTableId . "_error", "style.display", 'block');
+		$this->response->script("toAnchor('{$mainTableId}_error')");
     }
 
 
@@ -306,7 +308,7 @@ class ajaxFunc extends Common {
 	 */
 	protected function getSessFormField($form_id, $id) {
 		$this->getSessForm($form_id);
-		return $this->orderFields[$id] ?? null;
+		return isset($this->orderFields[$id]) ? $this->orderFields[$id] : false;
 	}
 
 
@@ -670,7 +672,7 @@ class ajaxFunc extends Common {
      * @return array
      */
     private function getSessForm($id) {
-        if ( ! $this->orderFields) {
+        if ( empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
