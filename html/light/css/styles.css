@@ -1300,12 +1300,12 @@ form .buttons-area .button[type=submit]:hover {
 
 
 @media (min-width: 992px) {
-    .modal-xl {
+    .modal-dialog.modal-xl {
         width: 900px;
     }
 }
 @media (min-width: 1200px) {
-    .modal-xl {
+    .modal-dialog.modal-xl {
         width: 1140px;
     }
 }
