@@ -503,6 +503,10 @@ var load = function (url, data, id, callback) {
         $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
         $('#navbar-top .module-action').text(action_title);
 
+		var siteName = $.trim($('.site-name').text());
+		var title    = siteName + ' - ' + mod_title + (action_title ? (' - ' + action_title) : '');
+		$('html > head > title').text(title);
+
         if (xhrs[id]) {
         	xhrs[id].abort();
         }
