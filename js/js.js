@@ -114,6 +114,29 @@ function jsToHead(src) {
 
 var glob = {'toAnchor':false};
 
+
+
+
+/**
+ * Анимация для указанного элемента
+ * @param {string} elementId
+ * @param {string} effect
+ */
+function animatedElement(elementId, effect) {
+
+	var element = $('#' + elementId);
+	if ( ! element[0]) {
+		return;
+	}
+
+
+	element.removeClass('animated ' + effect);
+
+	setTimeout(function() {
+		element.addClass('animated ' + effect);
+	}, 0);
+}
+
 function toAnchor(id) {
 	if (!id) return;
 	if (typeof id != 'string') return;

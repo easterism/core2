@@ -239,10 +239,36 @@ function jsToHead(src) {
 
 
 /**
+ * Анимация для указанного элемента
+ * @param {string} elementId
+ * @param {string} effect
+ */
+function animatedElement(elementId, effect) {
+
+	var element = $('#' + elementId);
+	if ( ! element[0]) {
+		return;
+	}
+
+
+	element.removeClass('animated ' + effect);
+
+	setTimeout(function() {
+		element.addClass('animated ' + effect);
+	}, 0);
+}
+
+
+/**
  * @param {string} id
  */
-function toAnchor(id){
+function toAnchor(id) {
     setTimeout(function() {
+		// Если открыт мадал, то не двигать
+		if ($('body > .modal-backdrop')[0]) {
+			return;
+		}
+
 		if (typeof id == 'string' && id.indexOf('#') < 0) {
 			id = "#" + id;
 		}

@@ -63,7 +63,7 @@
 	<script type="text/javascript" src="core2/html/light/js/class.list.js?_=2"></script>
 	<script type="text/javascript" src="core2/html/light/js/class.edit.js?_=10"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" src="core2/html/light/js/main.js?_=4"></script>
+	<script type="text/javascript" src="core2/html/light/js/main.js?_=5"></script>
     <!--[if IE]>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
     <![endif]-->

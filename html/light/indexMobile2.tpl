@@ -57,7 +57,7 @@
 	<script type="text/javascript" src="core2/html/light/js/class.list.js?_=2"></script>
     <script type="text/javascript" src="core2/html/light/js/class.edit.js?_=10"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" src="core2/html/light/js/main.js?_=4"></script>
+	<script type="text/javascript" src="core2/html/light/js/main.js?_=5"></script>
 
     <link rel="icon" type="image/png" href="favicon.png"/>
 	<!--[if lte IE 7]>
