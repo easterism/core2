@@ -834,7 +834,11 @@ var edit = {
 			}
 
 			$.each(items, function (key, item) {
-				edit.modalList.addItem(edit.modalList.control, item.id || null, item.text || null);
+				var id     = item.hasOwnProperty('id') && ['string', 'number'].indexOf(typeof item.id) >= 0 ? item.id : null;
+				var text   = item.hasOwnProperty('text') && ['string', 'number'].indexOf(typeof item.text) >= 0 ? item.text : null;
+				var fields = item.hasOwnProperty('fields') && typeof item.fields === 'object' ? item.fields : null;
+
+				edit.modalList.addItem(edit.modalList.control, id, text, fields);
 			});
 
 			this.hideModal();
@@ -876,11 +880,14 @@ var edit = {
 
 
 		/**
+		 * Добавление строки
 		 * @param control
 		 * @param id
 		 * @param text
+		 * @param fields
+		 * @returns {boolean}
 		 */
-		addItem: function (control, id, text) {
+		addItem: function (control, id, text, fields) {
 
 			// Уже есть запись с таким ID
 			var issetId = false;
@@ -895,16 +902,38 @@ var edit = {
 				return false;
 			}
 
-			var key = edit.modalList.keygen();
+			var key          = edit.modalList.keygen();
+			var renderFields = [];
+
+			$.each(this.options[control].fields, function (index, field) {
+				var type       = field.hasOwnProperty('type') && typeof field.type === 'string' ? field.type : 'text';
+				var name       = field.hasOwnProperty('name') && typeof field.name === 'string' ? field.name : '';
+				var title      = field.hasOwnProperty('title') && typeof field.title === 'string' ? field.title : '';
+				var attributes = field.hasOwnProperty('attributes') && typeof field.attributes === 'string' ? field.attributes : '';
+
+				var value = typeof fields === 'object' &&
+							fields !== null &&
+							fields.hasOwnProperty(name) &&
+							['string', 'number'].indexOf(typeof fields[name]) >= 0
+					? fields[name]
+					: '';
+
+				renderFields.push('<input type="' + type + '" class="form-control input-sm modal-list__item-field" ' +
+										 'name="control[' + control + '][' + key + '][' + name + ']" value="' + value + '" ' +
+									     'placeholder="' + title + '" ' + attributes + '>');
+			});
 
 			$('.modal-list__control-' + control)
 				.append(
 					$('<li class="modal-list__item modal-list__item-' + control + '-' + key + '" data-key="' + key + '" style="display: none">' +
-						'<span>' + text + '</span>' +
-						'<input type="hidden" class="modal-list__item-id" name="control[' + control + '][' + key + '][id]" value="' + id + '">' +
-						'<img src="' + edit.modalList.themeSrc + '/img/delete.png" ' +
-						'class="modal-list__item-delete" onclick="edit.modalList.deleteItem(\'' + control + '\', \'' + key + '\')"/>' +
-						'</li>'));
+						'<span class="modal-list__item-text">' + text + '</span>' +
+						renderFields.join('') +
+						'<div>' +
+							'<input type="hidden" class="modal-list__item-id" name="control[' + control + '][' + key + '][id]" value="' + id + '">' +
+							'<img src="' + edit.modalList.themeSrc + '/img/delete.png" ' +
+								 'class="modal-list__item-delete" onclick="edit.modalList.deleteItem(\'' + control + '\', \'' + key + '\')"/>' +
+						'</div>' +
+					'</li>'));
 
 			$('.modal-list__item-' + control + '-' + key).fadeIn('fast');
 
@@ -959,11 +988,21 @@ var edit = {
 						});
 
 						if ( ! issetKey) {
-							var row = $('#table-' + tableName + ' td.checked-row input[value="' + rowIdNew + '"]').parent().parent();
+							var row    = $('#table-' + tableName + ' td.checked-row input[value="' + rowIdNew + '"]').parent().parent();
+							var fields = {};
+
+							$.each($(row).data(), function (dataName, dataValue) {
+								if (dataName.indexOf('field') === 0 && dataName.length > 5) {
+									let fieldName = dataName.substring(5).toLowerCase();
+									fields[fieldName] = dataValue;
+								}
+							});
+
 
 							selectRows.push({
 								id : rowIdNew,
 								text : row[0] ? row.data('text') : '-',
+								fields : fields
 							})
 						}
 					});
@@ -1056,7 +1095,7 @@ var edit = {
 				}
 
 				$.each(selectRows, function (key, row) {
-					edit.modalList.addItem(edit.modalList.control, row.id, row.text);
+					edit.modalList.addItem(edit.modalList.control, row.id, row.text, row.fields);
 				});
 
 				clearSelected();

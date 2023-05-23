@@ -15,11 +15,6 @@ class CommonApi extends \Core2\Acl {
      */
 	protected $auth;
 
-    /**
-     * @var Zend_Config_Ini
-     */
-	protected $config;
-
 	private $module;
 	private $_p = array();
 
@@ -32,7 +27,6 @@ class CommonApi extends \Core2\Acl {
 		parent::__construct();
 		$this->module = $module;
 		$this->auth = Zend_Registry::get('auth');
-		$this->config = Zend_Registry::get('config');
 	}
 
 

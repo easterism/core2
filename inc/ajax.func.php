@@ -278,9 +278,11 @@ class ajaxFunc extends Common {
             //тогда id элемента для вывода ошибок можно задать вручную
             $mainTableId = $data['class_id'];
         }
-    	$this->response->assign($mainTableId . "_error", "innerHTML", '<a name="' . $mainTableId . '_error"> </a>' . implode("<br/>", $this->error));
-		$this->response->assign($mainTableId . "_error", "style.display", 'block');
-		$this->response->script("toAnchor('{$mainTableId}_error')");
+
+    	$this->response->assign("{$mainTableId}_error", "innerHTML",     implode("<br/>", $this->error));
+        $this->response->assign("{$mainTableId}_error", "style.display", 'block');
+        $this->response->script("toAnchor('{$mainTableId}_error')");
+        $this->response->script("animatedElement('{$mainTableId}_error', 'headShake')");
     }
 
 

@@ -221,9 +221,9 @@ class Templater2 {
 	/**
 	 * Fill SELECT items on page
 	 *
-	 * @param varchar $inID
+	 * @param string $inID
 	 * @param array $inOptions
-	 * @param varchar $inVal
+	 * @param string $inVal
 	 */
 	public function fillDropDown($inID, Array $inOptions, $inVal = '') {
 		if (is_array(current($inOptions))) {

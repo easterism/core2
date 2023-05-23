@@ -50,11 +50,11 @@ class User extends \Common {
 
 
     /**
-     * Удаление сотрудника
+     * Удаление пользователя
      */
     public function delete() {
 
-        $where = $this->db->quoteInto('u_id ?', $this->u_id);
+        $where = $this->db->quoteInto('u_id = ?', $this->u_id);
         $this->db->delete('core_users', $where);
     }
 

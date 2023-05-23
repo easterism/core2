@@ -615,10 +615,10 @@ table.editTable > tbody > tr > td {
 	border:0;
 	vertical-align:top;
 }
-table.editTable td > table > tbody > tr > td {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td {
     padding: 0;
 }
-table.editTable td > table > tbody > tr > td > .input[disabled] {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td > .input[disabled] {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
@@ -1297,6 +1297,18 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
+
+
+@media (min-width: 992px) {
+    .modal-dialog.modal-xl {
+        width: 900px;
+    }
+}
+@media (min-width: 1200px) {
+    .modal-dialog.modal-xl {
+        width: 1140px;
+    }
+}
 label {font-weight: 500}
 label.control-label {font-weight: 700}
 .hide {display:none}
@@ -1618,20 +1630,20 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     list-style: none;
     min-width: 400px;
     white-space: nowrap;
-    padding: 10px 35px 10px 0;
+    padding: 10px 0 10px 0;
     position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.modal-list__control .modal-list__item > .modal-list__item-text {
+    flex: 1 1 auto!important;
 }
 .modal-list__control .modal-list__item:first-child {
     padding-top: 0;
 }
 .modal-list__control .modal-list__item .modal-list__item-delete {
-    position: absolute;
-    right: 10px;
-    top: 12px;
     cursor: pointer;
-}
-.modal-list__control .modal-list__item:first-child .modal-list__item-delete {
-    top: 4px;
 }
 .core-panel {
     margin-bottom: 20px;
@@ -2360,7 +2372,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: #ffffff;
     margin: 0;
     position: relative;
-    overflow: auto;
+    /*overflow: auto;*/
 }
 .coreui-table-wrapper .filter-controls {
     display: flex;

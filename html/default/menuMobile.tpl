@@ -1,8 +1,8 @@
 <div id="menuContainer">
-	<table width="100%" background="core2/html/default/img/menu_background.gif">
+	<table class="menu_back">
 		<tr>
 			<td class="font homeButton">
-				<img src="core2/html/default/img/home.gif" alt="На главную" title="Уйти на главную страницу" onclick="goHome()"/>
+				<img src="core2/html/default/img/home.gif" alt="На главную" title="_tr('Уйти на главную страницу')" onclick="goHome()"/>
 			</td>
 			<td align="center" width="100%" height="37">
 				<table style="margin-bottom:-2px;">
@@ -16,7 +16,7 @@
 		        </table>
 			</td>
 			<td class="font closeButton">
-				<img src="core2/html/default/img/exit.gif" alt="Выход" title="Надоело! Хочу домой!!!" onclick="logout()"/>
+				<img src="core2/html/default/img/exit.gif" alt="Выход" title="_tr('Надоело! Хочу домой!!!')" onclick="logout()"/>
 			</td>
 		</tr>
 		<tr valign="middle">

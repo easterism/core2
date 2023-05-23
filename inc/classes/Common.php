@@ -24,7 +24,6 @@ class Common extends \Core2\Acl {
     /**
      * @var Zend_Config_Ini
      */
-	protected $config;
 	private $_p = array();
 	private $AR = array(
         'module',
@@ -78,8 +77,6 @@ class Common extends \Core2\Acl {
 			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
-
-		$this->config = $reg->get('config');
 	}
 
 
@@ -162,12 +159,12 @@ class Common extends \Core2\Acl {
 			// Получение экземпляра контроллера указанного модуля
 			elseif (strpos($k, 'mod') === 0) {
 				$module = strtolower(substr($k, 3));
-
 				if ($module === 'admin') {
 					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
 					$v         = $this->modAdmin = new CoreController();
 					$v->module = $module;
-				} elseif ($location = $this->getModuleLocation($module)) {
+				}
+                elseif ($location = $this->getModuleLocation($module)) {
 					if (!$this->isModuleActive($module)) {
 						throw new Exception("Модуль \"{$module}\" не активен");
 					}

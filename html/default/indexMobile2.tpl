@@ -25,9 +25,9 @@
 	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=8"></script>
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=7"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=8"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/js.js"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=2"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta name="author" content="easter.by@gmail.com"/>
 	<link rel="icon" type="image/png" href="favicon.png"/>

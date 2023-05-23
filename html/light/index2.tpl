@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="core2/html/light/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/menu.css?_=3" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=26" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=28" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
@@ -61,9 +61,9 @@
 	<![endif]-->
 
 	<script type="text/javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-	<script type="text/javascript" src="core2/html/light/js/class.edit.js?_=10"></script>
+	<script type="text/javascript" src="core2/html/light/js/class.edit.js?_=11"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" src="core2/html/light/js/main.js?_=4"></script>
+	<script type="text/javascript" src="core2/html/light/js/main.js?_=5"></script>
     <!--[if IE]>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
     <![endif]-->
