@@ -803,6 +803,20 @@ class editTable extends initEdit {
                                     foreach ($value['in']['list'] as $item) {
                                         $tpl->item->assign('[TEXT]', $item['text'] ?? '-');
                                         $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
+
+
+                                        if ( ! empty($value['in']['fields'])) {
+                                            foreach ($value['in']['fields'] as $list_field) {
+                                                $name = $list_field['name'] ?? '';
+
+                                                $tpl->item->readonly_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
+                                                $tpl->item->readonly_field->assign('[TITLE]', $list_field['title'] ?? '');
+                                                $tpl->item->readonly_field->assign('[NAME]',  $name);
+                                                $tpl->item->readonly_field->assign('[VALUE]', $item[$name] ?? '');
+                                                $tpl->item->readonly_field->reassign();
+                                            }
+                                        }
+
                                         $tpl->item->reassign();
                                     }
                                 }
@@ -817,6 +831,7 @@ class editTable extends initEdit {
                                 $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
                                 $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
                                 $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
+                                $options['fields']   = isset($value['in']['fields']) ? $value['in']['fields'] : [];
 
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
@@ -847,9 +862,26 @@ class editTable extends initEdit {
                                         $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
 
                                         $tpl->item->edit_item->assign('[ID]', $item['id'] ?? '');
+
+                                        if ( ! empty($value['in']['fields'])) {
+                                            foreach ($value['in']['fields'] as $list_field) {
+                                                $name = $list_field['name'] ?? '';
+
+                                                $tpl->item->extra_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
+                                                $tpl->item->extra_field->assign('[TITLE]', $list_field['title'] ?? '');
+                                                $tpl->item->extra_field->assign('[NAME]',  $name);
+                                                $tpl->item->extra_field->assign('[VALUE]', $item[$name] ?? '');
+                                                $tpl->item->extra_field->reassign();
+                                            }
+                                        }
                                         $tpl->item->reassign();
                                     }
                                 }
+
+                                $fields = ! empty($options['fields']) && is_array($options['fields'])
+                                    ? $options['fields']
+                                    : [];
+                                $tpl->add_items->assign('[FIELDS]', json_encode($fields, JSON_UNESCAPED_UNICODE));
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
                                     ? trim($options['onHidden'])

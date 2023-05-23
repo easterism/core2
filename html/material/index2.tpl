@@ -28,7 +28,7 @@
 	<link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=7" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=27" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=28" type="text/css"/>
 
 	<!--system_css-->
 
@@ -63,7 +63,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" src="core2/html/material/js/class.list.js?_=3"></script>
-	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=15"></script>
+	<script type="text/javascript" src="core2/html/material/js/class.edit.js?_=16"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" src="core2/html/material/js/main.js?_=9"></script>
     <!--[if IE]>

@@ -33,7 +33,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=8"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=9"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=7"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
