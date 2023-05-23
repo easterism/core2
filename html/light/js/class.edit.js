@@ -516,7 +516,7 @@ var edit = {
 			$('.modal-list__control-' + control)
 				.append(
 					$('<li class="modal-list__item modal-list__item-' + control + '-' + key + '" data-key="' + key + '" style="display: none">' +
-						'<span>' + text + '</span>' +
+						'<span class="modal-list__item-text">' + text + '</span>' +
 						renderFields.join('') +
 						'<div>' +
 							'<input type="hidden" class="modal-list__item-id" name="control[' + control + '][' + key + '][id]" value="' + id + '">' +

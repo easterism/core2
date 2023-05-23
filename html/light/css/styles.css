@@ -1636,7 +1636,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     gap: 8px;
     align-items: center;
 }
-.modal-list__control .modal-list__item > span {
+.modal-list__control .modal-list__item > .modal-list__item-text {
     flex: 1 1 auto!important;
 }
 .modal-list__control .modal-list__item:first-child {
