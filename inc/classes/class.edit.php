@@ -831,6 +831,9 @@ class editTable extends initEdit {
                                 $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
                                 $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
                                 $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
+                                $options['onAdd']    = isset($value['in']['onAdd']) ? $value['in']['onAdd'] : '';
+                                $options['onHidden'] = isset($value['in']['onHidden']) ? $value['in']['onHidden'] : '';
+                                $options['onDelete'] = isset($value['in']['onDelete']) ? $value['in']['onDelete'] : '';
                                 $options['fields']   = isset($value['in']['fields']) ? $value['in']['fields'] : [];
 
                                 switch ($options['size']) {

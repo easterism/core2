@@ -554,7 +554,7 @@ var edit = {
 
 
 			if (this.options[control] && typeof this.options[this.control].onAdd === 'function') {
-				this.options[control].onAdd(key, id, text);
+				this.options[control].onAdd(key, id, text, fields);
 			}
 		},
 
