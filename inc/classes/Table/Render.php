@@ -203,12 +203,18 @@ class Render extends Acl {
                     ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
                     : 0;
 
+                $tpl_count_pages = ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages;
+                if ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
+                    $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
+                    $tpl_count_pages = "~" . $count_pages;
+                }
+
                 if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
                     $tpl->footer->pages->touchBlock('gotopage');
                 }
 
                 $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
-                $tpl->footer->pages->assign('[COUNT_PAGES]',  ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages);
+                $tpl->footer->pages->assign('[COUNT_PAGES]',  $tpl_count_pages);
 
                 if ($current_page > 1) {
                     $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
@@ -676,7 +682,6 @@ class Render extends Acl {
                                 : substr($edit_url, 11);
 
                         } else {
-                            //$edit_url = str_replace('?', '#', $edit_url);
                             $row['attr']['onclick'] = isset($row['attr']['onclick'])
                                 ? $row['attr']['onclick'] .= " load('{$edit_url}');"
                                 : "load('{$edit_url}');";
