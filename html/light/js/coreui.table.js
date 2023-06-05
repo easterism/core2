@@ -620,13 +620,13 @@ CoreUI.table = {
 
             load(CoreUI.table.loc[resource], {}, container, function () {
                 CoreUI.table.preloader.hide(resource);
-                preloader.callback();
+                preloader.hide();
                 CoreUI.table._callEventReload(resource);
             });
 
         } else {
             load(CoreUI.table.loc[resource], {}, '', function () {
-                preloader.callback();
+                preloader.hide();
                 CoreUI.table._callEventReload(resource);
             });
         }
