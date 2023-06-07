@@ -464,7 +464,7 @@ class editTable extends initEdit {
 
 						$value['type'] = str_replace("_default", "", $value['type']); //FIXME WTF
 
-						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};\"" : "") . ">";
+						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};min-width:{$this->firstColWidth};\"" : "") . ">";
 						if ($value['req']) {
 							$controlGroups[$cellId]['html'][$key] .= "<span class=\"requiredStar\">*</span>";
 						}

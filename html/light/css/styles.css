@@ -593,8 +593,9 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-    padding: 0 10px 3px 3px;
+    padding: 0 10px 3px 0;
     width: 190px;
+    min-width: 190px;
     box-sizing: border-box;
 }
 .newRulesModule {

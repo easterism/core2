@@ -466,6 +466,7 @@ table.editTable {
 	text-align: right;
 	padding: 3px;
 	width: 150px;
+	min-width: 150px;
 }
 .newRulesModule {
 	text-decoration:underline;
