@@ -32,11 +32,12 @@ class File extends \Common {
      *
      */
     public function dispatch() {
+
         header("Pragma: public");
         header("Expires: 0");
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-
         header("Content-Transfer-Encoding: binary");
+
         echo $this->content;
     }
 
@@ -133,8 +134,11 @@ class File extends \Common {
 
         //Если задан размер тамбнейла или если тамбнейла нет в базе
         if (!empty($_GET['size']) || !$res2['thumb']) {
+            ob_start();
             $image = new Image();
             $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
+            $this->content = ob_get_clean();
+
         } else {
             $this->content = $res2['thumb'];
         }
