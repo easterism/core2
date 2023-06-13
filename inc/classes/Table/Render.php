@@ -494,6 +494,16 @@ class Render extends Acl {
                             $tpl->filter_controls->filter_control->date_one->assign("[ATTR]",  $attributes_str);
                             break;
 
+                        case 'date_month' :
+                            if ( ! empty($filter['title'])) {
+                                $tpl->filter_controls->filter_control->date_month->title->assign('[TITLE]', $filter['title']);
+                            }
+
+                            $tpl->filter_controls->filter_control->date_month->assign("[KEY]",   $key);
+                            $tpl->filter_controls->filter_control->date_month->assign("[VALUE]", $control_value);
+                            $tpl->filter_controls->filter_control->date_month->assign("[ATTR]",  $attributes_str);
+                            break;
+
                         case 'date' :
                             if ( ! empty($filter['title'])) {
                                 $tpl->filter_controls->filter_control->date->title->assign('[TITLE]', $filter['title']);

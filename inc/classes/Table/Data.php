@@ -90,6 +90,7 @@ class Data extends Table {
      * @param array $filter_rules
      * @param array $filter_data
      * @return array
+     * @throws \Exception
      */
     private function filterData(array $data, array $filter_rules, array $filter_data): array {
 
@@ -132,6 +133,20 @@ class Data extends Table {
                                         unset($data[$key]);
                                         continue 2;
                                     }
+                                }
+                            }
+                            break;
+
+                        case 'date_month':
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
+                                $date_start = new \DateTime("{$filter_value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strtotime($row[$filter_field]) < $date_start->getTimestamp() ||
+                                    strtotime($row[$filter_field]) > $date_end->getTimestamp()
+                                ) {
+                                    unset($data[$key]);
+                                    continue 2;
                                 }
                             }
                             break;

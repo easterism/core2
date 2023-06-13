@@ -155,6 +155,7 @@ class Db extends Table {
      * @param \Zend_Db_Select $select
      * @return array
      * @throws \Zend_Db_Select_Exception
+     * @throws \Exception
      */
     private function fetchDataSelect(\Zend_Db_Select $select): array {
 
@@ -277,6 +278,28 @@ class Db extends Table {
 
                             } else {
                                 $select->where("{$field} = ?", $value);
+                            }
+                            break;
+
+                        case self::FILTER_DATE_MONTH:
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $value)) {
+                                $date_start = new \DateTime("{$value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strpos($field, 'ADD_SEARCH') !== false) {
+                                    $quoted_value1 = $this->db->quote($date_start->format('Y-m-d 00:00:00'));
+                                    $quoted_value2 = $this->db->quote($date_end->format('Y-m-d 23:59:59'));
+
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+
+                                    $select->where($where);
+
+                                } else {
+                                    $where  = $this->db->quoteInto("{$field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
+                                    $where .= $this->db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
+                                    $select->where($where);
+                                }
                             }
                             break;
 
@@ -445,6 +468,7 @@ class Db extends Table {
      * Получение данных по запросу sql
      * @param $query
      * @return array
+     * @throws \Exception
      */
     private function fetchDataQuery($query): array {
 
@@ -579,6 +603,28 @@ class Db extends Table {
                                     $quoted_value1 = $this->db->quote($filter_value[0]);
                                     $quoted_value2 = $this->db->quote($filter_value[1]);
                                     $select->addWhere("{$filter_field} BETWEEN {$quoted_value1} AND {$quoted_value2}");
+                                }
+                            }
+                            break;
+
+                        case self::FILTER_DATE_MONTH:
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
+                                $date_start = new \DateTime("{$filter_value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                    $quoted_value1 = $this->db->quote($date_start->format('Y-m-d 00:00:00'));
+                                    $quoted_value2 = $this->db->quote($date_end->format('Y-m-d 23:59:59'));
+
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+
+                                    $select->addWhere($where);
+
+                                } else {
+                                    $where  = $this->db->quoteInto("{$filter_field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
+                                    $where .= $this->db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
+                                    $select->addWhere($where);
                                 }
                             }
                             break;
