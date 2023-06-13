@@ -68,6 +68,7 @@ abstract class Table extends Acl {
     const SEARCH_SELECT      = 'select';
     const SEARCH_TEXT        = 'text';
     const SEARCH_TEXT_STRICT = 'text_strict';
+    const SEARCH_DATE_ONE    = 'date_one';
     const SEARCH_DATE        = 'date';
     const SEARCH_DATETIME    = 'datetime';
     const SEARCH_NUMBER      = 'number';
@@ -78,6 +79,7 @@ abstract class Table extends Acl {
     const FILTER_SELECT      = 'select';
     const FILTER_TEXT        = 'text';
     const FILTER_TEXT_STRICT = 'text_strict';
+    const FILTER_DATE_ONE    = 'date_one';
     const FILTER_DATE        = 'date';
     const FILTER_DATETIME    = 'datetime';
     const FILTER_NUMBER      = 'number';
@@ -116,6 +118,20 @@ abstract class Table extends Acl {
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
             foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
+                if (is_array($search_value)) {
+                    $isset_value = false;
+                    foreach ($search_value as $search_item) {
+                        if ($search_item || $search_item === 0) {
+                            $isset_value = true;
+                            break;
+                        }
+                    }
+
+                    if ( ! $isset_value) {
+                        $search_value = null;
+                    }
+                }
+
                 $this->setSearch($nmbr_field, $search_value);
             }
         }
@@ -135,8 +151,22 @@ abstract class Table extends Acl {
             if ($all_empty) {
                 $this->clearFilter();
             } else {
-                foreach ($_POST['filter'][$resource] as $nmbr_field => $search_value) {
-                    $this->setFilter($nmbr_field, $search_value);
+                foreach ($_POST['filter'][$resource] as $nmbr_field => $filter_value) {
+                    if (is_array($filter_value)) {
+                        $isset_value = false;
+                        foreach ($filter_value as $filter_item) {
+                            if ($filter_item) {
+                                $isset_value = true;
+                                break;
+                            }
+                        }
+
+                        if ( ! $isset_value) {
+                            $filter_value = null;
+                        }
+                    }
+
+                    $this->setFilter($nmbr_field, $filter_value);
                 }
             }
         }
@@ -355,6 +385,15 @@ abstract class Table extends Acl {
         }
 
         return $search ?: null;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getResource(): string {
+
+        return $this->resource;
     }
 
 
@@ -797,7 +836,7 @@ abstract class Table extends Acl {
      * @param string $field
      * @param string $type
      * @param string $title
-     * @return void
+     * @return Filter
      * @throws Exception
      */
     public function addFilter(string $field, string $type = self::FILTER_TEXT, string $title = ''): Filter {
