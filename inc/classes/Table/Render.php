@@ -23,6 +23,7 @@ class Render extends Acl {
         'All'                                        => 'Все',
         'Add'                                        => 'Добавить',
         'Delete'                                     => 'Удалить',
+        'Clear'                                      => 'Очистить',
         'Are you sure you want to delete this post?' => 'Вы действительно хотите удалить эту запись?',
         'You must select at least one record'        => 'Нужно выбрать хотя бы одну запись',
     ];
@@ -388,7 +389,7 @@ class Render extends Acl {
                 : [];
 
             if ( ! empty($filter_value) && count($filter_value)) {
-                $tpl->filter_controls->touchBlock('filter_clear');
+                $tpl->filter_controls->filter_clear->assign('[CLEAR_TEXT]', $this->getLocution('Clear'));
             }
 
 
