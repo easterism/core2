@@ -205,12 +205,17 @@ class Render extends Acl {
                     : 0;
 
                 if ($count_pages > 0) {
-                    $tpl_count_pages = ! empty($this->table['recordsTotalMore']) ? $count_pages + 1 : $count_pages;
+                    if (empty($this->table['recordsTotalMore'])) {
+                        $tpl_count_pages = $count_pages;
 
-                    if ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
+                    } elseif ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
                         $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
-                        $tpl_count_pages = "~" . $count_pages;
+                        $tpl_count_pages = "~{$count_pages}";
+
+                    } else {
+                        $tpl_count_pages = $count_pages;
                     }
+
                 } else {
                     $tpl_count_pages = 1;
                 }
