@@ -20,13 +20,12 @@ use Core2\InstallModule as Install;
 
 
 /**
- * Class CoreController
- * @property Users         $dataUsers
- * @property Enum          $dataEnum
- * @property Modules       $dataModules
- * @property Roles         $dataRoles
- * @property SubModules    $dataSubModules
- * @property UsersProfile  $dataUsersProfile
+ * @property Core2\Model\Users        $dataUsers
+ * @property Core2\Model\Enum         $dataEnum
+ * @property Core2\Model\Modules      $dataModules
+ * @property Core2\Model\Roles        $dataRoles
+ * @property Core2\Model\SubModules   $dataSubModules
+ * @property Core2\Model\UsersProfile $dataUsersProfile
  * @property ModProfileApi $apiProfile
  */
 class CoreController extends Common implements File {
@@ -383,16 +382,32 @@ class CoreController extends Common implements File {
 	 */
     public function action_delete(Array $params)
     {
-        $sess       = new SessionContainer('List');
         $resource   = $params['res'];
-        if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
-        if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
-        $ids        = explode(",", $params['id']);
+
+        if ( ! $resource) {
+            throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
+        }
+
+        if ( ! $params['id']) {
+            throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
+        }
+
+        $sess      = new SessionContainer('List');
 		$sessData   = $sess->$resource;
         $deleteKey  = $sessData['deleteKey'];
-        if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        $ids       = explode(",", $params['id']);
+
+        if ( ! $deleteKey) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
         [$table, $refid] = explode(".", $deleteKey);
-        if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+
+        if ( ! $table || ! $refid) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
+        // TODO В случае, когда нужно удалить что-то на главной странице - это нельзя будет сделать, так как у обычного юзера нет доступа к модулю админ
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
@@ -622,9 +637,9 @@ class CoreController extends Common implements File {
 			header('Content-type: application/json; charset="utf-8"');
 
 			try {
-				if (empty($supportFormModule)) {
-					throw new Exception($this->translate->tr('Выберите модуль.'));
-				}
+//				if (empty($supportFormModule)) {
+//					throw new Exception($this->translate->tr('Выберите модуль.'));
+//				}
 				if (empty($supportFormMessage)) {
 					throw new Exception($this->translate->tr('Введите текст сообщения.'));
 				}
@@ -739,7 +754,7 @@ class CoreController extends Common implements File {
 				}
 
                 $value['m_name']  = strip_tags($value['m_name']);
-                $value['sm_name'] = strip_tags($value['sm_name']);
+                $value['sm_name'] = strip_tags($value['sm_name'] ?? '');
 
 				if (!isset($currentMod[$value['m_name']])) {
 					$currentMod[$value['m_name']] = array();
@@ -1028,6 +1043,7 @@ class CoreController extends Common implements File {
     private function checkModulesChanges() {
         $server = $this->config->system->host;
         $admin_email = $this->getSetting('admin_email');
+        $is_send_changes_email = $this->getSetting('is_send_changes_email');
 
         if (!$admin_email) {
             $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
@@ -1062,7 +1078,7 @@ class CoreController extends Common implements File {
 //                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
                 $mods[] = $val['module_id'];
                 //отправка уведомления
-                if ($admin_email && $server) {
+                if ($admin_email && $server && (empty($is_send_changes_email) || $is_send_changes_email == 'Y')) {
                 	if ($this->isModuleActive('queue')) {
 						$is_send = $this->db->fetchOne(
 							"SELECT 1
