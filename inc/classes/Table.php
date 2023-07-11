@@ -122,7 +122,8 @@ abstract class Table extends Acl {
                 if (is_array($search_value)) {
                     $isset_value = false;
                     foreach ($search_value as $search_item) {
-                        if ($search_item) {
+                        if ($search_item || $search_item === 0) {
+
                             $isset_value = true;
                             break;
                         }

@@ -607,6 +607,7 @@ class Db extends Table {
                             }
                             break;
 
+
                         case self::FILTER_DATE_MONTH:
                             if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
                                 $date_start = new \DateTime("{$filter_value}-01");
@@ -628,7 +629,6 @@ class Db extends Table {
                                 }
                             }
                             break;
-
                         case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:

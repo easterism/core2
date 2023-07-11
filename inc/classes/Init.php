@@ -553,20 +553,25 @@ class Init extends \Core2\Db {
                     $token = $_SERVER['HTTP_AUTHORIZATION'];
                 }
                 //TODO сделать поддержку других видов авторизации
+                if (!$token) return;
+                //TODO заменить модуль webservice на модуль auth
+                $this->setContext('webservice');
+                $this->checkWebservice();
+                $webservice_controller = new ModWebserviceController();
+                //требуется webservice 2.6.0
+                return $webservice_controller->dispatchJwtToken($token);
             }
             elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
+                //DEPRECATED в будущих версиях авторизоваться с таким токеном будет нельзя
                 if (strpos($_SERVER['HTTP_CORE2M'], 'Bearer') === 0) {
                     $token = $_SERVER['HTTP_CORE2M'];
                 }
+                if (!$token) return;
+                $this->setContext('webservice');
+                $this->checkWebservice();
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchWebToken($token);
             }
-            if ( ! $token) {
-                return;
-            }
-            //TODO заменить модуль webservice на модуль auth
-            $this->setContext('webservice');
-            $this->checkWebservice();
-            $webservice_controller = new ModWebserviceController();
-            return $webservice_controller->dispatchJwtToken($token);
         }
 
 
