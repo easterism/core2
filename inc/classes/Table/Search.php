@@ -20,6 +20,7 @@ class Search {
         'text',
         'text_strict',
         'number',
+        'date_one',
         'date',
         'datetime',
         'radio',

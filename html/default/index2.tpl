@@ -26,16 +26,16 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=6"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=10"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
 	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=5"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=10"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=6"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=7"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="author" content="easter.by@gmail.com" />
     <!--[if IE]>

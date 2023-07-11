@@ -676,7 +676,7 @@ class listTable extends initList {
                         //
                     } else {
                         if (isset($this->table_column[$this->main_table_id][$x])) {
-                            $sql_value = htmlspecialchars($sql_value);
+                            $sql_value = htmlspecialchars($sql_value ?? '');
                         }
                     }
                     $this->data[$k][] = $sql_value;
@@ -1263,30 +1263,30 @@ class listTable extends initList {
                     } elseif ($value['type'] == 'html' || $value['type'] == 'block') {
                         $tableBodyHTML .= htmlspecialchars_decode($sql_value);
                     } else if ($value['type'] == 'date') {
-                        $dd   = substr($sql_value, 8, 2);
-                        $mm   = substr($sql_value, 5, 2);
-                        $yyyy = substr($sql_value, 0, 4);
-                        $yy   = substr($sql_value, 2, 2);
+                        $dd   = ! empty($sql_value) ? substr($sql_value, 8, 2) : '';
+                        $mm   = ! empty($sql_value) ? substr($sql_value, 5, 2) : '';
+                        $yyyy = ! empty($sql_value) ? substr($sql_value, 0, 4) : '';
+                        $yy   = ! empty($sql_value) ? substr($sql_value, 2, 2) : '';
 
                         $tableBodyHTML .= str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
 
                     } else if ($value['type'] == 'datetime') {
-                        $dd   = substr($sql_value, 8, 2);
-                        $mm   = substr($sql_value, 5, 2);
-                        $yyyy = substr($sql_value, 0, 4);
-                        $yy   = substr($sql_value, 2, 2);
-                        $time = substr($sql_value, 11);
+                        $dd   = ! empty($sql_value) ? substr($sql_value, 8, 2) : '';
+                        $mm   = ! empty($sql_value) ? substr($sql_value, 5, 2) : '';
+                        $yyyy = ! empty($sql_value) ? substr($sql_value, 0, 4) : '';
+                        $yy   = ! empty($sql_value) ? substr($sql_value, 2, 2) : '';
+                        $time = ! empty($sql_value) ? substr($sql_value, 11) : '';
 
                         $sql_value = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
                         $tableBodyHTML .= $sql_value . ' ' . $time;
                     } else if ($value['type'] == 'datetime_human') {
                         require_once('humanRelativeDate.class.php');
                         $humanRelativeDate = new HumanRelativeDate();
-                        $dd                = substr($sql_value, 8, 2);
-                        $mm                = substr($sql_value, 5, 2);
-                        $yyyy              = substr($sql_value, 0, 4);
-                        $yy                = substr($sql_value, 2, 2);
-                        $time              = substr($sql_value, 11);
+                        $dd                = ! empty($sql_value) ? substr($sql_value, 8, 2) : '';
+                        $mm                = ! empty($sql_value) ? substr($sql_value, 5, 2) : '';
+                        $yyyy              = ! empty($sql_value) ? substr($sql_value, 0, 4) : '';
+                        $yy                = ! empty($sql_value) ? substr($sql_value, 2, 2) : '';
+                        $time              = ! empty($sql_value) ? substr($sql_value, 11) : '';
 
                         $title = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask)) . ' ' . $time;
                         $sql_value = trim($sql_value);

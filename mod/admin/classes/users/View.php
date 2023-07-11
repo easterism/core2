@@ -189,7 +189,7 @@ class View extends \Common {
 
             if ($is_auth_certificate_on) {
                 $cert_desc = '<br><small class="text-muted">x509</small>';
-                $certificate = $user ? htmlspecialchars($user->certificate) : '';
+                $certificate = $user ? htmlspecialchars($user->certificate ?? '') : '';
                 $edit->addControl($this->_("Сертификат") . $cert_desc, "XFILE_AUTO", "", $this->editCert($certificate), "");
             }
         }

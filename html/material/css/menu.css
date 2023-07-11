@@ -54,7 +54,7 @@ a {color: #337AB7}
     width: 240px;
     overflow: auto;
     background-color: #3e5a70;
-    box-shadow: inset -1px 0 3px 0 #444;
+    box-shadow: inset -1px 0 3px 0 #00000059;
     direction: rtl;
     -webkit-transition: all 0.3s ease-in-out;
        -moz-transition: all 0.3s ease-in-out;
@@ -398,6 +398,7 @@ a {color: #337AB7}
     .buttons-container .buttons-offset {
         width: 0 !important;
     }
+    .screen-open #main .screen-panel,
     .ext-open #main .ext-panel,
     .pdf-open #main .pdf-panel {left: 0}
     body.modal-open .modal {
@@ -447,6 +448,7 @@ a {color: #337AB7}
         margin-left: 2px;
     }
 
+    .screen-open #main.s-toggle .screen-panel,
     .ext-open #main.s-toggle .ext-panel,
     .pdf-open #main.s-toggle .pdf-panel {left: 50px}
 
