@@ -44,12 +44,12 @@ class Settings extends \Common
         $edit->SQL = array(array('id' => 1));
         $settings  = $this->dataSettings->getSystem();
         foreach ($settings as $setting) {
-            $edit->SQL[0][$setting['code']] = $setting['value'];
+            $edit->SQL[0][$setting->code] = $setting->value;
 
-            $type = $setting['type'] && in_array(strtolower($setting['type']), $types)
-                ? $setting['type']
+            $type = $setting->type && in_array(strtolower($setting->type), $types)
+                ? $setting->type
                 : 'text';
-            $edit->addControl($setting['system_name'] . ":", $type, 'size="30"');
+            $edit->addControl($setting->system_name . ":", $type, 'size="30"');
         }
 
 

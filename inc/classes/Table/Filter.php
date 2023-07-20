@@ -17,6 +17,8 @@ class Filter {
         'text',
         'text_strict',
         'number',
+        'date_one',
+        'date_month',
         'date',
         'datetime',
         'radio',

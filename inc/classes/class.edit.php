@@ -182,15 +182,15 @@ class editTable extends initEdit {
 
     /**
      * @param array $options
-     * @return false|string
+     * @return string
      * @throws Zend_Db_Adapter_Exception
      * @throws Zend_Exception
      */
-    public function render($options = []) {
+    public function render(array $options = []) {
 
 	    ob_start();
         $this->showTable($options);
-        return ob_get_clean();
+        return (string)ob_get_clean();
 	}
 
 
@@ -308,6 +308,8 @@ class editTable extends initEdit {
 				if ($access_edit == 'owner' || $access_read == 'owner') {
 					$res = $this->db->fetchRow("SELECT * FROM `$this->table` WHERE `{$keyfield}`=? LIMIT 1", $refid);
 					if (!isset($res['author'])) {
+                        // Это условие кажется нелогичным.
+                        // Если у пользователя есть доступ на чтение = 'all', то почему нельзя показывать форму в виде $this->readOnly = true;
 						$this->noAccess();
 						return;
 					} elseif ($authNamespace->NAME !== $res['author']) {
@@ -432,8 +434,11 @@ class editTable extends initEdit {
 						}
 
 						//присвоение значения из запроса, если запрос вернул результат
-						if (isset($arr[0]) && isset($arr[0][0]) && isset($arr[0][$sqlKey])) {
-							//$value['default'] = htmlspecialchars(stripslashes($arr[0][$sqlKey]));
+						if (isset($arr[0]) &&
+                            isset($arr[0][0]) &&
+                            isset($arr[0][$sqlKey]) &&
+                            is_scalar($arr[0][$sqlKey])
+                        ) {
 							$value['default'] = htmlspecialchars($arr[0][$sqlKey]);
 						}
 
@@ -459,7 +464,7 @@ class editTable extends initEdit {
 
 						$value['type'] = str_replace("_default", "", $value['type']); //FIXME WTF
 
-						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};\"" : "") . ">";
+						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};min-width:{$this->firstColWidth};\"" : "") . ">";
 						if ($value['req']) {
 							$controlGroups[$cellId]['html'][$key] .= "<span class=\"requiredStar\">*</span>";
 						}
@@ -498,11 +503,23 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"datetime-local\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'week') {
+						elseif ($value['type'] == 'date_week') {
 							if ($this->readOnly) {
-								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? date('Y.m неделя W', strtotime($value['default'])) : '';
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+                                $input_year  = $value['default'] ? date('Y', strtotime($value['default'])) : '';
+                                $input_week  = $value['default'] ? date('W', strtotime($value['default'])) : '';
+                                $input_value = $input_year ? "{$input_year}-W{$input_week}" : '';
+
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"week\" name=\"control[$field]\" {$attrs} value=\"{$input_value}\">";
+							}
+						}
+						elseif ($value['type'] == 'date_month') {
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'] ? date('Y.m', strtotime($value['default'])) : '';
+							} else {
+                                $input_value = $value['default'] ? date('Y-m', strtotime($value['default'])) : '';
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"month\" name=\"control[$field]\" {$attrs} value=\"{$input_value}\">";
 							}
 						}
 						elseif ($value['type'] == 'number') { // только цифры
@@ -510,6 +527,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\">";
+							}
+						}
+						elseif ($value['type'] == 'number_range') { // только цифры
+							if ($this->readOnly) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-start\" type=\"text\" name=\"control[$field][0]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\" placeholder=\"от\"> - ";
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"{$fieldId}-end\" type=\"text\" name=\"control[$field][1]\" {$attrs} value=\"\" onkeypress=\"return checkInt(event);\" placeholder=\"до\">";
 							}
 						}
 						elseif ($value['type'] == 'money') {
@@ -603,12 +628,14 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'switch') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? 'да' : 'нет';
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? $this->_('да') : $this->_('нет');
 
                             } else {
                                 $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
                                 $value_y = isset($value['in']['value_Y']) ? $value['in']['value_Y'] : 'Y';
                                 $value_n = isset($value['in']['value_N']) ? $value['in']['value_N'] : 'N';
+
+                                $value['default'] = ! empty($value['default']) ? $value['default'] : $value_n;
 
                                 $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
@@ -701,8 +728,8 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'modal2') {
                             if ($this->readOnly) {
-                                $controlGroups[$cellId]['html'][$key] .= ! empty($value['default'])
-                                    ? isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : ''
+                                $controlGroups[$cellId]['html'][$key] .= isset($value['in']['text'])
+                                    ? htmlspecialchars($value['in']['text'])
                                     : '';
                             } else {
                                 $this->scripts['modal2'] = true;
@@ -718,7 +745,8 @@ class editTable extends initEdit {
                                 $options['onChoose'] = isset($value['in']['onChoose']) ? $value['in']['onChoose'] : '';
 
                                 switch ($options['size']) {
-                                    case 'small': $size = 'modal-sm'; break;
+                                    case 'xl':     $size = 'modal-xl'; break;
+                                    case 'small':  $size = 'modal-sm'; break;
                                     case 'normal': $size = ''; break;
                                     case 'large':
                                     default: $size = 'modal-lg'; break;
@@ -737,7 +765,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[KEY]',       crc32(microtime(true)));
+                                $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
 
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
@@ -761,6 +789,119 @@ class editTable extends initEdit {
                                 if ( ! $value['req']) {
                                     $tpl->touchBlock('clear');
                                 }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                        }
+						elseif ($value['type'] == 'modal_list') {
+                            if ($this->readOnly) {
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl->assign('[CONTROL]', $field);
+
+                                if ( ! empty($value['in']['list'])) {
+                                    foreach ($value['in']['list'] as $item) {
+                                        $tpl->item->assign('[TEXT]', $item['text'] ?? '-');
+                                        $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
+
+
+                                        if ( ! empty($value['in']['fields'])) {
+                                            foreach ($value['in']['fields'] as $list_field) {
+                                                $name = $list_field['name'] ?? '';
+
+                                                $tpl->item->readonly_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
+                                                $tpl->item->readonly_field->assign('[TITLE]', $list_field['title'] ?? '');
+                                                $tpl->item->readonly_field->assign('[NAME]',  $name);
+                                                $tpl->item->readonly_field->assign('[VALUE]', $item[$name] ?? '');
+                                                $tpl->item->readonly_field->reassign();
+                                            }
+                                        }
+
+                                        $tpl->item->reassign();
+                                    }
+                                }
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+
+                            } else {
+                                $this->scripts['modal_list'] = true;
+
+                                $options             = [];
+                                $options['size']     = isset($value['in']['size']) ? $value['in']['size'] : '';
+                                $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
+                                $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
+                                $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
+                                $options['onAdd']    = isset($value['in']['onAdd']) ? $value['in']['onAdd'] : '';
+                                $options['onHidden'] = isset($value['in']['onHidden']) ? $value['in']['onHidden'] : '';
+                                $options['onDelete'] = isset($value['in']['onDelete']) ? $value['in']['onDelete'] : '';
+                                $options['fields']   = isset($value['in']['fields']) ? $value['in']['fields'] : [];
+
+                                switch ($options['size']) {
+                                    case 'xl':     $size = 'modal-xl'; break;
+                                    case 'small':  $size = 'modal-sm'; break;
+                                    case 'normal': $size = ''; break;
+                                    case 'large':
+                                    default: $size = 'modal-lg'; break;
+                                }
+
+                                $url = strpos(trim($options['url']), 'function') !== false
+                                    ? $options['url']
+                                    : "'{$options['url']}'";
+
+                                require_once 'Templater3.php';
+                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
+                                $tpl->assign('[TITLE]',     $options['title']);
+                                $tpl->assign('[VALUE]',     $options['value']);
+                                $tpl->assign('[URL]',       $url);
+                                $tpl->assign('[NAME]',      'control[' . $field . ']');
+                                $tpl->assign('[SIZE]',      $size);
+                                $tpl->assign('[CONTROL]',   $field);
+
+
+                                if ( ! empty($value['in']['list'])) {
+                                    foreach ($value['in']['list'] as $item) {
+                                        $tpl->item->assign('[TEXT]', $item['text'] ?? '-');
+                                        $tpl->item->assign('[KEY]',  crc32(uniqid() . microtime(true)));
+
+                                        $tpl->item->edit_item->assign('[ID]', $item['id'] ?? '');
+
+                                        if ( ! empty($value['in']['fields'])) {
+                                            foreach ($value['in']['fields'] as $list_field) {
+                                                $name = $list_field['name'] ?? '';
+
+                                                $tpl->item->extra_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
+                                                $tpl->item->extra_field->assign('[TITLE]', $list_field['title'] ?? '');
+                                                $tpl->item->extra_field->assign('[NAME]',  $name);
+                                                $tpl->item->extra_field->assign('[VALUE]', $item[$name] ?? '');
+                                                $tpl->item->extra_field->reassign();
+                                            }
+                                        }
+                                        $tpl->item->reassign();
+                                    }
+                                }
+
+                                $fields = ! empty($options['fields']) && is_array($options['fields'])
+                                    ? $options['fields']
+                                    : [];
+                                $tpl->add_items->assign('[FIELDS]', json_encode($fields, JSON_UNESCAPED_UNICODE));
+
+                                $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
+                                    ? trim($options['onHidden'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_HIDDEN]', $on_hidden);
+
+
+                                $on_delete = ! empty($options['onDelete']) && strpos(trim($options['onDelete']), 'function') !== false
+                                    ? trim($options['onDelete'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_DELETE]', $on_delete);
+
+
+                                $on_add = ! empty($options['onAdd']) && strpos(trim($options['onAdd']), 'function') !== false
+                                    ? trim($options['onAdd'])
+                                    : "''";
+                                $tpl->add_items->assign('[ON_ADD]', $on_add);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }
@@ -1370,12 +1511,18 @@ class editTable extends initEdit {
 
 						}
 						elseif ($value['type'] == 'dataset') {
-                            if (empty($value['in']) || ! is_string($value['default'])) {
+                            if (empty($value['in']) ||
+                                ( ! is_string($value['default']) && ! is_array($value['default']))
+                            ) {
                                 throw new Exception('Некорректно заполнены настройки формы');
                             }
 
-                            $json_string = html_entity_decode($value['default']);
-                            $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                            if (is_array($value['default'])) {
+                                $datasets = $value['default'];
+                            } else {
+                                $json_string = html_entity_decode($value['default']);
+                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                            }
 
                             if ($this->readOnly) {
                                 if ( ! empty($datasets)) {
@@ -1403,7 +1550,7 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
@@ -1415,6 +1562,12 @@ class editTable extends initEdit {
 
                                             } elseif ($type_name == 'datetime') {
                                                 $field_value = $field_value ? date('d.m.Y H:i', strtotime($field_value)) : '';
+
+                                            } elseif ($type_name == 'switch') {
+                                                $field_value = $field_value == 'Y' ? 'Вкл' : 'Выкл';
+
+                                            } elseif ($type_name == 'hidden') {
+                                                $field_value = '';
                                             }
 
 
@@ -1437,14 +1590,16 @@ class editTable extends initEdit {
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
-                                $tpl->assign('[OPTIONS]',    json_encode($value['in']));
+                                $tpl->assign('[OPTIONS]',    addslashes(json_encode($value['in'])));
 
                                 $tpl->touchBlock('delete_col');
                                 $tpl->touchBlock('edit_controls');
 
                                 foreach ($value['in'] as $item_field) {
-                                    $tpl->title->assign('[TITLE]', $item_field['title']);
-                                    $tpl->title->reassign();
+                                    if (empty($item_field['type']) || $item_field['type'] != 'hidden') {
+                                        $tpl->title->assign('[TITLE]', $item_field['title'] ?? '');
+                                        $tpl->title->reassign();
+                                    }
                                 }
 
 
@@ -1461,7 +1616,7 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if ($item_field['type'] == 'select') {
+                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
                                                         $field_value = $item_field['options'][$field_value] ?? $field_value;
                                                     }
                                                 }
@@ -1474,25 +1629,29 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select' && ! empty($item_field['options'])) {
                                                 foreach ($item_field['options'] as $option_value => $option_title) {
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                    $tpl->item->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
-                                                    $tpl->item->{"field_{$type_name}"}->option->reassign();
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }
+                                            if ($type_name == 'switch') {
+                                                $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_Y]', $field_value == 'Y' ? 'checked="checked"' : '');
+                                                $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_N]', $field_value == 'N' ? 'checked="checked"' : '');
+                                            }
 
-                                            $tpl->item->{"field_{$type_name}"}->assign('[FIELD]',      $field);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[NUM]',        $num);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
-                                            $tpl->item->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
-                                            $tpl->item->{"field_{$type_name}"}->reassign();
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        $num);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
+                                            $tpl->item->field->{"field_{$type_name}"}->reassign();
                                         }
 
                                         $tpl->item->touchBlock('delete');
@@ -1509,23 +1668,31 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number'])) {
+                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                             $type_name = 'text';
                                         }
 
                                         if ($type_name == 'select' && ! empty($item_field['options'])) {
                                             foreach ($item_field['options'] as $option_value => $option_title) {
+                                                $selected = isset($item_field['default_value']) && $item_field['default_value'] == $option_value
+                                                    ? 'selected'
+                                                    : '';
+
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', '');
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $selected);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                             }
+                                        }
+                                        if ($type_name == 'switch') {
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_Y]', $item_field['default_value'] == 'Y' ? 'checked="checked"' : '');
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_N]', $item_field['default_value'] == 'N' ? 'checked="checked"' : '');
                                         }
 
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        1);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      '');
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $item_field['default_value'] ?? '');
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
                                         $tpl->item->field->reassign();
                                     }

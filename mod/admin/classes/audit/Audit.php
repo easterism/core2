@@ -86,7 +86,8 @@ class Audit extends \Common {
 
         try {
             $server = $this->config->system->host;
-            $admin_email = $this->getSetting('admin_email');
+            $admin_email           = $this->getSetting('admin_email');
+            $is_send_changes_email = $this->getSetting('is_send_changes_email');
 
             if (!$admin_email) {
                 $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
@@ -147,7 +148,7 @@ class Audit extends \Common {
                     echo "<div><h2>Обнаружены изменения в модуле \"{$val['m_name']}\"</h2>{$val[2]}</div><br><br>";
                     //отправка уведомления
 
-                    if ($admin_email && $server) {
+                    if ($admin_email && $server && (empty($is_send_changes_email) || $is_send_changes_email == 'Y')) {
                         if ($this->isModuleActive('queue')) {
                             $is_send = $this->db->fetchOne(
                                 "SELECT 1

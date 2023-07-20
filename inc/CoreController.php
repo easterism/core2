@@ -26,7 +26,7 @@ use Core2\InstallModule as Install;
  * @property Core2\Model\Roles        $dataRoles
  * @property Core2\Model\SubModules   $dataSubModules
  * @property Core2\Model\UsersProfile $dataUsersProfile
- * @property ModProfileApi $apiProfile
+ * @property ModProfileApi            $apiProfile
  */
 class CoreController extends Common implements File {
 
@@ -97,7 +97,9 @@ class CoreController extends Common implements File {
                         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                             throw new Exception('Некорректный запрос');
                         }
+
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
+
                         return json_encode(['status' => 'success']);
                 }
 
@@ -170,7 +172,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 header("Content-Type: application/json");
@@ -189,7 +191,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 return Alert::danger($e->getMessage());
@@ -380,9 +382,9 @@ class CoreController extends Common implements File {
 	 * @return bool
 	 * @throws Exception
 	 */
-    public function action_delete(Array $params)
+    public function action_delete(array $params)
     {
-        $resource   = $params['res'];
+        $resource = $params['res'];
 
         if ( ! $resource) {
             throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
@@ -393,8 +395,8 @@ class CoreController extends Common implements File {
         }
 
         $sess      = new SessionContainer('List');
-		$sessData   = $sess->$resource;
-        $deleteKey  = $sessData['deleteKey'];
+        $sessData  = $sess->$resource;
+        $deleteKey = $sessData['deleteKey'];
         $ids       = explode(",", $params['id']);
 
         if ( ! $deleteKey) {
@@ -411,7 +413,7 @@ class CoreController extends Common implements File {
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
-            if ($this->checkAcl($resource, 'delete_owner') && !$this->checkAcl($resource, 'delete_all')) {
+            if ($this->checkAcl($resource, 'delete_owner') && ! $this->checkAcl($resource, 'delete_all')) {
                 $authorOnly = true;
             }
             $this->db->beginTransaction();
@@ -1041,8 +1043,8 @@ class CoreController extends Common implements File {
      * @return array
      */
     private function checkModulesChanges() {
-        $server = $this->config->system->host;
-        $admin_email = $this->getSetting('admin_email');
+        $server                = $this->config->system->host;
+        $admin_email           = $this->getSetting('admin_email');
         $is_send_changes_email = $this->getSetting('is_send_changes_email');
 
         if (!$admin_email) {

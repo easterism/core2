@@ -15,11 +15,21 @@
 
         <!-- BEGIN item -->
         <tr class="field-dataset-item" id="field-dataset-item-[ID]">
+            <!-- BEGIN field -->
             <!-- BEGIN field_text -->
             <td>
                 <input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
             </td>
             <!-- END field_text -->
+            <!-- BEGIN field_select -->
+            <td>
+                <select class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>
+                    <!-- BEGIN option -->
+                    <option value="[VALUE]" [SELECTED]>[TITLE]</option>
+                    <!-- END option -->
+                </select>
+            </td>
+            <!-- END field_select -->
             <!-- BEGIN field_number -->
             <td>
                 <input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
@@ -35,6 +45,21 @@
                 <input type="date" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>
             </td>
             <!-- END field_date -->
+            <!-- BEGIN field_switch -->
+            <td>
+                <div class="core-switch color-primary"
+                     onclick="edit.switchToggle(this)">
+
+                    <input type="radio" class="core-switch-active"
+                           name="control[[FIELD]][[NUM]][[CODE]]" value="Y" [CHECKED_Y]>
+                    <input type="radio" class="core-switch-inactive"
+                           name="control[[FIELD]][[NUM]][[CODE]]" value="N" [CHECKED_N]>
+
+                    <span class="core-slider"></span>
+                </div>
+            </td>
+            <!-- END field_switch -->
+            <!-- END field -->
             <!-- BEGIN field_readonly -->
             <td>
                 [VALUE]
@@ -57,7 +82,11 @@
        onclick="edit.fieldDataset.addItem('[FIELD_ID]', '[FIELD]', '[THEME_PATH]'); return false">_tr(Добавить)</button>
 
     <script>
-        edit.fieldDataset.data['[FIELD_ID]'] = [OPTIONS];
+        try {
+            edit.fieldDataset.data['[FIELD_ID]'] = JSON.parse('[OPTIONS]');
+        } catch (e) {
+            // ignore
+        }
     </script>
     <!-- END edit_controls -->
 </div>

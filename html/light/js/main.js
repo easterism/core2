@@ -138,6 +138,29 @@ function jsToHead(src) {
 	$('head').append(s);
 }
 
+
+
+/**
+ * Анимация для указанного элемента
+ * @param {string} elementId
+ * @param {string} effect
+ */
+function animatedElement(elementId, effect) {
+
+	var element = $('#' + elementId);
+	if ( ! element[0]) {
+		return;
+	}
+
+
+	element.removeClass('animated ' + effect);
+
+	setTimeout(function() {
+		element.addClass('animated ' + effect);
+	}, 0);
+}
+
+
 /**
  * @param {string} id
  */
@@ -386,6 +409,9 @@ var load = function (url, data, id, callback) {
         $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
         $('#navbar-top .module-action').text(action_title);
 
+		var siteName = $.trim($('.site-name').text());
+		var title    = siteName + ' - ' + mod_title + (action_title ? (' - ' + action_title) : '');
+		$('html > head > title').text(title);
 
         if (xhrs[locData.id]) {
             xhrs[locData.id].abort();
@@ -505,6 +531,11 @@ $(function(){
 		var hash = location.hash;
 		var url = preloader.prepare(hash.substr(1));
 		load(url);
+
+		$('body > .modal-backdrop').fadeOut(function () {
+			$('body').removeClass('modal-open');
+			$(this).remove();
+		});
 	});
 	// Since the event is only triggered when the hash changes, we need to trigger
 	// the event now, to handle the hash the page may have loaded with.

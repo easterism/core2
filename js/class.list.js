@@ -175,7 +175,7 @@ var listx = {
 			var new_alt 	= "on";
 			var str 		= "Активировать запись?";
 		}						
-		if (confirm(str)) {				
+		if (confirm(str)) {
 			$.post('index.php?module=admin&action=switch&loc=core',
 				{data: data, is_active: is_active, value: val},
 				function(data, textStatus) {
@@ -574,7 +574,7 @@ var listx = {
 			if (confirm('Удалить этот шаблон?')) {
 				preloader.show();
 
-				let post = [{
+				var post = [{
 					'name' : 'template_remove_' + resource,
 					'value': id,
 				}];
@@ -610,7 +610,7 @@ var listx = {
 
 			preloader.show();
 
-			let post = [{
+			var post = [{
 				'name' : 'template_select_' + resource,
 				'value': id,
 			}];

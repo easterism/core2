@@ -27,7 +27,7 @@ CoreUI.panel = {
         $('#core-panel-' + resource + ' > .core-panel-body > .core-panel-content').load(url, function () {
 
             $('#core-panel-' + resource + ' > .core-panel-body > .core-panel-tabs > li').removeClass('active');
-            $('#core-panel-' + resource + ' > .core-panel-body > .core-panel-tabs > li#panel-tab-' + tabId).addClass('active');
+            $('#core-panel-' + resource + ' > .core-panel-body > .core-panel-tabs > li#panel-' + resource + '-' + tabId).addClass('active');
 
             preloader.hide();
 

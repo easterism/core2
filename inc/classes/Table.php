@@ -80,6 +80,7 @@ abstract class Table extends Acl {
     const FILTER_TEXT        = 'text';
     const FILTER_TEXT_STRICT = 'text_strict';
     const FILTER_DATE_ONE    = 'date_one';
+    const FILTER_DATE_MONTH  = 'date_month';
     const FILTER_DATE        = 'date';
     const FILTER_DATETIME    = 'datetime';
     const FILTER_NUMBER      = 'number';
@@ -122,6 +123,7 @@ abstract class Table extends Acl {
                     $isset_value = false;
                     foreach ($search_value as $search_item) {
                         if ($search_item || $search_item === 0) {
+
                             $isset_value = true;
                             break;
                         }
@@ -927,9 +929,7 @@ abstract class Table extends Acl {
      */
     public function setLocution(string $locution, string $text) {
 
-        if (isset($this->locutions[$locution])) {
-            $this->locutions[$locution] = $text;
-        }
+        $this->locutions[$locution] = $text;
     }
 
 

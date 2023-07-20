@@ -109,11 +109,11 @@ class Panel {
      * @param string $back_url
      * @return void
      */
-    public function setTitle(string $title, string $description = '', string $back_url = ''): void {
+    public function setTitle(string $title, string $description = null, string $back_url = null): void {
 
         $this->title       = $title;
         $this->description = $description;
-        $this->back_url    = str_replace('?', '#', $back_url);
+        $this->back_url    = str_replace('?', '#', (string)$back_url);
     }
 
 

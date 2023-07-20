@@ -21,7 +21,6 @@ class Data extends Table {
      */
     public function fetchData(): array {
 
-        $this->preFetchRows();
         return $this->fetchRows();
     }
 
@@ -91,13 +90,14 @@ class Data extends Table {
      * @param array $filter_rules
      * @param array $filter_data
      * @return array
+     * @throws \Exception
      */
     private function filterData(array $data, array $filter_rules, array $filter_data): array {
 
         foreach ($data as $key => $row) {
 
             foreach ($filter_data as $key2 => $filter_value) {
-                $filter_column = $filter_rules[$key2];
+                $filter_column = $filter_rules[$key2] ?? null;
 
                 if ($filter_column instanceof Filter) {
                     if ($filter_value == '') {
@@ -137,6 +137,20 @@ class Data extends Table {
                             }
                             break;
 
+                        case 'date_month':
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
+                                $date_start = new \DateTime("{$filter_value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strtotime($row[$filter_field]) < $date_start->getTimestamp() ||
+                                    strtotime($row[$filter_field]) > $date_end->getTimestamp()
+                                ) {
+                                    unset($data[$key]);
+                                    continue 2;
+                                }
+                            }
+                            break;
+
                         case 'number':
                             if (is_array($filter_value)) {
                                 if ($filter_value[0] && ! $filter_value[1]) {
@@ -162,6 +176,7 @@ class Data extends Table {
                             }
                             break;
 
+                        case 'date_one':
                         case 'radio':
                         case 'select':
                         case 'text_strict':
@@ -205,7 +220,7 @@ class Data extends Table {
         foreach ($data as $key => $row) {
 
             foreach ($search_data as $key2 => $search_value) {
-                $search_column = $search_rules[$key2];
+                $search_column = $search_rules[$key2] ?? null;
 
                 if ($search_column instanceof Search) {
                     if ($search_value == '') {
@@ -296,6 +311,7 @@ class Data extends Table {
                             }
                             break;
 
+                        case 'date_one':
                         case 'radio':
                         case 'select':
                         case 'text_strict':
