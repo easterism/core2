@@ -5,10 +5,10 @@ var feedback = {
 		var me = $('#supportFormMessage');
 		$('#feedbackError').hide('fast');
 		var err = [];
-		if (!m.val()) {
-			err.push('Выберите модуль');
-			this.feedbackError(err);
-		}
+		// if (!m.val()) {
+		// 	err.push('Выберите модуль');
+		// 	this.feedbackError(err);
+		// }
 		if (!me.val()) {
 			err.push('Введите текст сообщения');
 			this.feedbackError(err);

@@ -639,9 +639,9 @@ class CoreController extends Common implements File {
 			header('Content-type: application/json; charset="utf-8"');
 
 			try {
-				if (empty($supportFormModule)) {
-					throw new Exception($this->translate->tr('Выберите модуль.'));
-				}
+//				if (empty($supportFormModule)) {
+//					throw new Exception($this->translate->tr('Выберите модуль.'));
+//				}
 				if (empty($supportFormMessage)) {
 					throw new Exception($this->translate->tr('Введите текст сообщения.'));
 				}

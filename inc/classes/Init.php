@@ -342,6 +342,7 @@ class Init extends \Core2\Db {
                 require_once 'core2/inc/Interfaces/Delete.php';
                 require_once 'core2/inc/Interfaces/File.php';
                 require_once 'core2/inc/Interfaces/Subscribe.php';
+                require_once 'core2/inc/Interfaces/Switches.php';
 
                 // TODO move ACL to auth
                 // найти способ для запросов с токеном без пользователя
