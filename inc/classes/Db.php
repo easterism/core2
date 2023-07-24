@@ -208,7 +208,7 @@ class Db {
      * @param \Zend_Config $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    protected function establishConnection(\Zend_Config $database) {
+    private function establishConnection(\Zend_Config $database) {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
