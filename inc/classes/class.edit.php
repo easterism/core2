@@ -1201,7 +1201,7 @@ class editTable extends initEdit {
                                 }
                             }
                             if ( ! is_array($value['default'])) {
-                                $value['default'] = explode(",", $value['default']);
+                                $value['default'] = explode(",", (string)$value['default']);
                             }
                             if ($this->readOnly) {
                                 if ($value['type'] == 'multilist') {
