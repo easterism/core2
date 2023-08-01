@@ -275,10 +275,8 @@ class ModAjax extends ajaxFunc {
                     SELECT 1
                     FROM core_enum
                     WHERE global_id = ?
-                      AND id != ?
                 ", array(
                     $data['control']['global_id'],
-                    $refid,
                 ));
 
                 if ($is_duplicate_enum) {
@@ -346,7 +344,7 @@ class ModAjax extends ajaxFunc {
             ", array(
                 $data['control']['parent_id'],
                 $data['control']['name'],
-                $refid,
+                (int)$refid,
             ));
 
             if ($is_duplicate_enum_value) {

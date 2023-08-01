@@ -84,7 +84,10 @@ class File extends \Common {
             header("Content-Type: application/octet-stream");
             header("Content-Type: application/download");
         }
-        header("Content-Disposition: filename=\"{$res2['filename']}\"");
+
+        $filename_encode = rawurlencode($res2['filename']);
+
+        header("Content-Disposition: filename=\"{$res2['filename']}\"; filename*=utf-8''{$filename_encode}");
         header("Content-Type: " . $res2['type']);
         header('Content-Length: ' . $res2['filesize']);
         $this->content = $res2['content'];

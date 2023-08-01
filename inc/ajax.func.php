@@ -282,9 +282,11 @@ class ajaxFunc extends Common {
             //тогда id элемента для вывода ошибок можно задать вручную
             $mainTableId = $data['class_id'];
         }
-    	$this->response->assign($mainTableId . "_error", "innerHTML", '<a name="' . $mainTableId . '_error"> </a>' . implode("<br/>", $this->error));
-		$this->response->assign($mainTableId . "_error", "style.display", 'block');
-		$this->response->script("toAnchor('{$mainTableId}_error')");
+
+    	$this->response->assign("{$mainTableId}_error", "innerHTML",     implode("<br/>", $this->error));
+        $this->response->assign("{$mainTableId}_error", "style.display", 'block');
+        $this->response->script("toAnchor('{$mainTableId}_error')");
+        $this->response->script("animatedElement('{$mainTableId}_error', 'headShake')");
     }
 
 
@@ -308,7 +310,7 @@ class ajaxFunc extends Common {
 	 */
 	protected function getSessFormField($form_id, $id) {
 		$this->getSessForm($form_id);
-		return isset($this->orderFields[$id]) ? $this->orderFields[$id] : false;
+    return isset($this->orderFields[$id]) ? $this->orderFields[$id] : null;
 	}
 
 
