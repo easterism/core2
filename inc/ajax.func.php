@@ -309,8 +309,9 @@ class ajaxFunc extends Common {
 	 * @return mixed
 	 */
 	protected function getSessFormField($form_id, $id) {
+
 		$this->getSessForm($form_id);
-    return isset($this->orderFields[$id]) ? $this->orderFields[$id] : null;
+        return isset($this->orderFields[$id]) ? $this->orderFields[$id] : null;
 	}
 
 
@@ -355,7 +356,7 @@ class ajaxFunc extends Common {
             }
 
 			foreach ($data['control'] as $key => $value) {
-				if ( ! is_array($value)) $value = trim($value);
+				if ( ! is_array($value)) $value = trim((string)$value);
 				if (substr($key, -3) == '%re') continue;
 				if (substr($key, -4) == '%tru') continue;
 				if (substr($key, 0, 9) == 'filesdel|') {
@@ -674,7 +675,8 @@ class ajaxFunc extends Common {
      * @return array
      */
     private function getSessForm($id) {
-        if ( empty($this->orderFields)) {
+
+        if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
