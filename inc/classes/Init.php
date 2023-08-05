@@ -831,7 +831,7 @@ class Init extends \Core2\Db {
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
 //            $xajax->configure('errorHandler', true);
-//            $xajax->processRequest();
+            $xajax->processRequest(); //DEPRECATED
 
             if (Tool::isMobileBrowser()) {
                 $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";
@@ -1712,14 +1712,19 @@ class Init extends \Core2\Db {
  * Обработчик POST запросов от xajax
  *
  * @param string $func
+ * @param string  $loc DEPRECATED
  * @param array  $data
  *
  * @return xajaxResponse
  * @throws Exception
  * @throws Zend_Exception
  */
-function post($func, $data) {
+function post($func, $loc, $data) {
     $route      = \Zend_Registry::get('route');
+    if ($loc) {
+        parse_str($loc, $route);
+        $route['query'] = $_SERVER['QUERY_STRING'];
+    }
     $translate = Zend_Registry::get('translate');
     $res       = new xajaxResponse();
 
@@ -1772,7 +1777,8 @@ function post($func, $data) {
             $func = 'ax' . ucfirst($func);
             if (method_exists($xajax, $func)) {
                 try {
-                    $data['params'] = $route['query'];
+                    parse_str($route['query'], $params);
+                    $data['params'] = $params;
                     return $xajax->$func($data);
                 } catch (Exception $e) {
                     \Core2\Error::catchXajax($e, $res);
