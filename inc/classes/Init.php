@@ -360,8 +360,9 @@ class Init extends \Core2\Db {
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
+
             if (
-                empty($_GET['module']) &&
+                empty($route['module']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
@@ -370,6 +371,18 @@ class Init extends \Core2\Db {
                 }
                 return $this->getMenu();
             } else {
+                if (!empty($_POST)) {
+                    //может ли xajax обработать запрос
+                    $xajax = new xajax();
+                    if ($xajax->canProcessRequest()) {
+//                    $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
+//                    $xajax->configure('errorHandler', true);
+                        $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
+                        $xajax->processRequest();
+                        return;
+                    }
+                }
+
                 if ($this->deleteAction()) return '';
                 if ($this->switchAction()) return '';
 
@@ -817,7 +830,8 @@ class Init extends \Core2\Db {
             $xajax = new xajax();
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-            $xajax->processRequest();
+//            $xajax->configure('errorHandler', true);
+//            $xajax->processRequest();
 
             if (Tool::isMobileBrowser()) {
                 $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";
@@ -826,7 +840,6 @@ class Init extends \Core2\Db {
                 $tpl_file      = "core2/html/" . THEME . "/index2.tpl";
                 $tpl_file_menu = "core2/html/" . THEME . "/menu.tpl";
             }
-
 
             $tpl      = new Templater3($tpl_file);
             $tpl_menu = new Templater3($tpl_file_menu);
@@ -1500,6 +1513,7 @@ class Init extends \Core2\Db {
                     }
                 }
             }
+            \Zend_Registry::set('route', $route);
             return $route;
         }
 
@@ -1698,42 +1712,67 @@ class Init extends \Core2\Db {
  * Обработчик POST запросов от xajax
  *
  * @param string $func
- * @param string $loc
  * @param array  $data
  *
  * @return xajaxResponse
  * @throws Exception
  * @throws Zend_Exception
  */
-function post($func, $loc, $data) {
+function post($func, $data) {
+    $route      = \Zend_Registry::get('route');
+    $translate = Zend_Registry::get('translate');
+    $res       = new xajaxResponse();
 
-        $translate = Zend_Registry::get('translate');
-        $res       = new xajaxResponse();
-        $loc       = explode('?', $loc);
+    if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-        if (isset($loc[1])) {
-            unset($loc[0]);
-            $loc = implode('?', $loc);
+    $acl = new \Core2\Acl();
+
+    Zend_Registry::set('context', array($route['module'], $route['action']));
+
+    if ($route['module'] == 'admin') {
+        require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
+        $auth = Zend_Registry::get('auth');
+        if ( ! $auth->ADMIN) throw new Exception(911);
+
+        $xajax = new ModAjax($res);
+        if (method_exists($xajax, $func)) {
+            $xajax->setupAcl();
+            try {
+                return $xajax->$func($data);
+            } catch (Exception $e) {
+                \Core2\Error::catchXajax($e, $res);
+            }
         } else {
-            $loc = $loc[0];
+            throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
         }
 
-        parse_str($loc, $params);
-        if (empty($params['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
+    } else {
+        if ($route['action'] == 'index') {
+            if ( ! $acl->checkAcl($route['module'], 'access')) {
+                throw new Exception(911);
+            }
+        } else {
+            if ( ! $acl->checkAcl($route['module'] . '_' . $route['action'], 'access')) {
+                throw new Exception(911);
+            }
+        }
 
-        $acl = new \Core2\Acl();
+        $db        = new \Core2\Db;
+        $location  = $db->getModuleLocation($route['module']);
+        $file_path = $location . "/ModAjax.php";
 
-        Zend_Registry::set('context', array($params['module'], !empty($params['action']) ? $params['action'] : 'index'));
+        if (file_exists($file_path)) {
+            $autoload = $location . "/vendor/autoload.php";
+            if (file_exists($autoload)) {
+                require_once $autoload;
+            }
 
-        if ($params['module'] == 'admin') {
-            require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
-            $auth = Zend_Registry::get('auth');
-            if ( ! $auth->ADMIN) throw new Exception(911);
-
+            require_once $file_path;
             $xajax = new ModAjax($res);
+            $func = 'ax' . ucfirst($func);
             if (method_exists($xajax, $func)) {
-                $xajax->setupAcl();
                 try {
+                    $data['params'] = $route['query'];
                     return $xajax->$func($data);
                 } catch (Exception $e) {
                     \Core2\Error::catchXajax($e, $res);
@@ -1741,44 +1780,8 @@ function post($func, $loc, $data) {
             } else {
                 throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
             }
-
-        } else {
-            if (empty($params['action']) || $params['action'] == 'index') {
-                if ( ! $acl->checkAcl($params['module'], 'access')) {
-                    throw new Exception(911);
-                }
-                $params['action'] = 'index';
-            } else {
-                if ( ! $acl->checkAcl($params['module'] . '_' . $params['action'], 'access')) {
-                    throw new Exception(911);
-                }
-            }
-
-            $db        = new \Core2\Db;
-            $location  = $db->getModuleLocation($params['module']);
-            $file_path = $location . "/ModAjax.php";
-
-            if (file_exists($file_path)) {
-                $autoload = $location . "/vendor/autoload.php";
-                if (file_exists($autoload)) {
-                    require_once $autoload;
-                }
-
-                require_once $file_path;
-                $xajax = new ModAjax($res);
-                $func = 'ax' . ucfirst($func);
-                if (method_exists($xajax, $func)) {
-                    try {
-                        $data['params'] = $params;
-                        return $xajax->$func($data);
-                    } catch (Exception $e) {
-                        \Core2\Error::catchXajax($e, $res);
-                    }
-                } else {
-                    throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
-                }
-            }
         }
-
-        return $res;
     }
+
+    return $res;
+}
