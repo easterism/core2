@@ -30,6 +30,11 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $uniq_class_id		    = '';
+    /**
+     * form action attribute
+     * @var string
+     */
+	private $action		    = '';
 
 
     /**
@@ -209,7 +214,7 @@ class editTable extends initEdit {
             }
 
             $this->makeTable();
-            $this->HTML = str_replace('[_ACTION_]', '', $this->HTML);
+            $this->HTML = str_replace('[_ACTION_]', $this->action, $this->HTML);
 
             echo $this->HTML;
 
@@ -336,7 +341,9 @@ class editTable extends initEdit {
 							if (strpos($fu, 'xajax_') !== false) {
 								$funcName = explode('(', $fu);
 								$funcName = substr($funcName[0], 6);
-								$func[$k] = "xajax_post('$funcName', 'index.php?" . $_SERVER['QUERY_STRING'] . "', " . substr($fu, strpos($fu, '(', 1) + 1, -1) . ")";
+                                $action = "index.php?" . $_SERVER['QUERY_STRING'];
+                                if ($this->action) $action = $this->action;
+								$func[$k] = "xajax.config['requestURI']='$action';xajax_post('$funcName', '', " . substr($fu, strpos($fu, '(', 1) + 1, -1) . ")";
 							}
 						}
 						$onsubmit .= implode(";", $func) . ";return;";
@@ -2169,7 +2176,8 @@ $controlGroups[$cellId]['html'][$key] .= "
 	/**
 	 * @param $func
 	 */
-	public function save($func) {
+	public function save($func, $action = '') {
+        $this->action = $action;
 		$this->isSaved = true;
 		// for javascript functions
 		if (strpos($func, '(') !== false) {
