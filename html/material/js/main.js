@@ -405,12 +405,15 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
  * @param callback
  */
 var load = function (url, data, id, callback) {
-	preloader.show();
 
-	if (!id) id = '#main_body';
-	else if (typeof id === 'string') {
+	if ( ! id) {
+		id = '#main_body';
+		preloader.show();
+
+	} else if (typeof id === 'string') {
 		id = '#' + id;
 	}
+
 	if (url.indexOf("index.php") === 0) {
 		url = url.substr(10);
 	}
