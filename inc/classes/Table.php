@@ -136,6 +136,8 @@ abstract class Table extends Acl {
 
                 $this->setSearch($nmbr_field, $search_value);
             }
+
+            unset($_POST['search'][$resource]);
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
             $this->clearSearch();
@@ -171,6 +173,8 @@ abstract class Table extends Acl {
                     $this->setFilter($nmbr_field, $filter_value);
                 }
             }
+
+            unset($_POST['filter'][$resource]);
         }
         if ( ! empty($_POST['filter_clear_' . $this->resource])) {
             $this->clearFilter();
@@ -185,6 +189,7 @@ abstract class Table extends Acl {
         // COLUMNS
         if (isset($_POST["columns_{$this->resource}"]) && is_array($_POST["columns_{$this->resource}"])) {
             $columns = $_POST["columns_{$this->resource}"];
+            unset($_POST['columns_' . $resource]);
 
             $this->session->table->columns = [];
 
@@ -207,6 +212,7 @@ abstract class Table extends Acl {
         // ORDERING
         if ( ! empty($_POST['order_' . $resource])) {
             $order = $_POST['order_' . $resource];
+            unset($_POST['order_' . $resource]);
 
             if (empty($this->session->table->order)) {
                 $this->session->table->order      = $order;
