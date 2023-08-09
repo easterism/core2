@@ -724,9 +724,16 @@ class ModAjax extends ajaxFunc {
         }
 
         if ( ! empty($data['is_copy']) && $role_id) {
-            $role      = $this->modAdmin->dataRoles->find($role_id)->current();
+            $role = $this->dataRoles->find($role_id)->current();
             $role_data = $role->toArray();
-            $role_data['name']       = "{$role_data['name']} (копия)";
+            $copy = $this->_("копия");
+            $res = (int) $this->db->fetchOne("SELECT COUNT(1) FROM core_roles WHERE name LIKE ?",
+                $role_data['name'] . " ($copy%"
+            );
+            if (!$res) $role_data['name'] = "{$role_data['name']} ($copy)";
+            else {
+                $role_data['name'] = "{$role_data['name']} ($copy " . $res + 1 . ")";
+            }
             $role_data['date_added'] = new \Zend_Db_Expr('NOW()');
             $role_data['lastupdate'] = new \Zend_Db_Expr('NOW()');
             $role_data['lastuser']   = $this->auth->ID && $this->auth->ID > 0 ? $this->auth->ID : null;
