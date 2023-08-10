@@ -30,6 +30,7 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $uniq_class_id		    = '';
+    private $acl                    = '';
     /**
      * form action attribute
      * @var string
