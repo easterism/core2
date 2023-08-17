@@ -275,8 +275,10 @@ class ModAjax extends ajaxFunc {
                     SELECT 1
                     FROM core_enum
                     WHERE global_id = ?
+                      AND id != ?
                 ", array(
                     $data['control']['global_id'],
+                    $refid,
                 ));
 
                 if ($is_duplicate_enum) {
@@ -739,7 +741,7 @@ class ModAjax extends ajaxFunc {
             $role_data['lastuser']   = $this->auth->ID && $this->auth->ID > 0 ? $this->auth->ID : null;
             unset($role_data['id']);
 
-            $role_new = $this->modAdmin->dataRoles->createRow($role_data);
+            $role_new = $this->dataRoles->createRow($role_data);
             $role_new->save();
         }
 
