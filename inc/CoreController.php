@@ -20,12 +20,14 @@ use Core2\InstallModule as Install;
 
 
 /**
- * @property Core2\Model\Users        $dataUsers
  * @property Core2\Model\Enum         $dataEnum
  * @property Core2\Model\Modules      $dataModules
- * @property Core2\Model\Roles        $dataRoles
  * @property Core2\Model\SubModules   $dataSubModules
+ * @property Core2\Model\Roles        $dataRoles
+ * @property Core2\Model\Users        $dataUsers
  * @property Core2\Model\UsersProfile $dataUsersProfile
+ * @property Core2\Model\Settings     $dataSettings
+ * @property Core2\Model\Session      $dataSession
  * @property ModProfileApi            $apiProfile
  */
 class CoreController extends Common implements File {
