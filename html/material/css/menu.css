@@ -337,6 +337,7 @@ a {color: #337AB7}
     display: inline-block;
 }
 
+
 /* Mobile */
 @media(max-width:767px) {
     #main #main-content {
@@ -446,6 +447,32 @@ a {color: #337AB7}
         color: #fff;
         font-weight: 600;
         margin-left: 2px;
+    }
+
+    #menu-wrapper::-webkit-scrollbar {
+        visibility: hidden;
+        -webkit-appearance: none;
+        width: 6px;
+        height: 6px;
+        background-color: rgba(0,0,0,0);
+    }
+    #menu-wrapper::-webkit-scrollbar-button {
+        height: 0;
+    }
+    #menu-wrapper::-webkit-scrollbar-thumb {
+        visibility: hidden;
+        background: #a6a6a6a3;
+        border-radius: 10px;
+    }
+    #menu-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #a6a6a6;
+    }
+    #menu-wrapper::-webkit-scrollbar-track {
+        background: #00000047;
+    }
+    #menu-wrapper:hover::-webkit-scrollbar,
+    #menu-wrapper:hover::-webkit-scrollbar-thumb {
+        visibility: visible;
     }
 
     .screen-open #main.s-toggle .screen-panel,
