@@ -150,7 +150,7 @@ a {color: #337AB7}
     color: #dae5eb;
     position: relative;
     display: block;
-    padding: 10px 16px 10px 17px;
+    padding: 10px 13px 10px 16px;
     text-decoration: none;
     text-align: left;
     direction: ltr;
@@ -170,7 +170,7 @@ a {color: #337AB7}
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
     background-color: #00000026;
-    padding-left: 14px;
+    padding-left: 13px;
     outline: none;
 }
 #menu-modules .module-submodules > a {
