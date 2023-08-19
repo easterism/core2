@@ -64,3 +64,7 @@
 [submodule "mod/webservice/v2.6.0"]
 	path = mod/webservice/v2.6.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
+[submodule "mod/cron/v3.5.0"]
+	path = mod/cron/v3.5.0
+	url = git@git.rdo.belhard.com:core2/modules/cron.git
+	branch = 3.5.0
