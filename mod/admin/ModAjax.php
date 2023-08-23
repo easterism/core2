@@ -275,8 +275,10 @@ class ModAjax extends ajaxFunc {
                     SELECT 1
                     FROM core_enum
                     WHERE global_id = ?
+                      AND id != ?
                 ", array(
                     $data['control']['global_id'],
+                    $refid,
                 ));
 
                 if ($is_duplicate_enum) {
@@ -724,15 +726,22 @@ class ModAjax extends ajaxFunc {
         }
 
         if ( ! empty($data['is_copy']) && $role_id) {
-            $role      = $this->modAdmin->dataRoles->find($role_id)->current();
+            $role = $this->dataRoles->find($role_id)->current();
             $role_data = $role->toArray();
-            $role_data['name']       = "{$role_data['name']} (копия)";
+            $copy = $this->_("копия");
+            $res = (int) $this->db->fetchOne("SELECT COUNT(1) FROM core_roles WHERE name LIKE ?",
+                $role_data['name'] . " ($copy%"
+            );
+            if (!$res) $role_data['name'] = "{$role_data['name']} ($copy)";
+            else {
+                $role_data['name'] = "{$role_data['name']} ($copy " . $res + 1 . ")";
+            }
             $role_data['date_added'] = new \Zend_Db_Expr('NOW()');
             $role_data['lastupdate'] = new \Zend_Db_Expr('NOW()');
             $role_data['lastuser']   = $this->auth->ID && $this->auth->ID > 0 ? $this->auth->ID : null;
             unset($role_data['id']);
 
-            $role_new = $this->modAdmin->dataRoles->createRow($role_data);
+            $role_new = $this->dataRoles->createRow($role_data);
             $role_new->save();
         }
 
