@@ -13,7 +13,9 @@ class Column {
     protected $field      = '';
     protected $type       = '';
     protected $attr       = [];
+    protected $options    = [];
     protected $is_sorting = true;
+    protected $is_show    = true;
 
 
     /**
@@ -75,11 +77,21 @@ class Column {
 
 
     /**
+     * Получение опций
+     * @return array
+     */
+    public function getOptions(): array {
+
+        return $this->options;
+    }
+
+
+    /**
      * Установка значения атрибута
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttr(string $name, string $value) {
         if ((is_string($name) || is_numeric($name)) &&
@@ -98,7 +110,7 @@ class Column {
      * @param string $name
      * @param string $value
      * @return self
-     *@throws Exception
+     * @throws Exception
      */
     public function setAttrPrepend(string $name, string $value): Column {
         if ((is_string($name) || is_numeric($name)) &&
@@ -153,11 +165,40 @@ class Column {
 
 
     /**
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options): self {
+
+        $this->options = $options;
+        return $this;
+    }
+
+
+    /**
      * @param bool $is_sort
      * @return self
      */
     public function sorting(bool $is_sort = true): Column {
         $this->is_sorting = (bool)$is_sort;
+        return $this;
+    }
+
+
+    /**
+     * @return $this
+     */
+    public function show(): Column {
+        $this->is_show = true;
+        return $this;
+    }
+
+
+    /**
+     * @return $this
+     */
+    public function hide(): Column {
+        $this->is_show = false;
         return $this;
     }
 
@@ -171,20 +212,33 @@ class Column {
 
 
     /**
+     * @return bool
+     */
+    public function isShow(): bool {
+        return $this->is_show;
+    }
+
+
+    /**
      * Преобразование в массив
      * @return array
      */
     public function toArray(): array {
 
         $data = [
-            'title'   => $this->title,
             'field'   => $this->field,
+            'title'   => $this->title,
             'type'    => $this->type,
             'sorting' => $this->is_sorting,
+            'show'    => $this->is_show,
         ];
 
         if ( ! empty($this->attr)) {
             $data['attr'] = $this->attr;
+        }
+
+        if ( ! empty($this->options)) {
+            $data['options'] = $this->options;
         }
 
         return $data;

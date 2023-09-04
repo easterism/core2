@@ -27,6 +27,31 @@ class Select {
 
 
     /**
+     * Получение sql запроса разделенного на части
+     * @return array
+     */
+    public function getSqlParts(): array {
+
+        foreach ($this->sql as $key => $sql_part) {
+
+            if (empty($sql_part)) {
+                unset($this->sql[$key]);
+                continue;
+            }
+
+            if ( ! empty($this->sub_queries)) {
+                foreach ($this->sub_queries as $hash => $query) {
+                    $this->sql[$key] = str_replace($hash, $query, $this->sql[$key]);
+                }
+            }
+        }
+
+
+        return $this->sql;
+    }
+
+
+    /**
      * Получение колонок
      * @return array
      */
@@ -112,6 +137,27 @@ class Select {
     }
 
 
+    /**
+     * @return string|null
+     */
+    public function getTableAlias(): ?string {
+
+        $alias   = null;
+        $matches = [];
+        preg_match(
+            '~^(?:`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)\s+(?:AS|)\s*(?<alias>`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)~i',
+            trim($this->sql['FROM']),
+            $matches
+        );
+
+
+        if ( ! empty($matches['alias'])) {
+            $alias = trim($matches['alias'], '`');
+        }
+
+        return $alias;
+    }
+
 
     /**
      * @return string
@@ -142,11 +188,11 @@ class Select {
 
         $sub_queries = [];
 
-        preg_match_all('~(\((?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
+        preg_match_all('~(\([^(](?:(?>[^()]+)|(?R))*\))~i', $sql, $sub_queries);
 
         if ( ! empty($sub_queries[1])) {
             foreach ($sub_queries[1] as $sub_query) {
-                if (preg_match('~^\(\s*SELECT\s~i', $sub_query)) {
+                if (preg_match('~[\(\s]*SELECT\s~i', $sub_query)) {
                     $query_hash = hash('crc32b', $sub_query);
                     $query_hash = "[{$query_hash}]";
                     $sql = str_replace($sub_query, $query_hash, $sql);

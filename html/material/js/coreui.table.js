@@ -4,6 +4,10 @@ var CoreUI = typeof CoreUI !== 'undefined' ? CoreUI : {};
 CoreUI.table = {
 
     loc: {},
+    _events: {
+        checked: [],
+        reload: [],
+    },
 
     preloader : {
         show : function(resource) {
@@ -19,11 +23,13 @@ CoreUI.table = {
 
         hide : function(resource) {
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
-            var nodes   = wrapper.childNodes;
-            for (var i = 0; i < nodes.length; i++) {
-                if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
-                    nodes[i].style.display = 'none';
-                    break;
+            if (wrapper) {
+                var nodes = wrapper.childNodes;
+                for (var i = 0; i < nodes.length; i++) {
+                    if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
+                        nodes[i].style.display = 'none';
+                        break;
+                    }
                 }
             }
         }
@@ -36,11 +42,23 @@ CoreUI.table = {
          * @param resource
          */
         toggle : function(resource) {
+
             var $search_container = $("#search-" + resource);
+            var templateContainer = $("#templates-" + resource);
+            var columns           = $("#column-switcher-" + resource);
+
+            if (columns.is(":visible")) {
+                columns.hide();
+            }
+
+            if (templateContainer.is(":visible")) {
+                templateContainer.hide();
+            }
+
             $search_container.toggle('fast');
 
-            var f = $search_container.find("form");
-            f[0].elements[0].focus();
+            var form = $search_container.find("form");
+            form[0].elements[0].focus();
         },
 
 
@@ -60,14 +78,16 @@ CoreUI.table = {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__clear=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -92,14 +112,16 @@ CoreUI.table = {
                     CoreUI.table.preloader.show(resource);
                     container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-                    load(CoreUI.table.loc[resource] + '&__search=1', post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
-                    load(CoreUI.table.loc[resource], post, container, function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.callback();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             }
@@ -108,37 +130,180 @@ CoreUI.table = {
 
 
     filter: {
+
         /**
-         *
-         * @param id
+         * @param resource
+         * @param isAjax
          */
-        show : function(id) {
-            $("#filterColumn" + id).toggle('fast');
+        clear : function(resource, isAjax) {
+
+            var post      = {};
+            var container = '';
+
+            post['filter_clear_' + resource] = 1;
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
+                        CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
+
+                } else {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
+                }
+            }
         },
 
 
         /**
-         * @param id
+         * @param resource
          * @param isAjax
          */
-        submit : function(id, isAjax) {
-            var o = $('#filterColumn' + id + ' form').find(':checkbox:checked');
-            var l = o.length;
-            var post = {};
-            var t = [];
+        submit : function(resource, isAjax) {
 
-            for (var i = 0; i < l; i++) {
-                t.push(o[i].value);
-            }
-            post['column_' + id] = t;
+            var allInputs = $("#filter-" + resource).find(":input");
+            var post      = {};
             var container = '';
 
-            if (CoreUI.table.loc[id]) {
+            $.each(allInputs, function(key, input) {
+                var name = $(input).attr('name');
+
+                if (name) {
+                    if (name.slice(-2) === '[]') {
+                        if ( ! post.hasOwnProperty(name)) {
+                            post[name] = [];
+                        }
+
+                        if ($(input).attr('type') === 'checkbox' && ! $(input).is(':checked')) {
+                            return true;
+                        }
+
+                        post[name].push($(input).val());
+
+                    } else {
+                        if ($(input).attr('type') === 'radio') {
+                            if ($(input).is(':checked')) {
+                                post[name] = $(input).val();
+                            }
+                        } else {
+                            post[name] = $(input).val();
+                        }
+                    }
+                }
+            });
+
+            $.each(post, function (name, value) {
+                if (name.slice(-2) === '[]' && typeof value === 'object' && value.length === 0) {
+                    post[name.substring(0, name.length - 2)] = '';
+                    delete post[name];
+                }
+            });
+
+
+            if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    container = document.getElementById("list" + id).parentNode;
-                    load(CoreUI.table.loc[id] + '&__filter=1', post, container);
+                    CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter=1', post, container, function () {
+                        CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
+
                 } else {
-                    load(CoreUI.table.loc[id], post, container);
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
+                }
+            }
+        }
+    },
+
+
+    columnSwitcher: {
+
+        /**
+         * Переключение панели управления колонками
+         * @param resource
+         */
+        toggleContainer : function(resource) {
+
+            var searchContainer   = $("#search-" + resource);
+            var templateContainer = $("#templates-" + resource);
+            var columnsContainer  = $("#column-switcher-" + resource);
+
+            if (searchContainer.is(":visible")) {
+                searchContainer.hide();
+            }
+
+            if (templateContainer.is(":visible")) {
+                templateContainer.hide();
+            }
+
+            columnsContainer.toggle('fast');
+        },
+
+
+        /**
+         * @param resource
+         */
+        toggleAllColumns : function(resource) {
+
+            var filterContainer = $("#column-switcher-" + resource + ' form');
+            var inputAll        = filterContainer.find('.checkbox-all input');
+
+            if (inputAll.is(":checked")) {
+                filterContainer.find('.checkbox input').prop("checked", true);
+            } else {
+                filterContainer.find('.checkbox input').prop("checked", false);
+            }
+        },
+
+
+        /**
+         * @param resource
+         * @param isAjax
+         */
+        submit : function(resource, isAjax) {
+
+            var checkboxes = $('#column-switcher-' + resource + ' form').find('.table-switch-column :checkbox:checked');
+            var post       = {};
+            var columns    = [];
+            var container  = '';
+
+            for (var i = 0; i < checkboxes.length; i++) {
+                columns.push(checkboxes[i].value);
+            }
+            post['columns_' + resource] = columns;
+
+            if (CoreUI.table.loc[resource]) {
+                if (isAjax) {
+                    //CoreUI.table.preloader.show(resource);
+                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+                    load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
+                        //CoreUI.table.preloader.hide(resource);
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
+
+
+
+                } else {
+                    load(CoreUI.table.loc[resource], post, container, function () {
+                        preloader.callback();
+                        CoreUI.table._callEventReload(resource);
+                    });
                 }
             }
         }
@@ -148,26 +313,51 @@ CoreUI.table = {
     template: {
 
         /**
+         * Переключение панели
+         * @param resource
+         */
+        toggleContainer : function(resource) {
+
+            var searchContainer   = $("#search-" + resource);
+            var columnsContainer  = $("#column-switcher-" + resource);
+            var templateContainer = $("#templates-" + resource);
+
+            if (searchContainer.is(":visible")) {
+                searchContainer.hide();
+            }
+
+            if (columnsContainer.is(":visible")) {
+                columnsContainer.hide();
+            }
+
+            templateContainer.toggle('fast');
+        },
+
+
+        /**
          * Создание критерия поиска
          * @param resource
          * @param isAjax
          */
         create: function (resource, isAjax) {
 
-            var post = $("#filter" + resource).find(":input").serializeArray();
+            var searchControls = $("#search-" + resource).find(":input").serializeArray();
 
-            if ($('#filterColumn' + resource)[0]) {
-                var columnsCheckboxes = $('#filterColumn' + resource + ' form').find(':checkbox:checked');
+            if ($('#column-switcher-' + resource)[0]) {
+                var columnsCheckboxes = $("#column-switcher-" + resource).find(':checkbox:checked');
 
                 for (var i = 0; i < columnsCheckboxes.length; i++) {
-                    post.push({
-                        'name' : 'column_' + resource + '[]',
-                        'value': columnsCheckboxes[i].value
-                    });
+                    if (columnsCheckboxes[i].value !== 'on') {
+                        searchControls.push({
+                            'name': 'columns_' + resource + '[]',
+                            'value': columnsCheckboxes[i].value
+                        });
+                    }
                 }
             }
 
-            if ( ! post || post.length === 0) {
+
+            if ( ! searchControls || searchControls.length === 0) {
                 swal('Не заполнены критерии для сохранения', '', 'warning').catch(swal.noop);
                 return false;
             }
@@ -184,7 +374,7 @@ CoreUI.table = {
                 confirmButtonColor: '#5bc0de',
                 confirmButtonText: "Сохранить",
                 cancelButtonText: "Отмена",
-                preConfirm: (templateTitle) => {
+                preConfirm: function (templateTitle) {
 
                     return new Promise(function (resolve, reject) {
                         if ( ! templateTitle || $.trim(templateTitle) === '') {
@@ -199,21 +389,23 @@ CoreUI.table = {
 
                     preloader.show();
 
-                    post.push({
+                    searchControls.push({
                         'name' : 'template_create_' + resource,
                         'value': templateTitle,
                     });
 
-                    if (listx.loc[resource]) {
+                    if (CoreUI.table.loc[resource]) {
                         if (isAjax) {
-                            var container = document.getElementById("list" + resource).parentNode;
-                            load(listx.loc[resource] + '&__template_create=1', post, container, function () {
+                            var container = document.getElementById("table-" + resource).parentNode;
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
-                            load(listx.loc[resource] + '&__template_create=1', post, '', function () {
+                            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', searchControls, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -246,21 +438,23 @@ CoreUI.table = {
 
                     preloader.show();
 
-                    let post = [{
+                    var post = [{
                         'name' : 'template_remove_' + resource,
                         'value': id,
                     }];
 
-                    if (listx.loc[resource]) {
+                    if (CoreUI.table.loc[resource]) {
                         if (isAjax) {
-                            var container = document.getElementById("list" + resource).parentNode;
-                            load(listx.loc[resource] + '&__template_remove=1', post, container, function () {
+                            var container = document.getElementById("table-" + resource).parentNode;
+                            load(CoreUI.table.loc[resource], post, container, function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
 
                         } else {
-                            load(listx.loc[resource] + '&__template_remove=1', post, '', function () {
+                            load(CoreUI.table.loc[resource], post, '', function () {
                                 preloader.hide();
+                                CoreUI.table._callEventReload(resource);
                             });
                         }
                     } else {
@@ -283,21 +477,23 @@ CoreUI.table = {
 
             preloader.show();
 
-            let post = [{
+            var post = [{
                 'name' : 'template_select_' + resource,
                 'value': id,
             }];
 
-            if (listx.loc[resource]) {
+            if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    var container = document.getElementById("list" + resource).parentNode;
-                    load(listx.loc[resource] + '&__template_select=1', post, container, function () {
+                    var container = document.getElementById("table-" + resource).parentNode;
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
 
                 } else {
-                    load(listx.loc[resource] + '&__template_select=1', post, '', function () {
+                    load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, '', function () {
                         preloader.hide();
+                        CoreUI.table._callEventReload(resource);
                     });
                 }
             } else {
@@ -332,11 +528,15 @@ CoreUI.table = {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     CoreUI.table.preloader.hide(resource);
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
-        } else load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
-            preloader.callback();
-        });
+        } else {
+            load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
+                preloader.callback();
+                CoreUI.table._callEventReload(resource);
+            });
+        }
     },
 
 
@@ -360,12 +560,14 @@ CoreUI.table = {
             } else {
                 load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                     preloader.callback();
+                    CoreUI.table._callEventReload(resource);
                 });
             }
 
         } else {
             load(CoreUI.table.loc[resource] + '&' + p, '', container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
@@ -387,84 +589,106 @@ CoreUI.table = {
             CoreUI.table.preloader.show(resource);
             container = document.getElementById("table-" + resource + "-wrapper").parentNode;
 
-            load(CoreUI.table.loc[resource] + '&__order=1', post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 CoreUI.table.preloader.hide(resource);
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
 
+            preloader.hide();
+
         } else {
-            load(CoreUI.table.loc[resource], post, container, function () {
+            load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
                 preloader.callback();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
 
 
-    switchActive: function(img, resource, rec_id) {
-        var src   = $(img).attr('src');
-        var value = $(img).data('value');
+    /**
+     * Перезагрузка таблицы
+     * @param resource
+     * @param isAjax
+     */
+    reload: function (resource, isAjax) {
 
-        if (value == 'Y' || value == '1') {
-            var new_value = value === 'Y' ? 'N' : 0;
-            var new_src   = src.replace("on.png", "off.png");
-            var msg       = "Деактивировать запись?";
+        if (isAjax) {
+            CoreUI.table.preloader.show(resource);
+
+            var container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+
+            load(CoreUI.table.loc[resource], {}, container, function () {
+                CoreUI.table.preloader.hide(resource);
+                preloader.hide();
+                CoreUI.table._callEventReload(resource);
+            });
+
         } else {
-            var new_value = value === 'N' ? 'Y' : 1;
-            var new_src   = src.replace("off.png", "on.png");
-            var msg       = "Активировать запись?";
-        }
-        if (confirm(msg)) {
-            var preloader_src = src.substr(0, src.lastIndexOf('/')+1) + 'preloader_circle.gif';
-            $(img).attr('src', preloader_src);
-
-            var token = $('#table-' + resource).data('csrf-token');
-            var url   = window.location.pathname + window.location.search;
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                dataType : 'json',
-                data : {
-                    rec_id: rec_id,
-                    new_value: new_value
-                },
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-CMB-CSRF-TOKEN', token)
-                        .setRequestHeader('X-CMB-RESOURCE',   resource)
-                        .setRequestHeader('X-CMB-PROCESS',    'status')
-                },
-                success: function(data, textStatus) {
-                    if (data.status == "success") {
-                        $(img).attr('src', new_src);
-                        $(img).data('value', new_value);
-                    } else {
-                        $(img).attr('src', src);
-                        if (data.message) {
-                            alert(data.message);
-                        }
-                    }
-                },
-                error : function(xhr, textStatus) {
-                    if (xhr.status == 0) {
-                        alert('You are offline!\nCheck you network.');
-                    } else if (xhr.status == 404) {
-                        alert('404 - page not found');
-                    } else if (xhr.status == 500) {
-                        alert('500 - server error');
-                    } else if (textStatus == 'parsererror') {
-                        alert('parse error');
-                    } else if (textStatus == 'timeout') {
-                        alert('timeout');
-                    } else {
-                        alert(xhr.status + ' - ' + xhr.responseText);
-                    }
-                    $(img).attr('src', src);
-                }
+            load(CoreUI.table.loc[resource], {}, '', function () {
+                preloader.hide();
+                CoreUI.table._callEventReload(resource);
             });
         }
     },
 
 
+    /**
+     * @param resource
+     * @param field
+     * @param id
+     * @param container
+     */
+    switchToggle: function (resource, field, id, container) {
+
+        var isActiveControl = $(container).find(':checked').hasClass('coreui-table-switch-active');
+
+        swal({
+            title: isActiveControl ? "Деактивировать?" : "Активировать?",
+            type: isActiveControl ? "warning" : "info",
+            showCancelButton: true,
+            confirmButtonColor: isActiveControl ? '#f0ad4e' : '#5bc0de',
+            confirmButtonText: "Да",
+            cancelButtonText: "Нет"
+        }).then(
+            function(result) {
+                var value = isActiveControl
+                    ? $(container).find('.coreui-table-switch-inactive').val()
+                    : $(container).find('.coreui-table-switch-active').val();
+
+                $.post('index.php?module=admin&action=switch&loc=core&resource=' + resource, {
+                        data:      field,
+                        is_active: value,
+                        value:     id
+                    }, function(data, textStatus) {
+                        if (textStatus === 'success' && data.status === "ok") {
+
+                            if (isActiveControl) {
+                                $(container).find('.coreui-table-switch-active').prop('checked', false);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', true);
+
+                            } else {
+                                $(container).find('.coreui-table-switch-active').prop('checked', true);
+                                $(container).find('.coreui-table-switch-inactive').prop('checked', false);
+                            }
+
+                        } else {
+                            if (data.status) {
+                                swal("Ошибка", data.status, 'error').catch(swal.noop);
+                            }
+                        }
+                    },
+                    'json');
+            }, function(dismiss) {}
+        );
+    },
+
+
+    /**
+     * @param resource
+     * @param returnArray
+     * @returns {*[]|string|*}
+     */
     getChecked : function (resource, returnArray) {
         var j = 1;
         if (returnArray === true) {
@@ -491,8 +715,8 @@ CoreUI.table = {
         return val;
     },
 
+
     /**
-     *
      * @param resource
      * @param confirmMsg
      * @param noSelectMsg
@@ -533,6 +757,7 @@ CoreUI.table = {
                                 if (data === true) {
                                     load(CoreUI.table.loc[resource], '', container, function () {
                                         preloader.callback();
+                                        CoreUI.table._callEventReload(resource);
                                     });
 
                                 } else {
@@ -548,6 +773,7 @@ CoreUI.table = {
                                         if (data.loc) {
                                             load(data.loc, '', container, function () {
                                                 preloader.callback();
+                                                CoreUI.table._callEventReload(resource);
                                             });
                                         }
                                     }
@@ -569,16 +795,227 @@ CoreUI.table = {
     },
 
 
+    /**
+     * Выделение всех строк
+     * @param obj
+     * @param resource
+     */
     checkAll : function (obj, resource) {
-        var j = 1;
-        var check = !! obj.checked;
+
+        var rowsId        = [];
+        var state         = $(obj).is(":checked");
+        var checkedInputs = $('#table-' + resource + ' .row-table .checked-row input');
+
+        checkedInputs.prop('checked', state);
+        checkedInputs.each(function (key, checked) {
+            rowsId.push($(checked).val());
+        });
+
+        $('#table-' + resource + ' .coreui-table-row-group .checked-row input').prop('checked', state);
+
+        CoreUI.table._callEventChecked(resource, rowsId, state);
+    },
+
+
+    /**
+     * Выделение группы строк
+     * @param obj
+     * @param resource
+     */
+    checkGroup : function (obj, resource) {
+
+        var j       = 1;
+        var row     = $(obj).parent().parent();
+        var rowsId = [];
+        var state  = $(obj).is(":checked");
+
         for (var i = 0; i < j; i++) {
-            if (document.getElementById("check-" + resource + '-' + j)) {
-                document.getElementById("check-" + resource + '-' + j).checked = check;
+            row = row.next('tr');
+
+            if (row.hasClass('row-table')) {
+                var checked = row.find('.checked-row input');
+                checked.prop('checked', state);
+
+                rowsId.push(checked.val());
+
                 j++;
             }
         }
-        return;
+
+        CoreUI.table._callEventChecked(resource, rowsId, state);
+    },
+
+
+    /**
+     Выделение строки
+     * @param obj
+     * @param resource
+     */
+    checkRow: function (obj, resource) {
+
+        var rowId = $(obj).val();
+        var state = $(obj).is(":checked");
+
+        CoreUI.table._callEventChecked(resource, [ rowId ], state);
+    },
+
+
+    /**
+     * Событие выполняемое при массовом выделении строк
+     * @param resource
+     * @param callback
+     */
+    onChecked: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.checked.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Событие выполняемое при перезагрузке содержимого
+     * @param resource
+     * @param callback
+     */
+    onReload: function (resource, callback) {
+        if (typeof callback === 'function') {
+            CoreUI.table._events.reload.push({
+                resource: resource,
+                callback: callback
+            });
+        }
+    },
+
+
+    /**
+     * Выполнение событий выделения
+     * @param resource
+     * @param rowsId
+     * @param state
+     * @private
+     */
+    _callEventChecked: function (resource, rowsId, state) {
+
+        if (CoreUI.table._events.checked.length > 0) {
+            $.each(CoreUI.table._events.checked, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback(rowsId, state);
+                }
+            })
+        }
+    },
+
+
+    /**
+     * Выполнение событий перезагрузки
+     * @param resource
+     * @private
+     */
+    _callEventReload: function (resource) {
+
+        if (CoreUI.table._events.reload.length > 0) {
+            $.each(CoreUI.table._events.reload, function () {
+                if (this.resource === resource &&
+                    typeof this.callback === 'function'
+                ) {
+                    this.callback();
+                }
+            })
+        }
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param columnNmbr
+     * @param url
+     * @param isAjax
+     */
+    toggleExpandColumn : function (resource, columnNmbr, url, isAjax) {
+
+        var urlHash = this.crc32(url);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(columnNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + urlHash);
+
+        if (row.hasClass('row-expanded')) {
+            row.removeClass('row-expanded');
+            row.next().hide('fast', function () {
+                $(this).remove();
+            })
+        }
+
+        if (isLoad) {
+            if (isAjax) {
+                CoreUI.table.preloader.show(resource);
+            } else {
+                preloader.show();
+            }
+
+            $.ajax({
+                method : 'get',
+                url    : url,
+                success: function (response) {
+                    row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
+                    row.addClass('row-expanded');
+                    row.next()
+                        .addClass('row-expand-name-' + urlHash)
+                        .show('fast');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                },
+                error  : function () {
+                    CoreUI.notice.create('Ошибка получения содержимого', 'danger');
+
+                    if (isAjax) {
+                        CoreUI.table.preloader.hide(resource);
+                    } else {
+                        preloader.hide();
+                    }
+                }
+            });
+        }
+    },
+
+
+    /**
+     * CRC32 hash
+     * @param str
+     * @param isNumber
+     * @returns {number}
+     */
+    crc32: function(str, isNumber) {
+
+        isNumber = typeof isNumber === 'undefined' ? false : !! isNumber;
+
+        for (var a, o = [], c = 0; c < 256; c++) {
+            a = c;
+            for (var f = 0; f < 8; f++) {
+                a = 1 & a ? 3988292384 ^ a >>> 1 : a >>> 1;
+            }
+            o[c] = a;
+        }
+
+        for (var n = -1, t = 0; t < str.length; t++) {
+            n = n >>> 8 ^ o[255 & (n ^ str.charCodeAt(t))];
+        }
+
+        var result = (-1 ^ n) >>> 0;
+
+        if ( ! isNumber) {
+            result = result.toString(16);
+        }
+
+        return result;
     },
 
 
@@ -598,9 +1035,10 @@ CoreUI.table = {
 
         var post = {};
         post['count_' + resource] = select.value;
-        load(CoreUI.table.loc[resource], post, container, function () {
+        load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1', post, container, function () {
             CoreUI.table.preloader.hide(resource);
             preloader.callback();
+            CoreUI.table._callEventReload(resource);
         });
     }
 };

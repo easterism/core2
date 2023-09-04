@@ -90,7 +90,11 @@ class MobileController extends Common {
         if (!$this->auth->ADMIN) throw new Exception(911);
 
         $mods = new Modules();
-        $mods->dispatch();
+        if (isset($_GET['edit'])) {
+            echo $mods->getEditInstalled();
+        } else {
+            echo $mods->getEditInstalled((int)$_GET['edit']);
+        }
 	}
 
 
@@ -757,14 +761,15 @@ class MobileController extends Common {
 
     /**
      * Проверяем файлы модулей на изменения
-     *
      * @param $install
-     *
      * @return array
+     * @throws Zend_Db_Adapter_Exception
      */
     public function checkModulesChanges($install) {
-        $server = $this->config->system->host;
-        $admin_email = $this->getSetting('admin_email');
+
+        $server                = $this->config->system->host;
+        $admin_email           = $this->getSetting('admin_email');
+        $is_send_changes_email = $this->getSetting('is_send_changes_email');
 
         if (!$admin_email) {
             $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
@@ -796,7 +801,7 @@ class MobileController extends Common {
 //                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
                 $mods[] = $val['module_id'];
                 //отправка уведомления
-                if ($admin_email && $server) {
+                if ($admin_email && $server && (empty($is_send_changes_email) || $is_send_changes_email == 'Y')) {
                 	if ($this->isModuleActive('queue')) {
 						$is_send = $this->db->fetchOne(
 							"SELECT 1

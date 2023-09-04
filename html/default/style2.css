@@ -124,7 +124,7 @@ TOP MENU
 	z-index: 1000;
 }
 #menuContainer .menu_back {
-	background-image: url("img/menu_background.gif");
+	background-image: url("img/winter.gif");
 	width:100%;
 }
 .menu_items, .menu_items_selected {
@@ -466,6 +466,7 @@ table.editTable {
 	text-align: right;
 	padding: 3px;
 	width: 150px;
+	min-width: 150px;
 }
 .newRulesModule {
 	text-decoration:underline;
@@ -1016,6 +1017,30 @@ table td.homeTD {
 	display: inline-block;
 	min-width: 255px;
 }
+.modal-list__control {
+	margin: 0;
+	padding: 0;
+}
+.modal-list__control .modal-list__item {
+	border-bottom: 1px solid #ddd;
+	list-style: none;
+	min-width: 400px;
+	white-space: nowrap;
+	padding: 10px 35px 10px 0;
+	position: relative;
+}
+.modal-list__control .modal-list__item:first-child {
+	padding-top: 0;
+}
+.modal-list__control .modal-list__item .modal-list__item-delete {
+	position: absolute;
+	right: 10px;
+	top: 12px;
+	cursor: pointer;
+}
+.modal-list__control .modal-list__item:first-child .modal-list__item-delete {
+	top: 4px;
+}
 
 .core-panel {
 	border-collapse: collapse;
@@ -1041,7 +1066,7 @@ table td.homeTD {
 	font-size: 14px;
 	font-weight: normal;
 	overflow: hidden;
-	padding: 5px 0 0;
+	padding: 6px 0 0;
 }
 
 .core-panel > .core-panel-body {
@@ -1070,8 +1095,8 @@ table td.homeTD {
 	position: relative;
 	display: block;
 	float: left;
-	margin-top: -1px;
-	margin-bottom: -1px;
+	margin-top: -2px;
+	margin-bottom: -2px;
 }
 
 .core-panel > .core-panel-body > .core-panel-tabs > li > a {
@@ -1727,13 +1752,22 @@ table.coreui-table > thead {background-color: #FFF}
 table.coreui-table > tfoot,
 table.coreui-table > thead > .table-control-panel,
 table.coreui-table > thead > .search-container,
+table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #eee;}
+table.coreui-table > thead > .table-service-panel .pull-right {float: right}
+table.coreui-table > thead > .table-service-panel .pull-left {float: left}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
+table.coreui-table > thead > .table-service-panel a.button {
+	display: inline-block;
+	line-height: 20px;
+	padding: 0 6px;
+	text-decoration: none;
+}
 
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){/* background-color:#fafafa */}
-table.coreui-table > tbody > tr:hover > td,
-table.coreui-table > tbody > tr:hover > th {background-color: #E1ECF1;}
+table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > td,
+table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > th {background-color: #E1ECF1;}
 
 table.coreui-table > caption + thead > tr:first-child > th,
 table.coreui-table > colgroup + thead > tr:first-child > th,
@@ -1757,7 +1791,10 @@ table.coreui-table > tfoot > tr > td {
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
 table.coreui-table > thead > tr.table-service-panel > td  {padding: 1px;}
-table.coreui-table > thead > tr.table-service-panel > td > .total  {padding: 3px 0;}
+table.coreui-table > thead > tr.table-service-panel > td > .total  {
+    padding: 3px 0;
+    line-height: 18px;
+}
 table.coreui-table > thead > tr > th:first-child,
 table.coreui-table > tbody > tr > th:first-child,
 table.coreui-table > thead > tr > td:first-child,
@@ -1779,11 +1816,11 @@ table.coreui-table > thead > tr > th {
 }
 table.coreui-table .pointer {cursor: pointer}
 table.coreui-table .table-header > th.pointer:hover > span {text-decoration: underline}
-table.coreui-table .search-controls {
+table.coreui-table .table-controls {
 	padding: 0px 0;
 	margin: 0;
 }
-table.coreui-table .search-controls .search-control {
+table.coreui-table .table-controls .table-control {
 	display: inline-block;
 	list-style: none;
 	cursor:pointer;
@@ -1795,7 +1832,17 @@ table.coreui-table .search-controls .search-control img {
 	float: left;
 	margin-right: 5px;
 }
-table.coreui-table .search-controls .search-control:hover span {text-decoration: underline}
+table.coreui-table .table-controls button {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+	color: #333;
+	font-size: 11px;
+}
+table.coreui-table .table-controls button img {
+	vertical-align: middle;
+}
+table.coreui-table .table-controls .table-control:hover span {text-decoration: underline}
 table.coreui-table > .table-control-panel > td,
 table.coreui-table > .search-container > td,
 table.coreui-table > .table-service-panel > td {padding: 5px 10px}
@@ -1814,6 +1861,10 @@ table.coreui-table > tbody > tr > td:last-child,
 table.coreui-table > tfoot > tr > td:last-child {
 	border-left:0;
 	border-right:0;
+}
+table.coreui-table > tbody > tr.row-expand > td {
+	padding: 15px 15px 30px 15px;
+	background-color: #eee;
 }
 @media screen and (max-width: 767px) {
 	.coreui-table-wrapper {
@@ -1839,6 +1890,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
 	text-align: right;
+	vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {
@@ -1880,6 +1932,9 @@ table.coreui-table .search-container .control-type-select select,
 table.coreui-table .search-container .control-type-multiselect select {
 	width: 180px;
 }
+table.coreui-table .column-switcher-container form  {
+     margin-bottom: 10px;
+}
 
 
 table.coreui-table select.multiselect {height: 85px}
@@ -1901,6 +1956,10 @@ table.coreui-table select.records-per-page {
 	outline: 0;
 	padding: 0;
 }
+table.coreui-table .coreui-table-row-group {
+	background-color: #f2f2f2;
+	font-weight: bold;
+}
 
 .coreui-table-wrapper > .preloader {
 	position: absolute;
@@ -1914,11 +1973,12 @@ table.coreui-table select.records-per-page {
 	height: 100%;
 	background-color: #0000000d;
 	cursor: wait;
+	z-index: 3;
 }
 .coreui-table-wrapper > .preloader > .block {
 	width: 175px;
 	position: absolute;
-	top: 70px;
+	top: 40px;
 	display: inline-block;
 	text-align: left;
 	padding: 10px 19px;
@@ -1940,4 +2000,62 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper *:before,
 .coreui-table-wrapper *:after {
 	box-sizing: border-box;
+}
+.coreui-table-switch {
+	position: relative;
+	display: block;
+	width: 33px;
+	height: 18px;
+}
+.coreui-table-switch input {display:none;}
+.coreui-table-switch .coreui-table-switch-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .15s;
+	transition: .15s;
+	border-radius: 34px;
+}
+.coreui-table-switch-slider:before {
+	border-radius: 50%;
+}
+
+.coreui-table-switch .coreui-table-switch-slider:before {
+	position: absolute;
+	content: "";
+	height: 12px;
+	width: 12px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	-webkit-transition: .15s;
+	transition: .15s;
+}
+.coreui-table-switch.color-default input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #444;}
+.coreui-table-switch.color-primary input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #2196F3;}
+.coreui-table-switch.color-success input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #8bc34a;}
+.coreui-table-switch.color-info input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #3de0f5;}
+.coreui-table-switch.color-warning input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #FFC107;}
+.coreui-table-switch.color-danger input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #f44336;}
+.coreui-table-switch input:focus ~ .coreui-table-switch-slider {
+	box-shadow: 0 0 1px #2196F3;
+}
+.coreui-table-switch input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider:before {
+	-webkit-transform: translateX(16px);
+	-ms-transform: translateX(16px);
+	transform: translateX(16px);
+}
+
+#backVideo {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	min-width: 100%;
+	min-height: 100%;
+	z-index: -1000;
+	opacity: 0.3;
 }

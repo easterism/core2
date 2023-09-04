@@ -8,18 +8,27 @@ namespace Core2\Classes\Table;
  */
 class Button {
 
-    protected $title = '';
-    protected $attr  = [
+    protected $content = '';
+    protected $attr    = [
         'type'  => 'button',
-        'class' => 'btn btn-default',
+        'class' => 'btn btn-sm btn-default',
     ];
 
 
     /**
-     * @param string $title
+     * @param string $content
      */
-    public function __construct(string $title) {
-        $this->title = $title;
+    public function __construct(string $content) {
+        $this->content = $content;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getContent(): string {
+
+        return $this->content;
     }
 
 
@@ -110,7 +119,7 @@ class Button {
     public function toArray(): array {
 
         $data = [
-            'title' => $this->title
+            'content' => $this->content
         ];
 
         if ( ! empty($this->attr)) {

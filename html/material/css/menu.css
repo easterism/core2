@@ -54,7 +54,7 @@ a {color: #337AB7}
     width: 240px;
     overflow: auto;
     background-color: #3e5a70;
-    box-shadow: inset -1px 0 3px 0 #444;
+    box-shadow: inset -1px 0 3px 0 #00000059;
     direction: rtl;
     -webkit-transition: all 0.3s ease-in-out;
        -moz-transition: all 0.3s ease-in-out;
@@ -150,7 +150,7 @@ a {color: #337AB7}
     color: #dae5eb;
     position: relative;
     display: block;
-    padding: 10px 16px 10px 17px;
+    padding: 10px 13px 10px 16px;
     text-decoration: none;
     text-align: left;
     direction: ltr;
@@ -170,7 +170,7 @@ a {color: #337AB7}
 #menu-modules .menu-module-selected a {
     border-left: 3px solid #2196F3;
     background-color: #00000026;
-    padding-left: 14px;
+    padding-left: 13px;
     outline: none;
 }
 #menu-modules .module-submodules > a {
@@ -337,6 +337,7 @@ a {color: #337AB7}
     display: inline-block;
 }
 
+
 /* Mobile */
 @media(max-width:767px) {
     #main #main-content {
@@ -398,6 +399,7 @@ a {color: #337AB7}
     .buttons-container .buttons-offset {
         width: 0 !important;
     }
+    .screen-open #main .screen-panel,
     .ext-open #main .ext-panel,
     .pdf-open #main .pdf-panel {left: 0}
     body.modal-open .modal {
@@ -447,6 +449,33 @@ a {color: #337AB7}
         margin-left: 2px;
     }
 
+    #menu-wrapper::-webkit-scrollbar {
+        visibility: hidden;
+        -webkit-appearance: none;
+        width: 6px;
+        height: 6px;
+        background-color: rgba(0,0,0,0);
+    }
+    #menu-wrapper::-webkit-scrollbar-button {
+        height: 0;
+    }
+    #menu-wrapper::-webkit-scrollbar-thumb {
+        visibility: hidden;
+        background: #a6a6a6a3;
+        border-radius: 10px;
+    }
+    #menu-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #a6a6a6;
+    }
+    #menu-wrapper::-webkit-scrollbar-track {
+        background: #00000047;
+    }
+    #menu-wrapper:hover::-webkit-scrollbar,
+    #menu-wrapper:hover::-webkit-scrollbar-thumb {
+        visibility: visible;
+    }
+
+    .screen-open #main.s-toggle .screen-panel,
     .ext-open #main.s-toggle .ext-panel,
     .pdf-open #main.s-toggle .pdf-panel {left: 50px}
 

@@ -593,9 +593,9 @@ table.editTable {
 	font-weight: bold;
 	border: 0;
 	text-align: right;
-	padding: 3px;
-    padding-right: 10px!important;
+    padding: 0 10px 3px 0;
     width: 190px;
+    min-width: 190px;
     box-sizing: border-box;
 }
 .newRulesModule {
@@ -616,10 +616,10 @@ table.editTable > tbody > tr > td {
 	border:0;
 	vertical-align:top;
 }
-table.editTable td > table > tbody > tr > td {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td {
     padding: 0;
 }
-table.editTable td > table > tbody > tr > td > .input[disabled] {
+table.editTable > tbody > tr > td > table:not(.table) > tbody > tr > td > .input[disabled] {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
@@ -966,10 +966,10 @@ table.calendar {
     user-select: none;
     background-image: none;
     border: 1px solid #ccc;
-    -webkit-border-radius: 3px;
-       -moz-border-radius: 3px;
-         -o-border-radius: 3px;
-            border-radius: 3px;
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+         -o-border-radius: 4px;
+            border-radius: 4px;
     color: #333;
     background-color: #fff;
     height: 30px;
@@ -1298,6 +1298,18 @@ form .buttons-area .button[type=submit]:hover {
     border-color: #204d74;
 }
 
+
+
+@media (min-width: 992px) {
+    .modal-dialog.modal-xl {
+        width: 900px;
+    }
+}
+@media (min-width: 1200px) {
+    .modal-dialog.modal-xl {
+        width: 1140px;
+    }
+}
 label {font-weight: 500}
 label.control-label {font-weight: 700}
 .hide {display:none}
@@ -1555,7 +1567,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     background-color: transparent;
 }
 .fileinput-button {
-    line-height: 20px;
+    line-height: 18px;
 }
 .password-control .buttonSmall {
     -webkit-border-bottom-left-radius: 0;
@@ -1610,6 +1622,30 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .password-control .reqField[disabled] {
     background-color: #EEEEEE;
 }
+.modal-list__control {
+    margin: 0;
+    padding: 0;
+}
+.modal-list__control .modal-list__item {
+    border-bottom: 1px solid #ddd;
+    list-style: none;
+    min-width: 400px;
+    white-space: nowrap;
+    padding: 10px 0 10px 0;
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.modal-list__control .modal-list__item > .modal-list__item-text {
+    flex: 1 1 auto!important;
+}
+.modal-list__control .modal-list__item:first-child {
+    padding-top: 0;
+}
+.modal-list__control .modal-list__item .modal-list__item-delete {
+    cursor: pointer;
+}
 .core-panel {
     margin-bottom: 20px;
     background-color: #fff;
@@ -1655,6 +1691,15 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
     overflow: hidden;
     padding: 5px 0 0;
 }
+
+
+.core-panel > .core-panel-heading > .core-panel-controls {
+    display:-webkit-box;
+}
+.core-panel > .core-panel-heading > .core-panel-controls div{
+    margin-left: 1px;
+}
+
 .core-panel > .core-panel-body {
     padding: 25px 20px;
 }
@@ -2326,13 +2371,63 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 
 .coreui-table-wrapper {
     background-color: #ffffff;
-    border-color: #dddddd;
-    border-radius: 2px;
-    border-style: solid;
-    border-width: 1px;
     margin: 0;
     position: relative;
-    overflow: auto;
+    /*overflow: auto;*/
+}
+.coreui-table-wrapper .filter-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+.coreui-table-wrapper .filter-controls .filter-control {
+    display: inline-block;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group {
+    display: table;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > .input-group-addon {
+    background-color: #f3f5f5;
+    color: #666;
+    font-size: 12px;
+}
+.coreui-table-wrapper .filter-controls .filter-control .input-group > * {
+    float: none;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-text input,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-select select {
+    width: 200px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input {
+    width: 100px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input {
+    width: 140px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input {
+    width: 175px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-date input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-datetime input:last-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-number input:last-child {
+    margin-left: -1px;
+}
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-radio .input-group-addon + .btn-group label:first-child,
+.coreui-table-wrapper .filter-controls .filter-control.filter-control-type-checkbox .input-group-addon + .btn-group label:first-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.coreui-table-wrapper .coreui-table-responsive {
+    width: 100%;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    border: 1px solid #ddd;
+    border-radius: 2px;
 }
 table.coreui-table {
     margin-bottom:0;
@@ -2348,13 +2443,16 @@ table.coreui-table > thead {background-color: #FFF}
 table.coreui-table > tfoot,
 table.coreui-table > thead > .table-control-panel,
 table.coreui-table > thead > .search-container,
+table.coreui-table > thead > .column-switcher-container,
 table.coreui-table > thead > .table-service-panel {background-color: #F3F5F5}
 table.coreui-table > thead > .table-service-panel .custom-buttons {display: inline-block}
 
+table.coreui-table > thead > .table-control-panel {height: 35px;}
+
 table.coreui-table > tbody > tr.edit-row {cursor:pointer}
 table.coreui-table > tbody > tr:nth-child(2n){background-color:#fafafa}
-table.coreui-table > tbody > tr:hover > td,
-table.coreui-table > tbody > tr:hover > th {background-color: #E1ECF1;}
+table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > td,
+table.coreui-table > tbody > tr:not(.coreui-table-row-group):hover > th {background-color: #E1ECF1;}
 
 table.coreui-table > caption + thead > tr:first-child > th,
 table.coreui-table > colgroup + thead > tr:first-child > th,
@@ -2377,7 +2475,10 @@ table.coreui-table > tfoot > tr > td {
 }
 /*table.coreui-table > thead > tr.table-control-panel > td  {padding: 8px;}*/
 table.coreui-table > thead > tr.table-service-panel > td  {padding: 5px;}
-table.coreui-table > thead > tr.table-service-panel > td > .total  {padding: 5px 0;}
+table.coreui-table > thead > tr.table-service-panel > td > .total  {
+    padding: 5px 0;
+    line-height: 18px;
+}
 table.coreui-table > thead > tr > th:first-child,
 table.coreui-table > tbody > tr > th:first-child,
 table.coreui-table > thead > tr > td:first-child,
@@ -2390,6 +2491,10 @@ table.coreui-table > thead > tr > td:last-child,
 table.coreui-table > tbody > tr > td:last-child {
     padding-right: 10px;
 }
+table.coreui-table > tbody > tr > td .checked-row input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+}
 table.coreui-table > thead > tr > th {
     border-bottom: 2px solid #D2D2D2;
     vertical-align: middle;
@@ -2397,17 +2502,22 @@ table.coreui-table > thead > tr > th {
 }
 table.coreui-table .pointer {cursor: pointer}
 table.coreui-table .table-header > th.pointer:hover > span {text-decoration: underline}
-table.coreui-table .search-controls {
+table.coreui-table .table-controls {
     padding: 4px 0;
     margin: 0;
 }
-table.coreui-table .search-controls .search-control {
+table.coreui-table .table-controls .table-control {
     display: inline-block;
     list-style: none;
     cursor:pointer;
     margin-right: 10px;
 }
-table.coreui-table .search-controls .search-control:hover span {text-decoration: underline}
+table.coreui-table .table-controls button {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+}
+table.coreui-table .table-controls .table-control:hover span {text-decoration: underline}
 table.coreui-table > .table-control-panel > td,
 table.coreui-table > .search-container > td,
 table.coreui-table > .table-service-panel > td {padding: 5px 10px}
@@ -2427,6 +2537,10 @@ table.coreui-table > tfoot > tr > td:last-child {
     border-left:0;
     border-right:0;
 }
+table.coreui-table > tbody > tr.row-expand > td {
+    padding: 15px 15px 30px 15px;
+    background-color: #eee;
+}
 @media screen and (max-width: 767px) {
     .coreui-table-wrapper {
         width: 100%;
@@ -2438,7 +2552,6 @@ table.coreui-table > tfoot > tr > td:last-child {
 }
 
 table.coreui-table > tfoot form {margin-bottom: 0}
-
 table.coreui-table .search-container form {margin-top: 15px;}
 table.coreui-table .search-container form .search-table th,
 table.coreui-table .search-container form .search-table td {padding-bottom: 10px;}
@@ -2451,6 +2564,7 @@ table.coreui-table .search-container form .search-table .out-text {
 }
 table.coreui-table .search-container form .search-table .control-label {
     text-align: right;
+    vertical-align: top;
 }
 table.coreui-table .search-container form .search-table .control .radio,
 table.coreui-table .search-container form .search-table .control .checkbox {
@@ -2492,6 +2606,9 @@ table.coreui-table .search-container .control-type-select select,
 table.coreui-table .search-container .control-type-multiselect select {
     width: 180px;
 }
+table.coreui-table .column-switcher-container form  {
+    margin-bottom: 10px;
+}
 
 
 table.coreui-table select.multiselect {height: 85px}
@@ -2504,6 +2621,8 @@ table.coreui-table input.gotopage {
     height: 22px;
     width: 35px;
     outline: 0;
+    margin-right: 3px;
+    font-size: 12px;
 }
 table.coreui-table select.records-per-page {
     width: 50px;
@@ -2512,6 +2631,10 @@ table.coreui-table select.records-per-page {
     border-radius: 2px;
     outline: 0;
     padding: 0;
+}
+table.coreui-table .coreui-table-row-group {
+    background-color: #f2f2f2;
+    font-weight: bold;
 }
 
 .coreui-table-wrapper > .preloader {
@@ -2526,11 +2649,12 @@ table.coreui-table select.records-per-page {
     height: 100%;
     background-color: #0000000d;
     cursor: wait;
+    z-index: 3;
 }
 .coreui-table-wrapper > .preloader > .block {
     width: 175px;
     position: absolute;
-    top: 95px;
+    top: 40px;
     display: inline-block;
     text-align: left;
     padding: 10px 19px;
@@ -2551,6 +2675,54 @@ table.coreui-table select.records-per-page {
 .coreui-table-wrapper *:after {
     box-sizing: border-box;
 }
+.coreui-table-switch {
+    position: relative;
+    display: block;
+    width: 33px;
+    height: 18px;
+}
+.coreui-table-switch input {display:none;}
+.coreui-table-switch .coreui-table-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .15s;
+    transition: .15s;
+    border-radius: 34px;
+}
+.coreui-table-switch-slider:before {
+    border-radius: 50%;
+}
+
+.coreui-table-switch .coreui-table-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .15s;
+    transition: .15s;
+}
+.coreui-table-switch.color-default input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #444;}
+.coreui-table-switch.color-primary input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #2196F3;}
+.coreui-table-switch.color-success input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #8bc34a;}
+.coreui-table-switch.color-info input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #3de0f5;}
+.coreui-table-switch.color-warning input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #FFC107;}
+.coreui-table-switch.color-danger input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider { background-color: #f44336;}
+.coreui-table-switch input:focus ~ .coreui-table-switch-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+.coreui-table-switch input.coreui-table-switch-active:checked ~ .coreui-table-switch-slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+}
 
 
 /* Mobile */
@@ -2558,9 +2730,10 @@ table.coreui-table select.records-per-page {
     .searchContainer .searchRow div.ctrl-dpr {
         min-width: 360px;
     }
-    .password-control .password-repeat {
+    .password-control span.password-repeat {
         display: block;
         clear: both;
+        float: none;
     }
     .core-group-head {
         text-align: left;

@@ -6,8 +6,9 @@
  * Time: 17:04
  * To change this template use File | Settings | File Templates.
  */
+namespace Core2\Model;
 
-class SubModules extends Zend_Db_Table_Abstract {
+class SubModules extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_submodules';
 	protected $_referenceMap = array(
@@ -37,6 +38,23 @@ class SubModules extends Zend_Db_Table_Abstract {
         }
         return $this->fetchAll($sel);
     }
+
+
+    /**
+     * @param int $module_id
+     * @return int
+     */
+    public function getCountByModuleId(int $module_id): int {
+
+        $select = $this->select()
+            ->from($this->_name, ['count' => 'COUNT(*)'])
+            ->where("m_id = ?", $module_id);
+
+        $row = $this->fetchRow($select);
+
+        return $row ? (int)$row['count'] : 0;
+    }
+
 
     public function getSubmodules($module) {
         $data = $this->_db->fetchPairs("

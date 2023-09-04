@@ -222,11 +222,11 @@ class ModAjax extends ajaxFunc {
             return $this->response;
         }
 
-        if ( ! empty($data['access'])) {
-            $data['control']['access_default'] = base64_encode(serialize($data['access']));
-        }
+        $access = ! empty($data['access']) ? $data['access'] : [];
 
-        $data['control']['access_add'] = '';
+        $data['control']['access_default'] = base64_encode(serialize($access));
+        $data['control']['access_add']     = '';
+
         if ( ! empty($data['addRules'])) {
             $rules = [];
             foreach ($data['addRules'] as $id => $value) {
@@ -346,7 +346,7 @@ class ModAjax extends ajaxFunc {
             ", array(
                 $data['control']['parent_id'],
                 $data['control']['name'],
-                $refid,
+                (int)$refid,
             ));
 
             if ($is_duplicate_enum_value) {
@@ -585,7 +585,6 @@ class ModAjax extends ajaxFunc {
             return $this->response;
         }
 
-
         $this->db->beginTransaction();
 
         try {
@@ -601,6 +600,8 @@ class ModAjax extends ajaxFunc {
             if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
                 $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
             }
+
+            $mail = [];
 
             if ($refid == 0) {
                 $update                     = false;
@@ -618,7 +619,7 @@ class ModAjax extends ajaxFunc {
                 $refid = $this->db->lastInsertId('core_users');
 
                 $who = $data['control']['is_admin_sw'] == 'Y' ? 'администратор безопасности' : 'пользователь';
-                $this->modAdmin->createEmail()
+                $mail = $this->modAdmin->createEmail()
                     ->from("noreply@" . $_SERVER["SERVER_NAME"])
                     ->to("easter.by@gmail.com")
                     ->subject("Зарегистрирован новый $who")
@@ -653,25 +654,31 @@ class ModAjax extends ajaxFunc {
                 if ( ! $row) {
                     $row = $this->dataUsersProfile->createRow();
                     $save['user_id'] = $refid;
+                    $event = 'user_new';
                 } else {
                     $data['control']['u_login'] = $this->dataUsers->fetchRow(
                         $this->dataUsers->select()->where("u_id = ?", $refid)->limit(1)
                     )->u_login;
+                    $event = 'user_update';
                 }
 
                 $row->setFromArray($save);
                 $row->save();
+                $this->emit($event, $save);
             }
             if ($send_info_sw) {
                 $res = $this->sendUserInformation($data['control'], $update);
                 if (isset($res['error'])) {
-                    $this->response->script("alertify.warning('Не удалось отправить уведомление');");
+                    $this->response->script("alertify.error('Не удалось отправить уведомление');");
                 }
+            }
+            if (isset($mail['error'])) {
+                $this->response->script("alertify.error('Не удалось отправить уведомление о создании пользователя');");
             }
 
             $this->db->commit();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->db->rollback();
             $this->error[] = $e->getMessage();
         }
@@ -683,29 +690,62 @@ class ModAjax extends ajaxFunc {
 
     /**
      * Сохранение роли пользователя
-	 * @param array $data
-	 * @return xajaxResponse
-	 */
-	public function saveRole($data) {
+     * @param array $data
+     * @return xajaxResponse
+     * @throws Exception
+     */
+	public function saveRole(array $data): xajaxResponse {
 
-		$fields = array('name' => 'req', 'position' => 'req');
-		if ($this->ajaxValidate($data, $fields)) {
-			return $this->response;
-		}
-		$refid = $this->getSessFormField($data['class_id'], 'refid');
-		if ($refid == 0) {
-			$data['control']['date_added'] = new \Zend_Db_Expr('NOW()');
-		}
-		if (!isset($data['access'])) $data['access'] = array();
-		$data['control']['access'] = serialize($data['access']);
-		if (!$last_insert_id = $this->saveData($data)) {
-			return $this->response;
-		}
-		if ($refid) {
-			$this->cache->clearByTags(array('role' . $refid));
-		}
-		
-		$this->done($data);
+        $fields = [
+            'name'     => 'req',
+            'position' => 'req',
+        ];
+
+        if ($this->ajaxValidate($data, $fields)) {
+            return $this->response;
+        }
+
+        $refid = $this->getSessFormField($data['class_id'], 'refid');
+
+        if ($refid == 0) {
+            $data['control']['date_added'] = new \Zend_Db_Expr('NOW()');
+        }
+
+        if ( ! isset($data['access'])) {
+            $data['access'] = [];
+        }
+
+        $data['control']['access'] = serialize($data['access']);
+
+        if ( ! $role_id = $this->saveData($data)) {
+            return $this->response;
+        }
+
+        if ($refid) {
+            $this->cache->clearByTags(['role' . $refid]);
+        }
+
+        if ( ! empty($data['is_copy']) && $role_id) {
+            $role = $this->dataRoles->find($role_id)->current();
+            $role_data = $role->toArray();
+            $copy = $this->_("копия");
+            $res = (int) $this->db->fetchOne("SELECT COUNT(1) FROM core_roles WHERE name LIKE ?",
+                $role_data['name'] . " ($copy%"
+            );
+            if (!$res) $role_data['name'] = "{$role_data['name']} ($copy)";
+            else {
+                $role_data['name'] = "{$role_data['name']} ($copy " . $res + 1 . ")";
+            }
+            $role_data['date_added'] = new \Zend_Db_Expr('NOW()');
+            $role_data['lastupdate'] = new \Zend_Db_Expr('NOW()');
+            $role_data['lastuser']   = $this->auth->ID && $this->auth->ID > 0 ? $this->auth->ID : null;
+            unset($role_data['id']);
+
+            $role_new = $this->dataRoles->createRow($role_data);
+            $role_new->save();
+        }
+
+        $this->done($data);
 		return $this->response;
     }
 

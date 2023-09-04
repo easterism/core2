@@ -97,7 +97,7 @@ $DB_ARRAY['TABLES']['core_enum']['KEY']['global_id']['COLUMNS']['global_id'] = "
 //TABLE: core_controls
 $DB_ARRAY['TABLES']['core_controls'] = array();
 //Table Enginge Definition
-$DB_ARRAY['TABLES']['core_controls']['ENGINE']  = "MyISAM";
+$DB_ARRAY['TABLES']['core_controls']['ENGINE']  = "InnoDB";
 //Primary Key for core_log
 //Define array for columns
 $DB_ARRAY['TABLES']['core_controls']['COLUMNS'] = array();

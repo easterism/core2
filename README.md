@@ -7,7 +7,7 @@ NOTE: Currently it's russian framework. So you'll get no way to translate any in
 Minimum Server Requirements
 ---------------------------
 
-* PHP 7.3 or greater
+* PHP 7.4 or greater
 * PDO PHP extension
 * MySQL or PostgreSQL Database
 * composer for dependencies

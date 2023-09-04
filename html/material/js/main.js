@@ -239,17 +239,45 @@ function jsToHead(src) {
 
 
 /**
+ * Анимация для указанного элемента
+ * @param {string} elementId
+ * @param {string} effect
+ */
+function animatedElement(elementId, effect) {
+
+	var element = $('#' + elementId);
+	if ( ! element[0]) {
+		return;
+	}
+
+
+	element.removeClass('animated ' + effect);
+
+	setTimeout(function() {
+		element.addClass('animated ' + effect);
+	}, 0);
+}
+
+
+/**
  * @param {string} id
  */
-function toAnchor(id){
-    setTimeout(function(){
-        if (id.indexOf('#') < 0) {
-            id = "#" + id;
-        }
-        var ofy = $(id);
-        if (ofy[0]) {
+function toAnchor(id) {
+    setTimeout(function() {
+		// Если открыт мадал, то не двигать
+		if ($('body > .modal-backdrop')[0]) {
+			return;
+		}
+
+		if (typeof id == 'string' && id.indexOf('#') < 0) {
+			id = "#" + id;
+		}
+
+		var element = $(id);
+
+        if (element && element[0]) {
             $('html,body').animate({
-                scrollTop : ofy.offset().top - $("#navbar-top").height() - 115
+                scrollTop : element.offset().top - $("#navbar-top").height() - 115
             }, 'fast');
         }
     }, 0);
@@ -289,9 +317,18 @@ var preloader = {
 				}
 				preloader.extraLoad = {};
 			}
-			$('html').animate({
-				scrollTop: 0
-			});
+
+			if (locData['loc'] &&
+				locData['id'] &&
+				locData['loc'].indexOf('&__') >= 0
+			) {
+				toAnchor(locData['id']);
+
+			} else {
+				$('html').animate({
+					scrollTop: 0
+				});
+			}
 		}
 		preloader.hide();
 		//resize();
@@ -368,12 +405,15 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
  * @param callback
  */
 var load = function (url, data, id, callback) {
-	preloader.show();
 
-	if (!id) id = '#main_body';
-	else if (typeof id === 'string') {
+	if ( ! id) {
+		id = '#main_body';
+		preloader.show();
+
+	} else if (typeof id === 'string') {
 		id = '#' + id;
 	}
+
 	if (url.indexOf("index.php") === 0) {
 		url = url.substr(10);
 	}
@@ -432,7 +472,7 @@ var load = function (url, data, id, callback) {
 				preloader.oldHash['--root'] = r;
 			}
 			//Activate root menu
-			if (qs['module']) {
+			if (qs['module'] && url.indexOf('&__') < 0) {
 				changeRoot($('#module-' + qs['module'])[0], false, qs['action']);
 				if (qs['action']) {
 					changeSub($('#submodule-' + qs['module'] + '-' + qs['action'])[0])
@@ -491,6 +531,10 @@ var load = function (url, data, id, callback) {
 
         $('#navbar-top .module-title').css(css_mod_title).text(mod_title);
         $('#navbar-top .module-action').text(action_title);
+
+		var siteName = $.trim($('.site-name').text());
+		var title    = siteName + ' - ' + mod_title + (action_title ? (' - ' + action_title) : '');
+		$('html > head > title').text(title);
 
         if (xhrs[id]) {
         	xhrs[id].abort();
@@ -587,6 +631,48 @@ function removePDF() {
 /**
  * @param url
  */
+var loadScreen = function (url) {
+	preloader.show();
+
+	$("#main_body").prepend(
+		'<div class="screen-panel hidden">' +
+			'<div class="screen-tool">' +
+				'<button class="btn btn-sm btn-default" onclick="removeScreen();">Закрыть</button>' +
+			'</div>' +
+			'<div class="screen-content"></div>' +
+		'</div>'
+
+	);
+
+	$(".screen-panel .screen-content").load(url, function() {
+		$("body").addClass("screen-open");
+
+		$("#main_body .screen-content").css({
+			'height': ($("body").height() - ($("#navbar-top").height()) - 40)
+		});
+
+		preloader.hide();
+		$('.screen-panel').removeClass('hidden');
+		$(window).hashchange( function() {
+			$("body").removeClass("screen-open");
+		});
+	});
+};
+
+
+/**
+ *
+ */
+function removeScreen() {
+	$('#main_body > .screen-panel').remove();
+	$('body').removeClass('screen-open');
+}
+
+
+
+/**
+ * @param url
+ */
 var loadExt = function (url) {
 	preloader.show();
 	$("#main_body").prepend(
@@ -629,6 +715,11 @@ $(function(){
 		var hash = location.hash;
 		var url = preloader.prepare(hash.substr(1));
 		load(url);
+
+		$('body > .modal-backdrop').fadeOut(function () {
+			$('body').removeClass('modal-open');
+			$(this).remove();
+		});
 	});
 	// Since the event is only triggered when the hash changes, we need to trigger
 	// the event now, to handle the hash the page may have loaded with.

@@ -96,7 +96,7 @@ var eTip = {
 function showHideTipHelp(tab) {
 	var containerTipHelp = document.getElementById('containerTipHelp_' + tab);
 	if (containerTipHelp != null) {
-		if (containerTipHelp.style.display == 'none') {
+		if (containerTipHelp.style.display != 'block') {
 			containerTipHelp.style.display = 'block';
 		} else {
 			containerTipHelp.style.display = 'none';

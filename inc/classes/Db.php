@@ -2,7 +2,10 @@
 namespace Core2;
 
 require_once "Cache.php";
-use Laminas\Cache\StorageFactory;
+require_once "Log.php";
+require_once "WorkerClient.php";
+require_once 'Zend_Registry.php';
+use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 
 /**
@@ -14,6 +17,7 @@ use Laminas\Session\Container as SessionContainer;
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
  * @property \Zend_Config_Ini          $core_config
+ * @property WorkerClient              $workerAdmin
  */
 class Db {
 
@@ -30,6 +34,7 @@ class Db {
     private $_s         = array();
     private $_settings  = array();
     private $_locations = array();
+    private $_modules = array();
     private string $schemaName = 'public';
 
     /**
@@ -81,26 +86,34 @@ class Db {
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
-                $adapter = !empty($this->_core_config->cache->adapter) ? $this->_core_config->cache->adapter : 'Filesystem';
+                $adapter_name = !empty($this->_core_config->cache->adapter) ? $this->_core_config->cache->adapter : 'Filesystem';
                 if (isset($this->config->cache->adapter)) {
-                    $adapter = $this->config->cache->adapter;
-                    $options = $this->config->cache->options;
+                    $adapter_name = $this->config->cache->adapter;
+                    $options = $this->config->cache->options->toArray();
                 }
-                else {
-                    if ($adapter == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                else { //DEPRECATED
+                    if ($adapter_name == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
                         $options['cache_dir'] = $this->config->cache;
                     }
                 }
                 $options['namespace'] = "Core2";
-				$sf = StorageFactory::factory(array(
-                    'adapter' => array(
-                        'name' => $adapter,
-                        'options' => $options,
-                        'plugins' => ['serializer']
-                    )
-                ));
-                $sf->addPlugin(StorageFactory::pluginFactory('serializer'));
-                $v = new Cache($sf);
+                //$container = null; // can be any configured PSR-11 container
+				//$sf = $container->get(StorageAdapterFactoryInterface::class);
+                if ($adapter_name == 'Filesystem') {
+                    $adapter  = new Storage\Adapter\Filesystem($options);
+                }
+                if ($adapter_name == 'Redis') {
+                    $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
+                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
+                    unset($options['cache_dir']);
+                    $adapter  = new Storage\Adapter\Redis($options);
+                }
+                $adapter->addPlugin(new Storage\Plugin\Serializer());
+                $plugin = new Storage\Plugin\ExceptionHandler();
+                $plugin->getOptions()->setThrowExceptions(false);
+                $adapter->addPlugin($plugin);
+
+                $v = new Cache($adapter, $adapter_name);
 				$reg->set($k, $v);
 			} else {
 				$v = $reg->get($k);
@@ -127,6 +140,35 @@ class Db {
 			}
 			return $v;
 		}
+        // Получение экземпляра воркера
+        elseif (strpos($k, 'worker') === 0) {
+            if (array_key_exists('worker', $this->_s)) {
+                $v = $this->_s['worker'];
+            } else {
+//                if ($this->db->getTransactionLevel()) {
+//                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
+//                }
+//                $this->db->closeConnection();
+                $v = new WorkerClient();
+                $this->_s['worker'] = $v;
+            }
+
+            $module = substr($k, 6);
+
+            if ($module == 'Admin') {
+                $v->setModule($module);
+                $v->setLocation(DOC_ROOT . "core2/mod/admin");
+            }
+            elseif ($this->isModuleActive($module)) {
+                $v->setModule($module);
+                $v->setLocation($this->getModuleLocation($module));
+            }
+            else {
+                return new \stdObject();
+            }
+
+            return $v;
+        }
 		// Получение экземпляра модели текущего модуля
 		elseif (strpos($k, 'data') === 0) {
 			if (array_key_exists($k, $this->_s)) {
@@ -137,7 +179,7 @@ class Db {
 				$model    = substr($module[0], 4);
 				$module   = !empty($module[1]) ? $module[1] : 'admin';
 				$location = $module == 'admin'
-					? DOC_ROOT . "core2/mod/admin"
+					? __DIR__ . "/../../mod/admin"
 					: $this->getModuleLocation($module);
                 $r = new \ReflectionClass(get_called_class());
                 $classLoc = $r->getFileName();
@@ -149,15 +191,15 @@ class Db {
                     $location  = $this->getModuleLocation($module);
                 }
 				if (!file_exists($location . "/Model/$model.php")) {
-                    throw new \Exception($this->translate->tr('Модель не найдена.'));
+                    throw new \Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
+                if ($module == 'admin') $model = "\Core2\Model\\$model";
                 $v            = new $model();
                 $this->_s[$k] = $v;
 			}
 			return $v;
 		}
-
 		return null;
 	}
 
@@ -166,11 +208,19 @@ class Db {
      * @param \Zend_Config $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    protected function establishConnection(\Zend_Config $database) {
+    private function establishConnection(\Zend_Config $database) {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
 			\Zend_Registry::getInstance()->set('db', $db);
+
+            //переопределяем config для нового подключения к базе
+            if ($this->config->database !== $database) {
+                $conf = $this->config->toArray();
+                $conf['database'] = $database->toArray();
+                $this->config = new \Zend_Config($conf);
+            }
+
 			if ($database->adapter === 'Pdo_Mysql') {
 			    if ($this->config->system->timezone) {
 			        $db->query("SET time_zone = '{$this->config->system->timezone}'");
@@ -322,9 +372,9 @@ class Db {
 	 */
 	public function logActivity($exclude = array()): void {
 
-        $auth = new SessionContainer('Auth');
+        $auth = \Zend_Registry::get('auth');
 
-        if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+        if ($auth->ID && $auth->ID > 0) {
             if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {
                 return;
             }
@@ -340,12 +390,31 @@ class Db {
 
             $data = [
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => $auth->getManager()->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
                 'user_id'        => $auth->ID
             ];
+
+            // обновление записи о последней активности
+            if ($auth->LIVEID) {
+                // у юзера есть сессия
+                $data['sid'] = $auth->getManager()->getId();
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+                if ($row) {
+                    $row->last_activity = new \Zend_Db_Expr('NOW()');
+                    $row->save();
+                }
+            } else {
+                // сессии нет, авторизовывается каждый запрос
+                $data['sid'] = ""; //TODO сохранить метод авторизации
+            }
+
+            // запись данных запроса в лог
+            $w = $this->workerAdmin->doBackground('Logger', array_merge($data, ['action' => $arr]));
+            if ($w) {
+                return;
+            }
 
             if (isset($this->config->log) &&
                 $this->config->log &&
@@ -357,23 +426,13 @@ class Db {
                 }
 
                 $log = new Log('access');
-                $log->access($auth->NAME);
+                $log->access($auth->NAME, $data['sid']);
 
             } else {
                 if ($arr) {
                     $data['action'] = serialize($arr);
                 }
                 $this->db->insert('core_log', $data);
-            }
-
-            // обновление записи о последней активности
-            if ($auth->LIVEID) {
-                $row = $this->dataSession->find($auth->LIVEID)->current();
-
-                if ($row) {
-                    $row->last_activity = new \Zend_Db_Expr('NOW()');
-                    $row->save();
-                }
             }
         }
     }
@@ -522,7 +581,7 @@ class Db {
 	 */
 	final public function isModuleActive($module_id) {
         $is = $this->isModuleInstalled($module_id);
-        return $is && $is['visible'] === 'Y' ? true : false;
+        return $is && isset($is['visible']) && $is['visible'] === 'Y' ? true : false;
 	}
 
 
@@ -534,12 +593,9 @@ class Db {
 	 * @return string
 	 */
 	final public function isSubModuleActive($submodule_id) {
-		$id = explode("_", $submodule_id);
-		if (isset($id[1]) && $this->isModuleActive($id[0])) {
-			$is = $this->db->fetchOne("SELECT 1 FROM core_modules AS m
-										INNER JOIN core_submodules AS s ON s.m_id=m.m_id
-									WHERE m.module_id=? AND s.sm_key=? AND s.visible='Y'",
-				$id);
+        $mod = $this->getSubModule($submodule_id);
+		if ($mod) {
+			$is = 1;
 		} else {
 			$is = 0;
 		}
@@ -554,41 +610,25 @@ class Db {
 	 * @return bool|false|mixed
 	 */
 	public function getSubModule($submodule_id) {
-
-        $key = "is_active_" . $this->config->database->params->dbname . "_" . $submodule_id;
+        $this->getAllModules();
         $id  = explode("_", $submodule_id);
-
 		if (empty($id[1])) {
 			return false;
 		}
-
-		if ( ! ($this->cache->hasItem($key))) {
-			$mods = $this->db->fetchRow("
-                SELECT m.m_id, 
-                       m_name, 
-                       sm_path, 
-                       m.module_id, 
-                       is_system, 
-                       sm.m_id AS sm_id
-                FROM core_modules AS m
-                    LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id AND sm.visible = 'Y'
-                WHERE m.visible = 'Y'
-                  AND m.module_id = ?
-                  AND sm_key = ?
-                ORDER BY sm.seq
-            ", [
-                $id[0],
-                $id[1]
-            ]);
-
-			$this->cache->setItem($key, $mods);
-            $this->cache->setTags($key, ['is_active_core_modules']);
-
-		} else {
-			$mods = $this->cache->getItem($key);
-		}
-
-		return $mods;
+        if (!isset($this->_modules[$id[0]])) return false;
+        if ($this->_modules[$id[0]]['visible'] !== 'Y') return false;
+        if (!isset($this->_modules[$id[0]]['submodules'][$id[1]])) return false;
+        if ($this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+        $sub = $this->_modules[$id[0]]['submodules'][$id[1]];
+        $mod = ['m_id'  => $this->_modules[$id[0]]['m_id'],
+               'm_name' => $this->_modules[$id[0]]['m_name'],
+               'sm_path' => $sub['sm_path'],
+               'sm_name' => $sub['sm_name'],
+               'module_id' => $id[0],
+               'is_system' => $this->_modules[$id[0]]['is_system'],
+               'sm_id'  => $id[1]
+        ];
+        return $mod;
 	}
 
 
@@ -598,25 +638,8 @@ class Db {
 	 * @return string
 	 */
 	final public function isModuleInstalled($module_id) {
-
-        $module_id = trim(strtolower($module_id));
-        $key       = "is_installed_" . $this->config->database->params->dbname;
-
-        if ( ! $this->cache->hasItem($key)) {
-            $res = $this->db->fetchAll("SELECT module_id, m_id, visible, is_system, version FROM core_modules");
-            $is  = [];
-            foreach ($res as $item) {
-                $is[$item['module_id']] = $item;
-            }
-            $this->cache->setItem($key, $is);
-            $this->cache->setTags($key, ['is_active_core_modules']);
-
-        } else {
-            $is = $this->cache->getItem($key);
-        }
-
-        $is = isset($is[$module_id]) ? $is[$module_id] : 0;
-
+        $this->getAllModules();
+        $is = isset($this->_modules[strtolower($module_id)]) ? $this->_modules[strtolower($module_id)] : [];
         return $is;
 	}
 
@@ -639,12 +662,9 @@ class Db {
 	 * @return string
 	 */
 	final public function getModuleVersion($module_id) {
-
-		return $this->db->fetchOne("
-            SELECT version
-            FROM core_modules
-            WHERE module_id = ?
-        ", $module_id);
+        $this->getAllModules();
+        $version = isset($this->_modules[$module_id]) ? $this->_modules[$module_id]['version'] : '';
+		return $version;
 	}
 
 
@@ -676,8 +696,7 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "is_installed_" . $this->config->database->params->dbname;
-
+            $key = "all_modules_" . $this->config->database->params->dbname;
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
@@ -695,7 +714,6 @@ class Db {
             $fromCache[$module_id]['location'] = $loc;
             $this->cache->setItem($key, $fromCache);
             $this->cache->setTags($key, ['is_active_core_modules']);
-
         } else {
             $loc = $module['location'];
         }
@@ -752,7 +770,7 @@ class Db {
 
             $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
 
-            $conf_ext = $module_loc . "/conf.ext.ini";
+            $conf_ext = $module_loc . "/conf.workers.ini";
             if (file_exists($conf_ext)) {
                 $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
                 $extends_mod_ext = $config_mod_ext->getExtends();
@@ -776,15 +794,17 @@ class Db {
 
 
 	/**
-	 * Получение всех настроек системы
+	 * Получение всех включенных настроек системы
 	 */
 	private function getAllSettings(): void {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
-			$res = $this->db->fetchAll("SELECT code, value, is_custom_sw, is_personal_sw FROM core_settings WHERE visible='Y'");
-			$is = array();
-			foreach ($res as $item) {
-				$is[$item['code']] = array(
+            require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
+            $v            = new Model\Settings($this->db);
+			$res = $v->fetchAll($v->select()->where("visible='Y'"))->toArray();
+            $is = array();
+            foreach ($res as $item) {
+                $is[$item['code']] = array(
 					'value' => $item['value'],
 					'is_custom_sw' => $item['is_custom_sw'],
 					'is_personal_sw' => $item['is_personal_sw']
@@ -796,5 +816,37 @@ class Db {
 		}
 		$this->_settings = $is;
 	}
+
+    /**
+     * Список всех модулей
+     *
+     * @return void
+     */
+    private function getAllModules(): void {
+        if ($this->_modules) return;
+        $key = "all_modules_" . $this->config->database->params->dbname;
+        if (!($this->cache->hasItem($key))) {
+            require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
+            require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
+            $m            = new Model\Modules($this->db);
+            $sm           = new Model\SubModules($this->db);
+            $res = $m->fetchAll($m->select()->order('seq'));
+            $sub = $sm->fetchAll($sm->select()->order('seq'));
+            $data = [];
+            foreach ($res as $val) {
+                $item = $val->toArray();
+                unset($item['uninstall']); //чтоб не смущал
+                $item['submodules'] = [];
+                foreach ($sub as $item2) {
+                    if ($item2->m_id == $val->m_id) $item['submodules'][$item2->sm_key] = $item2->toArray();
+                }
+                $data[$val->module_id] = $item;
+            }
+            $this->cache->setItem($key, $data);
+        } else {
+            $data = $this->cache->getItem($key);
+        }
+        $this->_modules = $data;
+    }
 
 }

@@ -121,60 +121,107 @@ class LdapAuth extends Db {
 	}
 
     /**
-     * @param $login
+     * @param string $login
+     * @return void
+     * @throws \Laminas\Ldap\Exception\LdapException
+     * @throws \Zend_Db_Adapter_Exception
      */
-	public function getLdapInfo($login) {
+	public function getLdapInfo(string $login): void {
 
 		$config = \Zend_Registry::getInstance()->get('config');
+
+        if ( ! $config->ldap) {
+            return;
+        }
+
 		$options = $config->ldap->toArray();
-		unset($options['active']);
-		unset($options['log_path']);
-		unset($options['root']);
-		unset($options['admin']);
-		unset($options['role_id']);
+
+        if ( ! empty($options['active'])) {
+            unset($options['active']);
+        }
+
+        if ( ! empty($options['log_path'])) {
+            unset($options['log_path']);
+        }
+
+        if ( ! empty($options['root'])) {
+            unset($options['root']);
+        }
+
+        if ( ! empty($options['admin'])) {
+            unset($options['admin']);
+        }
+
+        if ( ! empty($options['role_id'])) {
+            unset($options['role_id']);
+        }
+
 		$options = current($options);
-		//echo "<PRE>";print_r($options);echo "</PRE>";die;
+
 		//$options['accountCanonicalForm'] = 2;
 		//$options['bindRequiresDn'] = true;
 		//$options['username'] = 'AIS-LdapRead';
 		//$options['password'] = 'AIS-LdapRead@1';
-		$u_id = $this->db->fetchOne("SELECT `u_id` FROM `core_users` WHERE `u_login` = ?", $login);
-		if (!$u_id) return;
+
+        $user_id = $this->db->fetchOne("
+            SELECT `u_id` 
+            FROM `core_users`
+            WHERE `u_login` = ?
+        ", $login);
+
+		if ( ! $user_id) {
+            return;
+        }
 
 		$key = 'profile_' . md5($login);
-		if (!($this->cache->test($key))) {
+
+		if ( ! ($this->cache->test($key))) {
 			$ldap = new Ldap($options);
 			$ldap->bind();
-			$temp = explode('\\', $login);
-			if (isset($temp[1])) $login = $temp[1];
-			$hm = $ldap->search("(samaccountname={$login})", $options['baseDn'], null,
-				array('mail', 'cn', 'sn', 'givenname', 'homephone', 'mobile', 'title'));
-			$data = $hm->getFirst();
 
-			//echo "<PRE>";print_r($data);echo "</PRE>";die;
+            $temp = explode('\\', $login);
+			if (isset($temp[1])) {
+                $login = $temp[1];
+            }
 
-			$this->db->update('core_users',
-				array('email' => $data['mail'][0]),
-				$this->db->quoteInto('u_id=?', $u_id)
-			);
-			$profile_id = $this->db->fetchOne("SELECT `id` FROM `core_users_profile` WHERE `user_id` = ?", $u_id);
-			if ($profile_id) {
-				$this->db->update('core_users_profile',
-					array('lastname' => $data['sn'][0],
-						'firstname' => $data['givenname'][0]
-					),
-					$this->db->quoteInto('id=?', $profile_id)
-				);
-			} else {
-				$this->db->insert('core_users_profile', array(
-					'user_id' => $u_id,
-					'lastname' => $data['sn'][0],
-					'firstname' => $data['givenname'][0]
-				));
-			}
-			//$this->auth->LN = $data['sn'][0];
-			//$this->auth->FN = $data['givenname'][0];
-			$this->cache->save($login, $key, array('core_users'));
-		}
-	}
+            $hm = $ldap->search(
+                "(samaccountname={$login})",
+                $options['baseDn'],
+                null,
+                ['mail', 'cn', 'sn', 'givenname', 'homephone', 'mobile', 'title']
+            );
+            $data = $hm->getFirst();
+
+
+            if ( ! empty($data['mail']) && ! empty($data['mail'][0])) {
+                $where = $this->db->quoteInto('u_id = ?', $user_id);
+                $this->db->update('core_users', [
+                    'email' => $data['mail'][0]
+                ], $where);
+            }
+
+            $profile_id = $this->db->fetchOne("
+                SELECT `id` 
+                FROM `core_users_profile` 
+                WHERE `user_id` = ?
+            ", $user_id);
+
+            if ($profile_id) {
+                $where = $this->db->quoteInto('id = ?', $profile_id);
+                $this->db->update('core_users_profile', [
+                    'lastname'  => ! empty($data['sn']) && ! empty($data['sn'][0]) ? $data['sn'][0] : '',
+                    'firstname' => ! empty($data['givenname']) && ! empty($data['givenname'][0]) ? $data['givenname'][0] : '',
+                ], $where);
+
+            } else {
+                $this->db->insert('core_users_profile', [
+                    'user_id'   => $user_id,
+                    'lastname'  => ! empty($data['sn']) && ! empty($data['sn'][0]) ? $data['sn'][0] : '',
+                    'firstname' => ! empty($data['givenname']) && ! empty($data['givenname'][0]) ? $data['givenname'][0] : '',
+                ]);
+            }
+
+            $this->cache->save($login, $key, ['core_users']);
+        }
+    }
 }

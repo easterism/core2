@@ -32,11 +32,12 @@ class File extends \Common {
      *
      */
     public function dispatch() {
+
         header("Pragma: public");
         header("Expires: 0");
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-
         header("Content-Transfer-Encoding: binary");
+
         echo $this->content;
     }
 
@@ -83,7 +84,10 @@ class File extends \Common {
             header("Content-Type: application/octet-stream");
             header("Content-Type: application/download");
         }
-        header("Content-Disposition: filename=\"{$res2['filename']}\"");
+
+        $filename_encode = rawurlencode($res2['filename']);
+
+        header("Content-Disposition: filename=\"{$res2['filename']}\"; filename*=utf-8''{$filename_encode}");
         header("Content-Type: " . $res2['type']);
         header('Content-Length: ' . $res2['filesize']);
         $this->content = $res2['content'];
@@ -133,8 +137,11 @@ class File extends \Common {
 
         //Если задан размер тамбнейла или если тамбнейла нет в базе
         if (!empty($_GET['size']) || !$res2['thumb']) {
+            ob_start();
             $image = new Image();
             $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
+            $this->content = ob_get_clean();
+
         } else {
             $this->content = $res2['thumb'];
         }

@@ -6,18 +6,18 @@
  * Time: 17:04
  * To change this template use File | Settings | File Templates.
  */
-
+namespace Core2\Model;
 /**
  * Class Modules
  */
-class Modules extends Zend_Db_Table_Abstract {
+class Modules extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_modules';
 
 	/**
 	 * @param string $expr
 	 * @param array  $var
-	 * @return null|Zend_Db_Table_Row_Abstract
+	 * @return null|\Zend_Db_Table_Row_Abstract
 	 */
 	public function exists($expr, $var = array()) {
 
@@ -44,6 +44,20 @@ class Modules extends Zend_Db_Table_Abstract {
         }
         return $data;
     }
+
+
+    /**
+     * Получение записи по Id
+     * @param int $id
+     * @return \Zend_Db_Table_Row_Abstract|null
+     */
+    public function getRowById(int $id):? \Zend_Db_Table_Row_Abstract {
+
+        $select = $this->select()->where("m_id = ?", $id);
+
+        return $this->fetchRow($select);
+    }
+
 
     /**
      * получаем список активных модулей

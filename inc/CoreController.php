@@ -16,23 +16,19 @@ require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
-
-use Core2\Settings as Settings;
-use Core2\Modules as Modules;
-use Core2\Roles as Roles;
-use Core2\Enum as Enum;
 use Core2\InstallModule as Install;
 
 
 /**
- * Class CoreController
- * @property Users         $dataUsers
- * @property Enum          $dataEnum
- * @property Modules       $dataModules
- * @property Roles         $dataRoles
- * @property SubModules    $dataSubModules
- * @property UsersProfile  $dataUsersProfile
- * @property ModProfileApi $apiProfile
+ * @property Core2\Model\Enum         $dataEnum
+ * @property Core2\Model\Modules      $dataModules
+ * @property Core2\Model\SubModules   $dataSubModules
+ * @property Core2\Model\Roles        $dataRoles
+ * @property Core2\Model\Users        $dataUsers
+ * @property Core2\Model\UsersProfile $dataUsersProfile
+ * @property Core2\Model\Settings     $dataSettings
+ * @property Core2\Model\Session      $dataSession
+ * @property ModProfileApi            $apiProfile
  */
 class CoreController extends Common implements File {
 
@@ -94,7 +90,7 @@ class CoreController extends Common implements File {
         if ( ! $this->auth->ADMIN) {
             throw new Exception(911);
         }
-
+        session_write_close();
 
         if (isset($_GET['data'])) {
             try {
@@ -178,7 +174,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 header("Content-Type: application/json");
@@ -197,7 +193,7 @@ class CoreController extends Common implements File {
                         break;
                 }
 
-                throw new Exception($this->_('Некорректный адрес'));
+                throw new Exception($this->_('Некорректный адрес запроса'));
 
             } catch (Exception $e) {
                 return Alert::danger($e->getMessage());
@@ -243,65 +239,98 @@ class CoreController extends Common implements File {
         }
 
 
-        $mods = new Modules();
-        if (empty($_POST)) {
-            $this->printJs("core2/mod/admin/assets/js/mod.js");
-            $this->printJs("core2/mod/admin/assets/js/gl.js");
-        }
 
-        $panel = new \Panel('tab');
-        $panel->addTab($this->_("Установленные модули"), 'install',   "index.php?module=admin&action=modules");
-        $panel->addTab($this->_("Доступные модули"),	 'available', "index.php?module=admin&action=modules");
+        $base_url = "index.php?module=admin&action=modules";
+        $mods     = new Core2\Modules();
+        $panel    = new \Panel('tab');
         $panel->setTitle($this->_("Модули"));
 
         ob_start();
-        switch ($panel->getActiveTab()) {
-            case 'install':
-                if (!empty($_POST)) {
-                    /* Обновление файлов модуля */
-                    if (!empty($_POST['refreshFilesModule'])) {
-                        $install = new Install();
-                        return $install->mRefreshFiles($_POST['refreshFilesModule']);
-                    }
+        /* Обновление файлов модуля */
+        if ( ! empty($_POST['refreshFilesModule'])) {
+            $install = new Install();
+            echo $install->mRefreshFiles($_POST['refreshFilesModule']);
 
-                    /* Обновление модуля */
-                    if (!empty($_POST['updateModule'])) {
-                        $install = new Install();
-                        return $install->checkModUpdates($_POST['updateModule']);
-                    }
+        /* Обновление модуля */
+        } elseif ( ! empty($_POST['updateModule'])) {
+            $install = new Install();
+            echo $install->checkModUpdates($_POST['updateModule']);
 
-                    //Деинсталяция модуля
-                    if (isset($_POST['uninstall'])) {
-                        $install = new Install();
-                        return $install->mUninstall($_POST['uninstall']);
-                    }
-                }
-                if (isset($_GET['edit']) && $_GET['edit'] != '') {
-                    $mods->getInstalledEdit((int) $_GET['edit']);
+        // Деинсталяция модуля
+        } elseif (isset($_POST['uninstall'])) {
+            $install = new Install();
+            echo $install->mUninstall($_POST['uninstall']);
+
+        // Инсталяция модуля
+        } elseif ( ! empty($_POST['install'])) {
+            $install = new Install();
+            echo $install->mInstall($_POST['install']);
+
+        // Инсталяция модуля из репозитория
+        } elseif ( ! empty($_POST['install_from_repo'])) {
+            $install = new Install();
+            echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
+
+        } else {
+            $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/gl.js");
+
+            if (isset($_GET['edit'])) {
+                if (empty($_GET['edit'])) {
+                    $panel->setTitle($this->_("Добавление модуля"));
+                    echo $mods->getEditInstalled();
+
                 } else {
-                    $mods->getInstalled();
-                }
-                break;
+                    $module = $this->dataModules->getRowById((int)$_GET['edit']);
 
-            case 'available':
-                // Инсталяция модуля
-                if (!empty($_POST['install'])) {
-                    $install = new Install();
-                    return $install->mInstall($_POST['install']);
-                }
-                // Инсталяция модуля из репозитория
-                if (!empty($_POST['install_from_repo'])) {
-                    $install = new Install();
-                    return $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
-                }
-                if (isset($_GET['add_mod'])) {
-                    $mods->getAvailableEdit((int) $_GET['add_mod']);
+                    if (empty($module)) {
+                        return Alert::danger($this->_('Указанный модуль не найден'));
+                    }
+
+                    $panel->setTitle(strip_tags($module->m_name), $module->module_id, $base_url);
+                    $count_submodules = $this->dataSubModules->getCountByModuleId((int)$_GET['edit']);
+
+                    $base_url .= "&edit={$module->m_id}";
+                    $panel->addTab($this->_("Модуль"),                          'module',     $base_url);
+                    $panel->addTab($this->_("Субмодули ({$count_submodules})"), 'submodules', $base_url);
+
+
+                    $base_url .= "&tab=" . $panel->getActiveTab();
+                    switch ($panel->getActiveTab()) {
+                        case 'module':
+                            echo $mods->getEditInstalled((int)$module->m_id);
+                            break;
+
+                        case 'submodules':
+                            if (isset($_GET['editsub'])) {
+                                echo $mods->getEditSubmodule((int)$module->m_id, (int)$_GET['editsub']);
+                            }
+
+                            echo $mods->getListSubmodules((int)$module->m_id);
+                            break;
+                    }
                 }
 
-                $mods->getAvailable();
-                $mods->getRepoModules();
+            }
+            else {
+                $panel->addTab($this->_("Установленные модули"), 'install',   $base_url);
+                $panel->addTab($this->_("Доступные модули"),	 'available', $base_url);
 
-                break;
+                switch ($panel->getActiveTab()) {
+                    case 'install':
+                        $mods->getListInstalled();
+                        break;
+
+                    case 'available':
+                        if (isset($_GET['add_mod'])) {
+                            $mods->getAvailableEdit((int) $_GET['add_mod']);
+                        }
+
+                        $mods->getAvailable();
+                        $mods->getRepoModules();
+                        break;
+                }
+            }
         }
 
         $panel->setContent(ob_get_clean());
@@ -355,22 +384,38 @@ class CoreController extends Common implements File {
 	 * @return bool
 	 * @throws Exception
 	 */
-    public function action_delete(Array $params)
+    public function action_delete(array $params)
     {
-        $sess       = new SessionContainer('List');
-        $resource   = $params['res'];
-        if (!$resource) throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
-        if (!$params['id']) throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
-        $ids        = explode(",", $params['id']);
-		$sessData   = $sess->$resource;
-        $deleteKey  = $sessData['deleteKey'];
-        if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        $resource = $params['res'];
+
+        if ( ! $resource) {
+            throw new Exception($this->translate->tr("Не удалось определить идентификатор ресурса"), 13);
+        }
+
+        if ( ! $params['id']) {
+            throw new Exception($this->translate->tr("Нет данных для удаления"), 13);
+        }
+
+        $sess      = new SessionContainer('List');
+        $sessData  = $sess->$resource;
+        $deleteKey = $sessData['deleteKey'];
+        $ids       = explode(",", $params['id']);
+
+        if ( ! $deleteKey) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
         [$table, $refid] = explode(".", $deleteKey);
-        if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+
+        if ( ! $table || ! $refid) {
+            throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        }
+
+        // TODO В случае, когда нужно удалить что-то на главной странице - это нельзя будет сделать, так как у обычного юзера нет доступа к модулю админ
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
-            if ($this->checkAcl($resource, 'delete_owner') && !$this->checkAcl($resource, 'delete_all')) {
+            if ($this->checkAcl($resource, 'delete_owner') && ! $this->checkAcl($resource, 'delete_all')) {
                 $authorOnly = true;
             }
             $this->db->beginTransaction();
@@ -509,7 +554,6 @@ class CoreController extends Common implements File {
                 if (empty($_GET['edit'])) {
                     $panel->setTitle($this->_("Создание нового пользователя"), '', $app);
                     echo $view->getEdit($app);
-
                 } else {
                     $user = new Admin\Users\User($_GET['edit']);
                     $panel->setTitle($user->u_login, $this->_('Редактирование пользователя'), $app);
@@ -539,7 +583,7 @@ class CoreController extends Common implements File {
 	public function action_settings () {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         $app = "index.php?module=admin&action=settings";
-        $settings = new Settings();
+        $settings = new Core2\Settings();
         $tab = new tabs('settings');
         $tab->addTab($this->translate->tr("Настройки системы"), 			$app, 130);
         $tab->addTab($this->translate->tr("Дополнительные параметры"), 		$app, 180);
@@ -597,9 +641,9 @@ class CoreController extends Common implements File {
 			header('Content-type: application/json; charset="utf-8"');
 
 			try {
-				if (empty($supportFormModule)) {
-					throw new Exception($this->translate->tr('Выберите модуль.'));
-				}
+//				if (empty($supportFormModule)) {
+//					throw new Exception($this->translate->tr('Выберите модуль.'));
+//				}
 				if (empty($supportFormMessage)) {
 					throw new Exception($this->translate->tr('Введите текст сообщения.'));
 				}
@@ -626,6 +670,10 @@ class CoreController extends Common implements File {
 					$html .= '</small>';
 
                     $email = $this->createEmail();
+                    if (isset($_FILES) && ! empty($_FILES['video-blob'])) {
+                        $file = $_FILES['video-blob'];
+                        $email->attacheFile(file_get_contents($file['tmp_name']), "feedback.webm", $file['type'], $file['size']);
+                    }
 
                     if ( ! empty($dataUser['email'])) {
                         $email->from($dataUser['email']);
@@ -710,7 +758,7 @@ class CoreController extends Common implements File {
 				}
 
                 $value['m_name']  = strip_tags($value['m_name']);
-                $value['sm_name'] = strip_tags($value['sm_name']);
+                $value['sm_name'] = strip_tags($value['sm_name'] ?? '');
 
 				if (!isset($currentMod[$value['m_name']])) {
 					$currentMod[$value['m_name']] = array();
@@ -729,6 +777,7 @@ class CoreController extends Common implements File {
 			}
 		}
 		$this->printJs("core2/mod/admin/assets/js/feedback.js", true);
+		$this->printJs("core2/html/default/js/capture.js");
 		require_once 'classes/Templater2.php';
 		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
@@ -832,7 +881,7 @@ class CoreController extends Common implements File {
 	public function action_roles() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$this->printCss($this->path . "assets/css/role.css");
-        $roles = new Roles();
+        $roles = new Core2\Roles();
         $roles->dispatch();
 	}
 
@@ -844,7 +893,7 @@ class CoreController extends Common implements File {
 	public function action_enum()
     {
         if (!$this->auth->ADMIN) throw new Exception(911);
-        $enum = new Enum();
+        $enum = new Core2\Enum();
         $tab = new tabs('enum');
 
         $title = $this->_("Справочники");
@@ -943,7 +992,7 @@ class CoreController extends Common implements File {
                 $upload_handler->delete();
                 break;
             default:
-                header('HTTP/1.0 405 Method Not Allowed');
+                header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
         }
 	}
 
@@ -996,8 +1045,9 @@ class CoreController extends Common implements File {
      * @return array
      */
     private function checkModulesChanges() {
-        $server = $this->config->system->host;
-        $admin_email = $this->getSetting('admin_email');
+        $server                = $this->config->system->host;
+        $admin_email           = $this->getSetting('admin_email');
+        $is_send_changes_email = $this->getSetting('is_send_changes_email');
 
         if (!$admin_email) {
             $id = $this->db->fetchOne("SELECT id FROM core_settings WHERE code = 'admin_email'");
@@ -1032,7 +1082,7 @@ class CoreController extends Common implements File {
 //                $this->db->update("core_modules", array('visible' => 'N'), $this->db->quoteInto("module_id = ? ", $val['module_id']));
                 $mods[] = $val['module_id'];
                 //отправка уведомления
-                if ($admin_email && $server) {
+                if ($admin_email && $server && (empty($is_send_changes_email) || $is_send_changes_email == 'Y')) {
                 	if ($this->isModuleActive('queue')) {
 						$is_send = $this->db->fetchOne(
 							"SELECT 1
@@ -1173,4 +1223,19 @@ class CoreController extends Common implements File {
 			return array('body' => $data2, 'count_lines' => $count_lines);
 		}
 	}
+
+    /**
+     * @throws Exception
+     * @return void
+     */
+    public function action_workhorse() {
+        if (!$this->auth->ADMIN) throw new Exception(911);
+        try {
+            require_once __DIR__ . "/../mod/admin/classes/workhorse/View.php";
+            $view  = new Admin\Workhorse\View();
+
+        } catch (Exception $e) {
+            echo Alert::danger($e->getMessage());
+        }
+    }
 }

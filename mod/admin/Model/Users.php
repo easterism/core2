@@ -1,10 +1,10 @@
 <?php
 
-
+namespace Core2\Model;
 /**
  * Class Users
  */
-class Users extends Zend_Db_Table_Abstract {
+class Users extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_users';
 
@@ -12,7 +12,7 @@ class Users extends Zend_Db_Table_Abstract {
     /**
      * @param string $expr
      * @param array  $var
-     * @return null|Zend_Db_Table_Row_Abstract
+     * @return null|\Zend_Db_Table_Row_Abstract
      */
 	public function exists($expr, $var = array()) {
 		$sel = $this->select()->where($expr, $var);
@@ -37,7 +37,7 @@ class Users extends Zend_Db_Table_Abstract {
             $sel->where($expr);
         }
         $res = $this->fetchRow($sel);
-        return $res ? $this->fetchRow($sel)->$field : null;
+        return $res ? $res->$field : null;
     }
 
 
@@ -137,7 +137,6 @@ class Users extends Zend_Db_Table_Abstract {
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
             WHERE u.`visible` = 'Y' 
         ");
-
         return $res;
     }
 

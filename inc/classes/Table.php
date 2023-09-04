@@ -2,20 +2,23 @@
 namespace Core2\Classes;
 use Core2\Acl;
 use Core2\Classes\Table\Exception;
-use Core2\Classes\Table\Row;
+use Core2\Classes\Table\Filter;
+use Core2\Classes\Table\Render;
 use Core2\Classes\Table\Button;
 use Core2\Classes\Table\Column;
 use Core2\Classes\Table\Search;
 use Laminas\Session\Container as SessionContainer;
 
-require_once 'Templater3.php';
 
+require_once 'Acl.php';
+require_once 'Table/Render.php';
 require_once 'Table/Exception.php';
 require_once 'Table/Row.php';
 require_once 'Table/Cell.php';
 require_once 'Table/Button.php';
 require_once 'Table/Column.php';
 require_once 'Table/Search.php';
+require_once 'Table/Filter.php';
 
 
 /**
@@ -25,9 +28,9 @@ require_once 'Table/Search.php';
 abstract class Table extends Acl {
 
     protected $resource                 = '';
-    protected $show_checkboxes          = true;
+    protected $show_select_rows         = true;
     protected $show_delete              = false;
-    protected $show_columns_switcher    = false;
+    protected $show_column_manage       = false;
     protected $show_templates           = false;
     protected $show_number_rows         = true;
     protected $show_service             = true;
@@ -35,65 +38,37 @@ abstract class Table extends Acl {
     protected $show_footer              = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
+    protected $table_name               = '';
+    protected $group_field              = '';
+    protected $group_options            = [];
     protected $data                     = [];
     protected $data_rows                = [];
     protected $columns                  = [];
     protected $buttons                  = [];
     protected $search_controls          = [];
+    protected $filter_controls          = [];
     protected $records_total            = 0;
+    protected $records_total_round      = 0;
+    protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
+    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
-    protected $round_record_count       = false;
     protected $is_ajax                  = false;
+    protected $is_round_calc            = false;
 
 
     /**
      * @var SessionContainer
      */
-    protected $session        = null;
-    protected $theme_src      = '';
-    protected $theme_location = '';
-    protected $date_mask      = "d.m.Y";
-    protected $datetime_mask  = "d.m.Y H:i";
-    protected $lang           = 'ru';
-    protected $locutions      = [
-        'ru' => [
-            'Search'                                     => 'Поиск',
-            'Clear'                                      => 'Очистить',
-            'All'                                        => 'Все',
-            'Add'                                        => 'Добавить',
-            'Delete'                                     => 'Удалить',
-            'num'                                        => '№',
-            'from'                                       => 'из',
-            'off'                                        => 'выкл',
-            'on'                                         => 'вкл',
-            'Total'                                      => 'Всего',
-            'No records'                                 => 'Нет записей',
-            'Are you sure you want to delete this post?' => 'Вы действительно хотите удалить эту запись?',
-            'You must select at least one record'        => 'Нужно выбрать хотя бы одну запись',
-        ],
-        'en' => [
-            'Search'                                     => 'Search',
-            'Clear'                                      => 'Clear',
-            'All'                                        => 'All',
-            'Add'                                        => 'Add',
-            'Delete'                                     => 'Delete',
-            'num'                                        => '№',
-            'from'                                       => 'from',
-            'off'                                        => 'off',
-            'on'                                         => 'on',
-            'Total'                                      => 'Total',
-            'No records'                                 => 'No records',
-            'Are you sure you want to delete this post?' => 'Are you sure you want to delete this post?',
-            'You must select at least one record'        => 'You must select at least one record',
-        ],
-    ];
+    protected $session   = null;
+    protected $locutions = [];
 
     const SEARCH_SELECT      = 'select';
     const SEARCH_TEXT        = 'text';
     const SEARCH_TEXT_STRICT = 'text_strict';
+    const SEARCH_DATE_ONE    = 'date_one';
     const SEARCH_DATE        = 'date';
     const SEARCH_DATETIME    = 'datetime';
     const SEARCH_NUMBER      = 'number';
@@ -101,26 +76,35 @@ abstract class Table extends Acl {
     const SEARCH_RADIO       = 'radio';
     const SEARCH_MULTISELECT = 'multiselect';
 
+    const FILTER_SELECT      = 'select';
+    const FILTER_TEXT        = 'text';
+    const FILTER_TEXT_STRICT = 'text_strict';
+    const FILTER_DATE_ONE    = 'date_one';
+    const FILTER_DATE_MONTH  = 'date_month';
+    const FILTER_DATE        = 'date';
+    const FILTER_DATETIME    = 'datetime';
+    const FILTER_NUMBER      = 'number';
+    const FILTER_CHECKBOX    = 'checkbox';
+    const FILTER_RADIO       = 'radio';
+
     const COLUMN_TEXT     = 'text';
     const COLUMN_HTML     = 'html';
     const COLUMN_DATE     = 'date';
     const COLUMN_DATETIME = 'datetime';
     const COLUMN_NUMBER   = 'number';
     const COLUMN_STATUS   = 'status';
+    const COLUMN_SWITCH   = 'switch';
 
 
     /**
      * @param string $resource
+     * @throws \Zend_Db_Adapter_Exception|Exception
      */
 	public function __construct(string $resource) {
 
         parent::__construct();
 
         $this->resource = $resource;
-        $this->lang     = 'ru';
-
-        $this->theme_src      = DOC_PATH . 'core2/html/' . THEME;
-        $this->theme_location = DOC_ROOT . 'core2/html/' . THEME;
 
         $this->current_page = isset($_GET["_page_{$this->resource}"]) && $_GET["_page_{$this->resource}"] > 0
             ? (int)$_GET["_page_{$this->resource}"]
@@ -134,10 +118,66 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
-            $this->session->table->search = $_POST['search'][$resource];
+            foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
+                if (is_array($search_value)) {
+                    $isset_value = false;
+                    foreach ($search_value as $search_item) {
+                        if ($search_item || $search_item === 0) {
+
+                            $isset_value = true;
+                            break;
+                        }
+                    }
+
+                    if ( ! $isset_value) {
+                        $search_value = null;
+                    }
+                }
+
+                $this->setSearch($nmbr_field, $search_value);
+            }
+
+            unset($_POST['search'][$resource]);
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
-            $this->session->table->search = [];
+            $this->clearSearch();
+        }
+
+        // FILTER
+        if ( ! empty($_POST['filter']) && ! empty($_POST['filter'][$resource])) {
+            $all_empty = true;
+            foreach ($_POST['filter'][$resource] as $filter) {
+                if ($filter !== '') {
+                    $all_empty = false;
+                    break;
+                }
+            }
+            if ($all_empty) {
+                $this->clearFilter();
+            } else {
+                foreach ($_POST['filter'][$resource] as $nmbr_field => $filter_value) {
+                    if (is_array($filter_value)) {
+                        $isset_value = false;
+                        foreach ($filter_value as $filter_item) {
+                            if ($filter_item) {
+                                $isset_value = true;
+                                break;
+                            }
+                        }
+
+                        if ( ! $isset_value) {
+                            $filter_value = null;
+                        }
+                    }
+
+                    $this->setFilter($nmbr_field, $filter_value);
+                }
+            }
+
+            unset($_POST['filter'][$resource]);
+        }
+        if ( ! empty($_POST['filter_clear_' . $this->resource])) {
+            $this->clearFilter();
         }
 
 
@@ -146,7 +186,23 @@ abstract class Table extends Acl {
             $this->session->table->records_per_page = abs((int)$_POST["count_{$this->resource}"]);
         }
 
-        if (isset($this->session->table->records_per_page) && $this->session->table->records_per_page > 0) {
+        // COLUMNS
+        if (isset($_POST["columns_{$this->resource}"]) && is_array($_POST["columns_{$this->resource}"])) {
+            $columns = $_POST["columns_{$this->resource}"];
+            unset($_POST['columns_' . $resource]);
+
+            $this->session->table->columns = [];
+
+            if ( ! empty($columns)) {
+                foreach ($columns as $column) {
+                    if (is_string($column)) {
+                        $this->session->table->columns[$column] = true;
+                    }
+                }
+            }
+        }
+
+        if (isset($this->session->table->records_per_page) && $this->session->table->records_per_page >= 0) {
             $this->records_per_page = $this->session->table->records_per_page;
             $this->records_per_page = $this->records_per_page === 0
                 ? 1000000000
@@ -156,6 +212,7 @@ abstract class Table extends Acl {
         // ORDERING
         if ( ! empty($_POST['order_' . $resource])) {
             $order = $_POST['order_' . $resource];
+            unset($_POST['order_' . $resource]);
 
             if (empty($this->session->table->order)) {
                 $this->session->table->order      = $order;
@@ -236,10 +293,203 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param array $page_list
+     * @return int[]
+     */
+    public function setRecordsPerPageList(array $page_list): array {
+
+        return $this->records_per_page_list = $page_list;
+    }
+
+
+    /**
+     * Использование примерного подсчета количества
+     * @param bool $is_round_calc
+     * @return void
+     */
+    public function setRoundCalc(bool $is_round_calc) {
+
+        $this->is_round_calc = $is_round_calc;
+    }
+
+
+    /**
+     * Установка поисковых значений
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setSearch(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->search)) {
+            $this->session->table->search = [];
+        }
+
+        $this->session->table->search[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка значений фильтра
+     * @param int $nmbr_field
+     * @param     $value_field
+     * @return void
+     */
+    public function setFilter(int $nmbr_field, $value_field) {
+
+        if ( ! isset($this->session->table->filter)) {
+            $this->session->table->filter = [];
+        }
+
+        $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка группировки строк по полю
+     * @param string $field_name
+     * @param array  $options
+     * @return void
+     */
+    public function setGroupBy(string $field_name, array $options = []): void {
+
+        $this->group_field   = $field_name;
+        $this->group_options = $options;
+    }
+
+
+    /**
+     * Очистка поиска
+     * @return void
+     */
+    public function clearSearch() {
+
+        $this->session->table->search = [];
+    }
+
+
+    /**
+     * Очистка фильтров
+     * @return void
+     */
+    public function clearFilter() {
+
+        $this->session->table->filter = [];
+    }
+
+
+    /**
+     * @param int|null $nmbr_control
+     * @return mixed
+     */
+    public function getSearch(int $nmbr_control = null): mixed {
+
+        $search = null;
+
+        if (isset($this->session->table->search)) {
+            $search = is_int($nmbr_control)
+                ? $this->session->table->search[$nmbr_control] ?? null
+                : $this->session->table->search;
+        }
+
+        return $search ?: null;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getResource(): string {
+
+        return $this->resource;
+    }
+
+
+    /**
+     * @param int|null $nmbr_control
+     * @return mixed
+     */
+    public function getFilters(int $nmbr_control = null): mixed {
+
+        $filter = null;
+
+        if (isset($this->session->table->filter)) {
+            $filter = is_int($nmbr_control)
+                ? $this->session->table->filter[$nmbr_control] ?? null
+                : $this->session->table->filter;
+        }
+
+        return $filter ?: null;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getOrder(): ?string {
+
+        $order_field = null;
+
+        if (isset($this->session->table->order) &&
+            $this->session->table->order &&
+            isset($this->columns[$this->session->table->order - 1])
+        ) {
+            $column = $this->columns[$this->session->table->order - 1];
+
+            if ($column instanceof Column && $column->isSorting()) {
+                $order_field = $column->getField();
+            }
+        }
+
+        return $order_field;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getOrderType(): ?string {
+
+        $order = isset($this->session) && isset($this->session->table) && isset($this->session->table->order_type)
+            ? $this->session->table->order_type
+            : null;
+
+        return $order ?: null;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getPage(): int {
+
+        return (int)$this->current_page;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getRecordsPerPage(): int {
+
+        return (int)$this->records_per_page;
+    }
+
+
+    /**
+     * @return int[]
+     */
+    public function getRecordsPerPageList(): array {
+
+        return $this->records_per_page_list;
+    }
+
+
+    /**
      *
      */
     public function showCheckboxes() {
-        $this->show_checkboxes = true;
+        $this->show_select_rows = true;
     }
 
 
@@ -247,7 +497,7 @@ abstract class Table extends Acl {
      *
      */
     public function hideCheckboxes() {
-        $this->show_checkboxes = false;
+        $this->show_select_rows = false;
     }
 
 
@@ -302,6 +552,22 @@ abstract class Table extends Acl {
     /**
      *
      */
+    public function showHeader() {
+        $this->show_header = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideHeader() {
+        $this->show_header = false;
+    }
+
+
+    /**
+     *
+     */
     public function showFooter() {
         $this->show_footer = true;
     }
@@ -316,405 +582,70 @@ abstract class Table extends Acl {
 
 
     /**
+     * @deprecated used showColumnManage()
+     */
+    public function showColumnsSwitcher() {
+        $this->show_column_manage = true;
+    }
+
+
+    /**
+     *
+     */
+    public function showColumnManage() {
+        $this->show_column_manage = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideColumnManage() {
+        $this->show_column_manage = false;
+    }
+
+
+    /**
+     *
+     */
+    public function showTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
+     *
+     */
+    public function hideTemplates() {
+        $this->show_templates = true;
+    }
+
+
+    /**
      * Рендеринг таблицы
      * @return string
      * @throws \Exception
      */
     public function render(): string {
 
-        if ( ! $this->checkAcl($this->resource, 'list_all') &&
-             ! $this->checkAcl($this->resource, 'list_owner')
-        ) {
-            return '';
-        }
-
-        $tpl = new \Templater3($this->theme_location . '/html/table.html');
-        $tpl->assign('[THEME_SRC]', $this->theme_src);
-        $tpl->assign('[RESOURCE]',  $this->resource);
-        $tpl->assign('[IS_AJAX]',   (int)$this->is_ajax);
-        $tpl->assign('[LOCATION]',  $this->is_ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING']);
-
-        if ( ! empty($this->buttons)) {
-            $buttons = [];
-
-            foreach ($this->buttons as $button) {
-                if ($button instanceof Button) {
-                    $attributes = [];
-                    foreach ($button->getAttributes() as $attr => $value) {
-                        $attributes[] = "$attr=\"{$value}\"";
-                    }
-
-                    $implode_attributes = implode(' ', $attributes);
-                    $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
-
-                    $buttons[] = "<button{$implode_attributes}>{$this->title}</button>";
-                }
-            }
-
-            $tpl->assign('[BUTTONS]', implode(' ', $buttons));
-
-        } else {
-            $tpl->assign('[BUTTONS]', '');
-        }
-
-
-        if ($this->show_service) {
-            if ($this->add_url &&
-                ($this->checkAcl($this->resource, 'edit_all') ||
-                 $this->checkAcl($this->resource, 'edit_owner')) &&
-                ($this->checkAcl($this->resource, 'read_all') ||
-                 $this->checkAcl($this->resource, 'read_owner'))
-            ) {
-                $tpl->service->add_button->assign('[URL]', str_replace('?', '#', $this->add_url));
-            }
-
-            if ($this->show_delete &&
-                ($this->checkAcl($this->resource, 'delete_all') ||
-                 $this->checkAcl($this->resource, 'delete_owner'))
-            ) {
-                $delete_msg    = $this->getLocution('Are you sure you want to delete this post?');
-                $no_select_msg = $this->getLocution('You must select at least one record');
-
-                $tpl->service->del_button->assign('[DELETE_MSG]',       $delete_msg);
-                $tpl->service->del_button->assign('[DELETE_NO_SELECT]', $no_select_msg);
-            }
-        }
-
-        if ($this->show_checkboxes == true) {
-            $tpl->header->touchBlock('checkboxes');
-        }
-
-        if ( ! empty($this->search_controls)) {
-            $search_value = ! empty($this->session->table) && ! empty($this->session->table->search)
-                ? $this->session->table->search
-                : [];
-
-            if ( ! empty($search_value) && count($search_value)) {
-                $tpl->search->touchBlock('clear');
-            }
-
-            foreach ($this->search_controls as $key => $search) {
-                if ($search instanceof Search) {
-                    $control_value     = $search_value[$key] ?? '';
-                    $search_attributes = $search->getAttributes();
-                    $attributes_str    = '';
-
-                    if ( ! empty($search_attributes)) {
-                        $attributes = [];
-                        foreach ($search_attributes as $attr => $value) {
-                            $attributes[] = "$attr=\"{$value}\"";
-                        }
-                        $implode_attributes = implode(' ', $attributes);
-                        $attributes_str     = $implode_attributes ? ' ' . $implode_attributes : '';
-                    }
-
-                    switch ($search->getType()) {
-                        case self::SEARCH_TEXT :
-                        case self::SEARCH_TEXT_STRICT :
-                            $tpl->search->field->text->assign("[KEY]",     $key);
-                            $tpl->search->field->text->assign("[VALUE]",   $control_value);
-                            $tpl->search->field->text->assign("[IN_TEXT]", $attributes_str);
-                            break;
-
-                        case self::SEARCH_RADIO :
-                            $data = $search->getData();
-                            if ( ! empty($data)) {
-                                $data  = array('' => $this->getLocution('All')) + $data;
-                                foreach ($data as $radio_value => $radio_title) {
-                                    $tpl->search->field->radio->assign("[KEY]",     $key);
-                                    $tpl->search->field->radio->assign("[VALUE]",   $radio_value);
-                                    $tpl->search->field->radio->assign("[TITLE]",   $radio_title);
-                                    $tpl->search->field->radio->assign("[IN_TEXT]", $attributes_str);
-
-                                    $is_checked = $control_value == $radio_value
-                                        ? 'checked="checked"'
-                                        : '';
-                                    $tpl->search->field->radio->assign("[IS_CHECKED]", $is_checked);
-                                    $tpl->search->field->radio->reassign();
-                                }
-                            }
-                            break;
-
-                        case self::SEARCH_CHECKBOX :
-                            $data = $search->getData();
-                            if ( ! empty($data)) {
-                                foreach ($data as $checkbox_value => $checkbox_title) {
-                                    $tpl->search->field->checkbox->assign("[KEY]",     $key);
-                                    $tpl->search->field->checkbox->assign("[VALUE]",   $checkbox_value);
-                                    $tpl->search->field->checkbox->assign("[TITLE]",   $checkbox_title);
-                                    $tpl->search->field->checkbox->assign("[IN_TEXT]", $attributes_str);
-
-                                    $is_checked = is_array($control_value) && in_array($checkbox_value, $control_value)
-                                        ? 'checked="checked"'
-                                        : '';
-                                    $tpl->search->field->checkbox->assign("[IS_CHECKED]", $is_checked);
-                                    $tpl->search->field->checkbox->reassign();
-                                }
-                            }
-                            break;
-
-                        case self::SEARCH_NUMBER :
-                            $tpl->search->field->number->assign("[KEY]",         $key);
-                            $tpl->search->field->number->assign("[VALUE_START]", $control_value[0] ?? '');
-                            $tpl->search->field->number->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->number->assign("[IN_TEXT]",     $attributes_str);
-                            break;
-
-                        case self::SEARCH_DATE :
-                            $tpl->search->field->date->assign("[KEY]",         $key);
-                            $tpl->search->field->date->assign("[VALUE_START]", $control_value[0] ?? '');
-                            $tpl->search->field->date->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->date->assign("[IN_TEXT]",     $attributes_str);
-                            break;
-
-                        case self::SEARCH_DATETIME :
-                            $tpl->search->field->datetime->assign("[KEY]",         $key);
-                            $tpl->search->field->datetime->assign("[VALUE_START]", $control_value[0] ?? '');
-                            $tpl->search->field->datetime->assign("[VALUE_END]",   $control_value[1] ?? '');
-                            $tpl->search->field->datetime->assign("[IN_TEXT]",     $attributes_str);
-                            break;
-
-                        case self::SEARCH_SELECT :
-                            $data    = $search->getData();
-                            $options = ['' => ''] + $data;
-                            $tpl->search->field->select->assign("[KEY]",      $key);
-                            $tpl->search->field->select->assign("[IN_TEXT]",  $attributes_str);
-                            $tpl->search->field->select->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
-                            break;
-
-                        case self::SEARCH_MULTISELECT :
-                            $data = $search->getData();
-                            $tpl->search->field->multiselect->assign("[KEY]",      $key);
-                            $tpl->search->field->multiselect->assign("[IN_TEXT]",  $attributes_str);
-                            $tpl->search->field->multiselect->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
-                            break;
-                    }
-
-
-                    $tpl->search->field->assign("[#]",        $key);
-                    $tpl->search->field->assign("[OUT_TEXT]", $search->getOut());
-                    $tpl->search->field->assign('[CAPTION]',  $search->getCaption());
-                    $tpl->search->field->assign('[TYPE]',     $search->getType());
-                    $tpl->search->field->reassign();
-                }
-            }
-        }
-
-
-        foreach ($this->columns as $key => $column) {
-            if ($column instanceof Column) {
-                if ($column->isSorting()) {
-                    if (isset($this->session->table->order) && $this->session->table->order == $key + 1) {
-                        if ($this->session->table->order_type == "asc") {
-                            $tpl->header->cell->sort->touchBlock('order_asc');
-                        } elseif ($this->session->table->order_type == "desc") {
-                            $tpl->header->cell->sort->touchBlock('order_desc');
-                        }
-                    }
-
-                    $width = $column->getAttr('width');
-                    if ($width) {
-                        $tpl->header->cell->sort->assign('<th', "<th width=\"{$width}\"");
-                    }
-
-                    $tpl->header->cell->sort->assign('[COLUMN_NUMBER]', ($key + 1));
-                    $tpl->header->cell->sort->assign('[CAPTION]',       $column->getTitle());
-
-                } else {
-                    $width = $column->getAttr('width');
-                    if ($width) {
-                        $tpl->header->cell->no_sort->assign('<th', "<th width=\"{$width}\"");
-                    }
-                    $tpl->header->cell->no_sort->assign('[CAPTION]', $column->getTitle());
-                }
-
-
-                if ($this->show_number_rows) {
-                    $tpl->header->touchBlock('header_number');
-                }
-
-                $tpl->header->cell->reassign();
-            }
-        }
-
-
-        $this->fetchData();
-
-        if ($this->show_service) {
-            $tpl->service->assign('[TOTAL_RECORDS]', ($this->round_record_count ? '~' : '') . $this->records_total);
-        }
-
-        if ( ! empty($this->data_rows)) {
-            $row_index  = 1;
-            $row_number = $this->current_page > 1
-                ? (($this->current_page - 1) * $this->records_per_page) + 1
-                : 1;
-
-            foreach ($this->data_rows as $row) {
-                $tpl->row->assign('[ID]', $row->id);
-
-                if ($this->show_number_rows) {
-                    $tpl->row->row_number->assign('[#]', $row_number);
-                }
-
-                if ($this->edit_url &&
-                    ($this->checkAcl($this->resource, 'edit_all') ||
-                         $this->checkAcl($this->resource, 'edit_owner') ||
-                     $this->checkAcl($this->resource, 'read_all') ||
-                     $this->checkAcl($this->resource, 'read_owner'))
-                ) {
-                    $edit_url = $this->replaceTCOL($row, $this->edit_url);
-                    $row->setAttrAppend('class', 'edit-row');
-
-                    if (strpos($edit_url, 'javascript:') === 0) {
-                        $row->setAttrAppend('onclick', substr($edit_url, 11));
-                    } else {
-                        $edit_url = str_replace('?', '#', $edit_url);
-                        $row->setAttrAppend('onclick', "load('{$edit_url}');");
-                    }
-                }
-
-                foreach ($this->columns as $column) {
-                    if ($column instanceof Column) {
-                        $cell  = $row->{$column->getField()};
-                        $value = $cell->getValue();
-
-                        switch ($column->getType()) {
-                            case self::COLUMN_TEXT:
-                                $tpl->row->col->assign('[VALUE]', htmlspecialchars($value));
-                                break;
-
-                            case self::COLUMN_NUMBER:
-                                $value = strrev($value);
-                                $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
-                                $value = strrev($value);
-                                $tpl->row->col->assign('[VALUE]', $value);
-                                break;
-
-                            case self::COLUMN_HTML:
-                                $tpl->row->col->assign('[VALUE]', $value);
-                                break;
-
-                            case self::COLUMN_DATE:
-                                $date = $value ? date($this->date_mask, strtotime($value)) : '';
-                                $tpl->row->col->assign('[VALUE]', $date);
-                                break;
-
-                            case self::COLUMN_DATETIME:
-                                $date = $value ? date($this->datetime_mask, strtotime($value)) : '';
-                                $tpl->row->col->assign('[VALUE]', $date);
-                                break;
-
-                            case self::COLUMN_STATUS:
-                                if ($value == 'Y' || $value == 1) {
-                                    $img = "<img src=\"{$this->theme_src}/list/img/lightbulb.png\" alt=\"_tr(вкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
-                                } else {
-                                    $img = "<img src=\"{$this->theme_src}/list/img/lightbulb_off.png\" alt=\"_tr(выкл)\" title=\"_tr(вкл)/_tr(выкл)\" data-value=\"{$value}\"/>";
-                                }
-                                $tpl->row->col->assign('[VALUE]', $img);
-                                break;
-                        }
-
-                        // Атрибуты ячейки
-                        $column_attributes = $cell->getAttributes();
-                        $attributes        = array();
-                        foreach ($column_attributes as $attr => $value) {
-                            $attributes[] = "$attr=\"{$value}\"";
-                        }
-                        $implode_attributes = implode(' ', $attributes);
-                        $implode_attributes = $implode_attributes ? ' ' . $implode_attributes : '';
-
-                        $tpl->row->col->assign('<td>', "<td{$implode_attributes}>");
-
-                        if (end($this->columns) != $column) $tpl->row->col->reassign();
-                    }
-                }
-
-
-                $attribs = $row->getAttributes();
-
-                if ( ! empty($attribs)) {
-                    $attribs_string = '';
-                    foreach ($attribs as $name => $attr) {
-                        $attribs_string .= " {$name}=\"{$attr}\"";
-                    }
-                    $tpl->row->assign('<tr', '<tr ' . $attribs_string);
-                }
-
-                if ($this->show_checkboxes) {
-                    $tpl->row->checkboxes->assign('[ID]', $row->id);
-                    $tpl->row->checkboxes->assign('[#]',  $row_index);
-                    $row_index++;
-                }
-
-                $row_number++;
-
-                $tpl->row->reassign();
-            }
-
-        } else {
-            $tpl->touchBlock('no_rows');
-        }
-
-
-        if ($this->show_footer) {
-
-            // Pagination
-            $count_pages = ceil($this->records_total / $this->records_per_page);
-            $tpl->footer->pages->assign('[CURRENT_PAGE]', $this->current_page);
-            $tpl->footer->pages->assign('[COUNT_PAGES]',  $count_pages);
-
-            if ($count_pages > 1) {
-                $tpl->footer->pages->touchBlock('gotopage');
-
-                if ($this->current_page > 1) {
-                    $tpl->footer->pages->prev->assign('[PREV_PAGE]', $this->current_page - 1);
-                }
-                if ($this->current_page < $count_pages) {
-                    $tpl->footer->pages->next->assign('[NEXT_PAGE]', $this->current_page + 1);
-                }
-
-
-                $per_page_list = [
-                    '25'   => '25',
-                    '50'   => '50',
-                    '100'  => '100',
-                    '1000' => '1000',
-                ];
-
-                if ( ! isset($per_page_list[$this->records_per_page_default]) &&
-                    $this->records_per_page_default > 0
-                ) {
-                    $per_page_list[$this->records_per_page_default] = $this->records_per_page_default;
-                }
-
-                ksort($per_page_list);
-
-                $per_page_list[0] = $this->getLocution('All');
-
-                $tpl->footer->pages->per_page->fillDropDown(
-                    'records-per-page-[RESOURCE]',
-                    $per_page_list,
-                    $this->records_per_page == 1000000000 ? 0 : $this->records_per_page
-                );
-            }
-        }
-
-        return $tpl->render();
+        $render = new Render($this->toArray());
+        $render->setLocutions($this->locutions);
+        return $render->render();
     }
 
 
     /**
      * Получение данных по таблице
      * @return array
+     * @throws Exception
      */
     public function toArray(): array {
 
         $toolbar   = [];
+        $filter    = [];
         $search    = [];
         $columns   = [];
         $records   = [];
-        $events    = [];
         $templates = [];
 
         $count_pages = ceil($this->records_total / $this->records_per_page);
@@ -723,31 +654,21 @@ abstract class Table extends Acl {
             foreach ($this->buttons as $button) {
                 if ($button instanceof Table\Button) {
                     $toolbar['buttons'][] = $button->toArray();
+
+                } elseif (is_string($button)) {
+                    $toolbar['buttons'][] = $button;
                 }
             }
         }
 
         if ($this->add_url) {
-            $toolbar['btnAdd'] = true;
-            $events['onAdd'] = "load('{$this->add_url}')";
+            $toolbar['addButton'] = $this->add_url;
         }
 
-        if ($this->show_delete) {
-            $toolbar['btnDelete'] = true;
-            $events['onDelete'] = "CoreUI.table.deleteRows('{$this->resource}')";
-        }
+        $rows = $this->fetchRows();
 
-        if ($this->edit_url) {
-            $events['onClickRow']       = "load('{$this->edit_url}')";
-            $events['onSorting']        = "";
-            $events['onSearch']         = "";
-            $events['onFastSearch']     = "";
-            $events['onSaveTemplate']   = "";
-            $events['onSelectTemplate'] = "";
-        }
-
-        if ( ! empty($this->data_rows)) {
-            foreach ($this->data_rows as $row) {
+        if ( ! empty($rows)) {
+            foreach ($rows as $row) {
                 if ($row instanceof Table\Row) {
                     $records[] = $row->toArray();
                 }
@@ -770,25 +691,79 @@ abstract class Table extends Acl {
             }
         }
 
+        if ( ! empty($this->filter_controls)) {
+            foreach ($this->filter_controls as $filter_control) {
+                if ($filter_control instanceof Table\Filter) {
+                    $filter[] = $filter_control->toArray();
+                }
+            }
+        }
+
+        if ($profile_controller = $this->getProfileController()) {
+            $hash      = $this->getUniqueHash();
+            $templates = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+        }
+
+
+        $per_page_list = $this->records_per_page_list;
+
+        if ($this->records_per_page_default > 0 &&
+            ! in_array($this->records_per_page_default, $per_page_list)
+        ) {
+            $per_page_list[] = $this->records_per_page_default;
+        }
+
+        sort($per_page_list);
+
+        if (($all_key = array_search('0', $per_page_list)) !== false) {
+            unset($per_page_list[$all_key]);
+            $per_page_list[] = 0;
+        }
+
         $data = [
             'resource' => $this->resource,
             'show'     => [
-                'header'        => $this->show_header,
-                'toolbar'       => true,
-                'footer'        => $this->show_footer,
-                'lineNumbers'   => $this->show_number_rows,
-                'selectRows'    => $this->show_checkboxes,
-                'switchColumns' => $this->show_columns_switcher,
-                'templates'     => $this->show_templates,
+                'header'       => $this->show_header,
+                'toolbar'      => $this->show_service,
+                'footer'       => $this->show_footer,
+                'delete'       => $this->show_delete,
+                'lineNumbers'  => $this->show_number_rows,
+                'selectRows'   => $this->show_select_rows,
+                'columnManage' => $this->show_column_manage,
+                'templates'    => $this->show_templates,
             ],
 
             'currentPage'        => $this->current_page,
             'countPages'         => $count_pages,
             'recordsPerPage'     => $this->records_per_page,
             'recordsTotal'       => $this->records_total,
-            'recordsPerPageList' => [ 25, 50, 100, 1000, ],
+            'recordsTotalMore'   => $this->records_total_more,
+            'recordsPerPageList' => $per_page_list,
+            'records'            => $records,
         ];
 
+
+        if ($this->edit_url) {
+            $data['recordsEditUrl'] = $this->edit_url;
+        }
+        if ($this->table_name) {
+            $data['tableName'] = $this->table_name;
+        }
+        if ($this->group_field) {
+            $data['groupField']   = $this->group_field;
+            $data['groupOptions'] = $this->group_options;
+        }
+        if ( ! empty($this->is_ajax)) {
+            $data['isAjax'] = $this->is_ajax;
+        }
+        if ( ! empty($this->is_round_calc)) {
+            $data['isRoundCalc']       = $this->is_round_calc;
+            $data['recordsTotalRound'] = $this->records_total_round;
+            $data['countPages']         = ceil($this->records_total_round / $this->records_per_page);
+        }
+        if ( ! empty($filter)) {
+            $data['filter'] = $filter;
+        }
         if ( ! empty($search)) {
             $data['search'] = $search;
         }
@@ -798,14 +773,8 @@ abstract class Table extends Acl {
         if ( ! empty($toolbar)) {
             $data['toolbar'] = $toolbar;
         }
-        if ( ! empty($events)) {
-            $data['events'] = $events;
-        }
         if ( ! empty($columns)) {
             $data['columns'] = $columns;
-        }
-        if ( ! empty($records)) {
-            $data['records'] = $records;
         }
 
         return $data;
@@ -814,11 +783,11 @@ abstract class Table extends Acl {
 
     /**
      * Добавление кнопки
-     * @param string $title
+     * @param string $content
      * @return Button
      */
-    public function addButton(string $title): Button {
-        return $this->buttons[] = new Button($title);
+    public function addButton(string $content): Button {
+        return $this->buttons[] = new Button($content);
     }
 
 
@@ -838,7 +807,7 @@ abstract class Table extends Acl {
      * @param string $type
      * @param string $width OPTIONAL parameter width column
      * @return Column
-     * @throws \Exception
+     * @throws Exception
      */
     public function addColumn(string $title, string $field, string $type = self::COLUMN_TEXT, string $width = ''): Column {
 
@@ -859,7 +828,7 @@ abstract class Table extends Acl {
      * @param string $field destination field name
      * @param string $type  type of search field
      * @return Search
-     * @throws \Exception
+     * @throws Exception
      */
     public function addSearch(string $title, string $field, string $type = self::SEARCH_TEXT): Search {
 
@@ -867,6 +836,23 @@ abstract class Table extends Acl {
 
         $this->search_controls[] = $search;
         return $search;
+    }
+
+
+    /**
+     * Добавление поля для фильтрации
+     * @param string $field
+     * @param string $type
+     * @param string $title
+     * @return Filter
+     * @throws Exception
+     */
+    public function addFilter(string $field, string $type = self::FILTER_TEXT, string $title = ''): Filter {
+
+        $filter = new Filter($field, $type, $title);
+
+        $this->filter_controls[] = $filter;
+        return $filter;
     }
 
 
@@ -880,40 +866,120 @@ abstract class Table extends Acl {
 
 
     /**
-     * Получение данных.
-     * @return array
+     * @return void
+     * @throws Exception
+     * @throws \Zend_Db_Adapter_Exception
      */
-    abstract public function fetchData(): array;
+    public function preFetchRows(): void {
+
+        //TEMPLATES
+        if ( ! empty($_POST['template_create_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_title = $_POST['template_create_' . $this->resource];
+                $hash           = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+                $template[hash('crc32b', $template_title)] = [
+                    'title'  => $template_title,
+                    'search' => $this->session->table->search ?? [],
+                    'column' => $this->session->table->columns ?? [],
+                ];
+
+                $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+            }
+        }
+
+        if ( ! empty($_POST['template_remove_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_remove_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+                $template    = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template    = $template ?: [];
 
 
-    /**
-     * @param string $locution
-     * @return string
-     */
-    protected function getLocution(string $locution): string {
-        return isset($this->locutions[$this->lang][$locution])
-            ? htmlspecialchars($this->locutions[$this->lang][$locution])
-            : htmlspecialchars($locution);
+                if (isset($template[$template_id])) {
+                    unset($template[$template_id]);
+                    $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
+                }
+            }
+        }
+
+        if ( ! empty($_POST['template_select_' . $this->resource])) {
+            if ($profile_controller = $this->getProfileController()) {
+                $template_id = $_POST['template_select_' . $this->resource];
+                $hash        = $this->getUniqueHash();
+
+                $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
+                $template = $template ?: [];
+
+                if (isset($template[$template_id])) {
+                    $this->session->table->search  = $template[$template_id]['search'];
+                    $this->session->table->columns = $template[$template_id]['column'];
+                }
+            }
+        }
     }
 
 
     /**
-     * Замена TCOL_ на значение указанного поля
-     * @param array|Row  $row Данные
-     * @param string     $str Строка с TCOL_ вставками
+     * Получение данных.
+     * @return array
+     */
+    abstract public function fetchRows(): array;
+
+
+    /**
+     * @param string $locution
+     * @param string $text
+     */
+    public function setLocution(string $locution, string $text) {
+
+        $this->locutions[$locution] = $text;
+    }
+
+
+    /**
+     * Получение контроллера профиля
+     * @return \ModProfileController|null
+     * @throws Exception
+     * @throws \Exception
+     */
+    private function getProfileController(): ?\ModProfileController {
+
+        if ($this->isModuleInstalled('profile')) {
+            $profile_location = $this->getModuleLocation('profile');
+
+            if (file_exists("$profile_location/vendor/autoload.php")) {
+                require_once "$profile_location/vendor/autoload.php";
+            }
+
+            require_once "$profile_location/ModProfileController.php";
+
+            return new \ModProfileController();
+
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Получение хэша соответствующего текущему набору поисковых полей, колонок и имени
      * @return string
      */
-    protected function replaceTCOL($row, string $str): string {
+    private function getUniqueHash(): string {
 
-        if (strpos($str, 'TCOL_') !== false) {
-            foreach ($row as $field => $value) {
-                $value = htmlspecialchars($value);
-                $value = addslashes($value);
-                $str   = str_replace('TCOL_' . strtoupper($field), $value, $str);
-            }
-            return $str;
-        } else {
-            return $str;
+        $indicators = [];
+
+        foreach ($this->search_controls as $search) {
+            $indicators[] = $search->getType();
         }
+
+        $indicators[] = $this->columns
+            ? count($this->columns)
+            : 0;
+
+        return hash('crc32b', $this->resource . implode('', $indicators));
     }
 }

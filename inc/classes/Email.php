@@ -1,7 +1,7 @@
 <?php
 namespace Core2;
 
-require_once DOC_ROOT . "core2/inc/classes/Db.php";
+require_once 'Db.php';
 
 use Laminas\Mail;
 use Laminas\Mail\Transport;
@@ -12,7 +12,7 @@ use Laminas\Mime\Part as MimePart;
 /**
  * Class Email
  */
-class Email {
+class Email extends Db {
 
     protected $mail_data = [
         'from'       => '',
@@ -206,8 +206,6 @@ class Email {
     public function send($immediately = false) {
 
         try {
-            $db = new Db();
-
             if (empty($this->mail_data['from'])) {
                 $config = \Zend_Registry::get('config');
 
@@ -229,9 +227,9 @@ class Email {
                 }
             }
 
-            if ($db->isModuleActive('queue')) {
-                $version  = $db->getModuleVersion('queue');
-                $location = $db->getModuleLocation('queue');
+            if ($this->isModuleActive('queue')) {
+                $version  = $this->getModuleVersion('queue');
+                $location = $this->getModuleLocation('queue');
                 require_once $location . '/ModQueueController.php';
 
                 if (version_compare($version, '1.2.0', '<')) {
@@ -280,16 +278,11 @@ class Email {
                     }
 
 
-                    $zend_db = \Zend_Registry::get('db');
-                    $zend_db->beginTransaction();
                     $mail_id = $queue->save();
 
                     if ( ! $mail_id || $mail_id <= 0) {
-                        $zend_db->rollback();
                         throw new \Exception('Ошибка добавления сообщения в очередь');
-
                     }
-                    $zend_db->commit();
 
                     if ($immediately) {
                         $is_send = $this->zendSend(
@@ -308,7 +301,9 @@ class Email {
                         }
                     }
 
-                } elseif (version_compare($version, '1.5.0', '<=')) {
+                }
+                elseif (version_compare($version, '1.5.0', '<=')) {
+                    //DEPRECATED
                     $queue = new \modQueueController();
 
                     $this->mail_data['date_send'] = $immediately
@@ -334,11 +329,11 @@ class Email {
                         }
                     }
 
-                } else {
+                }
+                else {
                     $queue = new \modQueueController();
                     $queue->createMail($this->mail_data, $immediately);
                 }
-
             }
             else {
                 $is_send = $this->zendSend(
@@ -413,6 +408,20 @@ class Email {
      * @throws \Zend_Exception
      */
     public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '') {
+
+        $w = $this->workerAdmin->doBackground('Mailer', [
+            'from'  => $from,
+            'to'    => $to,
+            'subj'  => $subj,
+            'body'  => $body,
+            'cc'    => $cc,
+            'bcc'   => $bcc,
+            'files' => serialize($files),
+            'reply' => $reply,
+        ]);
+        if ($w) {
+            return;
+        }
 
         $config = \Zend_Registry::get('config');
 

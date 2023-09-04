@@ -6,8 +6,9 @@
  * Time: 17:04
  * To change this template use File | Settings | File Templates.
  */
+namespace Core2\Model;
 
-class UsersProfile extends Zend_Db_Table_Abstract {
+class UsersProfile extends \Zend_Db_Table_Abstract {
 
 	protected $_name = 'core_users_profile';
 

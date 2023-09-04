@@ -16,16 +16,20 @@ namespace Core2;
 class Cache
 {
     private $adapter;
-    const NS = 'Core2';
+    private $adapter_name; //может пригодиться
+    private $namespace = 'Core2';
 
     /**
      * Cache constructor.
      * @link https://docs.zendframework.com/zend-cache/storage/adapter/
      * @param $adapter
      */
-    public function __construct($adapter)
+    public function __construct($adapter, $adapter_name)
     {
         $this->adapter = $adapter;
+        $this->adapter_name = $adapter_name;
+
+        $this->namespace = $this->adapter->getOptions()->getNamespace();
     }
 
     /**
@@ -48,6 +52,25 @@ class Cache
     }
 
     /**
+     * add tags to the key
+     * @param $key
+     * @param $tags
+     * @return void
+     */
+    public function setTags($key, $tags) {
+        if (method_exists($this->adapter,'setTags')) return $this->adapter->setTags($key, $tags);
+        //TODO сделать тэгирование
+    }
+
+    public function clearByTags($tags) {
+        if (method_exists($this->adapter,'clearByTags')) $this->adapter->clearByTags($tags);
+        else {
+            //TODO сделать очистку по тэгам
+            $this->adapter->clearByNamespace($this->namespace);
+        }
+    }
+
+    /**
      * @param $key
      * @return bool
      */
@@ -64,17 +87,20 @@ class Cache
      */
     public function save($data, $key, $tags = []) {
         $this->adapter->setItem($key, $data);
-        if ($tags) $this->adapter->setTags($key, $tags);
+        if ($tags) $this->setTags($key, $tags);
     }
 
     /**
      * @param $mode
      * @param array $tags
      */
-    public function clean($mode = '', $tags = []) {
-        if ($tags) $this->adapter->clearByTags($tags);
+    public function clean($key = '', $tags = []) {
+        if ($tags) {
+            $this->clearByTags($tags);
+        }
         else {
-            $this->adapter->clearByNamespace(self::NS);
+            if ($key) $this->adapter->removeItem($key);
+            else $this->adapter->clearByNamespace($this->namespace);
         }
     }
 

@@ -76,10 +76,10 @@ class tabs extends initTabs {
 				<td class=\"containerHeaderTD\">";
         $tpl = new Templater2("core2/html/" . THEME . "/tab/caption.tpl");
 		$tpl->assign('[caption]', $caption);
-		if ( ! empty($this->help[$this->tabs_id])) {
-			$tpl->help->assign('[TAB_ID]', $this->tabs_id);
-			$tpl->help->assign('[HELP]', $this->help[$this->tabs_id]);
-			unset($this->help[$this->tabs_id]);
+		if ( ! empty($this->help[$this->activeTab])) {
+			$tpl->help->assign('[TAB_ID]', $this->activeTab);
+			$tpl->help->assign('[HELP]', $this->help[$this->activeTab]);
+			unset($this->help[$this->activeTab]);
 		}
 		$HTML .= $tpl->parse() . "</td></tr>";
 		if (isset($this->tabs[$this->tabs_id]) && count($this->tabs[$this->tabs_id])) {

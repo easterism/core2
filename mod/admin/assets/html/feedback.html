@@ -1,10 +1,10 @@
 <div id="feedbackError" style="display:none"></div>
-<form id="feedback-form" method="post" onsubmit="feedback.post();return false;">
+<form id="feedback-form" method="post" onsubmit="feedback.post();return false;" enctype="multipart/form-data">
     <table height="100%" width="100%" cellpadding="5">
         <tr>
             <td width="60" class="feedback-label">Модуль:</td>
             <td width="240" class="feedback-control">
-    	        <select class="feedBackSelect" id="supportFormModule">
+    	        <select class="feedBackSelect" id="supportFormModule" name="supportFormModule">
     	            <option value="" disabled="disabled" selected="selected">Выберите модуль</option>
                 </select>
             </td>
@@ -14,17 +14,79 @@
                 <br/>
                 Сообщение:
             </td>
-        <td width="240" class="feedback-control">
-            <br/>
-            <textarea id="supportFormMessage" class="feedBackMessage"></textarea>
-        </td>
-    </tr>
-    <tr>
-        <td class="feedback-label">&nbsp;</td>
-        <td class="feedback-control">
-            <br/>
-            <input type="submit" name="sendSupportForm" value="Отправить" class="button"/>
-        </td>
-    </tr>
+            <td width="240" class="feedback-control">
+                <br/>
+                <textarea id="supportFormMessage" class="feedBackMessage" name="supportFormMessage"></textarea>
+            </td>
+        </tr>
+        <tr valign="top" id="feedback-video">
+            <td style="width:75px">
+                <br/>
+                Запись экрана:
+            </td>
+            <td>
+                <video controls autoplay playsinline style="max-width: 250px;display: none;"></video>
+                <script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+                <button class="buttonSmall" style="margin-top: 7px" id="btn-start-recording">
+                    <img src="core2/html/default/img/monitor.png"/>
+                </button>
+                <button id="btn-stop-recording" style="display: none">Стоп</button>
+                <script>
+                    var video = document.querySelector('video');
+                    if (!navigator.getDisplayMedia && !navigator.mediaDevices) {
+                        var error = 'Your browser does NOT support the getDisplayMedia API.';
+
+                        document.querySelector('video').style.display = 'none';
+                        document.getElementById('feedback-video').style.display = 'none';
+                        document.getElementById('btn-start-recording').style.display = 'none';
+                        document.getElementById('btn-stop-recording').style.display = 'none';
+                    }
+
+                    var recorder; // globally accessible
+
+                    if (recorder && !video.src) {
+                        document.querySelector('video').style.display = '';
+                        document.getElementById('btn-start-recording').style.display = 'none';
+                        document.getElementById('btn-stop-recording').style.display = '';
+                    }
+
+                    document.getElementById('btn-start-recording').onclick = function() {
+                        this.disabled = true;
+
+                        captureScreen(function(screen) {
+                            video.srcObject = screen;
+
+                            recorder = RecordRTC(screen, {
+                                type: 'video'
+                            });
+
+                            recorder.startRecording();
+                            video.style.display = 'block';
+                            // release screen on stopRecording
+                            recorder.screen = screen;
+                            document.getElementById('btn-start-recording').style.display = 'none';
+                            document.getElementById('btn-stop-recording').style.display = 'block';
+                            document.getElementById('btn-stop-recording').disabled = false;
+                        });
+
+                        return false;
+                    };
+
+                    document.getElementById('btn-stop-recording').onclick = function() {
+                        document.getElementById('btn-start-recording').style.display = 'block';
+                        this.style.display = 'none';
+                        this.disabled = true;
+                        recorder.stopRecording(stopRecordingCallback);
+                    };
+                </script>
+            </td>
+        </tr>
+        <tr>
+            <td class="feedback-label">&nbsp;</td>
+            <td class="feedback-control">
+                <br/>
+                <input type="submit" value="Отправить" class="button"/>
+            </td>
+        </tr>
     </table>
 </form>

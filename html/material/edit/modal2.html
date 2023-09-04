@@ -2,7 +2,7 @@
     <input type="hidden" id="[KEY]" name="[NAME]" value="[VALUE]">
     <div class="input-group">
         <input id="[KEY]-title" class="modal-control-title form-control input-sm first"
-               value="[TEXT]" type="text" disabled="disabled">
+               value="[TEXT]" type="text" disabled="disabled" [ATTR]>
         <!-- BEGIN clear -->
         <button type="button" class="modal-control-clear btn btn-default add-on middle" onclick="edit.modal2.clear('[KEY]');">
             <img src="[THEME_DIR]/img/clear.png" alt="Очистить" title="Очистить">
@@ -12,19 +12,10 @@
                onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', [URL])">
         <div class="clearfix"></div>
     </div>
-    <div class="modal fade" id="[KEY]-modal" tabindex='-1' style="display: none">
-        <div class="modal-dialog [SIZE]">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <span class="close" data-dismiss="modal" onclick="edit.modal2.hide()">&times;</span>
-                    <h4 class="modal-title">[TITLE]</h4>
-                </div>
-                <div class="modal-body"></div>
-            </div>
-        </div>
-    </div>
     <script>
         edit.modal2.options['[KEY]'] = {
+            'title': '[TITLE]',
+            'size': '[SIZE]',
             'onHidden': [ON_HIDDEN],
             'onClear': [ON_CLEAR],
             'onChoose': [ON_CHOOSE]
