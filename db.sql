@@ -153,7 +153,6 @@ CREATE TABLE IF NOT EXISTS `core_settings` (
   KEY `visible` (`visible`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Экспортируемые данные не выделены.
 CREATE TABLE IF NOT EXISTS `core_submodules` (
   `sm_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `sm_name` varchar(128) NOT NULL DEFAULT '',
@@ -186,3 +185,5 @@ CREATE TABLE IF NOT EXISTS `core_users_roles` (
   CONSTRAINT `core_users_roles_fk2` FOREIGN KEY (`role_id`) REFERENCES `core_roles` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+INSERT INTO `core_users` (`u_login`, `u_pass`, `visible`, `is_admin_sw`, `date_added`) VALUES ('admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y', NOW());
