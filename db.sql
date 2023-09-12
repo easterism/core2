@@ -185,5 +185,6 @@ CREATE TABLE IF NOT EXISTS `core_users_roles` (
   CONSTRAINT `core_users_roles_fk2` FOREIGN KEY (`role_id`) REFERENCES `core_roles` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
-INSERT INTO `core_users` (`u_login`, `u_pass`, `visible`, `is_admin_sw`, `date_added`) VALUES ('admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y', NOW());
+INSERT INTO core_roles (name, is_active_sw, lastupdate, description, lastuser, access, date_added, position, access_add) VALUES ('Администратор', 'Y', NOW(), null, 1, 'a:0:{}', NOW(), 1, null);
+SET @role_id = LAST_INSERT_ID();
+INSERT INTO `core_users` (`role_id`, `u_login`, `u_pass`, `visible`, `is_admin_sw`, `date_added`) VALUES (@role_id, 'admin', 'ad7123ebca969de21e49c12a7d69ce25', 'Y', 'Y', NOW());
