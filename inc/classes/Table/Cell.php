@@ -15,8 +15,8 @@ class Cell {
     /**
      * @param mixed $value
      */
-    public function __construct($value) {
-        $this->value = (string)$value;
+    public function __construct(mixed $value) {
+        $this->value = $value;
     }
 
 
@@ -24,22 +24,22 @@ class Cell {
      * @return string
      */
     public function __toString() {
-        return $this->value;
+        return (string)$this->value;
     }
 
 
-    /**h
+    /**
      * @param mixed $value
      */
-    public function setValue($value) {
-        $this->value = (string)$value;
+    public function setValue(mixed $value): void {
+        $this->value = $value;
     }
 
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getValue(): string {
+    public function getValue(): mixed {
         return $this->value;
     }
 
@@ -47,7 +47,7 @@ class Cell {
     /**
      * @return string
      */
-    public function val(): string {
+    public function val(): mixed {
         return $this->value;
     }
 
