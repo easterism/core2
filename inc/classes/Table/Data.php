@@ -27,7 +27,7 @@ class Data extends Table {
 
     /**
      * Получение данных.
-     * @return array
+     * @return Row[]
      */
     public function fetchRows(): array {
 
@@ -194,7 +194,7 @@ class Data extends Table {
                             break;
 
                         case 'text':
-                            if (mb_stripos($row[$filter_field], $filter_value, null, 'utf8') === false) {
+                            if (mb_stripos($row[$filter_field], $filter_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
                             }
@@ -330,7 +330,7 @@ class Data extends Table {
                             break;
 
                         case 'text':
-                            if (mb_stripos($row[$search_field], $search_value, null, 'utf8') === false) {
+                            if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
                             }

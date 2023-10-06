@@ -1646,8 +1646,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel.core-panel-default {border-color: #cbcbcb}
 .core-panel.core-panel-default > .core-panel-heading {
     font-weight: normal;
-    font-size: 26px;
     overflow: hidden;
+}
+.core-panel.core-panel-default > .core-panel-heading > .core-panel-header {
+    font-size: 26px;
 }
 .core-panel > .core-panel-heading {
     padding: 20px 20px 6px 20px;
@@ -1665,7 +1667,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
             border-top-right-radius: 3px;
 }
 .core-panel > .core-panel-heading .btn {
-    margin-top: -4px;
+    margin-top: 2px;
+}
+.core-panel > .core-panel-heading > .btn {
+    margin-top: -12px;
 }
 .core-panel > .core-panel-heading > .core-panel-subtitle {
     color: #757575;
@@ -1678,7 +1683,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel > .core-panel-heading > .core-panel-controls {
     display:-webkit-box;
 }
-.core-panel > .core-panel-heading > .core-panel-controls div {
+.core-panel > .core-panel-heading > .core-panel-controls > div {
     margin-left: 8px;
 }
 
