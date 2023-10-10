@@ -742,16 +742,17 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['modal2'] = true;
 
-                                $options               = [];
-                                $options['size']       = $value['in']['size'] ?? '';
-                                $options['title']      = $value['in']['title'] ?? '';
-                                $options['text']       = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
-                                $options['value']      = $value['in']['value'] ?? $value['default'];
-                                $options['attributes'] = $value['in']['attributes'] ?? '';
-                                $options['url']        = $value['in']['url'] ?? '';
-                                $options['onHidden']   = $value['in']['onHidden'] ?? '';
-                                $options['onClear']    = $value['in']['onClear'] ?? '';
-                                $options['onChoose']   = $value['in']['onChoose'] ?? '';
+                                $options                     = [];
+                                $options['size']             = $value['in']['size'] ?? '';
+                                $options['title']            = $value['in']['title'] ?? '';
+                                $options['text']             = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
+                                $options['value']            = $value['in']['value'] ?? $value['default'];
+                                $options['attributes']       = $value['in']['attributes'] ?? '';
+                                $options['url']              = $value['in']['url'] ?? '';
+                                $options['onHidden']         = $value['in']['onHidden'] ?? '';
+                                $options['onClear']          = $value['in']['onClear'] ?? '';
+                                $options['onChoose']         = $value['in']['onChoose'] ?? '';
+                                $options['autocomplete_url'] = $value['in']['autocomplete_url'] ?? '';
 
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
@@ -767,15 +768,16 @@ class editTable extends initEdit {
 
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal2.html');
-                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
-                                $tpl->assign('[TITLE]',     $options['title']);
-                                $tpl->assign('[TEXT]',      $options['text']);
-                                $tpl->assign('[VALUE]',     $options['value']);
-                                $tpl->assign('[URL]',       $url);
-                                $tpl->assign('[NAME]',      'control[' . $field . ']');
-                                $tpl->assign('[SIZE]',      $size);
-                                $tpl->assign('[ATTR]',      $options['attributes']);
-                                $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
+                                $tpl->assign('[THEME_DIR]',        'core2/html/' . THEME);
+                                $tpl->assign('[TITLE]',            $options['title']);
+                                $tpl->assign('[TEXT]',             $options['text']);
+                                $tpl->assign('[VALUE]',            $options['value']);
+                                $tpl->assign('[URL]',              $url);
+                                $tpl->assign('[AUTOCOMPLETE_URL]', $options['autocomplete_url']);
+                                $tpl->assign('[NAME]',             'control[' . $field . ']');
+                                $tpl->assign('[SIZE]',             $size);
+                                $tpl->assign('[ATTR]',             $options['attributes']);
+                                $tpl->assign('[KEY]',              crc32(uniqid() . microtime(true)));
 
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
@@ -794,11 +796,6 @@ class editTable extends initEdit {
                                     ? trim($options['onChoose'])
                                     : "''";
                                 $tpl->assign('[ON_CHOOSE]', $on_choose);
-
-
-                                if ( ! $value['req']) {
-                                    $tpl->touchBlock('clear');
-                                }
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }

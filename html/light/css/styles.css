@@ -1252,9 +1252,17 @@ table td.homeTD {padding: 10px}
 
 /* UI */
 .ui-autocomplete-category {
-	font-weight: bold;
-	font-style: italic;
-	color: #808080;
+    font-weight: 600;
+    padding: 0.2em 0.4em;
+    margin: 0.8em 0 0;
+    font-style: italic;
+    color: #424242;
+}
+.ui-autocomplete-loading {
+    background-image: url("../img/load.gif");
+    background-position-y: center;
+    background-position-x: 97%;
+    background-repeat: no-repeat;
 }
 .ui-timepicker-div .ui-widget-header {margin-bottom: 8px}
 .ui-timepicker-div dl {text-align: left}
