@@ -1234,9 +1234,17 @@ table td.homeTD {padding: 10px}
 
 /* UI */
 .ui-autocomplete-category {
-	font-weight: bold;
+    font-weight: 600;
+    padding: 0.2em 0.4em;
+    margin: 0.8em 0 0;
 	font-style: italic;
-	color: #808080;
+	color: #424242;
+}
+.ui-autocomplete-loading {
+    background-image: url("../img/load.gif");
+    background-position-y: center;
+    background-position-x: 97%;
+    background-repeat: no-repeat;
 }
 .ui-timepicker-div .ui-widget-header {margin-bottom: 8px}
 .ui-timepicker-div dl {text-align: left}
@@ -1302,7 +1310,11 @@ label.control-label {font-weight: 700}
 .pull-right {float: right}
 .clearfix {clear:both}
 .bg-white {background-color: #fff}
-.form-control.modal-control-title {width: 235px}
+.form-control.modal-control-title {
+    border-bottom-left-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    width: 235px;
+}
 .modal-control .modal-control-button {height: 30px}
 .modal-control .input-group {min-width: 350px}
 .ctrl-dpr-controls > *,
