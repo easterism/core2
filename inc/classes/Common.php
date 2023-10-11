@@ -308,6 +308,21 @@ class Common extends \Core2\Acl {
 
 
 	/**
+	 * link to CSS file
+     * @param string $module module name
+	 * @param string $href   CSS filename
+     * @throws \Exception
+	 */
+	protected function getCssModule(string $module, string $href): string {
+
+        $src_mod = $this->getModuleLoc($module);
+        ob_start();
+        Tool::printCss($src_mod . $href);
+        return ob_get_clean();
+	}
+
+
+	/**
 	 * 
 	 * Print link to JS file
 	 * @param string $src - JS filename
@@ -328,6 +343,23 @@ class Common extends \Core2\Acl {
 	protected function printJsModule($module, $src, $chachable = false) {
 		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
+	}
+
+
+    /**
+     * Link to JS file
+     * @param string $module module name
+     * @param string $src    JS filename
+     * @param bool   $chachable
+     * @return string
+     * @throws Exception
+     */
+	protected function getJsModule(string $module, string $src, bool $chachable = false): string {
+
+        $src_mod = $this->getModuleLoc($module);
+        ob_start();
+        Tool::printJs($src_mod . $src, $chachable);
+        return ob_get_clean();
 	}
 
 
