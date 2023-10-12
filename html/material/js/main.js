@@ -412,10 +412,6 @@ var load = function (url, data, id, callback) {
 		id = '#' + id;
 	}
 
-	if ( ! url) {
-		return;
-	}
-
 	if (url.indexOf("index.php") === 0) {
 		url = url.substr(10);
 	}
