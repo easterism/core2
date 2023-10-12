@@ -1252,12 +1252,13 @@ class editTable extends initEdit {
                                         $group                                = $row[2];
                                     }
                                     $selected   = "";
-                                    $real_value = explode('"', $row[0]);
-                                    $real_value = $real_value[0];
-                                    if (in_array($real_value, $value['default'])) {
-                                        $selected = 'selected="selected"';
+                                    if ($row[0]) {
+                                        $real_value = explode('"', $row[0]);
+                                        $real_value = $real_value[0];
+                                        if (in_array($real_value, $value['default'])) {
+                                            $selected = 'selected="selected"';
+                                        }
                                     }
-
                                     if (is_array($row[1])) {
                                         $row[1] = $row[1]['value'];
                                     }

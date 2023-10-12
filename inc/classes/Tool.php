@@ -92,7 +92,7 @@ class Tool {
 	 * Строки маркируются датой и временем
      *
 	 * @param string $filename
-	 * @param string $text
+	 * @param string|array $text
 	 */
 	public static function logToFile($filename, $text) {
 
