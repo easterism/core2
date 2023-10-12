@@ -124,7 +124,7 @@ TOP MENU
 	z-index: 1000;
 }
 #menuContainer .menu_back {
-	background-image: url("img/menu_background.gif");
+	background-image: url("img/winter.gif");
 	width:100%;
 }
 .menu_items, .menu_items_selected {
@@ -466,6 +466,7 @@ table.editTable {
 	text-align: right;
 	padding: 3px;
 	width: 150px;
+	min-width: 150px;
 }
 .newRulesModule {
 	text-decoration:underline;
@@ -1016,6 +1017,30 @@ table td.homeTD {
 	display: inline-block;
 	min-width: 255px;
 }
+.modal-list__control {
+	margin: 0;
+	padding: 0;
+}
+.modal-list__control .modal-list__item {
+	border-bottom: 1px solid #ddd;
+	list-style: none;
+	min-width: 400px;
+	white-space: nowrap;
+	padding: 10px 35px 10px 0;
+	position: relative;
+}
+.modal-list__control .modal-list__item:first-child {
+	padding-top: 0;
+}
+.modal-list__control .modal-list__item .modal-list__item-delete {
+	position: absolute;
+	right: 10px;
+	top: 12px;
+	cursor: pointer;
+}
+.modal-list__control .modal-list__item:first-child .modal-list__item-delete {
+	top: 4px;
+}
 
 .core-panel {
 	border-collapse: collapse;
@@ -1070,8 +1095,8 @@ table td.homeTD {
 	position: relative;
 	display: block;
 	float: left;
-	margin-top: -1px;
-	margin-bottom: -1px;
+	margin-top: -2px;
+	margin-bottom: -2px;
 }
 
 .core-panel > .core-panel-body > .core-panel-tabs > li > a {
@@ -2023,4 +2048,14 @@ table.coreui-table .coreui-table-row-group {
 	-webkit-transform: translateX(16px);
 	-ms-transform: translateX(16px);
 	transform: translateX(16px);
+}
+
+#backVideo {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	min-width: 100%;
+	min-height: 100%;
+	z-index: -1000;
+	opacity: 0.3;
 }

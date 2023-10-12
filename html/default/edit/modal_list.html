@@ -1,0 +1,38 @@
+<ul class="modal-list__control modal-list__control-[CONTROL]">
+  <!-- BEGIN item -->
+  <li class="modal-list__item modal-list__item-[CONTROL]-[KEY]" data-key="[KEY]">
+    <span class="modal-list__item-text">[TEXT]</span>
+
+    <!-- BEGIN extra_field -->
+    <input type="[TYPE]" class="form-control input-sm modal-list__item-field" name="control[[CONTROL]][[KEY]][NAME]" value="[VALUE]"
+           placeholder="[TITLE]">
+    <!-- END extra_field -->
+
+    <!-- BEGIN readonly_field -->
+    <span>[VALUE]</span>
+    <!-- END readonly_field -->
+
+    <!-- BEGIN edit_item -->
+    <input type="hidden" class="modal-list__item-id" name="control[[CONTROL]][[KEY]][id]" value="[ID]">
+    <img src="[THEME_DIR]/img/delete.png" class="modal-list__item-delete" onclick="edit.modalList.deleteItem('[CONTROL]', '[KEY]')"/>
+    <!-- END edit_item -->
+  </li>
+  <!-- END item -->
+</ul>
+
+<!-- BEGIN add_items-->
+<button type="button" class="btn btn-sm btn-link"
+        onclick="edit.modalList.showModal('[CONTROL]', [URL])">Добавить</button>
+
+<script>
+  edit.modalList.themeSrc = '[THEME_DIR]';
+  edit.modalList.options['[CONTROL]'] = {
+    'title': '[TITLE]',
+    'size': '[SIZE]',
+    'fields': [FIELDS],
+    'onHidden': [ON_HIDDEN],
+    'onDelete': [ON_DELETE],
+    'onAdd': [ON_ADD]
+  };
+</script>
+<!-- END add_items -->

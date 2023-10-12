@@ -10,7 +10,7 @@
 	<meta name="description" content="CORE2">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="stylesheet" href="core2/html/default/style2.css?_=13" type="text/css" />
+	<link rel="stylesheet" href="core2/html/default/style2.css?_=16" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 	<link rel="stylesheet" href="core2/html/default/alertify/alertify.css" type="text/css" />
 	<!--system_css-->
@@ -26,16 +26,16 @@
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
 	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=6"></script>
+	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=10"></script>
 
 	<!--[if (gte IE 8)&(lt IE 10)]>
 	<script src="core2/vendor/blueimp/jquery-file-upload/js/cors/jquery.xdr-transport.js"></script>
 	<![endif]-->
 
 	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=5"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=10"></script>
 	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=6"></script>
+	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=7"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="author" content="easter.by@gmail.com" />
     <!--[if IE]>
@@ -55,7 +55,10 @@
 </head>
 <body>
 <div id="rootContainer">
-<!--index-->
+	<!-- video autoplay muted loop id="backVideo">
+		<source src="core2/html/default/videvostock009.mp4" type="video/mp4">
+	</video -->
+	<!--index-->
 </div>
 <!--system_js-->
 </body>

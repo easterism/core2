@@ -443,10 +443,14 @@ class Tool {
 
         switch ($order) {
             case SORT_ASC:
-                usort($array, function($a, $b) use ($key) {return strnatcasecmp($a[$key], $b[$key]);});
+                usort($array, function($a, $b) use ($key) {
+                    return strnatcasecmp((string)$a[$key], (string)$b[$key]);
+                });
                 break;
             case SORT_DESC:
-                usort($array, function($a, $b) use ($key) {return strnatcasecmp($b[$key], $a[$key]);});
+                usort($array, function($a, $b) use ($key) {
+                    return strnatcasecmp((string)$b[$key], (string)$a[$key]);
+                });
                 break;
         }
 

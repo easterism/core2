@@ -155,6 +155,7 @@ class Db extends Table {
      * @param \Zend_Db_Select $select
      * @return array
      * @throws \Zend_Db_Select_Exception
+     * @throws \Exception
      */
     private function fetchDataSelect(\Zend_Db_Select $select): array {
 
@@ -183,6 +184,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
@@ -266,6 +268,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
@@ -275,6 +278,28 @@ class Db extends Table {
 
                             } else {
                                 $select->where("{$field} = ?", $value);
+                            }
+                            break;
+
+                        case self::FILTER_DATE_MONTH:
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $value)) {
+                                $date_start = new \DateTime("{$value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strpos($field, 'ADD_SEARCH') !== false) {
+                                    $quoted_value1 = $this->db->quote($date_start->format('Y-m-d 00:00:00'));
+                                    $quoted_value2 = $this->db->quote($date_end->format('Y-m-d 23:59:59'));
+
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+
+                                    $select->where($where);
+
+                                } else {
+                                    $where  = $this->db->quoteInto("{$field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
+                                    $where .= $this->db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
+                                    $select->where($where);
+                                }
                             }
                             break;
 
@@ -443,6 +468,7 @@ class Db extends Table {
      * Получение данных по запросу sql
      * @param $query
      * @return array
+     * @throws \Exception
      */
     private function fetchDataQuery($query): array {
 
@@ -451,7 +477,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
-                $search_column = $this->search_controls[$key];
+                $search_column = $this->search_controls[$key] ?? null;
 
                 if ($search_column instanceof Search) {
                     $search_field = $search_column->getField();
@@ -492,6 +518,7 @@ class Db extends Table {
                             }
                             break;
 
+                        case self::SEARCH_DATE_ONE:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
@@ -539,11 +566,7 @@ class Db extends Table {
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->filter)) {
             foreach ($this->session->table->filter as $key => $filter_value) {
-                if ( ! isset($this->filter_controls[$key])) {
-                    continue;
-                }
-
-                $filter_column = $this->filter_controls[$key];
+                $filter_column = $this->filter_controls[$key] ?? null;
 
                 if ($filter_column instanceof Filter) {
                     $filter_field = $filter_column->getField();
@@ -556,8 +579,8 @@ class Db extends Table {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
                         case self::FILTER_NUMBER:
-                            if (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                if ( ! empty($value[0]) || ! empty($value[1])) {
+                            if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {
                                     $quoted_value1 = $this->db->quote($filter_value[0]);
                                     $quoted_value2 = $this->db->quote($filter_value[1]);
 
@@ -584,6 +607,29 @@ class Db extends Table {
                             }
                             break;
 
+
+                        case self::FILTER_DATE_MONTH:
+                            if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
+                                $date_start = new \DateTime("{$filter_value}-01");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+
+                                if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                    $quoted_value1 = $this->db->quote($date_start->format('Y-m-d 00:00:00'));
+                                    $quoted_value2 = $this->db->quote($date_end->format('Y-m-d 23:59:59'));
+
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+
+                                    $select->addWhere($where);
+
+                                } else {
+                                    $where  = $this->db->quoteInto("{$filter_field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
+                                    $where .= $this->db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
+                                    $select->addWhere($where);
+                                }
+                            }
+                            break;
+                        case self::FILTER_DATE_ONE:
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
@@ -625,6 +671,11 @@ class Db extends Table {
                     }
                 }
             }
+        }
+
+
+        if (empty($this->table)) {
+            $this->table = $select->getTable();
         }
 
         //проверка наличия полей для последовательности и автора
@@ -685,16 +736,11 @@ class Db extends Table {
 
         $offset = ($this->current_page - 1) * $this->records_per_page;
 
-
-        if ( ! $this->table) {
-            $this->setTable($select->getTable());
-        }
-
         $this->query_parts = $select->getSqlParts();
 
-        $select_sql = $select->getSql();
-
         if ($this->is_round_calc) {
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') !== false) {
                 $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
             }
@@ -709,21 +755,21 @@ class Db extends Table {
 
             $select->setLimit($records_per_page, $offset);
             $select_sql = $select->getSql();
-            $result = $this->db->fetchAll($select_sql, $this->query_params);
+            $result     = $this->db->fetchAll($select_sql, $this->query_params);
 
-            // если к-во записей примерное, то и к-во страниц примерное
+            if (count($result) > $this->records_per_page) {
+                $this->records_total      = $offset + $this->records_per_page;
+                $this->records_total_more = true;
+                unset($result[array_key_last($result)]);
 
-//            if (count($result) > $this->records_per_page) {
-//                $this->records_total      = $offset + $this->records_per_page;
-//                //$this->records_total_more = true;
-//                unset($result[array_key_last($result)]);
-//
-//            } else {
-//                $this->records_total = $offset + count($result);
-//            }
-
+            } else {
+                $this->records_total = $offset + count($result);
+            }
 
         } else {
+            $select->setLimit($records_per_page, $offset);
+            $select_sql = $select->getSql();
+
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }

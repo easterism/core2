@@ -14,6 +14,10 @@ class Mailer
     public function run($job, &$log) {
 
         $workload = json_decode($job->workload());
+        if (\JSON_ERROR_NONE !== json_last_error()) {
+            throw new \InvalidArgumentException(json_last_error_msg());
+            return;
+        }
         $config = unserialize($workload->config);
         \Zend_Registry::set('config', $config);
         \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));

@@ -27,7 +27,7 @@ CoreUI.tabs = {
         $('#core-tabs-' + resource + ' > .core-tabs-body > .core-tabs-content').load(url, function () {
 
             $('#core-tabs-' + resource + ' > .core-tabs-body > .core-tabs-tabs > li').removeClass('active');
-            $('#core-tabs-' + resource + ' > .core-tabs-body > .core-tabs-tabs > li#tab-tab-' + tabId).addClass('active');
+            $('#core-tabs-' + resource + ' > .core-tabs-body > .core-tabs-tabs > li#tab-' + resource + '-' + tabId).addClass('active');
 
             preloader.hide();
 

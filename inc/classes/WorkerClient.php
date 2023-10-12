@@ -1,9 +1,6 @@
 <?php
 namespace Core2;
 
-use Laminas\Session\Container as SessionContainer;
-
-
 /**
  * Class WorkerClient
  */
@@ -12,12 +9,21 @@ class WorkerClient {
     private $location;
     private $module;
 
+
+    /**
+     * @throws \Exception
+     */
     public function __construct() {
 
         $cc = \Zend_Registry::get('core_config');
 
-        if ($host = trim($cc->gearman->host)) {
-            if (!class_exists('\\GearmanClient')) throw new \Exception('Class GearmanClient not found');
+        if ($cc->gearman && $cc->gearman->host) {
+            $host = trim($cc->gearman->host);
+
+            if ( ! class_exists('\\GearmanClient')) {
+                throw new \Exception('Class GearmanClient not found');
+            }
+
             $this->client = new \GearmanClient();
             //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
             try {
@@ -26,6 +32,7 @@ class WorkerClient {
             } catch (\GearmanException $e) {
                 return new \stdObject();
             }
+
         } else { //TODO другие воркеры?
             return new \stdObject();
         }
@@ -96,13 +103,20 @@ class WorkerClient {
      * @return false|string
      */
     public function doBackground($worker, $data, $unique = null) {
-        $workload = $this->getWorkload($worker, $data);
-        $worker = $this->getWorkerName($worker);
-        $jh = $this->client->doBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
-        {
+
+        if (empty($this->client)) {
             return false;
         }
+
+        $workload = $this->getWorkload($worker, $data);
+        $worker   = $this->getWorkerName($worker);
+
+        $jh = $this->client->doBackground($worker, $workload, $unique);
+
+        if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
+            return false;
+        }
+
         return $jh;
     }
 
@@ -114,13 +128,16 @@ class WorkerClient {
      * @return false|string
      */
     public function doHighBackground($worker, $data, $unique = null) {
+
         $workload = $this->getWorkload($worker, $data);
-        $worker = $this->getWorkerName($worker);
+        $worker   = $this->getWorkerName($worker);
+
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
-        if ($this->client->returnCode() != GEARMAN_SUCCESS)
-        {
+
+        if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
             return false;
         }
+
         return $jh;
     }
 
@@ -132,16 +149,18 @@ class WorkerClient {
      * @return false|string
      */
     private function getWorkload($worker, $data) {
-        $auth = new SessionContainer('Auth');
-        $dt = new \DateTime();
+
+        $auth     = \Zend_Registry::get('auth');
+        $dt       = new \DateTime();
         $workload = [
             'timestamp' => $dt->format('U'),
             'location' => $this->location,
             'config'   => serialize(\Zend_Registry::get('config')),
             'server'   => $_SERVER,
-            'auth'     => $auth->getArrayCopy(),
+            'auth'     => $auth->MOBILE ? get_object_vars($auth) : $auth->getArrayCopy(),
             'payload'  => $data,
         ];
+
         if ($this->module !== 'Admin') {
             $workload = [
                 'module'    => $this->module,

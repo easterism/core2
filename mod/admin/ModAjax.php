@@ -222,11 +222,11 @@ class ModAjax extends ajaxFunc {
             return $this->response;
         }
 
-        if ( ! empty($data['access'])) {
-            $data['control']['access_default'] = base64_encode(serialize($data['access']));
-        }
+        $access = ! empty($data['access']) ? $data['access'] : [];
 
-        $data['control']['access_add'] = '';
+        $data['control']['access_default'] = base64_encode(serialize($access));
+        $data['control']['access_add']     = '';
+
         if ( ! empty($data['addRules'])) {
             $rules = [];
             foreach ($data['addRules'] as $id => $value) {
@@ -346,7 +346,7 @@ class ModAjax extends ajaxFunc {
             ", array(
                 $data['control']['parent_id'],
                 $data['control']['name'],
-                $refid,
+                (int)$refid,
             ));
 
             if ($is_duplicate_enum_value) {
@@ -690,29 +690,62 @@ class ModAjax extends ajaxFunc {
 
     /**
      * Сохранение роли пользователя
-	 * @param array $data
-	 * @return xajaxResponse
-	 */
-	public function saveRole($data) {
+     * @param array $data
+     * @return xajaxResponse
+     * @throws Exception
+     */
+	public function saveRole(array $data): xajaxResponse {
 
-		$fields = array('name' => 'req', 'position' => 'req');
-		if ($this->ajaxValidate($data, $fields)) {
-			return $this->response;
-		}
-		$refid = $this->getSessFormField($data['class_id'], 'refid');
-		if ($refid == 0) {
-			$data['control']['date_added'] = new \Zend_Db_Expr('NOW()');
-		}
-		if (!isset($data['access'])) $data['access'] = array();
-		$data['control']['access'] = serialize($data['access']);
-		if (!$last_insert_id = $this->saveData($data)) {
-			return $this->response;
-		}
-		if ($refid) {
-			$this->cache->clearByTags(array('role' . $refid));
-		}
-		
-		$this->done($data);
+        $fields = [
+            'name'     => 'req',
+            'position' => 'req',
+        ];
+
+        if ($this->ajaxValidate($data, $fields)) {
+            return $this->response;
+        }
+
+        $refid = $this->getSessFormField($data['class_id'], 'refid');
+
+        if ($refid == 0) {
+            $data['control']['date_added'] = new \Zend_Db_Expr('NOW()');
+        }
+
+        if ( ! isset($data['access'])) {
+            $data['access'] = [];
+        }
+
+        $data['control']['access'] = serialize($data['access']);
+
+        if ( ! $role_id = $this->saveData($data)) {
+            return $this->response;
+        }
+
+        if ($refid) {
+            $this->cache->clearByTags(['role' . $refid]);
+        }
+
+        if ( ! empty($data['is_copy']) && $role_id) {
+            $role = $this->dataRoles->find($role_id)->current();
+            $role_data = $role->toArray();
+            $copy = $this->_("копия");
+            $res = (int) $this->db->fetchOne("SELECT COUNT(1) FROM core_roles WHERE name LIKE ?",
+                $role_data['name'] . " ($copy%"
+            );
+            if (!$res) $role_data['name'] = "{$role_data['name']} ($copy)";
+            else {
+                $role_data['name'] = "{$role_data['name']} ($copy " . $res + 1 . ")";
+            }
+            $role_data['date_added'] = new \Zend_Db_Expr('NOW()');
+            $role_data['lastupdate'] = new \Zend_Db_Expr('NOW()');
+            $role_data['lastuser']   = $this->auth->ID && $this->auth->ID > 0 ? $this->auth->ID : null;
+            unset($role_data['id']);
+
+            $role_new = $this->dataRoles->createRow($role_data);
+            $role_new->save();
+        }
+
+        $this->done($data);
 		return $this->response;
     }
 

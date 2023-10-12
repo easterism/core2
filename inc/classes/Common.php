@@ -24,7 +24,6 @@ class Common extends \Core2\Acl {
     /**
      * @var Zend_Config_Ini
      */
-	protected $config;
 	private $_p = array();
 	private $AR = array(
         'module',
@@ -42,7 +41,7 @@ class Common extends \Core2\Acl {
         if ($child_class_name == 'CoreController') {
             $mod_name = 'admin';
         } else {
-            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli)$~', $child_class_name)
+            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli|Api)$~', $child_class_name)
                 ? substr($child_class_name, 3, -10)
                 : '';
         }
@@ -78,8 +77,6 @@ class Common extends \Core2\Acl {
 			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
-
-		$this->config = $reg->get('config');
 	}
 
 
@@ -162,12 +159,12 @@ class Common extends \Core2\Acl {
 			// Получение экземпляра контроллера указанного модуля
 			elseif (strpos($k, 'mod') === 0) {
 				$module = strtolower(substr($k, 3));
-
 				if ($module === 'admin') {
 					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
 					$v         = $this->modAdmin = new CoreController();
 					$v->module = $module;
-				} elseif ($location = $this->getModuleLocation($module)) {
+				}
+                elseif ($location = $this->getModuleLocation($module)) {
 					if (!$this->isModuleActive($module)) {
 						throw new Exception("Модуль \"{$module}\" не активен");
 					}
@@ -218,23 +215,37 @@ class Common extends \Core2\Acl {
 
 			// Получение экземпляра api класса указанного модуля
 			elseif (strpos($k, 'api') === 0) {
-                $module     = substr($k, 3);
-                if ($k == 'api') $module = $this->module;
+                $module = substr($k, 3);
+                if ($k == 'api') {
+                    $module = $this->module;
+                }
+
                 if ($this->isModuleActive($module)) {
                     $location = $module == 'Admin'
-                            ? DOC_ROOT . "core2/mod/admin"
-                            : $this->getModuleLocation($module);
-                    $module = ucfirst($module);
+                        ? DOC_ROOT . "core2/mod/admin"
+                        : $this->getModuleLocation($module);
+
+                    $module     = ucfirst($module);
                     $module_api = "Mod{$module}Api";
-                    if (!file_exists($location . "/{$module_api}.php")) {
+
+                    if ( ! file_exists("{$location}/{$module_api}.php")) {
                         return new stdObject();
+
                     } else {
+                        $autoload_file = $location . "/vendor/autoload.php";
+
+                        if (file_exists($autoload_file)) {
+                            require_once($autoload_file);
+                        }
+
                         require_once "CommonApi.php";
-                        require_once $location . "/{$module_api}.php";
+                        require_once "{$location}/{$module_api}.php";
+
                         $api = new $module_api();
-                        if (!is_subclass_of($api, 'CommonApi')) {
+                        if ( ! is_subclass_of($api, 'CommonApi')) {
                             return new stdObject();
                         }
+
                         $v = $this->{$k} = $api;
                     }
                 } else {

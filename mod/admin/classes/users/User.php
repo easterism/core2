@@ -50,11 +50,11 @@ class User extends \Common {
 
 
     /**
-     * Удаление сотрудника
+     * Удаление пользователя
      */
     public function delete() {
 
-        $where = $this->db->quoteInto('u_id ?', $this->u_id);
+        $where = $this->db->quoteInto('u_id = ?', $this->u_id);
         $this->db->delete('core_users', $where);
     }
 
@@ -103,7 +103,7 @@ class User extends \Common {
             return;
         }
 
-        $row = $this->modAdmin->dataUsers->fetchRow($this->modAdmin->dataUsers->select()->where('u_id', $user_id));
+        $row = $user_id ? $this->modAdmin->dataUsers->find($user_id)->current() : null;
 
         if ($row) {
             $this->_data = $row;

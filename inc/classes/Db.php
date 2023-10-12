@@ -104,6 +104,7 @@ class Db {
                 }
                 if ($adapter_name == 'Redis') {
                     $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
+                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
                     unset($options['cache_dir']);
                     $adapter  = new Storage\Adapter\Redis($options);
                 }
@@ -199,7 +200,6 @@ class Db {
 			}
 			return $v;
 		}
-
 		return null;
 	}
 
@@ -208,11 +208,19 @@ class Db {
      * @param \Zend_Config $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    protected function establishConnection(\Zend_Config $database) {
+    private function establishConnection(\Zend_Config $database) {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
 			\Zend_Registry::getInstance()->set('db', $db);
+
+            //переопределяем config для нового подключения к базе
+            if ($this->config->database !== $database) {
+                $conf = $this->config->toArray();
+                $conf['database'] = $database->toArray();
+                $this->config = new \Zend_Config($conf);
+            }
+
 			if ($database->adapter === 'Pdo_Mysql') {
 			    if ($this->config->system->timezone) {
 			        $db->query("SET time_zone = '{$this->config->system->timezone}'");
@@ -364,9 +372,9 @@ class Db {
 	 */
 	public function logActivity($exclude = array()): void {
 
-        $auth = new SessionContainer('Auth');
+        $auth = \Zend_Registry::get('auth');
 
-        if ($auth->ID && $auth->ID > 0 && $auth->LIVEID) {
+        if ($auth->ID && $auth->ID > 0) {
             if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {
                 return;
             }
@@ -382,7 +390,6 @@ class Db {
 
             $data = [
                 'ip'             => $_SERVER['REMOTE_ADDR'],
-                'sid'            => $auth->getManager()->getId(),
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'remote_port'    => $_SERVER['REMOTE_PORT'],
                 'query'          => $_SERVER['QUERY_STRING'],
@@ -391,11 +398,16 @@ class Db {
 
             // обновление записи о последней активности
             if ($auth->LIVEID) {
+                // у юзера есть сессия
+                $data['sid'] = $auth->getManager()->getId();
                 $row = $this->dataSession->find($auth->LIVEID)->current();
                 if ($row) {
                     $row->last_activity = new \Zend_Db_Expr('NOW()');
                     $row->save();
                 }
+            } else {
+                // сессии нет, авторизовывается каждый запрос
+                $data['sid'] = ""; //TODO сохранить метод авторизации
             }
 
             // запись данных запроса в лог
@@ -685,7 +697,6 @@ class Db {
 
         if ( ! isset($module['location'])) {
             $key = "all_modules_" . $this->config->database->params->dbname;
-
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
@@ -818,7 +829,7 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $m            = new Model\Modules($this->db);
-            $sm            = new Model\SubModules($this->db);
+            $sm           = new Model\SubModules($this->db);
             $res = $m->fetchAll($m->select()->order('seq'));
             $sub = $sm->fetchAll($sm->select()->order('seq'));
             $data = [];
