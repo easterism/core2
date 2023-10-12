@@ -1,7 +1,12 @@
 <?php
-use Laminas\Db\Adapter\Adapter;
+/**
+ * Created by PhpStorm.
+ * User: StepovichPE
+ * Date: 01.07.14
+ * Time: 18:57
+ */
 
-class Core_Db_Adapter_Pdo_Mysql extends Adapter {
+class Core_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 
 	/**
 	 * Current Transaction Level

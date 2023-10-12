@@ -7,11 +7,10 @@ require_once "WorkerClient.php";
 require_once 'Zend_Registry.php';
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
-use Laminas\Db\Adapter\Adapter;
 
 /**
  * Class Db
- * @property \Laminas\Db\Adapter\Adapter $db
+ * @property \Zend_Db_Adapter_Abstract $db
  * @property Cache                     $cache
  * @property I18n                      $translate
  * @property Log                       $log

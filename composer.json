@@ -22,7 +22,7 @@
   "prefer-stable": true,
   "require": {
     "php": ">=8.0",
-    "laminas/laminas-db": "2.18.0",
+    "belhard/zend-db": "dev-master",
     "laminas/laminas-session": "2.16.0",
     "laminas/laminas-cache-storage-adapter-filesystem": "2.3.0",
     "laminas/laminas-cache-storage-adapter-memcached": "2.4.0",

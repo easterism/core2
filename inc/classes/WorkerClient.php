@@ -8,6 +8,8 @@ class WorkerClient {
 
     private $location;
     private $module;
+    private $client;
+
 
 
     /**
