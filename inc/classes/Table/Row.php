@@ -49,9 +49,9 @@ class Row implements \Iterator {
     public function __set(string $field, mixed $value) {
 
         if (array_key_exists($field, $this->cells)) {
-            $this->cells[$field]->setValue($value);
+            $this->cells[$field]->setValue((string)$value);
         } else {
-            $this->cells[$field] = new Cell($value);
+            $this->cells[$field] = new Cell((string)$value);
         }
     }
 
