@@ -113,6 +113,8 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker   = $this->getWorkerName($worker);
 
+        if (!$workload) return false;
+
         $jh = $this->client->doBackground($worker, $workload, $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
