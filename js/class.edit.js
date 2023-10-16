@@ -865,6 +865,14 @@ var edit = {
 			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
 				this.options[this.key].onChoose(value, title);
 			}
+		},
+
+		getOption: function (key) {
+			if (edit.modal2.options[key] !== undefined) {
+				return edit.modal2.options[key];
+			} else {
+				return [];
+			}
 		}
     },
 
