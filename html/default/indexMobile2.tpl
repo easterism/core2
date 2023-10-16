@@ -25,7 +25,7 @@
 	<script type="text/javascript" src="core2/html/default/js/coreui.table.js?_=9"></script>
 
 	<script type="text/javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" src="core2/js/class.edit.js?_=10"></script>
+	<script type="text/javascript" src="core2/js/class.edit.js?_=19"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" src="core2/js/js.js?_=2"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>

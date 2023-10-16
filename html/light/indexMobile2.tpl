@@ -55,7 +55,7 @@
     <![endif]-->
 
 	<script type="text/javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-    <script type="text/javascript" src="core2/html/light/js/class.edit.js?_=13"></script>
+    <script type="text/javascript" src="core2/html/light/js/class.edit.js?_=19"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" src="core2/html/light/js/main.js?_=5"></script>
 
