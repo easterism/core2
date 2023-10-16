@@ -479,10 +479,16 @@ var edit = {
         },
 
 		getOption: function (key) {
-			if (edit.modal2.options[key] !== undefined) {
+			if (edit.modal2.options.hasOwnProperty(key)) {
 				return edit.modal2.options[key];
 			} else {
 				return [];
+			}
+		},
+
+		setOption: function (key, option_name, val){
+			if (edit.modal2.options.hasOwnProperty(key)) {
+				edit.modal2.options[key][option_name] = val;
 			}
 		}
     },
