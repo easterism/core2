@@ -753,6 +753,9 @@ class editTable extends initEdit {
                                 $options['onClear']    = $value['in']['onClear'] ?? '';
                                 $options['onChoose']   = $value['in']['onChoose'] ?? '';
 
+                                $options['autocomplete_url']        = $value['in']['autocomplete_url'] ?? '';
+                                $options['autocomplete_min_length'] = $value['in']['autocomplete_min_length'] ?? '';
+
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
                                     case 'small':  $size = 'modal-sm'; break;
@@ -776,7 +779,8 @@ class editTable extends initEdit {
                                 $tpl->assign('[SIZE]',      $size);
                                 $tpl->assign('[ATTR]',      $options['attributes']);
                                 $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
-
+                                $tpl->assign('[AUTOCOMPLETE_URL]',        $options['autocomplete_url']);
+                                $tpl->assign('[AUTOCOMPLETE_MIN_LENGTH]', $options['autocomplete_min_length']);
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
                                     ? trim($options['onHidden'])
@@ -794,11 +798,6 @@ class editTable extends initEdit {
                                     ? trim($options['onChoose'])
                                     : "''";
                                 $tpl->assign('[ON_CHOOSE]', $on_choose);
-
-
-                                if ( ! $value['req']) {
-                                    $tpl->touchBlock('clear');
-                                }
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }

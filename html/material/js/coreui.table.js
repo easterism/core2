@@ -10,19 +10,32 @@ CoreUI.table = {
     },
 
     preloader : {
+
+        /**
+         * @param resource
+         */
         show : function(resource) {
+
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
-            var nodes   = wrapper.childNodes;
-            for (var i = 0; i < nodes.length; i++) {
-                if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
-                    nodes[i].style.display = 'block';
-                    break;
+
+            if (wrapper) {
+                var nodes = wrapper.childNodes;
+                for (var i = 0; i < nodes.length; i++) {
+                    if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
+                        nodes[i].style.display = 'block';
+                        break;
+                    }
                 }
             }
         },
 
+
+        /**
+         * @param resource
+         */
         hide : function(resource) {
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
+
             if (wrapper) {
                 var nodes = wrapper.childNodes;
                 for (var i = 0; i < nodes.length; i++) {
@@ -76,7 +89,8 @@ CoreUI.table = {
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     CoreUI.table.preloader.show(resource);
-                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                    var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                    container   = wrapper ? wrapper.parentNode : null;
 
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
@@ -110,7 +124,8 @@ CoreUI.table = {
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     CoreUI.table.preloader.show(resource);
-                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                    var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                    container   = wrapper ? wrapper.parentNode : null;
 
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__search=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
@@ -145,7 +160,8 @@ CoreUI.table = {
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     CoreUI.table.preloader.show(resource);
-                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                    var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                    container   = wrapper ? wrapper.parentNode : null;
 
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter_clear=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
@@ -211,7 +227,8 @@ CoreUI.table = {
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
                     CoreUI.table.preloader.show(resource);
-                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                    var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                    container   = wrapper ? wrapper.parentNode : null;
 
                     load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__filter=1', post, container, function () {
                         CoreUI.table.preloader.hide(resource);
@@ -288,11 +305,10 @@ CoreUI.table = {
 
             if (CoreUI.table.loc[resource]) {
                 if (isAjax) {
-                    //CoreUI.table.preloader.show(resource);
-                    container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                    var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                    container   = wrapper ? wrapper.parentNode : null;
 
                     load(CoreUI.table.loc[resource] + '&__filter=1', post, container, function () {
-                        //CoreUI.table.preloader.hide(resource);
                         preloader.callback();
                         CoreUI.table._callEventReload(resource);
                     });
@@ -517,10 +533,11 @@ CoreUI.table = {
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
 
-            container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+            container   = wrapper ? wrapper.parentNode : null;
 
             if (CoreUI.table.loc[resource].indexOf('&__') < 0) {
-                if (container.id) {
+                if (container && container.id) {
                     location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(CoreUI.table.loc[resource] + "&" + p));
                 }
 
@@ -551,10 +568,11 @@ CoreUI.table = {
         var p         = '_page_' + resource + '=' + $('#table-' + resource + '-gotopage').val();
 
         if (isAjax) {
-            container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+            container   = wrapper ? wrapper.parentNode : null;
 
             if (CoreUI.table.loc[resource].indexOf('&__') < 0) {
-                if (container.id) {
+                if (container && container.id) {
                     location.hash = preloader.prepare(location.hash.substr(1) + '&--' + container.id + '=' + preloader.toJson(CoreUI.table.loc[resource] + "&" + p));
                 }
             } else {
@@ -587,7 +605,8 @@ CoreUI.table = {
 
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
-            container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+            container   = wrapper ? wrapper.parentNode : null;
 
             load(CoreUI.table.loc[resource] + '&_page_' + resource + '=1&__order=1', post, container, function () {
                 CoreUI.table.preloader.hide(resource);
@@ -616,7 +635,8 @@ CoreUI.table = {
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
 
-            var container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+            container   = wrapper ? wrapper.parentNode : null;
 
             load(CoreUI.table.loc[resource], {}, container, function () {
                 CoreUI.table.preloader.hide(resource);
@@ -746,7 +766,8 @@ CoreUI.table = {
 
                         if (isAjax) {
                             CoreUI.table.preloader.show(resource);
-                            container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+                            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+                            container   = wrapper ? wrapper.parentNode : null;
                         }
 
                         $.ajax({
@@ -1030,7 +1051,8 @@ CoreUI.table = {
 
         if (isAjax) {
             CoreUI.table.preloader.show(resource);
-            container = document.getElementById("table-" + resource + "-wrapper").parentNode;
+            var wrapper = document.getElementById("table-" + resource + "-wrapper");
+            container   = wrapper ? wrapper.parentNode : null;
         }
 
         var post = {};

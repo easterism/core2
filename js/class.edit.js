@@ -653,8 +653,117 @@ var edit = {
 
 		options: [],
 
+		/**
+		 * Инициализация модала
+		 * @param {object} options
+		 */
+		init: function (options) {
+
+			edit.modal2.options[options.id] = {
+				id: options.id,
+				title: options.title || '',
+				size: options.size || '',
+				themeDir: options.themeDir || '',
+				url: options.url || '',
+				autocompleteUrl: options.autocompleteUrl || '',
+				autocompleteMinLength: options.autocompleteMinLength || 2,
+				onHidden: options.onHidden || '',
+				onClear: options.onClear || '',
+				onChoose: options.onChoose || ''
+			};
+
+			var modalOptions   = edit.modal2.options[options.id];
+			var isAutocomplete = modalOptions.autocompleteUrl && typeof modalOptions.autocompleteUrl === 'string';
+			var inputValue     = $('.modal-container-' + modalOptions.id + ' input[type="hidden"]');
+			var inputTitle     = $('.modal-container-' + modalOptions.id + ' .modal-control-title');
+
+			$('.modal-container-' + modalOptions.id + ' .modal-control-clear').click(function() {
+				edit.modal2.clear(modalOptions.id);
+
+				if (isAutocomplete) {
+					inputTitle.removeAttr('disabled');
+				}
+			});
+
+			$('.modal-container-' + modalOptions.id + ' .modal-control-button').click(function() {
+				edit.modal2.load(modalOptions.themeDir, modalOptions.id, modalOptions.url);
+			});
+
+			if (isAutocomplete) {
+				if ( ! inputValue.val()) {
+					inputTitle.removeAttr('disabled');
+				}
+
+				inputTitle.autocomplete({
+					source: function (request, response) {
+						$.getJSON( modalOptions.autocompleteUrl, {
+							term: $.trim(request.term)
+						}, function(data) {
+							response(data.items || []);
+						});
+					},
+					minLength: modalOptions.autocompleteMinLength,
+					focus: function( event, ui ) {
+						event.preventDefault();
+						inputTitle.val(ui.item.label);
+					},
+					select: function( event, ui ) {
+						event.preventDefault();
+						inputValue.val(ui.item.value);
+						inputTitle.val(ui.item.label);
+						inputTitle.attr('disabled', 'disabled');
+					},
+					close: function( event, ui ) {
+						event.preventDefault();
+
+						if ( ! inputValue.val()) {
+							inputTitle.val('');
+						}
+					},
+					create: function (event, ui) {
+						$(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+							var info  = item.info ? '<br><small class="text-muted">' + item.info + '</small>': '';
+							var term  = this.term.split(' ').join('|');
+							var label = item.label;
+
+							if (term) {
+								term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
+								label = label.replace(
+									new RegExp("(" + term + ")", "gi"),
+									"<b>$1</b>"
+								);
+							}
+
+							return $('<li>')
+								.attr( "data-value", item.value )
+								.append('<a>' + label + info + '</a>')
+								.appendTo(ul);
+						};
+
+						$(this).data('ui-autocomplete')._renderMenu = function (ul, items) {
+							var that         = this;
+							var currentGroup = "";
+
+							ul.css('min-width', inputTitle.width());
+							ul.css('max-width', 450);
+
+							$.each( items, function( index, item ) {
+								if (item.group && item.group !== currentGroup) {
+									ul.append( "<li class=\"ui-autocomplete-category\">" + item.group + "</li>" );
+									currentGroup = item.group;
+								}
+
+								that._renderItemData( ul, item );
+							});
+						};
+					}
+				})
+			}
+		},
+
 
 		/**
+		 * Загрузка содержимого модала
 		 * @param theme_src
 		 * @param key
 		 * @param url
@@ -714,6 +823,7 @@ var edit = {
 
 
 		/**
+		 * Очистка поля
 		 * @param key
 		 */
 		clear: function(key) {
@@ -729,7 +839,7 @@ var edit = {
 
 
 		/**
-		 *
+		 * Скрытие модала
 		 */
 		hide: function() {
 			$('#' + this.key + '-modal').modal('hide');
@@ -737,12 +847,19 @@ var edit = {
 
 
 		/**
+		 * Выбор
 		 * @param value
 		 * @param title
 		 */
 		choose: function(value, title) {
-			$('#' + this.key).val(value);
-			$('#' + this.key + '-title').val(title);
+
+			var inputTitle = $('.modal-container-' + this.key + ' .modal-control-title');
+			var inputValue = $('.modal-container-' + this.key + ' input[type="hidden"]');
+
+			inputValue.val(value);
+			inputTitle.val(title);
+			inputTitle.attr('disabled', 'disabled');
+
 			this.hide();
 
 			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
