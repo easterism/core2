@@ -1,6 +1,3 @@
-[submodule "mod/repo/v1.4.1"]
-	path = mod/repo/v1.4.1
-	url = git@git.rdo.belhard.com:core2/modules/repo.git
 [submodule "mod/queue/v1.6.0"]
 	path = mod/queue/v1.6.0
 	url = git@git.rdo.belhard.com:core2/modules/queue.git
@@ -10,9 +7,6 @@
 [submodule "mod/metrics/v1.0.0"]
 	path = mod/metrics/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/metrics.git
-[submodule "mod/cron/v3.2.0"]
-	path = mod/cron/v3.2.0
-	url = git@git.rdo.belhard.com:core2/modules/cron.git
 [submodule "mod/webservice/v1.11.0"]
 	path = mod/webservice/v1.11.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
@@ -43,18 +37,9 @@
 [submodule "mod/webservice/v3.0.0"]
 	path = mod/webservice/v3.0.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
-[submodule "mod/cron/v3.0.0"]
-    path = mod/cron/v3.0.0
-    url = git@git.rdo.belhard.com:core2/modules/cron.git
-[submodule "mod/repo/v1.4.0"]
-    path = mod/repo/v1.4.0
-    url = git@git.rdo.belhard.com:core2/modules/repo.git
 [submodule "mod/profile/v1.10.0"]
     path = mod/profile/v1.10.0
     url = git@git.rdo.belhard.com:core2/modules/profile.git
-[submodule "mod/repo/v1.4.0"]
-	path = mod/repo/v1.4.0
-	url = git@git.rdo.belhard.com:core2/modules/repo.git
 [submodule "mod/search/v1.0.0"]
 	path = mod/search/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/search.git
@@ -65,6 +50,5 @@
 	path = mod/webservice/v2.6.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
 [submodule "mod/cron/v3.5.0"]
-	path = mod/cron/v3.5.0
-	url = git@git.rdo.belhard.com:core2/modules/cron.git
-	branch = 3.5.0
+    path = mod/cron/v3.5.0
+    url = git@git.rdo.belhard.com:core2/modules/cron.git

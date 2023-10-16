@@ -1261,7 +1261,7 @@ class listTable extends initList {
                         $tableBodyHTML .= $this->commafy($sql_value);
 
                     } elseif ($value['type'] == 'html' || $value['type'] == 'block') {
-                        $tableBodyHTML .= htmlspecialchars_decode($sql_value);
+                        $tableBodyHTML .= $sql_value ? htmlspecialchars_decode($sql_value) : '';
                     } else if ($value['type'] == 'date') {
                         $dd   = ! empty($sql_value) ? substr($sql_value, 8, 2) : '';
                         $mm   = ! empty($sql_value) ? substr($sql_value, 5, 2) : '';

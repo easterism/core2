@@ -157,7 +157,7 @@ class WorkerClient {
             'location' => $this->location,
             'config'   => serialize(\Zend_Registry::get('config')),
             'server'   => $_SERVER,
-            'auth'     => $auth->MOBILE ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
             'payload'  => $data,
         ];
 
