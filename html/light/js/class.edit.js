@@ -2,6 +2,7 @@
 var edit = {
 	ev: {},
 	xfiles: {},
+	saveSuccessParams: {},
 	dateBlur : function(id) {
 		var year = document.getElementById(id + '_year').value;
 		var month = document.getElementById(id + '_month').value;

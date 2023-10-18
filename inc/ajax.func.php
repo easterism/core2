@@ -26,7 +26,7 @@ class ajaxFunc extends Common {
 	protected $script;
 	protected $userId;
 	private $orderFields    = [];
-	private $last_insert_id = null;
+	private $last_insert_id = 0;
 
 
     /**
@@ -534,7 +534,11 @@ class ajaxFunc extends Common {
 			$this->response->script($this->script . "setTimeout(function () {load('{$order_fields['back']}')}, 0);");
 		}
         if ( ! empty($order_fields['save_success'])) {
-			$this->response->script(str_replace('[ID]', $this->last_insert_id, $order_fields['save_success']));
+            $script  = "edit.saveSuccessParams.id = {$this->last_insert_id};";
+            $script .= "{$order_fields['save_success']};";
+            $script .= "edit.saveSuccessParams = {};";
+
+			$this->response->script($script);
 		}
 	}
 
