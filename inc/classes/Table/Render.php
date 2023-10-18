@@ -73,13 +73,20 @@ class Render extends Acl {
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
-                if (isset($this->table['recordsTotalRound']) &&
-                    (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
-                    $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
-                ) {
-                    $total_records = "~{$this->table['recordsTotalRound']}";
+                if (count($this->table['records']) == 0 && $this->table['currentPage'] == 1) {
+                    $this->table['recordsTotal']      = 0;
+                    $this->table['recordsTotalRound'] = 0;
+                    $total_records = 0;
+
                 } else {
-                    $total_records = $this->table['recordsTotal'] ?? 0;
+                    if (isset($this->table['recordsTotalRound']) &&
+                        (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
+                        $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
+                    ) {
+                        $total_records = "~{$this->table['recordsTotalRound']}";
+                    } else {
+                        $total_records = $this->table['recordsTotal'] ?? 0;
+                    }
                 }
 
                 $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
