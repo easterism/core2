@@ -23,6 +23,9 @@
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/coreui.notice.css" type="text/css"/>
 
+	<link rel="stylesheet" href="core2/html/light/css/select2.bootstrap.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/light/css/select2.min.css" type="text/css"/>
+
 	<!--[if lte IE 10]>
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2-ie.min.css" type="text/css"/>
 	<![endif]-->
@@ -47,6 +50,9 @@
 	<script type="text/javascript" src="core2/html/light/js/coreui.table.js?_=11"></script>
 	<script type="text/javascript" src="core2/html/light/js/coreui.panel.js?_=0"></script>
 	<script type="text/javascript" src="core2/html/light/js/coreui.tabs.js?_=0"></script>
+
+	<script type="text/javascript" src="core2/html/light/js/select2.min.js"></script>
+	<script type="text/javascript" src="core2/html/light/js/select2.ru.min.js"></script>
 
 	<!--[if lte IE 10]>
 	<script type="text/javascript" src="core2/html/light/js/sweetalert2-ie.min.js"></script>

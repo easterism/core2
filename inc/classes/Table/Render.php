@@ -376,11 +376,26 @@ class Render extends Acl {
                             $tpl->search_container->search_field->select->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
                             break;
 
+                        case 'select2' :
+                            $data = $search['data'] ?? [];
+                            $options = ['' => ''] + $data;
+                            $tpl->search_container->search_field->select2->assign("[KEY]",      $key);
+                            $tpl->search_container->search_field->select2->assign("[IN_TEXT]",  $attributes_str);
+                            $tpl->search_container->search_field->select2->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
+                            break;
+
                         case 'multiselect' :
                             $data = $search['data'] ?? [];
                             $tpl->search_container->search_field->multiselect->assign("[KEY]",      $key);
                             $tpl->search_container->search_field->multiselect->assign("[IN_TEXT]",  $attributes_str);
                             $tpl->search_container->search_field->multiselect->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
+                            break;
+
+                        case 'multiselect2' :
+                            $data = $search['data'] ?? [];
+                            $tpl->search_container->search_field->multiselect2->assign("[KEY]",      $key);
+                            $tpl->search_container->search_field->multiselect2->assign("[IN_TEXT]",  $attributes_str);
+                            $tpl->search_container->search_field->multiselect2->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
                             break;
                     }
 

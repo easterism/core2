@@ -30,6 +30,8 @@
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=9" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=29" type="text/css"/>
 
+	<link rel="stylesheet" href="core2/html/material/css/select2.bootstrap.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/select2.min.css" type="text/css"/>
 	<!--system_css-->
 
 	<script type="text/javascript" src="core2/js/md5.js"></script>
@@ -49,6 +51,8 @@
 	<script type="text/javascript" src="core2/html/material/js/coreui.panel.js?_=0"></script>
 	<script type="text/javascript" src="core2/html/material/js/coreui.tabs.js?_=0"></script>
 
+	<script type="text/javascript" src="core2/html/material/js/select2.min.js"></script>
+	<script type="text/javascript" src="core2/html/material/js/select2.ru.min.js"></script>
 	<!--[if lte IE 10]>
 	<script type="text/javascript" src="core2/html/material/js/sweetalert2-ie.min.js"></script>
 	<![endif]-->
