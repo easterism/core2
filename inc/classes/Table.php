@@ -120,6 +120,7 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
+            $this->clearSearch();
             foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
                 if (is_array($search_value)) {
                     $isset_value = false;
