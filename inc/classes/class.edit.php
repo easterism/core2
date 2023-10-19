@@ -1032,7 +1032,7 @@ class editTable extends initEdit {
 
 								$id = "template_content" . $this->main_table_id . $key;
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$fck_attrs.">{$value['default']}</textarea>";
-								$onload .= "mceSetup('" . $id . "', $mce_params);";
+								$onload .= "edit.mceSetup('" . $id . "', $mce_params);";
 								$PrepareSave .= "document.getElementById('" . $id . "').value = tinyMCE.get('" . $id . "').getContent();";
 							}
 						}
@@ -2189,6 +2189,18 @@ $controlGroups[$cellId]['html'][$key] .= "
 			$this->addParams('file', $func);
 		}
 	}
+
+
+    /**
+     * Установка js кода которых будет выполнен при успешном сохранении
+     * @param string $func
+     * @return void
+     */
+	public function saveSuccess(string $func): void {
+
+        $this->setSessFormField('save_success', $func);
+	}
+
 
 	/**
 	 * @param $va

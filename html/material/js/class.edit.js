@@ -1,14 +1,9 @@
 
 
-function lastFocus(f){
-	f.elements[f.elements.length - 1].focus();
-}
-
-//var isIE = window.navigator.userAgent.indexOf("MSIE")>-1;
-
 var edit = {
 	ev: {},
 	xfiles: {},
+	saveSuccessParams: {},
 	dateBlur : function(id) {
 		var year = document.getElementById(id + '_year').value;
 		var month = document.getElementById(id + '_month').value;
@@ -58,7 +53,8 @@ var edit = {
 		this.dateBlur(id);
 	},
 	onsubmit: function (obj) {
-		lastFocus(obj);
+		obj.elements[obj.elements.length - 1].focus();
+
 		if (typeof PrepareSave == 'function') {
 			PrepareSave();
 		}
@@ -409,8 +405,8 @@ var edit = {
 								'<h4 class="modal-title">' + title + '</h4>' +
 							'</div>' +
 							'<div class="modal-body">' +
-								'<div style="text-align:center">' +
-									'<img src="' + theme_src + '/img/load.gif" alt="loading"> Загрузка' +
+								'<div class="text-center">' +
+									'<i class="fa fa-fw fa-spin fa-spinner"></i> Загрузка' +
 								'</div>' +
 							'</div>' +
 						'</div>' +
@@ -434,6 +430,37 @@ var edit = {
 				modal.remove();
 			});
         },
+
+
+		/**
+		 * Перезагрузка содержимого текущего модального окна которое будет получено с базового адреса
+		 */
+		reload: function () {
+
+			var options = this.getOptions(this.key);
+
+			if ( ! options.url) {
+				return;
+			}
+
+			this.loadContent(this.key, options.url);
+		},
+
+
+		/**
+		 * Загрузка содержимого модального окна которое будет получено с указанного адреса
+		 */
+		loadContent: function (key, url) {
+
+			var modalBody = $('#' + key + '-modal .modal-dialog > .modal-content > .modal-body');
+
+			if ( ! modalBody[0]) {
+				return;
+			}
+
+			modalBody.html('<div class="text-center"><i class="fa fa-fw fa-spin fa-spinner"></i> Загрузка</div>')
+				.load(url);
+		},
 
 
 		/**
@@ -481,7 +508,12 @@ var edit = {
 			}
 		},
 
-		getOption: function (key) {
+
+		/**
+		 * Получение параметров указанного модального поля
+		 * @param key
+		 */
+		getOptions: function (key) {
 			if (edit.modal2.options.hasOwnProperty(key)) {
 				return edit.modal2.options[key];
 			} else {
@@ -489,6 +521,23 @@ var edit = {
 			}
 		},
 
+
+		/**
+		 * Получение параметров указанного модального поля
+		 * @param key
+		 * @deprecated
+		 */
+		getOption: function (key) {
+			this.getOptions(key);
+		},
+
+
+		/**
+		 * Установка параметра указанного модального поля
+		 * @param key
+		 * @param option_name
+		 * @param val
+		 */
 		setOption: function (key, option_name, val){
 			if (edit.modal2.options.hasOwnProperty(key)) {
 				edit.modal2.options[key][option_name] = val;
@@ -1288,6 +1337,40 @@ var edit = {
 			$(container).find('.core-switch-active').prop('checked', true);
 			$(container).find('.core-switch-inactive').prop('checked', false);
 		}
+	},
+
+
+
+	/**
+	 * Инициализация редактора
+	 * @param id
+	 * @param opt
+	 */
+	mceSetup: function (id, opt) {
+
+		var options = {
+			selector : '#' + id,
+			language : 'ru',
+			theme : 'modern',
+			skin : 'light',
+			forced_root_block : false,
+			force_br_newlines : true,
+			force_p_newlines : false,
+			verify_html : true,
+			convert_urls : false,
+			relative_urls : false,
+			plugins: [
+				"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
+				"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
+				"save table contextmenu directionality emoticons template paste textcolor"
+			],
+			toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
+			theme_advanced_resizing : true
+		};
+		for (k in opt) {
+			options[k] = opt[k];
+		}
+		tinymce.init(options);
 	}
 };
 
@@ -1295,30 +1378,17 @@ var edit = {
 /**
  * @param id
  * @param opt
+ * @deprecated
  */
 function mceSetup(id, opt) {
+	edit.mceSetup(id, opt);
+}
 
-    var options = {
-		selector : '#' + id,
-        language : 'ru',
-        theme : 'modern',
-        skin : 'light',
-        forced_root_block : false,
-        force_br_newlines : true,
-        force_p_newlines : false,
-        verify_html : true,
-        convert_urls : false,
-        relative_urls : false,
-        plugins: [
-			"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
-			"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
-			"save table contextmenu directionality emoticons template paste textcolor"
-		],
-		toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
-		theme_advanced_resizing : true
-       };
-    for (k in opt) {
-        options[k] = opt[k];
-    }
-	tinymce.init(options);
+
+/**
+ * @param f
+ * @deprecated
+ */
+function lastFocus(f){
+	f.elements[f.elements.length - 1].focus();
 }

@@ -73,13 +73,20 @@ class Render extends Acl {
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
-                if (isset($this->table['recordsTotalRound']) &&
-                    (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
-                    $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
-                ) {
-                    $total_records = "~{$this->table['recordsTotalRound']}";
+                if (count($this->table['records']) == 0 && $this->table['currentPage'] == 1) {
+                    $this->table['recordsTotal']      = 0;
+                    $this->table['recordsTotalRound'] = 0;
+                    $total_records = 0;
+
                 } else {
-                    $total_records = $this->table['recordsTotal'] ?? 0;
+                    if (isset($this->table['recordsTotalRound']) &&
+                        (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
+                        $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
+                    ) {
+                        $total_records = "~{$this->table['recordsTotalRound']}";
+                    } else {
+                        $total_records = $this->table['recordsTotal'] ?? 0;
+                    }
                 }
 
                 $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
@@ -581,6 +588,13 @@ class Render extends Acl {
             foreach ($this->table['columns'] as $key => $column) {
                 if (is_array($column) && ! empty($column['show'])) {
 
+                    if ($column['type'] == 'money') {
+                        $column['attr']['style'] = ! empty($column['attr']['style'])
+                            ? "text-align:right;{$column['attr']['style']}"
+                            : "text-align:right;";
+                    }
+
+
                     $column_attributes = [];
                     if ( ! empty($column['attr'])) {
                         foreach ($column['attr'] as $attr => $value) {
@@ -743,6 +757,23 @@ class Render extends Acl {
                                     $value = strrev($value);
                                     $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
                                     $value = strrev($value);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $value);
+                                    break;
+
+                                case 'money':
+                                    $value    = \Tool::commafy(sprintf("%0.2f", $value));
+                                    $options  = $column['options'] ?? [];
+                                    $template = $options['tpl'] ?? '<b>[VALUE]</b> <small class=\"text-muted\">[CURRENCY]</small>';
+                                    $currency = $options['currency'] ?? $this->table['currency'];
+
+                                    $value = str_replace('[VALUE]', $value, $template);
+                                    $value = str_replace('[CURRENCY]', $currency, $value);
+
+                                    $cell['attr']['style'] = ! empty($cell['attr']['style'])
+                                        ? "text-align:right;{$cell['attr']['style']}"
+                                        : "text-align:right;";
+
+
                                     $tpl->rows->row->col->default->assign('[VALUE]', $value);
                                     break;
 
