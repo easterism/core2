@@ -39,6 +39,7 @@ abstract class Table extends Acl {
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $currency                 = 'BYN';
     protected $group_field              = '';
     protected $group_options            = [];
     protected $data                     = [];
@@ -92,6 +93,7 @@ abstract class Table extends Acl {
     const COLUMN_DATE     = 'date';
     const COLUMN_DATETIME = 'datetime';
     const COLUMN_NUMBER   = 'number';
+    const COLUMN_MONEY    = 'money';
     const COLUMN_STATUS   = 'status';
     const COLUMN_SWITCH   = 'switch';
 
@@ -733,6 +735,7 @@ abstract class Table extends Acl {
                 'templates'    => $this->show_templates,
             ],
 
+            'currency'           => $this->currency,
             'currentPage'        => $this->current_page,
             'countPages'         => $count_pages,
             'recordsPerPage'     => $this->records_per_page,
@@ -862,6 +865,15 @@ abstract class Table extends Acl {
      */
     public function setData($data) {
         $this->data = $data;
+    }
+
+
+    /**
+     * Установка валюты по умолчанию
+     * @param string $currency
+     */
+    public function setCurrency(string $currency): void {
+        $this->currency = $currency;
     }
 
 
