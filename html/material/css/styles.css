@@ -2683,6 +2683,8 @@ table.coreui-table .search-container .control-type-datetime input {
 table.coreui-table .search-container .control-type-text input,
 table.coreui-table .search-container .control-type-text_strict input,
 table.coreui-table .search-container .control-type-select select,
+table.coreui-table .search-container .control-type-select2 select,
+table.coreui-table .search-container .control-type-multiselect2 select,
 table.coreui-table .search-container .control-type-multiselect select {
     width: 180px;
 }

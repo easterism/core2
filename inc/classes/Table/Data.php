@@ -314,6 +314,7 @@ class Data extends Table {
                         case 'date_one':
                         case 'radio':
                         case 'select':
+                        case 'select2':
                         case 'text_strict':
                             if ($row[$search_field] != $search_value) {
                                 unset($data[$key]);
@@ -323,6 +324,7 @@ class Data extends Table {
 
                         case 'checkbox':
                         case 'multiselect':
+                        case 'multiselect2':
                             if ( ! in_array('', $search_value) && ! in_array($row[$search_field], $search_value)) {
                                 unset($data[$key]);
                                 continue 2;
