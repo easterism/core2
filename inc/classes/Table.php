@@ -53,7 +53,7 @@ abstract class Table extends Acl {
     protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
-    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
+    protected $records_per_page_list    = [ 25, 50, 100, 1000 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
     protected $is_ajax                  = false;
