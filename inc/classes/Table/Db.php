@@ -199,6 +199,7 @@ class Db extends Table {
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -241,6 +242,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -543,6 +545,7 @@ class Db extends Table {
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if ($search_value != '') {
                                 $quoted_value = $this->db->quote($search_value);
 
@@ -556,6 +559,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if ( ! empty($search_value)) {
                                 $quoted_value = $this->db->quote($search_value);
 
