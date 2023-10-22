@@ -184,6 +184,7 @@ require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
 require_once 'Login.php';
+require_once 'SSE.php';
 
 
 /**
@@ -326,6 +327,25 @@ class Init extends \Core2\Db {
             $route = $this->routeParse();
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+
+                if (isset($route['module']) && $route['module'] === 'sse') {
+                    $this->setContext("admin", "sse");
+                    session_write_close();
+                    header("Content-Type: text/event-stream; charset=utf-8");
+                    header("X-Accel-Buffering: no");
+                    header("Cache-Control: no-cache");
+
+                    $sse = new Core2\SSE();
+                    while (1) {
+
+                        $sse->loop();
+
+                        if ( connection_aborted() ) break;
+
+                        sleep(1);
+                    }
+                    return;
+                }
 
                 // LOG USER ACTIVITY
                 $logExclude = array(
