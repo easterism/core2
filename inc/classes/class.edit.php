@@ -30,7 +30,7 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $uniq_class_id		    = '';
-    private $acl                    = '';
+    protected $acl                    = '';
     /**
      * form action attribute
      * @var string
@@ -450,7 +450,7 @@ class editTable extends initEdit {
 							$value['default'] = htmlspecialchars($arr[0][$sqlKey]);
 						}
 
-						//если тип hidden то формируется только hidden поле формы
+						//если тип hidden, то формируется только hidden поле формы
 						if ($value['type'] == 'hidden') {
 							$controlGroups[$cellId]['html'][$key] .= "<input id=\"" . $fieldId . "\" type=\"hidden\" name=\"control[$field]\" value=\"{$value['default']}\" />";
 							continue;
@@ -1540,6 +1540,7 @@ class editTable extends initEdit {
                                     $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
 
                                     foreach ($value['in'] as $item_field) {
+
                                         $tpl->title->assign('[TITLE]', $item_field['title']);
                                         $tpl->title->reassign();
                                     }
@@ -1560,14 +1561,17 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
-                                            } elseif ($type_name == 'date') {
+                                            } elseif ($type_name == 'select2') {
+                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+
+                                            }  elseif ($type_name == 'date') {
                                                 $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
 
                                             } elseif ($type_name == 'datetime') {
@@ -1600,6 +1604,18 @@ class editTable extends initEdit {
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
+
+                                $options = $value['in'];
+                                foreach ($options as $key_column => $option) {
+                                    if ( ! empty($option['options'])) {
+                                        $temp = [];
+                                        foreach ($option['options'] as $key_val => $item) {
+                                            $temp[] = ['val' => $key_val, 'title' => $item];
+                                        }
+                                        $value['in'][$key_column]['options'] = $temp;
+                                    }
+                                }
+
                                 $tpl->assign('[OPTIONS]',    addslashes(json_encode($value['in'])));
 
                                 $tpl->touchBlock('delete_col');
@@ -1640,11 +1656,11 @@ class editTable extends initEdit {
                                                 $type_name = 'text';
                                             }
 
-                                            if ( ($type_name == 'select' || $type_name == 'select2' )  && ! empty($item_field['options'])) {
-                                                foreach ($item_field['options'] as $option_value => $option_title) {
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                            if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
+                                                foreach ($item_field['options'] as $option) {
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option['val'] == $field_value ? 'selected="selected"' : '');
                                                     $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }

@@ -1275,24 +1275,31 @@ var edit = {
 							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
 							break;
 
-						case 'select2':
-							console.log(111111111111);
-							var selectOptions = '';
 
-							$.each(field['options'], function (value, title) {
+						case 'select2':
+							var selectOptions2 = '';
+							$.each(field['options'], function (key, option) {
 								var selected = '';
 
 								if (field['default_value']) {
-									selected = field['default_value'] === value ? 'selected' : '';
+									selected = field['default_value'] === option.val ? 'selected' : '';
 								} else {
-									selected = value === '' ? 'selected' : ''
+									selected = option.val === '' ? 'selected' : ''
 								}
 
-								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
+								selectOptions2 += "<option value=\"" + option.val + "\" " + selected + ">" + option.title + "</option>";
 							});
 
 							tplFieldCustom = tplFieldSelect2;
-							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
+							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions2);
+
+							setTimeout(function () {
+								$('#select2_' + key ).select2({
+									language: 'ru',
+									theme: 'bootstrap',
+								});
+							}, 10);
+
 							break;
 
 						case 'switch':
