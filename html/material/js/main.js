@@ -1018,13 +1018,6 @@ worker.port.addEventListener(
 	},
 	false,
 );
-document.addEventListener(
-	"Core2",
-	(e) => {
-		console.log(e.detail)
-	},
-	false,
-);
 worker.onerror = (event) => {
 	console.error("There is an error with your worker!");
 };
