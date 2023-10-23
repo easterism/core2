@@ -27,7 +27,7 @@ class Data extends Table {
 
     /**
      * Получение данных.
-     * @return array
+     * @return Row[]
      */
     public function fetchRows(): array {
 
@@ -139,8 +139,8 @@ class Data extends Table {
 
                         case 'date_month':
                             if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
-                                $date_start = new \DateTime("{$filter_value}-01");
-                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+                                $date_start = new \DateTime("{$filter_value}-01 00:00:00");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t 23:59:59'));
 
                                 if (strtotime($row[$filter_field]) < $date_start->getTimestamp() ||
                                     strtotime($row[$filter_field]) > $date_end->getTimestamp()
@@ -194,7 +194,7 @@ class Data extends Table {
                             break;
 
                         case 'text':
-                            if (mb_stripos($row[$filter_field], $filter_value, null, 'utf8') === false) {
+                            if (mb_stripos($row[$filter_field], $filter_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
                             }
@@ -314,6 +314,7 @@ class Data extends Table {
                         case 'date_one':
                         case 'radio':
                         case 'select':
+                        case 'select2':
                         case 'text_strict':
                             if ($row[$search_field] != $search_value) {
                                 unset($data[$key]);
@@ -323,6 +324,7 @@ class Data extends Table {
 
                         case 'checkbox':
                         case 'multiselect':
+                        case 'multiselect2':
                             if ( ! in_array('', $search_value) && ! in_array($row[$search_field], $search_value)) {
                                 unset($data[$key]);
                                 continue 2;
@@ -330,7 +332,7 @@ class Data extends Table {
                             break;
 
                         case 'text':
-                            if (mb_stripos($row[$search_field], $search_value, null, 'utf8') === false) {
+                            if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
                             }

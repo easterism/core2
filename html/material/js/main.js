@@ -381,7 +381,9 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
     preloader.hide();
     if (jqxhr.status === '0') {
         //alert("Соединение прервано.");
-    } else if (jqxhr.statusText === 'error') {
+    } else if (jqxhr.responseText === 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.' ){
+		swal(jqxhr.responseText, '', 'error').catch(swal.noop);
+	} else if (jqxhr.statusText === 'error') {
         swal("Отсутствует соединение с Интернет.", '', 'error').catch(swal.noop);
     } else if (jqxhr.status === 403) {
         swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
@@ -405,10 +407,12 @@ $(document).ajaxSuccess(function (event, xhr, settings) {
  * @param callback
  */
 var load = function (url, data, id, callback) {
-	preloader.show();
 
-	if (!id) id = '#main_body';
-	else if (typeof id === 'string') {
+	if ( ! id) {
+		id = '#main_body';
+		preloader.show();
+
+	} else if (typeof id === 'string') {
 		id = '#' + id;
 	}
 

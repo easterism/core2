@@ -30,6 +30,7 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $uniq_class_id		    = '';
+    private $acl                    = '';
     /**
      * form action attribute
      * @var string
@@ -741,15 +742,19 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['modal2'] = true;
 
-                                $options             = [];
-                                $options['size']     = isset($value['in']['size']) ? $value['in']['size'] : '';
-                                $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
-                                $options['text']     = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
-                                $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
-                                $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
-                                $options['onHidden'] = isset($value['in']['onHidden']) ? $value['in']['onHidden'] : '';
-                                $options['onClear']  = isset($value['in']['onClear']) ? $value['in']['onClear'] : '';
-                                $options['onChoose'] = isset($value['in']['onChoose']) ? $value['in']['onChoose'] : '';
+                                $options               = [];
+                                $options['size']       = $value['in']['size'] ?? '';
+                                $options['title']      = $value['in']['title'] ?? '';
+                                $options['text']       = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
+                                $options['value']      = $value['in']['value'] ?? $value['default'];
+                                $options['attributes'] = $value['in']['attributes'] ?? '';
+                                $options['url']        = $value['in']['url'] ?? '';
+                                $options['onHidden']   = $value['in']['onHidden'] ?? '';
+                                $options['onClear']    = $value['in']['onClear'] ?? '';
+                                $options['onChoose']   = $value['in']['onChoose'] ?? '';
+
+                                $options['autocomplete_url']        = $value['in']['autocomplete_url'] ?? '';
+                                $options['autocomplete_min_length'] = $value['in']['autocomplete_min_length'] ?? '';
 
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
@@ -772,8 +777,10 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
+                                $tpl->assign('[ATTR]',      $options['attributes']);
                                 $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
-
+                                $tpl->assign('[AUTOCOMPLETE_URL]',        $options['autocomplete_url']);
+                                $tpl->assign('[AUTOCOMPLETE_MIN_LENGTH]', $options['autocomplete_min_length']);
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
                                     ? trim($options['onHidden'])
@@ -791,11 +798,6 @@ class editTable extends initEdit {
                                     ? trim($options['onChoose'])
                                     : "''";
                                 $tpl->assign('[ON_CHOOSE]', $on_choose);
-
-
-                                if ( ! $value['req']) {
-                                    $tpl->touchBlock('clear');
-                                }
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }
@@ -1030,7 +1032,7 @@ class editTable extends initEdit {
 
 								$id = "template_content" . $this->main_table_id . $key;
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$fck_attrs.">{$value['default']}</textarea>";
-								$onload .= "mceSetup('" . $id . "', $mce_params);";
+								$onload .= "edit.mceSetup('" . $id . "', $mce_params);";
 								$PrepareSave .= "document.getElementById('" . $id . "').value = tinyMCE.get('" . $id . "').getContent();";
 							}
 						}
@@ -1624,9 +1626,6 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
-                                                        $field_value = $item_field['options'][$field_value] ?? $field_value;
-                                                    }
                                                 }
                                             }
 
@@ -1637,11 +1636,11 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'select' && ! empty($item_field['options'])) {
+                                            if ( ($type_name == 'select' || $type_name == 'select2' )  && ! empty($item_field['options'])) {
                                                 foreach ($item_field['options'] as $option_value => $option_title) {
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
@@ -2187,6 +2186,18 @@ $controlGroups[$cellId]['html'][$key] .= "
 			$this->addParams('file', $func);
 		}
 	}
+
+
+    /**
+     * Установка js кода которых будет выполнен при успешном сохранении
+     * @param string $func
+     * @return void
+     */
+	public function saveSuccess(string $func): void {
+
+        $this->setSessFormField('save_success', $func);
+	}
+
 
 	/**
 	 * @param $va

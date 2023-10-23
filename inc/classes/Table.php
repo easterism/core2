@@ -39,6 +39,7 @@ abstract class Table extends Acl {
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $currency                 = 'BYN';
     protected $group_field              = '';
     protected $group_options            = [];
     protected $data                     = [];
@@ -66,6 +67,7 @@ abstract class Table extends Acl {
     protected $locutions = [];
 
     const SEARCH_SELECT      = 'select';
+    const SEARCH_SELECT2     = 'select2';
     const SEARCH_TEXT        = 'text';
     const SEARCH_TEXT_STRICT = 'text_strict';
     const SEARCH_DATE_ONE    = 'date_one';
@@ -75,6 +77,7 @@ abstract class Table extends Acl {
     const SEARCH_CHECKBOX    = 'checkbox';
     const SEARCH_RADIO       = 'radio';
     const SEARCH_MULTISELECT = 'multiselect';
+    const SEARCH_MULTISELECT2 = 'multiselect2';
 
     const FILTER_SELECT      = 'select';
     const FILTER_TEXT        = 'text';
@@ -92,6 +95,7 @@ abstract class Table extends Acl {
     const COLUMN_DATE     = 'date';
     const COLUMN_DATETIME = 'datetime';
     const COLUMN_NUMBER   = 'number';
+    const COLUMN_MONEY    = 'money';
     const COLUMN_STATUS   = 'status';
     const COLUMN_SWITCH   = 'switch';
 
@@ -118,6 +122,7 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
+            $this->clearSearch();
             foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
                 if (is_array($search_value)) {
                     $isset_value = false;
@@ -136,6 +141,8 @@ abstract class Table extends Acl {
 
                 $this->setSearch($nmbr_field, $search_value);
             }
+
+            unset($_POST['search'][$resource]);
         }
         if ( ! empty($_POST['search_clear_' . $this->resource])) {
             $this->clearSearch();
@@ -171,6 +178,8 @@ abstract class Table extends Acl {
                     $this->setFilter($nmbr_field, $filter_value);
                 }
             }
+
+            unset($_POST['filter'][$resource]);
         }
         if ( ! empty($_POST['filter_clear_' . $this->resource])) {
             $this->clearFilter();
@@ -185,6 +194,7 @@ abstract class Table extends Acl {
         // COLUMNS
         if (isset($_POST["columns_{$this->resource}"]) && is_array($_POST["columns_{$this->resource}"])) {
             $columns = $_POST["columns_{$this->resource}"];
+            unset($_POST['columns_' . $resource]);
 
             $this->session->table->columns = [];
 
@@ -207,6 +217,7 @@ abstract class Table extends Acl {
         // ORDERING
         if ( ! empty($_POST['order_' . $resource])) {
             $order = $_POST['order_' . $resource];
+            unset($_POST['order_' . $resource]);
 
             if (empty($this->session->table->order)) {
                 $this->session->table->order      = $order;
@@ -727,6 +738,7 @@ abstract class Table extends Acl {
                 'templates'    => $this->show_templates,
             ],
 
+            'currency'           => $this->currency,
             'currentPage'        => $this->current_page,
             'countPages'         => $count_pages,
             'recordsPerPage'     => $this->records_per_page,
@@ -856,6 +868,15 @@ abstract class Table extends Acl {
      */
     public function setData($data) {
         $this->data = $data;
+    }
+
+
+    /**
+     * Установка валюты по умолчанию
+     * @param string $currency
+     */
+    public function setCurrency(string $currency): void {
+        $this->currency = $currency;
     }
 
 

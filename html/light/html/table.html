@@ -280,6 +280,22 @@
                               multiple="multiple" [IN_TEXT]></select>
                     </div>
                     <!-- END multiselect -->
+
+                    <!-- BEGIN select2 -->
+                    <div>
+
+                      <select [IN_TEXT] class="form-control input-sm" id="search-[RESOURCE]-[KEY]" name="search[[RESOURCE]][[KEY]]"></select>
+                      <script> $('#search-[RESOURCE]-[KEY]').select2({language: 'ru', theme: 'bootstrap', }); </script>
+                    </div>
+                    <!-- END select2 -->
+
+                    <!-- BEGIN multiselect2 -->
+                    <div>
+                      <select [IN_TEXT] class="form-control input-sm multiselect" id="search-[RESOURCE]-[KEY]"
+                              multiple="multiple" name="search[[RESOURCE]][[KEY]][]"></select>
+                      <script>$('#search-[RESOURCE]-[KEY]').select2({language: 'ru',theme: 'bootstrap',});</script>
+                    </div>
+                    <!-- END multiselect2 -->
                   </div>
                   <div class="out-text">[OUT_TEXT]</div>
                 </td>

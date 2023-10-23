@@ -25,7 +25,8 @@ class ajaxFunc extends Common {
 	protected $response;
 	protected $script;
 	protected $userId;
-	private $orderFields = [];
+	private $orderFields    = [];
+	private $last_insert_id = 0;
 
 
     /**
@@ -67,9 +68,9 @@ class ajaxFunc extends Common {
 	protected function ajaxValidate($data, $fields) {
 
 		$order_fields = $this->getSessForm($data['class_id']);
-        if (!isset($order_fields['mainTableId'])) {
+        if ( ! isset($order_fields['mainTableId'])) {
             $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
-            $this->response->script("CoreUI.error.create('$msg');");
+            $this->response->script("CoreUI.notice.create('$msg', 'danger');");
             return true;
         }
 		$control  = $data['control']; //данные полей формы
@@ -309,6 +310,7 @@ class ajaxFunc extends Common {
 	 * @return mixed
 	 */
 	protected function getSessFormField($form_id, $id) {
+
 		$this->getSessForm($form_id);
         return isset($this->orderFields[$id]) ? $this->orderFields[$id] : null;
 	}
@@ -486,6 +488,9 @@ class ajaxFunc extends Common {
 			$this->displayError($data);
 			return 0;
 		}
+
+        $this->last_insert_id = $last_insert_id;
+
 		return $last_insert_id;
 	}
 
@@ -527,6 +532,13 @@ class ajaxFunc extends Common {
         }
         if ( ! empty($order_fields['back'])) {
 			$this->response->script($this->script . "setTimeout(function () {load('{$order_fields['back']}')}, 0);");
+		}
+        if ( ! empty($order_fields['save_success'])) {
+            $script  = "edit.saveSuccessParams.id = {$this->last_insert_id};";
+            $script .= "{$order_fields['save_success']};";
+            $script .= "edit.saveSuccessParams = {};";
+
+			$this->response->script($script);
 		}
 	}
 
@@ -674,7 +686,8 @@ class ajaxFunc extends Common {
      * @return array
      */
     private function getSessForm($id) {
-        if ( empty($this->orderFields)) {
+
+        if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
