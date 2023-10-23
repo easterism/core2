@@ -8,6 +8,8 @@ class WorkerClient {
 
     private $location;
     private $module;
+    private $client;
+
 
 
     /**
@@ -110,6 +112,8 @@ class WorkerClient {
 
         $workload = $this->getWorkload($worker, $data);
         $worker   = $this->getWorkerName($worker);
+
+        if (!$workload) return false;
 
         $jh = $this->client->doBackground($worker, $workload, $unique);
 
