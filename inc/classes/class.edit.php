@@ -1626,9 +1626,6 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
-                                                        $field_value = $item_field['options'][$field_value] ?? $field_value;
-                                                    }
                                                 }
                                             }
 
@@ -1639,11 +1636,11 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'select' && ! empty($item_field['options'])) {
+                                            if ( ($type_name == 'select' || $type_name == 'select2' )  && ! empty($item_field['options'])) {
                                                 foreach ($item_field['options'] as $option_value => $option_title) {
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);

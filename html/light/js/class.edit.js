@@ -1239,6 +1239,11 @@ var edit = {
 				'<select class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>[OPTIONS]</select>' +
 				'</td>';
 
+			var tplFieldSelect2 =
+				'<td>' +
+				'<select id = "[FIELD][NUM][CODE]"  class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" [ATTRIBUTES]>[OPTIONS]</select>' +
+				'</td>';
+
 			var fields = [];
 			var key    = this.keygen();
 
@@ -1267,6 +1272,26 @@ var edit = {
 							});
 
 							tplFieldCustom = tplFieldSelect;
+							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
+							break;
+
+						case 'select2':
+							console.log(111111111111);
+							var selectOptions = '';
+
+							$.each(field['options'], function (value, title) {
+								var selected = '';
+
+								if (field['default_value']) {
+									selected = field['default_value'] === value ? 'selected' : '';
+								} else {
+									selected = value === '' ? 'selected' : ''
+								}
+
+								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
+							});
+
+							tplFieldCustom = tplFieldSelect2;
 							tplFieldCustom = tplFieldCustom.replace(/\[OPTIONS\]/g, selectOptions);
 							break;
 
