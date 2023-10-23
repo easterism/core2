@@ -71,9 +71,9 @@ class editTable extends initEdit {
         if ($data === 'db' || $data === 'cache' || $data === 'translate') {
             return parent::__get($data);
         }
-		$this->$data = new cell($this->main_table_id);
-		$this->cell[$data] = $this->$data;
-       	return $this->$data;
+        if (isset($this->cell[$data])) return $this->cell[$data];
+		$this->cell[$data] = new cell($this->main_table_id);
+       	return $this->cell[$data];
 	}
 
 
