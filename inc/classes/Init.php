@@ -329,6 +329,9 @@ class Init extends \Core2\Db {
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module']) && $route['module'] === 'sse') {
+
+                    require_once 'core2/inc/Interfaces/Event.php';
+
                     $this->setContext("admin", "sse");
                     session_write_close();
                     header("Content-Type: text/event-stream; charset=utf-8");

@@ -27,15 +27,12 @@ self.addEventListener(
                     eventSrc.addEventListener('message', function (event) {
 
                         var message = JSON.parse(event.data);
-                        for (var i in message) {
-
-                            that.postMessage({type: "message", event: message});
-                        }
+                        that.postMessage({type: "modules", event: message});
 
                     }, false);
-                    eventSrc.addEventListener('core2', function (event) {
+                    eventSrc.addEventListener('Core2', function (event) {
 
-                        that.postMessage({type: "core2", event: event.data});
+                        that.postMessage({type: "Core2", event: event.data});
 
                     }, false);
 

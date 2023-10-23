@@ -1,12 +1,35 @@
 <?php
 namespace Core2;
 
-
 /**
  * Class SSE
  * @package Core2
  */
 class SSE extends \Common {
+
+    private $_events = [];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $mods = $this->dataModules->getModuleList();
+        foreach ($mods as $mod) {
+            $location      = $this->getModuleLocation($mod['module_id']);
+            if (!is_dir($location . "/events")) continue;
+
+            foreach (new \DirectoryIterator($location . "/events") as $fileInfo) {
+                if ($fileInfo->isDot()) continue;
+                $eventFile = $fileInfo->getBasename('.php');
+                if (!$eventFile) continue;
+                require_once $fileInfo->getRealPath();
+                $eventFile = "Core2\Mod\\" . ucfirst($mod['module_id']) . "\\" . $eventFile;
+                $eventClass = new $eventFile();
+                if ($eventClass instanceof Event) {
+                    $this->_events[$eventFile] = $eventClass;
+                }
+            }
+        }
+    }
 
     /**
      * @return void
@@ -37,17 +60,29 @@ class SSE extends \Common {
 
     public function loop() {
 
-        //TODO сделать получение событий от всех модулей
         //модуль должен иметь папку events
-        //внутри каждый клас должен реализовать нетерфейс Event
+        //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
+        //в папке events каждый клас должен реализовать нетерфейс Event
+        $data = [];
 
-        $curDate = date(DATE_ISO8601);
-        echo "event: module\n",
-            'data: {"time": "' . $curDate . '"}', "\n\n";
+        foreach ($this->_events as $path => $event) {
+            if ($event->check()) {
+                //TODO реализовать не блокирующий вызов
+                ob_start();
+                $event->dispatch();
+                $data[str_replace("\\", "-" , $path)] = ob_get_clean();
+            }
+        }
 
-        echo "event: core2\n",
-            'data: asd asd', "\n\n";
-        // Send a simple message at random intervals.
+        if ($data) {
+            echo "event: modules\n",
+                'data: ', json_encode($data), "\n\n";
+
+            echo "event: Core2\n",
+                'data: произошли события: ',
+                implode("\ndata: ", array_keys($data)),
+                "\n\n";
+        }
 
         $this->doFlush();
     }
