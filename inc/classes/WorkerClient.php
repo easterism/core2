@@ -166,7 +166,7 @@ class WorkerClient {
         ];
 
         if ($this->module !== 'Admin') {
-            $workload = [
+            $workload += [
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
                 'context'   => \Zend_Registry::get('context'),
