@@ -26,7 +26,9 @@ class Search {
         'radio',
         'checkbox',
         'select',
+        'select2',
         'multiselect',
+        'multiselect2',
     ];
 
 

@@ -1409,7 +1409,7 @@ class InstallModule extends \Common {
         } catch (RequestException $e) {
             $msg = '';
             if ($e->hasResponse()) {
-                $msg = Psr7\str($e->getResponse());
+                $msg = Psr7\Message::toString($e->getResponse());
             }
             if (!$msg) $msg = $e->getMessage();
             throw new \Exception($msg);

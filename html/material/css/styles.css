@@ -1234,9 +1234,17 @@ table td.homeTD {padding: 10px}
 
 /* UI */
 .ui-autocomplete-category {
-	font-weight: bold;
+    font-weight: 600;
+    padding: 0.2em 0.4em;
+    margin: 0.8em 0 0;
 	font-style: italic;
-	color: #808080;
+	color: #424242;
+}
+.ui-autocomplete-loading {
+    background-image: url("../img/load.gif");
+    background-position-y: center;
+    background-position-x: 97%;
+    background-repeat: no-repeat;
 }
 .ui-timepicker-div .ui-widget-header {margin-bottom: 8px}
 .ui-timepicker-div dl {text-align: left}
@@ -1302,7 +1310,11 @@ label.control-label {font-weight: 700}
 .pull-right {float: right}
 .clearfix {clear:both}
 .bg-white {background-color: #fff}
-.form-control.modal-control-title {width: 235px}
+.form-control.modal-control-title {
+    border-bottom-left-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    width: 235px;
+}
 .modal-control .modal-control-button {height: 30px}
 .modal-control .input-group {min-width: 350px}
 .ctrl-dpr-controls > *,
@@ -1646,8 +1658,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel.core-panel-default {border-color: #cbcbcb}
 .core-panel.core-panel-default > .core-panel-heading {
     font-weight: normal;
-    font-size: 26px;
     overflow: hidden;
+}
+.core-panel.core-panel-default > .core-panel-heading > .core-panel-header {
+    font-size: 26px;
 }
 .core-panel > .core-panel-heading {
     padding: 20px 20px 6px 20px;
@@ -1665,7 +1679,10 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
             border-top-right-radius: 3px;
 }
 .core-panel > .core-panel-heading .btn {
-    margin-top: -4px;
+    margin-top: 2px;
+}
+.core-panel > .core-panel-heading > .btn {
+    margin-top: -12px;
 }
 .core-panel > .core-panel-heading > .core-panel-subtitle {
     color: #757575;
@@ -1678,7 +1695,7 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel > .core-panel-heading > .core-panel-controls {
     display:-webkit-box;
 }
-.core-panel > .core-panel-heading > .core-panel-controls div {
+.core-panel > .core-panel-heading > .core-panel-controls > div {
     margin-left: 8px;
 }
 
@@ -2666,6 +2683,8 @@ table.coreui-table .search-container .control-type-datetime input {
 table.coreui-table .search-container .control-type-text input,
 table.coreui-table .search-container .control-type-text_strict input,
 table.coreui-table .search-container .control-type-select select,
+table.coreui-table .search-container .control-type-select2 select,
+table.coreui-table .search-container .control-type-multiselect2 select,
 table.coreui-table .search-container .control-type-multiselect select {
     width: 180px;
 }

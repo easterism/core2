@@ -171,15 +171,18 @@ class Tool {
 
     /**
      * Добавляет разделитель через каждые 3 символа в указанном числе
-     *
-     * @param string $_
-     * @param string $del
-     *
+     * @param string $number
+     * @param string $separator
      * @return string
      */
-    public static function commafy($_, $del = ';psbn&') {
-	    return strrev( (string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $del , strrev( $_ ) ) );
-	}
+    public static function commafy($number, string $separator = ';psbn&'): string {
+
+        if (empty($number)) {
+            return '';
+        }
+
+	    return strrev((string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $separator , strrev( $number )));
+    }
 
 
     /**

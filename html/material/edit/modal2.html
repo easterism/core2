@@ -1,24 +1,26 @@
-<div class="modal-control">
+<div class="modal-control modal-container-[KEY]">
     <input type="hidden" id="[KEY]" name="[NAME]" value="[VALUE]">
     <div class="input-group">
         <input id="[KEY]-title" class="modal-control-title form-control input-sm first"
-               value="[TEXT]" type="text" disabled="disabled">
-        <!-- BEGIN clear -->
-        <button type="button" class="modal-control-clear btn btn-default add-on middle" onclick="edit.modal2.clear('[KEY]');">
+               value="[TEXT]" type="text" disabled="disabled" [ATTR]>
+        <button type="button" class="modal-control-clear btn btn-default add-on middle">
             <img src="[THEME_DIR]/img/clear.png" alt="Очистить" title="Очистить">
         </button>
-        <!-- END clear -->
-        <input type="button" class="modal-control-button btn btn-default btn-sm last" value="_tr(Выбрать)"
-               onclick="edit.modal2.load('[THEME_DIR]', '[KEY]', [URL])">
+        <input type="button" class="modal-control-button btn btn-default btn-sm last" value="_tr(Выбрать)">
         <div class="clearfix"></div>
     </div>
     <script>
-        edit.modal2.options['[KEY]'] = {
-            'title': '[TITLE]',
-            'size': '[SIZE]',
-            'onHidden': [ON_HIDDEN],
-            'onClear': [ON_CLEAR],
-            'onChoose': [ON_CHOOSE]
-        };
+        edit.modal2.init({
+            id: '[KEY]',
+            title: '[TITLE]',
+            size: '[SIZE]',
+            themeDir: '[THEME_DIR]',
+            url: [URL],
+            autocompleteUrl: '[AUTOCOMPLETE_URL]',
+            autocompleteMinLength: '[AUTOCOMPLETE_MIN_LENGTH]',
+            onHidden: [ON_HIDDEN],
+            onClear: [ON_CLEAR],
+            onChoose: [ON_CHOOSE]
+        });
     </script>
 </div>

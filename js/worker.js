@@ -40,7 +40,7 @@ self.addEventListener(
                         that.postMessage("SSE open");
                     }, false);
                     eventSrc.addEventListener('error', function (event) {
-                        if (event.eventPhase == eventSrc.CLOSED) {
+                        if (event.eventPhase === eventSrc.CLOSED) {
                             // Соединение было закрыто
                             that.postMessage('ERROR: SSE connection closed')
                             eventSrc = null;
