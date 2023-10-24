@@ -15,13 +15,16 @@
     <link rel="stylesheet" href="core2/html/light/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/material-design-iconic-font.min.css" type="text/css"/>
     <link rel="stylesheet" href="core2/html/light/css/menu.css?_=3" type="text/css"/>
-    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=28" type="text/css"/>
+    <link rel="stylesheet" href="core2/html/light/css/styles.css?_=29" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/jquery.ui.theme.font-awesome.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/light/css/coreui.notice.css" type="text/css"/>
+
+	<link rel="stylesheet" href="core2/html/light/css/select2.bootstrap.css" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/light/css/select2.min.css" type="text/css"/>
 
 	<!--[if lte IE 10]>
 	<link rel="stylesheet" href="core2/html/light/css/sweetalert2-ie.min.css" type="text/css"/>
@@ -48,6 +51,9 @@
 	<script type="text/javascript" src="core2/html/light/js/coreui.panel.js?_=0"></script>
 	<script type="text/javascript" src="core2/html/light/js/coreui.tabs.js?_=0"></script>
 
+	<script type="text/javascript" src="core2/html/light/js/select2.min.js"></script>
+	<script type="text/javascript" src="core2/html/light/js/select2.ru.min.js"></script>
+
 	<!--[if lte IE 10]>
 	<script type="text/javascript" src="core2/html/light/js/sweetalert2-ie.min.js"></script>
 	<![endif]-->
@@ -61,7 +67,7 @@
 	<![endif]-->
 
 	<script type="text/javascript" src="core2/html/light/js/class.list.js?_=2"></script>
-	<script type="text/javascript" src="core2/html/light/js/class.edit.js?_=12"></script>
+	<script type="text/javascript" src="core2/html/light/js/class.edit.js?_=20"></script>
 	<script type="text/javascript" src="core2/js/eTip.js"></script>
 	<script type="text/javascript" src="core2/html/light/js/main.js?_=5"></script>
     <!--[if IE]>

@@ -18,6 +18,7 @@ class Db extends Table {
     protected $table         = '';
     protected $primary_key   = '';
     protected $query         = '';
+    protected $query_result  = '';
     protected $query_params  = '';
     protected $order         = null;
     protected $select        = null;
@@ -40,6 +41,16 @@ class Db extends Table {
     public function getQueryParts(): array {
 
         return $this->query_parts;
+    }
+
+
+    /**
+     * Получение sql запроса который выполняется для получения данных
+     * @return string
+     */
+    public function getQueryResult(): string {
+
+        return $this->query_result;
     }
 
 
@@ -188,6 +199,7 @@ class Db extends Table {
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -230,6 +242,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -432,6 +445,8 @@ class Db extends Table {
                 }
             }
 
+            $this->query_result = $select_sql;
+
             $data_result = $this->db->fetchAll($select_sql);
 
             if (count($data_result) > $this->records_per_page) {
@@ -440,13 +455,21 @@ class Db extends Table {
                 unset($data_result[array_key_last($data_result)]);
 
             } else {
-                $this->records_total = $offset + count($data_result);
+                if (count($data_result) === 0) {
+                    $this->records_total      = $this->records_total_round;
+                    $this->records_total_more = true;
+
+                } else {
+                    $this->records_total = $offset + count($data_result);
+                }
             }
 
         } else {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
+
+            $this->query_result = $select_sql;
 
             $data_result         = $this->db->fetchAll($select_sql);
             $this->records_total = (int)$this->db->fetchOne('SELECT FOUND_ROWS()');
@@ -522,6 +545,7 @@ class Db extends Table {
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if ($search_value != '') {
                                 $quoted_value = $this->db->quote($search_value);
 
@@ -535,6 +559,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if ( ! empty($search_value)) {
                                 $quoted_value = $this->db->quote($search_value);
 
@@ -754,8 +779,10 @@ class Db extends Table {
             }
 
             $select->setLimit($records_per_page, $offset);
-            $select_sql = $select->getSql();
-            $result     = $this->db->fetchAll($select_sql, $this->query_params);
+            $select_sql         = $select->getSql();
+            $this->query_result = $select_sql;
+
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
 
             if (count($result) > $this->records_per_page) {
                 $this->records_total      = $offset + $this->records_per_page;
@@ -763,7 +790,13 @@ class Db extends Table {
                 unset($result[array_key_last($result)]);
 
             } else {
-                $this->records_total = $offset + count($result);
+                if (count($result) === 0) {
+                    $this->records_total      = $this->records_total_round;
+                    $this->records_total_more = true;
+
+                } else {
+                    $this->records_total = $offset + count($result);
+                }
             }
 
         } else {
@@ -773,6 +806,8 @@ class Db extends Table {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
+
+            $this->query_result = $select_sql;
 
             $result = $this->db->fetchAll($select_sql, $this->query_params);
             $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");

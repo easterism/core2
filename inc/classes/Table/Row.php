@@ -44,14 +44,14 @@ class Row implements \Iterator {
     /**
      * Set value in cell
      * @param string $field
-     * @param string $value
+     * @param mixed  $value
      */
-    public function __set(string $field, string $value) {
+    public function __set(string $field, mixed $value) {
 
         if (array_key_exists($field, $this->cells)) {
-            $this->cells[$field]->setValue($value);
+            $this->cells[$field]->setValue((string)$value);
         } else {
-            $this->cells[$field] = new Cell($value);
+            $this->cells[$field] = new Cell((string)$value);
         }
     }
 
