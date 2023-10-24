@@ -1022,6 +1022,7 @@ if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'fun
 					document.dispatchEvent(new CustomEvent("Core2", {detail: evt}));
 					break;
 			}
+
 		},
 		false,
 	);
@@ -1032,3 +1033,4 @@ if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'fun
 	worker.port.postMessage("start");
 	worker.port.postMessage("sse-open");
 }
+
