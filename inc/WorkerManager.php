@@ -584,21 +584,78 @@ class WorkerManager {
     protected function parse_config($file) {
 
         $this->toLog("Loading configuration from $file");
+        $loaded = parse_ini_file($file, true);
+        $iniArray = array();
+        foreach ($loaded as $key => $data)
+        {
+            $pieces = explode(":", $key);
+            $thisSection = trim($pieces[0]);
+            switch (count($pieces)) {
+                case 1:
+                    $iniArray[$thisSection] = $data;
+                    break;
 
-        $gearman_config = new \Zend_Config_Ini($file, self::DEFAULT_CONFIG);
+                case 2:
+                    $extendedSection = trim($pieces[1]);
+                    $iniArray[$thisSection] = array_merge(array(';extends'=>$extendedSection), $data);
+                    break;
 
-        if (empty($gearman_config)) {
+                default:
+                    /**
+                     * @see Zend_Config_Exception
+                     */
+                    // require_once 'Zend/Config/Exception.php';
+                    throw new \Exception("Section '$thisSection' may not extend multiple sections in $file");
+            }
+        }
+        $dataArray = array();
+        foreach ($iniArray as $sectionName => $sectionData) {
+            //$dataArray[$sectionName] = $this->_processSection($iniArray, $sectionName);
+            $config = [];
+            foreach ($sectionData as $key => $value) {
+                $config = $this->_processKey($config, $key, $value);
+            }
+            $dataArray[$sectionName] = $config;
+        }
+
+        if (empty($dataArray)) {
             $this->show_help("No configuration found in $file");
         }
 
-        if (isset($gearman_config->gearman)) {
-            $this->config = $gearman_config->gearman->toArray();
+        $config = current($dataArray);
+        if (isset($config['gearman'])) {
+            $this->config = $config['gearman'];
             $this->config['functions'] = [];
-            if ($gearman_config->gearman->functions) {
-                $this->config['functions'] = $gearman_config->gearman->functions->toArray();
+            if (!empty($config['gearman']['functions'])) {
+                $this->config['functions'] = $config['gearman']['functions'];
             };
         }
 
+    }
+
+    protected function _processKey($config, $key, $value)
+    {
+        if (strpos($key, '.') !== false) {
+            $pieces = explode('.', $key, 2);
+            if (strlen($pieces[0]) && strlen($pieces[1])) {
+                if (!isset($config[$pieces[0]])) {
+                    if ($pieces[0] === '0' && !empty($config)) {
+                        // convert the current values in $config into an array
+                        $config = array($pieces[0] => $config);
+                    } else {
+                        $config[$pieces[0]] = array();
+                    }
+                } elseif (!is_array($config[$pieces[0]])) {
+                    throw new \Exception("Cannot create sub-key for '{$pieces[0]}' as key already exists");
+                }
+                $config[$pieces[0]] = $this->_processKey($config[$pieces[0]], $pieces[1], $value);
+            } else {
+                throw new \Exception("Invalid key '$key'");
+            }
+        } else {
+            $config[$key] = $value;
+        }
+        return $config;
     }
 
     /**
@@ -970,6 +1027,8 @@ class WorkerManager {
      */
     protected function register_ticks($parent = true) {
 
+        //pcntl_async_signals(true);
+
         if ($parent) {
             $this->toLog("Registering signals for parent", self::LOG_LEVEL_DEBUG);
             pcntl_signal(SIGTERM, array($this, "signal"));
@@ -1206,6 +1265,7 @@ class WorkerManager {
         $thisWorker = new \GearmanWorker();
 
         $thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
+        $thisWorker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
 
         $thisWorker->setTimeout(5000);
 
@@ -1281,6 +1341,9 @@ class WorkerManager {
         $w = $job->workload();
 
         $h = $job->handle();
+
+//        echo $h . chr(10);//die;
+//        echo $job->unique() .chr(10);//die;
         //TODO control handlers
         $job_name = $job->functionName();
         $job_name = explode("-", $job_name);
@@ -1291,8 +1354,7 @@ class WorkerManager {
         } else {
             $func = $job_name;
         }
-
-        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists($func, false)) {
+        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists("\Core2\\" . $func, false)) {
 
             if (!isset($this->functions[$job_name])) {
                 $this->toLog("Function $func is not a registered job name");
@@ -1301,10 +1363,10 @@ class WorkerManager {
 
             require_once $this->functions[$job_name]["path"];
 
-            if (class_exists($func) && method_exists($func, "run")) {
+            if (class_exists("\Core2\\" . $func) && method_exists("\Core2\\" . $func, "run")) {
 
                 $this->toLog("Creating a $func object", self::LOG_LEVEL_WORKER_INFO);
-                $ns_func = "\\$func";
+                $ns_func = "\Core2\\$func";
                 $objects[$job_name] = new $ns_func();
 
             } elseif (!function_exists($func)) {
@@ -1324,6 +1386,7 @@ class WorkerManager {
         /**
          * Run the real function here
          */
+        $result = null;
         if (isset($objects[$job_name])) {
             $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
             try {
@@ -1401,7 +1464,7 @@ class WorkerManager {
             require_once $props["path"];
             $real_func = $this->prefix.$func;
             if (!function_exists($real_func) &&
-                (!class_exists($real_func) || !method_exists($real_func, "run"))) {
+                (!class_exists("\Core2\\" . $real_func) || !method_exists("\Core2\\" . $real_func, "run"))) {
                 $this->toLog("Function $real_func not found in ".$props["path"]);
                 posix_kill($this->pid, SIGUSR2);
                 exit();
