@@ -1560,14 +1560,17 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
-                                            } elseif ($type_name == 'date') {
+                                            } elseif ($type_name == 'select2') {
+                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+
+                                            }  elseif ($type_name == 'date') {
                                                 $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
 
                                             } elseif ($type_name == 'datetime') {
@@ -1595,6 +1598,16 @@ class editTable extends initEdit {
                                 }
 
                             } else {
+                                foreach ($value['in'] as $key_column => $option) {
+                                    if ( ! empty($option['options'])) {
+                                        $options = [];
+                                        foreach ($option['options'] as $key_val => $item) {
+                                            $options[] = ['val' => $key_val, 'title' => $item];
+                                        }
+                                        $value['in'][$key_column]['options'] = $options;
+                                    }
+                                }
+
                                 require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
@@ -1626,9 +1639,6 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
-                                                        $field_value = $item_field['options'][$field_value] ?? $field_value;
-                                                    }
                                                 }
                                             }
 
@@ -1639,15 +1649,16 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'select' && ! empty($item_field['options'])) {
-                                                foreach ($item_field['options'] as $option_value => $option_title) {
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                            if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
+
+                                                foreach ($item_field['options'] as $option) {
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option['val'] == $field_value ? 'selected="selected"' : '');
                                                     $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }
@@ -1678,18 +1689,18 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                        if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                             $type_name = 'text';
                                         }
 
-                                        if ($type_name == 'select' && ! empty($item_field['options'])) {
-                                            foreach ($item_field['options'] as $option_value => $option_title) {
+                                        if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
+                                            foreach ($item_field['options'] as $option_value => $option) {
                                                 $selected = isset($item_field['default_value']) && $item_field['default_value'] == $option_value
                                                     ? 'selected'
                                                     : '';
 
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $selected);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                             }
