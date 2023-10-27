@@ -1,12 +1,13 @@
 <?php
-
-use Core2\Log;
+namespace Core2;
 
 require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
 require_once __DIR__ . '/../inc/classes/Log.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
 require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
+
+use Core2\Log;
 
 class Logger
 {
@@ -43,7 +44,7 @@ class Logger
             if ($data['action']) {
                 $data['action'] = serialize($data['action']);
             }
-            $db = new \Core2\Db($config);
+            $db = new Db($config);
             //$log[] = "Соединяемся с базой...";
             $mysql = $db->db;
             try {
