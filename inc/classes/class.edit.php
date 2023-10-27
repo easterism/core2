@@ -1530,8 +1530,8 @@ class editTable extends initEdit {
                             if (is_array($value['default'])) {
                                 $datasets = $value['default'];
                             } else {
-                                $json_string = html_entity_decode($value['default']);
-                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                                $json_string = $value['default'] ? html_entity_decode($value['default']) : '';
+                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/u', '', $json_string), true);
                             }
 
                             if ($this->readOnly) {
