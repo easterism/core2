@@ -524,7 +524,7 @@ var edit = {
 		 * @deprecated
 		 */
 		getOption: function (key) {
-			this.getOptions(key);
+			return this.getOptions(key);
 		},
 
 
