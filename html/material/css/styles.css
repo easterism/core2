@@ -1240,7 +1240,7 @@ table td.homeTD {padding: 10px}
 	font-style: italic;
 	color: #424242;
 }
-.ui-autocomplete-loading {
+.modal-control .ui-autocomplete-loading {
     background-image: url("../img/load.gif");
     background-position-y: center;
     background-position-x: 97%;
