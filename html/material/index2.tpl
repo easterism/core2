@@ -28,7 +28,7 @@
 	<link rel="stylesheet" href="core2/html/material/css/animate.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/snarl.min.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/menu.css?_=9" type="text/css"/>
-	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=29" type="text/css"/>
+	<link rel="stylesheet" href="core2/html/material/css/styles.css?_=30" type="text/css"/>
 
 	<link rel="stylesheet" href="core2/html/material/css/select2.bootstrap.css" type="text/css"/>
 	<link rel="stylesheet" href="core2/html/material/css/select2.min.css" type="text/css"/>

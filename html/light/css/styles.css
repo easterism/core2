@@ -2733,7 +2733,12 @@ table.coreui-table .coreui-table-row-group {
     -ms-transform: translateX(16px);
     transform: translateX(16px);
 }
-
+.select2-container.select2-container--bootstrap .select2-selection--single {
+    min-height: 30px;
+}
+.select2-container--bootstrap .select2-results__option {
+    min-height: 27px;
+}
 
 /* Mobile */
 @media(max-width:767px) {
