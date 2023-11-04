@@ -1,4 +1,5 @@
 <?php
+namespace Core2;
 
 use Core2\Log;
 
