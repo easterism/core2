@@ -10,19 +10,32 @@ CoreUI.table = {
     },
 
     preloader : {
+
+        /**
+         * @param resource
+         */
         show : function(resource) {
+
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
-            var nodes   = wrapper.childNodes;
-            for (var i = 0; i < nodes.length; i++) {
-                if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
-                    nodes[i].style.display = 'block';
-                    break;
+
+            if (wrapper) {
+                var nodes = wrapper.childNodes;
+                for (var i = 0; i < nodes.length; i++) {
+                    if (/(\\s|^)preloader(\\s|$)/.test(nodes[i].className)) {
+                        nodes[i].style.display = 'block';
+                        break;
+                    }
                 }
             }
         },
 
+
+        /**
+         * @param resource
+         */
         hide : function(resource) {
             var wrapper = document.getElementById('table-' + resource + '-wrapper');
+
             if (wrapper) {
                 var nodes = wrapper.childNodes;
                 for (var i = 0; i < nodes.length; i++) {

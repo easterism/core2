@@ -542,33 +542,30 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item){
 };
 
 //------------Core2 worker-------------
-let worker = new SharedWorker("core2/js/worker.js");
-worker.port.addEventListener(
-	"message",
-	(e) => {
-		// console.log(e.data);
-		var evt = e.data.event;
-		if (e.data.type == 'modules') {
-			for (i in evt) {
-				document.dispatchEvent(new CustomEvent(i, {detail: evt[i]}));
+if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'function') {
+	var worker = new SharedWorker("core2/js/worker.js");
+	worker.port.addEventListener(
+		"message",
+		function(e) {
+			var evt = e.data.event;
+			switch (e.data.type) {
+				case 'modules':
+					for (i in evt) {
+						document.dispatchEvent(new CustomEvent(i, {detail: evt[i]}));
+					}
+					break;
+
+				case 'Core2':
+					document.dispatchEvent(new CustomEvent("Core2", {detail: evt}));
+					break;
 			}
-		}
-		if (e.data.type == 'Core2') {
-			document.dispatchEvent(new CustomEvent("Core2", {detail: evt}));
-		}
-	},
-	false,
-);
-document.addEventListener(
-	"Core2",
-	(e) => {
-		console.log(e.detail)
-	},
-	false,
-);
-worker.onerror = (event) => {
-	console.error("There is an error with your worker!");
-};
-worker.port.start();
-worker.port.postMessage("start");
-worker.port.postMessage("sse-open");
+		},
+		false,
+	);
+	worker.onerror = function(event) {
+		console.error("There is an error with your worker!");
+	};
+	worker.port.start();
+	worker.port.postMessage("start");
+	worker.port.postMessage("sse-open");
+}

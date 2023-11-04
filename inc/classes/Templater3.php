@@ -259,30 +259,106 @@ class Templater3 {
      */
     public function fillDropDown($id, array $options, $selected = null) {
 
-        if ($this->reassign) $this->startReassign();
+        if ($this->reassign) {
+            $this->startReassign();
+        }
+
         $html = "";
+
         foreach ($options as $value => $option) {
             if (is_array($option)) {
-                $html .= "<optgroup label=\"{$value}\">";
-                foreach ($option as $val => $opt) {
-                    $sel = $selected !== null && ((is_array($selected) && in_array((string)$val, $selected)) || (is_scalar($selected) && (string)$val === (string)$selected))
-                        ? 'selected="selected" '
-                        : '';
-                    $html .= "<option {$sel}value=\"{$val}\">{$opt}</option>";
+                if ( ! empty($option['title'])) {
+                    $item_value = ! empty($option['value'])
+                        ? $option['value']
+                        : $value;
+
+                    $attr = [];
+
+                    if ($selected !== null &&
+                        (
+                            (is_array($selected) && in_array((string)$item_value, $selected)) ||
+                            (is_scalar($selected) && (string)$item_value === (string)$selected)
+                        )
+                    ) {
+                        $attr[] = 'selected="selected" ';
+                    }
+
+                    if ( ! empty($option['attr']) && is_array($option['attr'])) {
+                        foreach ($option['attr'] as $attr_name => $attr_value) {
+                            $attr[] = "{$attr_name}=\"{$attr_value}\"";
+                        }
+                    }
+
+                    $attr[] = "value=\"{$item_value}\"";
+                    $attr = implode(' ', $attr);
+
+                    $html .= "<option {$attr}>{$option['title']}</option>";
+
+                } else {
+                    $html .= "<optgroup label=\"{$value}\">";
+
+                    foreach ($option as $option_value => $option_item) {
+                        if ( ! empty($option_item['title'])) {
+                            $item_value = ! empty($option_item['value'])
+                                ? $option_item['value']
+                                : $option_value;
+
+                            $attr = [];
+
+                            if ($selected !== null &&
+                                (
+                                    (is_array($selected) && in_array((string)$item_value, $selected)) ||
+                                    (is_scalar($selected) && (string)$item_value === (string)$selected)
+                                )
+                            ) {
+                                $attr[] = 'selected="selected"';
+                            }
+
+                            if ( ! empty($option_item['attr']) && is_array($option_item['attr'])) {
+                                foreach ($option_item['attr'] as $attr_name => $attr_value) {
+                                    $attr[] = "{$attr_name}=\"{$attr_value}\"";
+                                }
+                            }
+
+                            $attr[] = "value=\"{$item_value}\"";
+                            $attr = implode(' ', $attr);
+
+                            $html .= "<option {$attr}>{$option_item['title']}</option>";
+
+                        } else {
+                            $selected_attr = $selected !== null &&
+                                   (
+                                       (is_array($selected) && in_array((string)$option_value, $selected)) ||
+                                       (is_scalar($selected) && (string)$option_value === (string)$selected)
+                                   )
+                                ? 'selected="selected" '
+                                : '';
+                            $html .= "<option {$selected_attr}value=\"{$option_value}\">{$option_item}</option>";
+                        }
+                    }
+                    $html .= '</optgroup>';
                 }
-                $html .= '</optgroup>';
 
             } else {
-                $sel = $selected !== null && ((is_array($selected) && in_array((string)$value, $selected)) || (is_scalar($selected) && (string)$value === (string)$selected))
+                $selected_attr = $selected !== null &&
+                        (
+                            (is_array($selected) && in_array((string)$value, $selected)) ||
+                            (is_scalar($selected) && (string)$value === (string)$selected)
+                        )
                     ? 'selected="selected" '
                     : '';
-                $html .= "<option {$sel}value=\"{$value}\">{$option}</option>";
+                $html .= "<option {$selected_attr}value=\"{$value}\">{$option}</option>";
             }
         }
+
         if ($html) {
             $id = preg_quote($id);
-            $reg = "~(<select.*?id\s*=\s*[\"']{$id}[\"'][^>]*>).*?(</select>)~si";
-            $this->html = preg_replace($reg, "$1[[$id]]$2", $this->html);
+
+            $this->html = preg_replace(
+                "~(<select.*?id\s*=\s*[\"']{$id}[\"'][^>]*>).*?(</select>)~si",
+                "$1[[$id]]$2",
+                $this->html
+            );
             $this->assign("[[$id]]", $html, true);
         }
     }

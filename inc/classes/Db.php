@@ -534,22 +534,32 @@ class Db {
 	 * @return array
 	 */
 	public function getEnumById($id) {
-		$res = $this->db->fetchRow("SELECT id, name, custom_field, is_default_sw
-									FROM core_enum
-									WHERE is_active_sw = 'Y'
-									AND id = ?", $id);
-		if ($res['custom_field']) {
-			$temp = array();
-			$temp2 = explode(":::", $res['custom_field']);
-			foreach ($temp2 as $fields) {
-				$fields = explode("::", $fields);
-				if (isset($fields[0]) && isset($fields[1])) {
-                    $temp[$fields[0]] = $fields[1];
+
+		$enum = $this->db->fetchRow("
+            SELECT id, 
+                   name, 
+                   custom_field, 
+                   is_default_sw
+			FROM core_enum
+			WHERE is_active_sw = 'Y'
+			  AND id = ?
+        ", $id);
+
+		if ($enum && $enum['custom_field']) {
+            $custom_fields         = [];
+            $custom_fields_explode = explode(":::", $enum['custom_field']);
+
+            foreach ($custom_fields_explode as $fields) {
+                $fields = explode("::", $fields);
+                if (isset($fields[0]) && isset($fields[1])) {
+                    $custom_fields[$fields[0]] = $fields[1];
                 }
-			}
-			$res['custom_field'] = $temp;
-		}
-		return $res;
+            }
+
+            $enum['custom_field'] = $custom_fields;
+        }
+
+        return $enum;
 	}
 
 

@@ -1,14 +1,9 @@
 
 
-function lastFocus(f){
-	f.elements[f.elements.length - 1].focus();
-}
-
-//var isIE = window.navigator.userAgent.indexOf("MSIE")>-1;
-
 var edit = {
 	ev: {},
 	xfiles: {},
+	saveSuccessParams: {},
 	dateBlur : function(id) {
 		var year = document.getElementById(id + '_year').value;
 		var month = document.getElementById(id + '_month').value;
@@ -58,7 +53,8 @@ var edit = {
 		this.dateBlur(id);
 	},
 	onsubmit: function (obj) {
-		lastFocus(obj);
+		obj.elements[obj.elements.length - 1].focus();
+
 		if (typeof PrepareSave == 'function') {
 			PrepareSave();
 		}
@@ -653,8 +649,117 @@ var edit = {
 
 		options: [],
 
+		/**
+		 * Инициализация модала
+		 * @param {object} options
+		 */
+		init: function (options) {
+
+			edit.modal2.options[options.id] = {
+				id: options.id,
+				title: options.title || '',
+				size: options.size || '',
+				themeDir: options.themeDir || '',
+				url: options.url || '',
+				autocompleteUrl: options.autocompleteUrl || '',
+				autocompleteMinLength: options.autocompleteMinLength || 2,
+				onHidden: options.onHidden || '',
+				onClear: options.onClear || '',
+				onChoose: options.onChoose || ''
+			};
+
+			var modalOptions   = edit.modal2.options[options.id];
+			var isAutocomplete = modalOptions.autocompleteUrl && typeof modalOptions.autocompleteUrl === 'string';
+			var inputValue     = $('.modal-container-' + modalOptions.id + ' input[type="hidden"]');
+			var inputTitle     = $('.modal-container-' + modalOptions.id + ' .modal-control-title');
+
+			$('.modal-container-' + modalOptions.id + ' .modal-control-clear').click(function() {
+				edit.modal2.clear(modalOptions.id);
+
+				if (isAutocomplete) {
+					inputTitle.removeAttr('disabled');
+				}
+			});
+
+			$('.modal-container-' + modalOptions.id + ' .modal-control-button').click(function() {
+				edit.modal2.load(modalOptions.themeDir, modalOptions.id, modalOptions.url);
+			});
+
+			if (isAutocomplete) {
+				if ( ! inputValue.val()) {
+					inputTitle.removeAttr('disabled');
+				}
+
+				inputTitle.autocomplete({
+					source: function (request, response) {
+						$.getJSON( modalOptions.autocompleteUrl, {
+							term: $.trim(request.term)
+						}, function(data) {
+							response(data.items || []);
+						});
+					},
+					minLength: modalOptions.autocompleteMinLength,
+					focus: function( event, ui ) {
+						event.preventDefault();
+						inputTitle.val(ui.item.label);
+					},
+					select: function( event, ui ) {
+						event.preventDefault();
+						inputValue.val(ui.item.value);
+						inputTitle.val(ui.item.label);
+						inputTitle.attr('disabled', 'disabled');
+					},
+					close: function( event, ui ) {
+						event.preventDefault();
+
+						if ( ! inputValue.val()) {
+							inputTitle.val('');
+						}
+					},
+					create: function (event, ui) {
+						$(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+							var info  = item.info ? '<br><small class="text-muted">' + item.info + '</small>': '';
+							var term  = this.term.split(' ').join('|');
+							var label = item.label;
+
+							if (term) {
+								term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
+								label = label.replace(
+									new RegExp("(" + term + ")", "gi"),
+									"<b>$1</b>"
+								);
+							}
+
+							return $('<li>')
+								.attr( "data-value", item.value )
+								.append('<a>' + label + info + '</a>')
+								.appendTo(ul);
+						};
+
+						$(this).data('ui-autocomplete')._renderMenu = function (ul, items) {
+							var that         = this;
+							var currentGroup = "";
+
+							ul.css('min-width', inputTitle.width());
+							ul.css('max-width', 450);
+
+							$.each( items, function( index, item ) {
+								if (item.group && item.group !== currentGroup) {
+									ul.append( "<li class=\"ui-autocomplete-category\">" + item.group + "</li>" );
+									currentGroup = item.group;
+								}
+
+								that._renderItemData( ul, item );
+							});
+						};
+					}
+				})
+			}
+		},
+
 
 		/**
+		 * Загрузка содержимого модала
 		 * @param theme_src
 		 * @param key
 		 * @param url
@@ -714,6 +819,7 @@ var edit = {
 
 
 		/**
+		 * Очистка поля
 		 * @param key
 		 */
 		clear: function(key) {
@@ -729,7 +835,7 @@ var edit = {
 
 
 		/**
-		 *
+		 * Скрытие модала
 		 */
 		hide: function() {
 			$('#' + this.key + '-modal').modal('hide');
@@ -737,16 +843,59 @@ var edit = {
 
 
 		/**
+		 * Выбор
 		 * @param value
 		 * @param title
 		 */
 		choose: function(value, title) {
-			$('#' + this.key).val(value);
-			$('#' + this.key + '-title').val(title);
+
+			var inputTitle = $('.modal-container-' + this.key + ' .modal-control-title');
+			var inputValue = $('.modal-container-' + this.key + ' input[type="hidden"]');
+
+			inputValue.val(value);
+			inputTitle.val(title);
+			inputTitle.attr('disabled', 'disabled');
+
 			this.hide();
 
 			if (this.options[this.key] && typeof this.options[this.key].onChoose === 'function') {
 				this.options[this.key].onChoose(value, title);
+			}
+		},
+
+
+		/**
+		 * Получение параметров указанного модального поля
+		 * @param key
+		 */
+		getOptions: function (key) {
+			if (edit.modal2.options.hasOwnProperty(key)) {
+				return edit.modal2.options[key];
+			} else {
+				return [];
+			}
+		},
+
+
+		/**
+		 * Получение параметров указанного модального поля
+		 * @param key
+		 * @deprecated
+		 */
+		getOption: function (key) {
+			this.getOptions(key);
+		},
+
+
+		/**
+		 * Установка параметра указанного модального поля
+		 * @param key
+		 * @param option_name
+		 * @param val
+		 */
+		setOption: function (key, option_name, val){
+			if (edit.modal2.options.hasOwnProperty(key)) {
+				edit.modal2.options[key][option_name] = val;
 			}
 		}
     },
@@ -1153,6 +1302,38 @@ var edit = {
 			$(container).find('.core-switch-active').prop('checked', true);
 			$(container).find('.core-switch-inactive').prop('checked', false);
 		}
+	},
+
+
+	/**
+	 * Инициализация редактора
+	 * @param id
+	 * @param opt
+	 */
+	mceSetup: function (id, opt) {
+
+		var options = {
+			selector : '#' + id,
+			language : 'ru',
+			theme : 'modern',
+			forced_root_block : false,
+			force_br_newlines : true,
+			force_p_newlines : false,
+			verify_html : true,
+			convert_urls : false,
+			relative_urls : false,
+			plugins: [
+				"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
+				"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
+				"save table contextmenu directionality emoticons template paste textcolor"
+			],
+			toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
+			theme_advanced_resizing : true
+		};
+		for (k in opt) {
+			options[k] = opt[k];
+		}
+		tinymce.init(options);
 	}
 };
 
@@ -1160,29 +1341,16 @@ var edit = {
 /**
  * @param id
  * @param opt
+ * @deprecated
  */
 function mceSetup(id, opt) {
+	edit.mceSetup(id, opt);
+}
 
-    var options = {
-		selector : '#' + id,
-        language : 'ru',
-        theme : 'modern',
-        forced_root_block : false,
-        force_br_newlines : true,
-        force_p_newlines : false,
-		verify_html : true,
-        convert_urls : false,
-        relative_urls : false,
-        plugins: [
-			"advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
-			"searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
-			"save table contextmenu directionality emoticons template paste textcolor"
-		],
-		toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
-		theme_advanced_resizing : true
-       };
-    for (k in opt) {
-        options[k] = opt[k];
-    }
-	tinymce.init(options);
+/**
+ * @param f
+ * @deprecated
+ */
+function lastFocus(f){
+	f.elements[f.elements.length - 1].focus();
 }

@@ -4,7 +4,7 @@
 <html>
 <head>
 	<title>{system_name}</title>
-	<link href="core2/html/default/style2.css?_=11" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/style2.css?_=12" type="text/css" rel="stylesheet"/>
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>
@@ -12,22 +12,22 @@
 
 	<!--system_css-->
 
-	<script type="text/javascript" language="javascript" src="core2/js/md5.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/QueryString.js"></script>
+	<script type="text/javascript" src="core2/js/md5.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/lib/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/i18n/jquery.ui.datepicker-ru.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/jquery-ui-timepicker-addon.js"></script>
+	<script type="text/javascript" src="core2/js/QueryString.js"></script>
 
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/alertify/alertify.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/html/default/js/coreui.table.js?_=9"></script>
+	<script type="text/javascript" src="core2/js/jquery/plugins/jquery.maskedinput.min.js"></script>
+	<script type="text/javascript" src="core2/js/jquery/plugins/jquery.maskMoney.js"></script>
+	<script type="text/javascript" src="core2/html/default/alertify/alertify.js"></script>
+	<script type="text/javascript" src="core2/html/default/js/coreui.table.js?_=9"></script>
 
-	<script type="text/javascript" language="javascript" src="core2/js/class.list.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/class.edit.js?_=9"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/eTip.js"></script>
-	<script type="text/javascript" language="javascript" src="core2/js/js.js?_=2"></script>
+	<script type="text/javascript" src="core2/js/class.list.js"></script>
+	<script type="text/javascript" src="core2/js/class.edit.js?_=20"></script>
+	<script type="text/javascript" src="core2/js/eTip.js"></script>
+	<script type="text/javascript" src="core2/js/js.js?_=2"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta name="author" content="easter.by@gmail.com"/>
 	<link rel="icon" type="image/png" href="favicon.png"/>
