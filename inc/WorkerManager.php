@@ -1027,7 +1027,7 @@ class WorkerManager {
      */
     protected function register_ticks($parent = true) {
 
-        //pcntl_async_signals(true);
+        pcntl_async_signals(true);
 
         if ($parent) {
             $this->toLog("Registering signals for parent", self::LOG_LEVEL_DEBUG);
@@ -1338,7 +1338,7 @@ class WorkerManager {
 
         if ($objects === null) $objects = array();
 
-        $w = $job->workload();
+//        $w = $job->workload();
 
         $h = $job->handle();
 
@@ -1379,7 +1379,7 @@ class WorkerManager {
         $job_name_log = $this->getRealJobName($job_name);
 
         $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
-        $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
+//        $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
 

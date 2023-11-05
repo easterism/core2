@@ -22,6 +22,12 @@ class Workhorse
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             $config = unserialize($workload->config);
+            \Zend_Registry::set('config',      $config);
+            \Zend_Registry::set('translate',   unserialize($workload->translate));
+            \Zend_Registry::set('context',     $workload->context);
+            \Zend_Registry::set('auth',        $workload->auth);
+            \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+
             $db = new \Core2\Db($config);
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job) {
@@ -30,14 +36,9 @@ class Workhorse
                 return;
             }
 
+
+
             $controller = $this->requireController($workload->module, $workload->location);
-
-            \Zend_Registry::set('config',      $config);
-            \Zend_Registry::set('translate',   unserialize($workload->translate));
-            \Zend_Registry::set('context',     $workload->context);
-            \Zend_Registry::set('auth',        $workload->auth);
-            \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
-
 
             $handler = $job->handle();
             $db->db->insert("core_worker_jobs", [
