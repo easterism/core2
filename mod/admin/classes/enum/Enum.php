@@ -229,7 +229,7 @@ class Enum extends \Common {
         $custom_fields = unserialize(base64_decode($res));
         $edit          = new \editTable('enumxxxur');
 
-        $res2       = $this->dataEnum->find($add)->current()->custom_field;
+        $res2       = $this->dataEnum->find($add)->current()?->custom_field;
         $arr_fields = [];
 
         /* Формирование массива кастомных полей из строки */
