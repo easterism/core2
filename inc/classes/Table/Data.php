@@ -194,6 +194,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                            $filter_value = trim($filter_value);
+
                             if (mb_stripos($row[$filter_field], $filter_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
@@ -332,6 +334,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                            $search_value = trim($search_value);
+
                             if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
