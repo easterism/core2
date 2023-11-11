@@ -381,7 +381,9 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
     preloader.hide();
     if (jqxhr.status === '0') {
         //alert("Соединение прервано.");
-    } else if (jqxhr.statusText === 'error') {
+    } else if (jqxhr.responseText === 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.' ){
+		swal(jqxhr.responseText, '', 'error').catch(swal.noop);
+	} else if (jqxhr.statusText === 'error') {
         swal("Отсутствует соединение с Интернет.", '', 'error').catch(swal.noop);
     } else if (jqxhr.status === 403) {
         swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
@@ -1001,3 +1003,34 @@ $.ui.autocomplete.prototype._renderItem = function( ul, item){
 		.append("<a>" + t + "</a>")
 		.appendTo(ul);
 };
+
+//------------Core2 worker-------------
+if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'function') {
+	var worker = new SharedWorker("core2/js/worker.js");
+	worker.port.addEventListener(
+		"message",
+		function(e) {
+			var evt = e.data.event;
+			switch (e.data.type) {
+				case 'modules':
+					for (i in evt) {
+						document.dispatchEvent(new CustomEvent(i, {detail: evt[i]}));
+					}
+					break;
+
+				case 'Core2':
+					document.dispatchEvent(new CustomEvent("Core2", {detail: evt}));
+					break;
+			}
+
+		},
+		false,
+	);
+	worker.onerror = function(event) {
+		console.error("There is an error with your worker!");
+	};
+	worker.port.start();
+	worker.port.postMessage("start");
+	worker.port.postMessage("sse-open");
+}
+

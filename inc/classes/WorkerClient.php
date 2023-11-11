@@ -8,6 +8,8 @@ class WorkerClient {
 
     private $location;
     private $module;
+    private $client;
+
 
 
     /**
@@ -111,6 +113,8 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker   = $this->getWorkerName($worker);
 
+        if (!$workload) return false;
+
         $jh = $this->client->doBackground($worker, $workload, $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
@@ -162,7 +166,7 @@ class WorkerClient {
         ];
 
         if ($this->module !== 'Admin') {
-            $workload = [
+            $workload += [
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
                 'context'   => \Zend_Registry::get('context'),

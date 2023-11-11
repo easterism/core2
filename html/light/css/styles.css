@@ -1258,7 +1258,7 @@ table td.homeTD {padding: 10px}
     font-style: italic;
     color: #424242;
 }
-.ui-autocomplete-loading {
+.modal-control .ui-autocomplete-loading {
     background-image: url("../img/load.gif");
     background-position-y: center;
     background-position-x: 97%;
@@ -2733,7 +2733,12 @@ table.coreui-table .coreui-table-row-group {
     -ms-transform: translateX(16px);
     transform: translateX(16px);
 }
-
+.select2-container.select2-container--bootstrap .select2-selection--single {
+    min-height: 30px;
+}
+.select2-container--bootstrap .select2-results__option {
+    min-height: 27px;
+}
 
 /* Mobile */
 @media(max-width:767px) {
