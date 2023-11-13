@@ -434,6 +434,30 @@ class Tool {
 
 
     /**
+     * Форматирование временного диапазона
+     * @param DateTime $date_start
+     * @param DateTime $date_end
+     * @param string   $format
+     * @return string
+     */
+    public static function getFormatPeriod(\DateTime $date_start, \DateTime $date_end, string $format = "%s - %s"): string {
+
+        $day_equal  = $date_start->format('dmY') == $date_end->format('dmY');
+        $year_equal = $date_start->format('Y') == $date_end->format('Y');
+
+        $date_start_format = $day_equal
+            ? $date_start->format('H:i')
+            : ($year_equal ? $date_start->format('H:i d.m') : $date_start->format('H:i d.m.Y'));
+
+        $date_end_format = $day_equal
+            ? $date_end->format('H:i d.m.Y')
+            : ($year_equal ? $date_end->format('H:i d.m') : $date_end->format('H:i d.m.Y'));
+
+        return sprintf($format, $date_start_format, $date_end_format);
+    }
+
+
+    /**
      * Cортировка массивов по элементу
      *
      * @param array  $array Массив
