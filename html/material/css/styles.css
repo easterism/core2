@@ -2805,6 +2805,42 @@ table.coreui-table .coreui-table-row-group {
     -ms-transform: translateX(16px);
     transform: translateX(16px);
 }
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive {
+    overflow-y: auto;
+}
+.coreui-table-wrapper.coreui-table-limit-height > .preloader > .block {
+    z-index: 100;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead {
+    position: sticky;
+    top: 0;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tfoot {
+    position: sticky;
+    bottom: 0;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead > tr {
+    box-shadow: 0 -1px 0 #DDDDDD inset;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead > tr.table-service-panel {
+    box-shadow: 0 -1px 0 #DDDDDD inset;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead > tr.table-header {
+    box-shadow: 0 -2px 0 #DDDDDD inset;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead > tr.table-header > th {
+    border-bottom-width: 0;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tbody > tr:first-child > td {
+    border-top-width: 0;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tfoot > tr {
+    box-shadow: 0 1px 0 #DDDDDD inset;
+}
+.coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tfoot > tr > td {
+    border-top: 0;
+}
+
 .select2-container.select2-container--bootstrap .select2-selection--single {
     min-height: 30px;
 }

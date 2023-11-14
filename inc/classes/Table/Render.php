@@ -65,11 +65,12 @@ class Render extends Acl {
         }
 
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
-        $tpl->assign('[THEME_SRC]', $this->theme_src);
-        $tpl->assign('[RESOURCE]',  $this->table['resource']);
-        $tpl->assign('[IS_AJAX]',   (int)($this->table['isAjax'] ?? 0));
-        $tpl->assign('[LOCATION]',  ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
-
+        $tpl->assign('[THEME_SRC]',         $this->theme_src);
+        $tpl->assign('[RESOURCE]',          $this->table['resource']);
+        $tpl->assign('[IS_AJAX]',           (int)($this->table['isAjax'] ?? 0));
+        $tpl->assign('[LOCATION]',          ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
+        $tpl->assign('[CLASS_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? 'coreui-table-limit-height' : '');
+        $tpl->assign('[STYLE_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? "max-height: {$this->table['max_height']}px;" : '');
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {

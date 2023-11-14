@@ -56,6 +56,7 @@ abstract class Table extends Acl {
     protected $records_per_page_list    = [ 25, 50, 100, 1000 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
+    protected $max_height               = null;
     protected $is_ajax                  = false;
     protected $is_round_calc            = false;
 
@@ -603,6 +604,15 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param int $height
+     * @return void
+     */
+    public function setMaxHeight(int $height): void {
+        $this->max_height = $height;
+    }
+
+
+    /**
      *
      */
     public function hideColumnManage() {
@@ -745,6 +755,7 @@ abstract class Table extends Acl {
             'recordsTotal'       => $this->records_total,
             'recordsTotalMore'   => $this->records_total_more,
             'recordsPerPageList' => $per_page_list,
+            'max_height'         => $this->max_height,
             'records'            => $records,
         ];
 
