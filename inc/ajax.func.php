@@ -117,7 +117,7 @@ class ajaxFunc extends Common {
             $params = explode(",", $val);
 
             if (in_array("req", $params) && ! array_key_exists($field, $control)) {
-                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>$field $val";
                 break;
             }
 
