@@ -9,13 +9,15 @@ namespace Core2\Classes\Table;
  */
 class Column {
 
-    protected $title      = '';
-    protected $field      = '';
-    protected $type       = '';
-    protected $attr       = [];
-    protected $options    = [];
-    protected $is_sorting = true;
-    protected $is_show    = true;
+    protected $title             = '';
+    protected $field             = '';
+    protected $type              = '';
+    protected $footer_total      = null;
+    protected $footer_total_attr = null;
+    protected $attr              = [];
+    protected $options           = [];
+    protected $is_sorting        = true;
+    protected $is_show           = true;
 
 
     /**
@@ -168,9 +170,22 @@ class Column {
      * @param array $options
      * @return $this
      */
-    public function setOptions(array $options): self {
+    public function setOptions(array $options): Column {
 
         $this->options = $options;
+        return $this;
+    }
+
+
+    /**
+     * @param string|null $string
+     * @param array|null  $attr
+     * @return $this
+     */
+    public function setFooterTotal(?string $string, array $attr = null): Column {
+
+        $this->footer_total      = $string;
+        $this->footer_total_attr = $attr;
         return $this;
     }
 
@@ -180,7 +195,7 @@ class Column {
      * @return self
      */
     public function sorting(bool $is_sort = true): Column {
-        $this->is_sorting = (bool)$is_sort;
+        $this->is_sorting = $is_sort;
         return $this;
     }
 
@@ -229,9 +244,14 @@ class Column {
             'field'   => $this->field,
             'title'   => $this->title,
             'type'    => $this->type,
-            'sorting' => $this->is_sorting,
             'show'    => $this->is_show,
+            'sorting' => $this->is_sorting,
         ];
+
+        if ( ! is_null($this->footer_total)) {
+            $data['footer_total']      = $this->footer_total;
+            $data['footer_total_attr'] = $this->footer_total_attr;
+        }
 
         if ( ! empty($this->attr)) {
             $data['attr'] = $this->attr;

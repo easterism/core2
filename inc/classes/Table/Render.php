@@ -201,68 +201,110 @@ class Render extends Acl {
             }
 
 
-            if ($this->table['show']['footer']) {
-                $current_page = $this->table['currentPage'] ?? 1;
-                $count_pages  = ! empty($this->table['recordsTotal']) && ! empty($this->table['recordsPerPage'])
-                    ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
-                    : 0;
+            if ( ! empty($this->table['show']['footer_pages']) ||
+                ( ! empty($this->table['show']['footer_total']) && ! empty($this->table['columns']))
+            ) {
+                if ( ! empty($this->table['show']['footer_pages'])) {
+                    $current_page = $this->table['currentPage'] ?? 1;
+                    $count_pages  = ! empty($this->table['recordsTotal']) && ! empty($this->table['recordsPerPage'])
+                        ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
+                        : 0;
 
-                if ($count_pages > 0) {
-                    if (empty($this->table['recordsTotalMore'])) {
-                        $tpl_count_pages = $count_pages;
+                    if ($count_pages > 0) {
+                        if (empty($this->table['recordsTotalMore'])) {
+                            $tpl_count_pages = $count_pages;
 
-                    } elseif ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
-                        $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
-                        $tpl_count_pages = "~{$count_pages}";
+                        } elseif ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
+                            $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
+                            $tpl_count_pages = "~{$count_pages}";
+
+                        } else {
+                            $tpl_count_pages = $count_pages;
+                        }
 
                     } else {
-                        $tpl_count_pages = $count_pages;
+                        $tpl_count_pages = 1;
                     }
 
-                } else {
-                    $tpl_count_pages = 1;
-                }
+                    if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
+                        $tpl->footer->pages->touchBlock('gotopage');
+                    }
 
-                if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
-                    $tpl->footer->pages->touchBlock('gotopage');
-                }
+                    $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
+                    $tpl->footer->pages->assign('[COUNT_PAGES]',  $tpl_count_pages);
 
-                $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
-                $tpl->footer->pages->assign('[COUNT_PAGES]',  $tpl_count_pages);
+                    if ($current_page > 1) {
+                        $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
+                    }
 
-                if ($current_page > 1) {
-                    $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
-                }
-
-                if ($current_page < $count_pages ||
-                    (
-                        (empty($this->table['recordsPerPage']) && count($this->table['records']) > 0) ||
-                        (count($this->table['records']) >= $this->table['recordsPerPage'])
-                    )
-                ) {
-                    $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
-                }
+                    if ($current_page < $count_pages ||
+                        (
+                            (empty($this->table['recordsPerPage']) && count($this->table['records']) > 0) ||
+                            (count($this->table['records']) >= $this->table['recordsPerPage'])
+                        )
+                    ) {
+                        $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
+                    }
 
 
-                $recordsPerPage = $this->table['recordsPerPage'] ?? 25;
-                $per_page_list  = [];
+                    $recordsPerPage = $this->table['recordsPerPage'] ?? 25;
+                    $per_page_list  = [];
 
 
-                if ( ! empty($this->table['recordsPerPageList'])) {
-                    foreach ($this->table['recordsPerPageList'] as $per_page_count) {
-                        if (is_numeric($per_page_count)) {
-                            $per_page_list[$per_page_count] = $per_page_count == 0
-                                ? $this->getLocution('All')
-                                : $per_page_count;
+                    if ( ! empty($this->table['recordsPerPageList'])) {
+                        foreach ($this->table['recordsPerPageList'] as $per_page_count) {
+                            if (is_numeric($per_page_count)) {
+                                $per_page_list[$per_page_count] = $per_page_count == 0
+                                    ? $this->getLocution('All')
+                                    : $per_page_count;
+                            }
                         }
                     }
+
+                    $tpl->footer->pages->per_page->fillDropDown(
+                        'records-per-page-[RESOURCE]',
+                        $per_page_list,
+                        $recordsPerPage == 1000000000 ? 0 : $recordsPerPage
+                    );
                 }
 
-                $tpl->footer->pages->per_page->fillDropDown(
-                    'records-per-page-[RESOURCE]',
-                    $per_page_list,
-                    $recordsPerPage == 1000000000 ? 0 : $recordsPerPage
-                );
+                if ( ! empty($this->table['show']['footer_total'])) {
+                    if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
+                        $tpl->footer->total->total_column->assign('[ATTR]',  '');
+                        $tpl->footer->total->total_column->assign('[VALUE]', '');
+                        $tpl->footer->total->total_column->reassign();
+                    }
+
+                    foreach ($this->table['columns'] as $column) {
+                        if (is_array($column) && ! empty($column['show'])) {
+
+                            $footer_attr  = [];
+                            $footer_value = '';
+
+                            if (array_key_exists('footer_total', $column) && ! is_null($column['footer_total'])) {
+                                if ( ! empty($column['footer_total_attr'])) {
+                                    foreach ($column['footer_total_attr'] as $attr => $value) {
+                                        if (is_string($attr) && is_string($value)) {
+                                            $footer_attr[] = "$attr=\"{$value}\"";
+                                        }
+                                    }
+                                }
+
+                                $footer_value = $column['footer_total'];
+                            }
+
+                            $tpl->footer->total->total_column->assign('[ATTR]',  implode(' ', $footer_attr));
+                            $tpl->footer->total->total_column->assign('[VALUE]', $footer_value);
+                            $tpl->footer->total->total_column->reassign();
+                        }
+                    }
+
+                    if ( ! empty($this->table['show']) && ! empty($this->table['show']['selectRows'])) {
+                        $tpl->footer->total->total_column->assign('[ATTR]',  '');
+                        $tpl->footer->total->total_column->assign('[VALUE]', '');
+                        $tpl->footer->total->total_column->reassign();
+                    }
+                }
             }
         }
 
