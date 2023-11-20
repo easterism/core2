@@ -151,7 +151,12 @@ class Parallel extends Db {
             try {
                 $result_value = $task();
             } catch (\Exception $e) {
-                $result_value = $e;
+                $result_value = [
+                    'error_message' => $e->getMessage(),
+                    'file'          => $e->getFile(),
+                    'line'          => $e->getLine(),
+                    'trace'         => $e->getTraceAsString(),
+                ];
             }
 
             $this->sendSocketData($socket, $result_value);
