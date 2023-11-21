@@ -4,7 +4,7 @@
 <html>
 <head>
 	<title>{system_name}</title>
-	<link href="core2/html/default/style2.css?_=12" type="text/css" rel="stylesheet"/>
+	<link href="core2/html/default/style2.css?_=31" type="text/css" rel="stylesheet"/>
 	<link href="core2/html/default/jquery/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css"
 		  rel="stylesheet"/>
 	<link href="core2/html/default/fileupload/jquery.fileupload-ui.css" type="text/css" rel="stylesheet"/>

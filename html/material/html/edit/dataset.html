@@ -30,6 +30,23 @@
                 </select>
             </td>
             <!-- END field_select -->
+
+            <!-- BEGIN field_select2 -->
+            <td>
+                <select [ATTRIBUTES] class="form-control input-sm" id = "[FIELD][NUM][CODE]" name="control[[FIELD]][[NUM]][[CODE]]">
+                    <!-- BEGIN option -->
+                    <option [SELECTED] value="[VALUE]">[TITLE]</option>
+                    <!-- END option -->
+                </select>
+                <script>
+                    $('#[FIELD][NUM][CODE]').select2({
+                        language: 'ru',
+                        theme: 'bootstrap',
+                    });
+                </script>
+            </td>
+            <!-- END field_select2 -->
+
             <!-- BEGIN field_number -->
             <td>
                 <input type="number" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>

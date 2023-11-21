@@ -186,7 +186,13 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::SEARCH_TEXT:
-                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                            $value = trim($value);
+
+                            if (strpos($field, '%ADD_SEARCH%') !== false) {
+                                $quoted_value = $this->db->quote("%{$value}%");
+                                $select->where(str_replace("%ADD_SEARCH%", $quoted_value, $field));
+
+                            } elseif (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
@@ -272,7 +278,13 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::FILTER_TEXT:
-                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                            $value = trim($value);
+
+                            if (strpos($field, '%ADD_SEARCH%') !== false) {
+                                $quoted_value = $this->db->quote("%{$value}%");
+                                $select->where(str_replace("%ADD_SEARCH%", $quoted_value, $field));
+
+                            } elseif (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
@@ -572,13 +584,19 @@ class Db extends Table {
                             break;
 
                         case self::SEARCH_TEXT:
+                            $search_value = trim($search_value);
+
                             if ($search_value != '') {
-                                if (strpos($search_field, 'ADD_SEARCH') !== false) {
+                                if (strpos($search_field, '%ADD_SEARCH%') !== false) {
+                                    $quoted_value = $this->db->quote("%{$search_value}%");
+                                    $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $search_field));
+
+                                } elseif (strpos($search_field, 'ADD_SEARCH') !== false) {
                                     $quoted_value = $this->db->quote($search_value);
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
 
                                 } else {
-                                    $quoted_value = $this->db->quote('%' . $search_value . '%');
+                                    $quoted_value = $this->db->quote("%{$search_value}%");
                                     $select->addWhere("{$search_field} LIKE {$quoted_value}");
                                 }
                             }
@@ -682,8 +700,14 @@ class Db extends Table {
                             break;
 
                         case self::FILTER_TEXT:
+                            $filter_value = trim($filter_value);
+
                             if ($filter_value != '') {
-                                if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                if (strpos($filter_field, '%ADD_SEARCH%') !== false) {
+                                    $quoted_value = $this->db->quote("%{$filter_value}%");
+                                    $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $filter_field));
+
+                                } elseif (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                     $quoted_value = $this->db->quote($filter_value);
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $filter_field));
 

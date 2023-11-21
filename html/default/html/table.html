@@ -1,4 +1,4 @@
-<div class="coreui-table-wrapper" id="table-[RESOURCE]-wrapper">
+<div class="coreui-table-wrapper [CLASS_MAX_HEIGHT]" id="table-[RESOURCE]-wrapper">
   <div class="preloader" style="display:none">
     <div class="lock-screen"></div>
     <div class="block">
@@ -150,7 +150,7 @@
 
   <div id="table-[RESOURCE]-error" class="error">[MSG]</div>
 
-  <div class="coreui-table-responsive">
+  <div class="coreui-table-responsive" style="[STYLE_MAX_HEIGHT]">
     <table width="100%" id="table-[RESOURCE]" class="coreui-table">
       <thead>
 
@@ -491,50 +491,66 @@
       <!-- END no_rows -->
 
       </tbody>
-      <!-- BEGIN footer -->
-      <tfoot><tr><td colspan="1000">
+        <!-- BEGIN footer -->
+      <tfoot>
+        <!-- BEGIN total -->
+        <tr>
+          <!-- BEGIN total_column -->
+          <td [ATTR]>
+            [VALUE]
+          </td>
+          <!-- END total_column -->
+        </tr>
+        <!-- END total -->
+
         <!-- BEGIN pages -->
-        <table style="width:100%"><tr>
-          <!-- BEGIN gotopage -->
-          <td align="left">
-            <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"
-                   onkeyup="if (event.which === 13) CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"/>/>
-          </td>
-          <td align="left">
-            <input class="paginButton btn btn-default btn-xs" type="button"
-                   onclick="CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"
-                   value="&raquo;"/>
-          </td>
-          <!-- END gotopage -->
-          <td align="center" width="100%">
-            <!-- BEGIN prev -->
-            <input class="paginButton btn btn-default btn-xs" type="button"
-                   onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[PREV_PAGE]"
-                   value="&laquo;"/>
-            <!-- END prev -->
-            [CURRENT_PAGE] _tr(из) [COUNT_PAGES]
-            <!-- BEGIN next -->
-            <input class="paginButton btn btn-default btn-xs" type="button"
-                   onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[NEXT_PAGE]"
-                   value="&raquo;"/>
-            <!-- END next -->
-          </td>
-          <!-- BEGIN per_page -->
-          <td align="right">
-            <select id="records-per-page-[RESOURCE]" class="records-per-page"
-                    onchange="CoreUI.table.recordsPerPage('[RESOURCE]', this, [IS_AJAX])"></select>
-          </td>
-          <!-- END per_page -->
-        </tr></table>
-        <!-- END pages -->
-      </td></tr></tfoot>
-      <!-- END footer -->
+        <tr>
+          <td colspan="1000">
+            <table style="width:100%">
+              <tr>
+                <!-- BEGIN gotopage -->
+                <td align="left">
+                  <input type="text" id="table-[RESOURCE]-gotopage" class="input gotopage"
+                         onkeyup="if (event.which === 13) CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"/>/>
+                </td>
+                <td align="left">
+                  <input class="paginButton btn btn-default btn-xs" type="button"
+                         onclick="CoreUI.table.goToPage(this, '[RESOURCE]', [IS_AJAX])"
+                         value="&raquo;"/>
+                </td>
+                <!-- END gotopage -->
+                <td align="center" width="100%">
+                  <!-- BEGIN prev -->
+                  <input class="paginButton btn btn-default btn-xs" type="button"
+                         onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[PREV_PAGE]"
+                         value="&laquo;"/>
+                  <!-- END prev -->
+                  [CURRENT_PAGE] _tr(из) [COUNT_PAGES]
+                  <!-- BEGIN next -->
+                  <input class="paginButton btn btn-default btn-xs" type="button"
+                         onclick="CoreUI.table.pageSw(this, '[RESOURCE]', [IS_AJAX])" title="[NEXT_PAGE]"
+                         value="&raquo;"/>
+                  <!-- END next -->
+                </td>
+                <!-- BEGIN per_page -->
+                <td align="right">
+                  <select id="records-per-page-[RESOURCE]" class="records-per-page"
+                          onchange="CoreUI.table.recordsPerPage('[RESOURCE]', this, [IS_AJAX])"></select>
+                </td>
+                <!-- END per_page -->
+              </tr>
+            </table>
+        </td>
+      </tr>
+      <!-- END pages -->
+    </tfoot>
+    <!-- END footer -->
     </table>
   </div>
 </div>
 
 <script>
-  if ( ! CoreUI.table) {
+  if ( ! CoreUI || ! CoreUI.table) {
     alert('CoreUI.table не найден!')
   } else {
     CoreUI.table.loc['[RESOURCE]'] = '[LOCATION]';
