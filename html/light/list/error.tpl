@@ -1,1 +1,0 @@
-<div id="[ID]" class="error">[MSG]</div>
