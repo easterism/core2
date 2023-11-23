@@ -86,8 +86,9 @@ class Enum extends \Common {
         $tpl->fillDropDown('yyy', $enums, '');
         $custom_field = $tpl->render();
 
-        $res = $this->dataEnum->find($enum_id)->current()->custom_field;
-        $custom_fields = unserialize(base64_decode($res));
+        $res           = $this->dataEnum->find($enum_id)->current()->custom_field;
+        $custom_fields = $res ? unserialize(base64_decode($res)) : [];
+
         if (is_array($custom_fields) && $custom_fields) {
             foreach ($custom_fields as $value) {
                 $list_custom .= str_replace(
@@ -142,7 +143,7 @@ class Enum extends \Common {
      */
     public function newEnumValue($enum_id) {
         $res = $this->dataEnum->find($enum_id)->current()->custom_field;
-        $custom_fields = unserialize(base64_decode($res));
+        $custom_fields = $res ? unserialize(base64_decode($res)) : [];
         $edit = new \editTable('enumxxxur');
 
         $fields_sql = '';
@@ -226,10 +227,10 @@ class Enum extends \Common {
 
         $add           = (int)$value_id;
         $res           = $this->dataEnum->find($enum_id)->current()->custom_field;
-        $custom_fields = unserialize(base64_decode($res));
+        $custom_fields = $res ? unserialize(base64_decode($res)) : [];
         $edit          = new \editTable('enumxxxur');
 
-        $res2       = $this->dataEnum->find($add)->current()->custom_field;
+        $res2       = $this->dataEnum->find($add)->current()?->custom_field;
         $arr_fields = [];
 
         /* Формирование массива кастомных полей из строки */
@@ -327,9 +328,8 @@ class Enum extends \Common {
      */
     public function listEnumValues($enum_id) {
 
-        $fields_sql = "";
         $res = $this->dataEnum->find($enum_id)->current()->custom_field;
-        $custom_fields = unserialize(base64_decode($res));
+        $custom_fields = $res ? unserialize(base64_decode($res)) : [];
 
         //ENUM dtl list
         $list = new \listTable('enumxxx3'.$enum_id);
@@ -375,7 +375,7 @@ class Enum extends \Common {
         $list->getData();
         foreach ($list->data as $key => $row) {
 
-            $fields_values = explode(":::", end($row));
+            $fields_values = explode(":::", (string)end($row));
             if ( ! empty($fields_values)) {
                 foreach ($fields_values as $fields_value) {
                     if (strpos($fields_value, '::') !== false) {

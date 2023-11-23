@@ -11,7 +11,9 @@ require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 class Workhorse
 {
     public function run($job, &$log) {
-        echo $job->unique().'\n';
+
+        $id = $job->unique();
+
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
@@ -20,10 +22,6 @@ class Workhorse
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             $config = unserialize($workload->config);
-            $handler = $job->handle();
-
-            $controller = $this->requireController($workload->module, $workload->location);
-
             \Zend_Registry::set('config',      $config);
             \Zend_Registry::set('translate',   unserialize($workload->translate));
             \Zend_Registry::set('context',     $workload->context);
@@ -31,7 +29,20 @@ class Workhorse
             \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
 
             $db = new \Core2\Db($config);
+            $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
+            if ($in_job) {
+                //задача уже обрабатывается
+
+                return;
+            }
+
+
+
+            $controller = $this->requireController($workload->module, $workload->location);
+
+            $handler = $job->handle();
             $db->db->insert("core_worker_jobs", [
+                'id' =>    $id,
                 'handler' =>    $handler,
                 'status' =>    'start',
             ]);
@@ -61,7 +72,7 @@ class Workhorse
                 'error'     =>    $error,
                 'executor'  =>    "$controller->$action",
                 'data'      =>    $out,
-            ], $db->db->quoteInto('handler = ?', $handler));
+            ], $db->db->quoteInto('id = ?', $id));
             $db->db->closeConnection();
 
             $log[] = "Finish $controller->$action";

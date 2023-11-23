@@ -187,10 +187,8 @@ class Common extends \Core2\Acl {
 						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
 					}
 
-
-
-					$v         = $this->{$k} = new $cl();
-					$v->module = $module;
+					$v = $this->{$k} = new $cl();
+                    // $v->module = $module;
 
 				} else {
 					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));

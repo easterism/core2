@@ -57,7 +57,7 @@ class Data extends Table {
 
                     $first_row = current($this->data);
 
-                    if (isset($first_row[$order_field])) {
+                    if (array_key_exists($order_field, $first_row)) {
                         $this->data = $this->orderData($this->data, $order_field, $this->session->table->order_type);
                     }
                 }
@@ -194,6 +194,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                            $filter_value = trim($filter_value);
+
                             if (mb_stripos($row[$filter_field], $filter_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
@@ -332,6 +334,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                            $search_value = trim($search_value);
+
                             if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
                                 unset($data[$key]);
                                 continue 2;
@@ -360,7 +364,7 @@ class Data extends Table {
                     if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
                         return $a[$order_field] <=> $b[$order_field];
                     }
-                    return strnatcasecmp($a[$order_field], $b[$order_field]);});
+                    return strnatcasecmp((string)$a[$order_field], (string)$b[$order_field]);});
                 break;
 
             case 'DESC':
@@ -368,7 +372,7 @@ class Data extends Table {
                     if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
                         return  $b[$order_field] <=> $a[$order_field];
                     }
-                    return strnatcasecmp($b[$order_field], $a[$order_field]);
+                    return strnatcasecmp((string)$b[$order_field], (string)$a[$order_field]);
                 });
                 break;
         }

@@ -780,7 +780,7 @@ class Db {
 
             $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
 
-            $conf_ext = $module_loc . "/conf.workers.ini";
+            $conf_ext = $module_loc . "/conf.ext.ini";
             if (file_exists($conf_ext)) {
                 $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
                 $extends_mod_ext = $config_mod_ext->getExtends();

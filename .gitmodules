@@ -52,3 +52,12 @@
 [submodule "mod/cron/v3.5.0"]
     path = mod/cron/v3.5.0
     url = git@git.rdo.belhard.com:core2/modules/cron.git
+[submodule "html/material"]
+	path = html/material
+	url = git@github.com:easterism/core2-front-material.git
+[submodule "html/default"]
+	path = html/default
+	url = git@github.com:easterism/core2-front-default.git
+[submodule "html/light"]
+	path = html/light
+	url = git@github.com:easterism/core2-front-light.git

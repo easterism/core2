@@ -87,7 +87,8 @@ class ajaxFunc extends Common {
 
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
-				$control[$field] = $val ? trim($val) : "";
+				$control[$field] = is_string($val) ? trim($val) : "";
+
 				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
 					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "2').className='reqField';";
 					$this->error[] = "- {$this->translate->tr('Пароль не совпадает.')}<br/>";
@@ -116,7 +117,7 @@ class ajaxFunc extends Common {
             $params = explode(",", $val);
 
             if (in_array("req", $params) && ! array_key_exists($field, $control)) {
-                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>$field $val";
                 break;
             }
 

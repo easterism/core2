@@ -1341,6 +1341,9 @@ class WorkerManager {
 //        $w = $job->workload();
 
         $h = $job->handle();
+
+//        echo $h . chr(10);//die;
+//        echo $job->unique() .chr(10);//die;
         //TODO control handlers
         $job_name = $job->functionName();
         $job_name = explode("-", $job_name);
