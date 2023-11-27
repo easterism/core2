@@ -351,18 +351,21 @@ class WorkerManager {
     protected function getopt() {
         $this->config = [];
 
-        $opts = getopt("ac:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L:s");
+        $opts = getopt("c:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L:s:");
 
         if (isset($opts["H"])) {
             $this->show_help();
         }
 
         if (isset($opts["c"])) {
-            $this->config['file'] = $opts['c'];
+            if (!file_exists($opts["c"])) {
+                $this->show_help("Application config file {$opts["c"]} not found.");
+            }
         } else {
-            $this->config['file'] = __DIR__ . "/../conf.ini";
+            $this->show_help("Path to Application config file reqired.");
         }
 
+        $this->config['file'] = __DIR__ . "/../conf.ini";
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
                 $core_config = $this->parse_config($this->config['file']);
@@ -375,7 +378,7 @@ class WorkerManager {
                 }
             }
             else {
-                $this->show_help("Core2 config file {$this->config['file']} not found.");
+                $this->show_help("Core2 worker config file {$this->config['file']} not found.");
             }
         }
 
@@ -386,14 +389,6 @@ class WorkerManager {
         }
 
         $config = [
-            'system'       => ['name' => 'CORE2'],
-            'include_path' => '',
-            'temp'         => getenv('TMP'),
-            'debug'        => ['on' => false],
-            'session'      => [
-                'cookie_httponly'  => true,
-                'use_only_cookies' => true,
-            ],
             'database' => [
                 'adapter' => 'Pdo_Mysql',
                 'params'  => [
@@ -403,10 +398,6 @@ class WorkerManager {
                     \PDO::ATTR_TIMEOUT => 3,
                 ],
                 'isDefaultTableAdapter' => true,
-                'profiler'              => [
-                    'enabled' => false,
-                    'class'   => 'Zend_Db_Profiler_Firebug',
-                ],
                 'caseFolding'                => true,
                 'autoQuoteIdentifiers'       => true,
                 'allowSerialization'         => true,
@@ -421,23 +412,15 @@ class WorkerManager {
             }
         }
         try {
-            $config = new \Zend_Config($config, true);
-
-            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
-            $conf_file = __DIR__ . "/../../conf.ini";
-            if (!file_exists($this->config['file'])) {
-                $this->show_help("Application config file $conf_file not found.");
+            $config2 = $this->parse_config($opts["c"], $section);
+            if (isset($config2['database']['params'])) {
+                $params = array_merge($config['database'], $config2['database']);
+                $config2['database'] = $params;
             }
-            $config2 = $this->parse_config($conf_file);
-            echo "<PRE>";print_r($config2);echo "</PRE>";die;
-            $conf_d = DOC_ROOT . "conf.ext.ini";
-            if (file_exists($conf_d)) {
-                $config2->merge(new Zend_Config_Ini($conf_d, $section));
-            }
-            $config->merge($config2);
+            $this->config['app'] = new \Zend_Config($config2, true);
         }
-        catch (Zend_Config_Exception $e) {
-            \Core2\Error::Exception($e->getMessage());
+        catch (\Zend_Config_Exception $e) {
+            Error::Exception($e->getMessage());
         }
 
         /**
@@ -649,10 +632,11 @@ class WorkerManager {
      * @param   string    $file     The config file. Just pass so we don't have
      *                              to keep it around in a var
      */
-    protected function parse_config($file) {
+    protected function parse_config($file, $section = 'production') {
 
         $this->toLog("Loading configuration from $file");
         $loaded = parse_ini_file($file, true);
+
         $iniArray = array();
         foreach ($loaded as $key => $data)
         {
@@ -685,13 +669,20 @@ class WorkerManager {
             }
             $dataArray[$sectionName] = $config;
         }
-
         if (empty($dataArray)) {
             $this->show_help("No configuration found in $file");
         }
+        if (!isset($dataArray[$section])) {
+            $this->show_help("No section $section found in $file");
+        }
+        $result = $dataArray[$section];
+        if (isset($dataArray[$section][';extends'])) {
+            //extended section found
+            $result = array_merge($dataArray[$dataArray[$section][';extends']], $dataArray[$section]);
+            unset($result[';extends']);
+        }
 
-        $config = current($dataArray);
-        return $config;
+        return $result;
 
     }
 
@@ -1296,7 +1287,7 @@ class WorkerManager {
         echo "  # ".basename(__FILE__)." -h | -c CONFIG [-v] [-l LOG_FILE] [-d] [-v] [-a] [-P PID_FILE]\n\n";
         echo "OPTIONS:\n";
         echo "  -a             Automatically check for new worker code\n";
-        echo "  -c CONFIG      Worker configuration file\n";
+        echo "  -c CONFIG      Application configuration file\n";
         echo "  -d             Daemon, detach and run in the background\n";
         echo "  -D NUMBER      Start NUMBER workers that do all jobs\n";
         echo "  -h HOST[:PORT] Connect to gearman HOST and optional PORT\n";
