@@ -133,14 +133,20 @@ class Parallel extends Db {
 
             // Самостоятельное завершение процесса перед выходом, иначе процесс будет закрыт вместе с родителем,
             register_shutdown_function(function () use ($socket) {
-                ob_end_clean();
+                $buffer = ob_get_clean();
 
                 // Отправка пустого сообщения при фатале
                 $error = error_get_last();
                 if ($error &&
-                    in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR, E_CORE_WARNING, E_COMPILE_WARNING, E_PARSE])
+                    in_array($error['type'], [
+                        E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR,
+                        E_CORE_WARNING, E_COMPILE_WARNING, E_PARSE
+                    ])
                 ) {
-                    $this->sendSocketData($socket, null);
+                    $this->sendSocketData($socket, [
+                        'result' => null,
+                        'buffer' => (string)$buffer
+                    ]);
                 }
 
                 // Убивает текущий процесс без выполнения деструкторов
@@ -159,7 +165,10 @@ class Parallel extends Db {
                 ];
             }
 
-            $this->sendSocketData($socket, $result_value);
+            $this->sendSocketData($socket, [
+                'result' => $result_value,
+                'buffer' => (string)ob_get_clean()
+            ]);
 
             // Завершение дочернего процесса
             exit();
