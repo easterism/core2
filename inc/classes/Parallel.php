@@ -50,6 +50,11 @@ class Parallel extends Db {
             $this->db->closeConnection();
         }
 
+        if ($this->cache->getAdapterName() !== 'Filesystem') {
+            $reg = \Zend_Registry::getInstance();
+            $reg->set('cache', null);
+        }
+
         $process_count = 0;
         foreach ($this->tasks as $task) {
             if ($process_count >= $this->pool_size) {
