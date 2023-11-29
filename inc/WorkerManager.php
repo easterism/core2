@@ -351,25 +351,76 @@ class WorkerManager {
     protected function getopt() {
         $this->config = [];
 
-        $opts = getopt("ac:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L");
+        $opts = getopt("c:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L:s:");
 
         if (isset($opts["H"])) {
             $this->show_help();
         }
 
         if (isset($opts["c"])) {
-            $this->config['file'] = $opts['c'];
+            if (!file_exists($opts["c"])) {
+                $this->show_help("Application config file {$opts["c"]} not found.");
+            }
         } else {
-            $this->config['file'] = __DIR__ . "/../conf.ini";
+            $this->show_help("Path to Application config file reqired.");
         }
 
+        $this->config['file'] = __DIR__ . "/../conf.ini";
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
-                $this->parse_config($this->config['file']);
+                $core_config = $this->parse_config($this->config['file']);
+                if (isset($core_config['gearman'])) {
+                    $this->config = $core_config['gearman'];
+                    $this->config['functions'] = [];
+                    if (!empty($config['gearman']['functions'])) {
+                        $this->config['functions'] = $core_config['gearman']['functions'];
+                    };
+                }
             }
             else {
-                $this->show_help("Config file {$this->config['file']} not found.");
+                $this->show_help("Core2 worker config file {$this->config['file']} not found.");
             }
+        }
+
+        $section = 'production';
+        if (isset($opts["s"])) {
+            $_SERVER['SERVER_NAME'] = $opts["s"];
+            $section = $_SERVER['SERVER_NAME'];
+        }
+
+        $config = [
+            'database' => [
+                'adapter' => 'Pdo_Mysql',
+                'params'  => [
+                    'charset' => 'utf8',
+                ],
+                'driver_options'=> [
+                    \PDO::ATTR_TIMEOUT => 3,
+                ],
+                'isDefaultTableAdapter' => true,
+                'caseFolding'                => true,
+                'autoQuoteIdentifiers'       => true,
+                'allowSerialization'         => true,
+                'autoReconnectOnUnserialize' => true,
+            ],
+        ];
+        // определяем путь к темповой папке
+        if (empty($config['temp'])) {
+            $config['temp'] = sys_get_temp_dir();
+            if (empty($config['temp'])) {
+                $config['temp'] = "/tmp";
+            }
+        }
+        try {
+            $config2 = $this->parse_config($opts["c"], $section);
+            if (isset($config2['database']['params'])) {
+                $params = array_merge($config['database'], $config2['database']);
+                $config2['database'] = $params;
+            }
+            $this->config['app'] = new \Zend_Config($config2, true);
+        }
+        catch (\Zend_Config_Exception $e) {
+            Error::Exception($e->getMessage());
         }
 
         /**
@@ -581,10 +632,11 @@ class WorkerManager {
      * @param   string    $file     The config file. Just pass so we don't have
      *                              to keep it around in a var
      */
-    protected function parse_config($file) {
+    protected function parse_config($file, $section = 'production') {
 
         $this->toLog("Loading configuration from $file");
         $loaded = parse_ini_file($file, true);
+
         $iniArray = array();
         foreach ($loaded as $key => $data)
         {
@@ -617,19 +669,20 @@ class WorkerManager {
             }
             $dataArray[$sectionName] = $config;
         }
-
         if (empty($dataArray)) {
             $this->show_help("No configuration found in $file");
         }
-
-        $config = current($dataArray);
-        if (isset($config['gearman'])) {
-            $this->config = $config['gearman'];
-            $this->config['functions'] = [];
-            if (!empty($config['gearman']['functions'])) {
-                $this->config['functions'] = $config['gearman']['functions'];
-            };
+        if (!isset($dataArray[$section])) {
+            $this->show_help("No section $section found in $file");
         }
+        $result = $dataArray[$section];
+        if (isset($dataArray[$section][';extends'])) {
+            //extended section found
+            $result = array_merge($dataArray[$dataArray[$section][';extends']], $dataArray[$section]);
+            unset($result[';extends']);
+        }
+
+        return $result;
 
     }
 
@@ -671,7 +724,7 @@ class WorkerManager {
 
         foreach ($dirs as $dir) {
 
-            $this->toLog("Loading workers in ".$dir);
+            $this->toLog("Loading workers in " . $dir);
 
             $worker_files = glob($dir . "/*.php");
 
@@ -1234,7 +1287,7 @@ class WorkerManager {
         echo "  # ".basename(__FILE__)." -h | -c CONFIG [-v] [-l LOG_FILE] [-d] [-v] [-a] [-P PID_FILE]\n\n";
         echo "OPTIONS:\n";
         echo "  -a             Automatically check for new worker code\n";
-        echo "  -c CONFIG      Worker configuration file\n";
+        echo "  -c CONFIG      Application configuration file\n";
         echo "  -d             Daemon, detach and run in the background\n";
         echo "  -D NUMBER      Start NUMBER workers that do all jobs\n";
         echo "  -h HOST[:PORT] Connect to gearman HOST and optional PORT\n";
@@ -1249,6 +1302,7 @@ class WorkerManager {
         echo "  -x SECONDS     Maximum seconds for a worker to live\n";
         echo "  -Z             Parse the command line and config file then dump it to the screen and exit.\n";
         echo "  -L LABEL       Label worker process to easy find in process list.\n";
+        echo "  -s SECTION     conf.ini section to use.\n";
         echo "\n";
         exit();
     }
@@ -1304,7 +1358,6 @@ class WorkerManager {
                         sleep(5);
                     }
                 }
-
             }
 
             /**
@@ -1324,7 +1377,6 @@ class WorkerManager {
         }
 
         $thisWorker->unregisterAll();
-
 
     }
 
