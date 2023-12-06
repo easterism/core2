@@ -584,20 +584,22 @@ class Db extends Table {
                             break;
 
                         case self::SEARCH_TEXT:
-                            $search_value = trim($search_value);
+                            if (is_string($search_value)) {
+                                $search_value = trim($search_value);
 
-                            if ($search_value != '') {
-                                if (strpos($search_field, '%ADD_SEARCH%') !== false) {
-                                    $quoted_value = $this->db->quote("%{$search_value}%");
-                                    $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $search_field));
+                                if ($search_value != '') {
+                                    if (strpos($search_field, '%ADD_SEARCH%') !== false) {
+                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $search_field));
 
-                                } elseif (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value = $this->db->quote($search_value);
-                                    $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
+                                    } elseif (strpos($search_field, 'ADD_SEARCH') !== false) {
+                                        $quoted_value = $this->db->quote($search_value);
+                                        $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
 
-                                } else {
-                                    $quoted_value = $this->db->quote("%{$search_value}%");
-                                    $select->addWhere("{$search_field} LIKE {$quoted_value}");
+                                    } else {
+                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $select->addWhere("{$search_field} LIKE {$quoted_value}");
+                                    }
                                 }
                             }
                             break;
