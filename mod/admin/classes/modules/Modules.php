@@ -772,7 +772,7 @@ class Modules extends \Common  {
     public function getTableGitlab(): string {
 
         $table = new Table\Data("{$this->resId}xxx_gitlab");
-        $table->hideCheckboxes();
+        $table->showCheckboxes(false);
         $table->setAjax();
 
         $modules = $this->getGitlabModules();
