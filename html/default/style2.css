@@ -2068,6 +2068,7 @@ table.coreui-table .coreui-table-row-group {
 .coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead {
 	position: sticky;
 	top: 0;
+	z-index: 1;
 }
 .coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tfoot {
 	position: sticky;
