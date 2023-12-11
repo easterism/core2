@@ -12,6 +12,9 @@ class Parallel extends Db {
     private bool  $use_db    = false;
     private int   $pool_size = 4;
 
+    private static int $number = 1;
+
+
     /**
      * @throws \Zend_Exception
      */
@@ -30,12 +33,14 @@ class Parallel extends Db {
     /**
      * Добавление задачи
      * @param \Closure $task
-     * @return void
+     * @return int уникальный порядковый номер задачи
      * @throws \Exception
      */
-    public function addTask(\Closure $task): void {
+    public function addTask(\Closure $task): int {
 
-        $this->tasks[] = $task;
+        $this->tasks[self::$number] = $task;
+
+        return self::$number++;
     }
 
 
@@ -55,14 +60,18 @@ class Parallel extends Db {
             $reg->set('cache', null);
         }
 
+        $task_numbers  = [];
         $process_count = 0;
-        foreach ($this->tasks as $task) {
+
+        foreach ($this->tasks as $number => $task) {
             if ($process_count >= $this->pool_size) {
                 pcntl_wait($status);
                 $process_count--;
             }
 
-            $this->startTask($task);
+            $pid = $this->startTask($task);
+
+            $task_numbers[$pid] = $number;
             $process_count++;
         }
 
@@ -93,7 +102,8 @@ class Parallel extends Db {
 
             socket_close($socket);
 
-            $result[$pid] = unserialize(trim($process_result));
+            $number = $task_numbers[$pid];
+            $result[$number] = unserialize(trim($process_result));
         }
 
         $this->pids    = [];
