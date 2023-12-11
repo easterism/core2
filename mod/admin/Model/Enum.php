@@ -64,6 +64,43 @@ class Enum extends \Zend_Db_Table_Abstract {
 
 
     /**
+     * Редактирование записи в справочнике
+     * @param int $enum_item_id
+     * @param string $customFieldName
+     * @throws \Zend_Db_Adapter_Exception
+     */
+    public function updateCustomFieldNmbr (int $enum_item_id, string $customFieldName) : void {
+
+        if (empty($enum_item_id)) {
+            throw new \Exception(sprintf('Указанная запись в справочниках не найдена', $enum_item_id));
+        }
+
+        $org_prefix_enum = $this->getEnumById($enum_item_id);
+
+        $enum_custom_fields = [];
+
+        foreach ($org_prefix_enum as $item) {
+            if ($item['custom_field']) {
+                foreach ($item['custom_field'] as $key => $value) {
+                    if ($key == $customFieldName) {
+                        $next_nmbr = $value + 1;
+                        $enum_custom_fields[] = "{$key}::{$next_nmbr}";
+                    } else {
+                        $enum_custom_fields[] = "{$key}::{$value}";
+                    }
+                }
+            }
+        }
+
+        $where = [];
+        $where[] = $this->_db->quoteInto('id = ?', $enum_item_id);
+        $this->_db->update('core_enum', [
+            'custom_field' => $enum_custom_fields ? implode(':::', $enum_custom_fields) : null,
+        ], $where);
+
+    }
+
+    /**
      * @param $expr
      * @param $var
      * @return \Zend_Db_Table_Row_Abstract|null
@@ -143,5 +180,36 @@ class Enum extends \Zend_Db_Table_Abstract {
         }
 
         return $this->_enum[$global_id];
+    }
+
+    public function getEnumById($enum_id) {
+
+        if ( ! isset($this->_enum[$enum_id])) {
+            $res  = $this->_db->fetchAll("
+                SELECT e.id, 
+                       e.name, 
+                       e.custom_field
+				FROM core_enum AS e
+				WHERE e.id = ?
+            ", $enum_id);
+
+            $data = [];
+            foreach ($res as $value) {
+                $data[$value['id']]           = [
+                    'value'        => $value['name']
+                ];
+                $data[$value['id']]['custom_field'] = [];
+                if ($value['custom_field']) {
+                    $temp = explode(":::", $value['custom_field']);
+                    foreach ($temp as $val) {
+                        $temp2                                   = explode("::", $val);
+                        $data[$value['id']]['custom_field'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
+                    }
+                }
+            }
+            $this->_enum[$enum_id] = $data;
+        }
+
+        return $this->_enum[$enum_id];
     }
 }
