@@ -366,24 +366,7 @@ class editTable extends initEdit {
 			$this->setSessForm($order_fields);
 
 			if ($refid && $this->table) {
-				$check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
-					array($this->table, $keyfield, $refid)
-				);
-				$lastupdate = microtime();
-				$auth = Zend_Registry::get('auth');
-				if (!$check) {
-					$this->db->insert('core_controls', array(
-                        'tbl' 		=> $this->table,
-                        'keyfield' 	=> $keyfield,
-                        'val' 		=> $refid,
-                        'lastuser' 	=> $auth->ID,
-                        'lastupdate' => $lastupdate
-                    ));
-				} else {
-					$this->db->query("UPDATE core_controls SET lastupdate=?, lastuser=? WHERE tbl=? AND keyfield=? AND val=?",
-						array($lastupdate, $auth->ID, $this->table, $keyfield, $refid)
-					);
-				}
+                $this->formControl($keyfield, $refid);
 			}
 
 			if (isset($this->params[$this->main_table_id]) && count($this->params[$this->main_table_id])) {
@@ -2293,7 +2276,39 @@ $controlGroups[$cellId]['html'][$key] .= "
 		return $out;
 	}
 
+    /**
+     * Контроль открытой формы
+     * @param $keyfield
+     * @param $refid
+     * @return void
+     */
+    private function formControl($keyfield, $refid) {
+        $check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
+            array($this->table, $keyfield, $refid)
+        );
+        $lastupdate = microtime();
+        $auth = Zend_Registry::get('auth');
+        if (!$check) {
+            $this->db->insert('core_controls', array(
+                'tbl' 		=> $this->table,
+                'keyfield' 	=> $keyfield,
+                'val' 		=> $refid,
+                'lastuser' 	=> $auth->ID,
+                'lastupdate' => $lastupdate
+            ));
+        } else {
+            $this->db->query("UPDATE core_controls SET lastupdate=?, lastuser=? WHERE tbl=? AND keyfield=? AND val=?",
+                array($lastupdate, $auth->ID, $this->table, $keyfield, $refid)
+            );
+        }
+    }
+
 }
+
+
+
+
+
 
 class cell {
 	protected $controls			= array();
@@ -2368,5 +2383,5 @@ class cell {
     	}
     	
     }
-    
+
 }
