@@ -48,7 +48,7 @@ class editTable extends initEdit {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->template 		= '<div id="' . $this->main_table_id . '_default">[default]</div>';
-		$this->uniq_class_id   	= crc32($name . microtime());
+		$this->uniq_class_id   	= crc32($name);
 
 		global $counter;
 		$counter = 0;
@@ -59,7 +59,10 @@ class editTable extends initEdit {
 
 
 		$this->sess_form = new SessionContainer('Form');
-        $this->sess_form->{$this->uniq_class_id} = array();
+        $already_opened = $this->sess_form->{$this->uniq_class_id};
+        //есль ли у юзера еще одна открытая эта же форма
+        if (!isset($already_opened['refid'])) $this->sess_form->{$this->uniq_class_id} = array();
+        //TODO сделать так, чтоб на сессию не влияла readme форма
     }
 
 
