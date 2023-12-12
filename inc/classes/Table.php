@@ -870,6 +870,14 @@ abstract class Table extends Acl {
         $this->buttons[] = $html;
     }
 
+    /**
+     * Удаление всех кнопок
+     */
+    public function clearControls() {
+        $this->buttons = [];
+    }
+
+
 
     /**
      * Добавление колонки

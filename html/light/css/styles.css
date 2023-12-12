@@ -775,7 +775,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 }
 .colorpicker-component .input-group-addon {
     width: 40px;
-    line-height: 20px;
+    line-height: 16px;
 }
 .combobox-control > input.form-control {
     width: 225px;
