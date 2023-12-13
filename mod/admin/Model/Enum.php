@@ -64,41 +64,32 @@ class Enum extends \Zend_Db_Table_Abstract {
 
 
     /**
-     * Редактирование записи в справочнике
-     * @param int $enum_item_id
-     * @param string $customFieldName
-     * @throws \Zend_Db_Adapter_Exception
+     * Получает id записи справочника по значению
+     *
+     * @param string $name
+     * @return int
+     * @throws \Zend_Db_Table_Exception
      */
-    public function updateCustomFieldNmbr (int $enum_item_id, string $customFieldName) : void {
+    public function getEnumIdByValue(string $name) : int {
+        $select = $this->select()
+            ->where('name = ?', $name);
+        $item = $this->fetchRow($select);
+        return ($item->id);
+    }
 
-        if (empty($enum_item_id)) {
-            throw new \Exception(sprintf('Указанная запись в справочниках не найдена', $enum_item_id));
-        }
 
-        $org_prefix_enum = $this->getEnumById($enum_item_id);
-
-        $enum_custom_fields = [];
-
-        foreach ($org_prefix_enum as $item) {
-            if ($item['custom_field']) {
-                foreach ($item['custom_field'] as $key => $value) {
-                    if ($key == $customFieldName) {
-                        $next_nmbr = $value + 1;
-                        $enum_custom_fields[] = "{$key}::{$next_nmbr}";
-                    } else {
-                        $enum_custom_fields[] = "{$key}::{$value}";
-                    }
-                }
-            }
-        }
-
-        $where = [];
-        $where[] = $this->_db->quoteInto('id = ?', $enum_item_id);
-        $this->_db->update('core_enum', [
+    /**
+     * Обновление custom_field в одной записи справочника
+     * @param int $enum_item_id
+     * @param array $enum_custom_fields
+     */
+    public function setCustomFields (int $enum_item_id, array $enum_custom_fields): void {
+       $where = $this->getAdapter()->quoteInto('id = ?', $enum_item_id);
+       $this->update([
             'custom_field' => $enum_custom_fields ? implode(':::', $enum_custom_fields) : null,
         ], $where);
-
     }
+
 
     /**
      * @param $expr
