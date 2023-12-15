@@ -41,7 +41,6 @@ class Enum extends \Zend_Db_Table_Abstract {
             }
         }
 
-
         $select = $this->select()
             ->from($this->_name, ['max_seq' => new \Zend_Db_Expr('MAX(seq)')])
             ->where('parent_id = ?', $enum->id);
@@ -64,30 +63,23 @@ class Enum extends \Zend_Db_Table_Abstract {
 
 
     /**
-     * Получает id записи справочника по значению
-     *
-     * @param string $name
-     * @return int
-     * @throws \Zend_Db_Table_Exception
-     */
-    public function getEnumIdByValue(string $name) : int {
-        $select = $this->select()
-            ->where('name = ?', $name);
-        $item = $this->fetchRow($select);
-        return ($item->id);
-    }
-
-
-    /**
      * Обновление custom_field в одной записи справочника
      * @param int $enum_item_id
      * @param array $enum_custom_fields
      */
-    public function setCustomFields (int $enum_item_id, array $enum_custom_fields): void {
-       $where = $this->getAdapter()->quoteInto('id = ?', $enum_item_id);
-       $this->update([
-            'custom_field' => $enum_custom_fields ? implode(':::', $enum_custom_fields) : null,
-        ], $where);
+    public function setCustomFields (int $enum_item_id, array $enum_custom_fields = []) {
+
+        $enum_custom_fields_fill = [];
+        $enum_item = $this->fetchRow($this->select()->where('id = ?', $enum_item_id));
+
+        foreach ($enum_custom_fields as $key => $value1) {
+            if (!empty($value1)) {
+                $enum_custom_fields_fill[] = "{$key}::{$value1}";
+            }
+        }
+
+        $enum_item->custom_field = $enum_custom_fields_fill ? implode(':::', $enum_custom_fields_fill) : null;
+        $enum_item->save();
     }
 
 
