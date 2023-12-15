@@ -865,7 +865,7 @@ $(document).ready(function() {
             swal("Превышено время ожидания ответа", 'Проверьте соединение с Интернет', 'error').catch(swal.noop);
         } else if (a.request.status === 500) {
             swal("Ой, извините!", 'Во время обработки вашего запроса произошла ошибка.', 'error').catch(swal.noop);
-        } else if (a.request.status === 203) {
+        } else if (a.request.status === 403) {
             swal("Время жизни вашей сессии истекло", 'Чтобы войти в систему заново, обновите страницу (F5)', 'error').catch(swal.noop);
         } else {
             swal("Произошла ошибка", a.request.status + ' ' + a.request.statusText, 'error').catch(swal.noop);

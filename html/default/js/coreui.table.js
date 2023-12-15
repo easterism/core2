@@ -942,21 +942,41 @@ CoreUI.table = {
     /**
      * Раскрытие / скрытие дополнительных данных строки
      * @param resource
-     * @param columnNmbr
+     * @param rowNmbr
      * @param url
      * @param isAjax
+     * @deprecated toggleExpandRowUrl
      */
-    toggleExpandColumn : function (resource, columnNmbr, url, isAjax) {
+    toggleExpandColumn : function (resource, rowNmbr, url, isAjax) {
 
-        var urlHash = this.crc32(url);
-        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(columnNmbr);
-        var isLoad  = ! row.next().hasClass('row-expand-name-' + urlHash);
+        this.toggleExpandRowUrl(resource, rowNmbr, url);
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param rowNmbr
+     * @param url
+     * @param isRebuild
+     */
+    toggleExpandRowUrl : function (resource, rowNmbr, url, isRebuild) {
+
+        var hash   = this.crc32(url);
+        var row    = $('#table-' + resource + ' > tbody > tr.row-table').eq(rowNmbr);
+        var isLoad = ! row.next().hasClass('row-expand-name-' + hash);
 
         if (row.hasClass('row-expanded')) {
-            row.removeClass('row-expanded');
-            row.next().hide('fast', function () {
-                $(this).remove();
-            })
+            if (row.next().is(':visible')) {
+                row.next().hide('fast', function () {
+                    if (isRebuild === null || isRebuild) {
+                        row.removeClass('row-expanded');
+                        $(this).remove();
+                    }
+                })
+            } else {
+                row.next().show('fast')
+            }
         }
 
         if (isLoad) {
@@ -969,7 +989,7 @@ CoreUI.table = {
                     row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
                     row.addClass('row-expanded');
                     row.next()
-                        .addClass('row-expand-name-' + urlHash)
+                        .addClass('row-expand-name-' + hash)
                         .show('fast');
 
                     preloader.hide();
@@ -979,6 +999,42 @@ CoreUI.table = {
                     preloader.hide();
                 }
             });
+        }
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param rowNmbr
+     * @param content
+     * @param isRebuild
+     */
+    toggleExpandRowContent : function (resource, rowNmbr, content, isRebuild) {
+
+        var hash    = this.crc32(content);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(rowNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + hash);
+
+        if (row.hasClass('row-expanded')) {
+            if (row.next().is(':visible')) {
+                row.next().hide('fast', function () {
+                    if (isRebuild === null || isRebuild) {
+                        row.removeClass('row-expanded');
+                        $(this).remove();
+                    }
+                })
+            } else {
+                row.next().show('fast')
+            }
+        }
+
+        if (isLoad) {
+            row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + content + '</td></tr>');
+            row.addClass('row-expanded');
+            row.next()
+                .addClass('row-expand-name-' + hash)
+                .show('fast');
         }
     },
 

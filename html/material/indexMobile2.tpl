@@ -39,7 +39,7 @@
     <script type="text/javascript" src="core2/html/material/js/es6-promise.auto.min.js"></script>
     <script type="text/javascript" src="core2/html/material/js/sweetalert2.min.js?_=2"></script>
     <script type="text/javascript" src="core2/html/material/js/coreui.notice.js?_=1"></script>
-    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=12"></script>
+    <script type="text/javascript" src="core2/html/material/js/coreui.table.js?_=13"></script>
     <script type="text/javascript" src="core2/html/material/js/coreui.panel.js?_=0"></script>
     <script type="text/javascript" src="core2/html/material/js/coreui.tabs.js?_=0"></script>
 
