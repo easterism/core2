@@ -64,21 +64,21 @@ class Enum extends \Zend_Db_Table_Abstract {
 
     /**
      * Обновление custom_field в одной записи справочника
-     * @param int $enum_item_id
-     * @param array $enum_custom_fields
+     * @param int   $item_id
+     * @param array $custom_fields
+     * @throws \Zend_Db_Table_Exception
      */
-    public function setCustomFields (int $enum_item_id, array $enum_custom_fields = []) {
+    public function setCustomFields(int $item_id, array $custom_fields = []): void {
 
-        $enum_custom_fields_fill = [];
-        $enum_item = $this->fetchRow($this->select()->where('id = ?', $enum_item_id));
+        $custom_fields_fill = [];
+        $enum_item = $this->find($item_id)->current();
 
-        foreach ($enum_custom_fields as $key => $value1) {
-            if (!empty($value1)) {
-                $enum_custom_fields_fill[] = "{$key}::{$value1}";
-            }
+        foreach ($custom_fields as $key => $value) {
+            $value = is_scalar($value) ? (string)$value : '';
+            $custom_fields_fill[] = "{$key}::{$value}";
         }
 
-        $enum_item->custom_field = $enum_custom_fields_fill ? implode(':::', $enum_custom_fields_fill) : null;
+        $enum_item->custom_field = $custom_fields_fill ? implode(':::', $custom_fields_fill) : null;
         $enum_item->save();
     }
 
