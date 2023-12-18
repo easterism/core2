@@ -41,7 +41,6 @@ class Enum extends \Zend_Db_Table_Abstract {
             }
         }
 
-
         $select = $this->select()
             ->from($this->_name, ['max_seq' => new \Zend_Db_Expr('MAX(seq)')])
             ->where('parent_id = ?', $enum->id);
@@ -60,6 +59,27 @@ class Enum extends \Zend_Db_Table_Abstract {
         ]);
 
         return (int)$data->save();
+    }
+
+
+    /**
+     * Обновление custom_field в одной записи справочника
+     * @param int $enum_item_id
+     * @param array $enum_custom_fields
+     */
+    public function setCustomFields (int $enum_item_id, array $enum_custom_fields = []) {
+
+        $enum_custom_fields_fill = [];
+        $enum_item = $this->fetchRow($this->select()->where('id = ?', $enum_item_id));
+
+        foreach ($enum_custom_fields as $key => $value1) {
+            if (!empty($value1)) {
+                $enum_custom_fields_fill[] = "{$key}::{$value1}";
+            }
+        }
+
+        $enum_item->custom_field = $enum_custom_fields_fill ? implode(':::', $enum_custom_fields_fill) : null;
+        $enum_item->save();
     }
 
 
@@ -143,5 +163,36 @@ class Enum extends \Zend_Db_Table_Abstract {
         }
 
         return $this->_enum[$global_id];
+    }
+
+    public function getEnumById($enum_id) {
+
+        if ( ! isset($this->_enum[$enum_id])) {
+            $res  = $this->_db->fetchAll("
+                SELECT e.id, 
+                       e.name, 
+                       e.custom_field
+				FROM core_enum AS e
+				WHERE e.id = ?
+            ", $enum_id);
+
+            $data = [];
+            foreach ($res as $value) {
+                $data[$value['id']]           = [
+                    'value'        => $value['name']
+                ];
+                $data[$value['id']]['custom_field'] = [];
+                if ($value['custom_field']) {
+                    $temp = explode(":::", $value['custom_field']);
+                    foreach ($temp as $val) {
+                        $temp2                                   = explode("::", $val);
+                        $data[$value['id']]['custom_field'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
+                    }
+                }
+            }
+            $this->_enum[$enum_id] = $data;
+        }
+
+        return $this->_enum[$enum_id];
     }
 }
