@@ -164,35 +164,4 @@ class Enum extends \Zend_Db_Table_Abstract {
 
         return $this->_enum[$global_id];
     }
-
-    public function getEnumById($enum_id) {
-
-        if ( ! isset($this->_enum[$enum_id])) {
-            $res  = $this->_db->fetchAll("
-                SELECT e.id, 
-                       e.name, 
-                       e.custom_field
-				FROM core_enum AS e
-				WHERE e.id = ?
-            ", $enum_id);
-
-            $data = [];
-            foreach ($res as $value) {
-                $data[$value['id']]           = [
-                    'value'        => $value['name']
-                ];
-                $data[$value['id']]['custom_field'] = [];
-                if ($value['custom_field']) {
-                    $temp = explode(":::", $value['custom_field']);
-                    foreach ($temp as $val) {
-                        $temp2                                   = explode("::", $val);
-                        $data[$value['id']]['custom_field'][$temp2[0]] = isset($temp2[1]) ? $temp2[1] : '';
-                    }
-                }
-            }
-            $this->_enum[$enum_id] = $data;
-        }
-
-        return $this->_enum[$enum_id];
-    }
 }
