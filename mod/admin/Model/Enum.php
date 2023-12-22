@@ -75,7 +75,9 @@ class Enum extends \Zend_Db_Table_Abstract {
 
         foreach ($custom_fields as $key => $value) {
             $value = is_scalar($value) ? (string)$value : '';
-            $custom_fields_fill[] = "{$key}::{$value}";
+            $custom_fields_fill[] = $value === ''
+                ? "{$key}"
+                : "{$key}::{$value}";
         }
 
         $enum_item->custom_field = $custom_fields_fill ? implode(':::', $custom_fields_fill) : null;
