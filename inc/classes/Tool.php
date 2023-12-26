@@ -177,7 +177,7 @@ class Tool {
      */
     public static function commafy($number, string $separator = ';psbn&'): string {
 
-        if (empty($number)) {
+        if (is_null($number)) {
             return '';
         }
 
