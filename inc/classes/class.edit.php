@@ -1560,14 +1560,16 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text','textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
-
-                                            } elseif ($type_name == 'select2') {
+                                            } elseif ($type_name == 'textarea') {
+                                                $type_name = 'textarea';
+                                            }
+                                            elseif ($type_name == 'select2') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
                                             }  elseif ($type_name == 'date') {
@@ -1649,7 +1651,7 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'textarea', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
@@ -1666,13 +1668,12 @@ class editTable extends initEdit {
                                                 $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_Y]', $field_value == 'Y' ? 'checked="checked"' : '');
                                                 $tpl->item->field->{"field_{$type_name}"}->assign('[CHECKED_N]', $field_value == 'N' ? 'checked="checked"' : '');
                                             }
-
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        $num);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
-                                            $tpl->item->field->{"field_{$type_name}"}->reassign();
+                                            $tpl->item->field->reassign();
                                         }
 
                                         $tpl->item->touchBlock('delete');
@@ -1689,7 +1690,7 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                        if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                             $type_name = 'text';
                                         }
 
