@@ -624,9 +624,9 @@ class Db {
         $id = explode("_", $submodule_id);
 
         if (empty($id[1]) ||
-            ! empty($this->_modules[$id[0]]) ||
+            empty($this->_modules[$id[0]]) ||
             $this->_modules[$id[0]]['visible'] !== 'Y' ||
-            ! empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
+            empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
             $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y'
         ) {
             return false;
