@@ -158,17 +158,17 @@ class WorkerClient {
         $dt       = new \DateTime();
         $workload = [
             'timestamp' => $dt->format('U'),
-            'location' => $this->location,
-            'config'   => serialize(\Zend_Registry::get('config')),
-            'server'   => $_SERVER,
-            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
-            'payload'  => $data,
+            'location'  => $this->location,
+            'config'    => serialize(\Zend_Registry::get('config')),
+            'server'    => $_SERVER,
+            'auth'      => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'payload'   => $data,
+            'doc_root'  => DOC_ROOT,
         ];
 
         if ($this->module !== 'Admin') {
             $workload += [
                 'module'    => $this->module,
-                'doc_root'  => DOC_ROOT,
                 'context'   => \Zend_Registry::get('context'),
                 'translate' => serialize(\Zend_Registry::get('translate')),
                 'worker'    => $worker
