@@ -1830,6 +1830,11 @@ class editTable extends initEdit {
                                     '{% } %}
                                     </script>';
                                 $tpl = new \Templater3($this->tpl_control['xfile_download']);
+                                if (!empty($options['id_hash'])) {
+                                    $tpl->assign("file.hash%", "file.id_hash%");
+                                } else {
+                                    $tpl->assign("file.hash%", "file.url%");
+                                }
                                 $controlGroups[$cellId]['html'][$key] .= '
                                     <!-- The template to display files available for download -->
                                     <script id="template-download" type="text/x-tmpl">
