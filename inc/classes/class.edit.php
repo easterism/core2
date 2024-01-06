@@ -1,5 +1,7 @@
 <?php
 require_once("class.ini.php");
+require_once 'Templater3.php';
+
 use Laminas\Session\Container as SessionContainer;
 
 $counter = 0;
@@ -648,7 +650,7 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'];
 
                             } else {
-                                require_once 'Templater3.php';
+
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -754,7 +756,6 @@ class editTable extends initEdit {
                                     ? $options['url']
                                     : "'{$options['url']}'";
 
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal2.html');
                                 $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
                                 $tpl->assign('[TITLE]',     $options['title']);
@@ -790,7 +791,6 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == 'modal_list') {
                             if ($this->readOnly) {
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
                                 $tpl->assign('[CONTROL]', $field);
 
@@ -843,7 +843,6 @@ class editTable extends initEdit {
                                     ? $options['url']
                                     : "'{$options['url']}'";
 
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
                                 $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
                                 $tpl->assign('[TITLE]',     $options['title']);
@@ -1294,8 +1293,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/select2.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1351,8 +1348,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multiselect2.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1402,7 +1397,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['multiselect2'] = true;
 
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist2.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1467,7 +1461,6 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= implode('<br>', $options_out);
 
                             } else {
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist3.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1522,7 +1515,6 @@ class editTable extends initEdit {
 
                             if ($this->readOnly) {
                                 if ( ! empty($datasets)) {
-                                    require_once 'Templater3.php';
                                     $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
 
                                     foreach ($value['in'] as $item_field) {
@@ -1594,7 +1586,6 @@ class editTable extends initEdit {
                                     }
                                 }
 
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1785,102 +1776,37 @@ class editTable extends initEdit {
                                 $max_filesize_human = Tool::formatSizeHuman($options['maxFileSize']);
 
 								$un = $fieldId;
+                                $tpl = new \Templater3(__DIR__ . '/../../html/' . THEME . '/edit/files.html');
+                                if ($xfile == 'xfiles') {
+                                    $tpl->touchBlock('xfiles');
+                                    $tpl->assign("{X}", "ы");
+                                    $tpl->assign('files[]"', 'files[]" multiple');
+                                } else {
+                                    $tpl->assign("{X}", "");
+                                }
+                                if (!isset($options['autoUpload']) || !$options['autoUpload']) {
+                                    $tpl->touchBlock('all');
+                                }
+
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
 									<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
-									<div id="fileupload-' . $un . '">
-										<div class="fileupload-buttonbar">
-											<span class="fileinput-button buttonSmall">
-												<span>Выбрать файл' . ($xfile == "xfiles" ? "ы" : "") . '</span>
-												<input type="file" name="files[]" ' . ($xfile == "xfiles" ? "multiple" : "") . '>
-											</span>';
-											if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
-												$controlGroups[$cellId]['html'][$key] .= '<button type="submit" class="start buttonSmall hide">Загрузить все</button>';
-											}
-											$controlGroups[$cellId]['html'][$key] .= '<button type="reset" class="cancel buttonSmall" style="display:none">Отменить</button>
-												<button type="button" class="delete buttonSmall hide">Удалить</button>';
-											if ($xfile == 'xfiles') {
-												$controlGroups[$cellId]['html'][$key] .= '<input type="checkbox" class="toggle hide">';
-											}
-											$controlGroups[$cellId]['html'][$key] .= '
-											<div class="fileupload-progress fade">
-												<!-- The global progress bar -->
-												<div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-													<div class="bar" style="width:0%;"></div>
-												</div>
-												<!-- The extended global progress information -->
-												<div class="progress-extended">&nbsp;</div>
-											</div>
-										</div>
-										<!-- The table listing the files available for upload/download -->
-										<table role="presentation" class="table">
-											<tbody class="files"></tbody>
-										</table>
-									</div>
-
+									<div id="fileupload-' . $un . '">' .
+                                        $tpl->render() .
+                                    '</div>';
+                                $tpl = new \Templater3(__DIR__ . '/../../html/' . THEME . '/edit/file_upload.html');
+                                $controlGroups[$cellId]['html'][$key] .= '
                                     <!-- The template to display files available for upload -->
                                     <script id="template-upload" type="text/x-tmpl">
-                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
-                                        <tr class="template-upload">
-                                            <td>
-                                                <span class="preview"></span>
-                                            </td>
-                                            <td>
-                                                <p class="name">{%=file.name%}</p>
-                                                <strong class="error text-danger"></strong>
-                                            </td>
-                                            <td>
-                                                <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                                                {% if (!o.files.error) { %}
-                                                    <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar progress-bar-success" style="width:0%;"></div></div>
-                                                {% } %}
-                                            </td>
-                                            <td>
-                                                {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                                                    <button class="btn btn-primary start buttonSmall">
-                                                        <i class="glyphicon glyphicon-upload"></i>
-                                                        <span>Старт</span>
-                                                    </button>
-                                                {% } %}
-                                                {% if (!i) { %}
-                                                    <button class="btn btn-warning btn-sm cancel buttonSmall">
-                                                        <i class="glyphicon glyphicon-ban-circle"></i>
-                                                        <span>Отмена</span>
-                                                    </button>
-                                                {% } %}
-                                            </td>
-                                        </tr>
-                                    {% } %}
-                                    </script>
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}' .
+                                        $tpl->render() .
+                                    '{% } %}';
+                                $tpl = new \Templater3(__DIR__ . '/../../html/' . THEME . '/edit/file_download.html');
+                                $controlGroups[$cellId]['html'][$key] .= '</script>
                                     <!-- The template to display files available for download -->
                                     <script id="template-download" type="text/x-tmpl">
-                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
-                                        <tr class="template-download">
-                                            {% if (file.error) { %}
-                                                <td></td>
-                                                <td class="name"><span>{%=file.name%}</span></td>
-                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-                                                <td class="error" colspan="2"><span class="label label-important">Error</span> {%=file.error%}</td>
-                                            {% } else { %}
-                                                <td>
-                                                    <span class="preview">
-                                                        {% if (file.thumbnail_url) { %}
-                                                            <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
-                                                        {% } else { %}
-                                                            <i class="fa fa-file-text-o"></i>
-                                                        {% } %}
-                                                    </span>
-                                                </td>
-                                                <td class="name">
-                                                    <a href="{%=file.' . (!empty($options['id_hash']) ? 'id_hash' : 'url') . '%}" {% if (file.thumbnail_url) { %}target="_blank" {% } %} title="{%=file.name%}" rel="{%=file.thumbnail_url&&\'gallery\'%}" download="{%=file.name%}">{%=file.name%}</a>
-                                                </td>
-                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-                                            {% } %}
-                                            <td data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
-                                                <button class="btn delete buttonSmall">Удалить</button>
-                                                <input class="toggle" type="checkbox" name="delete" value="1">
-                                            </td>
-                                        </tr>
-                                    {% } %}
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}' .
+                                        $tpl->render() .
+                                    '{% } %}
                                     </script>';
 
 $controlGroups[$cellId]['html'][$key] .= "<script>
