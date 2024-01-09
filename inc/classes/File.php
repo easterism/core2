@@ -106,7 +106,7 @@ class File extends \Common {
         $this->content = $content;
     }
 
-    private function getContent($table, $id)
+    public function getContent($table, $id)
     {
         $quote_table_files = $this->db->quoteIdentifier($table . '_files');
         $content = $this->db->fetchRow("SELECT `content`, `storage`, `hash` FROM {$quote_table_files} WHERE id = ?", $id);
