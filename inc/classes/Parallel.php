@@ -9,7 +9,6 @@ class Parallel extends Db {
     private array $pids      = [];
     private array $sockets   = [];
     private array $tasks     = [];
-    private bool  $use_db    = false;
     private int   $pool_size = 4;
 
     private static int $number = 1;
@@ -23,9 +22,6 @@ class Parallel extends Db {
 
         if ( ! empty($options['pool_size'])) {
             $this->pool_size = (int)$options['pool_size'];
-        }
-        if ( ! empty($options['use_db'])) {
-            $this->use_db = (bool)$options['use_db'];
         }
     }
 
@@ -51,9 +47,7 @@ class Parallel extends Db {
      */
     public function start(): array {
 
-        if ($this->use_db) {
-            $this->db->closeConnection();
-        }
+        $this->db->closeConnection();
 
         if ($this->cache->getAdapterName() !== 'Filesystem') {
             $reg = \Zend_Registry::getInstance();
@@ -75,9 +69,7 @@ class Parallel extends Db {
             $process_count++;
         }
 
-        if ($this->use_db) {
-            $this->db;
-        }
+        $this->db;
 
 
         $result = [];
@@ -163,6 +155,8 @@ class Parallel extends Db {
                         'buffer' => (string)$buffer
                     ]);
                 }
+
+                $this->db->closeConnection();
 
                 // Убивает текущий процесс без выполнения деструкторов
                 posix_kill(getmypid(), SIGTERM);
