@@ -68,11 +68,19 @@ class ajaxFunc extends Common {
 	protected function ajaxValidate($data, $fields) {
 
 		$order_fields = $this->getSessForm($data['class_id']);
+
         if ( ! isset($order_fields['mainTableId'])) {
             $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
             $this->response->script("CoreUI.notice.create('$msg', 'danger');");
+
+            $this->sendErrorMessage('Ошибка сохранения формы. Не найдены сессионные данные по таблице', [
+                'session_data' => $order_fields,
+                'data'         => $data,
+                'fields'       => $fields,
+            ]);
             return true;
         }
+
 		$control  = $data['control']; //данные полей формы
 		$script   = "for(var i = 0; i < document.getElementById('{$order_fields['mainTableId']}_mainform').elements.length; i++){document.getElementById('{$order_fields['mainTableId']}_mainform').elements[i].classList.remove('reqField')};";
 		$req      = array();
@@ -117,7 +125,12 @@ class ajaxFunc extends Common {
             $params = explode(",", $val);
 
             if (in_array("req", $params) && ! array_key_exists($field, $control)) {
-                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>$field $val";
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                $this->sendErrorMessage("Ошибка сохранения формы. Нет обязательного поля: {$field}", [
+                    'session_data' => $order_fields,
+                    'data'         => $data,
+                    'fields'       => $fields,
+                ]);
                 break;
             }
 
