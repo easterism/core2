@@ -28,6 +28,7 @@ class ajaxFunc extends Common {
 	protected $userId;
 	private $orderFields    = [];
 	private $last_insert_id = 0;
+	private $refid = 0;
 
 
     /**
@@ -37,6 +38,18 @@ class ajaxFunc extends Common {
     public function __construct (xajaxResponse $res) {
 	    $this->response = $res;
     	parent::__construct();
+    }
+
+    /**
+     * установка id формы
+     * используется для поиска в сессии
+     *
+     * @param int $id
+     * @return void
+     */
+    public function setRefId(int $id)
+    {
+        $this->refid = $id;
     }
 
 
@@ -723,14 +736,15 @@ class ajaxFunc extends Common {
      * @param string $id
      * @return array
      */
-    private function getSessForm($id) {
+    private function getSessForm($id) : array {
 
         if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
             }
-            $this->orderFields = $sess_form->$id;
+            $all_forms = $sess_form->$id;
+            $this->orderFields = isset($all_forms[$this->refid]) ? $all_forms[$this->refid] : [];
         }
         return $this->orderFields;
     }

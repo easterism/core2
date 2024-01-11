@@ -31,6 +31,7 @@ class editTable extends initEdit {
 	private $isSaved 				= false;
 	private $scripts		        = array();
 	private $sess_form		        = '';
+	private $sess_form_custom       = [];
 	private $uniq_class_id		    = '';
 
     /**
@@ -66,7 +67,7 @@ class editTable extends initEdit {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->template 		= '<div id="' . $this->main_table_id . '_default">[default]</div>';
-		$this->uniq_class_id   	= crc32($name);
+		$this->uniq_class_id   	= $name; //crc32($name);
 
 		global $counter;
 		$counter = 0;
@@ -76,11 +77,6 @@ class editTable extends initEdit {
 		}
 
 
-		$this->sess_form = new SessionContainer('Form');
-        $already_opened = $this->sess_form->{$this->uniq_class_id};
-        //есль ли у юзера еще одна открытая эта же форма
-        if (!isset($already_opened['refid'])) $this->sess_form->{$this->uniq_class_id} = array();
-        //TODO сделать так, чтоб на сессию не влияла readme форма
     }
 
 
@@ -213,9 +209,7 @@ class editTable extends initEdit {
 	 */
 	public function setSessFormField($id, $value)
 	{
-        $ssi = $this->sess_form->{$this->uniq_class_id};
-        $ssi[$id] = $value;
-        $this->sess_form->{$this->uniq_class_id} = $ssi;
+        $this->sess_form_custom[$id] = $value;
 	}
 
 
@@ -292,6 +286,9 @@ class editTable extends initEdit {
 		} else {
 			$refid = 0;
 		}
+
+
+
 		if (!isset($arr_fields)) {
 			$tmp_pos = strripos($this->SQL, "FROM ");
 			// - IN CASE WE USE EDIT WITHOUT TABLE
@@ -389,6 +386,7 @@ class editTable extends initEdit {
 
 			$this->HTML .= "<form id=\"{$this->main_table_id}_mainform\" method=\"POST\" action=\"[_ACTION_]\" enctype=\"multipart/form-data\" onsubmit=\"$onsubmit\">";
 			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"{$this->uniq_class_id}\"/>";
+			$this->HTML .= "<input type=\"hidden\" name=\"class_refid\" value=\"{$refid}\"/>";
 			$order_fields['resId']       = $this->resource;
 			$order_fields['mainTableId'] = $this->main_table_id;
 			$order_fields['back']        = $this->back;
@@ -2109,6 +2107,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 
 			$this->HTML .= str_replace($fromReplace, $toReplace, $this->template);
 		}
+
 		//buttons area
 		$this->HTML .= "<div class=\"buttons-container\">";
 		$this->HTML .= "<div class=\"buttons-offset\"" . ($this->firstColWidth ? " style=\"width:{$this->firstColWidth};\"" : "") . "></div>";
@@ -2124,7 +2123,23 @@ $controlGroups[$cellId]['html'][$key] .= "
 		}
 
 		if (!$this->readOnly) {
-			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
+
+            $this->sess_form = new SessionContainer('Form');
+            //$this->uniq_class_id .= "|$refid";
+            $already_opened = $this->sess_form->{$this->uniq_class_id};
+            //CUSTOM session fields
+            $sess_data = isset($already_opened[$refid]) ? $already_opened[$refid] : [];
+            if ($this->sess_form_custom) {
+                foreach ($this->sess_form_custom as $key => $item) {
+                    //TODO возможно надо добавить проверку того что мы вставляем в ссессию
+                    $sess_data[$key] = $item;
+                }
+            }
+            $already_opened[$refid] = $sess_data;
+            //есль ли у юзера еще одна открытая эта же форма, то в сессии ничего не изменится
+            $this->sess_form->{$this->uniq_class_id} = $already_opened;
+
+            $this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
 		$this->HTML .= 	"</div></div>";
 		if (!$this->readOnly) {

@@ -1797,6 +1797,7 @@ function post($func, $loc, $data) {
 
             require_once $file_path;
             $xajax = new ModAjax($res);
+            if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
             $func = 'ax' . ucfirst($func);
             if (method_exists($xajax, $func)) {
                 try {
