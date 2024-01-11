@@ -173,7 +173,7 @@ class Common extends \Core2\Acl {
 					$controller_file = $location . '/' . $cl . '.php';
 
 					if (!file_exists($controller_file)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера."), $module));
+						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
 					}
 
                     $autoload_file = $location . "/vendor/autoload.php";
