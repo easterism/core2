@@ -706,7 +706,6 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "all_modules_" . $this->config->database->params->dbname;
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
@@ -720,10 +719,7 @@ class Db {
                     }
                 }
             }
-            $fromCache                         = $this->cache->getItem($key);
-            $fromCache[$module_id]['location'] = $loc;
-            $this->cache->setItem($key, $fromCache);
-            $this->cache->setTags($key, ['is_active_core_modules']);
+            $this->_modules[$module_id]['location'] = $loc;
         } else {
             $loc = $module['location'];
         }
