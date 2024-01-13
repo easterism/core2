@@ -2128,6 +2128,7 @@ $controlGroups[$cellId]['html'][$key] .= "
             //$this->uniq_class_id .= "|$refid";
             $already_opened = $this->sess_form->{$this->uniq_class_id};
             //CUSTOM session fields
+            if (!$refid) $refid = 0;
             $sess_data = isset($already_opened[$refid]) ? $already_opened[$refid] : [];
             if ($this->sess_form_custom) {
                 foreach ($this->sess_form_custom as $key => $item) {
