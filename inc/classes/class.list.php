@@ -644,6 +644,7 @@ class listTable extends initList {
                 }
             }
         }
+        $this->setDatabase(null);
 
         //echo round(microtime() - $a, 3);
         if (is_array($res) && $res) {
