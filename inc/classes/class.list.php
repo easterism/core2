@@ -570,17 +570,17 @@ class listTable extends initList {
             $this->search_sql = $search;
         }
 
-        if ( ! empty($questions)) {
-            $this->search_sql = $search;
-            foreach ($questions as $question) {
-                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
-            }
-        } else {
-            $this->search_sql = $search;
-        }
+//        if ( ! empty($questions)) {
+//            $this->search_sql = $search;
+//            foreach ($questions as $question) {
+//                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
+//            }
+//        } else {
+//            $this->search_sql = $search;
+//        }
 
         if ($this->SQL) {
-            $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $search, $this->SQL);
+            $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $this->search_sql, $this->SQL);
         }
 
         $order = isset($tmp['order']) ? $tmp['order'] : '';
@@ -636,7 +636,7 @@ class listTable extends initList {
             } else {
                 if ($this->config->database->adapter === 'Pdo_Mysql') {
                     $res = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
-                    $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
+                    if (!$this->recordCount) $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
                 } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
                     $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
                     $res = $this->db->fetchAll($this->SQL, $questions);
