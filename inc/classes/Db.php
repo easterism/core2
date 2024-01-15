@@ -35,6 +35,7 @@ class Db {
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
+    private $_db;
     private string $schemaName = 'public';
 
     /**
@@ -55,6 +56,10 @@ class Db {
         }
 	}
 
+    public function setDatabase($db) {
+        $this->_db = $db;
+    }
+
 
 	/**
 	 * @param string $k
@@ -69,6 +74,7 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
+            if ($this->_db) return $this->_db;
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
