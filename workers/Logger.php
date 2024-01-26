@@ -21,7 +21,7 @@ class Logger
         $config = unserialize($workload->config);
 
         \Zend_Registry::set('config', $config);
-        \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
 
         $_SERVER = get_object_vars($workload->server);
 
