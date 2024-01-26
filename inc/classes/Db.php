@@ -35,6 +35,7 @@ class Db {
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
+    private $_db;
     private string $schemaName = 'public';
 
     /**
@@ -55,6 +56,11 @@ class Db {
         }
 	}
 
+    public function setDatabase($db)
+    {
+        $this->_db = $db;
+    }
+
 
 	/**
 	 * @param string $k
@@ -69,6 +75,7 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
+            if ($this->_db) return $this->_db;
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
@@ -710,7 +717,6 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "all_modules_" . $this->config->database->params->dbname;
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
@@ -724,10 +730,7 @@ class Db {
                     }
                 }
             }
-            $fromCache                         = $this->cache->getItem($key);
-            $fromCache[$module_id]['location'] = $loc;
-            $this->cache->setItem($key, $fromCache);
-            $this->cache->setTags($key, ['is_active_core_modules']);
+            $this->_modules[$module_id]['location'] = $loc;
         } else {
             $loc = $module['location'];
         }
@@ -784,7 +787,7 @@ class Db {
 
             $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
 
-            $conf_ext = $module_loc . "/conf.workers.ini";
+            $conf_ext = $module_loc . "/conf.ext.ini";
             if (file_exists($conf_ext)) {
                 $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
                 $extends_mod_ext = $config_mod_ext->getExtends();

@@ -1764,6 +1764,7 @@ function post($func, $loc, $data) {
 
         $xajax = new ModAjax($res);
         if (method_exists($xajax, $func)) {
+            if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
             $xajax->setupAcl();
             try {
                 return $xajax->$func($data);
@@ -1799,6 +1800,7 @@ function post($func, $loc, $data) {
             $xajax = new ModAjax($res);
             $func = 'ax' . ucfirst($func);
             if (method_exists($xajax, $func)) {
+                if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
                 try {
                     parse_str($route['query'], $params);
                     $data['params'] = $params;

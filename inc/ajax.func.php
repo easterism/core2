@@ -1,13 +1,14 @@
 <?php
 
-require_once __DIR__ .'/classes/Common.php';
-require_once __DIR__ .'/classes/Image.php';
+require_once __DIR__ . '/classes/Common.php';
+require_once __DIR__ . '/classes/Image.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Validator\EmailAddress as ValidateEmailAddress;
 use Laminas\Validator\Hostname as ValidateHostname;
 use Laminas\I18n\Validator\IsFloat;
 use Laminas\I18n\Validator\IsInt;
+use Aws\S3\S3Client;
 
 /**
  * Class ajaxFunc
@@ -27,6 +28,7 @@ class ajaxFunc extends Common {
 	protected $userId;
 	private $orderFields    = [];
 	private $last_insert_id = 0;
+	private $refid = 0;
 
 
     /**
@@ -36,6 +38,18 @@ class ajaxFunc extends Common {
     public function __construct (xajaxResponse $res) {
 	    $this->response = $res;
     	parent::__construct();
+    }
+
+    /**
+     * установка id формы
+     * используется для поиска в сессии
+     *
+     * @param int $id
+     * @return void
+     */
+    public function setRefId(int $id)
+    {
+        $this->refid = $id;
     }
 
 
@@ -680,6 +694,41 @@ class ajaxFunc extends Common {
                     }
                 }
 
+                $key = null;
+                //Check cloued storage
+                if ($s3 = $this->config->s3) {
+                    // S3 storage
+                    try {
+                        $client = new S3Client([
+                            'region' => 'us-west-2',
+                            'version' => 'latest',
+                            'endpoint' => $s3->host,
+                            'credentials' => [
+                                'key' => $s3->access_key,
+                                'secret' => $s3->secret_key
+                            ],
+                            // Set the S3 class to use objects.dreamhost.com/bucket
+                            // instead of bucket.objects.dreamhost.com
+                            'use_path_style_endpoint' => true
+                        ]);
+                        //$listResponse = $client->listBuckets();
+                        $key = "$table|$last_insert_id|$hash";
+                        $client->putObject([
+                            'Bucket' => $s3->bucket,
+                            'Key' => $key,
+                            'Body' => $content
+                        ]);
+                        $key = "S3|{$s3->bucket}|$key";
+                        $content = null;
+
+                    } catch (\Exception $e) {
+                        throw new \Exception($e->getMessage());
+                        //TODO Log me!
+                    }
+
+                }
+                //TODO add GCP here
+
                 $this->db->insert($table . '_files', array(
                     'refid'    => $last_insert_id,
                     'filename' => $file[0],
@@ -688,7 +737,8 @@ class ajaxFunc extends Common {
                     'type'     => $file[2],
                     'content'  => $content,
                     'fieldid'  => $field,
-                    'thumb'    => $thumb_content
+                    'thumb'    => $thumb_content,
+                    'storage'  => $key
                 ));
             }
         }
@@ -699,14 +749,15 @@ class ajaxFunc extends Common {
      * @param string $id
      * @return array
      */
-    private function getSessForm($id) {
+    private function getSessForm($id) : array {
 
         if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
             }
-            $this->orderFields = $sess_form->$id;
+            $all_forms = $sess_form->$id;
+            $this->orderFields = isset($all_forms[$this->refid]) ? $all_forms[$this->refid] : [];
         }
         return $this->orderFields;
     }

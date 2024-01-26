@@ -12,6 +12,7 @@ class SSE extends \Common {
     public function __construct()
     {
         parent::__construct();
+
         $mods = $this->dataModules->getModuleList();
         foreach ($mods as $mod) {
             $location      = $this->getModuleLocation($mod['module_id']);

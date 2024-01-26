@@ -9,16 +9,17 @@
 namespace Core2\Store;
 
 use Laminas\Session\Container as SessionContainer;
+use Aws\S3\S3Client;
 
-require_once(DOC_ROOT . "core2/inc/classes/Common.php");
-require_once(DOC_ROOT . "core2/inc/classes/Image.php");
+require_once(__DIR__ . "/Common.php");
+require_once(__DIR__ . "/Image.php");
 
 class File extends \Common {
-    private $that;
     private $content;
     private $resource;
     private $imgWidth = 80;
     private $imgHeight = 80;
+    private $data = [];
 
     /**
      * File constructor.
@@ -41,23 +42,16 @@ class File extends \Common {
         echo $this->content;
     }
 
-
-    /**
-     * Обработка запроса на получение содержимого файла из хранилища
-     * @param string $table
-     * @param int    $id - id файла
-     * @throws \Exception
-     */
-    public function handleFile($table, $id) {
+    private function getFileData($table, $id) {
         $quote_table       = $this->db->quoteIdentifier($table);
         $quote_table_files = $this->db->quoteIdentifier($table.'_files');
-        $res2 = $this->db->fetchRow("SELECT `content`,
-                                            `refid`,
+        $res2 = $this->db->fetchRow("SELECT `refid`,
                                             `filename`,
                                             `filesize`,
                                             `hash`,
                                             `type`,
-                                            `fieldid`
+                                            `fieldid`,
+                                            `storage`
                                        FROM {$quote_table_files}
                                       WHERE id = ?", $id);
         if (!$res2) {
@@ -73,6 +67,23 @@ class File extends \Common {
                 }
             }
         }
+        $this->data = $res2;
+    }
+
+    public function getData() {
+        return $this->data;
+    }
+
+
+    /**
+     * Обработка запроса на получение содержимого файла из хранилища
+     * @param string $table
+     * @param int    $id - id файла
+     * @throws \Exception
+     */
+    public function handleFile($table, $id) {
+        $this->getFileData($table, $id);
+        $res2 = $this->data;
 
         $image = new Image();
         if ($image->isImage($res2['type'])) {
@@ -90,7 +101,50 @@ class File extends \Common {
         header("Content-Disposition: filename=\"{$res2['filename']}\"; filename*=utf-8''{$filename_encode}");
         header("Content-Type: " . $res2['type']);
         header('Content-Length: ' . $res2['filesize']);
-        $this->content = $res2['content'];
+
+        $content = $this->getContent($table, $id);
+        $this->content = $content;
+    }
+
+    public function getContent($table, $id)
+    {
+        $quote_table_files = $this->db->quoteIdentifier($table . '_files');
+        $content = $this->db->fetchRow("SELECT `content`, `storage`, `hash` FROM {$quote_table_files} WHERE id = ?", $id);
+        //$cacheed = $this->config->temp . '/' . $content['hash'];
+        if ($content['storage']) {
+            $s      = explode("|", $content['storage']);
+            if ($s[0] === 'S3') {
+                // Check S3 Storage
+                if ($s3 = $this->config->s3) {
+                    try {
+                        $client = new S3Client([
+                            'region' => 'us-west-2',
+                            'version' => 'latest',
+                            'endpoint' => $s3->host,
+                            'credentials' => [
+                                'key' => $s3->access_key,
+                                'secret' => $s3->secret_key
+                            ],
+                            // Set the S3 class to use objects.dreamhost.com/bucket
+                            // instead of bucket.objects.dreamhost.com
+                            'use_path_style_endpoint' => true
+                        ]);
+                        //$listResponse = $client->listBuckets();
+                        $object  = $client->getObject(['Bucket' => $s[1], 'Key' => "{$s[2]}|{$s[3]}|{$s[4]}"]);
+                        $content = $object['Body']->getContents();
+
+                        return $content;
+
+                    } catch (\Exception $e) {
+                        throw new \Exception($e->getMessage());
+                        //TODO Log me!
+                    }
+                } else {
+                    throw new \Exception("S3 settings not found", 404);
+                }
+            }
+        }
+        return $content['content'];
     }
 
     /**
@@ -100,22 +154,8 @@ class File extends \Common {
      * @throws \Exception
      */
     public function handleThumb($table, $id) {
-        $quote_table       = $this->db->quoteIdentifier($table);
-        $quote_table_files = $this->db->quoteIdentifier($table.'_files');
-        $res2 = $this->db->fetchRow("SELECT * FROM {$quote_table_files} WHERE id = ?", $id);
-        if (!$res2) {
-            throw new \Exception(404);
-        }
-        if (!$this->checkAcl($this->resource, 'read_all')) {
-            if (!$this->checkAcl($this->resource, 'read_owner')) {
-                throw new \Exception(911);
-            } else {
-                $res = $this->db->fetchRow("SELECT * FROM {$quote_table} WHERE `id` = ? LIMIT 1", $res2['refid']);
-                if (!$res || !isset($res['author']) || $this->auth->NAME !== $res['author']) {
-                    throw new \Exception(911);
-                }
-            }
-        }
+        $this->getFileData($table, $id);
+        $res2 = $this->data;
 
         header("Content-type: {$res2['type']}");
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
@@ -134,16 +174,18 @@ class File extends \Common {
             }
         }
 
-
+        $quote_table_files = $this->db->quoteIdentifier($table . '_files');
+        $thumb = $this->db->fetchOne("SELECT `thumb` FROM {$quote_table_files} WHERE id = ?", $id);
         //Если задан размер тамбнейла или если тамбнейла нет в базе
-        if (!empty($_GET['size']) || !$res2['thumb']) {
+        if (!empty($_GET['size']) || !$thumb) {
+            $content = $this->getContent($table, $id);
             ob_start();
             $image = new Image();
-            $image->outStringResized($res2['content'], $res2['type'], $this->imgWidth, $this->imgHeight);
+            $image->outStringResized($content, $res2['type'], $this->imgWidth, $this->imgHeight);
             $this->content = ob_get_clean();
 
         } else {
-            $this->content = $res2['thumb'];
+            $this->content = $thumb;
         }
     }
 
@@ -190,7 +232,16 @@ class File extends \Common {
     public function handleFileList($table, $id, $filed) {
 
         $quote_table_files = $this->db->quoteIdentifier($table . '_files');
-        $SQL = "SELECT * FROM {$quote_table_files} WHERE refid = ?";
+        $SQL = "SELECT `id`, 
+                        `refid`,
+                        `filename`,
+                        `filesize`,
+                        `hash`,
+                        `type`,
+                        `fieldid`,
+                        `storage` 
+            FROM {$quote_table_files} 
+            WHERE refid = ?";
         $arr = array($id);
         if ($filed) {
             $SQL .= ' AND fieldid = ?';

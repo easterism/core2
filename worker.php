@@ -18,6 +18,7 @@ if (!file_exists($gm)) {
     print $gm . " not exists.";
     die;
 }
+//define("DOC_ROOT", "/var/www/autoparts24.by/htdocs");
 require_once __DIR__ . "/inc/WorkerManager.php";
 
 // Create Worker Object

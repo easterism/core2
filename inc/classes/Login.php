@@ -215,10 +215,11 @@ class Login extends Db {
         }
 
         // GET LOGIN PAGE
+        if ( ! empty($_POST['xjxr'])) {
+            throw new \Exception('expired');
+        }
         if (array_key_exists('X-Requested-With', \Tool::getRequestHeaders())) {
-            if ( ! empty($_POST['xjxr'])) {
-                throw new \Exception('expired');
-            }
+
             if ( ! empty($_GET['module'])) {
                 http_response_code(403);
                 return '';
