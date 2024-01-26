@@ -73,18 +73,13 @@ class Render extends Acl {
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
-
-                $total_records = $this->table['recordsTotal'] ?? 0;
-
-                if (isset($this->table['recordsTotalMore']) && $this->table['recordsTotalMore']) {
-                    $total_records .= '+';
-                }
-
                 if (isset($this->table['recordsTotalRound']) &&
-                    $this->table['recordsPerPage'] == count($this->table['records']) &&
-                    $this->table['recordsTotalRound'] > $this->table['recordsTotal']
+                    (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
+                    $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
                 ) {
-                    $total_records .= " <small>(~{$this->table['recordsTotalRound']})</small>";
+                    $total_records = "~{$this->table['recordsTotalRound']}";
+                } else {
+                    $total_records = $this->table['recordsTotal'] ?? 0;
                 }
 
                 $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
@@ -230,7 +225,13 @@ class Render extends Acl {
                 if ($current_page > 1) {
                     $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
                 }
-                if ($current_page < $count_pages || ! empty($this->table['recordsTotalMore'])) {
+
+                if ($current_page < $count_pages ||
+                    (
+                        (empty($this->table['recordsPerPage']) && count($this->table['records']) > 0) ||
+                        (count($this->table['records']) >= $this->table['recordsPerPage'])
+                    )
+                ) {
                     $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
                 }
 

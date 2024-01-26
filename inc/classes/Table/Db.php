@@ -440,7 +440,13 @@ class Db extends Table {
                 unset($data_result[array_key_last($data_result)]);
 
             } else {
-                $this->records_total = $offset + count($data_result);
+                if (count($data_result) === 0) {
+                    $this->records_total      = $this->records_total_round;
+                    $this->records_total_more = true;
+
+                } else {
+                    $this->records_total = $offset + count($data_result);
+                }
             }
 
         } else {
@@ -763,7 +769,13 @@ class Db extends Table {
                 unset($result[array_key_last($result)]);
 
             } else {
-                $this->records_total = $offset + count($result);
+                if (count($result) === 0) {
+                    $this->records_total      = $this->records_total_round;
+                    $this->records_total_more = true;
+
+                } else {
+                    $this->records_total = $offset + count($result);
+                }
             }
 
         } else {

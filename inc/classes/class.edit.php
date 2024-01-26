@@ -30,6 +30,7 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $uniq_class_id		    = '';
+    private $acl                    = '';
     /**
      * form action attribute
      * @var string
@@ -741,15 +742,16 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['modal2'] = true;
 
-                                $options             = [];
-                                $options['size']     = isset($value['in']['size']) ? $value['in']['size'] : '';
-                                $options['title']    = isset($value['in']['title']) ? $value['in']['title'] : '';
-                                $options['text']     = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
-                                $options['value']    = isset($value['in']['value']) ? $value['in']['value'] : $value['default'];
-                                $options['url']      = isset($value['in']['url']) ? $value['in']['url'] : '';
-                                $options['onHidden'] = isset($value['in']['onHidden']) ? $value['in']['onHidden'] : '';
-                                $options['onClear']  = isset($value['in']['onClear']) ? $value['in']['onClear'] : '';
-                                $options['onChoose'] = isset($value['in']['onChoose']) ? $value['in']['onChoose'] : '';
+                                $options               = [];
+                                $options['size']       = $value['in']['size'] ?? '';
+                                $options['title']      = $value['in']['title'] ?? '';
+                                $options['text']       = isset($value['in']['text']) ? htmlspecialchars($value['in']['text']) : '';
+                                $options['value']      = $value['in']['value'] ?? $value['default'];
+                                $options['attributes'] = $value['in']['attributes'] ?? '';
+                                $options['url']        = $value['in']['url'] ?? '';
+                                $options['onHidden']   = $value['in']['onHidden'] ?? '';
+                                $options['onClear']    = $value['in']['onClear'] ?? '';
+                                $options['onChoose']   = $value['in']['onChoose'] ?? '';
 
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
@@ -772,6 +774,7 @@ class editTable extends initEdit {
                                 $tpl->assign('[URL]',       $url);
                                 $tpl->assign('[NAME]',      'control[' . $field . ']');
                                 $tpl->assign('[SIZE]',      $size);
+                                $tpl->assign('[ATTR]',      $options['attributes']);
                                 $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
 
 

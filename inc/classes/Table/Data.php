@@ -139,8 +139,8 @@ class Data extends Table {
 
                         case 'date_month':
                             if (preg_match('~^[\d]{4}\-[\d]{1,2}$~', $filter_value)) {
-                                $date_start = new \DateTime("{$filter_value}-01");
-                                $date_end   = new \DateTime($date_start->format('Y-m-t'));
+                                $date_start = new \DateTime("{$filter_value}-01 00:00:00");
+                                $date_end   = new \DateTime($date_start->format('Y-m-t 23:59:59'));
 
                                 if (strtotime($row[$filter_field]) < $date_start->getTimestamp() ||
                                     strtotime($row[$filter_field]) > $date_end->getTimestamp()
