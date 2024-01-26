@@ -1659,7 +1659,6 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-panel.core-panel-default {border-color: #cbcbcb}
 .core-panel.core-panel-default > .core-panel-heading {
     font-weight: normal;
-    overflow: hidden;
 }
 .core-panel.core-panel-default > .core-panel-heading > .core-panel-header {
     font-size: 26px;
