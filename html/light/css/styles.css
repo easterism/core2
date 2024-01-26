@@ -761,6 +761,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .field-dataset-items .field-dataset-item > td {
     padding-bottom: 8px;
     padding-right: 4px;
+    vertical-align: top;
 }
 .field-dataset-items .field-dataset-item > td .field-dataset-delete {
     padding: 5px;
