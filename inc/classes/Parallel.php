@@ -6,15 +6,14 @@ namespace Core2;
  */
 class Parallel extends Db {
 
-    private array $pids      = [];
-    private array $sockets   = [];
-    private array $tasks     = [];
-    private int   $pool_size = 4;
-
-    private static int $number = 1;
+    private array  $tasks     = [];
+    private int    $pool_size = 4;
+    private int    $task_id   = 1;
+    private string $boundary  = '';
 
 
     /**
+     * @param array|null $options
      * @throws \Zend_Exception
      */
     public function __construct(array $options = null) {
@@ -34,18 +33,19 @@ class Parallel extends Db {
      */
     public function addTask(\Closure $task): int {
 
-        $this->tasks[self::$number] = $task;
+        $this->tasks[$this->task_id] = $task;
 
-        return self::$number++;
+        return $this->task_id++;
     }
 
 
     /**
      * Запуск выполнения добавленных задач
+     * @param \Closure|null $task_callback
      * @return array
      * @throws \Exception
      */
-    public function start(): array {
+    public function start(\Closure $task_callback = null): array {
 
         $this->db->closeConnection();
 
@@ -54,95 +54,136 @@ class Parallel extends Db {
             $reg->set('cache', null);
         }
 
-        $task_numbers  = [];
         $process_count = 0;
+        $tasks_result  = [];
+        $tasks_pid     = [];
 
-        foreach ($this->tasks as $number => $task) {
+        $this->boundary = md5(uniqid('', true));
+
+        [$socket_parent, $socket_child] = $this->createSocketsPair();
+
+        foreach ($this->tasks as $task_id => $task) {
+
             if ($process_count >= $this->pool_size) {
-                pcntl_wait($status);
+                if ($responses = $this->waitResponses($socket_child)) {
+
+                    foreach ($responses as $response) {
+                        $tasks_result[$response['id']] = [
+                            'buffer' => $response['buffer'],
+                            'result' => $response['result']
+                        ];
+
+                        if ($task_callback instanceof \Closure) {
+                            $task_callback($response);
+                        }
+
+                        if ( ! empty($tasks_pid[$response['pid']])) {
+                            unset($tasks_pid[$response['pid']]);
+                        };
+                    }
+                }
+
                 $process_count--;
             }
 
-            $pid = $this->startTask($task);
 
-            $task_numbers[$pid] = $number;
+            $pid = $this->startTask($task_id, $task, $socket_child, $socket_parent);
+            $tasks_pid[$pid] = $pid;
+
             $process_count++;
         }
 
-        $this->db;
 
+        while (count($tasks_pid)) {
+            if ($responses = $this->waitResponses($socket_child)) {
 
-        $result = [];
-        pcntl_wait($status);
+                foreach ($responses as $response) {
+                    $tasks_result[$response['id']] = [
+                        'buffer' => $response['buffer'],
+                        'result' => $response['result']
+                    ];
 
-        foreach ($this->pids as $index => $pid) {
-            pcntl_waitpid($pid, $status);
-            $process_result = "";
-            $socket         = $this->sockets[$index][1];
+                    if ($task_callback instanceof \Closure) {
+                        $task_callback($response);
+                    }
 
-            while ($resp = socket_read($socket, 102400)) {
-                $process_result .= $resp;
-
-                // prevent socket_read hangs
-                if ($process_result[-1] === "\n" &&
-                    $process_result[-2] === "\r" &&
-                    $process_result[-3] === "\0"
-                ) {
-                    break;
+                    if ( ! empty($tasks_pid[$response['pid']])) {
+                        unset($tasks_pid[$response['pid']]);
+                    };
                 }
             }
-
-            socket_close($socket);
-
-            $number = $task_numbers[$pid];
-            $result[$number] = unserialize(trim($process_result));
         }
 
-        $this->pids    = [];
-        $this->sockets = [];
-        $this->tasks   = [];
+        pcntl_wait($status);
 
-        return $result;
+        socket_close($socket_child);
+        socket_close($socket_parent);
+
+        $this->tasks = [];
+
+        $this->db;
+
+        return $tasks_result;
+    }
+
+
+    /**
+     * @param \Socket $socket
+     * @return array
+     * @throws \Exception
+     */
+    private function waitResponses(\Socket $socket): array {
+
+        $responses    = $this->getResponses($socket);
+        $task_results = [];
+
+        foreach ($responses as $response) {
+
+            if ( ! empty($response['id'])) {
+                $task_results[] = [
+                    'id'     => $response['id'],
+                    'pid'    => $response['pid'],
+                    'buffer' => $response['buffer'],
+                    'result' => $response['result'],
+                ];
+
+                pcntl_waitpid($response['pid'], $status);
+
+                unset($this->tasks[$response['id']]);
+            }
+        }
+
+        return $task_results;
     }
 
 
     /**
      * Запуск выполнения задачи
+     * @param int      $task_id
      * @param \Closure $task
+     * @param \Socket  $socket_child
+     * @param \Socket  $socket_parent
      * @return int
      * @throws \Exception
      */
-    private function startTask(\Closure $task): int {
+    private function startTask(int $task_id, \Closure $task, \Socket $socket_child, \Socket $socket_parent): int {
 
-        $domain      = strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? AF_INET : AF_UNIX;
-        $socket_nmbr = count($this->sockets);
-
-        if ( ! socket_create_pair($domain, SOCK_STREAM, 0, $this->sockets[$socket_nmbr])) {
-            throw new \Exception("socket_create_pair failed. Reason: " . socket_strerror(socket_last_error()));
-        }
-
-        $socket = $this->sockets[$socket_nmbr][0];
-        $pid    = pcntl_fork();
+        $pid = pcntl_fork();
 
         if ($pid == -1) {
             throw new \Exception($this->_(sprintf(
                 'Не удалось породить дочерний процесс: %s', pcntl_strerror(pcntl_get_last_error())
             )));
 
-        } elseif ($pid) {
-            // Родительский процесс
-            $this->pids[$socket_nmbr] = $pid;
-
-        } else {
             // Дочерний процесс
+        } elseif ( ! $pid) {
             ob_start();
-
+            socket_close($socket_child);
 
             // Самостоятельное завершение процесса перед выходом, иначе процесс будет закрыт вместе с родителем,
-            register_shutdown_function(function () use ($socket) {
+            register_shutdown_function(function () use ($task_id, $socket_parent) {
                 $buffer = ob_get_clean();
 
-                // Отправка пустого сообщения при фатале
                 $error = error_get_last();
                 if ($error &&
                     in_array($error['type'], [
@@ -150,16 +191,13 @@ class Parallel extends Db {
                         E_CORE_WARNING, E_COMPILE_WARNING, E_PARSE
                     ])
                 ) {
-                    $this->sendSocketData($socket, [
+                    $this->sendSocketData($socket_parent, [
+                        'id'     => $task_id,
+                        'pid'    => posix_getpid(),
+                        'buffer' => (string)$buffer,
                         'result' => null,
-                        'buffer' => (string)$buffer
                     ]);
                 }
-
-                $this->db->closeConnection();
-
-                // Убивает текущий процесс без выполнения деструкторов
-                posix_kill(getmypid(), SIGTERM);
             });
 
 
@@ -174,9 +212,11 @@ class Parallel extends Db {
                 ];
             }
 
-            $this->sendSocketData($socket, [
+            $this->sendSocketData($socket_parent, [
+                'id'     => $task_id,
+                'pid'    => posix_getpid(),
+                'buffer' => (string)ob_get_clean(),
                 'result' => $result_value,
-                'buffer' => (string)ob_get_clean()
             ]);
 
             // Завершение дочернего процесса
@@ -188,6 +228,24 @@ class Parallel extends Db {
 
 
     /**
+     * Создание парного соединения для общения между процессами
+     * @return array
+     * @throws \Exception
+     */
+    private function createSocketsPair(): array {
+
+        $domain       = strtoupper(substr(PHP_OS, 0, 3)) == 'WIN' ? AF_INET : AF_UNIX;
+        $sockets_pair = [];
+
+        if ( ! socket_create_pair($domain, SOCK_STREAM, 0, $sockets_pair)) {
+            throw new \Exception("Fail start socket_create_pair. Reason: " . socket_strerror(socket_last_error()));
+        }
+
+        return $sockets_pair;
+    }
+
+
+    /**
      * Отправка данных в сокет процесса
      * @param \Socket $socket
      * @param mixed   $data
@@ -195,14 +253,41 @@ class Parallel extends Db {
      */
     private function sendSocketData(\Socket $socket, mixed $data): void {
 
-        // Declare $sendingData end of line , prevent socket_read hangs
-        $sending_data  = serialize($data) . "\0\r\n";
+        $sending_data  = serialize($data) . "--{$this->boundary}--\0\r\n";
         $buffer_length = mb_strlen($sending_data, '8bit');
 
-        // If not declare $bufferLength, it is silently truncated to the length of SO_SNDBUF
-        // @see https://www.php.net/manual/en/function.socket-write.php
-        // @see https://www.php.net/manual/en/function.socket-get-option.php
         socket_write($socket, $sending_data, $buffer_length);
         socket_close($socket);
+    }
+
+
+    /**
+     * Отправка данных в сокет процесса
+     * @param \Socket $socket
+     * @return array
+     */
+    private function getResponses(\Socket $socket): array {
+
+        $socket_result = "";
+
+        while ($response = socket_read($socket, 102400)) {
+            $socket_result .= $response;
+
+            if (str_ends_with($socket_result, "--{$this->boundary}--\0\r\n")) {
+                break;
+            }
+        }
+
+
+        $results     = [];
+        $results_raw = explode("--{$this->boundary}--\0\r\n", $socket_result);
+
+        foreach ($results_raw as $result_raw) {
+            if ( ! empty($result_raw)) {
+                $results[] = unserialize(trim($result_raw));
+            }
+        }
+
+        return $results;
     }
 }
