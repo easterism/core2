@@ -9,4 +9,5 @@ mod/admin/conf.ext.ini
 
 composer\.phar
 
-html/
+html/*
+mod/*
