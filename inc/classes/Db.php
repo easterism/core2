@@ -56,7 +56,8 @@ class Db {
         }
 	}
 
-    public function setDatabase($db) {
+    public function setDatabase($db)
+    {
         $this->_db = $db;
     }
 
