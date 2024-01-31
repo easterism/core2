@@ -351,25 +351,76 @@ class WorkerManager {
     protected function getopt() {
         $this->config = [];
 
-        $opts = getopt("ac:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L");
+        $opts = getopt("c:dD:h:Hl:o:p:P:u:v::w:r:x:Z:L:s:");
 
         if (isset($opts["H"])) {
             $this->show_help();
         }
 
         if (isset($opts["c"])) {
-            $this->config['file'] = $opts['c'];
+            if (!file_exists($opts["c"])) {
+                $this->show_help("Application config file {$opts["c"]} not found.");
+            }
         } else {
-            $this->config['file'] = __DIR__ . "/../conf.ini";
+            $this->show_help("Path to Application config file reqired.");
         }
 
+        $this->config['file'] = __DIR__ . "/../conf.ini";
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
-                $this->parse_config($this->config['file']);
+                $core_config = $this->parse_config($this->config['file']);
+                if (isset($core_config['gearman'])) {
+                    $this->config = $core_config['gearman'];
+                    $this->config['functions'] = [];
+                    if (!empty($config['gearman']['functions'])) {
+                        $this->config['functions'] = $core_config['gearman']['functions'];
+                    };
+                }
             }
             else {
-                $this->show_help("Config file {$this->config['file']} not found.");
+                $this->show_help("Core2 worker config file {$this->config['file']} not found.");
             }
+        }
+
+        $section = 'production';
+        if (isset($opts["s"])) {
+            $_SERVER['SERVER_NAME'] = $opts["s"];
+            $section = $_SERVER['SERVER_NAME'];
+        }
+
+        $config = [
+            'database' => [
+                'adapter' => 'Pdo_Mysql',
+                'params'  => [
+                    'charset' => 'utf8',
+                ],
+                'driver_options'=> [
+                    \PDO::ATTR_TIMEOUT => 3,
+                ],
+                'isDefaultTableAdapter' => true,
+                'caseFolding'                => true,
+                'autoQuoteIdentifiers'       => true,
+                'allowSerialization'         => true,
+                'autoReconnectOnUnserialize' => true,
+            ],
+        ];
+        // определяем путь к темповой папке
+        if (empty($config['temp'])) {
+            $config['temp'] = sys_get_temp_dir();
+            if (empty($config['temp'])) {
+                $config['temp'] = "/tmp";
+            }
+        }
+        try {
+            $config2 = $this->parse_config($opts["c"], $section);
+            if (isset($config2['database']['params'])) {
+                $params = array_merge($config['database'], $config2['database']);
+                $config2['database'] = $params;
+            }
+            $this->config['app'] = new \Zend_Config($config2, true);
+        }
+        catch (\Zend_Config_Exception $e) {
+            Error::Exception($e->getMessage());
         }
 
         /**
@@ -581,24 +632,83 @@ class WorkerManager {
      * @param   string    $file     The config file. Just pass so we don't have
      *                              to keep it around in a var
      */
-    protected function parse_config($file) {
+    protected function parse_config($file, $section = 'production') {
 
         $this->toLog("Loading configuration from $file");
+        $loaded = parse_ini_file($file, true);
 
-        $gearman_config = new \Zend_Config_Ini($file, self::DEFAULT_CONFIG);
+        $iniArray = array();
+        foreach ($loaded as $key => $data)
+        {
+            $pieces = explode(":", $key);
+            $thisSection = trim($pieces[0]);
+            switch (count($pieces)) {
+                case 1:
+                    $iniArray[$thisSection] = $data;
+                    break;
 
-        if (empty($gearman_config)) {
+                case 2:
+                    $extendedSection = trim($pieces[1]);
+                    $iniArray[$thisSection] = array_merge(array(';extends'=>$extendedSection), $data);
+                    break;
+
+                default:
+                    /**
+                     * @see Zend_Config_Exception
+                     */
+                    // require_once 'Zend/Config/Exception.php';
+                    throw new \Exception("Section '$thisSection' may not extend multiple sections in $file");
+            }
+        }
+        $dataArray = array();
+        foreach ($iniArray as $sectionName => $sectionData) {
+            //$dataArray[$sectionName] = $this->_processSection($iniArray, $sectionName);
+            $config = [];
+            foreach ($sectionData as $key => $value) {
+                $config = $this->_processKey($config, $key, $value);
+            }
+            $dataArray[$sectionName] = $config;
+        }
+        if (empty($dataArray)) {
             $this->show_help("No configuration found in $file");
         }
-
-        if (isset($gearman_config->gearman)) {
-            $this->config = $gearman_config->gearman->toArray();
-            $this->config['functions'] = [];
-            if ($gearman_config->gearman->functions) {
-                $this->config['functions'] = $gearman_config->gearman->functions->toArray();
-            };
+        if (!isset($dataArray[$section])) {
+            $this->show_help("No section $section found in $file");
+        }
+        $result = $dataArray[$section];
+        if (isset($dataArray[$section][';extends'])) {
+            //extended section found
+            $result = array_merge($dataArray[$dataArray[$section][';extends']], $dataArray[$section]);
+            unset($result[';extends']);
         }
 
+        return $result;
+
+    }
+
+    protected function _processKey($config, $key, $value)
+    {
+        if (strpos($key, '.') !== false) {
+            $pieces = explode('.', $key, 2);
+            if (strlen($pieces[0]) && strlen($pieces[1])) {
+                if (!isset($config[$pieces[0]])) {
+                    if ($pieces[0] === '0' && !empty($config)) {
+                        // convert the current values in $config into an array
+                        $config = array($pieces[0] => $config);
+                    } else {
+                        $config[$pieces[0]] = array();
+                    }
+                } elseif (!is_array($config[$pieces[0]])) {
+                    throw new \Exception("Cannot create sub-key for '{$pieces[0]}' as key already exists");
+                }
+                $config[$pieces[0]] = $this->_processKey($config[$pieces[0]], $pieces[1], $value);
+            } else {
+                throw new \Exception("Invalid key '$key'");
+            }
+        } else {
+            $config[$key] = $value;
+        }
+        return $config;
     }
 
     /**
@@ -614,7 +724,7 @@ class WorkerManager {
 
         foreach ($dirs as $dir) {
 
-            $this->toLog("Loading workers in ".$dir);
+            $this->toLog("Loading workers in " . $dir);
 
             $worker_files = glob($dir . "/*.php");
 
@@ -970,6 +1080,8 @@ class WorkerManager {
      */
     protected function register_ticks($parent = true) {
 
+        pcntl_async_signals(true);
+
         if ($parent) {
             $this->toLog("Registering signals for parent", self::LOG_LEVEL_DEBUG);
             pcntl_signal(SIGTERM, array($this, "signal"));
@@ -1175,7 +1287,7 @@ class WorkerManager {
         echo "  # ".basename(__FILE__)." -h | -c CONFIG [-v] [-l LOG_FILE] [-d] [-v] [-a] [-P PID_FILE]\n\n";
         echo "OPTIONS:\n";
         echo "  -a             Automatically check for new worker code\n";
-        echo "  -c CONFIG      Worker configuration file\n";
+        echo "  -c CONFIG      Application configuration file\n";
         echo "  -d             Daemon, detach and run in the background\n";
         echo "  -D NUMBER      Start NUMBER workers that do all jobs\n";
         echo "  -h HOST[:PORT] Connect to gearman HOST and optional PORT\n";
@@ -1190,6 +1302,7 @@ class WorkerManager {
         echo "  -x SECONDS     Maximum seconds for a worker to live\n";
         echo "  -Z             Parse the command line and config file then dump it to the screen and exit.\n";
         echo "  -L LABEL       Label worker process to easy find in process list.\n";
+        echo "  -s SECTION     conf.ini section to use.\n";
         echo "\n";
         exit();
     }
@@ -1206,6 +1319,7 @@ class WorkerManager {
         $thisWorker = new \GearmanWorker();
 
         $thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
+        $thisWorker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
 
         $thisWorker->setTimeout(5000);
 
@@ -1244,7 +1358,6 @@ class WorkerManager {
                         sleep(5);
                     }
                 }
-
             }
 
             /**
@@ -1265,7 +1378,6 @@ class WorkerManager {
 
         $thisWorker->unregisterAll();
 
-
     }
 
     /**
@@ -1278,9 +1390,12 @@ class WorkerManager {
 
         if ($objects === null) $objects = array();
 
-        $w = $job->workload();
+//        $w = $job->workload();
 
         $h = $job->handle();
+
+//        echo $h . chr(10);//die;
+//        echo $job->unique() .chr(10);//die;
         //TODO control handlers
         $job_name = $job->functionName();
         $job_name = explode("-", $job_name);
@@ -1291,8 +1406,7 @@ class WorkerManager {
         } else {
             $func = $job_name;
         }
-
-        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists($func, false)) {
+        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists("\Core2\\" . $func, false)) {
 
             if (!isset($this->functions[$job_name])) {
                 $this->toLog("Function $func is not a registered job name");
@@ -1301,10 +1415,10 @@ class WorkerManager {
 
             require_once $this->functions[$job_name]["path"];
 
-            if (class_exists($func) && method_exists($func, "run")) {
+            if (class_exists("\Core2\\" . $func) && method_exists("\Core2\\" . $func, "run")) {
 
                 $this->toLog("Creating a $func object", self::LOG_LEVEL_WORKER_INFO);
-                $ns_func = "\\$func";
+                $ns_func = "\Core2\\$func";
                 $objects[$job_name] = new $ns_func();
 
             } elseif (!function_exists($func)) {
@@ -1317,13 +1431,14 @@ class WorkerManager {
         $job_name_log = $this->getRealJobName($job_name);
 
         $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
-        $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
+//        $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
 
         /**
          * Run the real function here
          */
+        $result = null;
         if (isset($objects[$job_name])) {
             $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
             try {
@@ -1401,7 +1516,7 @@ class WorkerManager {
             require_once $props["path"];
             $real_func = $this->prefix.$func;
             if (!function_exists($real_func) &&
-                (!class_exists($real_func) || !method_exists($real_func, "run"))) {
+                (!class_exists("\Core2\\" . $real_func) || !method_exists("\Core2\\" . $real_func, "run"))) {
                 $this->toLog("Function $real_func not found in ".$props["path"]);
                 posix_kill($this->pid, SIGUSR2);
                 exit();

@@ -65,21 +65,29 @@ class Render extends Acl {
         }
 
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
-        $tpl->assign('[THEME_SRC]', $this->theme_src);
-        $tpl->assign('[RESOURCE]',  $this->table['resource']);
-        $tpl->assign('[IS_AJAX]',   (int)($this->table['isAjax'] ?? 0));
-        $tpl->assign('[LOCATION]',  ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
-
+        $tpl->assign('[THEME_SRC]',         $this->theme_src);
+        $tpl->assign('[RESOURCE]',          $this->table['resource']);
+        $tpl->assign('[IS_AJAX]',           (int)($this->table['isAjax'] ?? 0));
+        $tpl->assign('[LOCATION]',          ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
+        $tpl->assign('[CLASS_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? 'coreui-table-limit-height' : '');
+        $tpl->assign('[STYLE_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? "max-height: {$this->table['max_height']}px;" : '');
 
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
-                if (isset($this->table['recordsTotalRound']) &&
-                    (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
-                    $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
-                ) {
-                    $total_records = "~{$this->table['recordsTotalRound']}";
+                if (count($this->table['records']) == 0 && $this->table['currentPage'] == 1) {
+                    $this->table['recordsTotal']      = 0;
+                    $this->table['recordsTotalRound'] = 0;
+                    $total_records = 0;
+
                 } else {
-                    $total_records = $this->table['recordsTotal'] ?? 0;
+                    if (isset($this->table['recordsTotalRound']) &&
+                        (count($this->table['records']) == 0 || $this->table['recordsPerPage'] == count($this->table['records'])) &&
+                        $this->table['recordsTotalRound'] >= $this->table['recordsTotal']
+                    ) {
+                        $total_records = "~{$this->table['recordsTotalRound']}";
+                    } else {
+                        $total_records = $this->table['recordsTotal'] ?? 0;
+                    }
                 }
 
                 $tpl->service->assign('[TOTAL_RECORDS]', $total_records);
@@ -193,68 +201,110 @@ class Render extends Acl {
             }
 
 
-            if ($this->table['show']['footer']) {
-                $current_page = $this->table['currentPage'] ?? 1;
-                $count_pages  = ! empty($this->table['recordsTotal']) && ! empty($this->table['recordsPerPage'])
-                    ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
-                    : 0;
+            if ( ! empty($this->table['show']['footer_pages']) ||
+                ( ! empty($this->table['show']['footer_total']) && ! empty($this->table['columns']))
+            ) {
+                if ( ! empty($this->table['show']['footer_pages'])) {
+                    $current_page = $this->table['currentPage'] ?? 1;
+                    $count_pages  = ! empty($this->table['recordsTotal']) && ! empty($this->table['recordsPerPage'])
+                        ? ceil($this->table['recordsTotal'] / $this->table['recordsPerPage'])
+                        : 0;
 
-                if ($count_pages > 0) {
-                    if (empty($this->table['recordsTotalMore'])) {
-                        $tpl_count_pages = $count_pages;
+                    if ($count_pages > 0) {
+                        if (empty($this->table['recordsTotalMore'])) {
+                            $tpl_count_pages = $count_pages;
 
-                    } elseif ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
-                        $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
-                        $tpl_count_pages = "~{$count_pages}";
+                        } elseif ( ! empty($this->table['recordsTotalRound']) && ! empty($this->table['recordsPerPage'])) {
+                            $count_pages     = ceil($this->table['recordsTotalRound'] / $this->table['recordsPerPage']);
+                            $tpl_count_pages = "~{$count_pages}";
+
+                        } else {
+                            $tpl_count_pages = $count_pages;
+                        }
 
                     } else {
-                        $tpl_count_pages = $count_pages;
+                        $tpl_count_pages = 1;
                     }
 
-                } else {
-                    $tpl_count_pages = 1;
-                }
+                    if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
+                        $tpl->footer->pages->touchBlock('gotopage');
+                    }
 
-                if ($count_pages > 1 || ! empty($this->table['recordsTotalMore'])) {
-                    $tpl->footer->pages->touchBlock('gotopage');
-                }
+                    $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
+                    $tpl->footer->pages->assign('[COUNT_PAGES]',  $tpl_count_pages);
 
-                $tpl->footer->pages->assign('[CURRENT_PAGE]', $current_page);
-                $tpl->footer->pages->assign('[COUNT_PAGES]',  $tpl_count_pages);
+                    if ($current_page > 1) {
+                        $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
+                    }
 
-                if ($current_page > 1) {
-                    $tpl->footer->pages->prev->assign('[PREV_PAGE]', $current_page - 1);
-                }
-
-                if ($current_page < $count_pages ||
-                    (
-                        (empty($this->table['recordsPerPage']) && count($this->table['records']) > 0) ||
-                        (count($this->table['records']) >= $this->table['recordsPerPage'])
-                    )
-                ) {
-                    $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
-                }
+                    if ($current_page < $count_pages ||
+                        (
+                            (empty($this->table['recordsPerPage']) && count($this->table['records']) > 0) ||
+                            (count($this->table['records']) >= $this->table['recordsPerPage'])
+                        )
+                    ) {
+                        $tpl->footer->pages->next->assign('[NEXT_PAGE]', $current_page + 1);
+                    }
 
 
-                $recordsPerPage = $this->table['recordsPerPage'] ?? 25;
-                $per_page_list  = [];
+                    $recordsPerPage = $this->table['recordsPerPage'] ?? 25;
+                    $per_page_list  = [];
 
 
-                if ( ! empty($this->table['recordsPerPageList'])) {
-                    foreach ($this->table['recordsPerPageList'] as $per_page_count) {
-                        if (is_numeric($per_page_count)) {
-                            $per_page_list[$per_page_count] = $per_page_count == 0
-                                ? $this->getLocution('All')
-                                : $per_page_count;
+                    if ( ! empty($this->table['recordsPerPageList'])) {
+                        foreach ($this->table['recordsPerPageList'] as $per_page_count) {
+                            if (is_numeric($per_page_count)) {
+                                $per_page_list[$per_page_count] = $per_page_count == 0
+                                    ? $this->getLocution('All')
+                                    : $per_page_count;
+                            }
                         }
                     }
+
+                    $tpl->footer->pages->per_page->fillDropDown(
+                        'records-per-page-[RESOURCE]',
+                        $per_page_list,
+                        $recordsPerPage == 1000000000 ? 0 : $recordsPerPage
+                    );
                 }
 
-                $tpl->footer->pages->per_page->fillDropDown(
-                    'records-per-page-[RESOURCE]',
-                    $per_page_list,
-                    $recordsPerPage == 1000000000 ? 0 : $recordsPerPage
-                );
+                if ( ! empty($this->table['show']['footer_total'])) {
+                    if ( ! empty($this->table['show']) && ! empty($this->table['show']['lineNumbers'])) {
+                        $tpl->footer->total->total_column->assign('[ATTR]',  '');
+                        $tpl->footer->total->total_column->assign('[VALUE]', '');
+                        $tpl->footer->total->total_column->reassign();
+                    }
+
+                    foreach ($this->table['columns'] as $column) {
+                        if (is_array($column) && ! empty($column['show'])) {
+
+                            $footer_attr  = [];
+                            $footer_value = '';
+
+                            if (array_key_exists('footer_total', $column) && ! is_null($column['footer_total'])) {
+                                if ( ! empty($column['footer_total_attr'])) {
+                                    foreach ($column['footer_total_attr'] as $attr => $value) {
+                                        if (is_string($attr) && is_string($value)) {
+                                            $footer_attr[] = "$attr=\"{$value}\"";
+                                        }
+                                    }
+                                }
+
+                                $footer_value = $column['footer_total'];
+                            }
+
+                            $tpl->footer->total->total_column->assign('[ATTR]',  implode(' ', $footer_attr));
+                            $tpl->footer->total->total_column->assign('[VALUE]', $footer_value);
+                            $tpl->footer->total->total_column->reassign();
+                        }
+                    }
+
+                    if ( ! empty($this->table['show']) && ! empty($this->table['show']['selectRows'])) {
+                        $tpl->footer->total->total_column->assign('[ATTR]',  '');
+                        $tpl->footer->total->total_column->assign('[VALUE]', '');
+                        $tpl->footer->total->total_column->reassign();
+                    }
+                }
             }
         }
 
@@ -376,11 +426,26 @@ class Render extends Acl {
                             $tpl->search_container->search_field->select->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
                             break;
 
+                        case 'select2' :
+                            $data = $search['data'] ?? [];
+                            $options = ['' => ''] + $data;
+                            $tpl->search_container->search_field->select2->assign("[KEY]",      $key);
+                            $tpl->search_container->search_field->select2->assign("[IN_TEXT]",  $attributes_str);
+                            $tpl->search_container->search_field->select2->fillDropDown("search-[RESOURCE]-[KEY]", $options, $control_value);
+                            break;
+
                         case 'multiselect' :
                             $data = $search['data'] ?? [];
                             $tpl->search_container->search_field->multiselect->assign("[KEY]",      $key);
                             $tpl->search_container->search_field->multiselect->assign("[IN_TEXT]",  $attributes_str);
                             $tpl->search_container->search_field->multiselect->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
+                            break;
+
+                        case 'multiselect2' :
+                            $data = $search['data'] ?? [];
+                            $tpl->search_container->search_field->multiselect2->assign("[KEY]",      $key);
+                            $tpl->search_container->search_field->multiselect2->assign("[IN_TEXT]",  $attributes_str);
+                            $tpl->search_container->search_field->multiselect2->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
                             break;
                     }
 
@@ -566,6 +631,13 @@ class Render extends Acl {
             foreach ($this->table['columns'] as $key => $column) {
                 if (is_array($column) && ! empty($column['show'])) {
 
+                    if ($column['type'] == 'money') {
+                        $column['attr']['style'] = ! empty($column['attr']['style'])
+                            ? "text-align:right;{$column['attr']['style']}"
+                            : "text-align:right;";
+                    }
+
+
                     $column_attributes = [];
                     if ( ! empty($column['attr'])) {
                         foreach ($column['attr'] as $attr => $value) {
@@ -728,6 +800,23 @@ class Render extends Acl {
                                     $value = strrev($value);
                                     $value = (string)preg_replace('/(\d{3})(?=\d)(?!\d*\.)/', '$1;psbn&', $value);
                                     $value = strrev($value);
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $value);
+                                    break;
+
+                                case 'money':
+                                    $value    = \Tool::commafy(sprintf("%0.2f", $value));
+                                    $options  = $column['options'] ?? [];
+                                    $template = $options['tpl'] ?? '<b>[VALUE]</b> <small class=\"text-muted\">[CURRENCY]</small>';
+                                    $currency = $options['currency'] ?? $this->table['currency'];
+
+                                    $value = str_replace('[VALUE]', $value, $template);
+                                    $value = str_replace('[CURRENCY]', $currency, $value);
+
+                                    $cell['attr']['style'] = ! empty($cell['attr']['style'])
+                                        ? "text-align:right;{$cell['attr']['style']}"
+                                        : "text-align:right;";
+
+
                                     $tpl->rows->row->col->default->assign('[VALUE]', $value);
                                     break;
 

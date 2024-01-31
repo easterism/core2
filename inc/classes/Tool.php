@@ -92,7 +92,7 @@ class Tool {
 	 * Строки маркируются датой и временем
      *
 	 * @param string $filename
-	 * @param string $text
+	 * @param string|array $text
 	 */
 	public static function logToFile($filename, $text) {
 
@@ -171,15 +171,18 @@ class Tool {
 
     /**
      * Добавляет разделитель через каждые 3 символа в указанном числе
-     *
-     * @param string $_
-     * @param string $del
-     *
+     * @param string $number
+     * @param string $separator
      * @return string
      */
-    public static function commafy($_, $del = ';psbn&') {
-	    return strrev( (string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $del , strrev( $_ ) ) );
-	}
+    public static function commafy($number, string $separator = ';psbn&'): string {
+
+        if (empty($number)) {
+            return '';
+        }
+
+	    return strrev((string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $separator , strrev( $number )));
+    }
 
 
     /**
@@ -427,6 +430,30 @@ class Tool {
         }
 
         return $src;
+    }
+
+
+    /**
+     * Форматирование временного диапазона
+     * @param DateTime $date_start
+     * @param DateTime $date_end
+     * @param string   $format
+     * @return string
+     */
+    public static function getFormatPeriod(\DateTime $date_start, \DateTime $date_end, string $format = "%s - %s"): string {
+
+        $day_equal  = $date_start->format('dmY') == $date_end->format('dmY');
+        $year_equal = $date_start->format('Y') == $date_end->format('Y');
+
+        $date_start_format = $day_equal
+            ? $date_start->format('H:i')
+            : ($year_equal ? $date_start->format('H:i d.m') : $date_start->format('H:i d.m.Y'));
+
+        $date_end_format = $day_equal
+            ? $date_end->format('H:i d.m.Y')
+            : ($year_equal ? $date_end->format('H:i d.m') : $date_end->format('H:i d.m.Y'));
+
+        return sprintf($format, $date_start_format, $date_end_format);
     }
 
 

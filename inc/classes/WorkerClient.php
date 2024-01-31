@@ -8,6 +8,8 @@ class WorkerClient {
 
     private $location;
     private $module;
+    private $client;
+
 
 
     /**
@@ -111,6 +113,8 @@ class WorkerClient {
         $workload = $this->getWorkload($worker, $data);
         $worker   = $this->getWorkerName($worker);
 
+        if (!$workload) return false;
+
         $jh = $this->client->doBackground($worker, $workload, $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
@@ -157,12 +161,12 @@ class WorkerClient {
             'location' => $this->location,
             'config'   => serialize(\Zend_Registry::get('config')),
             'server'   => $_SERVER,
-            'auth'     => $auth->MOBILE ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
             'payload'  => $data,
         ];
 
         if ($this->module !== 'Admin') {
-            $workload = [
+            $workload += [
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
                 'context'   => \Zend_Registry::get('context'),

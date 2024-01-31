@@ -1,13 +1,14 @@
 <?php
 
-require_once __DIR__ .'/classes/Common.php';
-require_once __DIR__ .'/classes/Image.php';
+require_once __DIR__ . '/classes/Common.php';
+require_once __DIR__ . '/classes/Image.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Validator\EmailAddress as ValidateEmailAddress;
 use Laminas\Validator\Hostname as ValidateHostname;
 use Laminas\I18n\Validator\IsFloat;
 use Laminas\I18n\Validator\IsInt;
+use Aws\S3\S3Client;
 
 /**
  * Class ajaxFunc
@@ -25,7 +26,9 @@ class ajaxFunc extends Common {
 	protected $response;
 	protected $script;
 	protected $userId;
-	private $orderFields = [];
+	private $orderFields    = [];
+	private $last_insert_id = 0;
+	private $refid = 0;
 
 
     /**
@@ -35,6 +38,18 @@ class ajaxFunc extends Common {
     public function __construct (xajaxResponse $res) {
 	    $this->response = $res;
     	parent::__construct();
+    }
+
+    /**
+     * установка id формы
+     * используется для поиска в сессии
+     *
+     * @param int $id
+     * @return void
+     */
+    public function setRefId(int $id)
+    {
+        $this->refid = $id;
     }
 
 
@@ -67,9 +82,9 @@ class ajaxFunc extends Common {
 	protected function ajaxValidate($data, $fields) {
 
 		$order_fields = $this->getSessForm($data['class_id']);
-        if (!isset($order_fields['mainTableId'])) {
+        if ( ! isset($order_fields['mainTableId'])) {
             $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
-            $this->response->script("CoreUI.error.create('$msg');");
+            $this->response->script("CoreUI.notice.create('$msg', 'danger');");
             return true;
         }
 		$control  = $data['control']; //данные полей формы
@@ -86,7 +101,8 @@ class ajaxFunc extends Common {
 
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
-				$control[$field] = trim($val);
+				$control[$field] = is_string($val) ? trim($val) : "";
+
 				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
 					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "2').className='reqField';";
 					$this->error[] = "- {$this->translate->tr('Пароль не совпадает.')}<br/>";
@@ -115,7 +131,7 @@ class ajaxFunc extends Common {
             $params = explode(",", $val);
 
             if (in_array("req", $params) && ! array_key_exists($field, $control)) {
-                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>$field $val";
                 break;
             }
 
@@ -487,6 +503,9 @@ class ajaxFunc extends Common {
 			$this->displayError($data);
 			return 0;
 		}
+
+        $this->last_insert_id = $last_insert_id;
+
 		return $last_insert_id;
 	}
 
@@ -528,6 +547,13 @@ class ajaxFunc extends Common {
         }
         if ( ! empty($order_fields['back'])) {
 			$this->response->script($this->script . "setTimeout(function () {load('{$order_fields['back']}')}, 0);");
+		}
+        if ( ! empty($order_fields['save_success'])) {
+            $script  = "edit.saveSuccessParams.id = {$this->last_insert_id};";
+            $script .= "{$order_fields['save_success']};";
+            $script .= "edit.saveSuccessParams = {};";
+
+			$this->response->script($script);
 		}
 	}
 
@@ -655,6 +681,41 @@ class ajaxFunc extends Common {
                     }
                 }
 
+                $key = null;
+                //Check cloued storage
+                if ($s3 = $this->config->s3) {
+                    // S3 storage
+                    try {
+                        $client = new S3Client([
+                            'region' => 'us-west-2',
+                            'version' => 'latest',
+                            'endpoint' => $s3->host,
+                            'credentials' => [
+                                'key' => $s3->access_key,
+                                'secret' => $s3->secret_key
+                            ],
+                            // Set the S3 class to use objects.dreamhost.com/bucket
+                            // instead of bucket.objects.dreamhost.com
+                            'use_path_style_endpoint' => true
+                        ]);
+                        //$listResponse = $client->listBuckets();
+                        $key = "$table|$last_insert_id|$hash";
+                        $client->putObject([
+                            'Bucket' => $s3->bucket,
+                            'Key' => $key,
+                            'Body' => $content
+                        ]);
+                        $key = "S3|{$s3->bucket}|$key";
+                        $content = null;
+
+                    } catch (\Exception $e) {
+                        throw new \Exception($e->getMessage());
+                        //TODO Log me!
+                    }
+
+                }
+                //TODO add GCP here
+
                 $this->db->insert($table . '_files', array(
                     'refid'    => $last_insert_id,
                     'filename' => $file[0],
@@ -663,7 +724,8 @@ class ajaxFunc extends Common {
                     'type'     => $file[2],
                     'content'  => $content,
                     'fieldid'  => $field,
-                    'thumb'    => $thumb_content
+                    'thumb'    => $thumb_content,
+                    'storage'  => $key
                 ));
             }
         }
@@ -674,14 +736,15 @@ class ajaxFunc extends Common {
      * @param string $id
      * @return array
      */
-    private function getSessForm($id) {
+    private function getSessForm($id) : array {
 
         if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
             if (!$sess_form || !$id || empty($sess_form->$id)) {
                 return array();
             }
-            $this->orderFields = $sess_form->$id;
+            $all_forms = $sess_form->$id;
+            $this->orderFields = isset($all_forms[$this->refid]) ? $all_forms[$this->refid] : [];
         }
         return $this->orderFields;
     }

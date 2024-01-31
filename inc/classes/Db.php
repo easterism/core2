@@ -35,6 +35,7 @@ class Db {
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
+    private $_db;
     private string $schemaName = 'public';
 
     /**
@@ -55,6 +56,11 @@ class Db {
         }
 	}
 
+    public function setDatabase($db)
+    {
+        $this->_db = $db;
+    }
+
 
 	/**
 	 * @param string $k
@@ -69,6 +75,7 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
+            if ($this->_db) return $this->_db;
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
@@ -534,22 +541,32 @@ class Db {
 	 * @return array
 	 */
 	public function getEnumById($id) {
-		$res = $this->db->fetchRow("SELECT id, name, custom_field, is_default_sw
-									FROM core_enum
-									WHERE is_active_sw = 'Y'
-									AND id = ?", $id);
-		if ($res['custom_field']) {
-			$temp = array();
-			$temp2 = explode(":::", $res['custom_field']);
-			foreach ($temp2 as $fields) {
-				$fields = explode("::", $fields);
-				if (isset($fields[0]) && isset($fields[1])) {
-                    $temp[$fields[0]] = $fields[1];
+
+		$enum = $this->db->fetchRow("
+            SELECT id, 
+                   name, 
+                   custom_field, 
+                   is_default_sw
+			FROM core_enum
+			WHERE is_active_sw = 'Y'
+			  AND id = ?
+        ", $id);
+
+		if ($enum && $enum['custom_field']) {
+            $custom_fields         = [];
+            $custom_fields_explode = explode(":::", $enum['custom_field']);
+
+            foreach ($custom_fields_explode as $fields) {
+                $fields = explode("::", $fields);
+                if (isset($fields[0]) && isset($fields[1])) {
+                    $custom_fields[$fields[0]] = $fields[1];
                 }
-			}
-			$res['custom_field'] = $temp;
-		}
-		return $res;
+            }
+
+            $enum['custom_field'] = $custom_fields;
+        }
+
+        return $enum;
 	}
 
 
@@ -696,7 +713,6 @@ class Db {
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
-            $key = "all_modules_" . $this->config->database->params->dbname;
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
@@ -710,10 +726,7 @@ class Db {
                     }
                 }
             }
-            $fromCache                         = $this->cache->getItem($key);
-            $fromCache[$module_id]['location'] = $loc;
-            $this->cache->setItem($key, $fromCache);
-            $this->cache->setTags($key, ['is_active_core_modules']);
+            $this->_modules[$module_id]['location'] = $loc;
         } else {
             $loc = $module['location'];
         }
@@ -770,7 +783,7 @@ class Db {
 
             $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
 
-            $conf_ext = $module_loc . "/conf.workers.ini";
+            $conf_ext = $module_loc . "/conf.ext.ini";
             if (file_exists($conf_ext)) {
                 $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
                 $extends_mod_ext = $config_mod_ext->getExtends();

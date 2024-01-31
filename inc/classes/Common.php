@@ -173,7 +173,7 @@ class Common extends \Core2\Acl {
 					$controller_file = $location . '/' . $cl . '.php';
 
 					if (!file_exists($controller_file)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера."), $module));
+						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
 					}
 
                     $autoload_file = $location . "/vendor/autoload.php";
@@ -187,10 +187,8 @@ class Common extends \Core2\Acl {
 						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
 					}
 
-
-
-					$v         = $this->{$k} = new $cl();
-					$v->module = $module;
+					$v = $this->{$k} = new $cl();
+                    // $v->module = $module;
 
 				} else {
 					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
@@ -308,6 +306,21 @@ class Common extends \Core2\Acl {
 
 
 	/**
+	 * link to CSS file
+     * @param string $module module name
+	 * @param string $href   CSS filename
+     * @throws \Exception
+	 */
+	protected function getCssModule(string $module, string $href): string {
+
+        $src_mod = $this->getModuleLoc($module);
+        ob_start();
+        Tool::printCss($src_mod . $href);
+        return ob_get_clean();
+	}
+
+
+	/**
 	 * 
 	 * Print link to JS file
 	 * @param string $src - JS filename
@@ -328,6 +341,23 @@ class Common extends \Core2\Acl {
 	protected function printJsModule($module, $src, $chachable = false) {
 		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
+	}
+
+
+    /**
+     * Link to JS file
+     * @param string $module module name
+     * @param string $src    JS filename
+     * @param bool   $chachable
+     * @return string
+     * @throws Exception
+     */
+	protected function getJsModule(string $module, string $src, bool $chachable = false): string {
+
+        $src_mod = $this->getModuleLoc($module);
+        ob_start();
+        Tool::printJs($src_mod . $src, $chachable);
+        return ob_get_clean();
 	}
 
 

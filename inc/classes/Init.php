@@ -13,6 +13,7 @@ if (!file_exists($autoload)) {
 require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
+require_once("Theme.php");
 require_once 'Zend_Registry.php'; //DEPRECATED
 
 use Laminas\Session\Config\SessionConfig;
@@ -143,6 +144,9 @@ if ( ! empty($config->theme)) {
     define('THEME', 'default');
 }
 
+$tpls = file_get_contents(__DIR__ . "/../../html/" . THEME . "/model.json");
+\Core2\Theme::set(THEME, $tpls);
+
 //сохраняем параметры сессии
 if ($config->session) {
     $sess_config = new SessionConfig();
@@ -184,6 +188,7 @@ require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
 require_once 'Login.php';
+require_once 'SSE.php';
 
 
 /**
@@ -326,6 +331,28 @@ class Init extends \Core2\Db {
             $route = $this->routeParse();
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+
+                if (isset($route['module']) && $route['module'] === 'sse') {
+
+                    require_once 'core2/inc/Interfaces/Event.php';
+
+                    $this->setContext("admin", "sse");
+                    session_write_close();
+                    header("Content-Type: text/event-stream; charset=utf-8");
+                    header("X-Accel-Buffering: no");
+                    header("Cache-Control: no-cache");
+
+                    $sse = new Core2\SSE();
+                    while (1) {
+
+                        $sse->loop();
+
+                        if ( connection_aborted() ) break;
+
+                        sleep(1);
+                    }
+                    return;
+                }
 
                 // LOG USER ACTIVITY
                 $logExclude = array(
@@ -834,11 +861,11 @@ class Init extends \Core2\Db {
             $xajax->processRequest(); //DEPRECATED
 
             if (Tool::isMobileBrowser()) {
-                $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";
-                $tpl_file_menu = "core2/html/" . THEME . "/menuMobile.tpl";
+                $tpl_file      = \Core2\Theme::get("indexMobile");
+                $tpl_file_menu = \Core2\Theme::get("menuMobile");
             } else {
-                $tpl_file      = "core2/html/" . THEME . "/index2.tpl";
-                $tpl_file_menu = "core2/html/" . THEME . "/menu.tpl";
+                $tpl_file      = \Core2\Theme::get("index");
+                $tpl_file_menu = \Core2\Theme::get("menu");
             }
 
             $tpl      = new Templater3($tpl_file);
@@ -1055,7 +1082,7 @@ class Init extends \Core2\Db {
             $html = '';
             switch ($navigate_item['type']) {
                 case 'divider':
-                    $html = file_get_contents(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.divider.html');
+                    $html = file_get_contents(__DIR__ . '/' . \Core2\Theme::get("html-navigation-divider"));
                     break;
 
                 case 'link':
@@ -1066,7 +1093,7 @@ class Init extends \Core2\Db {
                         ? $navigate_item['onclick']
                         : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.link.html');
+                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-link"));
                     $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                     $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1077,7 +1104,7 @@ class Init extends \Core2\Db {
                     break;
 
                 case 'dropdown':
-                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.dropdown.html');
+                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-dropdown"));
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
                     $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1741,6 +1768,7 @@ function post($func, $loc, $data) {
 
         $xajax = new ModAjax($res);
         if (method_exists($xajax, $func)) {
+            if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
             $xajax->setupAcl();
             try {
                 return $xajax->$func($data);
@@ -1776,6 +1804,7 @@ function post($func, $loc, $data) {
             $xajax = new ModAjax($res);
             $func = 'ax' . ucfirst($func);
             if (method_exists($xajax, $func)) {
+                if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
                 try {
                     parse_str($route['query'], $params);
                     $data['params'] = $params;

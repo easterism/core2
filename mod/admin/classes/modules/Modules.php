@@ -505,8 +505,8 @@ class Modules extends \Common  {
 
         if ($refid > 0) {
 
-            $access_default = unserialize(base64_decode($module->access_default ?? ''));
-            $access_add 	= unserialize(base64_decode($module->access_add ?? ''));
+            $access_default = $module->access_default ? unserialize(base64_decode($module->access_default)) : [];
+            $access_add 	= $module->access_add ? unserialize(base64_decode($module->access_add)) : [];
             if (is_array($access_add) && count($access_add)) {
                 foreach ($access_add as $key => $value) {
                     $id = uniqid('', true);

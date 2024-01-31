@@ -18,6 +18,7 @@ class Db extends Table {
     protected $table         = '';
     protected $primary_key   = '';
     protected $query         = '';
+    protected $query_result  = '';
     protected $query_params  = '';
     protected $order         = null;
     protected $select        = null;
@@ -40,6 +41,16 @@ class Db extends Table {
     public function getQueryParts(): array {
 
         return $this->query_parts;
+    }
+
+
+    /**
+     * Получение sql запроса который выполняется для получения данных
+     * @return string
+     */
+    public function getQueryResult(): string {
+
+        return $this->query_result;
     }
 
 
@@ -175,7 +186,13 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::SEARCH_TEXT:
-                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                            $value = trim($value);
+
+                            if (strpos($field, '%ADD_SEARCH%') !== false) {
+                                $quoted_value = $this->db->quote("%{$value}%");
+                                $select->where(str_replace("%ADD_SEARCH%", $quoted_value, $field));
+
+                            } elseif (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
@@ -188,6 +205,7 @@ class Db extends Table {
                         case self::SEARCH_RADIO:
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -230,6 +248,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -259,7 +278,13 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::FILTER_TEXT:
-                            if (strpos($field, 'ADD_SEARCH') !== false) {
+                            $value = trim($value);
+
+                            if (strpos($field, '%ADD_SEARCH%') !== false) {
+                                $quoted_value = $this->db->quote("%{$value}%");
+                                $select->where(str_replace("%ADD_SEARCH%", $quoted_value, $field));
+
+                            } elseif (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $this->db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
@@ -432,6 +457,8 @@ class Db extends Table {
                 }
             }
 
+            $this->query_result = $select_sql;
+
             $data_result = $this->db->fetchAll($select_sql);
 
             if (count($data_result) > $this->records_per_page) {
@@ -453,6 +480,8 @@ class Db extends Table {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
+
+            $this->query_result = $select_sql;
 
             $data_result         = $this->db->fetchAll($select_sql);
             $this->records_total = (int)$this->db->fetchOne('SELECT FOUND_ROWS()');
@@ -528,6 +557,7 @@ class Db extends Table {
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
+                        case self::SEARCH_SELECT2:
                             if ($search_value != '') {
                                 $quoted_value = $this->db->quote($search_value);
 
@@ -541,6 +571,7 @@ class Db extends Table {
 
                         case self::SEARCH_CHECKBOX:
                         case self::SEARCH_MULTISELECT:
+                        case self::SEARCH_MULTISELECT2:
                             if ( ! empty($search_value)) {
                                 $quoted_value = $this->db->quote($search_value);
 
@@ -553,14 +584,22 @@ class Db extends Table {
                             break;
 
                         case self::SEARCH_TEXT:
-                            if ($search_value != '') {
-                                if (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value = $this->db->quote($search_value);
-                                    $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
+                            if (is_string($search_value)) {
+                                $search_value = trim($search_value);
 
-                                } else {
-                                    $quoted_value = $this->db->quote('%' . $search_value . '%');
-                                    $select->addWhere("{$search_field} LIKE {$quoted_value}");
+                                if ($search_value != '') {
+                                    if (strpos($search_field, '%ADD_SEARCH%') !== false) {
+                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $search_field));
+
+                                    } elseif (strpos($search_field, 'ADD_SEARCH') !== false) {
+                                        $quoted_value = $this->db->quote($search_value);
+                                        $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
+
+                                    } else {
+                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $select->addWhere("{$search_field} LIKE {$quoted_value}");
+                                    }
                                 }
                             }
                             break;
@@ -663,8 +702,14 @@ class Db extends Table {
                             break;
 
                         case self::FILTER_TEXT:
+                            $filter_value = trim($filter_value);
+
                             if ($filter_value != '') {
-                                if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                if (strpos($filter_field, '%ADD_SEARCH%') !== false) {
+                                    $quoted_value = $this->db->quote("%{$filter_value}%");
+                                    $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $filter_field));
+
+                                } elseif (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                     $quoted_value = $this->db->quote($filter_value);
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $filter_field));
 
@@ -760,8 +805,10 @@ class Db extends Table {
             }
 
             $select->setLimit($records_per_page, $offset);
-            $select_sql = $select->getSql();
-            $result     = $this->db->fetchAll($select_sql, $this->query_params);
+            $select_sql         = $select->getSql();
+            $this->query_result = $select_sql;
+
+            $result = $this->db->fetchAll($select_sql, $this->query_params);
 
             if (count($result) > $this->records_per_page) {
                 $this->records_total      = $offset + $this->records_per_page;
@@ -785,6 +832,8 @@ class Db extends Table {
             if (strpos($select_sql, ' SQL_CALC_FOUND_ROWS') === false) {
                 $select_sql = preg_replace('~^(\s*SELECT\s+)~', "$1SQL_CALC_FOUND_ROWS ", $select_sql);
             }
+
+            $this->query_result = $select_sql;
 
             $result = $this->db->fetchAll($select_sql, $this->query_params);
             $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");

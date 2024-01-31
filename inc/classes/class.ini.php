@@ -30,6 +30,7 @@ class initList extends \Core2\Acl {
         'SWITCH'       => 'вкл/выкл',
         'DELETE_MSG'   => 'Вы действительно хотите удалить эту запись?'
     );
+    protected $acl;
 
 
     /**
@@ -94,6 +95,8 @@ class initEdit extends \Core2\Acl {
 	public $back		  = "";
 	public $firstColWidth = "";
 	public $classText	  = [];
+
+    protected $acl;
 
 
     /**

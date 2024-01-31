@@ -35,10 +35,11 @@ abstract class Table extends Acl {
     protected $show_number_rows         = true;
     protected $show_service             = true;
     protected $show_header              = true;
-    protected $show_footer              = true;
+    protected $show_footer_pages        = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
+    protected $currency                 = 'BYN';
     protected $group_field              = '';
     protected $group_options            = [];
     protected $data                     = [];
@@ -47,14 +48,16 @@ abstract class Table extends Acl {
     protected $buttons                  = [];
     protected $search_controls          = [];
     protected $filter_controls          = [];
+    protected $footer_total             = [];
     protected $records_total            = 0;
     protected $records_total_round      = 0;
     protected $records_total_more       = false;
     protected $records_per_page         = 25;
     protected $records_per_page_default = 25;
-    protected $records_per_page_list    = [ 25, 50, 100, 1000, 0 ];
+    protected $records_per_page_list    = [ 25, 50, 100, 1000 ];
     protected $records_seq              = false;
     protected $current_page             = 1;
+    protected $max_height               = null;
     protected $is_ajax                  = false;
     protected $is_round_calc            = false;
 
@@ -66,6 +69,7 @@ abstract class Table extends Acl {
     protected $locutions = [];
 
     const SEARCH_SELECT      = 'select';
+    const SEARCH_SELECT2     = 'select2';
     const SEARCH_TEXT        = 'text';
     const SEARCH_TEXT_STRICT = 'text_strict';
     const SEARCH_DATE_ONE    = 'date_one';
@@ -75,6 +79,7 @@ abstract class Table extends Acl {
     const SEARCH_CHECKBOX    = 'checkbox';
     const SEARCH_RADIO       = 'radio';
     const SEARCH_MULTISELECT = 'multiselect';
+    const SEARCH_MULTISELECT2 = 'multiselect2';
 
     const FILTER_SELECT      = 'select';
     const FILTER_TEXT        = 'text';
@@ -92,6 +97,7 @@ abstract class Table extends Acl {
     const COLUMN_DATE     = 'date';
     const COLUMN_DATETIME = 'datetime';
     const COLUMN_NUMBER   = 'number';
+    const COLUMN_MONEY    = 'money';
     const COLUMN_STATUS   = 'status';
     const COLUMN_SWITCH   = 'switch';
 
@@ -118,6 +124,7 @@ abstract class Table extends Acl {
 
         // SEARCH
         if ( ! empty($_POST['search']) && ! empty($_POST['search'][$resource])) {
+            $this->clearSearch();
             foreach ($_POST['search'][$resource] as $nmbr_field => $search_value) {
                 if (is_array($search_value)) {
                     $isset_value = false;
@@ -468,6 +475,27 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param string $field
+     * @return Column|null
+     */
+    public function getColumnByField(string $field):? Column {
+
+        $result_column = null;
+
+        if ( ! empty($this->columns)) {
+            foreach ($this->columns as $column) {
+                if ($column instanceof Column && $column->getField() == $field) {
+                    $result_column = $column;
+                    break;
+                }
+            }
+        }
+
+        return $result_column;
+    }
+
+
+    /**
      * @return int
      */
     public function getRecordsPerPage(): int {
@@ -488,136 +516,169 @@ abstract class Table extends Acl {
     /**
      *
      */
-    public function showCheckboxes() {
-        $this->show_select_rows = true;
+    public function showCheckboxes(bool $is_show = true): void {
+        $this->show_select_rows = $is_show;
+    }
+
+
+    /**
+     * @return void
+     * @deprecated showCheckboxes(false)
+     */
+    public function hideCheckboxes(): void {
+        $this->showCheckboxes(false);
+    }
+
+
+    /**
+     * @param bool $is_show
+     * @return void
+     */
+    public function showNumberRows(bool $is_show = true): void {
+        $this->show_number_rows = $is_show;
+    }
+
+
+    /**
+     * @return void
+     * @deprecated hideNumberRows(false)
+     */
+    public function hideNumberRows(): void {
+        $this->showNumberRows(false);
+    }
+
+
+    /**
+     * @param bool $is_show
+     * @return void
+     */
+    public function showDelete(bool $is_show = true): void {
+        $this->show_delete = $is_show;
+    }
+
+
+    /**
+     * @return void
+     * @deprecated showDelete(false)
+     */
+    public function hideDelete(): void {
+        $this->showDelete(false);
     }
 
 
     /**
      *
      */
-    public function hideCheckboxes() {
-        $this->show_select_rows = false;
+    public function showService(bool $is_show = true): void {
+        $this->show_service = $is_show;
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showService(false)
      */
-    public function showNumberRows() {
-        $this->show_number_rows = true;
+    public function hideService(): void {
+        $this->showService(false);
     }
 
 
     /**
-     *
+     * @param bool $is_show
+     * @return void
      */
-    public function hideNumberRows() {
-        $this->show_number_rows = false;
+    public function showHeader(bool $is_show = true): void {
+        $this->show_header = $is_show;
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showHeader(false)
      */
-    public function showDelete() {
-        $this->show_delete = true;
+    public function hideHeader(): void {
+        $this->showHeader(false);
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showFooterPages(true)
      */
-    public function hideDelete() {
-        $this->show_delete = false;
+    public function showFooter(): void {
+        $this->showFooterPages(true);
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showFooterPages(false)
      */
-    public function showService() {
-        $this->show_service = true;
+    public function hideFooter(): void {
+        $this->showFooterPages(false);
     }
 
 
     /**
-     *
+     * @param bool $is_show
+     * @return void
      */
-    public function hideService() {
-        $this->show_service = false;
+    public function showFooterPages(bool $is_show = true): void {
+        $this->show_footer_pages = $is_show;
     }
 
 
     /**
-     *
+     * @deprecated showColumnManage(true)
+     * @return void
      */
-    public function showHeader() {
-        $this->show_header = true;
+    public function showColumnsSwitcher(): void {
+        $this->showColumnManage(true);
     }
 
 
     /**
-     *
+     * @param bool $is_show
+     * @return void
      */
-    public function hideHeader() {
-        $this->show_header = false;
+    public function showColumnManage(bool $is_show = true): void {
+        $this->show_column_manage = $is_show;
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showColumnManage(false)
      */
-    public function showFooter() {
-        $this->show_footer = true;
+    public function hideColumnManage(): void {
+        $this->showColumnManage(false);
     }
 
 
     /**
-     *
+     * @param int $height
+     * @return void
      */
-    public function hideFooter() {
-        $this->show_footer = false;
+    public function setMaxHeight(int $height): void {
+        $this->max_height = $height;
     }
 
 
     /**
-     * @deprecated used showColumnManage()
+     * @param bool $is_show
+     * @return void
      */
-    public function showColumnsSwitcher() {
-        $this->show_column_manage = true;
+    public function showTemplates(bool $is_show = true): void {
+        $this->show_templates = $is_show;
     }
 
 
     /**
-     *
+     * @return void
+     * @deprecated showTemplates(false)
      */
-    public function showColumnManage() {
-        $this->show_column_manage = true;
-    }
-
-
-    /**
-     *
-     */
-    public function hideColumnManage() {
-        $this->show_column_manage = false;
-    }
-
-
-    /**
-     *
-     */
-    public function showTemplates() {
-        $this->show_templates = true;
-    }
-
-
-    /**
-     *
-     */
-    public function hideTemplates() {
-        $this->show_templates = true;
+    public function hideTemplates(): void {
+        $this->showTemplates(false);
     }
 
 
@@ -641,12 +702,13 @@ abstract class Table extends Acl {
      */
     public function toArray(): array {
 
-        $toolbar   = [];
-        $filter    = [];
-        $search    = [];
-        $columns   = [];
-        $records   = [];
-        $templates = [];
+        $toolbar           = [];
+        $filter            = [];
+        $search            = [];
+        $columns           = [];
+        $records           = [];
+        $templates         = [];
+        $show_footer_total = false;
 
         $count_pages = ceil($this->records_total / $this->records_per_page);
 
@@ -678,7 +740,13 @@ abstract class Table extends Acl {
         if ( ! empty($this->columns)) {
             foreach ($this->columns as $column) {
                 if ($column instanceof Table\Column) {
-                    $columns[] = $column->toArray();
+                    $column_array = $column->toArray();
+
+                    if (array_key_exists('footer_total', $column_array) && ! is_null($column_array['footer_total'])) {
+                        $show_footer_total = true;
+                    }
+
+                    $columns[] = $column_array;
                 }
             }
         }
@@ -725,7 +793,8 @@ abstract class Table extends Acl {
             'show'     => [
                 'header'       => $this->show_header,
                 'toolbar'      => $this->show_service,
-                'footer'       => $this->show_footer,
+                'footer_pages' => $this->show_footer_pages,
+                'footer_total' => $show_footer_total,
                 'delete'       => $this->show_delete,
                 'lineNumbers'  => $this->show_number_rows,
                 'selectRows'   => $this->show_select_rows,
@@ -733,12 +802,14 @@ abstract class Table extends Acl {
                 'templates'    => $this->show_templates,
             ],
 
+            'currency'           => $this->currency,
             'currentPage'        => $this->current_page,
             'countPages'         => $count_pages,
             'recordsPerPage'     => $this->records_per_page,
             'recordsTotal'       => $this->records_total,
             'recordsTotalMore'   => $this->records_total_more,
             'recordsPerPageList' => $per_page_list,
+            'max_height'         => $this->max_height,
             'records'            => $records,
         ];
 
@@ -862,6 +933,15 @@ abstract class Table extends Acl {
      */
     public function setData($data) {
         $this->data = $data;
+    }
+
+
+    /**
+     * Установка валюты по умолчанию
+     * @param string $currency
+     */
+    public function setCurrency(string $currency): void {
+        $this->currency = $currency;
     }
 
 

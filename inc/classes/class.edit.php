@@ -1,5 +1,7 @@
 <?php
 require_once("class.ini.php");
+require_once 'Templater3.php';
+
 use Laminas\Session\Container as SessionContainer;
 
 $counter = 0;
@@ -29,13 +31,30 @@ class editTable extends initEdit {
 	private $isSaved 				= false;
 	private $scripts		        = array();
 	private $sess_form		        = '';
+	private $sess_form_custom       = [];
 	private $uniq_class_id		    = '';
-    private $acl                    = '';
+
     /**
      * form action attribute
      * @var string
      */
 	private $action		    = '';
+
+    private $tpl_control = [
+        'xfile'         => __DIR__ . '/../../html/' . THEME . '/html/edit/files.html',
+        'xfile_upload'  => __DIR__ . '/../../html/' . THEME . '/html/edit/file_upload.html',
+        'xfile_download' => __DIR__ . '/../../html/' . THEME . '/html/edit/file_download.html',
+        'dataset'       => __DIR__ . '/../../html/' . THEME . '/html/edit/dataset.html',
+        'switch'        => __DIR__ . '/../../html/' . THEME . '/html/edit/switch.html',
+        'switch_button' => __DIR__ . '/../../html/' . THEME . '/html/edit/button_switch.html',
+        'combobox'      => __DIR__ . '/../../html/' . THEME . '/html/edit/combobox.html',
+        'date2'         => __DIR__ . '/../../html/' . THEME . '/html/edit/date2.html',
+        'datetime2'      => __DIR__ . '/../../html/' . THEME . '/html/edit/datetime2.html',
+        'datetime'      => __DIR__ . '/../../html/' . THEME . '/html/edit/datetime.html',
+        'color'         => __DIR__ . '/../../html/' . THEME . '/html/edit/color.html',
+        'modal'         => __DIR__ . '/../../html/' . THEME . '/html/edit/modal_list.html',
+        'modal2'         => __DIR__ . '/../../html/' . THEME . '/html/edit/modal2.html',
+    ];
 
 
     /**
@@ -48,7 +67,7 @@ class editTable extends initEdit {
 		$this->resource 		= $name;
 		$this->main_table_id 	= "main_" . $name;
 		$this->template 		= '<div id="' . $this->main_table_id . '_default">[default]</div>';
-		$this->uniq_class_id   	= crc32($name . microtime());
+		$this->uniq_class_id   	= $name; //crc32($name);
 
 		global $counter;
 		$counter = 0;
@@ -58,8 +77,6 @@ class editTable extends initEdit {
 		}
 
 
-		$this->sess_form = new SessionContainer('Form');
-        $this->sess_form->{$this->uniq_class_id} = array();
     }
 
 
@@ -71,9 +88,9 @@ class editTable extends initEdit {
         if ($data === 'db' || $data === 'cache' || $data === 'translate') {
             return parent::__get($data);
         }
-		$this->$data = new cell($this->main_table_id);
-		$this->cell[$data] = $this->$data;
-       	return $this->$data;
+        if (isset($this->cell[$data])) return $this->cell[$data];
+		$this->cell[$data] = new cell($this->main_table_id);
+       	return $this->cell[$data];
 	}
 
 
@@ -84,6 +101,18 @@ class editTable extends initEdit {
 	public function setTemplate($html) {
 		$this->template = $html;
 	}
+
+    /**
+     * set custom filename for any form control
+     * @param $type - form control type
+     * @param $filename - absolute path to the file
+     * @return void
+     */
+    public function setTemplateControl($type, $filename) {
+        if (is_file($filename)) {
+            $this->tpl_control[$type] = $filename;
+        }
+    }
 	
 		
 	/**
@@ -151,7 +180,7 @@ class editTable extends initEdit {
 	 * @param string $value - switch ON or OFF
 	 */
 	public function addButtonSwitch($field_name, $value) {
-		$tpl = new Templater2("core2/html/" . THEME . "/edit/button_switch.html");
+		$tpl = new Templater3($this->tpl_control['switch_button']);
 		if ($value) {
 			$tpl->assign('data-switch="off"', 'data-switch="off" class="hide"');
 			$valueInput = 'Y';
@@ -162,7 +191,7 @@ class editTable extends initEdit {
 		$id = $this->main_table_id . $field_name;
 		$tpl->assign('{ID}', $id);
 		$html  = '<input type="hidden" id="' . $id . 'hid" name="control[' . $field_name . ']" value="' . $valueInput . '"/>';
-		$html .= $tpl->parse();
+		$html .= $tpl->render();
 		$this->addButtonCustom($html);
 	}
 
@@ -180,9 +209,7 @@ class editTable extends initEdit {
 	 */
 	public function setSessFormField($id, $value)
 	{
-        $ssi = $this->sess_form->{$this->uniq_class_id};
-        $ssi[$id] = $value;
-        $this->sess_form->{$this->uniq_class_id} = $ssi;
+        $this->sess_form_custom[$id] = $value;
 	}
 
 
@@ -259,6 +286,9 @@ class editTable extends initEdit {
 		} else {
 			$refid = 0;
 		}
+
+
+
 		if (!isset($arr_fields)) {
 			$tmp_pos = strripos($this->SQL, "FROM ");
 			// - IN CASE WE USE EDIT WITHOUT TABLE
@@ -356,6 +386,7 @@ class editTable extends initEdit {
 
 			$this->HTML .= "<form id=\"{$this->main_table_id}_mainform\" method=\"POST\" action=\"[_ACTION_]\" enctype=\"multipart/form-data\" onsubmit=\"$onsubmit\">";
 			$this->HTML .= "<input type=\"hidden\" name=\"class_id\" value=\"{$this->uniq_class_id}\"/>";
+			$this->HTML .= "<input type=\"hidden\" name=\"class_refid\" value=\"{$refid}\"/>";
 			$order_fields['resId']       = $this->resource;
 			$order_fields['mainTableId'] = $this->main_table_id;
 			$order_fields['back']        = $this->back;
@@ -366,24 +397,7 @@ class editTable extends initEdit {
 			$this->setSessForm($order_fields);
 
 			if ($refid && $this->table) {
-				$check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
-					array($this->table, $keyfield, $refid)
-				);
-				$lastupdate = microtime();
-				$auth = Zend_Registry::get('auth');
-				if (!$check) {
-					$this->db->insert('core_controls', array(
-                        'tbl' 		=> $this->table,
-                        'keyfield' 	=> $keyfield,
-                        'val' 		=> $refid,
-                        'lastuser' 	=> $auth->ID,
-                        'lastupdate' => $lastupdate
-                    ));
-				} else {
-					$this->db->query("UPDATE core_controls SET lastupdate=?, lastuser=? WHERE tbl=? AND keyfield=? AND val=?",
-						array($lastupdate, $auth->ID, $this->table, $keyfield, $refid)
-					);
-				}
+                $this->formControl($keyfield, $refid);
 			}
 
 			if (isset($this->params[$this->main_table_id]) && count($this->params[$this->main_table_id])) {
@@ -591,7 +605,7 @@ class editTable extends initEdit {
 								$insert = str_replace(array("dd", "mm", "yyyy"), array($day, $month, $year), strtolower($this->date_mask));
 								$insert = str_replace("yy", $year, $insert);
 
-								$tpl = new Templater2(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime.html');
+								$tpl = new Templater3($this->tpl_control['datetime']);
 								$tpl->assign('[dt]', $insert);
 								$tpl->assign('[prefix]', $prefix);
 								$tpl->assign('name=""', 'name="control[' . $field . ']"');
@@ -604,7 +618,7 @@ class editTable extends initEdit {
 									$tpl->datetime->assign('[i]', $mi);
 									$tpl->datetime->assign('onblur=""', $beh);
 								}
-								$controlGroups[$cellId]['html'][$key] .= $tpl->parse();
+								$controlGroups[$cellId]['html'][$key] .= $tpl->render();
 								if ($value['in']) {
 									$controlGroups[$cellId]['html'][$key] .= "<script>edit.ev['{$prefix}'] = " . json_encode($value['in']) . ";</script>";
 								} else {
@@ -625,7 +639,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['color'] = true;
 
-                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/color.html');
+                                $tpl = file_get_contents($this->tpl_control['color']);
                                 $tpl = str_replace('[FIELD_ID]',   $fieldId, $tpl);
                                 $tpl = str_replace('[FIELD]',      $field, $tpl);
                                 $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
@@ -645,7 +659,7 @@ class editTable extends initEdit {
 
                                 $value['default'] = ! empty($value['default']) ? $value['default'] : $value_n;
 
-                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/switch.html');
+                                $tpl = file_get_contents($this->tpl_control['switch']);
                                 $tpl = str_replace('[FIELD_ID]',  $fieldId, $tpl);
                                 $tpl = str_replace('[FIELD]',     $field, $tpl);
                                 $tpl = str_replace('[CHECKED_Y]', $value['default'] == $value_y ? 'checked="checked"' : '', $tpl);
@@ -662,8 +676,8 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= $value['default'];
 
                             } else {
-                                require_once 'Templater3.php';
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/combobox.html');
+
+                                $tpl = new Templater3($this->tpl_control['combobox']);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[VALUE]',      $value['default']);
@@ -698,7 +712,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['date2'] = true;
 								$options = is_array($value['in']) ? json_encode($value['in']) : '{}';
-                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/date2.html');
+                                $tpl = file_get_contents($this->tpl_control['date2']);
                                 $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
@@ -726,7 +740,7 @@ class editTable extends initEdit {
                                 }
                             } else {
                                 $this->scripts['datetime2'] = true;
-                                $tpl = file_get_contents(DOC_ROOT . 'core2/html/' . THEME . '/edit/datetime2.html');
+                                $tpl = file_get_contents($this->tpl_control['datetime2']);
                                 $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
@@ -753,6 +767,9 @@ class editTable extends initEdit {
                                 $options['onClear']    = $value['in']['onClear'] ?? '';
                                 $options['onChoose']   = $value['in']['onChoose'] ?? '';
 
+                                $options['autocomplete_url']        = $value['in']['autocomplete_url'] ?? '';
+                                $options['autocomplete_min_length'] = $value['in']['autocomplete_min_length'] ?? '';
+
                                 switch ($options['size']) {
                                     case 'xl':     $size = 'modal-xl'; break;
                                     case 'small':  $size = 'modal-sm'; break;
@@ -765,8 +782,7 @@ class editTable extends initEdit {
                                     ? $options['url']
                                     : "'{$options['url']}'";
 
-                                require_once 'Templater3.php';
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal2.html');
+                                $tpl = new Templater3($this->tpl_control['modal2']);
                                 $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
                                 $tpl->assign('[TITLE]',     $options['title']);
                                 $tpl->assign('[TEXT]',      $options['text']);
@@ -776,7 +792,8 @@ class editTable extends initEdit {
                                 $tpl->assign('[SIZE]',      $size);
                                 $tpl->assign('[ATTR]',      $options['attributes']);
                                 $tpl->assign('[KEY]',       crc32(uniqid() . microtime(true)));
-
+                                $tpl->assign('[AUTOCOMPLETE_URL]',        $options['autocomplete_url']);
+                                $tpl->assign('[AUTOCOMPLETE_MIN_LENGTH]', $options['autocomplete_min_length']);
 
                                 $on_hidden = ! empty($options['onHidden']) && strpos(trim($options['onHidden']), 'function') !== false
                                     ? trim($options['onHidden'])
@@ -795,18 +812,12 @@ class editTable extends initEdit {
                                     : "''";
                                 $tpl->assign('[ON_CHOOSE]', $on_choose);
 
-
-                                if ( ! $value['req']) {
-                                    $tpl->touchBlock('clear');
-                                }
-
                                 $controlGroups[$cellId]['html'][$key] .= $tpl->render();
                             }
                         }
 						elseif ($value['type'] == 'modal_list') {
                             if ($this->readOnly) {
-                                require_once 'Templater3.php';
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl = new Templater3($this->tpl_control['modal']);
                                 $tpl->assign('[CONTROL]', $field);
 
                                 if ( ! empty($value['in']['list'])) {
@@ -858,8 +869,7 @@ class editTable extends initEdit {
                                     ? $options['url']
                                     : "'{$options['url']}'";
 
-                                require_once 'Templater3.php';
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/edit/modal_list.html');
+                                $tpl = new Templater3($this->tpl_control['modal']);
                                 $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
                                 $tpl->assign('[TITLE]',     $options['title']);
                                 $tpl->assign('[VALUE]',     $options['value']);
@@ -949,13 +959,13 @@ class editTable extends initEdit {
 									$insert = str_replace("yyyy", $year, $insert);
 									$insert = str_replace("yy", $year, $insert);
 
-									$tpl = new Templater2('core2/html/' . THEME . '/edit/datetime.tpl');
+									$tpl = new Templater3($this->tpl_control['datetime']);
 									$tpl->assign('[dt]', $insert);
 									$tpl->assign('[prefix]', $prefix);
 									$tpl->assign('name=""', 'name="control[' . $field . ']"');
 									$tpl->assign('value=""', 'value="' . $dates[$i] . '"');
 
-									$controlGroups[$cellId]['html'][$key] .= "<td style=\"padding:0\">{$tpl->parse()}</td>";
+									$controlGroups[$cellId]['html'][$key] .= "<td style=\"padding:0\">{$tpl->render()}</td>";
 									$controlGroups[$cellId]['html'][$key] .= "</tr></table><script>edit.create_date('$prefix');</script></div>";
 									if ($i == 0) {
 										$prefix .= '_tru';
@@ -1033,7 +1043,7 @@ class editTable extends initEdit {
 
 								$id = "template_content" . $this->main_table_id . $key;
 								$controlGroups[$cellId]['html'][$key] .= "<textarea id=\"" . $id . "\" name=\"control[$field]\" ".$fck_attrs.">{$value['default']}</textarea>";
-								$onload .= "mceSetup('" . $id . "', $mce_params);";
+								$onload .= "edit.mceSetup('" . $id . "', $mce_params);";
 								$PrepareSave .= "document.getElementById('" . $id . "').value = tinyMCE.get('" . $id . "').getContent();";
 							}
 						}
@@ -1255,12 +1265,13 @@ class editTable extends initEdit {
                                         $group                                = $row[2];
                                     }
                                     $selected   = "";
-                                    $real_value = explode('"', $row[0]);
-                                    $real_value = $real_value[0];
-                                    if (in_array($real_value, $value['default'])) {
-                                        $selected = 'selected="selected"';
+                                    if ($row[0]) {
+                                        $real_value = explode('"', $row[0]);
+                                        $real_value = $real_value[0];
+                                        if (in_array($real_value, $value['default'])) {
+                                            $selected = 'selected="selected"';
+                                        }
                                     }
-
                                     if (is_array($row[1])) {
                                         $row[1] = $row[1]['value'];
                                     }
@@ -1308,8 +1319,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/select2.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1365,8 +1374,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multiselect2.html');
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1416,7 +1423,6 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['multiselect2'] = true;
 
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist2.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1481,7 +1487,6 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= implode('<br>', $options_out);
 
                             } else {
-                                require_once 'Templater3.php';
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist3.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1530,14 +1535,13 @@ class editTable extends initEdit {
                             if (is_array($value['default'])) {
                                 $datasets = $value['default'];
                             } else {
-                                $json_string = html_entity_decode($value['default']);
-                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json_string), true);
+                                $json_string = $value['default'] ? html_entity_decode($value['default']) : '';
+                                $datasets    = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/u', '', $json_string), true);
                             }
 
                             if ($this->readOnly) {
                                 if ( ! empty($datasets)) {
-                                    require_once 'Templater3.php';
-                                    $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
+                                    $tpl = new Templater3($this->tpl_control['dataset']);
 
                                     foreach ($value['in'] as $item_field) {
                                         $tpl->title->assign('[TITLE]', $item_field['title']);
@@ -1560,14 +1564,17 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
-                                            } elseif ($type_name == 'date') {
+                                            } elseif ($type_name == 'select2') {
+                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+
+                                            }  elseif ($type_name == 'date') {
                                                 $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
 
                                             } elseif ($type_name == 'datetime') {
@@ -1595,7 +1602,16 @@ class editTable extends initEdit {
                                 }
 
                             } else {
-                                require_once 'Templater3.php';
+                                foreach ($value['in'] as $key_column => $option) {
+                                    if ( ! empty($option['options'])) {
+                                        $options = [];
+                                        foreach ($option['options'] as $key_val => $item) {
+                                            $options[] = ['val' => $key_val, 'title' => $item];
+                                        }
+                                        $value['in'][$key_column]['options'] = $options;
+                                    }
+                                }
+
                                 $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
@@ -1626,9 +1642,6 @@ class editTable extends initEdit {
                                                         ? $dataset[$item_field['code']]
                                                         : '';
 
-                                                    if (isset($item_field['type']) && $item_field['type'] == 'select') {
-                                                        $field_value = $item_field['options'][$field_value] ?? $field_value;
-                                                    }
                                                 }
                                             }
 
@@ -1639,15 +1652,16 @@ class editTable extends initEdit {
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'select','select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'select' && ! empty($item_field['options'])) {
-                                                foreach ($item_field['options'] as $option_value => $option_title) {
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option_value == $field_value ? 'selected="selected"' : '');
+                                            if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
+
+                                                foreach ($item_field['options'] as $option) {
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option['val'] == $field_value ? 'selected="selected"' : '');
                                                     $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }
@@ -1678,18 +1692,18 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'select', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                        if ( ! in_array($type_name, ['text', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                             $type_name = 'text';
                                         }
 
-                                        if ($type_name == 'select' && ! empty($item_field['options'])) {
-                                            foreach ($item_field['options'] as $option_value => $option_title) {
+                                        if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
+                                            foreach ($item_field['options'] as $option_value => $option) {
                                                 $selected = isset($item_field['default_value']) && $item_field['default_value'] == $option_value
                                                     ? 'selected'
                                                     : '';
 
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]',    $option_value);
-                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]',    $option_title);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
+                                                $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $selected);
                                                 $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                             }
@@ -1788,102 +1802,43 @@ class editTable extends initEdit {
                                 $max_filesize_human = Tool::formatSizeHuman($options['maxFileSize']);
 
 								$un = $fieldId;
+                                $tpl = new \Templater3($this->tpl_control['xfile']);
+                                if ($xfile == 'xfiles') {
+                                    $tpl->touchBlock('xfiles');
+                                    $tpl->assign("{S}", "ы");
+                                    $tpl->assign('files[]"', 'files[]" multiple');
+                                } else {
+                                    $tpl->assign("{S}", "");
+                                }
+                                if (!isset($options['autoUpload']) || !$options['autoUpload']) {
+                                    $tpl->touchBlock('all');
+                                }
+
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
 									<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
-									<div id="fileupload-' . $un . '">
-										<div class="fileupload-buttonbar">
-											<span class="fileinput-button buttonSmall">
-												<span>Выбрать файл' . ($xfile == "xfiles" ? "ы" : "") . '</span>
-												<input type="file" name="files[]" ' . ($xfile == "xfiles" ? "multiple" : "") . '>
-											</span>';
-											if ($xfile == 'xfiles' && (!isset($options['autoUpload']) || !$options['autoUpload'])) {
-												$controlGroups[$cellId]['html'][$key] .= '<button type="submit" class="start buttonSmall hide">Загрузить все</button>';
-											}
-											$controlGroups[$cellId]['html'][$key] .= '<button type="reset" class="cancel buttonSmall" style="display:none">Отменить</button>
-												<button type="button" class="delete buttonSmall hide">Удалить</button>';
-											if ($xfile == 'xfiles') {
-												$controlGroups[$cellId]['html'][$key] .= '<input type="checkbox" class="toggle hide">';
-											}
-											$controlGroups[$cellId]['html'][$key] .= '
-											<div class="fileupload-progress fade">
-												<!-- The global progress bar -->
-												<div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-													<div class="bar" style="width:0%;"></div>
-												</div>
-												<!-- The extended global progress information -->
-												<div class="progress-extended">&nbsp;</div>
-											</div>
-										</div>
-										<!-- The table listing the files available for upload/download -->
-										<table role="presentation" class="table">
-											<tbody class="files"></tbody>
-										</table>
-									</div>
-
+									<div id="fileupload-' . $un . '">' .
+                                        $tpl->render() .
+                                    '</div>';
+                                $tpl = new \Templater3($this->tpl_control['xfile_upload']);
+                                $controlGroups[$cellId]['html'][$key] .= '
                                     <!-- The template to display files available for upload -->
                                     <script id="template-upload" type="text/x-tmpl">
-                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
-                                        <tr class="template-upload">
-                                            <td>
-                                                <span class="preview"></span>
-                                            </td>
-                                            <td>
-                                                <p class="name">{%=file.name%}</p>
-                                                <strong class="error text-danger"></strong>
-                                            </td>
-                                            <td>
-                                                <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                                                {% if (!o.files.error) { %}
-                                                    <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar progress-bar-success" style="width:0%;"></div></div>
-                                                {% } %}
-                                            </td>
-                                            <td>
-                                                {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                                                    <button class="btn btn-primary start buttonSmall">
-                                                        <i class="glyphicon glyphicon-upload"></i>
-                                                        <span>Старт</span>
-                                                    </button>
-                                                {% } %}
-                                                {% if (!i) { %}
-                                                    <button class="btn btn-warning btn-sm cancel buttonSmall">
-                                                        <i class="glyphicon glyphicon-ban-circle"></i>
-                                                        <span>Отмена</span>
-                                                    </button>
-                                                {% } %}
-                                            </td>
-                                        </tr>
-                                    {% } %}
-                                    </script>
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}' .
+                                        $tpl->render() .
+                                    '{% } %}
+                                    </script>';
+                                $tpl = new \Templater3($this->tpl_control['xfile_download']);
+                                if (!empty($options['id_hash'])) {
+                                    $tpl->assign("file.hash%", "file.id_hash%");
+                                } else {
+                                    $tpl->assign("file.hash%", "file.url%");
+                                }
+                                $controlGroups[$cellId]['html'][$key] .= '
                                     <!-- The template to display files available for download -->
                                     <script id="template-download" type="text/x-tmpl">
-                                    {% for (var i=0, file; file=o.files[i]; i++) { %}
-                                        <tr class="template-download">
-                                            {% if (file.error) { %}
-                                                <td></td>
-                                                <td class="name"><span>{%=file.name%}</span></td>
-                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-                                                <td class="error" colspan="2"><span class="label label-important">Error</span> {%=file.error%}</td>
-                                            {% } else { %}
-                                                <td>
-                                                    <span class="preview">
-                                                        {% if (file.thumbnail_url) { %}
-                                                            <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnail_url%}"></a>
-                                                        {% } else { %}
-                                                            <i class="fa fa-file-text-o"></i>
-                                                        {% } %}
-                                                    </span>
-                                                </td>
-                                                <td class="name">
-                                                    <a href="{%=file.' . (!empty($options['id_hash']) ? 'id_hash' : 'url') . '%}" {% if (file.thumbnail_url) { %}target="_blank" {% } %} title="{%=file.name%}" rel="{%=file.thumbnail_url&&\'gallery\'%}" download="{%=file.name%}">{%=file.name%}</a>
-                                                </td>
-                                                <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-                                            {% } %}
-                                            <td data-service="{%=file.delete_service%}" data-id="{%=file.delete_id%}">
-                                                <button class="btn delete buttonSmall">Удалить</button>
-                                                <input class="toggle" type="checkbox" name="delete" value="1">
-                                            </td>
-                                        </tr>
-                                    {% } %}
+                                    {% for (var i=0, file; file=o.files[i]; i++) { %}' .
+                                        $tpl->render() .
+                                    '{% } %}
                                     </script>';
 
 $controlGroups[$cellId]['html'][$key] .= "<script>
@@ -2152,6 +2107,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 
 			$this->HTML .= str_replace($fromReplace, $toReplace, $this->template);
 		}
+
 		//buttons area
 		$this->HTML .= "<div class=\"buttons-container\">";
 		$this->HTML .= "<div class=\"buttons-offset\"" . ($this->firstColWidth ? " style=\"width:{$this->firstColWidth};\"" : "") . "></div>";
@@ -2167,7 +2123,24 @@ $controlGroups[$cellId]['html'][$key] .= "
 		}
 
 		if (!$this->readOnly) {
-			$this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
+
+            $this->sess_form = new SessionContainer('Form');
+            //$this->uniq_class_id .= "|$refid";
+            $already_opened = $this->sess_form->{$this->uniq_class_id};
+            //CUSTOM session fields
+            if (!$refid) $refid = 0;
+            $sess_data = isset($already_opened[$refid]) ? $already_opened[$refid] : [];
+            if ($this->sess_form_custom) {
+                foreach ($this->sess_form_custom as $key => $item) {
+                    //TODO возможно надо добавить проверку того что мы вставляем в ссессию
+                    $sess_data[$key] = $item;
+                }
+            }
+            $already_opened[$refid] = $sess_data;
+            //есль ли у юзера еще одна открытая эта же форма, то в сессии ничего не изменится
+            $this->sess_form->{$this->uniq_class_id} = $already_opened;
+
+            $this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
 		$this->HTML .= 	"</div></div>";
 		if (!$this->readOnly) {
@@ -2189,6 +2162,18 @@ $controlGroups[$cellId]['html'][$key] .= "
 			$this->addParams('file', $func);
 		}
 	}
+
+
+    /**
+     * Установка js кода которых будет выполнен при успешном сохранении
+     * @param string $func
+     * @return void
+     */
+	public function saveSuccess(string $func): void {
+
+        $this->setSessFormField('save_success', $func);
+	}
+
 
 	/**
 	 * @param $va
@@ -2270,7 +2255,39 @@ $controlGroups[$cellId]['html'][$key] .= "
 		return $out;
 	}
 
+    /**
+     * Контроль открытой формы
+     * @param $keyfield
+     * @param $refid
+     * @return void
+     */
+    private function formControl($keyfield, $refid) {
+        $check = $this->db->fetchOne("SELECT 1 FROM core_controls WHERE tbl=? AND keyfield=? AND val=?",
+            array($this->table, $keyfield, $refid)
+        );
+        $lastupdate = microtime();
+        $auth = Zend_Registry::get('auth');
+        if (!$check) {
+            $this->db->insert('core_controls', array(
+                'tbl' 		=> $this->table,
+                'keyfield' 	=> $keyfield,
+                'val' 		=> $refid,
+                'lastuser' 	=> $auth->ID,
+                'lastupdate' => $lastupdate
+            ));
+        } else {
+            $this->db->query("UPDATE core_controls SET lastupdate=?, lastuser=? WHERE tbl=? AND keyfield=? AND val=?",
+                array($lastupdate, $auth->ID, $this->table, $keyfield, $refid)
+            );
+        }
+    }
+
 }
+
+
+
+
+
 
 class cell {
 	protected $controls			= array();
@@ -2345,5 +2362,5 @@ class cell {
     	}
     	
     }
-    
+
 }
