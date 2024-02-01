@@ -266,7 +266,7 @@ class Login extends Db {
      */
     private function getPageLogin() {
 
-        $tpl = new \Templater2("core2/html/" . THEME . "/login/login.html");
+        $tpl = new \Templater2(Theme::get("login"));
 
         $logo = $this->getSystemLogo();
 
@@ -348,7 +348,7 @@ class Login extends Db {
      */
     private function getPageRegistration() {
 
-        $tpl  = new \Templater3("core2/html/" . THEME . "/login/registration.html");
+        $tpl  = new \Templater3(Theme::get("login-registration"));
         $logo = $this->getSystemLogo();
 
         if (is_file($logo)) {
@@ -430,7 +430,7 @@ class Login extends Db {
      */
     private function getPageRegistrationComplete($key) {
 
-        $tpl  = new \Templater3("core2/html/" . THEME . "/login/registration-complete.html");
+        $tpl  = new \Templater3(Theme::get("login-registration-complete"));
         $logo = $this->getSystemLogo();
 
         if (is_file($logo)) {
@@ -479,7 +479,7 @@ class Login extends Db {
      */
     private function getPageRestore() {
 
-        $tpl = new \Templater3("core2/html/" . THEME . "/login/restore.html");
+        $tpl = new \Templater3(Theme::get("login-restore"));
 
         $logo = $this->getSystemLogo();
 
@@ -510,7 +510,7 @@ class Login extends Db {
      */
     private function getPageRestoreComplete($key) {
 
-        $tpl = new \Templater3("core2/html/" . THEME . "/login/restore-complete.html");
+        $tpl = new \Templater3(Theme::get("login-restore-complete"));
 
         $logo = $this->getSystemLogo();
 
@@ -1357,7 +1357,7 @@ class Login extends Db {
         if ( ! empty($res) && is_file($res)) {
             return $res;
         } else {
-            return 'core2/html/' . THEME . '/img/logo.gif';
+            return Theme::get("logo");
         }
     }
 
@@ -1473,9 +1473,9 @@ class Login extends Db {
         $tpl = new \Templater3();
 
         if (\Tool::isMobileBrowser()) {
-            $tpl->loadTemplate("core2/html/" . THEME . "/login/indexMobile.html");
+            $tpl->loadTemplate(Theme::get("login-indexMobile"));
         } else {
-            $tpl->loadTemplate("core2/html/" . THEME . "/login/index.html");
+            $tpl->loadTemplate(Theme::get("login-index"));
         }
 
         $tpl->assign('{system_name}', $this->system_name);

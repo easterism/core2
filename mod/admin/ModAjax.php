@@ -1,8 +1,8 @@
 <?php
-
 require_once("core2/inc/ajax.func.php");
 
 use Laminas\Session\Container as SessionContainer;
+
 
 /**
  * Class ModAjax
