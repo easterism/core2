@@ -1,10 +1,10 @@
 <?php
 namespace Core2\Mod\Admin\Users;
 
-require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
-require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
-require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
-require_once DOC_ROOT . 'core2/inc/classes/Common.php';
+require_once __DIR__ . '/../../../../inc/classes/class.list.php';
+require_once __DIR__ . '/../../../../inc/classes/class.edit.php';
+require_once __DIR__ . '/../../../../inc/classes/class.tab.php';
+require_once __DIR__ . '/../../../../inc/classes/Common.php';
 
 
 /**
