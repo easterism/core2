@@ -13,9 +13,6 @@
 [submodule "mod/webservice/v2.5.0"]
 	path = mod/webservice/v2.5.0
 	url = git@git.rdo.belhard.com:core2/modules/webservice.git
-[submodule "mod/profile/v2.1.0"]
-	path = mod/profile/v2.1.0
-	url = git@git.rdo.belhard.com:core2/modules/profile.git
 [submodule "mod/auth/v1.0.0"]
 	path = mod/auth/v1.0.0
 	url = git@git.rdo.belhard.com:core2/modules/auth.git
@@ -46,9 +43,6 @@
 [submodule "mod/cron/v3.4.0"]
 	path = mod/cron/v3.4.0
 	url = git@git.rdo.belhard.com:core2/modules/cron.git
-[submodule "mod/webservice/v2.6.0"]
-	path = mod/webservice/v2.6.0
-	url = git@git.rdo.belhard.com:core2/modules/webservice.git
 [submodule "mod/cron/v3.5.0"]
     path = mod/cron/v3.5.0
     url = git@git.rdo.belhard.com:core2/modules/cron.git
