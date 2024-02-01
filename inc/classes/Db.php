@@ -56,12 +56,6 @@ class Db {
         }
 	}
 
-    public function setDatabase($db)
-    {
-        $this->_db = $db;
-    }
-
-
 	/**
 	 * @param string $k
 	 * @return mixed|\Zend_Cache_Core|\Zend_Db_Adapter_Abstract|Log
@@ -75,7 +69,6 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
-            if ($this->_db) return $this->_db;
 			$reg = \Zend_Registry::getInstance();
 			if (!$reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');

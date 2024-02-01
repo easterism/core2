@@ -13,6 +13,7 @@ if (!file_exists($autoload)) {
 require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
+require_once("Theme.php");
 require_once 'Zend_Registry.php'; //DEPRECATED
 
 use Laminas\Session\Config\SessionConfig;
@@ -142,6 +143,13 @@ if ( ! empty($config->theme)) {
 } else {
     define('THEME', 'default');
 }
+
+$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+if (!file_exists($theme_model)) {
+    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+}
+$tpls = file_get_contents($theme_model);
+\Core2\Theme::set(THEME, $tpls);
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -857,11 +865,11 @@ class Init extends \Core2\Db {
             $xajax->processRequest(); //DEPRECATED
 
             if (Tool::isMobileBrowser()) {
-                $tpl_file      = "core2/html/" . THEME . "/indexMobile2.tpl";
-                $tpl_file_menu = "core2/html/" . THEME . "/menuMobile.tpl";
+                $tpl_file      = \Core2\Theme::get("indexMobile");
+                $tpl_file_menu = \Core2\Theme::get("menuMobile");
             } else {
-                $tpl_file      = "core2/html/" . THEME . "/index2.tpl";
-                $tpl_file_menu = "core2/html/" . THEME . "/menu.tpl";
+                $tpl_file      = \Core2\Theme::get("index");
+                $tpl_file_menu = \Core2\Theme::get("menu");
             }
 
             $tpl      = new Templater3($tpl_file);
@@ -1078,7 +1086,7 @@ class Init extends \Core2\Db {
             $html = '';
             switch ($navigate_item['type']) {
                 case 'divider':
-                    $html = file_get_contents(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.divider.html');
+                    $html = file_get_contents(\Core2\Theme::get("html-navigation-divider"));
                     break;
 
                 case 'link':
@@ -1089,7 +1097,7 @@ class Init extends \Core2\Db {
                         ? $navigate_item['onclick']
                         : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.link.html');
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-link"));
                     $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                     $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1100,7 +1108,7 @@ class Init extends \Core2\Db {
                     break;
 
                 case 'dropdown':
-                    $tpl = new Templater3(DOC_ROOT . '/core2/html/' . THEME . '/html/navigation.dropdown.html');
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-dropdown"));
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
                     $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
