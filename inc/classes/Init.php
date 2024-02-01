@@ -144,7 +144,11 @@ if ( ! empty($config->theme)) {
     define('THEME', 'default');
 }
 
-$tpls = file_get_contents(__DIR__ . "/../../html/" . THEME . "/model.json");
+$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+if (!file_exists($theme_model)) {
+    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+}
+$tpls = file_get_contents($theme_model);
 \Core2\Theme::set(THEME, $tpls);
 
 //сохраняем параметры сессии
@@ -1082,7 +1086,7 @@ class Init extends \Core2\Db {
             $html = '';
             switch ($navigate_item['type']) {
                 case 'divider':
-                    $html = file_get_contents(__DIR__ . '/' . \Core2\Theme::get("html-navigation-divider"));
+                    $html = file_get_contents(\Core2\Theme::get("html-navigation-divider"));
                     break;
 
                 case 'link':
@@ -1093,7 +1097,7 @@ class Init extends \Core2\Db {
                         ? $navigate_item['onclick']
                         : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-link"));
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-link"));
                     $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                     $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1104,7 +1108,7 @@ class Init extends \Core2\Db {
                     break;
 
                 case 'dropdown':
-                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-dropdown"));
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-dropdown"));
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
                     $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
