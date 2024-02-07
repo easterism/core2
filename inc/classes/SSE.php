@@ -30,6 +30,8 @@ class SSE extends \Common {
                 }
             }
         }
+        $this->db->closeConnection();
+        set_time_limit(0);
     }
 
     /**
