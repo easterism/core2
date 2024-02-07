@@ -308,10 +308,15 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
 
                 require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+
                 $route = $this->routeParse();
-
+                if (isset($matches['module'])) { //DEPRECATED
+                    //for webservice < 2.6.0
+                    $route['version'] = $matches['version'];
+                } else {
+                    unset($route['module']);
+                }
                 $webservice_controller = new ModWebserviceController();
-
                 return $webservice_controller->dispatchRest($route);
             }
 
@@ -554,20 +559,18 @@ class Init extends \Core2\Db {
                 return;
             }
 
-
             $matches = [];
-
-            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
+            if (preg_match('~api/v(?<version>\d+\.\d+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = [
+                    'version' => $matches['version'],
+                    'action'  => $matches[2]
+                ];
                 return;
             }
+
             // DEPRECATED
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = [
-                    'module'  => $matches[1],
-                    'version' => '',
-                    'action'  => $matches[2],
-                ];
+            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
                 return;
             }
             // DEPRECATED
@@ -1491,7 +1494,6 @@ class Init extends \Core2\Db {
             $route = array(
                 'module'  => '',
                 'action'  => 'index',
-                'version' => '',
                 'params'  => array(),
                 'query'   => $_SERVER['QUERY_STRING']
             );
