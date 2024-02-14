@@ -299,7 +299,8 @@ class Common extends \Core2\Acl {
 	 * @param string $href   CSS filename
      * @throws \Exception
 	 */
-	protected function printCssModule($module, $href) {
+	protected function printCssModule($module, $href): void {
+
         $src_mod = $this->getModuleLoc($module);
         Tool::printCss($src_mod . $href);
 	}
@@ -314,19 +315,17 @@ class Common extends \Core2\Acl {
 	protected function getCssModule(string $module, string $href): string {
 
         $src_mod = $this->getModuleLoc($module);
-        ob_start();
-        Tool::printCss($src_mod . $href);
-        return ob_get_clean();
+        return Tool::getCss($src_mod . $href);
 	}
 
 
 	/**
-	 * 
 	 * Print link to JS file
 	 * @param string $src - JS filename
 	 * @param bool   $chachable
 	 */
-	protected function printJs($src, $chachable = false) {
+	protected function printJs($src, $chachable = false): void {
+
         Tool::printJs($src, $chachable);
 	}
 
@@ -338,7 +337,8 @@ class Common extends \Core2\Acl {
 	 * @param bool   $chachable
      * @throws \Exception
 	 */
-	protected function printJsModule($module, $src, $chachable = false) {
+	protected function printJsModule($module, $src, $chachable = false): void {
+
 		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
@@ -355,9 +355,7 @@ class Common extends \Core2\Acl {
 	protected function getJsModule(string $module, string $src, bool $chachable = false): string {
 
         $src_mod = $this->getModuleLoc($module);
-        ob_start();
-        Tool::printJs($src_mod . $src, $chachable);
-        return ob_get_clean();
+        return Tool::getJs($src_mod . $src, $chachable);
 	}
 
 
