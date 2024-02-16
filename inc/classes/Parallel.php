@@ -6,10 +6,11 @@ namespace Core2;
  */
 class Parallel extends Db {
 
-    private array  $tasks     = [];
-    private int    $pool_size = 4;
-    private int    $task_id   = 1;
-    private string $boundary  = '';
+    private array  $tasks        = [];
+    private int    $pool_size    = 4;
+    private bool   $print_buffer = false;
+    private int    $task_id      = 1;
+    private string $boundary     = '';
 
 
     /**
@@ -21,6 +22,10 @@ class Parallel extends Db {
 
         if ( ! empty($options['pool_size'])) {
             $this->pool_size = (int)$options['pool_size'];
+        }
+
+        if ( ! empty($options['print_buffer'])) {
+            $this->print_buffer = (bool)$options['print_buffer'];
         }
     }
 
@@ -68,6 +73,10 @@ class Parallel extends Db {
                 if ($responses = $this->waitResponses($socket_child)) {
 
                     foreach ($responses as $response) {
+                        if ($this->print_buffer) {
+                            echo $response['buffer'];
+                        }
+
                         $tasks_result[$response['id']] = [
                             'buffer' => $response['buffer'],
                             'result' => $response['result']
@@ -98,6 +107,10 @@ class Parallel extends Db {
             if ($responses = $this->waitResponses($socket_child)) {
 
                 foreach ($responses as $response) {
+                    if ($this->print_buffer) {
+                        echo $response['buffer'];
+                    }
+
                     $tasks_result[$response['id']] = [
                         'buffer' => $response['buffer'],
                         'result' => $response['result']
