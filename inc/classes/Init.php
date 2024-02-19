@@ -240,19 +240,19 @@ class Init extends \Core2\Db {
          */
         public function checkAuth() {
 
+            $this->detectWebService();
+
+            if ($this->is_rest || $this->is_soap) {
+                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
+                return;
+            }
+
             // проверяем, есть ли в запросе токен авторизации
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return; //выходим, если авторизация состоялась
-            }
-
-            $this->detectWebService();
-
-            if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
-                return;
             }
 
             if (PHP_SAPI === 'cli') {
@@ -315,6 +315,7 @@ class Init extends \Core2\Db {
                     $route['version'] = $matches['version'];
                 } else {
                     unset($route['module']);
+                    $route['version'] = $matches['version'];
                 }
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route);
@@ -366,7 +367,6 @@ class Init extends \Core2\Db {
                 // LOG USER ACTIVITY
                 $logExclude = array(
                     'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
-                    'module=profile&sse=open', //Запросы на установку sse
                     'module=profile&action=messages&data=sse', //Отправка данных для sse
                 );
 
@@ -392,7 +392,7 @@ class Init extends \Core2\Db {
                 $login = new \Core2\Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
-                return $login->dispatch();
+                return $login->dispatch($route);
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -597,6 +597,14 @@ class Init extends \Core2\Db {
 
             $token = '';
             if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
+                    list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                    $user = $this->dataUsers->getUserByLogin($login);
+                    if (!$user || $user['u_pass'] !== \Tool::pass_salt(md5($password))) {
+                        header("Location: " . DOC_PATH . "auth");
+                        return;
+                    }
+                }
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer') === 0) {
                     $token = $_SERVER['HTTP_AUTHORIZATION'];
                 }
@@ -1442,7 +1450,6 @@ class Init extends \Core2\Db {
                         $self_methods = $all_class_methods;
                     }
 
-
 	                if (array_search($action, $self_methods) === false) {
 	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
@@ -1451,7 +1458,6 @@ class Init extends \Core2\Db {
                     if (file_exists($autoload_file)) {
                         require_once($autoload_file);
                     }
-
 
 	                $mod_instance = new $mod_cli();
 	                $result = call_user_func_array(array($mod_instance, $action), $params);
