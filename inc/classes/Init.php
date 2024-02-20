@@ -141,15 +141,17 @@ if ( ! empty($config->theme)) {
     define('THEME', $config->system->theme->name);
 
 } else {
-    define('THEME', 'default');
+    //define('THEME', 'default');
 }
 
-$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
-if (!file_exists($theme_model)) {
-    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+if (defined('THEME')) {
+    $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+    if (!file_exists($theme_model)) {
+        \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+    }
+    $tpls = file_get_contents($theme_model);
+    \Core2\Theme::set(THEME, $tpls);
 }
-$tpls = file_get_contents($theme_model);
-\Core2\Theme::set(THEME, $tpls);
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -386,6 +388,7 @@ class Init extends \Core2\Db {
                 $this->acl->setupAcl();
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
             }
             else {
 
@@ -398,10 +401,12 @@ class Init extends \Core2\Db {
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
             if (
-                empty($_GET['module']) &&
+                empty($route['module']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
+                if (!defined('THEME')) return;
+
                 if ($this->auth->MOBILE) {
                     return $this->getMenuMobile();
                 }
@@ -472,8 +477,11 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-
-                        if ($this->auth->MOBILE) {
+                        if ($params = \Zend_Registry::get('route')['params']) {
+                            //запрос от приложения
+                            $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
+                        }
+                        elseif ($this->auth->MOBILE) {
                             $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
                         } else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
