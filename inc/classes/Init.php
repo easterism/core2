@@ -401,7 +401,7 @@ class Init extends \Core2\Db {
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
             if (
-                empty($route['module']) &&
+                empty($_GET['module']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
