@@ -82,14 +82,12 @@ class Error {
 		if ($code == 503) {
             self::Exception($message, $code);
         }
-
-
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
 
 		} elseif ($message == '404') {
-			self::Exception('Нет такой страницы', $code);
+			self::Exception('Нет такой страницы', 404);
 
 		} elseif ($message == 'expired') {
             setcookie($cnf->session->name, false);
