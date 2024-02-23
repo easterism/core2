@@ -26,9 +26,37 @@ class Login extends Db {
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    public function dispatch() {
+    public function dispatch(Array $route) {
 
-        if (isset($_GET['core'])) {
+        if ($route['module'] == 'auth' && $this->core_config->auth) {
+            if ($this->core_config->auth->scheme == 'basic') {
+                try {
+                    if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                        if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
+                            list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                            $user = $this->dataUsers->getUserByLogin($login);
+                            if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
+                                if ($this->auth($user)) {
+                                    header("Location: " . DOC_PATH);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    //TODO log me
+                }
+                header('HTTP/1.1 401 Unauthorized');
+                header('WWW-Authenticate: Basic realm="' . $this->core_config->auth->basic->realm . '"');
+            }
+            if ($this->core_config->auth->scheme == 'digest') {
+                header('HTTP/1.1 401 Unauthorized');
+                header('WWW-Authenticate: Digest realm="' . $this->core_config->auth->digest->realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
+            }
+            return;
+        }
+        parse_str($route['query'], $request);
+        if (isset($request['core'])) {
             if ($this->config->mail && $this->config->mail->server) {
                 if ($this->core_config->registration &&
                     $this->core_config->registration->on &&

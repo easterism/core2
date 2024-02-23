@@ -8,7 +8,7 @@ require_once __DIR__ . '/../inc/classes/Error.php';
 require_once __DIR__ . '/../inc/classes/I18n.php';
 require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 
-class Workhorse extends Db
+class Workhorse
 {
 
     public function __construct()
@@ -61,8 +61,8 @@ class Workhorse extends Db
             }
             $config->merge($config2);
         }
-        catch (Zend_Config_Exception $e) {
-            \Core2\Error::Exception($e->getMessage());
+        catch (\Zend_Config_Exception $e) {
+            Error::Exception($e->getMessage());
         }
 
         parent::__construct($config);
@@ -91,7 +91,6 @@ class Workhorse extends Db
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job) {
                 //задача уже обрабатывается
-
                 return;
             }
 
@@ -124,7 +123,7 @@ class Workhorse extends Db
                 $error = $e->getMessage();
             }
 
-            $db = new \Core2\Db($config);
+            $db = new Db($config);
             $db->db->update("core_worker_jobs", [
                 'time_finish' =>  (new \DateTime())->format("Y-m-d H:i:s"),
                 'status'    =>    'finish',
