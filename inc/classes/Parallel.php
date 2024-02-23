@@ -88,7 +88,11 @@ class Parallel extends Db {
 
                         if ( ! empty($tasks_pid[$response['pid']])) {
                             unset($tasks_pid[$response['pid']]);
-                        };
+                        }
+
+                        if ( ! empty($this->tasks[$response['id']])) {
+                            unset($this->tasks[$response['id']]);
+                        }
                     }
                 }
 
@@ -188,7 +192,7 @@ class Parallel extends Db {
                 'Не удалось породить дочерний процесс: %s', pcntl_strerror(pcntl_get_last_error())
             )));
 
-            // Дочерний процесс
+        // Дочерний процесс
         } elseif ( ! $pid) {
             ob_start();
             socket_close($socket_child);
