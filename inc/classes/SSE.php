@@ -66,12 +66,12 @@ class SSE extends \Common {
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
 
-        foreach ($this->_events as $path => $event) {
+        foreach ($this->_events as $class_name => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
                 ob_start();
                 $event->dispatch();
-                $data[str_replace("\\", "-" , $path)] = ob_get_clean();
+                $data[str_replace("\\", "-" , $class_name)] = ob_get_clean();
             }
         }
 
