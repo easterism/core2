@@ -1,12 +1,10 @@
 <?php
 namespace Core2;
 
-use Laminas\Session\Container as SessionContainer;
-
-
 require_once 'Templater3.php';
 require_once 'Tool.php';
 
+use Laminas\Session\Container as SessionContainer;
 
 /**
  * Class Login
@@ -53,7 +51,11 @@ class Login extends Db {
                 header('HTTP/1.1 401 Unauthorized');
                 header('WWW-Authenticate: Digest realm="' . $this->core_config->auth->digest->realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
             }
+            //TODO реализовать остальные схемы
             return;
+        }
+        if ($this->core_config->auth->scheme !== 'password') {
+            header("Location: " . DOC_PATH . "auth");
         }
         parse_str($route['query'], $request);
         if (isset($request['core'])) {
@@ -63,7 +65,7 @@ class Login extends Db {
                     $this->core_config->registration->role_id
                 ) {
 
-                    if ($_GET['core'] == 'registration') {
+                    if ($request['core'] == 'registration') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             return $this->getPageRegistration();
 
@@ -77,14 +79,14 @@ class Login extends Db {
                         }
                     }
 
-                    if ($_GET['core'] == 'registration_complete') {
+                    if ($request['core'] == 'registration_complete') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($_GET['key'])) {
+                            if (empty($request['key'])) {
                                 http_response_code(404);
                                 return '';
                             }
 
-                            return $this->getPageRegistrationComplete($_GET['key']);
+                            return $this->getPageRegistrationComplete($request['key']);
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (empty($_POST['key'])) {
@@ -108,7 +110,7 @@ class Login extends Db {
                 }
 
                 if ($this->core_config->restore && $this->core_config->restore->on) {
-                    if ($_GET['core'] == 'restore') {
+                    if ($request['core'] == 'restore') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             return $this->getPageRestore();
 
@@ -129,14 +131,14 @@ class Login extends Db {
                     }
 
 
-                    if ($_GET['core'] == 'restore_complete') {
+                    if ($request['core'] == 'restore_complete') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($_GET['key'])) {
+                            if (empty($request['key'])) {
                                 http_response_code(404);
                                 return '';
                             }
 
-                            return $this->getPageRestoreComplete($_GET['key']);
+                            return $this->getPageRestoreComplete($request['key']);
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (empty($_POST['key'])) {
@@ -162,8 +164,10 @@ class Login extends Db {
                 $this->core_config->auth->module &&
                 $this->core_config->auth->social &&
                 $_SERVER['REQUEST_METHOD'] === 'POST' &&
-                in_array($_GET['core'], ['auth_vk', 'auth_ok', 'auth_fb'])
+                in_array($request['core'], ['auth_vk', 'auth_ok', 'auth_fb'])
             ) {
+                //---------авторизуемся с помощью соцсетей------
+                //TODO перенести в модуль Auth
                 try {
                     $code = $_POST['code'] ?? '';
 
@@ -171,7 +175,7 @@ class Login extends Db {
                         throw new \Exception($this->_('Некорректный запрос'));
                     }
 
-                    switch ($_GET['core']) {
+                    switch ($request['core']) {
                         case 'auth_vk':
                             if ($this->core_config->auth->social->vk &&
                                 $this->core_config->auth->social->vk->on
@@ -209,7 +213,7 @@ class Login extends Db {
             }
 
 
-            if ($_GET['core'] == 'login') {
+            if ($request['core'] == 'login') {
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($_POST['login'])) {
                         return json_encode([
@@ -248,7 +252,7 @@ class Login extends Db {
         }
         if (array_key_exists('X-Requested-With', \Tool::getRequestHeaders())) {
 
-            if ( ! empty($_GET['module'])) {
+            if ( ! empty($request['module'])) {
                 http_response_code(403);
                 return '';
             }
@@ -302,49 +306,49 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->core_config->auth &&
-            $this->core_config->auth->ldap &&
-            $this->core_config->auth->ldap->on
-        ) {
-            $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
-        }
-
-        if ($this->core_config->auth &&
-            $this->core_config->auth->module &&
-            $this->core_config->auth->social
-        ) {
-            if ($this->core_config->auth->social->fb &&
-                $this->core_config->auth->social->fb->on &&
-                $this->core_config->auth->social->fb->app_id &&
-                $this->core_config->auth->social->fb->api_secret &&
-                $this->core_config->auth->social->fb->redirect_url
+        if ($this->core_config->auth) {
+            if ($this->core_config->auth->ldap &&
+                $this->core_config->auth->ldap->on
             ) {
-
-                $tpl->social->fb->assign('[APP_ID]',       $this->core_config->auth->social->fb->app_id);
-                $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
             }
 
-            if ($this->core_config->auth->social->ok &&
-                $this->core_config->auth->social->ok->on &&
-                $this->core_config->auth->social->ok->app_id &&
-                $this->core_config->auth->social->ok->public_key &&
-                $this->core_config->auth->social->ok->secret_key &&
-                $this->core_config->auth->social->ok->redirect_url
+            if ($this->core_config->auth->module &&
+                $this->core_config->auth->social
             ) {
+                if ($this->core_config->auth->social->fb &&
+                    $this->core_config->auth->social->fb->on &&
+                    $this->core_config->auth->social->fb->app_id &&
+                    $this->core_config->auth->social->fb->api_secret &&
+                    $this->core_config->auth->social->fb->redirect_url
+                ) {
 
-                $tpl->social->ok->assign('[APP_ID]',       $this->core_config->auth->social->ok->app_id);
-                $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
-            }
+                    $tpl->social->fb->assign('[APP_ID]', $this->core_config->auth->social->fb->app_id);
+                    $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                }
 
-            if ($this->core_config->auth->social->vk &&
-                $this->core_config->auth->social->vk->on &&
-                $this->core_config->auth->social->vk->app_id &&
-                $this->core_config->auth->social->vk->api_secret &&
-                $this->core_config->auth->social->vk->redirect_url
-            ) {
+                if ($this->core_config->auth->social->ok &&
+                    $this->core_config->auth->social->ok->on &&
+                    $this->core_config->auth->social->ok->app_id &&
+                    $this->core_config->auth->social->ok->public_key &&
+                    $this->core_config->auth->social->ok->secret_key &&
+                    $this->core_config->auth->social->ok->redirect_url
+                ) {
 
-                $tpl->social->vk->assign('[APP_ID]',       $this->core_config->auth->social->vk->app_id);
-                $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                    $tpl->social->ok->assign('[APP_ID]', $this->core_config->auth->social->ok->app_id);
+                    $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
+                }
+
+                if ($this->core_config->auth->social->vk &&
+                    $this->core_config->auth->social->vk->on &&
+                    $this->core_config->auth->social->vk->app_id &&
+                    $this->core_config->auth->social->vk->api_secret &&
+                    $this->core_config->auth->social->vk->redirect_url
+                ) {
+
+                    $tpl->social->vk->assign('[APP_ID]', $this->core_config->auth->social->vk->app_id);
+                    $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                }
             }
         }
 
@@ -591,10 +595,10 @@ class Login extends Db {
         $authNamespace->accept_answer = true;
 
         $session_life = $this->db->fetchOne("
-            SELECT value 
-            FROM core_settings 
-            WHERE visible = 'Y' 
-              AND code = 'session_lifetime' 
+            SELECT value
+            FROM core_settings
+            WHERE visible = 'Y'
+              AND code = 'session_lifetime'
             LIMIT 1
         ");
 
@@ -1108,7 +1112,7 @@ class Login extends Db {
             SELECT u_id AS id,
                    u_login AS login,
                    email
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1274,7 +1278,7 @@ class Login extends Db {
 
         $user_id = $this->db->fetchOne("
             SELECT u_id
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1316,7 +1320,7 @@ class Login extends Db {
         $content_email = "
             Вы зарегистрированы на сервисе {$host}<br>
             Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
         ";
 
@@ -1347,7 +1351,7 @@ class Login extends Db {
             Вы запросили смену пароля на сервисе {$host}<br>
             Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
         ";
 

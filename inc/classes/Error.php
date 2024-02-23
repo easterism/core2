@@ -25,6 +25,9 @@ class Error {
             if ($code == 403) {
                 header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
             }
+            if ($code == 404) {
+                header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
+            }
 			if ($code == 13) { //ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
 			} else {
@@ -79,15 +82,12 @@ class Error {
 		if ($code == 503) {
             self::Exception($message, $code);
         }
-
-
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
 
 		} elseif ($message == '404') {
-            header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
-			self::Exception('Нет такой страницы', $code);
+			self::Exception('Нет такой страницы', 404);
 
 		} elseif ($message == 'expired') {
             setcookie($cnf->session->name, false);
