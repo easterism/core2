@@ -477,13 +477,14 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if ($params = \Zend_Registry::get('route')['params']) {
+                        if (\Zend_Registry::get('route')['params'] || !\Zend_Registry::get('route')['query']) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
                         }
                         elseif ($this->auth->MOBILE) {
                             $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
-                        } else {
+                        }
+                        else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                         }
 

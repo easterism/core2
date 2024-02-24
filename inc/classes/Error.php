@@ -176,12 +176,16 @@ class Error {
 	public static function catchJsonException($out = [], $code = 0) {
 
 	    if (!$out) $out = [];
+        if (!is_array($out)) $out = trim($out) ? ["msg" => $out] : [];
 
 		if ($code == 400) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
 
 		} elseif ($code == 403) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
+
+		} elseif ($code == 404) {
+			header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
 
 		} elseif ($code == 500) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 500 Internal Server Error");
