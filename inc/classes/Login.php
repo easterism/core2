@@ -51,7 +51,11 @@ class Login extends Db {
                 header('HTTP/1.1 401 Unauthorized');
                 header('WWW-Authenticate: Digest realm="' . $this->core_config->auth->digest->realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
             }
+            //TODO реализовать остальные схемы
             return;
+        }
+        if ($this->core_config->auth->scheme !== 'password') {
+            header("Location: " . DOC_PATH . "auth");
         }
         parse_str($route['query'], $request);
         if (isset($request['core'])) {
@@ -591,10 +595,10 @@ class Login extends Db {
         $authNamespace->accept_answer = true;
 
         $session_life = $this->db->fetchOne("
-            SELECT value 
-            FROM core_settings 
-            WHERE visible = 'Y' 
-              AND code = 'session_lifetime' 
+            SELECT value
+            FROM core_settings
+            WHERE visible = 'Y'
+              AND code = 'session_lifetime'
             LIMIT 1
         ");
 
@@ -1108,7 +1112,7 @@ class Login extends Db {
             SELECT u_id AS id,
                    u_login AS login,
                    email
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1274,7 +1278,7 @@ class Login extends Db {
 
         $user_id = $this->db->fetchOne("
             SELECT u_id
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1316,7 +1320,7 @@ class Login extends Db {
         $content_email = "
             Вы зарегистрированы на сервисе {$host}<br>
             Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
         ";
 
@@ -1347,7 +1351,7 @@ class Login extends Db {
             Вы запросили смену пароля на сервисе {$host}<br>
             Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
         ";
 

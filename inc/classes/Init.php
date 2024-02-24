@@ -143,7 +143,6 @@ if ( ! empty($config->theme)) {
 } else {
     //define('THEME', 'default');
 }
-
 if (defined('THEME')) {
     $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
     if (!file_exists($theme_model)) {
