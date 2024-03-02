@@ -698,12 +698,20 @@ class Init extends \Core2\Db {
 
             $favicon_png = $favicon_png && is_file($favicon_png)
                 ? $favicon_png
-                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
+                : (is_file('favicon.png') ? 'favicon.png' : '');
 
             $favicon_ico = $favicon_ico && is_file($favicon_ico)
                 ? $favicon_ico
-                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
+                : (is_file('favicon.ico') ? 'favicon.ico' : '');
 
+            if (defined('THEME')) {
+                if (!$favicon_png) {
+                    $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
+                }
+                if (!$favicon_ico) {
+                    $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
+                }
+            }
 
             return [
                 'png' => $favicon_png,
