@@ -56,6 +56,7 @@ class Login extends Db {
         }
         if ($this->core_config->auth->scheme !== 'password') {
             header("Location: " . DOC_PATH . "auth");
+            return;
         }
         parse_str($route['query'], $request);
         if (isset($request['core'])) {

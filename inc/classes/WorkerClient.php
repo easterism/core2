@@ -27,7 +27,7 @@ class WorkerClient {
             }
 
             $this->client = new \GearmanClient();
-            //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
+            if (defined('GEARMAN_CLIENT_NON_BLOCKING')) $this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
             try {
                 //$this->assignCallbacks();
                 $this->client->addServers($host);
