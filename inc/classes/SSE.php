@@ -23,7 +23,7 @@ class SSE extends \Common {
         $this->_events["Core2-Fact"] = $eventClass;
 
         //события модулей
-        $mods = $this->dataModules->getModuleList();
+        $mods = $this->db->fetchAll($this->dataModules->select()->where("visible = 'Y'"));
         foreach ($mods as $mod) {
             $location      = $this->getModuleLocation($mod['module_id']);
             if (!is_dir($location . "/events")) continue;
