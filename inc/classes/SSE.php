@@ -78,19 +78,36 @@ class SSE extends \Common {
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
 
-        foreach ($this->_events as $class_name => $event) {
+        foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
-                $class_name = str_replace("\\", "-" , $class_name);
+                $path = str_replace("\\", "-" , $path);
 
                 ob_start();
-                $event->dispatch();
-                $data[str_replace("\\", "-" , $class_name)] = ob_get_clean();
+                $msgs = $event->dispatch();
+
+                $data[$path] = ob_get_clean();
+
+                if ($data[$path] || ($msgs && is_array($msgs))) {
+                    if ($data[$path]) {
+                        echo "event: modules\n",
+                        'data: ', json_encode([$path => $data[$path]]), "\n\n";
+                    }
+                    if ($msgs) {
+                        foreach ($msgs as $topic => $msg) {
+                            if ($topic !== 'public') $topic = "-{$topic}";
+                            else $topic = '';
+
+                            echo "event: modules\n",
+                            'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                        }
+                    }
+                    $this->doFlush();
+                }
             }
         }
 
         if ($data) {
-
             echo "event: Core2\n",
                 'data: произошли события: ',
                 implode("\ndata: ", array_keys($data)),
@@ -99,6 +116,4 @@ class SSE extends \Common {
 
         $this->doFlush();
     }
-
-
 }
