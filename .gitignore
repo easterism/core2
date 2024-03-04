@@ -1,3 +1,5 @@
+html/*
+mod/*
 !mod/admin
 mod/admin/conf.d.ini
 mod/admin/conf.ext.ini
@@ -9,5 +11,4 @@ mod/admin/conf.ext.ini
 
 composer\.phar
 
-html/*
-mod/*
+
