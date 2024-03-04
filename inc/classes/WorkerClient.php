@@ -27,7 +27,7 @@ class WorkerClient {
             }
 
             $this->client = new \GearmanClient();
-            //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
+            if (defined('GEARMAN_CLIENT_NON_BLOCKING')) $this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
             try {
                 //$this->assignCallbacks();
                 $this->client->addServers($host);
@@ -159,7 +159,6 @@ class WorkerClient {
         $workload = [
             'timestamp' => $dt->format('U'),
             'location' => $this->location,
-            'config'   => serialize(\Zend_Registry::get('config')),
             'server'   => $_SERVER,
             'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
             'payload'  => $data,

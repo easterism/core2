@@ -340,7 +340,6 @@ class Init extends \Core2\Db {
 
             // Парсим маршрут
             $route = $this->routeParse();
-
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module']) && $route['module'] === 'sse') {
@@ -466,11 +465,14 @@ class Init extends \Core2\Db {
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
+
+                        //TODO перенести проверку субмодуля в контроллер модуля
                         if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }
                     }
+
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
                         if ($this->translate->isSetup()) {
