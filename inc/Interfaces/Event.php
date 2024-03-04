@@ -20,7 +20,7 @@ interface Event
      * если буфер пуст, всплывает пустое событие
      * по умолчанию будет вызываться каждую секунду
      *
-     * @return void
+     * @return void|array
      */
-    public function dispatch() : void;
+    public function dispatch();
 }

@@ -5,6 +5,8 @@ require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
 require_once 'Zend_Registry.php';
+require_once 'Fact.php';
+
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 
@@ -121,7 +123,7 @@ class Db {
 			return $v;
 		}
 		// Получение экземпляра переводчика
-		if ($k == 'translate') {
+        elseif ($k == 'translate') {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
@@ -200,6 +202,16 @@ class Db {
 			}
 			return $v;
 		}
+        // Получение экземпляра регистратора фактов
+        elseif ($k == 'fact') {
+            if (array_key_exists($k, $this->_s)) {
+                $v = $this->_s[$k];
+            } else {
+                $v = new Fact();
+                $this->_s[$k] = $v;
+            }
+            return $v;
+        }
 		return null;
 	}
 
