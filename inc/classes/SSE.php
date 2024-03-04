@@ -13,7 +13,17 @@ class SSE extends \Common {
     {
         parent::__construct();
 
-        $mods = $this->dataModules->getModuleList();
+        //события ядра
+        $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
+        require_once $eventFile;
+        $shm_key = ftok($eventFile, 't') + $this->auth->ID; //у аждого юзера своя очередь
+        if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
+        $eventClass = new MessageQueue();
+        $eventClass->setQueue(msg_get_queue($shm_key));
+        $this->_events["Core2-Fact"] = $eventClass;
+
+        //события модулей
+        $mods = $this->db->fetchAll($this->dataModules->select()->where("visible = 'Y'"));
         foreach ($mods as $mod) {
             $location      = $this->getModuleLocation($mod['module_id']);
             if (!is_dir($location . "/events")) continue;
@@ -30,6 +40,8 @@ class SSE extends \Common {
                 }
             }
         }
+        $this->db->closeConnection();
+        set_time_limit(0);
     }
 
     /**
@@ -69,6 +81,8 @@ class SSE extends \Common {
         foreach ($this->_events as $class_name => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
+                $class_name = str_replace("\\", "-" , $class_name);
+
                 ob_start();
                 $event->dispatch();
                 $data[str_replace("\\", "-" , $class_name)] = ob_get_clean();
@@ -76,8 +90,6 @@ class SSE extends \Common {
         }
 
         if ($data) {
-            echo "event: modules\n",
-                'data: ', json_encode($data), "\n\n";
 
             echo "event: Core2\n",
                 'data: произошли события: ',

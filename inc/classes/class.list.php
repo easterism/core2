@@ -369,7 +369,7 @@ class listTable extends initList {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $is = $this->db->describeTable($this->table);
+            $is = $this->db->describeTable(trim($this->table, '`'));
 
             if (isset($is['seq'])) $this->is_seq = true;
 

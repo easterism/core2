@@ -41,7 +41,6 @@ class editTable extends initEdit {
 	private $action		    = '';
 
     private $tpl_control = [
-        'xfile'         => __DIR__ . '/../../html/' . THEME . '/html/edit/files.html',
         'xfile_upload'  => __DIR__ . '/../../html/' . THEME . '/html/edit/file_upload.html',
         'xfile_download' => __DIR__ . '/../../html/' . THEME . '/html/edit/file_download.html',
         'dataset'       => __DIR__ . '/../../html/' . THEME . '/html/edit/dataset.html',
@@ -75,8 +74,8 @@ class editTable extends initEdit {
 		foreach ($this->types as $acl_type) {
 			$this->acl->$acl_type = $this->checkAcl($this->resource, $acl_type);
 		}
-
-
+        $this->setTemplateControl('xfile', \Core2\Theme::get("html-edit-files"));
+        //TODO заполнить остальные шаблоны из модели шкурки (или прописать напрямую из \Core2\Theme)
     }
 
 
@@ -1319,7 +1318,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/select2.html');
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-select2"));
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', $attrs);
@@ -1374,7 +1373,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multiselect2.html');
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multiselect2"));
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', $attrs);
@@ -1423,7 +1422,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['multiselect2'] = true;
 
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist2.html');
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multilist2"));
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1487,7 +1486,7 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= implode('<br>', $options_out);
 
                             } else {
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/multilist3.html');
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multilist3"));
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1610,7 +1609,7 @@ class editTable extends initEdit {
                                     }
                                 }
 
-                                $tpl = new Templater3(DOC_ROOT . 'core2/html/' . THEME . '/html/edit/dataset.html');
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-dataset"));
                                 $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
@@ -1679,7 +1678,8 @@ class editTable extends initEdit {
                                         $num++;
                                     }
 
-                                } else {
+                                }
+                                else {
                                     foreach ($value['in'] as $item_field) {
                                         $field_attributes  = ! empty($item_field['attributes'])
                                             ? $item_field['attributes']

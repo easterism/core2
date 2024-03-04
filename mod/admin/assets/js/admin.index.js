@@ -11,8 +11,11 @@ AdminIndex.clearCache = function() {
 
     preloader.show();
 
-    $.post('index.php?module=admin&action=index&data=clear_cache', {},
-        function (data, textStatus) {
+    fetch("index.php?module=admin&action=index&data=clear_cache")
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
             preloader.hide();
 
             if (data.status !== 'success') {
@@ -29,6 +32,5 @@ AdminIndex.clearCache = function() {
                     alertify.success('Кэш очищен')
                 }
             }
-        },
-        'json');
+        })
 };

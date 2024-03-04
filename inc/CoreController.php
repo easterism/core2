@@ -96,12 +96,8 @@ class CoreController extends Common implements File {
             try {
                 switch ($_GET['data']) {
                     case 'clear_cache':
-                        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                            throw new Exception('Некорректный запрос');
-                        }
-
                         $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
-
+                        header('Content-type: application/json; charset="utf-8"');
                         return json_encode(['status' => 'success']);
                 }
 

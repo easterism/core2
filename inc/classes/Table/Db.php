@@ -381,7 +381,7 @@ class Db extends Table {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $table_columns = $this->db->describeTable($this->table);
+            $table_columns = $this->db->describeTable(trim($this->table, '`'));
 
             if (isset($table_columns['seq'])) {
                 $this->records_seq = true;
@@ -729,7 +729,7 @@ class Db extends Table {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $table_columns = $this->db->describeTable($this->table);
+            $table_columns = $this->db->describeTable(trim($this->table, '`'));
 
             if (isset($table_columns['seq'])) {
                 $this->records_seq = true;

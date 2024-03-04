@@ -26,8 +26,7 @@ self.addEventListener(
 
                     eventSrc.addEventListener('message', function (event) {
 
-                        var message = JSON.parse(event.data);
-                        that.postMessage({type: "modules", event: message});
+                        that.postMessage({type: "modules", event: JSON.parse(event.data)});
 
                     }, false);
                     eventSrc.addEventListener('Core2', function (event) {
