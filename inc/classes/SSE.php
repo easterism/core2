@@ -77,7 +77,6 @@ class SSE extends \Common {
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
-
         foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
@@ -108,7 +107,6 @@ class SSE extends \Common {
         }
 
         if ($data) {
-
             echo "event: Core2\n",
                 'data: произошли события: ',
                 implode("\ndata: ", array_keys($data)),
@@ -117,6 +115,4 @@ class SSE extends \Common {
 
         $this->doFlush();
     }
-
-
 }
