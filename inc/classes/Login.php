@@ -11,7 +11,7 @@ use Laminas\Session\Container as SessionContainer;
  * @package Core2
  * @property \Users           $dataUsers
  */
-class Login extends Db {
+class Login extends \Common {
 
     private $system_name = '';
     private $favicon     = [];
@@ -26,38 +26,44 @@ class Login extends Db {
      */
     public function dispatch(Array $route) {
 
-        if ($route['module'] == 'auth' && $this->core_config->auth) {
-            if ($this->core_config->auth->scheme == 'basic') {
-                try {
-                    if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                        if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
-                            list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                            $user = $this->dataUsers->getUserByLogin($login);
-                            if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
-                                if ($this->auth($user)) {
-                                    header("Location: " . DOC_PATH);
-                                    return;
+        if (isset($route['api'])) {
+            header('HTTP/1.1 401 Unauthorized');
+            if ($this->core_config->auth) {
+                if ($this->core_config->auth->scheme == 'basic') {
+                    try {
+                        if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                            if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
+                                list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                                $user = $this->dataUsers->getUserByLogin($login);
+                                if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
+                                    if ($this->auth($user)) {
+                                        header("Location: " . DOC_PATH);
+                                        return;
+                                    }
                                 }
                             }
                         }
+                    } catch (\Exception $e) {
+                        //TODO log me
                     }
-                } catch (\Exception $e) {
-                    //TODO log me
+
+                    header('WWW-Authenticate: Basic realm="' . $this->core_config->auth->basic->realm . '"');
                 }
-                header('HTTP/1.1 401 Unauthorized');
-                header('WWW-Authenticate: Basic realm="' . $this->core_config->auth->basic->realm . '"');
+                if ($this->core_config->auth->scheme == 'digest') {
+                    $realm = $this->core_config->auth->digest->realm;
+                    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
+                }
+                if ($this->core_config->auth->scheme == 'bearer') {
+                    $realm = $this->core_config->auth->bearer->realm;
+                    header('WWW-Authenticate: Digest realm="' . $realm . '",scope="' . $this->core_config->auth->bearer->scope . '"');
+                }
+                //TODO реализовать остальные схемы
             }
-            if ($this->core_config->auth->scheme == 'digest') {
-                header('HTTP/1.1 401 Unauthorized');
-                header('WWW-Authenticate: Digest realm="' . $this->core_config->auth->digest->realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
-            }
-            //TODO реализовать остальные схемы
             return;
         }
-        if ($this->core_config->auth->scheme !== 'password') {
-            header("Location: " . DOC_PATH . "auth");
-            return;
-        }
+
+        //-------------регистрация, аутентификация через форму------------------
+
         parse_str($route['query'], $request);
         if (isset($request['core'])) {
             if ($this->config->mail && $this->config->mail->server) {
@@ -141,7 +147,8 @@ class Login extends Db {
 
                             return $this->getPageRestoreComplete($request['key']);
 
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        }
+                        elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (empty($_POST['key'])) {
                                 http_response_code(404);
                                 return '';
@@ -733,28 +740,8 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
 
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
-
+            $mod_controller = $this->getAuthModule();
             $user_id = $mod_controller->authVk($code);
             $user    = $this->dataUsers->getUserById($user_id);
 
@@ -787,27 +774,7 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
+            $mod_controller = $this->getAuthModule();
 
             $user_id = $mod_controller->authOk($code);
             $user    = $this->dataUsers->getUserById($user_id);
@@ -841,27 +808,7 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
+            $mod_controller = $this->getAuthModule();
 
             $user_id = $mod_controller->authFb($code);
             $user    = $this->dataUsers->getUserById($user_id);
@@ -889,51 +836,7 @@ class Login extends Db {
      */
     private function registration(array $data) {
 
-        // Кастомная регистрация
-        if ($this->core_config->registration->module) {
-            $module_name = strtolower($this->core_config->registration->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Registration)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает регистрацию'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRegistration($data);
-
-                if ($result_text && is_string($result_text)) {
-                    return json_encode([
-                        'status'  => 'success',
-                        'message' => $result_text,
-                    ]);
-
-                } else {
-                    throw new \Exception($this->_('Не удалось завершить регистрацию. Попробуйте позже, либо свяжитесь с администратором'));
-                }
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
+        $this->emit('reg_data', $data);
 
         // Стандартная регистрация
         if (empty($data['name'])) {
@@ -1040,6 +943,7 @@ class Login extends Db {
                 'firstname'  => $firstname,
                 'middlename' => $middlename,
             ]);
+            $this->emit('new_user', $user_id);
         }
 
 
@@ -1061,53 +965,6 @@ class Login extends Db {
      * @throws \Exception
      */
     private function registrationComplete($key, $password) {
-
-        // Кастомное завершение регистрации
-        if ($this->core_config->registration->module) {
-            $module_name = strtolower($this->core_config->registration->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Registration)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает регистрацию'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRegistrationComplete($key, $password);
-
-                if ($result_text && is_string($result_text)) {
-                    return json_encode([
-                        'status'  => 'success',
-                        'message' => $result_text,
-                    ]);
-
-                } else {
-                    throw new \Exception($this->_('Не удалось завершить регистрацию. Попробуйте позже, либо свяжитесь с администратором'));
-                }
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
-
 
         $user_info = $this->db->fetchRow("
             SELECT u_id AS id,
@@ -1152,47 +1009,6 @@ class Login extends Db {
      */
     private function restore($email) {
 
-        // Кастомное восстановление
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestore($email);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : $this->_('На указанную вами почту отправлены данные для смены пароля'),
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
 
         $user_id = $this->db->fetchOne("
             SELECT u.u_id
@@ -1233,49 +1049,6 @@ class Login extends Db {
      * @throws \Exception
      */
     private function restoreComplete($key, $password) {
-
-        // Кастомное завершение восстановления
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestoreComplete($key, $password);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : "<h4>Пароль изменен!</h4><p>Вернитесь на форму входа и войдите в систему с новым паролем</p>",
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
 
         $user_id = $this->db->fetchOne("
             SELECT u_id
@@ -1539,5 +1312,26 @@ class Login extends Db {
         }
 
         return $tpl->render();
+    }
+
+    /**
+     *
+     * @return \ModAuthController
+     * @throws \Exception
+     */
+    private function getAuthModule()
+    {
+        $module_name = 'auth';
+        $location    = $this->getModuleLocation($module_name);
+
+        require_once "{$location}/ModAuthController.php";
+        $vendor_autoload     = "{$location}/vendor/autoload.php";
+
+        if (file_exists($vendor_autoload)) {
+            require_once $vendor_autoload;
+        }
+
+        $this->setContext($module_name);
+        return new \ModAuthController();
     }
 }
