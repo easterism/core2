@@ -838,32 +838,32 @@ class Login extends \Common {
 
         $this->emit('reg_data', $data);
 
-        // Стандартная регистрация
-        if (empty($data['name'])) {
-            return json_encode([
-                'status'        => 'error',
-                'error_message' => $this->_('Имя не заполнено'),
-            ]);
+        if (!$this->core_config->registration->fields) return;
+
+        $fields = $this->core_config->registration->fields->toArray();
+        foreach ($fields as $key => $field) {
+            if (!empty($field['required']) && empty($data[$key])) {
+                return json_encode([
+                    'status'        => 'error',
+                    'error_message' => sprintf($this->_('Поле %s не заполнено'), $field['title']),
+                ]);
+            }
         }
 
-        if (empty($data['login'])) {
+        $data['email'] = isset($data['email']) ? trim($data['email']) : null;
+        $data['login'] = isset($data['login']) ? trim($data['login']) : $data['email'];
+        if (!$data['email']) {
             return json_encode([
                 'status'        => 'error',
-                'error_message' => $this->_('Логин не заполнен'),
+                'error_message' => $this->_('Не удалось получить email для регистрации')
             ]);
         }
-
-        if (empty($data['email'])) {
+        if (!$data['login']) {
             return json_encode([
                 'status'        => 'error',
-                'error_message' => $this->_('Email не заполнен'),
+                'error_message' => $this->_('Не удалось задать логин пользователя')
             ]);
         }
-
-        $data['name']  = trim($data['name']);
-        $data['email'] = trim($data['email']);
-        $data['login'] = trim($data['login']);
-
 
         $isset_user_login = $this->db->fetchOne("
             SELECT 1
