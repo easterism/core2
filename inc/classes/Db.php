@@ -16,6 +16,7 @@ use Laminas\Session\Container as SessionContainer;
  * @property Cache                     $cache
  * @property I18n                      $translate
  * @property Log                       $log
+ * @property Fact                      $fact
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
  * @property \Zend_Config_Ini          $core_config

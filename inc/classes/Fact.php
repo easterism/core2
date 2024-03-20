@@ -30,7 +30,7 @@ class Fact extends \Common {
         parent::__construct();
 
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
-        $this->shm_id = ftok($eventFile, 't') + $this->auth->ID; //у аждого юзера своя очередь
+        $this->shm_id = ftok($eventFile, 't') + crc32($this->auth->LIVEID); //у каждого юзера своя очередь
     }
 
     public function __get($v)
