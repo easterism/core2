@@ -21,7 +21,7 @@ class Error {
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
 			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
-			if (!$code) $code == 200;
+			if (!$code) $code = 200;
             if ($code == 403) {
                 header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
             }
