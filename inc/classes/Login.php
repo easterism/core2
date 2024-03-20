@@ -1009,47 +1009,6 @@ class Login extends \Common {
      */
     private function restore($email) {
 
-        // Кастомное восстановление
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestore($email);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : $this->_('На указанную вами почту отправлены данные для смены пароля'),
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
 
         $user_id = $this->db->fetchOne("
             SELECT u.u_id
@@ -1090,49 +1049,6 @@ class Login extends \Common {
      * @throws \Exception
      */
     private function restoreComplete($key, $password) {
-
-        // Кастомное завершение восстановления
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestoreComplete($key, $password);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : "<h4>Пароль изменен!</h4><p>Вернитесь на форму входа и войдите в систему с новым паролем</p>",
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
 
         $user_id = $this->db->fetchOne("
             SELECT u_id
