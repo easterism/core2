@@ -57,7 +57,7 @@ class Common extends \Core2\Acl {
 
 		parent::__construct();
         $reg     = Zend_Registry::getInstance();
-		$context = $reg->get('context');
+		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
 
         if ($mod_name) {
             $this->module = strtolower($mod_name);

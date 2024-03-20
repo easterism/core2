@@ -122,15 +122,6 @@ if (isset($config->include_path) && $config->include_path) {
 require_once 'I18n.php';
 $translate = new \Core2\I18n($config);
 
-if (isset($config->auth) && $config->auth->on) {
-    $realm = $config->auth->params->realm;
-    $users = $config->auth->params->users;
-    if ($code = Tool::httpAuth($realm, $users)) {
-        if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
-        if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
-    }
-}
-
 //устанавливаем шкурку
 if ( ! empty($config->theme)) {
     define('THEME', $config->theme);
@@ -367,7 +358,6 @@ class Init extends \Core2\Db {
                 // LOG USER ACTIVITY
                 $logExclude = array(
                     'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
-                    'module=profile&action=messages&data=sse', //Отправка данных для sse
                 );
 
                 $this->logActivity($logExclude);
@@ -1524,12 +1514,13 @@ class Init extends \Core2\Db {
 
             $co = count($temp2);
             if ($co) {
-                if ($co > 1) {
+                if ($co > 1 || current($temp2) === 'auth') {
                     $i = 0;
+                    //если мы здесь, значит хотим вызвать API
                     foreach ($temp2 as $k => $v) {
                         if ($i == 0) {
-                            $route['module'] = strtolower($v);
-                            $_GET['module'] = $route['module']; //DEPRECATED
+                            $route['api'] = strtolower($v);
+                            $_GET['module'] = $route['api']; //DEPRECATED
                         }
                         elseif ($i == 1) {
                             if (!$v) $v = 'index';
