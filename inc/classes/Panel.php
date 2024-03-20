@@ -311,6 +311,8 @@ class Panel {
         if ( ! empty($this->tabs)) {
             $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
 
+            $tabs_load_count = [];
+
             foreach ($this->tabs as $tab) {
 
                 if ($tab['type'] == 'tab') {
@@ -340,6 +342,13 @@ class Panel {
                         $tpl->tabs->elements->tab->assign('[URL]',     $url);
                     }
 
+                    if ( ! empty($tab['options']['load_count'])) {
+                        $tabs_load_count[] = [
+                            'id'  => $tab['id'],
+                            'url' => $tab['options']['load_count'],
+                        ];
+                    }
+
                 } else {
                     if (in_array($this->position, [self::POSITION_RIGHT, self::POSITION_LEFT]) &&
                         $this->type == self::TYPE_TABS
@@ -349,6 +358,10 @@ class Panel {
                 }
 
                 $tpl->tabs->elements->reassign();
+            }
+
+            if ( ! empty($tabs_load_count) && $tpl->issetBlock('load_counts')) {
+                $tpl->load_counts->assign('[TABS_LOAD_COUNT]', addslashes(json_encode($tabs_load_count)));
             }
         }
         if ( ! empty($this->controls)) {

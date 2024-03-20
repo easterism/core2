@@ -15,7 +15,7 @@ class Theme
         $tpl = json_decode($json, true);
         foreach ($tpl as $key => $path) {
             if (strpos($path, "/") !== 0) {
-                $path = "core2/html/$theme/$path";
+                $path = __DIR__ . "/../../html/$theme/$path";
             }
             self::$_tpl[$key] = $path;
         }

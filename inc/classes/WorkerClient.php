@@ -1,6 +1,8 @@
 <?php
 namespace Core2;
 
+require_once "Log.php";
+
 /**
  * Class WorkerClient
  */
@@ -20,17 +22,26 @@ class WorkerClient {
         $cc = \Zend_Registry::get('core_config');
 
         if ($cc->gearman && $cc->gearman->host) {
-            $host = trim($cc->gearman->host);
-
             if ( ! class_exists('\\GearmanClient')) {
                 throw new \Exception('Class GearmanClient not found');
             }
 
+            $host = explode(":", trim($cc->gearman->host));
+            if (!isset($host[1])) $host[1] = $cc->gearman->port;
+
             $this->client = new \GearmanClient();
-            //$this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
+            if (defined('GEARMAN_CLIENT_NON_BLOCKING')) $this->client->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
+
             try {
+                $c = new \GearmanClient();
+                $c->addServer($host[0], $host[1], false);
                 //$this->assignCallbacks();
-                $this->client->addServers($host);
+                if (@$c->ping('ping')) {
+                    $this->client->addServers($host[0], $host[1]);
+                } else {
+                    (new Log())->error("Job server not available");
+                    return new \stdObject();
+                }
             } catch (\GearmanException $e) {
                 return new \stdObject();
             }
@@ -118,6 +129,7 @@ class WorkerClient {
         $jh = $this->client->doBackground($worker, $workload, $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
+            (new Log())->error("Job server return " . $this->client->returnCode());
             return false;
         }
 
@@ -139,6 +151,7 @@ class WorkerClient {
         $jh = $this->client->doHighBackground($worker, $workload, $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
+            (new Log())->error("Job server return " . $this->client->returnCode());
             return false;
         }
 
@@ -158,17 +171,17 @@ class WorkerClient {
         $dt       = new \DateTime();
         $workload = [
             'timestamp' => $dt->format('U'),
-            'location'  => $this->location,
-            'config'    => serialize(\Zend_Registry::get('config')),
-            'server'    => $_SERVER,
-            'auth'      => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
-            'payload'   => $data,
+            'location' => $this->location,
+            'server'   => $_SERVER,
+            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'payload'  => $data,
             'doc_root'  => DOC_ROOT,
         ];
 
         if ($this->module !== 'Admin') {
             $workload += [
                 'module'    => $this->module,
+                'doc_root'  => DOC_ROOT,
                 'context'   => \Zend_Registry::get('context'),
                 'translate' => serialize(\Zend_Registry::get('translate')),
                 'worker'    => $worker

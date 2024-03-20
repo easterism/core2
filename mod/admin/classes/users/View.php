@@ -129,14 +129,7 @@ class View extends \Common {
 
         $is_auth_certificate_on = $this->core_config->auth && $this->core_config->auth->x509 && $this->core_config->auth->x509->on;
 
-
-        if ($this->core_config->auth && $this->core_config->auth->pass) {
-            $is_auth_pass_on = $this->core_config->auth->pass->on;
-        } else {
-            $is_auth_pass_on = true;
-        }
-
-
+        $is_auth_pass_on = true;
 
         if ($this->auth->LDAP) {
             unset($fields[7]);

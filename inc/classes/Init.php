@@ -122,15 +122,6 @@ if (isset($config->include_path) && $config->include_path) {
 require_once 'I18n.php';
 $translate = new \Core2\I18n($config);
 
-if (isset($config->auth) && $config->auth->on) {
-    $realm = $config->auth->params->realm;
-    $users = $config->auth->params->users;
-    if ($code = Tool::httpAuth($realm, $users)) {
-        if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
-        if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
-    }
-}
-
 //устанавливаем шкурку
 if ( ! empty($config->theme)) {
     define('THEME', $config->theme);
@@ -141,11 +132,16 @@ if ( ! empty($config->theme)) {
     define('THEME', $config->system->theme->name);
 
 } else {
-    define('THEME', 'default');
+    //define('THEME', 'default');
 }
-
-$tpls = file_get_contents(__DIR__ . "/../../html/" . THEME . "/model.json");
-\Core2\Theme::set(THEME, $tpls);
+if (defined('THEME')) {
+    $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+    if (!file_exists($theme_model)) {
+        \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+    }
+    $tpls = file_get_contents($theme_model);
+    \Core2\Theme::set(THEME, $tpls);
+}
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -236,19 +232,19 @@ class Init extends \Core2\Db {
          */
         public function checkAuth() {
 
+            $this->detectWebService();
+
+            if ($this->is_rest || $this->is_soap) {
+                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
+                return;
+            }
+
             // проверяем, есть ли в запросе токен авторизации
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 return; //выходим, если авторизация состоялась
-            }
-
-            $this->detectWebService();
-
-            if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
-                return;
             }
 
             if (PHP_SAPI === 'cli') {
@@ -304,10 +300,16 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
 
                 require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+
                 $route = $this->routeParse();
-
+                if (isset($matches['module'])) { //DEPRECATED
+                    //for webservice < 2.6.0
+                    $route['version'] = $matches['version'];
+                } else {
+                    unset($route['module']);
+                    $route['version'] = $matches['version'];
+                }
                 $webservice_controller = new ModWebserviceController();
-
                 return $webservice_controller->dispatchRest($route);
             }
 
@@ -329,7 +331,6 @@ class Init extends \Core2\Db {
 
             // Парсим маршрут
             $route = $this->routeParse();
-
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module']) && $route['module'] === 'sse') {
@@ -357,8 +358,6 @@ class Init extends \Core2\Db {
                 // LOG USER ACTIVITY
                 $logExclude = array(
                     'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
-                    'module=profile&sse=open', //Запросы на установку sse
-                    'module=profile&action=messages&data=sse', //Отправка данных для sse
                 );
 
                 $this->logActivity($logExclude);
@@ -377,13 +376,14 @@ class Init extends \Core2\Db {
                 $this->acl->setupAcl();
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
             }
             else {
 
                 $login = new \Core2\Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
-                return $login->dispatch();
+                return $login->dispatch($route);
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -393,6 +393,8 @@ class Init extends \Core2\Db {
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
+                if (!defined('THEME')) return;
+
                 if ($this->auth->MOBILE) {
                     return $this->getMenuMobile();
                 }
@@ -453,20 +455,27 @@ class Init extends \Core2\Db {
                     } else {
                         $submodule_id = $module . '_' . $action;
                         $mods = $this->getSubModule($submodule_id);
+
+                        //TODO перенести проверку субмодуля в контроллер модуля
                         if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }
                     }
+
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-
-                        if ($this->auth->MOBILE) {
+                        if (\Zend_Registry::get('route')['params'] || !\Zend_Registry::get('route')['query']) {
+                            //запрос от приложения
+                            $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
+                        }
+                        elseif ($this->auth->MOBILE) {
                             $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
-                        } else {
+                        }
+                        else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                         }
 
@@ -550,20 +559,18 @@ class Init extends \Core2\Db {
                 return;
             }
 
-
             $matches = [];
-
-            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = $matches;
+            if (preg_match('~api/v(?<version>\d+\.\d+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = [
+                    'version' => $matches['version'],
+                    'action'  => $matches[2]
+                ];
                 return;
             }
+
             // DEPRECATED
-            if (preg_match('~api/([a-zA-Z0-9_]+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-                $this->is_rest = [
-                    'module'  => $matches[1],
-                    'version' => '',
-                    'action'  => $matches[2],
-                ];
+            if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+                $this->is_rest = $matches;
                 return;
             }
             // DEPRECATED
@@ -590,6 +597,14 @@ class Init extends \Core2\Db {
 
             $token = '';
             if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
+                    list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                    $user = $this->dataUsers->getUserByLogin($login);
+                    if (!$user || $user['u_pass'] !== \Tool::pass_salt(md5($password))) {
+                        header("Location: " . DOC_PATH . "auth");
+                        return;
+                    }
+                }
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer') === 0) {
                     $token = $_SERVER['HTTP_AUTHORIZATION'];
                 }
@@ -675,12 +690,20 @@ class Init extends \Core2\Db {
 
             $favicon_png = $favicon_png && is_file($favicon_png)
                 ? $favicon_png
-                : (is_file('favicon.png') ? 'favicon.png' : 'core2/html/' . THEME . '/img/favicon.png');
+                : (is_file('favicon.png') ? 'favicon.png' : '');
 
             $favicon_ico = $favicon_ico && is_file($favicon_ico)
                 ? $favicon_ico
-                : (is_file('favicon.ico') ? 'favicon.ico' : 'core2/html/' . THEME . '/img/favicon.ico');
+                : (is_file('favicon.ico') ? 'favicon.ico' : '');
 
+            if (defined('THEME')) {
+                if (!$favicon_png) {
+                    $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
+                }
+                if (!$favicon_ico) {
+                    $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
+                }
+            }
 
             return [
                 'png' => $favicon_png,
@@ -1082,7 +1105,7 @@ class Init extends \Core2\Db {
             $html = '';
             switch ($navigate_item['type']) {
                 case 'divider':
-                    $html = file_get_contents(__DIR__ . '/' . \Core2\Theme::get("html-navigation-divider"));
+                    $html = file_get_contents(\Core2\Theme::get("html-navigation-divider"));
                     break;
 
                 case 'link':
@@ -1093,7 +1116,7 @@ class Init extends \Core2\Db {
                         ? $navigate_item['onclick']
                         : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-link"));
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-link"));
                     $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                     $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1104,7 +1127,7 @@ class Init extends \Core2\Db {
                     break;
 
                 case 'dropdown':
-                    $tpl = new Templater3(__DIR__ . '/' . \Core2\Theme::get("html-navigation-dropdown"));
+                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-dropdown"));
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
                     $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1435,7 +1458,6 @@ class Init extends \Core2\Db {
                         $self_methods = $all_class_methods;
                     }
 
-
 	                if (array_search($action, $self_methods) === false) {
 	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
 	                }
@@ -1444,7 +1466,6 @@ class Init extends \Core2\Db {
                     if (file_exists($autoload_file)) {
                         require_once($autoload_file);
                     }
-
 
 	                $mod_instance = new $mod_cli();
 	                $result = call_user_func_array(array($mod_instance, $action), $params);
@@ -1487,19 +1508,19 @@ class Init extends \Core2\Db {
             $route = array(
                 'module'  => '',
                 'action'  => 'index',
-                'version' => '',
                 'params'  => array(),
                 'query'   => $_SERVER['QUERY_STRING']
             );
 
             $co = count($temp2);
             if ($co) {
-                if ($co > 1) {
+                if ($co > 1 || current($temp2) === 'auth') {
                     $i = 0;
+                    //если мы здесь, значит хотим вызвать API
                     foreach ($temp2 as $k => $v) {
                         if ($i == 0) {
-                            $route['module'] = strtolower($v);
-                            $_GET['module'] = $route['module']; //DEPRECATED
+                            $route['api'] = strtolower($v);
+                            $_GET['module'] = $route['api']; //DEPRECATED
                         }
                         elseif ($i == 1) {
                             if (!$v) $v = 'index';

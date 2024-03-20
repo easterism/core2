@@ -40,6 +40,7 @@ class Acl extends Db {
 		$auth 		= $registry->get('auth');
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
+//        $this->cache->clean($key);
 
 		if (!($this->cache->hasItem($key))) {
 			$acl = new \Zend_Acl();
@@ -58,7 +59,6 @@ class Acl extends Db {
 					   ) AS a ORDER BY 2";
 			$res = $this->db->fetchAll($SQL);
 			// ADD ALL AVAILABLE RESOURCES
-
 			$resources = array();
 			$resources2 = array();
 			$access_default = array();

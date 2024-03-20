@@ -1,19 +1,17 @@
 <?php
 namespace Core2;
 
-use Laminas\Session\Container as SessionContainer;
-
-
 require_once 'Templater3.php';
 require_once 'Tool.php';
 
+use Laminas\Session\Container as SessionContainer;
 
 /**
  * Class Login
  * @package Core2
  * @property \Users           $dataUsers
  */
-class Login extends Db {
+class Login extends \Common {
 
     private $system_name = '';
     private $favicon     = [];
@@ -26,16 +24,55 @@ class Login extends Db {
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    public function dispatch() {
+    public function dispatch(Array $route) {
 
-        if (isset($_GET['core'])) {
+        if (isset($route['api'])) {
+            header('HTTP/1.1 401 Unauthorized');
+            if ($this->core_config->auth) {
+                if ($this->core_config->auth->scheme == 'basic') {
+                    try {
+                        if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                            if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
+                                list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                                $user = $this->dataUsers->getUserByLogin($login);
+                                if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
+                                    if ($this->auth($user)) {
+                                        header("Location: " . DOC_PATH);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        //TODO log me
+                    }
+
+                    header('WWW-Authenticate: Basic realm="' . $this->core_config->auth->basic->realm . '"');
+                }
+                if ($this->core_config->auth->scheme == 'digest') {
+                    $realm = $this->core_config->auth->digest->realm;
+                    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
+                }
+                if ($this->core_config->auth->scheme == 'bearer') {
+                    $realm = $this->core_config->auth->bearer->realm;
+                    header('WWW-Authenticate: Digest realm="' . $realm . '",scope="' . $this->core_config->auth->bearer->scope . '"');
+                }
+                //TODO реализовать остальные схемы
+            }
+            return;
+        }
+
+        //-------------регистрация, аутентификация через форму------------------
+
+        parse_str($route['query'], $request);
+        if (isset($request['core'])) {
             if ($this->config->mail && $this->config->mail->server) {
                 if ($this->core_config->registration &&
                     $this->core_config->registration->on &&
                     $this->core_config->registration->role_id
                 ) {
 
-                    if ($_GET['core'] == 'registration') {
+                    if ($request['core'] == 'registration') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             return $this->getPageRegistration();
 
@@ -49,14 +86,14 @@ class Login extends Db {
                         }
                     }
 
-                    if ($_GET['core'] == 'registration_complete') {
+                    if ($request['core'] == 'registration_complete') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($_GET['key'])) {
+                            if (empty($request['key'])) {
                                 http_response_code(404);
                                 return '';
                             }
 
-                            return $this->getPageRegistrationComplete($_GET['key']);
+                            return $this->getPageRegistrationComplete($request['key']);
 
                         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (empty($_POST['key'])) {
@@ -80,7 +117,7 @@ class Login extends Db {
                 }
 
                 if ($this->core_config->restore && $this->core_config->restore->on) {
-                    if ($_GET['core'] == 'restore') {
+                    if ($request['core'] == 'restore') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             return $this->getPageRestore();
 
@@ -101,16 +138,17 @@ class Login extends Db {
                     }
 
 
-                    if ($_GET['core'] == 'restore_complete') {
+                    if ($request['core'] == 'restore_complete') {
                         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($_GET['key'])) {
+                            if (empty($request['key'])) {
                                 http_response_code(404);
                                 return '';
                             }
 
-                            return $this->getPageRestoreComplete($_GET['key']);
+                            return $this->getPageRestoreComplete($request['key']);
 
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        }
+                        elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (empty($_POST['key'])) {
                                 http_response_code(404);
                                 return '';
@@ -134,8 +172,10 @@ class Login extends Db {
                 $this->core_config->auth->module &&
                 $this->core_config->auth->social &&
                 $_SERVER['REQUEST_METHOD'] === 'POST' &&
-                in_array($_GET['core'], ['auth_vk', 'auth_ok', 'auth_fb'])
+                in_array($request['core'], ['auth_vk', 'auth_ok', 'auth_fb'])
             ) {
+                //---------авторизуемся с помощью соцсетей------
+                //TODO перенести в модуль Auth
                 try {
                     $code = $_POST['code'] ?? '';
 
@@ -143,7 +183,7 @@ class Login extends Db {
                         throw new \Exception($this->_('Некорректный запрос'));
                     }
 
-                    switch ($_GET['core']) {
+                    switch ($request['core']) {
                         case 'auth_vk':
                             if ($this->core_config->auth->social->vk &&
                                 $this->core_config->auth->social->vk->on
@@ -181,7 +221,7 @@ class Login extends Db {
             }
 
 
-            if ($_GET['core'] == 'login') {
+            if ($request['core'] == 'login') {
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (empty($_POST['login'])) {
                         return json_encode([
@@ -220,7 +260,7 @@ class Login extends Db {
         }
         if (array_key_exists('X-Requested-With', \Tool::getRequestHeaders())) {
 
-            if ( ! empty($_GET['module'])) {
+            if ( ! empty($request['module'])) {
                 http_response_code(403);
                 return '';
             }
@@ -274,49 +314,49 @@ class Login extends Db {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->core_config->auth &&
-            $this->core_config->auth->ldap &&
-            $this->core_config->auth->ldap->on
-        ) {
-            $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
-        }
-
-        if ($this->core_config->auth &&
-            $this->core_config->auth->module &&
-            $this->core_config->auth->social
-        ) {
-            if ($this->core_config->auth->social->fb &&
-                $this->core_config->auth->social->fb->on &&
-                $this->core_config->auth->social->fb->app_id &&
-                $this->core_config->auth->social->fb->api_secret &&
-                $this->core_config->auth->social->fb->redirect_url
+        if ($this->core_config->auth) {
+            if ($this->core_config->auth->ldap &&
+                $this->core_config->auth->ldap->on
             ) {
-
-                $tpl->social->fb->assign('[APP_ID]',       $this->core_config->auth->social->fb->app_id);
-                $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
             }
 
-            if ($this->core_config->auth->social->ok &&
-                $this->core_config->auth->social->ok->on &&
-                $this->core_config->auth->social->ok->app_id &&
-                $this->core_config->auth->social->ok->public_key &&
-                $this->core_config->auth->social->ok->secret_key &&
-                $this->core_config->auth->social->ok->redirect_url
+            if ($this->core_config->auth->module &&
+                $this->core_config->auth->social
             ) {
+                if ($this->core_config->auth->social->fb &&
+                    $this->core_config->auth->social->fb->on &&
+                    $this->core_config->auth->social->fb->app_id &&
+                    $this->core_config->auth->social->fb->api_secret &&
+                    $this->core_config->auth->social->fb->redirect_url
+                ) {
 
-                $tpl->social->ok->assign('[APP_ID]',       $this->core_config->auth->social->ok->app_id);
-                $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
-            }
+                    $tpl->social->fb->assign('[APP_ID]', $this->core_config->auth->social->fb->app_id);
+                    $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                }
 
-            if ($this->core_config->auth->social->vk &&
-                $this->core_config->auth->social->vk->on &&
-                $this->core_config->auth->social->vk->app_id &&
-                $this->core_config->auth->social->vk->api_secret &&
-                $this->core_config->auth->social->vk->redirect_url
-            ) {
+                if ($this->core_config->auth->social->ok &&
+                    $this->core_config->auth->social->ok->on &&
+                    $this->core_config->auth->social->ok->app_id &&
+                    $this->core_config->auth->social->ok->public_key &&
+                    $this->core_config->auth->social->ok->secret_key &&
+                    $this->core_config->auth->social->ok->redirect_url
+                ) {
 
-                $tpl->social->vk->assign('[APP_ID]',       $this->core_config->auth->social->vk->app_id);
-                $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                    $tpl->social->ok->assign('[APP_ID]', $this->core_config->auth->social->ok->app_id);
+                    $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
+                }
+
+                if ($this->core_config->auth->social->vk &&
+                    $this->core_config->auth->social->vk->on &&
+                    $this->core_config->auth->social->vk->app_id &&
+                    $this->core_config->auth->social->vk->api_secret &&
+                    $this->core_config->auth->social->vk->redirect_url
+                ) {
+
+                    $tpl->social->vk->assign('[APP_ID]', $this->core_config->auth->social->vk->app_id);
+                    $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                }
             }
         }
 
@@ -563,10 +603,10 @@ class Login extends Db {
         $authNamespace->accept_answer = true;
 
         $session_life = $this->db->fetchOne("
-            SELECT value 
-            FROM core_settings 
-            WHERE visible = 'Y' 
-              AND code = 'session_lifetime' 
+            SELECT value
+            FROM core_settings
+            WHERE visible = 'Y'
+              AND code = 'session_lifetime'
             LIMIT 1
         ");
 
@@ -700,28 +740,8 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
 
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
-
+            $mod_controller = $this->getAuthModule();
             $user_id = $mod_controller->authVk($code);
             $user    = $this->dataUsers->getUserById($user_id);
 
@@ -754,27 +774,7 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
+            $mod_controller = $this->getAuthModule();
 
             $user_id = $mod_controller->authOk($code);
             $user    = $this->dataUsers->getUserById($user_id);
@@ -808,27 +808,7 @@ class Login extends Db {
                 throw new \Exception($this->_('Не указан код авторизации'));
             }
 
-            $module_name = strtolower($this->core_config->auth->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
+            $mod_controller = $this->getAuthModule();
 
             $user_id = $mod_controller->authFb($code);
             $user    = $this->dataUsers->getUserById($user_id);
@@ -856,78 +836,34 @@ class Login extends Db {
      */
     private function registration(array $data) {
 
-        // Кастомная регистрация
-        if ($this->core_config->registration->module) {
-            $module_name = strtolower($this->core_config->registration->module);
-            $location    = $this->getModuleLocation($module_name);
+        $this->emit('reg_data', $data);
 
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
+        if (!$this->core_config->registration->fields) return;
 
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Registration)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает регистрацию'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRegistration($data);
-
-                if ($result_text && is_string($result_text)) {
-                    return json_encode([
-                        'status'  => 'success',
-                        'message' => $result_text,
-                    ]);
-
-                } else {
-                    throw new \Exception($this->_('Не удалось завершить регистрацию. Попробуйте позже, либо свяжитесь с администратором'));
-                }
-
-            } catch (\Exception $e) {
+        $fields = $this->core_config->registration->fields->toArray();
+        foreach ($fields as $key => $field) {
+            if (!empty($field['required']) && empty($data[$key])) {
                 return json_encode([
                     'status'        => 'error',
-                    'error_message' => $e->getMessage(),
+                    'error_message' => sprintf($this->_('Поле %s не заполнено'), $field['title']),
                 ]);
             }
         }
 
-
-        // Стандартная регистрация
-        if (empty($data['name'])) {
+        $data['email'] = isset($data['email']) ? trim($data['email']) : null;
+        $data['login'] = isset($data['login']) ? trim($data['login']) : $data['email'];
+        if (!$data['email']) {
             return json_encode([
                 'status'        => 'error',
-                'error_message' => $this->_('Имя не заполнено'),
+                'error_message' => $this->_('Не удалось получить email для регистрации')
             ]);
         }
-
-        if (empty($data['login'])) {
+        if (!$data['login']) {
             return json_encode([
                 'status'        => 'error',
-                'error_message' => $this->_('Логин не заполнен'),
+                'error_message' => $this->_('Не удалось задать логин пользователя')
             ]);
         }
-
-        if (empty($data['email'])) {
-            return json_encode([
-                'status'        => 'error',
-                'error_message' => $this->_('Email не заполнен'),
-            ]);
-        }
-
-        $data['name']  = trim($data['name']);
-        $data['email'] = trim($data['email']);
-        $data['login'] = trim($data['login']);
-
 
         $isset_user_login = $this->db->fetchOne("
             SELECT 1
@@ -1007,6 +943,7 @@ class Login extends Db {
                 'firstname'  => $firstname,
                 'middlename' => $middlename,
             ]);
+            $this->emit('new_user', $user_id);
         }
 
 
@@ -1029,58 +966,11 @@ class Login extends Db {
      */
     private function registrationComplete($key, $password) {
 
-        // Кастомное завершение регистрации
-        if ($this->core_config->registration->module) {
-            $module_name = strtolower($this->core_config->registration->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Registration)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает регистрацию'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRegistrationComplete($key, $password);
-
-                if ($result_text && is_string($result_text)) {
-                    return json_encode([
-                        'status'  => 'success',
-                        'message' => $result_text,
-                    ]);
-
-                } else {
-                    throw new \Exception($this->_('Не удалось завершить регистрацию. Попробуйте позже, либо свяжитесь с администратором'));
-                }
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
-
-
         $user_info = $this->db->fetchRow("
             SELECT u_id AS id,
                    u_login AS login,
                    email
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1119,47 +1009,6 @@ class Login extends Db {
      */
     private function restore($email) {
 
-        // Кастомное восстановление
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestore($email);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : $this->_('На указанную вами почту отправлены данные для смены пароля'),
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
 
         $user_id = $this->db->fetchOne("
             SELECT u.u_id
@@ -1201,52 +1050,9 @@ class Login extends Db {
      */
     private function restoreComplete($key, $password) {
 
-        // Кастомное завершение восстановления
-        if ($this->core_config->restore->module) {
-            $module_name = strtolower($this->core_config->restore->module);
-            $location    = $this->getModuleLocation($module_name);
-
-            $mod_controller_name = "Mod" . ucfirst($module_name) . "Controller";
-            $vendor_autoload     = "{$location}/vendor/autoload.php";
-
-            if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
-            }
-
-            require_once "{$location}/{$mod_controller_name}.php";
-
-            if (file_exists($vendor_autoload)) {
-                require_once $vendor_autoload;
-            }
-
-            $this->setContext($module_name);
-            $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof \Restore)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает восстановление'), $module_name));
-            }
-
-            try {
-                $result_text = $mod_controller->coreRestoreComplete($key, $password);
-
-                return json_encode([
-                    'status'  => 'success',
-                    'message' => $result_text && is_string($result_text)
-                        ? $result_text
-                        : "<h4>Пароль изменен!</h4><p>Вернитесь на форму входа и войдите в систему с новым паролем</p>",
-                ]);
-
-            } catch (\Exception $e) {
-                return json_encode([
-                    'status'        => 'error',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-        }
-
-
         $user_id = $this->db->fetchOne("
             SELECT u_id
-            FROM core_users 
+            FROM core_users
             WHERE reg_key = ?
               AND date_expired > NOW()
             LIMIT 1
@@ -1288,7 +1094,7 @@ class Login extends Db {
         $content_email = "
             Вы зарегистрированы на сервисе {$host}<br>
             Для продолжения регистрации <b>перейдите по указанной ниже ссылке</b>.<br><br>
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
         ";
 
@@ -1319,7 +1125,7 @@ class Login extends Db {
             Вы запросили смену пароля на сервисе {$host}<br>
             Для продолжения <b>перейдите по указанной ниже ссылке</b>.<br><br>
 
-            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\" 
+            <a href=\"{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}\"
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
         ";
 
@@ -1506,5 +1312,26 @@ class Login extends Db {
         }
 
         return $tpl->render();
+    }
+
+    /**
+     *
+     * @return \ModAuthController
+     * @throws \Exception
+     */
+    private function getAuthModule()
+    {
+        $module_name = 'auth';
+        $location    = $this->getModuleLocation($module_name);
+
+        require_once "{$location}/ModAuthController.php";
+        $vendor_autoload     = "{$location}/vendor/autoload.php";
+
+        if (file_exists($vendor_autoload)) {
+            require_once $vendor_autoload;
+        }
+
+        $this->setContext($module_name);
+        return new \ModAuthController();
     }
 }

@@ -5,6 +5,8 @@ require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
 require_once 'Zend_Registry.php';
+require_once 'Fact.php';
+
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 
@@ -14,6 +16,7 @@ use Laminas\Session\Container as SessionContainer;
  * @property Cache                     $cache
  * @property I18n                      $translate
  * @property Log                       $log
+ * @property Fact                      $fact
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
  * @property \Zend_Config_Ini          $core_config
@@ -35,7 +38,7 @@ class Db {
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
-    private $_db;
+    private $_db = [];
     private string $schemaName = 'public';
 
     /**
@@ -56,12 +59,6 @@ class Db {
         }
 	}
 
-    public function setDatabase($db)
-    {
-        $this->_db = $db;
-    }
-
-
 	/**
 	 * @param string $k
 	 * @return mixed|\Zend_Cache_Core|\Zend_Db_Adapter_Abstract|Log
@@ -75,9 +72,17 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
-            if ($this->_db) return $this->_db;
 			$reg = \Zend_Registry::getInstance();
-			if (!$reg->isRegistered('db')) {
+            if ($reg->isRegistered('invoker')) {
+                $module_config = $this->getModuleConfig($reg->get('invoker'));
+                if ($module_config && $module_config->database) {
+                    if (!isset($this->_db[$reg->get('invoker')])) {
+                        $this->_db[$reg->get('invoker')] = $this->getConnection($module_config->database);
+                    }
+                    return $this->_db[$reg->get('invoker')];
+                }
+            }
+			if (! $reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
 				$db = $this->establishConnection($this->config->database);
@@ -128,7 +133,7 @@ class Db {
 			return $v;
 		}
 		// Получение экземпляра переводчика
-		if ($k == 'translate') {
+        elseif ($k == 'translate') {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
@@ -207,6 +212,16 @@ class Db {
 			}
 			return $v;
 		}
+        // Получение экземпляра регистратора фактов
+        elseif ($k == 'fact') {
+            if (array_key_exists($k, $this->_s)) {
+                $v = $this->_s[$k];
+            } else {
+                $v = new Fact();
+                $this->_s[$k] = $v;
+            }
+            return $v;
+        }
 		return null;
 	}
 
