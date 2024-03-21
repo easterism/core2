@@ -359,8 +359,11 @@ class WorkerManager {
         }
 
         if (isset($opts["c"])) {
-            if (!file_exists($opts["c"])) {
+            if (! file_exists($opts["c"])) {
                 $this->show_help("Application config file {$opts["c"]} not found.");
+            }
+            if ($opts["c"] == 'conf.ini') {
+                $this->show_help("Application config file is wrong.");
             }
         } else {
             $this->show_help("Path to Application config file reqired.");
@@ -370,6 +373,7 @@ class WorkerManager {
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
                 $core_config = $this->parse_config($this->config['file']);
+                Registry::set('core_config', new \Zend_Config($core_config));
                 if (isset($core_config['gearman'])) {
                     $this->config = $core_config['gearman'];
                     $this->config['functions'] = [];
@@ -419,7 +423,6 @@ class WorkerManager {
                 $config2['database'] = $params;
             }
             Registry::set('config', new \Zend_Config($config2));
-            Registry::set('core_config', new \Zend_Config($this->parse_config(__DIR__ . "/../conf.ini", "production")));
         }
         catch (\Zend_Config_Exception $e) {
             $this->show_help($e->getMessage());
