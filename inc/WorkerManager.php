@@ -1304,7 +1304,7 @@ class WorkerManager {
         echo "  -x SECONDS     Maximum seconds for a worker to live\n";
         echo "  -Z             Parse the command line and config file then dump it to the screen and exit.\n";
         echo "  -L LABEL       Label worker process to easy find in process list.\n";
-        echo "  -s SECTION     conf.ini section to use.\n";
+        echo "  -s SECTION     conf.ini section to use. ('production' by default)\n";
         echo "\n";
         exit();
     }
