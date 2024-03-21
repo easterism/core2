@@ -12,6 +12,12 @@ use Laminas\Mime\Part as MimePart;
 
 class Mailer
 {
+    public function __construct()
+    {
+        \Zend_Registry::set('config', Registry::get('config'));
+        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+    }
+
     public function run($job, &$log) {
 
         $workload = json_decode($job->workload());
@@ -19,9 +25,6 @@ class Mailer
             throw new \InvalidArgumentException(json_last_error_msg());
             return;
         }
-        $config = unserialize($workload->config);
-        \Zend_Registry::set('config', $config);
-        \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
         $_SERVER = get_object_vars($workload->server);
 
         $from   = $workload->payload->from;

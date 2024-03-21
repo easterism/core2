@@ -6,7 +6,7 @@
 
 namespace Core2;
 
-require_once "Common.php";
+require_once __DIR__ . "/Common.php";
 
 /**
  * Class Fact

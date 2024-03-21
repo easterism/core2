@@ -1,7 +1,4 @@
 <?php
-
-namespace Core2;
-
 /**
  *
  * PHP script for managing Core2 workers based on Gearman Manager for PHP
@@ -20,9 +17,13 @@ namespace Core2;
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+namespace Core2;
+
+
+require_once "classes/Registry.php";
+
 
 declare(ticks = 1);
-
 error_reporting(E_ALL | E_STRICT);
 
 class WorkerManager {
@@ -397,7 +398,7 @@ class WorkerManager {
                 'driver_options'=> [
                     \PDO::ATTR_TIMEOUT => 3,
                 ],
-                'isDefaultTableAdapter' => true,
+                'isDefaultTableAdapter'      => true,
                 'caseFolding'                => true,
                 'autoQuoteIdentifiers'       => true,
                 'allowSerialization'         => true,
@@ -417,10 +418,10 @@ class WorkerManager {
                 $params = array_merge($config['database'], $config2['database']);
                 $config2['database'] = $params;
             }
-            $this->config['app'] = new \Zend_Config($config2, true);
+            Registry::set(new \Zend_Config($config2, true));
         }
         catch (\Zend_Config_Exception $e) {
-            Error::Exception($e->getMessage());
+            $this->show_help($e->getMessage());
         }
 
         /**
@@ -1343,6 +1344,8 @@ class WorkerManager {
             $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
         }
 
+        register_shutdown_function(array($this, 'fatal_handler'));
+
         $start = time();
 
         while (!$this->stop_work) {
@@ -1402,7 +1405,7 @@ class WorkerManager {
         $job_name = end($job_name);
 
         if ($this->prefix) {
-            $func = $this->prefix.$job_name;
+            $func = $this->prefix . $job_name;
         } else {
             $func = $job_name;
         }
@@ -1529,5 +1532,24 @@ class WorkerManager {
         $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
         $dd = trim($dd, '-');
         return $dd . "-" . $job_name;
+    }
+
+    public function fatal_handler()
+    {
+        $errfile = "unknown file";
+        $errstr  = "shutdown";
+        $errno   = E_CORE_ERROR;
+        $errline = 0;
+
+        $error = error_get_last();
+
+        if ($error !== NULL) {
+            $errno   = $error["type"];
+            $errfile = $error["file"];
+            $errline = $error["line"];
+            $errstr  = $error["message"];
+            $trace   = print_r(debug_backtrace( false ), true);
+            $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_WORKER_INFO);
+        }
     }
 }

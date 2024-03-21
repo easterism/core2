@@ -1,6 +1,7 @@
 <?php
 namespace Core2;
 
+require_once __DIR__ . '/../inc/classes/Registry.php';
 require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Common.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
@@ -13,60 +14,8 @@ class Workhorse
 
     public function __construct()
     {
-        $config = [
-            'system'       => ['name' => 'CORE2'],
-            'include_path' => '',
-            'temp'         => getenv('TMP'),
-            'debug'        => ['on' => false],
-            'session'      => [
-                'cookie_httponly'  => true,
-                'use_only_cookies' => true,
-            ],
-            'database' => [
-                'adapter' => 'Pdo_Mysql',
-                'params'  => [
-                    'charset' => 'utf8',
-                ],
-                'driver_options'=> [
-                    \PDO::ATTR_TIMEOUT => 3,
-                ],
-                'isDefaultTableAdapter' => true,
-                'profiler'              => [
-                    'enabled' => false,
-                    'class'   => 'Zend_Db_Profiler_Firebug',
-                ],
-                'caseFolding'                => true,
-                'autoQuoteIdentifiers'       => true,
-                'allowSerialization'         => true,
-                'autoReconnectOnUnserialize' => true,
-            ],
-        ];
-        // определяем путь к темповой папке
-        if (empty($config['temp'])) {
-            $config['temp'] = sys_get_temp_dir();
-            if (empty($config['temp'])) {
-                $config['temp'] = "/tmp";
-            }
-        }
-
-        try {
-            $config = new \Zend_Config($config, true);
-
-
-            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
-            $config2 = new Zend_Config_Ini($conf_file, $section);
-            $conf_d = DOC_ROOT . "conf.ext.ini";
-            if (file_exists($conf_d)) {
-                $config2->merge(new Zend_Config_Ini($conf_d, $section));
-            }
-            $config->merge($config2);
-        }
-        catch (\Zend_Config_Exception $e) {
-            Error::Exception($e->getMessage());
-        }
-
-        parent::__construct($config);
-        $translate = new I18n($config);
+        \Zend_Registry::set('config', Registry::get('config'));
+        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
     }
 
     public function run($job, &$log) {
@@ -82,12 +31,10 @@ class Workhorse
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             $config = unserialize($workload->config);
-            \Zend_Registry::set('config',      $config);
             \Zend_Registry::set('context',     $workload->context);
             \Zend_Registry::set('auth',        $workload->auth);
-            \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
 
-            $db = new \Core2\Db($config);
+            $db = new Db();
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job) {
                 //задача уже обрабатывается
@@ -116,8 +63,9 @@ class Workhorse
             $log[] = "Run $controller->$action";
 
             $error = null;
-            $out = null;
+            $out   = null;
             try {
+                //выполнение задачи
                 $out = $modWorker->$action($job, $workload->payload);
             } catch (\Exception $e) {
                 $error = $e->getMessage();
