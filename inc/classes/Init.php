@@ -15,6 +15,7 @@ require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Zend_Registry.php'; //DEPRECATED
+require_once 'Registry.php'; //DEPRECATED
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
@@ -22,6 +23,7 @@ use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
+use Core2\Registry;
 
 $conf_file = DOC_ROOT . "conf.ini";
 
@@ -236,6 +238,7 @@ class Init extends \Core2\Db {
 
             if ($this->is_rest || $this->is_soap) {
                 Zend_Registry::set('auth', new StdClass()); //DEPRECATED
+                Registry::set('auth', new StdClass());
                 return;
             }
 
@@ -244,12 +247,14 @@ class Init extends \Core2\Db {
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
                 Zend_Registry::set('auth', $this->auth); //DEPRECATED
+                Registry::set('auth', $this->auth);
                 return; //выходим, если авторизация состоялась
             }
 
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
                 Zend_Registry::set('auth', new StdClass());  //DEPRECATED
+                Registry::set('auth', new StdClass());
                 return;
             }
             //$s = SessionContainer::getDefaultManager()->sessionExists();
@@ -275,7 +280,8 @@ class Init extends \Core2\Db {
                     $this->closeSession('Y');
                 }
             }
-            Zend_Registry::set('auth', $this->auth);
+            Zend_Registry::set('auth', $this->auth);  //DEPRECATED
+            Registry::set('auth', $this->auth);
         }
 
 
@@ -666,7 +672,8 @@ class Init extends \Core2\Db {
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
                 ], 500);
             }
-            Zend_Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
+            Zend_Registry::set('auth', new StdClass()); //DEPRECATED
+            Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
 
@@ -1697,7 +1704,7 @@ class Init extends \Core2\Db {
          * @param string $action
          */
         private function setContext($module, $action = 'index') {
-            $registry     = Zend_Registry::getInstance();
+            $registry     = \Core2\Registry::getInstance();
             //$registry 	= new ServiceManager();
             //$registry->setAllowOverride(true);
             $registry->set('context', array($module, $action));
@@ -1780,11 +1787,11 @@ function post($func, $loc, $data) {
 
     $acl = new \Core2\Acl();
 
-    Zend_Registry::set('context', array($route['module'], $route['action']));
+    \Core2\Registry::set('context', array($route['module'], $route['action']));
 
     if ($route['module'] == 'admin') {
         require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
-        $auth = Zend_Registry::get('auth');
+        $auth = Registry::get('auth');
         if ( ! $auth->ADMIN) throw new Exception(911);
 
         $xajax = new ModAjax($res);

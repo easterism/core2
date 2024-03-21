@@ -15,7 +15,7 @@ class Mailer
     public function __construct()
     {
         \Zend_Registry::set('config', Registry::get('config'));
-        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+        \Zend_Registry::set('core_config',  Registry::get('core_config'));
     }
 
     public function run($job, &$log) {

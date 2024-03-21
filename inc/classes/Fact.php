@@ -6,13 +6,11 @@
 
 namespace Core2;
 
-require_once __DIR__ . "/Common.php";
-
 /**
  * Class Fact
  * @package Core2
  */
-class Fact extends \Common {
+class Fact {
 
     /**
      * @var id for System V IPC
@@ -27,10 +25,9 @@ class Fact extends \Common {
 
     public function __construct()
     {
-        parent::__construct();
-
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
-        $this->shm_id = ftok($eventFile, 't') + $this->auth->ID; //у аждого юзера своя очередь
+        $auth = Registry::get('auth');
+        $this->shm_id = ftok($eventFile, 't') + $auth->ID; //у аждого юзера своя очередь
     }
 
     public function __get($v)

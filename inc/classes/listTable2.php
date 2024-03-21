@@ -199,7 +199,7 @@ class listTable2 extends initList {
 				if ($noauthor) {
 					throw new Exception("Данные не содержат признака автора!");
 				} else {
-					$auth 	= Zend_Registry::get('auth');
+					$auth 	= \Core2\Registry::get('auth');
 					$questions[] = $auth->NAME;
 					$search = " AND author=?";
 				}
@@ -459,7 +459,7 @@ class listTable2 extends initList {
 					if ($noauthor) {
 						throw new Exception("Данные не содержат признака автора!");
 					} else {
-						$auth 	= Zend_Registry::get('auth');
+						$auth 	= \Core2\Registry::get('auth');
 					}
 				}
 				if ($nodelete) {

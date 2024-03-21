@@ -15,7 +15,7 @@ class Workhorse
     public function __construct()
     {
         \Zend_Registry::set('config', Registry::get('config'));
-        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+        \Zend_Registry::set('core_config',  Registry::get('core_config'));
     }
 
     public function run($job, &$log) {
@@ -27,12 +27,12 @@ class Workhorse
             throw new \InvalidArgumentException(json_last_error_msg());
             return;
         }
-        $_SERVER = $workload->server; //
+        $_SERVER = get_object_vars($workload->server);
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             $config = unserialize($workload->config);
-            \Zend_Registry::set('context',     $workload->context);
-            \Zend_Registry::set('auth',        $workload->auth);
+            Registry::set('context',     $workload->context);
+            Registry::set('auth',        $workload->auth);
 
             $db = new Db();
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
@@ -47,9 +47,9 @@ class Workhorse
 
             $handler = $job->handle();
             $db->db->insert("core_worker_jobs", [
-                'id' =>    $id,
+                'id'      =>    $id,
                 'handler' =>    $handler,
-                'status' =>    'start',
+                'status'  =>    'start',
             ]);
             $db->db->closeConnection();
 

@@ -1098,8 +1098,7 @@ class Login extends \Common {
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=registration_complete&key={$reg_key}</a>
         ";
 
-        $reg = \Zend_Registry::getInstance();
-        $reg->set('context', ['queue', 'index']);
+        Registry::set('context', ['queue', 'index']);
 
         require_once 'Email.php';
         $email = new \Core2\Email();
@@ -1129,8 +1128,7 @@ class Login extends \Common {
                style=\"font-size: 16px\">{$protocol}://{$host}{$doc_path}index.php?core=restore_complete&key={$reg_key}</a>
         ";
 
-        $reg = \Zend_Registry::getInstance();
-        $reg->set('context', ['queue', 'index']);
+        Registry::set('context', ['queue', 'index']);
 
         require_once 'Email.php';
         $core_email = new \Core2\Email();
@@ -1147,7 +1145,7 @@ class Login extends \Common {
      * @param string $action
      */
     private function setContext($module, $action = 'index') {
-        \Zend_Registry::set('context', [$module, $action]);
+        Registry::set('context', [$module, $action]);
     }
 
 

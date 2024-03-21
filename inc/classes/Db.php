@@ -71,7 +71,7 @@ class Db {
             return $this->_core_config;
         }
 		if ($k == 'db') {
-			$reg = \Zend_Registry::getInstance();
+			$reg = Registry::getInstance();
             if ($reg->isRegistered('invoker')) {
                 $module_config = $this->getModuleConfig($reg->get('invoker'));
                 if ($module_config && $module_config->database) {
@@ -81,6 +81,8 @@ class Db {
                     return $this->_db[$reg->get('invoker')];
                 }
             }
+
+            $reg = \Zend_Registry::getInstance();
 			if (! $reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
@@ -393,7 +395,7 @@ class Db {
 	 */
 	public function logActivity($exclude = array()): void {
 
-        $auth = \Zend_Registry::get('auth');
+        $auth = Registry::get('auth');
 
         if ($auth->ID && $auth->ID > 0) {
             if ($exclude && in_array($_SERVER['QUERY_STRING'], $exclude)) {

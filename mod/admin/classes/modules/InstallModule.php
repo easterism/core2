@@ -1269,7 +1269,7 @@ class InstallModule extends \Common {
         $this->installPath 	= ((strtolower($mInfo['install']['module_system']) == "y" ? "core2/" : "") . "mod/{$mInfo['install']['module_id']}/v{$mInfo['install']['version']}");
 
         //ID юзера, ставящего модуль
-        $authNamespace 		= \Zend_Registry::get('auth');
+        $authNamespace 		= \Core2\Registry::get('auth');
         $this->lastUser 	= $authNamespace->ID < 0 ? NULL : $authNamespace->ID;
 
         $this->module_is_off = array();

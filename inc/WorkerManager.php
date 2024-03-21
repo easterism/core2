@@ -418,7 +418,8 @@ class WorkerManager {
                 $params = array_merge($config['database'], $config2['database']);
                 $config2['database'] = $params;
             }
-            Registry::set(new \Zend_Config($config2, true));
+            Registry::set('config', new \Zend_Config($config2));
+            Registry::set('core_config', new \Zend_Config($this->parse_config(__DIR__ . "/../conf.ini", "production")));
         }
         catch (\Zend_Config_Exception $e) {
             $this->show_help($e->getMessage());

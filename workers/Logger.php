@@ -18,7 +18,7 @@ class Logger
     {
         $this->_config = Registry::get('config');
         \Zend_Registry::set('config', $this->_config);
-        \Zend_Registry::set('core_config', new \Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
+        \Zend_Registry::set('core_config',  Registry::get('core_config'));
 
         if (isset($this->_config->log) &&
             $this->_config->log &&
