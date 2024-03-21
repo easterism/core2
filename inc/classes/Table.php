@@ -36,6 +36,7 @@ abstract class Table extends Acl {
     protected $show_service             = true;
     protected $show_header              = true;
     protected $show_footer_pages        = true;
+    protected $show_filters_clear       = true;
     protected $edit_url                 = '';
     protected $add_url                  = '';
     protected $table_name               = '';
@@ -683,6 +684,15 @@ abstract class Table extends Acl {
 
 
     /**
+     * @param bool $is_show
+     * @return void
+     */
+    public function showFiltersClear(bool $is_show = true): void {
+        $this->show_filters_clear = $is_show;
+    }
+
+
+    /**
      * Рендеринг таблицы
      * @return string
      * @throws \Exception
@@ -791,15 +801,16 @@ abstract class Table extends Acl {
         $data = [
             'resource' => $this->resource,
             'show'     => [
-                'header'       => $this->show_header,
-                'toolbar'      => $this->show_service,
-                'footer_pages' => $this->show_footer_pages,
-                'footer_total' => $show_footer_total,
-                'delete'       => $this->show_delete,
-                'lineNumbers'  => $this->show_number_rows,
-                'selectRows'   => $this->show_select_rows,
-                'columnManage' => $this->show_column_manage,
-                'templates'    => $this->show_templates,
+                'header'        => $this->show_header,
+                'toolbar'       => $this->show_service,
+                'footer_pages'  => $this->show_footer_pages,
+                'footer_total'  => $show_footer_total,
+                'delete'        => $this->show_delete,
+                'lineNumbers'   => $this->show_number_rows,
+                'selectRows'    => $this->show_select_rows,
+                'columnManage'  => $this->show_column_manage,
+                'templates'     => $this->show_templates,
+                'filters_clear' => $this->show_filters_clear,
             ],
 
             'currency'           => $this->currency,
