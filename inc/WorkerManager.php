@@ -1,7 +1,4 @@
 <?php
-
-namespace Core2;
-
 /**
  *
  * PHP script for managing Core2 workers based on Gearman Manager for PHP
@@ -20,9 +17,13 @@ namespace Core2;
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
+namespace Core2;
+
+
+require_once "classes/Registry.php";
+
 
 declare(ticks = 1);
-
 error_reporting(E_ALL | E_STRICT);
 
 class WorkerManager {
@@ -357,18 +358,18 @@ class WorkerManager {
             $this->show_help();
         }
 
-        if (isset($opts["c"])) {
-            if (!file_exists($opts["c"])) {
-                $this->show_help("Application config file {$opts["c"]} not found.");
-            }
-        } else {
-            $this->show_help("Path to Application config file reqired.");
+        if (!isset($opts["c"])) {
+            $opts["c"] = __DIR__ . "/../../conf.ini";
+        }
+        if (! file_exists($opts["c"])) {
+            $this->show_help("Application config file {$opts["c"]} not found.");
         }
 
         $this->config['file'] = __DIR__ . "/../conf.ini";
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
                 $core_config = $this->parse_config($this->config['file']);
+                Registry::set('core_config', new \Zend_Config($core_config));
                 if (isset($core_config['gearman'])) {
                     $this->config = $core_config['gearman'];
                     $this->config['functions'] = [];
@@ -397,7 +398,7 @@ class WorkerManager {
                 'driver_options'=> [
                     \PDO::ATTR_TIMEOUT => 3,
                 ],
-                'isDefaultTableAdapter' => true,
+                'isDefaultTableAdapter'      => true,
                 'caseFolding'                => true,
                 'autoQuoteIdentifiers'       => true,
                 'allowSerialization'         => true,
@@ -417,10 +418,10 @@ class WorkerManager {
                 $params = array_merge($config['database'], $config2['database']);
                 $config2['database'] = $params;
             }
-            $this->config['app'] = new \Zend_Config($config2, true);
+            Registry::set('config', new \Zend_Config($config2));
         }
         catch (\Zend_Config_Exception $e) {
-            Error::Exception($e->getMessage());
+            $this->show_help($e->getMessage());
         }
 
         /**
@@ -509,7 +510,7 @@ class WorkerManager {
 
         if (isset($this->config['verbose'])) {
             switch ($this->config['verbose']) {
-                case false:
+                case "":
                 case self::LOG_LEVEL_INFO:
                     $this->verbose = self::LOG_LEVEL_INFO;
                     break;
@@ -1302,7 +1303,7 @@ class WorkerManager {
         echo "  -x SECONDS     Maximum seconds for a worker to live\n";
         echo "  -Z             Parse the command line and config file then dump it to the screen and exit.\n";
         echo "  -L LABEL       Label worker process to easy find in process list.\n";
-        echo "  -s SECTION     conf.ini section to use.\n";
+        echo "  -s SECTION     conf.ini section to use. ('production' by default)\n";
         echo "\n";
         exit();
     }
@@ -1342,6 +1343,8 @@ class WorkerManager {
             $this->toLog("Adding job $w ; timeout: " . $timeout, self::LOG_LEVEL_WORKER_INFO);
             $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
         }
+
+        register_shutdown_function(array($this, 'fatal_handler'));
 
         $start = time();
 
@@ -1402,7 +1405,7 @@ class WorkerManager {
         $job_name = end($job_name);
 
         if ($this->prefix) {
-            $func = $this->prefix.$job_name;
+            $func = $this->prefix . $job_name;
         } else {
             $func = $job_name;
         }
@@ -1529,5 +1532,25 @@ class WorkerManager {
         $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
         $dd = trim($dd, '-');
         return $dd . "-" . $job_name;
+    }
+
+    public function fatal_handler()
+    {
+        $errfile = "unknown file";
+        $errstr  = "shutdown";
+        $errno   = E_CORE_ERROR;
+        $errline = 0;
+
+        $error = error_get_last();
+
+        if ($error !== NULL) {
+            $errno   = $error["type"];
+            $errfile = $error["file"];
+            $errline = $error["line"];
+            $errstr  = $error["message"];
+            $trace   = print_r(debug_backtrace( false ), true);
+            if ($this->verbose == self::LOG_LEVEL_DEBUG) echo $errstr . chr(10);
+            $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_WORKER_INFO);
+        }
     }
 }

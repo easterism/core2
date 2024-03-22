@@ -380,7 +380,7 @@ class listTable extends initList {
                 if ( ! isset($is['author'])) {
                     throw new \Exception("Данные не содержат признака автора!");
                 } else {
-                    $auth        = \Zend_Registry::get('auth');
+                    $auth        = \Core2\Registry::get('auth');
                     $questions[] = $auth->NAME;
                     // FIXME Может быть случай, когда в запросе есть две таблицы с полем author. Нужно подставлять alias
                     $search      = " AND author = ?";

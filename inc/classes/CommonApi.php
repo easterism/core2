@@ -26,7 +26,7 @@ class CommonApi extends \Core2\Acl {
 	public function __construct($module) {
 		parent::__construct();
 		$this->module = $module;
-		$this->auth = Zend_Registry::get('auth');
+		$this->auth = \Core2\Registry::get('auth');
 	}
 
 

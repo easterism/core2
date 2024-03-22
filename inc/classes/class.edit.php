@@ -1725,7 +1725,7 @@ class editTable extends initEdit {
 
                         }
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
-							[$module, $action] = Zend_Registry::get('context');
+							[$module, $action] = \Core2\Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("
                                     SELECT id, 
@@ -2261,7 +2261,7 @@ $controlGroups[$cellId]['html'][$key] .= "
             array($this->table, $keyfield, $refid)
         );
         $lastupdate = microtime();
-        $auth = Zend_Registry::get('auth');
+        $auth = \Core2\Registry::get('auth');
         if (!$check) {
             $this->db->insert('core_controls', array(
                 'tbl' 		=> $this->table,

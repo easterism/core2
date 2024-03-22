@@ -464,7 +464,7 @@ class Render extends Acl {
                 ? $this->session->table->filter
                 : [];
 
-            if ( ! empty($filter_value) && count($filter_value)) {
+            if ( ! empty($filter_value) && count($filter_value) && $this->table['show']['filters_clear']) {
                 $tpl->filter_controls->filter_clear->assign('[CLEAR_TEXT]', $this->getLocution('Clear'));
             }
 

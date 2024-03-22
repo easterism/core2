@@ -391,7 +391,7 @@ class Db extends Table {
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth   = \Zend_Registry::get('auth');
+                $auth   = \Core2\Registry::get('auth');
                 $alias  = "{$this->table}.";
                 $tables = $select->getPart($select::FROM);
 
@@ -739,7 +739,7 @@ class Db extends Table {
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth         = \Zend_Registry::get('auth');
+                $auth         = \Core2\Registry::get('auth');
                 $quoted_value = $db->quote($auth->NAME);
                 $alias        = $select->getTableAlias();
                 $alias        = $alias ? "{$alias}." : "{$this->table}.";
