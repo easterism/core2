@@ -499,7 +499,7 @@ class ModAjax extends ajaxFunc {
         $data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
 
 
-        $authNamespace = Zend_Registry::get('auth');
+        $authNamespace = \Core2\Registry::get('auth');
 
         $dataForSave = [
             'visible'         => $data['control']['visible'],
@@ -755,7 +755,7 @@ class ModAjax extends ajaxFunc {
 
 		$this->db->beginTransaction();
 		try {
-			$authNamespace = Zend_Registry::get('auth');
+			$authNamespace = \Core2\Registry::get('auth');
 			foreach ($data['control'] as $field => $value) {
 				$where = $this->db->quoteInto("code = ?", $field);		
 				$this->db->update('core_settings',

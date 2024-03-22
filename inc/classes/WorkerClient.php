@@ -167,7 +167,7 @@ class WorkerClient {
      */
     private function getWorkload($worker, $data) {
 
-        $auth     = \Zend_Registry::get('auth');
+        $auth     = Registry::get('auth');
         $dt       = new \DateTime();
         $workload = [
             'timestamp' => $dt->format('U'),
@@ -182,7 +182,7 @@ class WorkerClient {
             $workload += [
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
-                'context'   => \Zend_Registry::get('context'),
+                'context'   => Registry::get('context'),
                 'translate' => serialize(\Zend_Registry::get('translate')),
                 'worker'    => $worker
             ];
