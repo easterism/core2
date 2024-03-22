@@ -358,15 +358,11 @@ class WorkerManager {
             $this->show_help();
         }
 
-        if (isset($opts["c"])) {
-            if (! file_exists($opts["c"])) {
-                $this->show_help("Application config file {$opts["c"]} not found.");
-            }
-            if ($opts["c"] == 'conf.ini') {
-                $this->show_help("Application config file is wrong.");
-            }
-        } else {
-            $this->show_help("Path to Application config file reqired.");
+        if (!isset($opts["c"])) {
+            $opts["c"] = __DIR__ . "/../../conf.ini";
+        }
+        if (! file_exists($opts["c"])) {
+            $this->show_help("Application config file {$opts["c"]} not found.");
         }
 
         $this->config['file'] = __DIR__ . "/../conf.ini";
