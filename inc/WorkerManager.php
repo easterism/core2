@@ -514,7 +514,7 @@ class WorkerManager {
 
         if (isset($this->config['verbose'])) {
             switch ($this->config['verbose']) {
-                case false:
+                case "":
                 case self::LOG_LEVEL_INFO:
                     $this->verbose = self::LOG_LEVEL_INFO;
                     break;
@@ -1553,6 +1553,7 @@ class WorkerManager {
             $errline = $error["line"];
             $errstr  = $error["message"];
             $trace   = print_r(debug_backtrace( false ), true);
+            if ($this->verbose == self::LOG_LEVEL_DEBUG) echo $errstr . chr(10);
             $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_WORKER_INFO);
         }
     }
