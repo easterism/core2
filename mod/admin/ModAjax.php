@@ -1,9 +1,7 @@
 <?php
+require_once("core2/inc/ajax.func.php");
 
 use Laminas\Session\Container as SessionContainer;
-
-
-require_once("core2/inc/ajax.func.php");
 
 
 /**
@@ -472,7 +470,6 @@ class ModAjax extends ajaxFunc {
         $core_config            = \Zend_Registry::getInstance()->get('core_config');
         $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
         $is_auth_pass_on        = true;
-        if ($core_config->auth) $is_auth_pass_on        = $core_config->auth && $core_config->auth->pass && $core_config->auth->pass->on;
         $is_auth_ldap_on        = $this->config->ldap && $this->config->ldap->active;
 
         $refid  = $this->getSessFormField($data['class_id'], 'refid');
@@ -502,7 +499,7 @@ class ModAjax extends ajaxFunc {
         $data['control']['middlename'] = trim(strip_tags($data['control']['middlename']));
 
 
-        $authNamespace = Zend_Registry::get('auth');
+        $authNamespace = \Core2\Registry::get('auth');
 
         $dataForSave = [
             'visible'         => $data['control']['visible'],
@@ -758,7 +755,7 @@ class ModAjax extends ajaxFunc {
 
 		$this->db->beginTransaction();
 		try {
-			$authNamespace = Zend_Registry::get('auth');
+			$authNamespace = \Core2\Registry::get('auth');
 			foreach ($data['control'] as $field => $value) {
 				$where = $this->db->quoteInto("code = ?", $field);		
 				$this->db->update('core_settings',

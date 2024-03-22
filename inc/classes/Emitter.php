@@ -43,7 +43,7 @@ class Emitter {
     public function emit() {
 
         $mods = $this->that->modAdmin->dataModules->getIds();
-        $auth = \Zend_Registry::get('auth');
+        $auth = Registry::get('auth');
         $out  = [];
 
         foreach ($mods as $id => $mod) {

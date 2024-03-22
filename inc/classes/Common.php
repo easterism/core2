@@ -56,8 +56,8 @@ class Common extends \Core2\Acl {
 //        }
 
 		parent::__construct();
-        $reg     = Zend_Registry::getInstance();
-		$context = $reg->get('context');
+        $reg     = \Core2\Registry::getInstance();
+		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
 
         if ($mod_name) {
             $this->module = strtolower($mod_name);
@@ -112,7 +112,7 @@ class Common extends \Core2\Acl {
      * @throws Zend_Exception
      */
     public function getInvoker() {
-        return Zend_Registry::get('invoker');
+        return \Core2\Registry::get('invoker');
     }
 
 
@@ -126,7 +126,7 @@ class Common extends \Core2\Acl {
      */
     public function __get($k) {
 		//исключение для герета базы или кеша, выполняется всегда
-		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config'])) {
+		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
 			return parent::__get($k);
 		}
 		//геттер для модели

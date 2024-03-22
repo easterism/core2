@@ -13,7 +13,17 @@ class SSE extends \Common {
     {
         parent::__construct();
 
-        $mods = $this->dataModules->getModuleList();
+        //события ядра
+        $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
+        require_once $eventFile;
+        $shm_key = ftok($eventFile, 't') + $this->auth->ID; //у аждого юзера своя очередь
+        if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
+        $eventClass = new MessageQueue();
+        $eventClass->setQueue(msg_get_queue($shm_key));
+        $this->_events["Core2-Fact"] = $eventClass;
+
+        //события модулей
+        $mods = $this->db->fetchAll($this->dataModules->select()->where("visible = 'Y'"));
         foreach ($mods as $mod) {
             $location      = $this->getModuleLocation($mod['module_id']);
             if (!is_dir($location . "/events")) continue;
@@ -30,6 +40,8 @@ class SSE extends \Common {
                 }
             }
         }
+        $this->db->closeConnection();
+        set_time_limit(0);
     }
 
     /**
@@ -65,20 +77,36 @@ class SSE extends \Common {
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
-
         foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
+                $path = str_replace("\\", "-" , $path);
+
                 ob_start();
-                $event->dispatch();
-                $data[str_replace("\\", "-" , $path)] = ob_get_clean();
+                $msgs = $event->dispatch();
+
+                $data[$path] = ob_get_clean();
+
+                if ($data[$path] || ($msgs && is_array($msgs))) {
+                    if ($data[$path]) {
+                        echo "event: modules\n",
+                        'data: ', json_encode([$path => $data[$path]]), "\n\n";
+                    }
+                    if ($msgs) {
+                        foreach ($msgs as $topic => $msg) {
+                            if ($topic !== 'public') $topic = "-{$topic}";
+                            else $topic = '';
+
+                            echo "event: modules\n",
+                            'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                        }
+                    }
+                    $this->doFlush();
+                }
             }
         }
 
         if ($data) {
-            echo "event: modules\n",
-                'data: ', json_encode($data), "\n\n";
-
             echo "event: Core2\n",
                 'data: произошли события: ',
                 implode("\ndata: ", array_keys($data)),
@@ -87,6 +115,4 @@ class SSE extends \Common {
 
         $this->doFlush();
     }
-
-
 }

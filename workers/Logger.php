@@ -11,6 +11,30 @@ use Core2\Log;
 
 class Logger
 {
+    private $_config;
+    private $_writer;
+
+    public function __construct()
+    {
+        $this->_config = Registry::get('config');
+        \Zend_Registry::set('config', $this->_config);
+        \Zend_Registry::set('core_config',  Registry::get('core_config'));
+
+        if (isset($this->_config->log) &&
+            $this->_config->log &&
+            isset($this->_config->log->system->writer) &&
+            $this->_config->log->system->writer == 'file'
+        ) {
+            if ( ! $this->_config->log->system->file) {
+                throw new \Exception('Не задан файл журнала запросов');
+            }
+            $this->_writer = 'file';
+
+        } else {
+            $this->_writer = 'db';
+        }
+    }
+
     public function run($job, &$log) {
 
         $workload = json_decode($job->workload());
@@ -18,23 +42,12 @@ class Logger
             throw new \InvalidArgumentException(json_last_error_msg());
             return;
         }
-        $config = unserialize($workload->config);
-
-        \Zend_Registry::set('config', $config);
-        \Zend_Registry::set('core_config', new Zend_Config_Ini(__DIR__ . "/../conf.ini", 'production'));
 
         $_SERVER = get_object_vars($workload->server);
 
         $data = []; //данные для сохранения в базу
-        if (isset($config->log) &&
-            $config->log &&
-            isset($config->log->system->writer) &&
-            $config->log->system->writer == 'file'
-        ) {
-            if ( ! $config->log->system->file) {
-                throw new \Exception('Не задан файл журнала запросов');
-            }
-            $log[] = "Запись в файл " . $config->log->system->file;
+        if ($this->_writer == 'file') {
+            $log[] = "Запись в файл " . $this->_config->log->system->file;
 
             $corelog = new Log('access');
             $corelog->access($workload->auth->NAME, $workload->payload->sid);
@@ -44,9 +57,8 @@ class Logger
             if ($data['action']) {
                 $data['action'] = serialize($data['action']);
             }
-            $db = new Db($config);
             //$log[] = "Соединяемся с базой...";
-            $mysql = $db->db;
+            $mysql = (new Db())->db;
             try {
                 $mysql->insert('core_log', $data);
 

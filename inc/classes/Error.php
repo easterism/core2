@@ -21,9 +21,12 @@ class Error {
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
 			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
-			if (!$code) $code == 200;
+			if (!$code) $code = 200;
             if ($code == 403) {
                 header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+            }
+            if ($code == 404) {
+                header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
             }
 			if ($code == 13) { //ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
@@ -79,15 +82,12 @@ class Error {
 		if ($code == 503) {
             self::Exception($message, $code);
         }
-
-
 		if ($message == '911') {
 			$text = 'Доступ закрыт! Если вы уверены, что вам сюда можно, обратитесь к администратору.';
 			self::Exception($text, $code);
 
 		} elseif ($message == '404') {
-            header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
-			self::Exception('Нет такой страницы', $code);
+			self::Exception('Нет такой страницы', 404);
 
 		} elseif ($message == 'expired') {
             setcookie($cnf->session->name, false);
@@ -176,12 +176,16 @@ class Error {
 	public static function catchJsonException($out = [], $code = 0) {
 
 	    if (!$out) $out = [];
+        if (!is_array($out)) $out = trim($out) ? ["msg" => $out] : [];
 
 		if ($code == 400) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
 
 		} elseif ($code == 403) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
+
+		} elseif ($code == 404) {
+			header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
 
 		} elseif ($code == 500) {
 			header("{$_SERVER['SERVER_PROTOCOL']} 500 Internal Server Error");

@@ -24,6 +24,7 @@ class Db extends Table {
     protected $select        = null;
     protected $is_fetched    = false;
     protected $query_parts   = [];
+    private $_db;
 
 
     /**
@@ -71,6 +72,10 @@ class Db extends Table {
         }
     }
 
+    public function setDatabase($db)
+    {
+        $this->_db = $db;
+    }
 
     /**
      * @param string $key
@@ -376,25 +381,17 @@ class Db extends Table {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $table_columns = $this->db->fetchCol("
-                SELECT column_name 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE table_schema = ? 
-                  AND table_name = ?
-            ", [
-                $this->getDbSchema(),
-                $this->table
-            ]);
+            $table_columns = $this->db->describeTable(trim($this->table, '`'));
 
-            if (in_array('seq', $table_columns)) {
+            if (isset($table_columns['seq'])) {
                 $this->records_seq = true;
             }
 
-            if (in_array('author', $table_columns) &&
+            if (isset($table_columns['author']) &&
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth   = \Zend_Registry::get('auth');
+                $auth   = \Core2\Registry::get('auth');
                 $alias  = "{$this->table}.";
                 $tables = $select->getPart($select::FROM);
 
@@ -509,6 +506,7 @@ class Db extends Table {
 
         $select = new Table\Db\Select($query);
 
+        $db = $this->_db ? $this->_db : $this->db;
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
@@ -527,8 +525,8 @@ class Db extends Table {
                         case self::SEARCH_NUMBER:
                             if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($value[0]) || ! empty($value[1])) {
-                                    $quoted_value1 = $this->db->quote($search_value[0]);
-                                    $quoted_value2 = $this->db->quote($search_value[1]);
+                                    $quoted_value1 = $db->quote($search_value[0]);
+                                    $quoted_value2 = $db->quote($search_value[1]);
 
                                     $where = str_replace("ADD_SEARCH1", $quoted_value1, $search_field);
                                     $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
@@ -538,16 +536,16 @@ class Db extends Table {
 
                             } else {
                                 if ( ! empty($search_value[0]) && empty($search_value[1])) {
-                                    $quoted_value = $this->db->quote($search_value[0]);
+                                    $quoted_value = $db->quote($search_value[0]);
                                     $select->addWhere("{$search_field} >= {$quoted_value}");
 
                                 } elseif (empty($search_value[0]) && ! empty($search_value[1])) {
-                                    $quoted_value = $this->db->quote($search_value[1]);
+                                    $quoted_value = $db->quote($search_value[1]);
                                     $select->addWhere("{$search_field} <= {$quoted_value}");
 
                                 } elseif ( ! empty($search_value[0]) && ! empty($search_value[1])) {
-                                    $quoted_value1 = $this->db->quote($search_value[0]);
-                                    $quoted_value2 = $this->db->quote($search_value[1]);
+                                    $quoted_value1 = $db->quote($search_value[0]);
+                                    $quoted_value2 = $db->quote($search_value[1]);
                                     $select->addWhere("{$search_field} BETWEEN {$quoted_value1} AND {$quoted_value2}");
                                 }
                             }
@@ -559,7 +557,7 @@ class Db extends Table {
                         case self::SEARCH_SELECT:
                         case self::SEARCH_SELECT2:
                             if ($search_value != '') {
-                                $quoted_value = $this->db->quote($search_value);
+                                $quoted_value = $db->quote($search_value);
 
                                 if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
@@ -573,7 +571,7 @@ class Db extends Table {
                         case self::SEARCH_MULTISELECT:
                         case self::SEARCH_MULTISELECT2:
                             if ( ! empty($search_value)) {
-                                $quoted_value = $this->db->quote($search_value);
+                                $quoted_value = $db->quote($search_value);
 
                                 if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
@@ -589,15 +587,15 @@ class Db extends Table {
 
                                 if ($search_value != '') {
                                     if (strpos($search_field, '%ADD_SEARCH%') !== false) {
-                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $quoted_value = $db->quote("%{$search_value}%");
                                         $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $search_field));
 
                                     } elseif (strpos($search_field, 'ADD_SEARCH') !== false) {
-                                        $quoted_value = $this->db->quote($search_value);
+                                        $quoted_value = $db->quote($search_value);
                                         $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));
 
                                     } else {
-                                        $quoted_value = $this->db->quote("%{$search_value}%");
+                                        $quoted_value = $db->quote("%{$search_value}%");
                                         $select->addWhere("{$search_field} LIKE {$quoted_value}");
                                     }
                                 }
@@ -626,8 +624,8 @@ class Db extends Table {
                         case self::FILTER_NUMBER:
                             if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {
-                                    $quoted_value1 = $this->db->quote($filter_value[0]);
-                                    $quoted_value2 = $this->db->quote($filter_value[1]);
+                                    $quoted_value1 = $db->quote($filter_value[0]);
+                                    $quoted_value2 = $db->quote($filter_value[1]);
 
                                     $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
                                     $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
@@ -637,16 +635,16 @@ class Db extends Table {
 
                             } else {
                                 if ( ! empty($filter_value[0]) && empty($filter_value[1])) {
-                                    $quoted_value = $this->db->quote($filter_value[0]);
+                                    $quoted_value = $db->quote($filter_value[0]);
                                     $select->addWhere("{$filter_field} >= {$quoted_value}");
 
                                 } elseif (empty($filter_value[0]) && ! empty($filter_value[1])) {
-                                    $quoted_value = $this->db->quote($filter_value[1]);
+                                    $quoted_value = $db->quote($filter_value[1]);
                                     $select->addWhere("{$filter_field} <= {$quoted_value}");
 
                                 } elseif ( ! empty($filter_value[0]) && ! empty($filter_value[1])) {
-                                    $quoted_value1 = $this->db->quote($filter_value[0]);
-                                    $quoted_value2 = $this->db->quote($filter_value[1]);
+                                    $quoted_value1 = $db->quote($filter_value[0]);
+                                    $quoted_value2 = $db->quote($filter_value[1]);
                                     $select->addWhere("{$filter_field} BETWEEN {$quoted_value1} AND {$quoted_value2}");
                                 }
                             }
@@ -659,8 +657,8 @@ class Db extends Table {
                                 $date_end   = new \DateTime($date_start->format('Y-m-t'));
 
                                 if (strpos($filter_field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value1 = $this->db->quote($date_start->format('Y-m-d 00:00:00'));
-                                    $quoted_value2 = $this->db->quote($date_end->format('Y-m-d 23:59:59'));
+                                    $quoted_value1 = $db->quote($date_start->format('Y-m-d 00:00:00'));
+                                    $quoted_value2 = $db->quote($date_end->format('Y-m-d 23:59:59'));
 
                                     $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
                                     $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
@@ -668,8 +666,8 @@ class Db extends Table {
                                     $select->addWhere($where);
 
                                 } else {
-                                    $where  = $this->db->quoteInto("{$filter_field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
-                                    $where .= $this->db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
+                                    $where  = $db->quoteInto("{$filter_field} BETWEEN ?", $date_start->format('Y-m-d 00:00:00'));
+                                    $where .= $db->quoteInto(" AND ? ", $date_end->format('Y-m-d 23:59:59'));
                                     $select->addWhere($where);
                                 }
                             }
@@ -679,7 +677,7 @@ class Db extends Table {
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
                             if ($filter_value != '') {
-                                $quoted_value = $this->db->quote($filter_value);
+                                $quoted_value = $db->quote($filter_value);
 
                                 if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $filter_field));
@@ -691,7 +689,7 @@ class Db extends Table {
 
                         case self::FILTER_CHECKBOX:
                             if ( ! empty($filter_value)) {
-                                $quoted_value = $this->db->quote($filter_value);
+                                $quoted_value = $db->quote($filter_value);
 
                                 if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $filter_field));
@@ -706,15 +704,15 @@ class Db extends Table {
 
                             if ($filter_value != '') {
                                 if (strpos($filter_field, '%ADD_SEARCH%') !== false) {
-                                    $quoted_value = $this->db->quote("%{$filter_value}%");
+                                    $quoted_value = $db->quote("%{$filter_value}%");
                                     $select->addWhere(str_replace("%ADD_SEARCH%", $quoted_value, $filter_field));
 
                                 } elseif (strpos($filter_field, 'ADD_SEARCH') !== false) {
-                                    $quoted_value = $this->db->quote($filter_value);
+                                    $quoted_value = $db->quote($filter_value);
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $filter_field));
 
                                 } else {
-                                    $quoted_value = $this->db->quote('%' . $filter_value . '%');
+                                    $quoted_value = $db->quote('%' . $filter_value . '%');
                                     $select->addWhere("{$filter_field} LIKE {$quoted_value}");
                                 }
                             }
@@ -731,26 +729,18 @@ class Db extends Table {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $table_columns = $this->db->fetchCol("
-                SELECT column_name 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE table_schema = ? 
-                  AND table_name = ?
-            ", [
-                $this->getDbSchema(),
-                $this->table
-            ]);
+            $table_columns = $this->db->describeTable(trim($this->table, '`'));
 
-            if (in_array('seq', $table_columns)) {
+            if (isset($table_columns['seq'])) {
                 $this->records_seq = true;
             }
 
-            if (in_array('author', $table_columns) &&
+            if (isset($table_columns['author']) &&
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                $auth         = \Zend_Registry::get('auth');
-                $quoted_value = $this->db->quote($auth->NAME);
+                $auth         = \Core2\Registry::get('auth');
+                $quoted_value = $db->quote($auth->NAME);
                 $alias        = $select->getTableAlias();
                 $alias        = $alias ? "{$alias}." : "{$this->table}.";
 
@@ -796,7 +786,7 @@ class Db extends Table {
                 $select_sql = str_replace(' SQL_CALC_FOUND_ROWS', "", $select_sql);
             }
 
-            $explain = $this->db->fetchAll('EXPLAIN ' . $select_sql, $this->query_params);
+            $explain = $db->fetchAll('EXPLAIN ' . $select_sql, $this->query_params);
 
             foreach ($explain as $value) {
                 if ($value['rows'] > $this->records_total_round) {
@@ -808,7 +798,7 @@ class Db extends Table {
             $select_sql         = $select->getSql();
             $this->query_result = $select_sql;
 
-            $result = $this->db->fetchAll($select_sql, $this->query_params);
+            $result = $db->fetchAll($select_sql, $this->query_params);
 
             if (count($result) > $this->records_per_page) {
                 $this->records_total      = $offset + $this->records_per_page;
@@ -835,8 +825,8 @@ class Db extends Table {
 
             $this->query_result = $select_sql;
 
-            $result = $this->db->fetchAll($select_sql, $this->query_params);
-            $this->records_total = $this->db->fetchOne("SELECT FOUND_ROWS()");
+            $result = $db->fetchAll($select_sql, $this->query_params);
+            $this->records_total = $db->fetchOne("SELECT FOUND_ROWS()");
         }
 
 

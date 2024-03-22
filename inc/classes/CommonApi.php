@@ -26,7 +26,7 @@ class CommonApi extends \Core2\Acl {
 	public function __construct($module) {
 		parent::__construct();
 		$this->module = $module;
-		$this->auth = Zend_Registry::get('auth');
+		$this->auth = \Core2\Registry::get('auth');
 	}
 
 
@@ -79,16 +79,42 @@ class CommonApi extends \Core2\Acl {
             }
 			// Получение экземпляра модели текущего модуля
 			elseif (strpos($k, 'data') === 0) {
-				$model    = substr($k, 4);
-				$location = $this->module == 'admin'
-						? DOC_ROOT . "core2/mod/admin"
-						: $this->getModuleLocation($this->module);
-
-				if (!file_exists($location . "/Model/$model.php")) throw new Exception('Модель не найдена.');
-				$this->db; //FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
-				require_once($location . "/Model/$model.php");
-				$v = $this->{$k} = new $model();
+                return parent::__get($k . "|" . $this->module);
 			}
+            elseif (strpos($k, 'api') === 0) {
+                $module = substr($k, 3);
+
+                if ($this->isModuleActive($module)) {
+                    $location = $module == 'Admin'
+                        ? DOC_ROOT . "core2/mod/admin"
+                        : $this->getModuleLocation($module);
+
+                    $module     = ucfirst($module);
+                    $module_api = "Mod{$module}Api";
+
+                    if ( ! file_exists("{$location}/{$module_api}.php")) {
+                        return new stdObject();
+
+                    } else {
+                        $autoload_file = $location . "/vendor/autoload.php";
+
+                        if (file_exists($autoload_file)) {
+                            require_once($autoload_file);
+                        }
+
+                        require_once "{$location}/{$module_api}.php";
+
+                        $api = new $module_api();
+                        if ( ! is_subclass_of($api, 'CommonApi')) {
+                            return new stdObject();
+                        }
+
+                        $v = $this->{$k} = $api;
+                    }
+                } else {
+                    return new stdObject();
+                }
+            }
             elseif ($k === 'moduleConfig') {
                 $module_loc = $this->getModuleLocation($this->module);
                 $conf_file  = "{$module_loc}/conf.ini";

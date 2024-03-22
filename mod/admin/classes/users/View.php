@@ -1,10 +1,10 @@
 <?php
 namespace Core2\Mod\Admin\Users;
 
-require_once DOC_ROOT . 'core2/inc/classes/class.list.php';
-require_once DOC_ROOT . 'core2/inc/classes/class.edit.php';
-require_once DOC_ROOT . 'core2/inc/classes/class.tab.php';
-require_once DOC_ROOT . 'core2/inc/classes/Common.php';
+require_once __DIR__ . '/../../../../inc/classes/class.list.php';
+require_once __DIR__ . '/../../../../inc/classes/class.edit.php';
+require_once __DIR__ . '/../../../../inc/classes/class.tab.php';
+require_once __DIR__ . '/../../../../inc/classes/Common.php';
 
 
 /**
@@ -129,14 +129,7 @@ class View extends \Common {
 
         $is_auth_certificate_on = $this->core_config->auth && $this->core_config->auth->x509 && $this->core_config->auth->x509->on;
 
-
-        if ($this->core_config->auth && $this->core_config->auth->pass) {
-            $is_auth_pass_on = $this->core_config->auth->pass->on;
-        } else {
-            $is_auth_pass_on = true;
-        }
-
-
+        $is_auth_pass_on = true;
 
         if ($this->auth->LDAP) {
             unset($fields[7]);

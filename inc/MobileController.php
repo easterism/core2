@@ -171,7 +171,7 @@ class MobileController extends Common {
                     if ($noauthor) {
                         throw new Exception($this->translate->tr("Данные не содержат признака автора!"));
                     } else {
-                        $auth = Zend_Registry::get('auth');
+                        $auth = \Core2\Registry::get('auth');
                     }
                 }
                 if ($nodelete) {
@@ -643,7 +643,7 @@ class MobileController extends Common {
 			$this->db->beginTransaction();
 			
 			try {
-				$authNamespace = Zend_Registry::get('auth');
+				$authNamespace = \Core2\Registry::get('auth');
 				$send_info_sw = false;
 			  	if (!empty($data['control']['send_info_sw'][0]) && $data['control']['send_info_sw'][0] == 'Y') {
 		     		$send_info_sw = true;

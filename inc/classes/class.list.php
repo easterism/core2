@@ -52,6 +52,7 @@ class listTable extends initList {
     private $scripts            = array();
     private $service_content    = array();
     private $show_templates     = false;
+    private $_db;
 
 
     /**
@@ -73,6 +74,11 @@ class listTable extends initList {
     public function showTemplates() {
 
         $this->show_templates = true;
+    }
+
+    public function setDatabase($db)
+    {
+        $this->_db = $db;
     }
 
 
@@ -258,6 +264,7 @@ class listTable extends initList {
             $tmp[$countPOST] = (int)$_POST[$countPOST];
         }
 
+        $db = $this->_db ? $this->_db : $this->db;
 
         //SEARCH
         if ( ! empty($_POST['search'][$this->main_table_id])) {
@@ -362,26 +369,18 @@ class listTable extends initList {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $is = $this->db->fetchCol("
-                SELECT column_name 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE table_schema = ? 
-                  AND table_name = ?
-            ", [
-                $this->getDbSchema(),
-                $this->table
-            ]);
+            $is = $this->db->describeTable(trim($this->table, '`'));
 
-            if (in_array('seq', $is)) $this->is_seq = true;
+            if (isset($is['seq'])) $this->is_seq = true;
 
-            if (in_array('author', $is) &&
+            if (isset($is['author']) &&
                 $this->checkAcl($this->resource, 'list_owner') &&
                 ! $this->checkAcl($this->resource, 'list_all')
             ) {
-                if ( ! in_array('author', $is)) {
+                if ( ! isset($is['author'])) {
                     throw new \Exception("Данные не содержат признака автора!");
                 } else {
-                    $auth        = \Zend_Registry::get('auth');
+                    $auth        = \Core2\Registry::get('auth');
                     $questions[] = $auth->NAME;
                     // FIXME Может быть случай, когда в запросе есть две таблицы с полем author. Нужно подставлять alias
                     $search      = " AND author = ?";
@@ -490,13 +489,13 @@ class listTable extends initList {
                                                 if (is_array($search_value) && ! empty($search_value)) {
                                                     $search_checkbox = array();
                                                     foreach ($search_value as $search_val) {
-                                                        $search_checkbox[] = str_replace("ADD_SEARCH", $this->db->quote($search_val), $next['field']);
+                                                        $search_checkbox[] = str_replace("ADD_SEARCH", $db->quote($search_val), $next['field']);
                                                     }
 
                                                     $search .= " AND (" . implode(" OR ", $search_checkbox) . ")";
 
                                                 } else {
-                                                    $search .= " AND " . str_replace("ADD_SEARCH", $this->db->quote($search_value), $next['field']);
+                                                    $search .= " AND " . str_replace("ADD_SEARCH", $db->quote($search_value), $next['field']);
                                                 }
                                             }
                                         }
@@ -564,7 +563,7 @@ class listTable extends initList {
         if ( ! empty($questions)) {
             $this->search_sql = $search;
             foreach ($questions as $question) {
-                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
+                $this->search_sql = $db->quoteInto($this->search_sql, $question, null, 1);
             }
         } else {
             $this->search_sql = $search;
@@ -573,7 +572,7 @@ class listTable extends initList {
 //        if ( ! empty($questions)) {
 //            $this->search_sql = $search;
 //            foreach ($questions as $question) {
-//                $this->search_sql = $this->db->quoteInto($this->search_sql, $question, null, 1);
+//                $this->search_sql = $db->quoteInto($this->search_sql, $question, null, 1);
 //            }
 //        } else {
 //            $this->search_sql = $search;
@@ -625,22 +624,25 @@ class listTable extends initList {
 
         if ($this->SQL) {
             if ($this->roundRecordCount) {
-                $expl = $this->db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
+//                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
+                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL);
                 $this->recordCount = 0;
                 foreach ($expl as $value) {
                     if ($value['rows'] > $this->recordCount) {
                         $this->recordCount = $value['rows'];
                     };
                 }
-                $res = $this->db->fetchAll($this->SQL, $questions);
+//                $res = $db->fetchAll($this->SQL, $questions);
+                $res = $db->fetchAll($this->SQL);
             } else {
                 if ($this->config->database->adapter === 'Pdo_Mysql') {
-                    $res = $this->db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
-                    if (!$this->recordCount) $this->recordCount = $this->db->fetchOne("SELECT FOUND_ROWS()");
+                    //$res = $db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
+                    $res = $db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6));
+                    if (!$this->recordCount) $this->recordCount = $db->fetchOne("SELECT FOUND_ROWS()");
                 } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
                     $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
-                    $res = $this->db->fetchAll($this->SQL, $questions);
-                    $this->recordCount = $this->db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
+                    $res = $db->fetchAll($this->SQL, $questions);
+                    $this->recordCount = $db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
                 }
             }
         }
