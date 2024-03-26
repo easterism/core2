@@ -627,66 +627,121 @@ class WorkerManager {
 
     }
 
+
     /**
-     * Parses the config file
-     *
-     * @param   string    $file     The config file. Just pass so we don't have
-     *                              to keep it around in a var
+     * Parses INI file adding extends functionality via ":base" postfix on namespace.
+     * @param string $file
+     * @param string $section
+     * @return array
+     * @throws \Exception
      */
-    protected function parse_config($file, $section = 'production') {
+    protected function parse_config(string $file, string $section = 'production'): array {
 
         $this->toLog("Loading configuration from $file");
-        $loaded = parse_ini_file($file, true);
+        $config  = parse_ini_file($file, true);
+        $config  = $this->resolveNestedSections($config);
 
-        $iniArray = array();
-        foreach ($loaded as $key => $data)
-        {
-            $pieces = explode(":", $key);
-            $thisSection = trim($pieces[0]);
-            switch (count($pieces)) {
-                case 1:
-                    $iniArray[$thisSection] = $data;
-                    break;
-
-                case 2:
-                    $extendedSection = trim($pieces[1]);
-                    $iniArray[$thisSection] = array_merge(array(';extends'=>$extendedSection), $data);
-                    break;
-
-                default:
-                    /**
-                     * @see Zend_Config_Exception
-                     */
-                    // require_once 'Zend/Config/Exception.php';
-                    throw new \Exception("Section '$thisSection' may not extend multiple sections in $file");
+        foreach ($config as $namespace => $properties) {
+            if (is_array($properties)) {
+                // overwrite / set current namespace values
+                foreach ($properties as $key => $val) {
+                    $config[$namespace] = $this->_processKey($config[$namespace], $key, $val);
+                    unset($config[$namespace][$key]);
+                }
             }
         }
-        $dataArray = array();
-        foreach ($iniArray as $sectionName => $sectionData) {
-            //$dataArray[$sectionName] = $this->_processSection($iniArray, $sectionName);
-            $config = [];
-            foreach ($sectionData as $key => $value) {
-                $config = $this->_processKey($config, $key, $value);
-            }
-            $dataArray[$sectionName] = $config;
-        }
-        if (empty($dataArray)) {
+
+
+        if (empty($config)) {
             $this->show_help("No configuration found in $file");
         }
-        if (!isset($dataArray[$section])) {
+
+        if ( ! isset($config[$section])) {
             $this->show_help("No section $section found in $file");
         }
-        $result = $dataArray[$section];
-        if (isset($dataArray[$section][';extends'])) {
-            //extended section found
-            $result = array_merge($dataArray[$dataArray[$section][';extends']], $dataArray[$section]);
-            unset($result[';extends']);
-        }
 
-        return $result;
-
+        return $config[$section];
     }
 
+
+    /**
+     * Добавляет возможность наследования секций
+     * @param array       $config
+     * @param string|null $section
+     * @return array
+     */
+    private function resolveNestedSections(array $config, string $section = null): array {
+
+        foreach ($config as $namespace => $section_content) {
+            if ( ! str_contains($namespace, ':')) {
+                if ($section) {
+                    if ($namespace == $section) {
+                        $config[$namespace] = $section_content;
+                    }
+
+                } else {
+                    $config[$namespace] = $section_content;
+                }
+            }
+        }
+
+        foreach ($config as $namespace => $section_content) {
+            if (str_contains($namespace, ':')) {
+                @list($name, $extends) = explode(':', $namespace);
+                $name    = trim($name);
+                $extends = trim((string)$extends);
+
+
+                if ($extends) {
+                    if ($section) {
+                        if ($name == $section) {
+                            $config[$namespace] = $section_content;
+
+                            if (isset($config[$extends])) {
+                                $config[$name] = array_merge($config[$extends], $section_content);
+
+                            } else {
+                                $nested_section = $this->resolveNestedSections($config, $extends);
+                                $config[$name]  = $nested_section[$extends] ?? [];
+                            }
+                        }
+
+                    } else {
+                        if (isset($config[$extends])) {
+                            $config[$name] = array_merge($config[$extends], $section_content);
+
+                        } else {
+                            $nested_section = $this->resolveNestedSections($config, $extends);
+                            $config[$name]  = $nested_section[$extends] ?? [];
+                        }
+                    }
+
+                    unset($config[$namespace]);
+
+                } else {
+                    if ($section) {
+                        if ($namespace == $section) {
+                            $config[$namespace] = $section_content;
+                        }
+
+                    } else {
+                        $config[$name] = $section_content;
+                    }
+                }
+            }
+        }
+
+        return $config;
+    }
+
+
+    /**
+     * @param $config
+     * @param $key
+     * @param $value
+     * @return array
+     * @throws \Exception
+     */
     protected function _processKey($config, $key, $value)
     {
         if (strpos($key, '.') !== false) {
@@ -711,6 +766,7 @@ class WorkerManager {
         }
         return $config;
     }
+
 
     /**
      * Helper function to load and filter worker files
