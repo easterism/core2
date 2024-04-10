@@ -334,6 +334,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                        case 'autocomplete':
+                        case 'autocomplete_table':
                             $search_value = trim($search_value);
 
                             if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
