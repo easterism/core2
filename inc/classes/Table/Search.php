@@ -29,6 +29,8 @@ class Search {
         'select2',
         'multiselect',
         'multiselect2',
+        'autocomplete',
+        'autocomplete_table',
     ];
 
 
