@@ -335,6 +335,8 @@ class Data extends Table {
                             break;
 
                         case 'text':
+                        case 'autocomplete':
+                        case 'autocomplete_table':
                             $search_value = trim($search_value);
 
                             if ( ! is_string($row[$search_field]) ||

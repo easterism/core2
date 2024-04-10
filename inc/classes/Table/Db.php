@@ -191,6 +191,8 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::SEARCH_TEXT:
+                        case self::SEARCH_AUTOCOMPLETE:
+                        case self::SEARCH_AUTOCOMPLETE_TABLE:
                             $value = trim($value);
 
                             if (strpos($field, '%ADD_SEARCH%') !== false) {
@@ -582,6 +584,8 @@ class Db extends Table {
                             break;
 
                         case self::SEARCH_TEXT:
+                        case self::SEARCH_AUTOCOMPLETE:
+                        case self::SEARCH_AUTOCOMPLETE_TABLE:
                             if (is_string($search_value)) {
                                 $search_value = trim($search_value);
 
