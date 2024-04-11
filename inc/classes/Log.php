@@ -46,7 +46,7 @@ class Log {
             if ($name === 'profile') {
                 if (isset($this->config->profile->mysql)) {
                     $profile_mysql = strpos($this->config->profile->mysql, '/') !== 0
-                        ? DOC_ROOT . $this->config->profile->mysql
+                        ? __DIR__ . "/../../" . $this->config->profile->mysql
                         : $this->config->profile->mysql;
 
                     $stream = new StreamHandler($profile_mysql);

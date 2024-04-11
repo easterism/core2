@@ -48,7 +48,7 @@ class Db {
 	public function __construct($config = null) {
 
 	    if (is_null($config)) {
-			$this->config = \Zend_Registry::get('config');
+			$this->config = Registry::get('config');
 		} else {
 			$this->config = $config;
 		}
@@ -66,7 +66,7 @@ class Db {
 	 */
 	public function __get($k) {
 		if ($k == 'core_config') {
-            $reg                = \Zend_Registry::getInstance();
+            $reg                = Registry::getInstance();
             $this->_core_config = $reg->get('core_config');
             return $this->_core_config;
         }
@@ -82,7 +82,7 @@ class Db {
                 }
             }
 
-            $reg = \Zend_Registry::getInstance();
+            $reg = Registry::getInstance();
 			if (! $reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
@@ -95,7 +95,7 @@ class Db {
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-			$reg = \Zend_Registry::getInstance();
+			$reg = Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
@@ -138,7 +138,7 @@ class Db {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
-				$v = \Zend_Registry::get('translate');
+				$v = Registry::get('translate');
 				$this->_s[$k] = $v;
 			}
 			return $v;

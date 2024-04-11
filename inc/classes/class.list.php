@@ -1023,7 +1023,7 @@ class listTable extends initList {
 
         
         // DATA HEADER первая строка таблицы
-        $tpl = new Templater("core2/html/" . THEME . "/list/headerHead.tpl");
+        $tpl = new Templater2("core2/html/" . THEME . "/list/headerHead.html");
         $tpl->assign('{main_table_id}', $this->main_table_id);
         $tpl->assign('{resource}',      $this->resource);
         $tpl->assign('isAjax',          $this->ajax);
@@ -1039,7 +1039,7 @@ class listTable extends initList {
         $columnsToReplace = [];
 
         if ($eh) { // добавляем дополнительные строки в шапку таблицы
-            $cell = $tpl->getBlock('extracell');
+//            $cell = $tpl->getBlock('extracell');
             $tpl->assign('{ROWSPAN}', $eh + 1);
 
             foreach ($this->extraHeaders as $k => $cols) {
@@ -1051,15 +1051,19 @@ class listTable extends initList {
                     if ( ! isset($span['col'])) $span['col'] = 1;
                     if ( ! isset($span['row'])) $span['row'] = 1;
 
-                    $temp .= str_replace(
-                        ['{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'],
-                        [$caption, $span['col'], $span['row'],],
-                        $cell
-                    );
+//                    $temp .= str_replace(
+//                        ['{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'],
+//                        [$caption, $span['col'], $span['row'],],
+//                        $cell
+//                    );
+                    $tpl->extrahead->extracell->assign('{CAPTION}', $caption);
+                    $tpl->extrahead->extracell->assign('{COLSPAN}', $span['col']);
+                    $tpl->extrahead->extracell->assign('{ROWSPAN2}', $span['row']);
+                    $tpl->extrahead->extracell->reassign();
                 }
             }
-            $tpl->replaceBlock('extracell', $temp);
-            $tpl->touchBlock('extrahead');
+//            $tpl->replaceBlock('extracell', $temp);
+//            $tpl->touchBlock('extrahead');
 
         } else {
             $tpl->assign('{ROWSPAN}', 1);
@@ -1104,6 +1108,11 @@ class listTable extends initList {
                     $value['width'], ($key + 1), $value['name'], $img, ''],
                     $cell
                 );
+//                $tpl->cell->assign('{WIDTH}', $value['width']);
+//                $tpl->cell->assign('{ORDER_VALUE}', $key + 1);
+//                $tpl->cell->assign('{CAPTION}', $value['name']);
+//                $tpl->cell->assign('{ORDER_TYPE}', $img);
+//                $tpl->cell->assign('{COLSPAN}', '');
 
             } else {
                 $temp .= str_replace(
@@ -1427,7 +1436,7 @@ class listTable extends initList {
 
         if (!$this->noFooter) {
             // FOOTER ROW
-            $tpl   = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
+            $tpl   = new Templater2("core2/html/" . THEME . "/list/footerx_controls.html");
             $count = ceil($this->recordCount / $this->recordsPerPage);
 
             //PAGINATION
@@ -1440,20 +1449,16 @@ class listTable extends initList {
             $tpl->assign('[IDD]', 'pagin_' . $this->resource);
             $tpl->assign('[ID]', $this->resource);
             if ($count > 1) {
-                $tpl->touchBlock('pages');
-                $tpl->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
+                $tpl->pages->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
 
                 if ($this->sessData[$pagePOST] > 1) {
-                    $tpl->touchBlock('pages2');
-                    $tpl->assign('{BACK}', $this->sessData[$pagePOST] - 1);
+                    $tpl->pages2->assign('{BACK}', $this->sessData[$pagePOST] - 1);
                 }
                 if ($this->sessData[$pagePOST] < $count) {
-                    $tpl->touchBlock('pages3');
-                    $tpl->assign('{FORW}', $this->sessData[$pagePOST] + 1);
+                    $tpl->pages3->assign('{FORW}', $this->sessData[$pagePOST] + 1);
                 }
                 $tpl->assign('{GO_TO}', "listx.pageSw(this, '$this->resource', $this->ajax)");
-                $tpl->touchBlock('recordsPerPage');
-                $tpl->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
+                $tpl->recordsPerPage->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
                 $opts    = array();
                 $notoall = false;
                 for ($k = 0; $k < $count - 1; $k++) {

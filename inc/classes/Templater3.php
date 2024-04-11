@@ -26,7 +26,7 @@ class Templater3 {
         }
 
         //добавляем плагин по умолчанию
-        $this->addPlugin("tr", Zend_Registry::get('translate'));
+        $this->addPlugin("tr", \Core2\Registry::get('translate'));
     }
 
 

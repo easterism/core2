@@ -5,7 +5,7 @@ header('Content-Type: text/html; charset=utf-8');
 define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
 define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-$autoload = DOC_ROOT . "core2/vendor/autoload.php";
+$autoload = __DIR__ . "/../../vendor/autoload.php";
 if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
@@ -15,7 +15,7 @@ require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Zend_Registry.php'; //DEPRECATED
-require_once 'Registry.php'; //DEPRECATED
+require_once 'Registry.php';
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
@@ -25,10 +25,15 @@ use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Registry;
 
+$f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+    \Core2\Error::Exception("File not found", 404);
+}
+
 $conf_file = DOC_ROOT . "conf.ini";
 
 if (!file_exists($conf_file)) {
-    \Core2\Error::Exception("conf.ini is missing.");
+    \Core2\Error::Exception("conf.ini is missing.", 404);
 }
 $config = [
     'system'       => ['name' => 'CORE2'],
@@ -171,18 +176,19 @@ if ($config->session) {
 }
 
 //сохраняем конфиг
-Zend_Registry::set('config', $config);
+Zend_Registry::set('config', $config); //DEPRECATED
+Registry::set('config', $config);
 
 //обрабатываем конфиг ядра
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
     $core_config = new Zend_Config_Ini($core_conf_file, 'production');
-    Zend_Registry::set('core_config', $core_config);
+    Zend_Registry::set('core_config', $core_config); //DEPRECATED
+    Registry::set('core_config', $core_config);
 }
 
 require_once 'Db.php';
 require_once 'Common.php';
-require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
 require_once 'Login.php';
@@ -305,7 +311,7 @@ class Init extends \Core2\Db {
 
                 $this->checkWebservice();
 
-                require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+                require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
 
                 $route = $this->routeParse();
                 if (isset($matches['module'])) { //DEPRECATED
@@ -474,7 +480,7 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if (\Zend_Registry::get('route')['params'] || !\Zend_Registry::get('route')['query']) {
+                        if (Registry::get('route')['params'] || !Registry::get('route')['query']) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
                         }
@@ -1568,7 +1574,8 @@ class Init extends \Core2\Db {
                     }
                 }
             }
-            \Zend_Registry::set('route', $route);
+            \Zend_Registry::set('route', $route); //DEPRECATED
+            Registry::set('route', $route);
             return $route;
         }
 
@@ -1775,22 +1782,22 @@ class Init extends \Core2\Db {
  * @throws Zend_Exception
  */
 function post($func, $loc, $data) {
-    $route      = \Zend_Registry::get('route');
+    $route      = Registry::get('route');
     if ($loc) {
         parse_str($loc, $route);
         $route['query'] = $_SERVER['QUERY_STRING'];
     }
-    $translate = Zend_Registry::get('translate');
+    $translate = Registry::get('translate');
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
     $acl = new \Core2\Acl();
 
-    \Core2\Registry::set('context', array($route['module'], $route['action']));
+    Registry::set('context', array($route['module'], $route['action']));
 
     if ($route['module'] == 'admin') {
-        require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
+        require_once __DIR__ . "/../../mod/admin/ModAjax.php";
         $auth = Registry::get('auth');
         if ( ! $auth->ADMIN) throw new Exception(911);
 
