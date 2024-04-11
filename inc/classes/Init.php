@@ -401,7 +401,7 @@ class Init extends \Core2\Db {
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
             if (
-                empty($_GET['module']) &&
+                empty($_GET['module']) && empty($route['api']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
@@ -427,7 +427,7 @@ class Init extends \Core2\Db {
                 if ($this->deleteAction()) return '';
                 if ($this->switchAction()) return '';
 
-                $module = $route['module'];
+                $module = !empty($route['api']) ? $route['api'] : $route['module'];
                 if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
                 $action = $route['action'];
                 $this->setContext($module, $action);
@@ -480,7 +480,7 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if (Registry::get('route')['params'] || !Registry::get('route')['query']) {
+                        if (!empty($route['api'])) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
                         }

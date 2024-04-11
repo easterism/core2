@@ -28,7 +28,7 @@ class Login extends \Common {
 
         if (isset($route['api'])) {
             header('HTTP/1.1 401 Unauthorized');
-            if ($this->core_config->auth) {
+            if (!$route['action'] && $this->core_config->auth) {
                 if ($this->core_config->auth->scheme == 'basic') {
                     try {
                         if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -58,6 +58,15 @@ class Login extends \Common {
                     header('WWW-Authenticate: Digest realm="' . $realm . '",scope="' . $this->core_config->auth->bearer->scope . '"');
                 }
                 //TODO реализовать остальные схемы
+                return;
+            }
+
+            if ($route['api'] == 'auth' && $route['action'] == 'gcp') { //вход через google
+//                parse_str($route['query'], $request);
+//                $s = new SessionContainer('Social');
+//                $s->back = DOC_PATH;
+                $this->apiAuth->action_gcp();
+                return "{}";
             }
             return;
         }
@@ -314,48 +323,53 @@ class Login extends \Common {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->core_config->auth) {
-            if ($this->core_config->auth->ldap &&
-                $this->core_config->auth->ldap->on
+        if ($this->isModuleInstalled('auth')) {
+            $auth_config = $this->modAuth->moduleConfig->auth;
+            if ($auth_config->ldap &&
+                $auth_config->ldap->on
             ) {
                 $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
             }
 
-            if ($this->core_config->auth->module &&
-                $this->core_config->auth->social
-            ) {
-                if ($this->core_config->auth->social->fb &&
-                    $this->core_config->auth->social->fb->on &&
-                    $this->core_config->auth->social->fb->app_id &&
-                    $this->core_config->auth->social->fb->api_secret &&
-                    $this->core_config->auth->social->fb->redirect_url
+            if ($auth_config->social) {
+                if ($auth_config->social->fb &&
+                    $auth_config->social->fb->on &&
+                    $auth_config->social->fb->app_id &&
+                    $auth_config->social->fb->api_secret &&
+                    $auth_config->social->fb->redirect_url
                 ) {
 
-                    $tpl->social->fb->assign('[APP_ID]', $this->core_config->auth->social->fb->app_id);
-                    $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                    $tpl->social->fb->assign('[APP_ID]', $auth_config->social->fb->app_id);
+                    $tpl->social->fb->assign('[REDIRECT_URL]', $auth_config->social->fb->redirect_url);
                 }
 
-                if ($this->core_config->auth->social->ok &&
-                    $this->core_config->auth->social->ok->on &&
-                    $this->core_config->auth->social->ok->app_id &&
-                    $this->core_config->auth->social->ok->public_key &&
-                    $this->core_config->auth->social->ok->secret_key &&
-                    $this->core_config->auth->social->ok->redirect_url
+                if ($auth_config->social->ok &&
+                    $auth_config->social->ok->on &&
+                    $auth_config->social->ok->app_id &&
+                    $auth_config->social->ok->public_key &&
+                    $auth_config->social->ok->secret_key &&
+                    $auth_config->social->ok->redirect_url
                 ) {
 
-                    $tpl->social->ok->assign('[APP_ID]', $this->core_config->auth->social->ok->app_id);
-                    $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
+                    $tpl->social->ok->assign('[APP_ID]', $auth_config->social->ok->app_id);
+                    $tpl->social->ok->assign('[REDIRECT_URL]', $auth_config->social->ok->redirect_url);
                 }
 
-                if ($this->core_config->auth->social->vk &&
-                    $this->core_config->auth->social->vk->on &&
-                    $this->core_config->auth->social->vk->app_id &&
-                    $this->core_config->auth->social->vk->api_secret &&
-                    $this->core_config->auth->social->vk->redirect_url
+                if ($auth_config->social->vk &&
+                    $auth_config->social->vk->on &&
+                    $auth_config->social->vk->app_id &&
+                    $auth_config->social->vk->api_secret &&
+                    $auth_config->social->vk->redirect_url
                 ) {
 
-                    $tpl->social->vk->assign('[APP_ID]', $this->core_config->auth->social->vk->app_id);
-                    $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                    $tpl->social->vk->assign('[APP_ID]', $auth_config->social->vk->app_id);
+                    $tpl->social->vk->assign('[REDIRECT_URL]', $auth_config->social->vk->redirect_url);
+                }
+
+                if ($auth_config->social->google &&
+                    $auth_config->social->google->on
+                ) {
+                    $tpl->social->google->assign('[OAUTH2]', $this->apiAuth->getAuthUrl('google'));
                 }
             }
         }
