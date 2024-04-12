@@ -1402,7 +1402,7 @@ class editTable extends initEdit {
                             }
 
                             if ( ! is_array($value['default'])) {
-                                $value['default'] = explode(",", $value['default']);
+                                $value['default'] = $value['default'] ? explode(",", $value['default']) : [];
                             }
 
                             $select_options = [];
@@ -1439,6 +1439,7 @@ class editTable extends initEdit {
                             } else {
                                 $select_options[] = array_combine($value['default'], $value['default']);
                             }
+
 
 
                             if ($this->readOnly) {
