@@ -8,11 +8,12 @@
  */
 namespace Core2\Store;
 
-use Laminas\Session\Container as SessionContainer;
-use Aws\S3\S3Client;
-
 require_once(__DIR__ . "/Common.php");
 require_once(__DIR__ . "/Image.php");
+
+use Laminas\Session\Container as SessionContainer;
+use Aws\S3\S3Client;
+use Core2\Registry;
 
 class File extends \Common {
     private $content;
@@ -196,7 +197,7 @@ class File extends \Common {
      * @throws \Zend_Exception
      */
     public function handleFileTemp($thumbName) {
-        $config     = \Zend_Registry::get('config');
+        $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $config->temp . '/' . $sid;
         $fname      = $upload_dir . "/thumbnail/" . $thumbName;
@@ -211,13 +212,11 @@ class File extends \Common {
             $mime = 'image/' . $temp[1];
         } else {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $fname);
+            $mime  = finfo_file($finfo, $fname);
         }
         header("Content-Type: $mime");
         header('Content-Length: ' . filesize($fname));
-        ob_clean();
-        flush();
-        readfile($fname);
+        $this->content = file_get_contents($fname);
     }
 
     /**
