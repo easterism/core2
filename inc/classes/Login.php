@@ -35,7 +35,7 @@ class Login extends \Common {
                             if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
                                 list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                                 $user = $this->dataUsers->getUserByLogin($login);
-                                if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
+                                if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
                                     if ($this->auth($user)) {
                                         header("Location: " . DOC_PATH);
                                         return;
@@ -267,7 +267,7 @@ class Login extends \Common {
         if ( ! empty($_POST['xjxr'])) {
             throw new \Exception('expired');
         }
-        if (array_key_exists('X-Requested-With', \Tool::getRequestHeaders())) {
+        if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
 
             if ( ! empty($request['module'])) {
                 http_response_code(403);
@@ -698,7 +698,7 @@ class Login extends \Common {
 
                     $user           = $this->getUserLdap($login, $password);
                     $user['LDAP']   = true;
-                    $user['u_pass'] = \Tool::pass_salt($password);
+                    $user['u_pass'] = Tool::pass_salt($password);
 
                 } else {
                     $user = $this->dataUsers->getUserByLogin($login);
@@ -710,7 +710,7 @@ class Login extends \Common {
             }
 
 
-            if ($user['u_pass'] !== \Tool::pass_salt($password)) {
+            if ($user['u_pass'] !== Tool::pass_salt($password)) {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
             }
 
@@ -1001,7 +1001,7 @@ class Login extends \Common {
         $this->db->update('core_users', [
             'visible'         => 'Y',
             'is_pass_changed' => 'Y',
-            'u_pass'          => \Tool::pass_salt($password),
+            'u_pass'          => Tool::pass_salt($password),
             'reg_key'         => new \Zend_Db_Expr('NULL'),
             'date_expired'    => new \Zend_Db_Expr('NULL'),
         ], $where);
@@ -1081,7 +1081,7 @@ class Login extends \Common {
 
         $where = $this->db->quoteInto('u_id = ?', $user_id);
         $this->db->update('core_users', [
-            'u_pass'       => \Tool::pass_salt($password),
+            'u_pass'       => Tool::pass_salt($password),
             'reg_key'      => new \Zend_Db_Expr('NULL'),
             'date_expired' => new \Zend_Db_Expr('NULL'),
         ], $where);
@@ -1290,7 +1290,7 @@ class Login extends \Common {
 
         $tpl = new \Templater3();
 
-        if (\Tool::isMobileBrowser()) {
+        if (Tool::isMobileBrowser()) {
             $tpl->loadTemplate(Theme::get("login-indexMobile"));
         } else {
             $tpl->loadTemplate(Theme::get("login-index"));

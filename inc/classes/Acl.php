@@ -35,7 +35,7 @@ class Acl extends Db {
      */
 	public function setupAcl() {
 
-		$registry 	= \Zend_Registry::getInstance();
+		$registry 	= Registry::getInstance();
 		$registry->set('addRes', $this->addRes);
 		$auth 		= $registry->get('auth');
 
@@ -221,12 +221,13 @@ class Acl extends Db {
 
     /**
      * Проверка существования и установка ресурса в ACL
-     * @param \Zend_Registry $registry
+     * @param Registry $registry
      * @param               $resource
      *
      * @throws \Zend_Exception
      */
-    private function setResource(\Zend_Registry $registry, $resource) {
+    private function setResource($resource) {
+        $registry    = Registry::getInstance();
         $acl         = $registry->get('acl');
         $addRes      = $registry->get('addRes');
         $availRes    = $registry->get('availRes');
@@ -246,9 +247,9 @@ class Acl extends Db {
 	 * @param $type
 	 */
 	public function allow($role, $resource, $type = 'access') {
-        $registry    = \Zend_Registry::getInstance();
+        $registry    = Registry::getInstance();
         $acl         = $registry->get('acl');
-        $this->setResource($registry, $resource);
+        $this->setResource($resource);
         $acl->allow($role, $resource, $type);
 		$registry->set('acl', $acl);
 
@@ -286,9 +287,9 @@ class Acl extends Db {
      */
     public function deny($role, $resource, $type = 'access')
     {
-        $registry    = \Zend_Registry::getInstance();
+        $registry    = Registry::getInstance();
         $acl         = $registry->get('acl');
-        $this->setResource($registry, $resource);
+        $this->setResource($resource);
         $acl->deny($role, $resource, $type);
         $registry->set('acl', $acl);
     }
@@ -301,7 +302,7 @@ class Acl extends Db {
 	 */
 	public function checkAcl($source, $type = 'access') {
 
-        $registry = \Zend_Registry::getInstance();
+        $registry = Registry::getInstance();
 
         if (($xxx = strrpos($source, 'xxx')) > 0) {
 			$source = substr($source, 0, $xxx); //TODO SHOULD BE FIX

@@ -1,5 +1,5 @@
 <?php
-
+namespace Core2;
 
 /**
  * Class Tool
@@ -141,7 +141,7 @@ class Tool {
      */
     public static function log($text) {
 
-    	$cnf = Zend_Registry::get('config');
+    	$cnf = Registry::get('config');
     	if ($cnf->log->on && $cnf->log->path) {
 			$f = fopen($cnf->log->path, 'a');
 			if (is_array($text) || is_object($text)) {
@@ -160,10 +160,10 @@ class Tool {
      * @param $text
      */
     public static function fb($text) {
-		$firephp = FirePHP::getInstance(true);
+		$firephp = \FirePHP::getInstance(true);
 		try {
 			$firephp->fb($text);
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			\Core2\Error::Exception($e->getMessage());
     	}
     }
@@ -435,8 +435,8 @@ class Tool {
 
     /**
      * Форматирование временного диапазона
-     * @param DateTime $date_start
-     * @param DateTime $date_end
+     * @param \DateTime $date_start
+     * @param \DateTime $date_end
      * @param string   $format
      * @return string
      */

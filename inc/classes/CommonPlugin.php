@@ -1,6 +1,8 @@
 <?php
 require_once 'Acl.php';
 
+use Core2\Registry;
+
 class CommonPlugin extends \Core2\Acl {
 
     private $_p = array();
@@ -50,13 +52,13 @@ class CommonPlugin extends \Core2\Acl {
 			}
 			// Получение экземпляра класса для работы с правами пользователей
 			elseif ($k == 'auth') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('auth');
+				$v = $this->{$k} = Registry::get('auth');
 			}
             elseif ($k == 'config') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('config');
+				$v = $this->{$k} = Registry::get('config');
 			}
             elseif ($k == 'acl') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
+				$v = $this->{$k} = Registry::get('acl');
 			}
             elseif ($k == 'modAdmin') {
                 require_once(DOC_ROOT . 'core2/inc/CoreController.php');

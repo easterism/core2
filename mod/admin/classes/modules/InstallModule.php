@@ -357,7 +357,7 @@ class InstallModule extends \Common {
                 throw new \Exception($this->_("Не удалось определить требуемую версию ядра"));
 
             } else {
-                $config = \Zend_Registry::getInstance()->get('core_config');
+                $config = Registry::get('core_config');
 
                 if ( ! $config->version) {
                     throw new \Exception($this->_("Не задана версия ядра"));
@@ -1858,7 +1858,7 @@ class InstallModule extends \Common {
                     $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Перезапись файлов прервана"), $this->translate->tr("Папка закрыта для записи"), "danger");
                 } else {
                     //записываем новые файлы
-                    $config                 = \Zend_Registry::getInstance()->get('config');
+                    $config                 = Registry::get('config');
                     $tempDir                = $config->temp . "/tmp_" . uniqid();
                     $this->make_zip($data);
                     $this->extractZip($tempDir);

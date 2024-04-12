@@ -2,7 +2,7 @@
 require_once("core2/inc/ajax.func.php");
 
 use Laminas\Session\Container as SessionContainer;
-
+use Core2\Registry;
 
 /**
  * Class ModAjax
@@ -467,7 +467,7 @@ class ModAjax extends ajaxFunc {
      */
 	public function saveUser($data) {
 
-        $core_config            = \Zend_Registry::getInstance()->get('core_config');
+        $core_config            = Registry::get('core_config');
         $is_auth_certificate_on = $core_config->auth && $core_config->auth->x509 && $core_config->auth->x509->on;
         $is_auth_pass_on        = true;
         $is_auth_ldap_on        = $this->config->ldap && $this->config->ldap->active;
@@ -595,7 +595,7 @@ class ModAjax extends ajaxFunc {
             }
 
             if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
-                $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
+                $dataForSave['u_pass'] = \Core2\Tool::pass_salt(md5($data['control']['u_pass']));
             }
 
             $mail = [];
@@ -1059,7 +1059,6 @@ class ModAjax extends ajaxFunc {
      * @param array $dataNewUser
      * @param int $isUpdate
      * @throws Exception
-     * @return void
      */
     private function sendUserInformation($dataNewUser, $isUpdate = 0) {
 

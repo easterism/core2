@@ -4,7 +4,6 @@ namespace Core2;
 require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
-require_once 'Zend_Registry.php';
 require_once 'Fact.php';
 
 use Laminas\Cache\Storage;
@@ -66,8 +65,7 @@ class Db {
 	 */
 	public function __get($k) {
 		if ($k == 'core_config') {
-            $reg                = Registry::getInstance();
-            $this->_core_config = $reg->get('core_config');
+            $this->_core_config = Registry::get('core_config');
             return $this->_core_config;
         }
 		if ($k == 'db') {
@@ -235,7 +233,7 @@ class Db {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
-			\Zend_Registry::getInstance()->set('db', $db);
+			Registry::set('db', $db);
 
             //переопределяем config для нового подключения к базе
             if ($this->config->database !== $database) {
@@ -284,7 +282,7 @@ class Db {
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
         }
-        \Zend_Registry::getInstance()->set('dbschema', $this->schemaName);
+        Registry::set('dbschema', $this->schemaName);
         $db = \Zend_Db::factory($database);
         $db->getConnection();
         return $db;

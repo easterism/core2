@@ -14,7 +14,6 @@ require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
-require_once 'Zend_Registry.php'; //DEPRECATED
 require_once 'Registry.php';
 
 use Laminas\Session\Config\SessionConfig;
@@ -176,14 +175,12 @@ if ($config->session) {
 }
 
 //сохраняем конфиг
-Zend_Registry::set('config', $config); //DEPRECATED
 Registry::set('config', $config);
 
 //обрабатываем конфиг ядра
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
     $core_config = new Zend_Config_Ini($core_conf_file, 'production');
-    Zend_Registry::set('core_config', $core_config); //DEPRECATED
     Registry::set('core_config', $core_config);
 }
 
@@ -243,7 +240,6 @@ class Init extends \Core2\Db {
             $this->detectWebService();
 
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
                 Registry::set('auth', new StdClass());
                 return;
             }
@@ -252,14 +248,12 @@ class Init extends \Core2\Db {
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
-                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 Registry::set('auth', $this->auth);
                 return; //выходим, если авторизация состоялась
             }
 
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
-                Zend_Registry::set('auth', new StdClass());  //DEPRECATED
                 Registry::set('auth', new StdClass());
                 return;
             }
@@ -286,7 +280,6 @@ class Init extends \Core2\Db {
                     $this->closeSession('Y');
                 }
             }
-            Zend_Registry::set('auth', $this->auth);  //DEPRECATED
             Registry::set('auth', $this->auth);
         }
 
@@ -1574,7 +1567,6 @@ class Init extends \Core2\Db {
                     }
                 }
             }
-            \Zend_Registry::set('route', $route); //DEPRECATED
             Registry::set('route', $route);
             return $route;
         }
