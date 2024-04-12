@@ -23,6 +23,7 @@ use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Registry;
+use Core2\Tool;
 
 $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
 if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
@@ -605,7 +606,7 @@ class Init extends \Core2\Db {
                 if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
                     list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                     $user = $this->dataUsers->getUserByLogin($login);
-                    if (!$user || $user['u_pass'] !== \Tool::pass_salt(md5($password))) {
+                    if (!$user || $user['u_pass'] !== Tool::pass_salt(md5($password))) {
                         header("Location: " . DOC_PATH . "auth");
                         return;
                     }
@@ -980,7 +981,7 @@ class Init extends \Core2\Db {
                                 $module_js_list = $modController->topJs()
                             ) {
                                 foreach ($module_js_list as $k => $module_js) {
-                                    $modules_js[] = \Tool::addSrcHash($module_js);
+                                    $modules_js[] = Tool::addSrcHash($module_js);
                                 }
                             }
 
@@ -988,7 +989,7 @@ class Init extends \Core2\Db {
                                 $module_css_list = $modController->topCss()
                             ) {
                                 foreach ($module_css_list as $k => $module_css) {
-                                    $modules_css[] = \Tool::addSrcHash($module_css);
+                                    $modules_css[] = Tool::addSrcHash($module_css);
                                 }
                             }
 
