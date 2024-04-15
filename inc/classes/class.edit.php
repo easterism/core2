@@ -3,6 +3,7 @@ require_once("class.ini.php");
 require_once 'Templater3.php';
 
 use Laminas\Session\Container as SessionContainer;
+use Core2\Tool;
 
 $counter = 0;
 
