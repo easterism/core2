@@ -447,6 +447,24 @@ class Render extends Acl {
                             $tpl->search_container->search_field->multiselect2->assign("[IN_TEXT]",  $attributes_str);
                             $tpl->search_container->search_field->multiselect2->fillDropDown("search-[RESOURCE]-[KEY]", $data, $control_value);
                             break;
+
+                        case 'autocomplete' :
+                            $data = $search['data'] ?? [];
+
+                            $tpl->search_container->search_field->autocomplete->assign("[KEY]",     $key);
+                            $tpl->search_container->search_field->autocomplete->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->autocomplete->assign("[IN_TEXT]", $attributes_str);
+                            $tpl->search_container->search_field->autocomplete->assign("[URL]",     $data['url'] ?? '');
+                            break;
+
+                        case 'autocomplete_table' :
+                            $data = $search['data'] ?? [];
+
+                            $tpl->search_container->search_field->autocomplete_table->assign("[KEY]",     $key);
+                            $tpl->search_container->search_field->autocomplete_table->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->autocomplete_table->assign("[IN_TEXT]", $attributes_str);
+                            $tpl->search_container->search_field->autocomplete_table->assign("[URL]",     $data['url'] ?? '');
+                            break;
                     }
 
 

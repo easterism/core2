@@ -69,18 +69,20 @@ abstract class Table extends Acl {
     protected $session   = null;
     protected $locutions = [];
 
-    const SEARCH_SELECT      = 'select';
-    const SEARCH_SELECT2     = 'select2';
-    const SEARCH_TEXT        = 'text';
-    const SEARCH_TEXT_STRICT = 'text_strict';
-    const SEARCH_DATE_ONE    = 'date_one';
-    const SEARCH_DATE        = 'date';
-    const SEARCH_DATETIME    = 'datetime';
-    const SEARCH_NUMBER      = 'number';
-    const SEARCH_CHECKBOX    = 'checkbox';
-    const SEARCH_RADIO       = 'radio';
-    const SEARCH_MULTISELECT = 'multiselect';
-    const SEARCH_MULTISELECT2 = 'multiselect2';
+    const SEARCH_SELECT             = 'select';
+    const SEARCH_SELECT2            = 'select2';
+    const SEARCH_TEXT               = 'text';
+    const SEARCH_TEXT_STRICT        = 'text_strict';
+    const SEARCH_DATE_ONE           = 'date_one';
+    const SEARCH_DATE               = 'date';
+    const SEARCH_DATETIME           = 'datetime';
+    const SEARCH_NUMBER             = 'number';
+    const SEARCH_CHECKBOX           = 'checkbox';
+    const SEARCH_RADIO              = 'radio';
+    const SEARCH_MULTISELECT        = 'multiselect';
+    const SEARCH_MULTISELECT2       = 'multiselect2';
+    const SEARCH_AUTOCOMPLETE       = 'autocomplete';
+    const SEARCH_AUTOCOMPLETE_TABLE = 'autocomplete_table';
 
     const FILTER_SELECT      = 'select';
     const FILTER_TEXT        = 'text';

@@ -705,9 +705,8 @@ var edit = {
 					},
 					select: function( event, ui ) {
 						event.preventDefault();
-						inputValue.val(ui.item.value);
-						inputTitle.val(ui.item.label);
-						inputTitle.attr('disabled', 'disabled');
+						edit.modal2.key = options.id;
+						edit.modal2.choose(ui.item.value, ui.item.label);
 					},
 					close: function( event, ui ) {
 						event.preventDefault();
