@@ -1384,6 +1384,82 @@ class editTable extends initEdit {
                             }
                             $select++;
 
+                        } elseif ($value['type'] === 'tags') {
+                            $options                 = [];
+                            $options['input_length'] = isset($value['in']['input_length']) && is_numeric($value['in']['input_length']) ? $value['in']['input_length'] : 0;
+                            $options['separators']   = isset($value['in']['separators']) && is_array($value['in']['separators'])       ? $value['in']['separators'] : null;
+                            $options['placeholder']  = isset($value['in']['placeholder']) && is_string($value['in']['placeholder'])    ? $value['in']['placeholder'] : null;
+                            $options['attr']         = isset($value['in']['attr']) && is_string($value['in']['attr'])                  ? $value['in']['attr'] : '';
+
+                            if ( ! empty($value['in']['autocomplete']) && ! empty($value['in']['autocomplete']['url'])) {
+                                $options['autocomplete'] = [
+                                    'url'                => $value['in']['autocomplete']['url'],
+                                    'dataType'           => 'json',
+                                ];
+                            }
+
+                            if ( ! is_array($value['default'])) {
+                                $value['default'] = $value['default'] ? explode(",", $value['default']) : [];
+                            }
+
+                            $select_options = [];
+
+                            if (is_array($this->selectSQL[$select])) {
+                                $row_tags = $value['default'];
+
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    if (is_array($v)) {
+                                        $options_group = array_values($v);
+
+                                        if (isset($options_group[2])) {
+                                            $select_options[$options_group[2]][$options_group[0]] = $options_group[1];
+
+                                            if (isset($row_tags[$options_group[0]])) {
+                                                unset($row_tags[$options_group[0]]);
+                                            }
+                                        }
+                                    } else {
+                                        $select_options[$k] = $v;
+
+                                        if (isset($row_tags[$k])) {
+                                            unset($row_tags[$k]);
+                                        }
+                                    }
+                                }
+
+                                if ( ! empty($row_tags)) {
+                                    foreach ($row_tags as $row_tag) {
+                                        $select_options[$row_tag] = $row_tag;
+                                    }
+                                }
+
+                            } else {
+                                $select_options[] = array_combine($value['default'], $value['default']);
+                            }
+
+
+
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= implode(', ', $value['default']);
+
+                            } else {
+                                $this->scripts['tags'] = true;
+
+                                $tpl = new Templater3(\Core2\Theme::get("html-edit-tags"));
+                                $tpl->assign('[FIELD_ID]',     $fieldId);
+                                $tpl->assign('[FIELD]',        $field);
+                                $tpl->assign('[ATTRIBUTES]',   $options['attr']);
+                                $tpl->assign('[SEPARATORS]',   json_encode($options['separators']));
+                                $tpl->assign('[PLACEHOLDER]',  json_encode($options['placeholder']));
+                                $tpl->assign('[INPUT_LENGTH]', $options['input_length']);
+                                $tpl->assign('[AJAX]',         ! empty($options['autocomplete']) ? json_encode($options['autocomplete']) : 'null');
+
+                                $tpl->fillDropDown('[FIELD_ID]', $select_options, $value['default']);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl->render();
+                            }
+                            $select++;
+
                         }
 						elseif ($value['type'] == 'multilist2') {
                             if (is_array($this->selectSQL[$select])) {
