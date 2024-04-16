@@ -42,11 +42,7 @@ class ClickHouse extends \Common {
      */
     public function select($request) {
 
-        try {
-            return self::$_db->select($request)->rawData()['data'];
-        } catch (DatabaseException $e) {
-            return $e;
-        }
+        return self::$_db->select($request)->rawData()['data'];
     }
 
     public function countAll()
@@ -90,15 +86,11 @@ class ClickHouse extends \Common {
      */
     public function fetchOne($request) {
 
-        try {
-            if (strpos($request, "FOUND_ROWS()") > 0) {
-                $this->_count_all = self::$_db->select($this->_sql)->countAll();
-                return $this->_count_all;
-            }
-            return self::$_db->select($request)->fetchOne()->rawData()['data'];
-        } catch (DatabaseException $e) {
-            return $e;
+        if (strpos($request, "FOUND_ROWS()") > 0) {
+            $this->_count_all = self::$_db->select($this->_sql)->countAll();
+            return $this->_count_all;
         }
+        return self::$_db->select($request)->fetchOne()->rawData()['data'];
     }
 
 
@@ -107,27 +99,19 @@ class ClickHouse extends \Common {
      */
     public function fetchRow($request) {
 
-        try {
-            $data = self::$_db->select($request)->fetchRow();
-            return $data;
-        } catch (DatabaseException $e) {
-            return $e;
-        }
+        $data = self::$_db->select($request)->fetchRow();
+        return $data;
     }
 
     public function fetchAll($SQL, $bind = []) {
-        try {
-            $SQL = str_replace("SQL_CALC_FOUND_ROWS", "", $SQL);
-            if ($bind) {
-                $SQL = str_replace("?", "%s", $SQL);
-                $SQL = sprintf($SQL, $bind);
-            }
-            $this->_sql = $SQL;
-            $data = self::$_db->select($SQL)->rows();
-            return $data;
-        } catch (DatabaseException $e) {
-            return $e;
+        $SQL = str_replace("SQL_CALC_FOUND_ROWS", "", $SQL);
+        if ($bind) {
+            $SQL = str_replace("?", "%s", $SQL);
+            $SQL = sprintf($SQL, $bind);
         }
+        $this->_sql = $SQL;
+        $data = self::$_db->select($SQL)->rows();
+        return $data;
     }
 
     /**
