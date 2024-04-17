@@ -37,6 +37,7 @@ class Db {
     private $_locations = array();
     private $_modules = array();
     private $_db = [];
+    private $_counter = 0;
     private string $schemaName = 'public';
 
     /**
@@ -857,9 +858,9 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $m            = new Model\Modules($this->db);
             $sm           = new Model\SubModules($this->db);
-            $res = $m->fetchAll($m->select()->order('seq'));
-            $sub = $sm->fetchAll($sm->select()->order('seq'));
-            $data = [];
+            $res    = $m->fetchAll($m->select()->order('seq'));
+            $sub    = $sm->fetchAll($sm->select()->order('seq'));
+            $data   = [];
             foreach ($res as $val) {
                 $item = $val->toArray();
                 unset($item['uninstall']); //чтоб не смущал
@@ -872,6 +873,13 @@ class Db {
             $this->cache->setItem($key, $data);
         } else {
             $data = $this->cache->getItem($key);
+            if (!$data || !is_array($data)) {
+                //этого не может быть!
+                if ($this->_counter > 5) throw new \Exception("Cache error", 500);
+                $this->_counter++;
+                $this->cache->remove($key);
+                $this->getAllModules();
+            }
         }
         $this->_modules = $data;
     }
