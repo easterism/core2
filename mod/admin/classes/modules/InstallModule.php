@@ -8,6 +8,7 @@ use Laminas\Session\Container as SessionContainer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\RequestException;
+use Core2\Tool;
 
 /**
  * Class InstallModule
@@ -1462,7 +1463,7 @@ class InstallModule extends \Common {
         }
         $url =  "{$server}webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
         //получаем apikey
-        $curl = \Tool::doCurlRequest($url);
+        $curl = Tool::doCurlRequest($url);
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200)
         {
