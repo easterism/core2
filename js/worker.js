@@ -24,15 +24,15 @@ self.addEventListener(
                         e.source.postMessage("SSE in state " + eventSrc.readyState);
                     }
 
-                    eventSrc.addEventListener('message', function (event) {
-
-                        that.postMessage({type: "modules", event: JSON.parse(event.data)});
-
-                    }, false);
-                    eventSrc.addEventListener('Core2', function (event) {
-
-                        that.postMessage({type: "Core2", event: event.data});
-
+                    eventSrc.addEventListener("message", function (event) {
+                        const d = JSON.parse(event.data);
+                        if (d) {
+                            if (d['done']) {
+                                that.postMessage({type: "Core2", event: d.done});
+                            } else {
+                                that.postMessage({type: "modules", event: d});
+                            }
+                        }
                     }, false);
 
                     eventSrc.addEventListener('open', function (event) {
