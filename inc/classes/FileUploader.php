@@ -193,8 +193,8 @@ class FileUploader extends \Core2\Db {
                 $img_height
             ) && $write_image($dst_img, $new_file_path);
         // Free up memory (imagedestroy does not delete files):
-        @imagedestroy($src_img);
-        @imagedestroy($dst_img);
+        if ($src_img) @imagedestroy($src_img);
+        if ($dst_img) @imagedestroy($dst_img);
         return $success;
     }
 
