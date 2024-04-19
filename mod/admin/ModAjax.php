@@ -3,6 +3,7 @@ require_once("core2/inc/ajax.func.php");
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Registry;
+use Core2\Tool;
 
 /**
  * Class ModAjax
@@ -595,7 +596,7 @@ class ModAjax extends ajaxFunc {
             }
 
             if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
-                $dataForSave['u_pass'] = \Core2\Tool::pass_salt(md5($data['control']['u_pass']));
+                $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
             }
 
             $mail = [];
