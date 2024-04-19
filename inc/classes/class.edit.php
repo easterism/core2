@@ -467,7 +467,7 @@ class editTable extends initEdit {
 
 						//если тип hidden то формируется только hidden поле формы
 						if ($value['type'] == 'hidden') {
-							$controlGroups[$cellId]['html'][$key] .= "<input id=\"" . $fieldId . "\" type=\"hidden\" name=\"control[$field]\" value=\"{$value['default']}\" />";
+							$controlGroups[$cellId]['html'][$key] .= "<input id=\"{$fieldId}\" type=\"hidden\" name=\"control[$field]\" value=\"{$value['default']}\" />";
 							continue;
 						}
 
@@ -487,20 +487,23 @@ class editTable extends initEdit {
 
 						$value['type'] = str_replace("_default", "", $value['type']); //FIXME WTF
 
-						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable$hide\"" . ($field ? " id=\"{$this->resource}_container_$field\"" : "") . "><tr valign=\"top\"><td class=\"eFirstCell\" " . ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};min-width:{$this->firstColWidth};\"" : "") . ">";
-						if ($value['req']) {
+                        $id    = $field ? " id=\"{$this->resource}_container_$field\"" : "";
+                        $width = ($this->firstColWidth ? "style=\"width:{$this->firstColWidth};min-width:{$this->firstColWidth};\"" : "");
+
+						$controlGroups[$cellId]['html'][$key] .= "<table class=\"editTable{$hide}\"{$id}><tr style=\"vertical-align: top\"><td class=\"eFirstCell\" {$width}>";
+
+                        if ($value['req']) {
 							$controlGroups[$cellId]['html'][$key] .= "<span class=\"requiredStar\">*</span>";
 						}
+
+                        if ( ! empty($value['in']) && is_array($value['in']) && ! empty($value['in']['description'])) {
+							$controlGroups[$cellId]['html'][$key] .= " <i class=\"fa fa-info-circle text-muted\" title=\"{$value['in']['description']}\"></i> ";
+						}
+
 						$controlGroups[$cellId]['html'][$key] .= $value['name'] . "</td><td" . ($field ? " id=\"{$this->resource}_cell_$field\"" : "") . ">";
 
 						if ($value['type'] == 'protect' || $value['type'] == 'protected') { //только для чтения
-							/*if (strpos($value['type'], '_email') !== false) {
-								$this->HTML .= "<span id='".$fieldId."' ".$attrs."><a href='mailto:".$value['default']."'>".$value['default']."</a></span>";
-							} elseif (strpos($value['type'], '_html') !== false) {
-								$this->HTML .= "<span id='".$fieldId."' ".$attrs.">" . htmlspecialchars_decode($value['default']) . "</span>";
-							} else {*/
-								$controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}>" . $value['default'] . "</span>";
-							//}
+                            $controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}>" . $value['default'] . "</span>";
 						}
 						elseif ($value['type'] == 'custom') { // произвольный html
 							$controlGroups[$cellId]['html'][$key] .= $attrs;
@@ -580,7 +583,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['html'][$key] .= "<span id=\"$fieldId\" {$attrs}><a href=\"{$value['default']}\">{$value['default']}</a></span>";
 						}
 						elseif ($value['type'] == 'search') { //TODO поле с быстрым поиском
-							$controlGroups[$cellId]['html'][$key] .= '<input id="' . $fieldId . '" type="hidden" name="control[' . $field . ']" value="' . $value['default'] . '"/>';
+							$controlGroups[$cellId]['html'][$key] .= "<input id=\"{$fieldId}\" type=\"hidden\" name=\"control[{$field}]\" value=\"{$value['default']}\"/>";
 						}
 						elseif ($value['type'] == 'date' || $value['type'] == 'datetime') {
 							if ($this->readOnly) {
@@ -1631,25 +1634,21 @@ class editTable extends initEdit {
                                         foreach ($value['in'] as $item_field) {
                                             $field_value = '';
 
-                                            if ( ! empty($dataset)) {
-                                                if (isset($dataset[$item_field['code']])) {
-                                                    $field_value = is_string($dataset[$item_field['code']])
-                                                        ? $dataset[$item_field['code']]
-                                                        : '';
-                                                }
+                                            if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
+                                                $field_value = is_string($dataset[$item_field['code']]) || is_numeric($dataset[$item_field['code']])
+                                                    ? $dataset[$item_field['code']]
+                                                    : '';
                                             }
 
                                             $type_name = $item_field['type'] ?? 'text';
 
-                                            if ( ! in_array($type_name, ['text','textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                            if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
                                                 $type_name = 'text';
                                             }
 
                                             if ($type_name == 'select') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
-                                            } elseif ($type_name == 'textarea') {
-                                                $type_name = 'textarea';
                                             } elseif ($type_name == 'select2') {
                                                 $field_value = $item_field['options'][$field_value] ?? $field_value;
 
@@ -1715,13 +1714,10 @@ class editTable extends initEdit {
                                         foreach ($value['in'] as $item_field) {
                                             $field_value = '';
 
-                                            if ( ! empty($dataset)) {
-                                                if (isset($dataset[$item_field['code']])) {
-                                                    $field_value = is_string($dataset[$item_field['code']])
-                                                        ? $dataset[$item_field['code']]
-                                                        : '';
-
-                                                }
+                                            if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
+                                                $field_value = is_string($dataset[$item_field['code']]) || is_numeric($dataset[$item_field['code']])
+                                                    ? $dataset[$item_field['code']]
+                                                    : '';
                                             }
 
                                             $field_attributes = ! empty($item_field['attributes'])
@@ -2120,7 +2116,10 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printCss("core2/html/" . THEME . "/css/bootstrap-colorpicker.min.css");
                     Tool::printJs("core2/html/" . THEME . "/js/bootstrap-colorpicker.min.js", true);
                 }
-                if (isset($this->scripts['multiselect2']) || isset($this->scripts['select2']) ) {
+                if (isset($this->scripts['multiselect2']) ||
+                    isset($this->scripts['select2']) ||
+                    isset($this->scripts['tags'])
+                ) {
                     Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
                     Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
                     Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
@@ -2149,7 +2148,6 @@ $controlGroups[$cellId]['html'][$key] .= "
                 }
             }
 
-			//echo "<PRE>";print_r($controlGroups);echo"</PRE>";die();
 			$fromReplace = array();
 			$toReplace   = array();
 			foreach ($controlGroups as $cellId => $value) {

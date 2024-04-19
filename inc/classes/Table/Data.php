@@ -57,7 +57,7 @@ class Data extends Table {
 
                     $first_row = current($this->data);
 
-                    if (array_key_exists($order_field, $first_row)) {
+                    if (is_array($first_row) && array_key_exists($order_field, $first_row)) {
                         $this->data = $this->orderData($this->data, $order_field, $this->session->table->order_type);
                     }
                 }
@@ -232,6 +232,7 @@ class Data extends Table {
                     $search_field = $search_column->getField();
 
                     if ( ! array_key_exists($search_field, $row)) {
+                        unset($data[$key]);
                         continue;
                     }
 
@@ -338,7 +339,9 @@ class Data extends Table {
                         case 'autocomplete_table':
                             $search_value = trim($search_value);
 
-                            if (mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false) {
+                            if ( ! is_string($row[$search_field]) ||
+                                mb_stripos($row[$search_field], $search_value, 0, 'utf8') === false
+                            ) {
                                 unset($data[$key]);
                                 continue 2;
                             }

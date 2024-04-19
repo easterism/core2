@@ -307,14 +307,14 @@ class Init extends \Core2\Db {
 
                 require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
 
-                $route = $this->routeParse();
-                if (isset($matches['module'])) { //DEPRECATED
-                    //for webservice < 2.6.0
-                    $route['version'] = $matches['version'];
-                } else {
-                    unset($route['module']);
-                    $route['version'] = $matches['version'];
+                $route            = $this->routeParse();
+                $route['version'] = $matches['version'];
+
+                if ( ! empty($matches['module'])) {
+                    $route['module'] = $matches['module'];
+                    $route['action'] = $matches['action'];
                 }
+
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route);
             }

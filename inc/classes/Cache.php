@@ -112,4 +112,11 @@ class Cache
         else $this->adapter->removeItem($key);
     }
 
+
+    /**
+     * @return string
+     */
+    public function getAdapterName(): string {
+        return (string)$this->adapter_name;
+    }
 }

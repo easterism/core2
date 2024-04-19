@@ -133,7 +133,7 @@ class Select {
         $matches = array();
         preg_match('~^(`[a-zA-Z0-9_ ]+`|[a-zA-Z0-9_]+)~i', trim($this->sql['FROM']), $matches);
 
-        return  ! empty($matches[1]) ? $matches[1] : false;
+        return ! empty($matches[1]) ? trim($matches[1], '`') : false;
     }
 
 

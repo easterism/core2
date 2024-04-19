@@ -666,7 +666,10 @@ class CoreController extends Common implements File {
 					$html .= '</small>';
 
                     $email = $this->createEmail();
-                    if (isset($_FILES) && ! empty($_FILES['video-blob'])) {
+                    if (isset($_FILES) &&
+                        ! empty($_FILES['video-blob']) &&
+                        ! empty($_FILES['video-blob']['tmp_name'])
+                    ) {
                         $file = $_FILES['video-blob'];
                         $email->attacheFile(file_get_contents($file['tmp_name']), "feedback.webm", $file['type'], $file['size']);
                     }

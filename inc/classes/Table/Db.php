@@ -508,7 +508,7 @@ class Db extends Table {
 
         $select = new Table\Db\Select($query);
 
-        $db = $this->_db ? $this->_db : $this->db;
+        $db = $this->_db ?: $this->db;
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {

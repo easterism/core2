@@ -167,14 +167,20 @@ class WorkerClient {
      */
     private function getWorkload($worker, $data) {
 
-        $auth     = Registry::get('auth');
-        $dt       = new \DateTime();
+        $auth = Registry::get('auth');
+        $dt   = new \DateTime();
+
+        $auth_data = $auth instanceof \Laminas\Session\Container
+            ? $auth->getArrayCopy()
+            : (is_object($auth) ? get_object_vars($auth) : []);
+
         $workload = [
             'timestamp' => $dt->format('U'),
             'location' => $this->location,
             'server'   => $_SERVER,
-            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'auth'     => $auth_data,
             'payload'  => $data,
+            'doc_root'  => DOC_ROOT,
         ];
 
         if ($this->module !== 'Admin') {

@@ -177,7 +177,7 @@ class Tool {
      */
     public static function commafy($number, string $separator = ';psbn&'): string {
 
-        if (empty($number)) {
+        if (is_null($number)) {
             return '';
         }
 
@@ -387,9 +387,7 @@ class Tool {
      */
     public static function printCss(string $src): void {
 
-        $src = self::addSrcHash($src);
-
-        echo '<link href="' . $src . '" type="text/css" rel="stylesheet" />';
+        echo self::getCss($src);
     }
 
 
@@ -400,14 +398,36 @@ class Tool {
      */
     public static function printJs(string $src, $chachable = false): void {
 
+        echo self::getJs($src, $chachable);
+    }
+
+
+    /**
+     * link to CSS file
+     * @param string $src - CSS filename
+     * @return string
+     */
+    public static function getCss(string $src): string {
+
         $src = self::addSrcHash($src);
 
-        if ($chachable) {
-            //помещаем скрипт в head
-            echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
-        } else {
-            echo '<script type="text/javascript" src="' . $src . '"></script>';
-        }
+        return '<link href="' . $src . '" type="text/css" rel="stylesheet" />';
+    }
+
+
+    /**
+     * link to JS file
+     * @param string $src - JS filename
+     * @param bool   $chachable
+     * @return string
+     */
+    public static function getJs(string $src, $chachable = false): string {
+
+        $src = self::addSrcHash($src);
+
+        return $chachable
+            ? "<script type=\"text/javascript\">jsToHead('{$src}')</script>"
+            : "<script type=\"text/javascript\" src=\"{$src}\"></script>";
     }
 
 

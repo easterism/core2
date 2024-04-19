@@ -6,7 +6,6 @@ require_once __DIR__ . '/../inc/classes/Log.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
 require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 
-use Core2\Log;
 
 class Logger
 {

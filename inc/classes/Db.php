@@ -15,6 +15,7 @@ use Laminas\Session\Container as SessionContainer;
  * @property Cache                     $cache
  * @property I18n                      $translate
  * @property Log                       $log
+ * @property Fact                      $fact
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
  * @property \Zend_Config_Ini          $core_config
@@ -635,33 +636,37 @@ class Db {
 	}
 
 
-	/**
-	 * Получаем информацию о субмодуле
-	 * @param $submodule_id
-	 *
-	 * @return bool|false|mixed
-	 */
-	public function getSubModule($submodule_id) {
+    /**
+     * Получаем информацию о субмодуле
+     * @param string $submodule_id
+     * @return array|false
+     */
+    public function getSubModule(string $submodule_id) {
+
         $this->getAllModules();
-        $id  = explode("_", $submodule_id);
-		if (empty($id[1])) {
-			return false;
-		}
-        if (!isset($this->_modules[$id[0]])) return false;
-        if ($this->_modules[$id[0]]['visible'] !== 'Y') return false;
-        if (!isset($this->_modules[$id[0]]['submodules'][$id[1]])) return false;
-        if ($this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
-        $sub = $this->_modules[$id[0]]['submodules'][$id[1]];
-        $mod = ['m_id'  => $this->_modules[$id[0]]['m_id'],
-               'm_name' => $this->_modules[$id[0]]['m_name'],
-               'sm_path' => $sub['sm_path'],
-               'sm_name' => $sub['sm_name'],
-               'module_id' => $id[0],
-               'is_system' => $this->_modules[$id[0]]['is_system'],
-               'sm_id'  => $id[1]
+        $id = explode("_", $submodule_id);
+
+        if (empty($id[1]) ||
+            empty($this->_modules[$id[0]]) ||
+            $this->_modules[$id[0]]['visible'] !== 'Y' ||
+            empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
+            $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y'
+        ) {
+            return false;
+        }
+
+        $submodule = $this->_modules[$id[0]]['submodules'][$id[1]];
+
+        return [
+            'm_id'      => $this->_modules[$id[0]]['m_id'],
+            'm_name'    => $this->_modules[$id[0]]['m_name'],
+            'sm_path'   => $submodule['sm_path'],
+            'sm_name'   => $submodule['sm_name'],
+            'module_id' => $id[0],
+            'is_system' => $this->_modules[$id[0]]['is_system'],
+            'sm_id'     => $id[1],
         ];
-        return $mod;
-	}
+    }
 
 
 	/**
@@ -865,8 +870,11 @@ class Db {
                 $item = $val->toArray();
                 unset($item['uninstall']); //чтоб не смущал
                 $item['submodules'] = [];
+
                 foreach ($sub as $item2) {
-                    if ($item2->m_id == $val->m_id) $item['submodules'][$item2->sm_key] = $item2->toArray();
+                    if ($item2->m_id == $val->m_id) {
+                        $item['submodules'][$item2->sm_key] = $item2->toArray();
+                    }
                 }
                 $data[$val->module_id] = $item;
             }

@@ -216,6 +216,7 @@ class File extends \Common {
         }
         header("Content-Type: $mime");
         header('Content-Length: ' . filesize($fname));
+
         $this->content = file_get_contents($fname);
     }
 

@@ -311,9 +311,24 @@ class Panel {
         if ( ! empty($this->tabs)) {
             $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
 
+            $tabs_load_count = [];
+
             foreach ($this->tabs as $tab) {
 
                 if ($tab['type'] == 'tab') {
+
+                    $tab_count = null;
+
+                    if (isset($tab['options']['count'])) {
+                        $tab_count = $tab['options']['count'];
+
+                    } elseif ( ! empty($tab['options']['load_count'])) {
+                        $tabs_load_count[] = [
+                            'id'  => $tab['id'],
+                            'url' => $tab['options']['load_count'],
+                        ];
+                    }
+
                     if (isset($tab['options']['disabled']) && $tab['options']['disabled']) {
                         $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
                         $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
@@ -333,9 +348,11 @@ class Panel {
                             }
                         }
 
+                        $title = $tab_count !== null ? "{$tab['title']} ({$tab_count})" : $tab['title'];
+
                         $tpl->tabs->elements->tab->assign('[ID]',      $tab['id']);
                         $tpl->tabs->elements->tab->assign('[CLASS]',   $class);
-                        $tpl->tabs->elements->tab->assign('[TITLE]',   $tab['title']);
+                        $tpl->tabs->elements->tab->assign('[TITLE]',   $title);
                         $tpl->tabs->elements->tab->assign('[ONCLICK]', $onclick);
                         $tpl->tabs->elements->tab->assign('[URL]',     $url);
                     }
@@ -349,6 +366,10 @@ class Panel {
                 }
 
                 $tpl->tabs->elements->reassign();
+            }
+
+            if ( ! empty($tabs_load_count) && $tpl->issetBlock('load_counts')) {
+                $tpl->load_counts->assign('[TABS_LOAD_COUNT]', addslashes(json_encode($tabs_load_count)));
             }
         }
         if ( ! empty($this->controls)) {

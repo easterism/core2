@@ -16,7 +16,7 @@ class SSE extends \Common {
         //события ядра
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         require_once $eventFile;
-        $shm_key = ftok($eventFile, 't') + $this->auth->ID; //у каждого юзера своя очередь
+        $shm_key = ftok($eventFile, 't') + crc32($this->auth->LIVEID); //у аждого юзера своя очередь
         if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
         $eventClass = new MessageQueue();
         $eventClass->setQueue(msg_get_queue($shm_key));
@@ -77,6 +77,7 @@ class SSE extends \Common {
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
+
         foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
