@@ -684,7 +684,6 @@ class Login extends \Common {
 
             if ($login === 'root') {
                 $user = $this->getUserRoot();
-
             } else {
                 if ($this->core_config->auth &&
                     $this->core_config->auth->ldap &&

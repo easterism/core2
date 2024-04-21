@@ -903,14 +903,15 @@ class CoreController extends Common implements File {
         $this->printJs("core2/mod/admin/assets/js/enum.js");
         $this->printJs("core2/mod/admin/assets/js/mod.js");
         if (!empty($_GET['edit'])) {
-            echo $enum->editEnum($_GET['edit']);
+            $enum = new Core2\Enum((int) $_GET['edit']);
+            echo $enum->editEnum();
             $tab->beginContainer(sprintf($this->translate->tr("Перечень значений справочника \"%s\""), $this->dataEnum->find($_GET['edit'])->current()->name));
             if (isset($_GET['newvalue'])) {
-                echo $enum->newEnumValue($_GET['edit']);
+                echo $enum->newEnumValue();
             } elseif (!empty($_GET['editvalue'])) {
-                echo $enum->editEnumValue($_GET['edit'], $_GET['editvalue']);
+                echo $enum->editEnumValue((int) $_GET['editvalue']);
             }
-            echo $enum->listEnumValues($_GET['edit']);
+            echo $enum->listEnumValues();
             $tab->endContainer();
         } elseif (isset($_GET['new'])) {
             echo $enum->newEnum();
