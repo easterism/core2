@@ -19,7 +19,6 @@
  */
 namespace Core2;
 
-
 require_once "classes/Registry.php";
 
 
@@ -412,8 +411,10 @@ class WorkerManager {
                 $config['temp'] = "/tmp";
             }
         }
+
         try {
             $config2 = $this->parse_config($opts["c"], $section);
+
             if (isset($config2['database']['params'])) {
                 $params = array_merge($config['database'], $config2['database']);
                 $config2['database'] = $params;
@@ -642,7 +643,7 @@ class WorkerManager {
         $config  = $this->resolveNestedSections($config);
 
         foreach ($config as $namespace => $properties) {
-            if (is_array($properties)) {
+            if (is_array($properties) && $namespace == $section) {
                 // overwrite / set current namespace values
                 foreach ($properties as $key => $val) {
                     $config[$namespace] = $this->_processKey($config[$namespace], $key, $val);
@@ -650,7 +651,6 @@ class WorkerManager {
                 }
             }
         }
-
 
         if (empty($config)) {
             $this->show_help("No configuration found in $file");
