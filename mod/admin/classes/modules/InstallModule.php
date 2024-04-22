@@ -8,6 +8,7 @@ use Laminas\Session\Container as SessionContainer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\RequestException;
+use Core2\Tool;
 
 /**
  * Class InstallModule
@@ -357,7 +358,7 @@ class InstallModule extends \Common {
                 throw new \Exception($this->_("Не удалось определить требуемую версию ядра"));
 
             } else {
-                $config = \Zend_Registry::getInstance()->get('core_config');
+                $config = Registry::get('core_config');
 
                 if ( ! $config->version) {
                     throw new \Exception($this->_("Не задана версия ядра"));
@@ -1462,7 +1463,7 @@ class InstallModule extends \Common {
         }
         $url =  "{$server}webservice?reg_apikey=" . $key . "&name=repo%20{$_SERVER['HTTP_HOST']}";
         //получаем apikey
-        $curl = \Tool::doCurlRequest($url);
+        $curl = Tool::doCurlRequest($url);
         //если чет пошло не так
         if (empty($curl['http_code']) || $curl['http_code'] != 200)
         {
@@ -1858,7 +1859,7 @@ class InstallModule extends \Common {
                     $this->addNotice($this->translate->tr("Обновление файлов"), $this->translate->tr("Перезапись файлов прервана"), $this->translate->tr("Папка закрыта для записи"), "danger");
                 } else {
                     //записываем новые файлы
-                    $config                 = \Zend_Registry::getInstance()->get('config');
+                    $config                 = Registry::get('config');
                     $tempDir                = $config->temp . "/tmp_" . uniqid();
                     $this->make_zip($data);
                     $this->extractZip($tempDir);

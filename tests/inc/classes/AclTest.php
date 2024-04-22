@@ -1,13 +1,13 @@
 <?php
 
 namespace Tests;
-use PHPUnit\Framework\TestCase;
 
 
 require_once __DIR__ . '/../../inc/classes/Db.php';
 require_once __DIR__ . '/../../inc/classes/Acl.php';
 
-
+use PHPUnit\Framework\TestCase;
+use Core2\Registry;
 
 /**
  * Class AclTest
@@ -48,13 +48,13 @@ class AclTest extends TestCase {
      */
     public function setUp() {
 
-        $config   = \Zend_Registry::get('config');
+        $config   = Registry::get('config');
         $database = new \Db($config);
 
         $this->acl_class   = new \Acl();
         $this->acl         = new \Zend_Acl();
         $this->db          = $database->db;
-        $this->auth        = \Zend_Registry::get('auth');
+        $this->auth        = Registry::get('auth');
         $this->auth->ID    = 99;
         $this->auth->NAME  = 'test999';
         $this->auth->ROLE  = '99999';

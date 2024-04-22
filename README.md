@@ -1,8 +1,6 @@
 core2
 =====
-PHP framework for business application.
-
-NOTE: Currently it's russian framework. So you'll get no way to translate any inner locutions. In the future the translator will be available as a system module.
+PHP framework for business applications.
 
 Minimum Server Requirements
 ---------------------------

@@ -1,9 +1,11 @@
 <?php
 namespace Core2\Classes\Table;
-use Core2\Acl;
-use Laminas\Session\Container as SessionContainer;
 
 require_once __DIR__ . '/../Templater3.php';
+
+use Core2\Acl;
+use Core2\Tool;
+use Laminas\Session\Container as SessionContainer;
 
 
 /**
@@ -822,7 +824,7 @@ class Render extends Acl {
                                     break;
 
                                 case 'money':
-                                    $value    = \Tool::commafy(sprintf("%0.2f", $value));
+                                    $value    = Tool::commafy(sprintf("%0.2f", $value));
                                     $options  = $column['options'] ?? [];
                                     $template = $options['tpl'] ?? '<b>[VALUE]</b> <small class=\"text-muted\">[CURRENCY]</small>';
                                     $currency = $options['currency'] ?? $this->table['currency'];

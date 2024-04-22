@@ -47,7 +47,7 @@ class I18n {
                 Error::Exception($e->getMessage());
             }
         }
-        \Zend_Registry::set('translate', $this);
+        Registry::set('translate', $this);
 	}
 
 
@@ -134,7 +134,7 @@ class I18n {
                 } catch (\Zend_Translate_Exception $e) {
                     Error::Exception($e->getMessage());
                 }
-                \Zend_Registry::set('translate', $this);
+                Registry::set('translate', $this);
             }
         }
     }

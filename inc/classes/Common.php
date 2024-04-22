@@ -2,6 +2,9 @@
 require_once 'Acl.php';
 require_once 'Emitter.php';
 
+use Core2\Registry;
+use Core2\Emitter;
+use Core2\Tool;
 
 /**
  * Class Common
@@ -144,7 +147,7 @@ class Common extends \Core2\Acl {
 		} else {
 			// Получение экземпляра класса для работы с правами пользователей
 			if ($k == 'acl') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
+				$v = $this->{$k} = Registry::get('acl');
 			}
 			elseif ($k === 'moduleConfig') {
 
@@ -366,7 +369,7 @@ class Common extends \Core2\Acl {
      * @return array
      */
 	protected function emit($event_name, $data = []) {
-	    $em = new \Core2\Emitter($this, $this->module);
+	    $em = new Emitter($this, $this->module);
         $em->addEvent($event_name, $data);
         return $em->emit();
     }

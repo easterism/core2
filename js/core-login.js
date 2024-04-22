@@ -27,7 +27,6 @@ CoreLogin.login = function (form) {
             password: passValue
         }
     })
-
         .always (function (jqXHR) {
             CoreLogin.loaderHide();
 
@@ -60,34 +59,23 @@ CoreLogin.authSocial = function (socialName, code) {
 
     CoreLogin.loaderShow();
     $('.form-main .text-danger').text('');
-
-    $.ajax({
-        url: "index.php?core=auth_" + socialName,
-        method: "POST",
-        data: {
-            code: code
-        }
-    })
-        .always (function (jqXHR) {
+    fetch("auth/" + socialName + "?login=" + encodeURIComponent(code))
+        .then(function (response) {
             CoreLogin.loaderHide();
-
-            var response     = typeof jqXHR === 'string' ? jqXHR : jqXHR.responseText;
-            var errorMessage = '';
-
-            try {
-                var data = JSON.parse(response);
-                errorMessage = typeof data.error_message === 'string' ? data.error_message : '';
-
-            } catch (err) {
-                errorMessage = response || "Ошибка. Попробуйте позже, либо обратитесь к администратору";
-            }
-
+            return response.json();
+        })
+        .then(function (data) {
+            errorMessage = typeof data.error === 'string' ? data.error : '';
             if (errorMessage !== '') {
                 $('.form-main .text-danger').text(errorMessage);
             } else {
-                location.reload();
+                location.href = "index.php";
             }
+        })
+        .catch((error) => {
+            $('.form-main .text-danger').text(error);
         });
+
 };
 
 
@@ -293,7 +281,6 @@ CoreLogin.parseQuery = function (queryString) {
 $(function () {
 
     var parameters = CoreLogin.parseQuery(location.search);
-
     if (parameters.hasOwnProperty('core') &&
         parameters.hasOwnProperty('code') &&
         parameters['core'] &&
@@ -315,6 +302,12 @@ $(function () {
             case 'auth_fb':
                 if ($('.auth-social-fb')[0]) {
                     CoreLogin.authSocial('fb', parameters['code']);
+                }
+                break;
+
+            case 'auth_google':
+                if ($('.auth-social-google')[0]) {
+                    CoreLogin.authSocial('gcp', parameters['code']);
                 }
                 break;
         }

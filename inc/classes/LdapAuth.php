@@ -59,7 +59,7 @@ class LdapAuth extends Db {
 	public function auth($login, $password) {
 		try {
 			$auth = new AuthenticationService();
-			$config = \Zend_Registry::getInstance()->get('config');
+			$config = Registry::get('config');
 			$log_path = $config->ldap->log_path;
 			$root = $config->ldap->root;
 			$admin = $config->ldap->admin;
@@ -128,7 +128,7 @@ class LdapAuth extends Db {
      */
 	public function getLdapInfo(string $login): void {
 
-		$config = \Zend_Registry::getInstance()->get('config');
+		$config = Registry::get('config');
 
         if ( ! $config->ldap) {
             return;

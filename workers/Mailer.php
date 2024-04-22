@@ -12,11 +12,6 @@ use Laminas\Mime\Part as MimePart;
 
 class Mailer
 {
-    public function __construct()
-    {
-        \Zend_Registry::set('config', Registry::get('config'));
-        \Zend_Registry::set('core_config',  Registry::get('core_config'));
-    }
 
     public function run($job, &$log) {
 

@@ -28,14 +28,14 @@ class Login extends \Common {
 
         if (isset($route['api'])) {
             header('HTTP/1.1 401 Unauthorized');
-            if ($this->core_config->auth) {
+            if (!$route['action'] && $this->core_config->auth) {
                 if ($this->core_config->auth->scheme == 'basic') {
                     try {
                         if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
                             if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
                                 list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                                 $user = $this->dataUsers->getUserByLogin($login);
-                                if ($user && $user['u_pass'] === \Tool::pass_salt(md5($password))) {
+                                if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
                                     if ($this->auth($user)) {
                                         header("Location: " . DOC_PATH);
                                         return;
@@ -58,6 +58,15 @@ class Login extends \Common {
                     header('WWW-Authenticate: Digest realm="' . $realm . '",scope="' . $this->core_config->auth->bearer->scope . '"');
                 }
                 //TODO реализовать остальные схемы
+                return;
+            }
+
+            if ($route['api'] == 'auth' && $route['action'] == 'gcp') { //вход через google
+//                parse_str($route['query'], $request);
+//                $s = new SessionContainer('Social');
+//                $s->back = DOC_PATH;
+                $this->apiAuth->action_gcp();
+                return "{}";
             }
             return;
         }
@@ -258,7 +267,7 @@ class Login extends \Common {
         if ( ! empty($_POST['xjxr'])) {
             throw new \Exception('expired');
         }
-        if (array_key_exists('X-Requested-With', \Tool::getRequestHeaders())) {
+        if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
 
             if ( ! empty($request['module'])) {
                 http_response_code(403);
@@ -314,48 +323,53 @@ class Login extends \Common {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->core_config->auth) {
-            if ($this->core_config->auth->ldap &&
-                $this->core_config->auth->ldap->on
+        if ($this->isModuleInstalled('auth')) {
+            $auth_config = $this->modAuth->moduleConfig->auth;
+            if ($auth_config->ldap &&
+                $auth_config->ldap->on
             ) {
                 $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
             }
 
-            if ($this->core_config->auth->module &&
-                $this->core_config->auth->social
-            ) {
-                if ($this->core_config->auth->social->fb &&
-                    $this->core_config->auth->social->fb->on &&
-                    $this->core_config->auth->social->fb->app_id &&
-                    $this->core_config->auth->social->fb->api_secret &&
-                    $this->core_config->auth->social->fb->redirect_url
+            if ($auth_config->social) {
+                if ($auth_config->social->fb &&
+                    $auth_config->social->fb->on &&
+                    $auth_config->social->fb->app_id &&
+                    $auth_config->social->fb->api_secret &&
+                    $auth_config->social->fb->redirect_url
                 ) {
 
-                    $tpl->social->fb->assign('[APP_ID]', $this->core_config->auth->social->fb->app_id);
-                    $tpl->social->fb->assign('[REDIRECT_URL]', $this->core_config->auth->social->fb->redirect_url);
+                    $tpl->social->fb->assign('[APP_ID]', $auth_config->social->fb->app_id);
+                    $tpl->social->fb->assign('[REDIRECT_URL]', $auth_config->social->fb->redirect_url);
                 }
 
-                if ($this->core_config->auth->social->ok &&
-                    $this->core_config->auth->social->ok->on &&
-                    $this->core_config->auth->social->ok->app_id &&
-                    $this->core_config->auth->social->ok->public_key &&
-                    $this->core_config->auth->social->ok->secret_key &&
-                    $this->core_config->auth->social->ok->redirect_url
+                if ($auth_config->social->ok &&
+                    $auth_config->social->ok->on &&
+                    $auth_config->social->ok->app_id &&
+                    $auth_config->social->ok->public_key &&
+                    $auth_config->social->ok->secret_key &&
+                    $auth_config->social->ok->redirect_url
                 ) {
 
-                    $tpl->social->ok->assign('[APP_ID]', $this->core_config->auth->social->ok->app_id);
-                    $tpl->social->ok->assign('[REDIRECT_URL]', $this->core_config->auth->social->ok->redirect_url);
+                    $tpl->social->ok->assign('[APP_ID]', $auth_config->social->ok->app_id);
+                    $tpl->social->ok->assign('[REDIRECT_URL]', $auth_config->social->ok->redirect_url);
                 }
 
-                if ($this->core_config->auth->social->vk &&
-                    $this->core_config->auth->social->vk->on &&
-                    $this->core_config->auth->social->vk->app_id &&
-                    $this->core_config->auth->social->vk->api_secret &&
-                    $this->core_config->auth->social->vk->redirect_url
+                if ($auth_config->social->vk &&
+                    $auth_config->social->vk->on &&
+                    $auth_config->social->vk->app_id &&
+                    $auth_config->social->vk->api_secret &&
+                    $auth_config->social->vk->redirect_url
                 ) {
 
-                    $tpl->social->vk->assign('[APP_ID]', $this->core_config->auth->social->vk->app_id);
-                    $tpl->social->vk->assign('[REDIRECT_URL]', $this->core_config->auth->social->vk->redirect_url);
+                    $tpl->social->vk->assign('[APP_ID]', $auth_config->social->vk->app_id);
+                    $tpl->social->vk->assign('[REDIRECT_URL]', $auth_config->social->vk->redirect_url);
+                }
+
+                if ($auth_config->social->google &&
+                    $auth_config->social->google->on
+                ) {
+                    $tpl->social->google->assign('[OAUTH2]', $this->apiAuth->getAuthUrl('google'));
                 }
             }
         }
@@ -670,7 +684,6 @@ class Login extends \Common {
 
             if ($login === 'root') {
                 $user = $this->getUserRoot();
-
             } else {
                 if ($this->core_config->auth &&
                     $this->core_config->auth->ldap &&
@@ -684,7 +697,7 @@ class Login extends \Common {
 
                     $user           = $this->getUserLdap($login, $password);
                     $user['LDAP']   = true;
-                    $user['u_pass'] = \Tool::pass_salt($password);
+                    $user['u_pass'] = Tool::pass_salt($password);
 
                 } else {
                     $user = $this->dataUsers->getUserByLogin($login);
@@ -696,7 +709,7 @@ class Login extends \Common {
             }
 
 
-            if ($user['u_pass'] !== \Tool::pass_salt($password)) {
+            if ($user['u_pass'] !== Tool::pass_salt($password)) {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
             }
 
@@ -987,7 +1000,7 @@ class Login extends \Common {
         $this->db->update('core_users', [
             'visible'         => 'Y',
             'is_pass_changed' => 'Y',
-            'u_pass'          => \Tool::pass_salt($password),
+            'u_pass'          => Tool::pass_salt($password),
             'reg_key'         => new \Zend_Db_Expr('NULL'),
             'date_expired'    => new \Zend_Db_Expr('NULL'),
         ], $where);
@@ -1067,7 +1080,7 @@ class Login extends \Common {
 
         $where = $this->db->quoteInto('u_id = ?', $user_id);
         $this->db->update('core_users', [
-            'u_pass'       => \Tool::pass_salt($password),
+            'u_pass'       => Tool::pass_salt($password),
             'reg_key'      => new \Zend_Db_Expr('NULL'),
             'date_expired' => new \Zend_Db_Expr('NULL'),
         ], $where);
@@ -1276,7 +1289,7 @@ class Login extends \Common {
 
         $tpl = new \Templater3();
 
-        if (\Tool::isMobileBrowser()) {
+        if (Tool::isMobileBrowser()) {
             $tpl->loadTemplate(Theme::get("login-indexMobile"));
         } else {
             $tpl->loadTemplate(Theme::get("login-index"));

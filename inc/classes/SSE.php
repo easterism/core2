@@ -16,7 +16,7 @@ class SSE extends \Common {
         //события ядра
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         require_once $eventFile;
-        $shm_key = ftok($eventFile, 't') + crc32($this->auth->LIVEID); //у аждого юзера своя очередь
+        $shm_key = ftok($eventFile, 't') + crc32($this->auth->LIVEID); //у каждого юзера своя очередь
         if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
         $eventClass = new MessageQueue();
         $eventClass->setQueue(msg_get_queue($shm_key));
@@ -77,7 +77,6 @@ class SSE extends \Common {
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
-
         foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
@@ -92,6 +91,7 @@ class SSE extends \Common {
                     if ($data[$path]) {
                         echo "event: modules\n",
                         'data: ', json_encode([$path => $data[$path]]), "\n\n";
+                        $this->doFlush();
                     }
                     if ($msgs) {
                         foreach ($msgs as $topic => $msg) {
@@ -100,17 +100,16 @@ class SSE extends \Common {
 
                             echo "event: modules\n",
                             'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                            $this->doFlush();
                         }
                     }
-                    $this->doFlush();
                 }
             }
         }
 
         if ($data) {
             echo "event: Core2\n",
-                'data: произошли события: ',
-                implode("\ndata: ", array_keys($data)),
+                'data: ' . json_encode(["done" => array_keys($data)]),
                 "\n\n";
         }
 

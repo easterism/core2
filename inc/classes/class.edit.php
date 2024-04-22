@@ -3,6 +3,8 @@ require_once("class.ini.php");
 require_once 'Templater3.php';
 
 use Laminas\Session\Container as SessionContainer;
+use Core2\Tool;
+use Core2\Registry;
 
 $counter = 0;
 
@@ -1804,7 +1806,7 @@ class editTable extends initEdit {
 
                         }
 						elseif ($value['type'] == 'xfile' || $value['type'] == 'xfiles') {
-							[$module, $action] = \Core2\Registry::get('context');
+							[$module, $action] = Registry::get('context');
 							if ($this->readOnly) {
 								$files = $this->db->fetchAll("
                                     SELECT id, 
@@ -2342,7 +2344,7 @@ $controlGroups[$cellId]['html'][$key] .= "
             array($this->table, $keyfield, $refid)
         );
         $lastupdate = microtime();
-        $auth = \Core2\Registry::get('auth');
+        $auth = Registry::get('auth');
         if (!$check) {
             $this->db->insert('core_controls', array(
                 'tbl' 		=> $this->table,

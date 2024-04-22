@@ -863,7 +863,7 @@ class Modules extends \Common  {
             }
 
             if ( ! empty($modules)) {
-                $modules = \Tool::arrayMultisort($modules, 'date', SORT_DESC);
+                $modules = Tool::arrayMultisort($modules, 'date', SORT_DESC);
             }
 
             $this->cache->save($modules, $gitlab_cache_key);
