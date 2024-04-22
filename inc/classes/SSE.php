@@ -77,6 +77,7 @@ class SSE extends \Common {
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
         //в папке events каждый клас должен реализовать нетерфейс Event
         $data = [];
+
         foreach ($this->_events as $path => $event) {
             if ($event->check()) {
                 //TODO реализовать не блокирующий вызов
