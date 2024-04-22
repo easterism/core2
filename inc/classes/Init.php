@@ -405,7 +405,8 @@ class Init extends \Core2\Db {
                     return $this->getMenuMobile();
                 }
                 return $this->getMenu();
-            } else {
+            }
+            else {
                 if (!empty($_POST)) {
                     //может ли xajax обработать запрос
                     $xajax = new xajax();
