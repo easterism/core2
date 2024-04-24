@@ -25,9 +25,11 @@ use Laminas\Cache\Storage;
 use Core2\Registry;
 use Core2\Tool;
 
-$f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
-    \Core2\Error::Exception("File not found", 404);
+if ( ! empty($_SERVER['REQUEST_URI'])) {
+    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+        \Core2\Error::Exception("File not found", 404);
+    }
 }
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -673,7 +675,6 @@ class Init extends \Core2\Db {
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
                 ], 500);
             }
-            Zend_Registry::set('auth', new StdClass()); //DEPRECATED
             Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
@@ -865,7 +866,7 @@ class Init extends \Core2\Db {
         private function requireController($location, $modController) {
             $controller_path = $location . "/" . $modController . ".php";
             if (!file_exists($controller_path)) {
-                throw new Exception($this->translate->tr("Модуль не существует") . ": " . $location, 404);
+                throw new Exception($this->translate->tr("Модуль не найден") . ": " . $modController, 404);
             }
             $autoload = $location . "/vendor/autoload.php";
             if (file_exists($autoload)) { //подключаем автозагрузку если есть
