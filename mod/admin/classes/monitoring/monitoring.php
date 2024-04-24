@@ -1,4 +1,5 @@
 <?php
+use Core2\Tool;
 
 require_once DOC_ROOT . 'core2/inc/classes/Alert.php';
 require_once DOC_ROOT . 'core2/inc/classes/Templater3.php';
