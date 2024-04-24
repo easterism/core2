@@ -92,6 +92,7 @@ class SSE extends \Common {
                     if ($data[$path]) {
                         echo "event: modules\n",
                         'data: ', json_encode([$path => $data[$path]]), "\n\n";
+                        $this->doFlush();
                     }
                     if ($msgs) {
                         foreach ($msgs as $topic => $msg) {
@@ -100,17 +101,16 @@ class SSE extends \Common {
 
                             echo "event: modules\n",
                             'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                            $this->doFlush();
                         }
                     }
-                    $this->doFlush();
                 }
             }
         }
 
         if ($data) {
             echo "event: Core2\n",
-                'data: произошли события: ',
-                implode("\ndata: ", array_keys($data)),
+                'data: ' . json_encode(["done" => array_keys($data)]),
                 "\n\n";
         }
 

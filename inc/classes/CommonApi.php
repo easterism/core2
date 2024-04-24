@@ -1,6 +1,7 @@
 <?php
 require_once 'Acl.php';
 
+use Core2\Registry;
 
 /**
  * Class CommonApi
@@ -70,7 +71,7 @@ class CommonApi extends \Core2\Acl {
 			}
 			// Получение экземпляра класса для работы с правами пользователей
 			elseif ($k == 'acl') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
+				$v = $this->{$k} = Registry::get('acl');
 			}
             elseif ($k == 'modAdmin') {
                 require_once(DOC_ROOT . 'core2/inc/CoreController.php');

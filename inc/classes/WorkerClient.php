@@ -19,7 +19,7 @@ class WorkerClient {
      */
     public function __construct() {
 
-        $cc = \Zend_Registry::get('core_config');
+        $cc = Registry::get('core_config');
 
         if ($cc->gearman && $cc->gearman->host) {
             if ( ! class_exists('\\GearmanClient')) {
@@ -167,13 +167,18 @@ class WorkerClient {
      */
     private function getWorkload($worker, $data) {
 
-        $auth     = Registry::get('auth');
-        $dt       = new \DateTime();
+        $auth = Registry::get('auth');
+        $dt   = new \DateTime();
+
+        $auth_data = $auth instanceof \Laminas\Session\Container
+            ? $auth->getArrayCopy()
+            : (is_object($auth) ? get_object_vars($auth) : []);
+
         $workload = [
             'timestamp' => $dt->format('U'),
             'location' => $this->location,
             'server'   => $_SERVER,
-            'auth'     => is_object($auth) ? get_object_vars($auth) : $auth->getArrayCopy(),
+            'auth'     => $auth_data,
             'payload'  => $data,
             'doc_root'  => DOC_ROOT,
         ];
@@ -183,7 +188,7 @@ class WorkerClient {
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
                 'context'   => Registry::get('context'),
-                'translate' => serialize(\Zend_Registry::get('translate')),
+                'translate' => serialize(Registry::get('translate')),
                 'worker'    => $worker
             ];
         }

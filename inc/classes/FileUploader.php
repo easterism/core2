@@ -1,11 +1,11 @@
 <?php
 namespace Core2\Store;
 
-use Laminas\Session\Container as SessionContainer;
-
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 require_once DOC_ROOT . "core2/inc/classes/Image.php";
 
+use Laminas\Session\Container as SessionContainer;
+use Core2\Registry;
 
 /**
  * Class FileUploader
@@ -23,7 +23,7 @@ class FileUploader extends \Core2\Db {
 
         parent::__construct();
 
-        $config     = \Zend_Registry::get('config');
+        $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $config->temp . '/' . $sid;
 
@@ -128,7 +128,7 @@ class FileUploader extends \Core2\Db {
             $file = new \stdClass();
             $file->name 		= $value['filename'];
             $file->size 		= (int)$value['filesize'];
-            if (preg_match(\Image::FORMAT_PICTURE, $type2)) {
+            if (preg_match(Image::FORMAT_PICTURE, $type2)) {
                 $file->thumbnail_url = $this->options['thumb_url'] . $value['id'] . '&t=' . $tbl;
             } else {
                 //$file->thumbnail_url = THEME . "/filetypes/pdf.gif";
@@ -147,8 +147,8 @@ class FileUploader extends \Core2\Db {
 
 
     private function create_scaled_image($file_name, $options) {
-        $file_path = $this->options['upload_dir'].$file_name;
-        $new_file_path = $options['upload_dir'].$file_name;
+        $file_path      = $this->options['upload_dir'] . $file_name;
+        $new_file_path  = $options['upload_dir'] . $file_name;
         list($img_width, $img_height) = @getimagesize($file_path);
         if (!$img_width || !$img_height) {
             return false;
@@ -162,7 +162,7 @@ class FileUploader extends \Core2\Db {
         }
         $new_width = $img_width * $scale;
         $new_height = $img_height * $scale;
-        $new_img = @imagecreatetruecolor($new_width, $new_height);
+        $dst_img = @imagecreatetruecolor($new_width, $new_height);
         switch (strtolower(substr(strrchr($file_name, '.'), 1))) {
             case 'jpg':
             case 'jpeg':
@@ -175,23 +175,26 @@ class FileUploader extends \Core2\Db {
                 break;
             case 'png':
                 $src_img = @imagecreatefrompng($file_path);
+                imagecolortransparent($dst_img, imagecolorallocatealpha($dst_img, 0, 0, 0, 127));
+                imageAlphaBlending($dst_img, false);
+                imageSaveAlpha($dst_img, true);
                 $write_image = 'imagepng';
                 break;
             default:
                 $src_img = $image_method = null;
         }
         $success = $src_img && @imagecopyresampled(
-                $new_img,
+                $dst_img,
                 $src_img,
                 0, 0, 0, 0,
                 $new_width,
                 $new_height,
                 $img_width,
                 $img_height
-            ) && $write_image($new_img, $new_file_path);
+            ) && $write_image($dst_img, $new_file_path);
         // Free up memory (imagedestroy does not delete files):
-        @imagedestroy($src_img);
-        @imagedestroy($new_img);
+        if ($src_img) @imagedestroy($src_img);
+        if ($dst_img) @imagedestroy($dst_img);
         return $success;
     }
 
@@ -261,7 +264,7 @@ class FileUploader extends \Core2\Db {
             $file_size = filesize($file_path);
             if ($file_size === $file->size) {
                 $file->url = "index.php?module=admin&filehandler=temp&tfile=" . rawurlencode($file->name);
-                foreach($this->options['image_versions'] as $version => $options) {
+                foreach ($this->options['image_versions'] as $version => $options) {
                     if ($this->create_scaled_image($file->name, $options)) {
                         $file->{$version.'_url'} = "index.php?module=admin&filehandler=temp&tfile="
                             .rawurlencode($file->name);

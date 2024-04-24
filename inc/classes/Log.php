@@ -41,12 +41,12 @@ class Log {
         if ($name !== 'access') {
             //эта секция предназначена для работы ядра
             $this->log = new Logger($_SERVER['SERVER_NAME'] . "." . $name);
-            $this->config = \Zend_Registry::getInstance()->get('core_config');
+            $this->config = Registry::get('core_config');
 
             if ($name === 'profile') {
                 if (isset($this->config->profile->mysql)) {
                     $profile_mysql = strpos($this->config->profile->mysql, '/') !== 0
-                        ? DOC_ROOT . $this->config->profile->mysql
+                        ? __DIR__ . "/../../" . $this->config->profile->mysql
                         : $this->config->profile->mysql;
 
                     $stream = new StreamHandler($profile_mysql);
@@ -78,7 +78,7 @@ class Log {
             }
         }
         else {
-            $this->config = \Zend_Registry::getInstance()->get('config');
+            $this->config = Registry::get('config');
             $this->log    = new Logger($name);
         }
     }

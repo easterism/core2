@@ -2,7 +2,6 @@
 namespace Core2;
 
 require_once __DIR__ . '/../inc/classes/Registry.php';
-require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Common.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
@@ -12,11 +11,6 @@ require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 class Workhorse
 {
 
-    public function __construct()
-    {
-        \Zend_Registry::set('config', Registry::get('config'));
-        \Zend_Registry::set('core_config',  Registry::get('core_config'));
-    }
 
     public function run($job, &$log) {
 

@@ -1,12 +1,12 @@
 <?php
 
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-
 
 require_once DOC_ROOT . 'core2/inc/classes/Tool.php';
 require_once DOC_ROOT . 'core2/inc/classes/Error.php';
 
+use PHPUnit\Framework\TestCase;
+use Core2\Tool;
 
 /**
  * Class ToolsTest
@@ -15,14 +15,14 @@ require_once DOC_ROOT . 'core2/inc/classes/Error.php';
 class ToolsTest extends TestCase {
 
     /**
-     * @var \Tool
+     * @var Tool
      */
     protected $tools;
 
 
     public function setUp() {
 
-        $this->tools = new \Tool();
+        $this->tools = new Tool();
     }
 
 
@@ -42,7 +42,7 @@ class ToolsTest extends TestCase {
     public function test_file_exists_ip($filen) {
 
         $filename = DOC_ROOT . $filen;
-        if (\Tool::file_exists_ip($filename)) {
+        if (Tool::file_exists_ip($filename)) {
             $this->fail(" Отсутствует файл " . $filename);
         }
     }
@@ -83,7 +83,7 @@ class ToolsTest extends TestCase {
         ];
         //$realm = array('username' => 'bbb', 'password' => 'bbb');
         $realm = ['username' => 'Aladdin', 'password' => 'open'];
-        if ($code = \Tool::httpAuth($realm, $users)) {
+        if ($code = Tool::httpAuth($realm, $users)) {
             if ($code == 1) \Core2\Error::Exception("Неверный пользователь.");
             if ($code == 2) \Core2\Error::Exception("Неверный пароль.");
         }
@@ -152,7 +152,7 @@ class ToolsTest extends TestCase {
     public function test_commafy($Numb) {
 
         $fn = $this->tools->commafy($Numb);
-        if ( ! \Tool::commafy($Numb)) {
+        if ( ! Tool::commafy($Numb)) {
             $this->fail(" тест не пройден " . $Numb . " для такой строки не работает");
         }
     }

@@ -4,7 +4,6 @@ namespace Core2;
 require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
-require_once 'Zend_Registry.php';
 require_once 'Fact.php';
 
 use Laminas\Cache\Storage;
@@ -39,6 +38,7 @@ class Db {
     private $_locations = array();
     private $_modules = array();
     private $_db = [];
+    private $_counter = 0;
     private string $schemaName = 'public';
 
     /**
@@ -49,7 +49,7 @@ class Db {
 	public function __construct($config = null) {
 
 	    if (is_null($config)) {
-			$this->config = \Zend_Registry::get('config');
+			$this->config = Registry::get('config');
 		} else {
 			$this->config = $config;
 		}
@@ -67,8 +67,7 @@ class Db {
 	 */
 	public function __get($k) {
 		if ($k == 'core_config') {
-            $reg                = \Zend_Registry::getInstance();
-            $this->_core_config = $reg->get('core_config');
+            $this->_core_config = Registry::get('core_config');
             return $this->_core_config;
         }
 		if ($k == 'db') {
@@ -83,7 +82,7 @@ class Db {
                 }
             }
 
-            $reg = \Zend_Registry::getInstance();
+            $reg = Registry::getInstance();
 			if (! $reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
@@ -96,7 +95,7 @@ class Db {
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-			$reg = \Zend_Registry::getInstance();
+			$reg = Registry::getInstance();
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
@@ -139,7 +138,7 @@ class Db {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
-				$v = \Zend_Registry::get('translate');
+				$v = Registry::get('translate');
 				$this->_s[$k] = $v;
 			}
 			return $v;
@@ -236,7 +235,7 @@ class Db {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
-			\Zend_Registry::getInstance()->set('db', $db);
+			Registry::set('db', $db);
 
             //переопределяем config для нового подключения к базе
             if ($this->config->database !== $database) {
@@ -285,7 +284,7 @@ class Db {
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
         }
-        \Zend_Registry::getInstance()->set('dbschema', $this->schemaName);
+        Registry::set('dbschema', $this->schemaName);
         $db = \Zend_Db::factory($database);
         $db->getConnection();
         return $db;
@@ -864,9 +863,9 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $m            = new Model\Modules($this->db);
             $sm           = new Model\SubModules($this->db);
-            $res = $m->fetchAll($m->select()->order('seq'));
-            $sub = $sm->fetchAll($sm->select()->order('seq'));
-            $data = [];
+            $res    = $m->fetchAll($m->select()->order('seq'));
+            $sub    = $sm->fetchAll($sm->select()->order('seq'));
+            $data   = [];
             foreach ($res as $val) {
                 $item = $val->toArray();
                 unset($item['uninstall']); //чтоб не смущал
@@ -882,6 +881,13 @@ class Db {
             $this->cache->setItem($key, $data);
         } else {
             $data = $this->cache->getItem($key);
+            if (!$data || !is_array($data)) {
+                //этого не может быть!
+                if ($this->_counter > 5) throw new \Exception("Cache error", 500);
+                $this->_counter++;
+                $this->cache->remove($key);
+                $this->getAllModules();
+            }
         }
         $this->_modules = $data;
     }

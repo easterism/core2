@@ -207,7 +207,7 @@ class Email extends Db {
 
         try {
             if (empty($this->mail_data['from'])) {
-                $config = \Zend_Registry::get('config');
+                $config = Registry::get('config');
 
                 if ($config->mail &&
                     $config->mail->username &&
@@ -423,7 +423,7 @@ class Email extends Db {
             return;
         }
 
-        $config = \Zend_Registry::get('config');
+        $config = Registry::get('config');
 
         $message = new Mail\Message();
         $message->setEncoding('UTF-8');
