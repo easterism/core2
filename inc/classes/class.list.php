@@ -407,11 +407,11 @@ class listTable extends initList {
                             if ($next['type'] == 'date') {
                                 try {
                                     if ($search_value[0]) {
-                                        $dt = new DateTime($search_value[0]);
+                                        $dt = new \DateTime($search_value[0]);
                                         $search_value[0] = $dt->format("Y-m-d");
                                     }
                                     if ($search_value[1]) {
-                                        $dt = new DateTime($search_value[1]);
+                                        $dt = new \DateTime($search_value[1]);
                                         $search_value[1] = $dt->format("Y-m-d");
                                     }
                                 } catch (Exception $e) {

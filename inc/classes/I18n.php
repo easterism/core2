@@ -21,9 +21,9 @@ class I18n {
 
 
     /**
-     * @param \Zend_Config $config
+     * @param Config $config
      */
-	public function __construct(\Zend_Config $config) {
+	public function __construct(Config $config) {
 
         if (isset($config->translate) && $config->translate->on) {
             try {

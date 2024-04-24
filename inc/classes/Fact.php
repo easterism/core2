@@ -27,7 +27,10 @@ class Fact {
     {
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         $auth = Registry::get('auth');
-        $this->shm_id = ftok($eventFile, 't') + crc32($auth->LIVEID); //у каждого юзера своя очередь
+        $user_key = $auth->LIVEID;
+        if (!$user_key) $user_key = $auth->ID;
+//        if (!$user_key) $user_key = -1;
+        $this->shm_id = ftok($eventFile, 't') + crc32($user_key); //у каждого юзера своя очередь
     }
 
     public function __get($v)

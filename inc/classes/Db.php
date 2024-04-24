@@ -8,6 +8,8 @@ require_once 'Fact.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
+use Laminas\Config;
+use Core2\Config as CoreConfig;
 
 /**
  * Class Db
@@ -228,12 +230,13 @@ class Db {
 
 
     /**
-     * @param \Zend_Config $database
+     * @param \Laminas\Config\Config $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(\Zend_Config $database) {
+    private function establishConnection(Config\Config $database) {
 		try {
             $db = $this->getConnection($database);
+            echo "<PRE>";print_r($db);echo "</PRE>";die;
 			\Zend_Db_Table::setDefaultAdapter($db);
 			Registry::set('db', $db);
 
@@ -241,7 +244,7 @@ class Db {
             if ($this->config->database !== $database) {
                 $conf = $this->config->toArray();
                 $conf['database'] = $database->toArray();
-                $this->config = new \Zend_Config($conf);
+                $this->config = new CoreConfig($conf);
             }
 
 			if ($database->adapter === 'Pdo_Mysql') {
@@ -273,11 +276,11 @@ class Db {
     /**
      * получаем соединение с базой данных
      *
-     * @param \Zend_Config $database
+     * @param Config\Config $database
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-	protected function getConnection(\Zend_Config $database) {
+	protected function getConnection(Config\Config $database) {
         if ($database->adapter === 'Pdo_Mysql') {
             $this->schemaName = $database->params->dbname;
         }
