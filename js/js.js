@@ -325,8 +325,8 @@ var load = function (url, data, id, callback) {
 				}
 				var t = locData.title.main;
 				if (locData.title.module) {
-					t += ' - ' + locData.title.module;
-					if (locData.title.smodule) t += ' - ' + locData.title.smodule;
+					t = locData.title.module + ' - ' + t;
+					if (locData.title.smodule) t = locData.title.smodule + ' - ' + t;
 				}
 				document.title = t;
 			}

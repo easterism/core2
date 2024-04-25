@@ -871,7 +871,7 @@ class Init extends \Core2\Db {
         private function requireController($location, $modController) {
             $controller_path = $location . "/" . $modController . ".php";
             if (!file_exists($controller_path)) {
-                throw new Exception($this->translate->tr("Модуль не существует") . ": " . $location, 404);
+                throw new Exception($this->translate->tr("Модуль не найден") . ": " . $modController, 404);
             }
             $autoload = $location . "/vendor/autoload.php";
             if (file_exists($autoload)) { //подключаем автозагрузку если есть
