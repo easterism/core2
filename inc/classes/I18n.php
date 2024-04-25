@@ -23,7 +23,7 @@ class I18n {
     /**
      * @param Config $config
      */
-	public function __construct(Config $config) {
+	public function __construct(\Laminas\Config\Config $config) {
 
         if (isset($config->translate) && $config->translate->on) {
             try {

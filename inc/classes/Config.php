@@ -30,15 +30,9 @@ class Config
         if ($config) $this->_config = new \Laminas\Config\Config($config, true);
     }
 
-    public function __get($val)
+    public function __get($name)
     {
-        return $this->_config->$val;
-    }
-
-    public function __set($key, $val)
-    {
-        $this->_config->$key = $val;
-        return $this->_config->$val;
+        return $this->_config->$name;
     }
 
     /**
@@ -53,8 +47,12 @@ class Config
         $data = $reader->fromFile($filename);
         if (!isset($data['production'])) throw new \Exception("production section not found", 404);
         $this->data = $data;
-        if ($section == 'production') return $this->data;
-        return new \Laminas\Config\Config($this->stageSection($section));
+        if ($section !== 'production') {
+            $reader->setNestSeparator('.');
+            $stage = $reader->fromString($this->stageSection($section));
+            $data = new \Laminas\Config\Config($stage);
+        }
+        return $data;
     }
 
     private function stageSection($section)
@@ -72,7 +70,12 @@ class Config
             $nest = $this->stageNested($stage);
             $this->data[$section] = array_merge($prod, $nest, $origin);
         }
-        $data       = $this->data[$section];
+        $data       = isset($this->data[$section]) ? $this->data[$section] : [];
+        $out = [];
+        foreach ($data as $key => $value) {
+            $out[] = $key . '="' . $value . '"';
+        }
+        $data = implode(chr(10), $out);
         $this->data = [];
         return $data;
     }
@@ -91,12 +94,10 @@ class Config
 
     public function merge(\Laminas\Config\Config $config)
     {
-        $this->_config->merge($config);
+        if ($this->_config) $this->_config->merge($config);
+        $this->_config = $config;
+        return $this->_config;
     }
 
-    public function setReadOnly()
-    {
-        $this->_config->setReadOnly();
-    }
 
 }

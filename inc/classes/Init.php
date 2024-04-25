@@ -76,7 +76,6 @@ if (empty($config['temp'])) {
 
 //обрабатываем общий конфиг
 try {
-    $config = new Core2\Config($config);
 
     if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
         $options = getopt('m:a:p:s:', array(
@@ -91,15 +90,19 @@ try {
     }
 
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+
+    $config = new Core2\Config($config);
     $config2   = $config->readIni($conf_file, $section);
     $conf_d = DOC_ROOT . "conf.ext.ini";
     if (file_exists($conf_d)) {
-        $config2->merge($config->readIni($conf_d, $section));
+        $config_ext = new Core2\Config();
+        $config2->merge($config_ext->readIni($conf_d, $section));
     }
-    $config->merge($config2);
-    echo "<PRE>";print_r($config2);echo "</PRE>";die;
+    echo "<PRE>";print_r($config->database);echo "</PRE>";//die;
+    echo "<PRE>";print_r($config2->database);echo "</PRE>";die;
+
 }
-catch (Zend_Config_Exception $e) {
+catch (Exception $e) {
     \Core2\Error::Exception($e->getMessage());
 }
 

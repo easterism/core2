@@ -236,7 +236,6 @@ class Db {
     private function establishConnection(Config\Config $database) {
 		try {
             $db = $this->getConnection($database);
-            echo "<PRE>";print_r($db);echo "</PRE>";die;
 			\Zend_Db_Table::setDefaultAdapter($db);
 			Registry::set('db', $db);
 
@@ -288,7 +287,7 @@ class Db {
             $this->schemaName = $database->schema;
         }
         Registry::set('dbschema', $this->schemaName);
-        $db = \Zend_Db::factory($database);
+        $db = \Zend_Db::factory($database->adapter, $database->params->toArray());
         $db->getConnection();
         return $db;
     }
@@ -793,32 +792,15 @@ class Db {
         $conf_file  = "{$module_loc}/conf.ini";
 
         if (is_file($conf_file)) {
-            $config_glob  = new \Zend_Config_Ini(DOC_ROOT . 'conf.ini');
-            $extends_glob = $config_glob->getExtends();
 
-            $config_mod  = new \Zend_Config_Ini($conf_file);
-            $extends_mod = $config_mod->getExtends();
-            $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
-            array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
-            array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
-                ? $_SERVER['SERVER_NAME']
-                : 'production';
-
-            $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
-
-            $conf_ext = $module_loc . "/conf.ext.ini";
-            if (file_exists($conf_ext)) {
-                $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
-                $extends_mod_ext = $config_mod_ext->getExtends();
-
-                $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
-                array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
-                array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
-                    ? $_SERVER['SERVER_NAME']
-                    : 'production';
-                $config_mod->merge(new \Zend_Config_Ini($conf_ext, $section_ext));
+            $config = new CoreConfig();
+            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+            $config2   = $config->readIni($conf_file, $section);
+            $conf_d = $module_loc . "conf.ext.ini";
+            if (file_exists($conf_d)) {
+                $config2->merge($config->readIni($conf_d, $section));
             }
-
+            $config_mod = $config->merge($config2);
 
             $config_mod->setReadOnly();
             return $config_mod;
