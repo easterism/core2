@@ -216,15 +216,6 @@ class editTable extends initEdit {
 
 
     /**
-     * Получение id формы
-     * @return string
-     */
-    public function getResource(): string {
-        return $this->resource;
-    }
-
-
-    /**
      * Добавление скрипта который необходимо выполнить странице с формой
      * @param string $script
      * @return void
@@ -265,7 +256,7 @@ class editTable extends initEdit {
 
             $this->makeTable();
             $this->HTML = str_replace('[_ACTION_]', $this->action, $this->HTML);
-            
+
             if ( ! empty($this->js_scripts)) {
                 $scripts = implode(";\n", $this->js_scripts);
                 $this->HTML .= "<script>{$scripts}</script>";
