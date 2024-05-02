@@ -1473,8 +1473,9 @@ class listTable extends initList {
                 if (!$notoall) {
                     $opts[1000] = $this->classText['PAGIN_ALL'];
                 }
-                $tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
-                $tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
+
+                $tpl->recordsPerPage->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
+                $tpl->recordsPerPage->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
             }
             $tplRoot->footer->assign('[FOOTER]', $tpl->parse()); // побликуем footer
         }

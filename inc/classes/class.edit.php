@@ -34,6 +34,7 @@ class editTable extends initEdit {
 	private $scripts		        = array();
 	private $sess_form		        = '';
 	private $sess_form_custom       = [];
+	private $js_scripts             = [];
 	private $uniq_class_id		    = '';
 
     /**
@@ -215,6 +216,17 @@ class editTable extends initEdit {
 
 
     /**
+     * Добавление скрипта который необходимо выполнить странице с формой
+     * @param string $script
+     * @return void
+     */
+    public function addJs(string $script): void {
+
+        $this->js_scripts[] = $script;
+    }
+
+
+    /**
      * @param array $options
      * @return string
      * @throws Zend_Db_Adapter_Exception
@@ -244,6 +256,11 @@ class editTable extends initEdit {
 
             $this->makeTable();
             $this->HTML = str_replace('[_ACTION_]', $this->action, $this->HTML);
+
+            if ( ! empty($this->js_scripts)) {
+                $scripts = implode(";\n", $this->js_scripts);
+                $this->HTML .= "<script>{$scripts}</script>";
+            }
 
             echo $this->HTML;
 

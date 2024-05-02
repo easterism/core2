@@ -676,7 +676,8 @@ class Db {
 	 */
 	final public function isModuleInstalled($module_id) {
         $this->getAllModules();
-        $is = isset($this->_modules[strtolower($module_id)]) ? $this->_modules[strtolower($module_id)] : [];
+        $module_id = strtolower($module_id);
+        $is = isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
         return $is;
 	}
 
@@ -736,7 +737,7 @@ class Db {
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
-                if ( ! $module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
+                if ( !$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
                 if ($module['is_system'] === "Y") {
                     $loc = "core2/mod/{$module_id}/v{$module['version']}";
                 } else {
@@ -750,7 +751,6 @@ class Db {
         } else {
             $loc = $module['location'];
         }
-
         $this->_locations[$module_id] = $loc;
         return $loc;
 	}
@@ -858,6 +858,7 @@ class Db {
     private function getAllModules(): void {
         if ($this->_modules) return;
         $key = "all_modules_" . $this->config->database->params->dbname;
+        //if (1==1) {
         if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");

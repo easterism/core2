@@ -76,101 +76,109 @@ class Login extends \Common {
         parse_str($route['query'], $request);
         if (isset($request['core'])) {
             if ($this->config->mail && $this->config->mail->server) {
-                if ($this->core_config->registration &&
-                    $this->core_config->registration->on &&
-                    $this->core_config->registration->role_id
-                ) {
 
-                    if ($request['core'] == 'registration') {
-                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            return $this->getPageRegistration();
+                if ($this->isModuleInstalled('auth')) {
+                    $auth_config = $this->modAuth->moduleConfig->auth;
+                    $reg_config = $this->modAuth->moduleConfig->registration;
+                    $restore_config = $this->modAuth->moduleConfig->restore;
 
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            return $this->registration($_POST);
+                    if ($reg_config &&
+                        $reg_config->on &&
+                        $reg_config->role_id
+                    ) {
 
-                        } else {
-                            http_response_code(404);
+                        if ($request['core'] == 'registration') {
+                            $fields = $reg_config->fields ? $reg_config->fields->toArray() : [];
 
-                            return '';
+                            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                                return $this->getPageRegistration($fields);
+
+                            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                                return $this->registration($fields, $_POST, $reg_config->role_id);
+
+                            } else {
+                                http_response_code(404);
+
+                                return '';
+                            }
+                        }
+
+                        if ($request['core'] == 'registration_complete') {
+                            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                                if (empty($request['key'])) {
+                                    http_response_code(404);
+                                    return '';
+                                }
+
+                                return $this->getPageRegistrationComplete($request['key']);
+
+                            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                                if (empty($_POST['key'])) {
+                                    http_response_code(404);
+                                    return '';
+                                }
+                                if (empty($_POST['password'])) {
+                                    return json_encode([
+                                        'status' => 'error',
+                                        'error_message' => $this->_('Заполните пароль')
+                                    ]);
+                                }
+
+                                return $this->registrationComplete($_POST['key'], $_POST['password']);
+
+                            } else {
+                                http_response_code(404);
+                                return '';
+                            }
                         }
                     }
 
-                    if ($request['core'] == 'registration_complete') {
-                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($request['key'])) {
+                    if ($restore_config && $restore_config->on) {
+                        if ($request['core'] == 'restore') {
+                            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                                return $this->getPageRestore();
+
+                            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                                if (empty($_POST['email'])) {
+                                    return json_encode([
+                                        'status' => 'error',
+                                        'error_message' => $this->_('Заполните email')
+                                    ]);
+                                }
+
+                                return $this->restore($_POST["email"]);
+
+                            } else {
                                 http_response_code(404);
                                 return '';
                             }
-
-                            return $this->getPageRegistrationComplete($request['key']);
-
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            if (empty($_POST['key'])) {
-                                http_response_code(404);
-                                return '';
-                            }
-                            if (empty($_POST['password'])) {
-                                return json_encode([
-                                    'status'        => 'error',
-                                    'error_message' => $this->_('Заполните пароль')
-                                ]);
-                            }
-
-                            return $this->registrationComplete($_POST['key'], $_POST['password']);
-
-                        } else {
-                            http_response_code(404);
-                            return '';
                         }
-                    }
-                }
 
-                if ($this->core_config->restore && $this->core_config->restore->on) {
-                    if ($request['core'] == 'restore') {
-                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            return $this->getPageRestore();
 
-                        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            if (empty($_POST['email'])) {
-                                return json_encode([
-                                    'status'        => 'error',
-                                    'error_message' => $this->_('Заполните email')
-                                ]);
+                        if ($request['core'] == 'restore_complete') {
+                            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                                if (empty($request['key'])) {
+                                    http_response_code(404);
+                                    return '';
+                                }
+
+                                return $this->getPageRestoreComplete($request['key']);
+
+                            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                                if (empty($_POST['key'])) {
+                                    http_response_code(404);
+                                    return '';
+                                }
+
+                                if (empty($_POST['password'])) {
+                                    return json_encode([
+                                        'status' => 'error',
+                                        'error_message' => $this->_('Заполните пароль')
+                                    ]);
+                                }
+
+                                return $this->restoreComplete($_POST['key'], $_POST['password']);
                             }
-
-                            return $this->restore($_POST["email"]);
-
-                        } else {
-                            http_response_code(404);
-                            return '';
-                        }
-                    }
-
-
-                    if ($request['core'] == 'restore_complete') {
-                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            if (empty($request['key'])) {
-                                http_response_code(404);
-                                return '';
-                            }
-
-                            return $this->getPageRestoreComplete($request['key']);
-
-                        }
-                        elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                            if (empty($_POST['key'])) {
-                                http_response_code(404);
-                                return '';
-                            }
-
-                            if (empty($_POST['password'])) {
-                                return json_encode([
-                                    'status'        => 'error',
-                                    'error_message' => $this->_('Заполните пароль')
-                                ]);
-                            }
-
-                            return $this->restoreComplete($_POST['key'], $_POST['password']);
                         }
                     }
                 }
@@ -325,6 +333,9 @@ class Login extends \Common {
 
         if ($this->isModuleInstalled('auth')) {
             $auth_config = $this->modAuth->moduleConfig->auth;
+            $reg_config = $this->modAuth->moduleConfig->registration;
+            $restore_config = $this->modAuth->moduleConfig->restore;
+
             if ($auth_config->ldap &&
                 $auth_config->ldap->on
             ) {
@@ -372,21 +383,20 @@ class Login extends \Common {
                     $tpl->social->google->assign('[OAUTH2]', $this->apiAuth->getAuthUrl('google'));
                 }
             }
-        }
 
-        if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration &&
-                $this->core_config->registration->on &&
-                $this->core_config->registration->role_id
-            ) {
-                $tpl->ext_actions->touchBlock('registration');
+            if ($this->config->mail && $this->config->mail->server) {
+                if ($reg_config &&
+                    $reg_config->on &&
+                    $reg_config->role_id
+                ) {
+                    $tpl->ext_actions->touchBlock('registration');
+                }
+
+                if ($restore_config && $restore_config->on) {
+                    $tpl->ext_actions->touchBlock('restore');
+                }
             }
-
-            if ($this->core_config->restore && $this->core_config->restore->on) {
-                $tpl->ext_actions->touchBlock('restore');
-            }
         }
-
 
         $html = $this->getIndex();
         $html = str_replace('<!--index -->', $tpl->render(), $html);
@@ -400,7 +410,7 @@ class Login extends \Common {
      * @return string
      * @throws \Exception
      */
-    private function getPageRegistration() {
+    private function getPageRegistration($fields = []) {
 
         $tpl  = new \Templater3(Theme::get("login-registration"));
         $logo = $this->getSystemLogo();
@@ -409,16 +419,11 @@ class Login extends \Common {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->restore && $this->core_config->restore->on) {
-                $tpl->touchBlock('restore');
-            }
-        }
+        $tpl->touchBlock('restore');
 
         $isset_phone = false;
 
-        if ($this->core_config->registration->fields) {
-            $fields = $this->core_config->registration->fields->toArray();
+        if ($fields) {
 
             if ( ! empty($fields)) {
                 foreach ($fields as $name => $field) {
@@ -493,11 +498,7 @@ class Login extends \Common {
 
         $error_message = '';
 
-        if ($this->core_config->registration->module) {
-            $tpl->pass->assign('[KEY]', $key);
-
-        } else {
-            $isset_key = $this->db->fetchOne("
+        $isset_key = $this->db->fetchOne("
                 SELECT 1
                 FROM core_users
                 WHERE reg_key = ?
@@ -505,19 +506,17 @@ class Login extends \Common {
                   AND visible = 'N'
             ", $key);
 
-            if ($isset_key) {
-                $tpl->pass->assign('[KEY]', $key);
-            } else {
-                $error_message = $this->_('Ссылка устарела');
-            }
+        if ($isset_key) {
+            $tpl->pass->assign('[KEY]', $key);
+        } else {
+            $error_message = $this->_('Ссылка устарела');
         }
 
         $tpl->assign('[ERROR_MSG]', $error_message);
 
-        if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->restore && $this->core_config->restore->on) {
-                $tpl->touchBlock('restore');
-            }
+        //FIXME сделать ненадежно
+        if ($this->modAuth->moduleConfig->restore && $this->modAuth->moduleConfig->restore->on) {
+            $tpl->touchBlock('restore');
         }
 
         $html = $this->getIndex();
@@ -541,14 +540,7 @@ class Login extends \Common {
             $tpl->logo->assign('{logo}', $logo);
         }
 
-        if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration &&
-                $this->core_config->registration->on &&
-                $this->core_config->registration->role_id
-            ) {
-                $tpl->touchBlock('registration');
-            }
-        }
+        $tpl->touchBlock('registration');
 
         $html = $this->getIndex();
         $html = str_replace('<!--index -->', $tpl->render(), $html);
@@ -589,14 +581,7 @@ class Login extends \Common {
 
         $tpl->assign('[ERROR_MSG]', $error_message);
 
-        if ($this->config->mail && $this->config->mail->server) {
-            if ($this->core_config->registration &&
-                $this->core_config->registration->on &&
-                $this->core_config->registration->role_id
-            ) {
-                $tpl->touchBlock('registration');
-            }
-        }
+        $tpl->touchBlock('registration');
 
 
         $html = $this->getIndex();
@@ -847,13 +832,12 @@ class Login extends \Common {
      * @throws \Zend_Db_Exception
      * @throws \Exception
      */
-    private function registration(array $data) {
+    private function registration(array $fields, sarray $data, $role_id) {
 
         $this->emit('reg_data', $data);
 
-        if (!$this->core_config->registration->fields) return;
+        if (!$fields || !$role_id) return;
 
-        $fields = $this->core_config->registration->fields->toArray();
         foreach ($fields as $key => $field) {
             if (!empty($field['required']) && empty($data[$key])) {
                 return json_encode([
@@ -933,7 +917,7 @@ class Login extends \Common {
             $this->db->insert('core_users', [
                 'u_login'        => $data['login'],
                 'email'          => $data['email'],
-                'role_id'        => $this->core_config->registration->role_id,
+                'role_id'        => $role_id,
                 'visible'        => 'N',
                 'is_email_wrong' => 'N',
                 'reg_key'        => $reg_key,

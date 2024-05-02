@@ -1,5 +1,5 @@
 <?php
-
+use Core2\Tool;
 require_once 'Tool.php';
 
 
