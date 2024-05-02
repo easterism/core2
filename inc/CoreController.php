@@ -776,7 +776,7 @@ class CoreController extends Common implements File {
 			}
 		}
 		$this->printJs("core2/mod/admin/assets/js/feedback.js", true);
-		$this->printJs("core2/html/default/js/capture.js");
+		$this->printJs("core2/mod/admin/assets/js/capture.js", true);
 		require_once 'classes/Templater2.php';
 		$tpl = new Templater2("core2/mod/admin/assets/html/feedback.html");
 		$tpl->assign('</select>', $selectMods . '</select>');
