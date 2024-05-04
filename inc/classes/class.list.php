@@ -437,7 +437,8 @@ class listTable extends initList {
                                     $search .= " AND " . $replace;
                                 }
 
-                            } elseif ($next['type'] == 'number') {
+                            }
+                            elseif ($next['type'] == 'number') {
                                 try {
                                     if ( ! empty($search_value[0]) && ! is_numeric($search_value[0])) {
                                         throw new Exception($this->_('Некорректно указан параметр числового поиска'));
@@ -477,7 +478,8 @@ class listTable extends initList {
                                     } else {
                                         $search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
                                     }
-                                } elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
+                                }
+                                elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                                     if (is_array($search_value)) {
                                         foreach ($search_value as $k => $val) {
                                             if (!$val) unset($search_value[$k]);
@@ -502,7 +504,8 @@ class listTable extends initList {
                                         }
                                     }
 
-                                } elseif ($next['type'] == 'text_strict') {
+                                }
+                                elseif ($next['type'] == 'text_strict') {
                                     $search_value = trim($search_value);
                                     $search_value = preg_replace('~[\s]{2,}~', ' ', $search_value);
 
