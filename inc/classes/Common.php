@@ -59,7 +59,7 @@ class Common extends \Core2\Acl {
 //        }
 
 		parent::__construct();
-        $reg     = \Core2\Registry::getInstance();
+        $reg     = Registry::getInstance();
 		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
 
         if ($mod_name) {
@@ -115,7 +115,7 @@ class Common extends \Core2\Acl {
      * @throws Zend_Exception
      */
     public function getInvoker() {
-        return \Core2\Registry::get('invoker');
+        return Registry::get('invoker');
     }
 
 
@@ -124,7 +124,7 @@ class Common extends \Core2\Acl {
      * инстансы подключенных объектов хранятся в массиве $_p
      *
      * @param string $k
-     * @return Common|null|Zend_Db_Adapter_Abstract|Zend_Config_Ini|CoreController|mixed
+     * @return Common|null|Zend_Db_Adapter_Abstract|CoreController|mixed
      * @throws Exception
      */
     public function __get($k) {
