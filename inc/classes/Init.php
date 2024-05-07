@@ -91,15 +91,14 @@ try {
 
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
 
-    $config = new Core2\Config($config);
-    $config2   = $config->readIni($conf_file, $section);
+    $conf     = new Core2\Config($config);
+    $config   = $conf->getData()->merge($conf->readIni($conf_file, $section));
+
+
     $conf_d = DOC_ROOT . "conf.ext.ini";
     if (file_exists($conf_d)) {
-        $config_ext = new Core2\Config();
-        $config2->merge($config_ext->readIni($conf_d, $section));
+        $config->merge($conf->readIni($conf_d, $section));
     }
-    echo "<PRE>";print_r($config->database);echo "</PRE>";//die;
-    echo "<PRE>";print_r($config2->database);echo "</PRE>";die;
 
 }
 catch (Exception $e) {
@@ -129,6 +128,7 @@ if ($config->database) {
 
 //конфиг стал только для чтения
 $config->setReadOnly();
+
 
 if (isset($config->include_path) && $config->include_path) {
     set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
@@ -191,8 +191,8 @@ Registry::set('config', $config);
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
     $config = new Core2\Config();
-    $core_config   = $config->readIni($core_conf_file, 'production');
-    Registry::set('core_config', $core_config);
+    $core_config   = $config->readIni($core_conf_file);
+    Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
 require_once 'Db.php';

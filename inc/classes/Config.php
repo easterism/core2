@@ -9,6 +9,7 @@
 namespace Core2;
 
 use Laminas\Config\Reader;
+use Laminas\Config\Config as LaminasConfig;
 
 /**
  * Class Config
@@ -27,7 +28,7 @@ class Config
      */
     public function __construct(array $config = [])
     {
-        if ($config) $this->_config = new \Laminas\Config\Config($config, true);
+        if ($config) $this->_config = new LaminasConfig($config, true);
     }
 
     public function __get($name)
@@ -47,11 +48,19 @@ class Config
         $data = $reader->fromFile($filename);
         if (!isset($data['production'])) throw new \Exception("production section not found", 404);
         $this->data = $data;
+
+        $reader->setNestSeparator('.');
         if ($section !== 'production') {
-            $reader->setNestSeparator('.');
             $stage = $reader->fromString($this->stageSection($section));
-            $data = new \Laminas\Config\Config($stage);
+        } else {
+            $out = [];
+            foreach ($data['production'] as $key => $value) {
+                $out[] = $key . '="' . $value . '"';
+            }
+            $data = implode(chr(10), $out);
+            $stage = $reader->fromString($data);
         }
+        $data = new LaminasConfig($stage, true);
         return $data;
     }
 
@@ -64,7 +73,8 @@ class Config
             $stage = trim(key($item));
             $origin = current($item);
             if ($stage == 'production') { //staging production section
-                return array_merge($prod, current($item));
+                $this->data[$section] = array_merge($prod, current($item));
+                break;
             }
 
             $nest = $this->stageNested($stage);
@@ -80,7 +90,7 @@ class Config
         return $data;
     }
 
-    private function stageNested($stage)
+    private function stageNested($stage): array
     {
         foreach ($this->data as $section => $item) {
             if ($stage !== trim($section)) continue;
@@ -90,6 +100,12 @@ class Config
             }
             return array_merge(current($item), $this->stageNested($stage));
         }
+        return [];
+    }
+
+    public function getData()
+    {
+        return $this->_config;
     }
 
     public function merge(\Laminas\Config\Config $config)

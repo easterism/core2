@@ -8,7 +8,7 @@ require_once 'Fact.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
-use Laminas\Config;
+use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
 
 /**
@@ -20,18 +20,18 @@ use Core2\Config as CoreConfig;
  * @property Fact                      $fact
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
- * @property \Zend_Config_Ini          $core_config
+ * @property LaminasConfig             $core_config
  * @property WorkerClient              $workerAdmin
  */
 class Db {
 
     /**
-     * @var \Zend_Config_Ini
+     * @var LaminasConfig
      */
     protected $config;
 
     /**
-     * @var \Zend_Config_Ini
+     * @var LaminasConfig
      */
     private $_core_config;
 
@@ -63,7 +63,7 @@ class Db {
 
 	/**
 	 * @param string $k
-	 * @return mixed|\Zend_Cache_Core|\Zend_Db_Adapter_Abstract|Log
+	 * @return mixed|LaminasConfig|\Zend_Db_Adapter_Abstract|Log
 	 * @throws \Zend_Exception
 	 * @throws \Exception
 	 */
@@ -230,10 +230,10 @@ class Db {
 
 
     /**
-     * @param \Laminas\Config\Config $database
+     * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(Config\Config $database) {
+    private function establishConnection(LaminasConfig $database) {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
@@ -243,7 +243,7 @@ class Db {
             if ($this->config->database !== $database) {
                 $conf = $this->config->toArray();
                 $conf['database'] = $database->toArray();
-                $this->config = new CoreConfig($conf);
+                $this->config = (new CoreConfig($conf))->getData();
             }
 
 			if ($database->adapter === 'Pdo_Mysql') {
@@ -275,11 +275,11 @@ class Db {
     /**
      * получаем соединение с базой данных
      *
-     * @param Config\Config $database
+     * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-	protected function getConnection(Config\Config $database) {
+	protected function getConnection(LaminasConfig $database) {
         if ($database->adapter === 'Pdo_Mysql') {
             $this->schemaName = $database->params->dbname;
         }
@@ -782,8 +782,7 @@ class Db {
     /**
      * Получение конфигурации модуля
      * @param string $name
-     * @return false|\Zend_Config_Ini
-     * @throws \Zend_Config_Exception
+     * @return false|LaminasConfig
      * @throws \Exception
      */
     final protected function getModuleConfig(string $name) {
@@ -793,17 +792,18 @@ class Db {
 
         if (is_file($conf_file)) {
 
-            $config = new CoreConfig();
-            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+            $config    = new CoreConfig();
+            $section   = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
             $config2   = $config->readIni($conf_file, $section);
+            if (!$config2->toArray()) {
+                $config2   = $config->readIni($conf_file, 'production');
+            }
             $conf_d = $module_loc . "conf.ext.ini";
             if (file_exists($conf_d)) {
                 $config2->merge($config->readIni($conf_d, $section));
             }
-            $config_mod = $config->merge($config2);
-
-            $config_mod->setReadOnly();
-            return $config_mod;
+            $config2->setReadOnly();
+            return $config2;
 
         } else {
             return false;
