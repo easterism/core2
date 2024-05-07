@@ -32,7 +32,7 @@
     "laminas/laminas-mail": "2.23.0",
     "laminas/laminas-i18n": "2.23.1",
     "laminas/laminas-config": "3.9.0",
-    "zf1/zend-acl": "~1.12",
+    "laminas/laminas-permissions-acl": "2.16.0",
     "belhard/zend-db": "dev-master",
     "belhard/xajax": "dev-master",
     "belhard/floatthead": "dev-master",
