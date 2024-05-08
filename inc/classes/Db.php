@@ -8,6 +8,8 @@ require_once 'Fact.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
+use Laminas\Config\Config as LaminasConfig;
+use Core2\Config as CoreConfig;
 
 /**
  * Class Db
@@ -228,10 +230,10 @@ class Db {
 
 
     /**
-     * @param \Zend_Config $database
+     * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(\Zend_Config $database) {
+    private function establishConnection(LaminasConfig $database) {
 		try {
             $db = $this->getConnection($database);
 			\Zend_Db_Table::setDefaultAdapter($db);
@@ -241,7 +243,7 @@ class Db {
             if ($this->config->database !== $database) {
                 $conf = $this->config->toArray();
                 $conf['database'] = $database->toArray();
-                $this->config = new \Zend_Config($conf);
+                $this->config = (new CoreConfig($conf))->getData();
             }
 
 			if ($database->adapter === 'Pdo_Mysql') {
@@ -273,11 +275,11 @@ class Db {
     /**
      * получаем соединение с базой данных
      *
-     * @param \Zend_Config $database
+     * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-	protected function getConnection(\Zend_Config $database) {
+	protected function getConnection(LaminasConfig $database) {
         if ($database->adapter === 'Pdo_Mysql') {
             $this->schemaName = $database->params->dbname;
         }
@@ -285,7 +287,7 @@ class Db {
             $this->schemaName = $database->schema;
         }
         Registry::set('dbschema', $this->schemaName);
-        $db = \Zend_Db::factory($database);
+        $db = \Zend_Db::factory($database->adapter, $database->params->toArray());
         $db->getConnection();
         return $db;
     }
@@ -790,35 +792,19 @@ class Db {
         $conf_file  = "{$module_loc}/conf.ini";
 
         if (is_file($conf_file)) {
-            $config_glob  = new \Zend_Config_Ini(DOC_ROOT . 'conf.ini');
-            $extends_glob = $config_glob->getExtends();
 
-            $config_mod  = new \Zend_Config_Ini($conf_file);
-            $extends_mod = $config_mod->getExtends();
-            $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
-            array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
-            array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
-                ? $_SERVER['SERVER_NAME']
-                : 'production';
-
-            $config_mod = new \Zend_Config_Ini($conf_file, $section_mod, true);
-
-            $conf_ext = $module_loc . "/conf.ext.ini";
-            if (file_exists($conf_ext)) {
-                $config_mod_ext  = new \Zend_Config_Ini($conf_ext);
-                $extends_mod_ext = $config_mod_ext->getExtends();
-
-                $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
-                array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
-                array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
-                    ? $_SERVER['SERVER_NAME']
-                    : 'production';
-                $config_mod->merge(new \Zend_Config_Ini($conf_ext, $section_ext));
+            $config = new CoreConfig();
+            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+            $config2   = $config->readIni($conf_file, $section);
+            if (!$config2->toArray()) {
+                $config2   = $config->readIni($conf_file, 'production');
             }
-
-
-            $config_mod->setReadOnly();
-            return $config_mod;
+            $conf_d = $module_loc . "conf.ext.ini";
+            if (file_exists($conf_d)) {
+                $config2->merge($config->readIni($conf_d, $section));
+            }
+            $config2->setReadOnly();
+            return $config2;
 
         } else {
             return false;
