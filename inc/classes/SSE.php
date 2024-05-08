@@ -16,7 +16,10 @@ class SSE extends \Common {
         //события ядра
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         require_once $eventFile;
-        $shm_key = ftok($eventFile, 't') + crc32($this->auth->LIVEID); //у аждого юзера своя очередь
+        $user_key = $this->auth->LIVEID;
+        if (!$user_key) $user_key = $this->auth->ID;
+//        if (!$user_key) $user_key = -1;
+        $shm_key = ftok($eventFile, 't') + crc32($user_key); //у аждого юзера своя очередь
         if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
         $eventClass = new MessageQueue();
         $eventClass->setQueue(msg_get_queue($shm_key));

@@ -12,6 +12,8 @@ require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/audit/Audit.php";
+require_once DOC_ROOT . "core2/mod/admin/classes/monitoring/Monitoring.php";
 require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 
 use Laminas\Session\Container as SessionContainer;
@@ -933,7 +935,57 @@ class CoreController extends Common implements File {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
             $app = "index.php?module=admin&action=monitoring";
-            require_once $this->path . 'classes/monitoring/monitoring.php';
+            $monitor = new \Core2\Monitoring();
+
+            $tab = new tabs('monitoring');
+
+            $tab->addTab($this->translate->tr("Активные пользователи"), $app, 170);
+            $tab->addTab($this->translate->tr("История посещений"),     $app, 170);
+            $tab->addTab($this->translate->tr("Журнал запросов"),       $app, 150);
+            $tab->addTab($this->translate->tr("Архив журнала"),         $app, 150);
+
+            $out = "";
+            if ($tab->activeTab == 1) {
+                if ( ! empty($_GET['kick'])) {
+                    $sess = $this->dataSession->find($_GET['kick'])->current();
+
+                    if ($sess->sid) {
+                        $sess->logout_time  = new \Zend_Db_Expr('NOW()');
+                        $sess->is_kicked_sw = 'Y';
+                        $sess->save();
+                    }
+                }
+                $out = $monitor->getOnline();
+            }
+            elseif ($tab->activeTab == 2) {
+                $out = $monitor->getHistory();
+            }
+            elseif ($tab->activeTab == 3) {
+                if (isset($_GET['download'])) {
+                    $zip_body = $monitor->downloadJournal();
+                    header("Content-Type: application/octet-stream");
+                    header("Accept-Ranges: bytes");
+                    header("Content-Length: " . strlen($zip_body));
+                    header("Content-Disposition: attachment; filename=\"access-log-" . date("Y-m-d-H:i:s") . ".txt.gz");
+                    return $zip_body;
+                }
+                $out = $monitor->getJournal();
+            }
+            elseif ($tab->activeTab == 4) {
+                /* Загрузка файла */
+                if (isset($_GET['download'])) {
+                    $zip_body = $monitor->downloadArhive($_GET['download']);
+                    header("Connection: close");
+                    header("Content-type: application/zip");
+                    return $zip_body;
+                }
+                $out = $monitor->getArchive();
+            }
+
+            $tab->beginContainer($this->_("Мониторинг"));
+            echo $out;
+            $tab->endContainer();
+
         } catch (Exception $e) {
             echo Alert::danger($e->getMessage());
         }
@@ -947,7 +999,6 @@ class CoreController extends Common implements File {
 	public function action_audit() {
 		if (!$this->auth->ADMIN) throw new Exception(911);
 		$app = "index.php?module=admin&action=audit";
-		require_once $this->path . 'classes/audit/Audit.php';
         $audit = new \Core2\Audit();
         $tab = new tabs('audit');
 

@@ -20,18 +20,18 @@ use Core2\Config as CoreConfig;
  * @property Fact                      $fact
  * @property \CoreController           $modAdmin
  * @property \Session                  $dataSession
- * @property \Zend_Config_Ini          $core_config
+ * @property LaminasConfig             $core_config
  * @property WorkerClient              $workerAdmin
  */
 class Db {
 
     /**
-     * @var \Zend_Config_Ini
+     * @var LaminasConfig
      */
     protected $config;
 
     /**
-     * @var \Zend_Config_Ini
+     * @var LaminasConfig
      */
     private $_core_config;
 
@@ -63,7 +63,7 @@ class Db {
 
 	/**
 	 * @param string $k
-	 * @return mixed|\Zend_Cache_Core|\Zend_Db_Adapter_Abstract|Log
+	 * @return mixed|LaminasConfig|\Zend_Db_Adapter_Abstract|Log
 	 * @throws \Zend_Exception
 	 * @throws \Exception
 	 */
@@ -782,8 +782,7 @@ class Db {
     /**
      * Получение конфигурации модуля
      * @param string $name
-     * @return false|\Zend_Config_Ini
-     * @throws \Zend_Config_Exception
+     * @return false|LaminasConfig
      * @throws \Exception
      */
     final protected function getModuleConfig(string $name) {
@@ -793,8 +792,8 @@ class Db {
 
         if (is_file($conf_file)) {
 
-            $config = new CoreConfig();
-            $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
+            $config    = new CoreConfig();
+            $section   = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
             $config2   = $config->readIni($conf_file, $section);
             if (!$config2->toArray()) {
                 $config2   = $config->readIni($conf_file, 'production');

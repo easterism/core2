@@ -120,34 +120,7 @@ class CommonApi extends \Core2\Acl {
                 $module_loc = $this->getModuleLocation($this->module);
                 $conf_file  = "{$module_loc}/conf.ini";
                 if (is_file($conf_file)) {
-                    $config_glob  = new Zend_Config_Ini(DOC_ROOT . 'conf.ini');
-                    $extends_glob = $config_glob->getExtends();
-
-                    $config_mod  = new Zend_Config_Ini($conf_file);
-                    $extends_mod = $config_mod->getExtends();
-                    $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
-                                   array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
-                                   array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
-                        ? $_SERVER['SERVER_NAME']
-                        : 'production';
-
-                    $config_mod = new Zend_Config_Ini($conf_file, $section_mod, true);
-
-                    $conf_ext = $module_loc . "/conf.ext.ini";
-                    if (file_exists($conf_ext)) {
-                        $config_mod_ext  = new Zend_Config_Ini($conf_ext);
-                        $extends_mod_ext = $config_mod_ext->getExtends();
-
-                        $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
-                                       array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
-                                       array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
-                                ? $_SERVER['SERVER_NAME']
-                                : 'production';
-                        $config_mod->merge(new Zend_Config_Ini($conf_ext, $section_ext));
-                    }
-
-
-                    $config_mod->setReadOnly();
+                    $config_mod = $this->getModuleConfig($this->module);
                     $v = $this->{$k} = $config_mod;
                 } else {
                     \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);

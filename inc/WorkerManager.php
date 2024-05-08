@@ -20,6 +20,7 @@
 namespace Core2;
 
 require_once "classes/Registry.php";
+require_once "classes/Config.php";
 
 
 declare(ticks = 1);
@@ -368,7 +369,7 @@ class WorkerManager {
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
                 $core_config = $this->parse_config($this->config['file']);
-                Registry::set('core_config', new \Zend_Config($core_config));
+                Registry::set('core_config', (new Config($core_config))->getData());
                 if (isset($core_config['gearman'])) {
                     $this->config = $core_config['gearman'];
                     $this->config['functions'] = [];
@@ -419,9 +420,9 @@ class WorkerManager {
                 $params = array_merge($config['database'], $config2['database']);
                 $config2['database'] = $params;
             }
-            Registry::set('config', new \Zend_Config($config2));
+            Registry::set('config', (new Config($config2))->getData());
         }
-        catch (\Zend_Config_Exception $e) {
+        catch (\Exception $e) {
             $this->show_help($e->getMessage());
         }
 
