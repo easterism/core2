@@ -86,12 +86,6 @@ class ajaxFunc extends Common {
         if ( ! isset($order_fields['mainTableId'])) {
             $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
             $this->response->script("CoreUI.notice.create('$msg', 'danger');");
-
-            $this->sendErrorMessage('Ошибка сохранения формы. Не найдены сессионные данные по таблице', [
-                'session_data' => $order_fields,
-                'data'         => $data,
-                'fields'       => $fields,
-            ]);
             return true;
         }
 
