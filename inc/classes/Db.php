@@ -84,7 +84,6 @@ class Db {
                 }
             }
 
-            $reg = Registry::getInstance();
 			if (! $reg->isRegistered('db')) {
 				if (!$this->config) $this->config = $reg->get('config');
 				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
@@ -847,14 +846,16 @@ class Db {
         if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $m            = new Model\Modules($this->db);
-            $sm           = new Model\SubModules($this->db);
+            $db = $this->db;
+            $m            = new Model\Modules($db);
+            $sm           = new Model\SubModules($db);
             $res    = $m->fetchAll($m->select()->order('seq'));
             $sub    = $sm->fetchAll($sm->select()->order('seq'));
             $data   = [];
             foreach ($res as $val) {
                 $item = $val->toArray();
                 unset($item['uninstall']); //чтоб не смущал
+                unset($item['files_hash']); //чтоб не смущал
                 $item['submodules'] = [];
 
                 foreach ($sub as $item2) {
