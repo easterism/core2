@@ -10,50 +10,52 @@ $counter = 0;
 
 
 /**
- * Class editTable
  * @property Core2\Acl $acl
  */
 class editTable extends initEdit {
-	public $selectSQL				= array();
-	public $buttons					= array();
-	public $params					= array();
-	public $modal					= array();
-	public $saveConfirm				= "";
-	public $SQL						= "";
-	public $HTML					= "";
-	public $readOnly				= false;
-	public $table   = '';
-	public $error   = '';
-	protected $controls				= array();
-	protected $resource				= "";
-	protected $cell					= array();
-	protected $template				= '';
-	private $main_table_id			= "";
-	private $beforeSaveArr			= array();
-	private $isSaved 				= false;
-	private $scripts		        = array();
-	private $sess_form		        = '';
-	private $sess_form_custom       = [];
-	private $uniq_class_id		    = '';
+
+    public    $selectSQL           = [];
+    public    $buttons             = [];
+    public    $params              = [];
+    public    $modal               = [];
+    public    $saveConfirm         = "";
+    public    $SQL                 = "";
+    public    $HTML                = "";
+    public    $readOnly            = false;
+    public    $table               = '';
+    public    $error               = '';
+    protected $controls            = [];
+    protected $resource            = "";
+    protected $cell                = [];
+    protected $template            = '';
+    private   $main_table_id       = "";
+    private   $beforeSaveArr       = [];
+    private   $isSaved             = false;
+    private   $form_leave_checking = false;
+    private   $scripts             = [];
+    private   $sess_form           = '';
+    private   $sess_form_custom    = [];
+    private   $uniq_class_id       = '';
+
 
     /**
      * form action attribute
      * @var string
      */
-	private $action		    = '';
+    private $action = '';
 
     private $tpl_control = [
-        'xfile_upload'  => __DIR__ . '/../../html/' . THEME . '/html/edit/file_upload.html',
+        'xfile_upload'   => __DIR__ . '/../../html/' . THEME . '/html/edit/file_upload.html',
         'xfile_download' => __DIR__ . '/../../html/' . THEME . '/html/edit/file_download.html',
-        'dataset'       => __DIR__ . '/../../html/' . THEME . '/html/edit/dataset.html',
-        'switch'        => __DIR__ . '/../../html/' . THEME . '/html/edit/switch.html',
-        'switch_button' => __DIR__ . '/../../html/' . THEME . '/html/edit/button_switch.html',
-        'combobox'      => __DIR__ . '/../../html/' . THEME . '/html/edit/combobox.html',
-        'date2'         => __DIR__ . '/../../html/' . THEME . '/html/edit/date2.html',
+        'dataset'        => __DIR__ . '/../../html/' . THEME . '/html/edit/dataset.html',
+        'switch'         => __DIR__ . '/../../html/' . THEME . '/html/edit/switch.html',
+        'switch_button'  => __DIR__ . '/../../html/' . THEME . '/html/edit/button_switch.html',
+        'combobox'       => __DIR__ . '/../../html/' . THEME . '/html/edit/combobox.html',
+        'date2'          => __DIR__ . '/../../html/' . THEME . '/html/edit/date2.html',
         'datetime2'      => __DIR__ . '/../../html/' . THEME . '/html/edit/datetime2.html',
-        'datetime'      => __DIR__ . '/../../html/' . THEME . '/html/edit/datetime.html',
-        'color'         => __DIR__ . '/../../html/' . THEME . '/html/edit/color.html',
-        'modal'         => __DIR__ . '/../../html/' . THEME . '/html/edit/modal_list.html',
+        'datetime'       => __DIR__ . '/../../html/' . THEME . '/html/edit/datetime.html',
+        'color'          => __DIR__ . '/../../html/' . THEME . '/html/edit/color.html',
+        'modal'          => __DIR__ . '/../../html/' . THEME . '/html/edit/modal_list.html',
         'modal2'         => __DIR__ . '/../../html/' . THEME . '/html/edit/modal2.html',
     ];
 
@@ -215,6 +217,17 @@ class editTable extends initEdit {
 
 
     /**
+     * Установка проверять ли изменения на форме при уходе со страницы
+     * @param bool $leave_checking
+     * @return void
+     */
+    public function setLeaveChecking(bool $leave_checking): void {
+
+        $this->form_leave_checking = $leave_checking;
+    }
+
+
+    /**
      * @param array $options
      * @return string
      * @throws Zend_Db_Adapter_Exception
@@ -244,6 +257,10 @@ class editTable extends initEdit {
 
             $this->makeTable();
             $this->HTML = str_replace('[_ACTION_]', $this->action, $this->HTML);
+
+            if ($this->form_leave_checking) {
+                $this->HTML .= "<script>edit.changeForm.listen('{$this->resource}')</script>";
+            }
 
             echo $this->HTML;
 
