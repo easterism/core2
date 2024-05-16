@@ -678,7 +678,7 @@ class Render extends Acl {
                         }
 
                         if ( ! empty($column_attributes)) {
-                            $tpl->header->cell->sort->assign('<th', "<th {$column_attributes}\"");
+                            $tpl->header->cell->sort->assign('<th', "<th {$column_attributes}");
                         }
 
                         $tpl->header->cell->sort->assign('[COLUMN_NUMBER]', ($key + 1));

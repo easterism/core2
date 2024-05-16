@@ -1,7 +1,6 @@
 <?php
 namespace Core2;
 
-require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
 
 use Laminas\Mail;
@@ -13,7 +12,20 @@ use Laminas\Mime\Part as MimePart;
 class Mailer
 {
 
-    public function run($job, &$log) {
+    private $_config;
+
+    public function __construct()
+    {
+        $this->_config = Registry::get('config');
+    }
+
+
+    /**
+     * @param \GearmanJob $job
+     * @param array       $log
+     * @return void
+     */
+    public function run(\GearmanJob $job, array &$log): void {
 
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
@@ -59,9 +71,9 @@ class Mailer
             $message->setReplyTo($reply_email, $reply_name);
         }
 
-        $force_from = ! empty($config->mail->force_from) ? $config->mail->force_from : $from;
+        $force_from = ! empty($this->_config->mail->force_from) ? $this->_config->mail->force_from : $from;
 
-        if ($config->mail && $force_from) {
+        if ($this->_config->mail && $force_from) {
             $reply_from            = $from;
             $reply_email           = $reply_from;
             $reply_name            = '';
@@ -182,28 +194,28 @@ class Mailer
 
         $transport = new Transport\Sendmail();
 
-        if ( ! empty($config->mail->server)) {
+        if ( ! empty($this->_config->mail->server)) {
             $config_smtp = [
-                'host' => $config->mail->server
+                'host' => $this->_config->mail->server
             ];
 
-            if ( ! empty($config->mail->port)) {
-                $config_smtp['port'] = $config->mail->port;
+            if ( ! empty($this->_config->mail->port)) {
+                $config_smtp['port'] = $this->_config->mail->port;
             }
 
-            if ( ! empty($config->mail->auth)) {
-                $config_smtp['connection_class'] = $config->mail->auth;
+            if ( ! empty($this->_config->mail->auth)) {
+                $config_smtp['connection_class'] = $this->_config->mail->auth;
 
-                if ( ! empty($config->mail->username)) {
-                    $config_smtp['connection_config']['username'] = $config->mail->username;
-                    $from_email = $config->mail->username;
+                if ( ! empty($this->_config->mail->username)) {
+                    $config_smtp['connection_config']['username'] = $this->_config->mail->username;
+                    $from_email = $this->_config->mail->username;
                     $from_name = '';
                 }
-                if ( ! empty($config->mail->password)) {
-                    $config_smtp['connection_config']['password'] = $config->mail->password;
+                if ( ! empty($this->_config->mail->password)) {
+                    $config_smtp['connection_config']['password'] = $this->_config->mail->password;
                 }
-                if ( ! empty($config->mail->ssl)) {
-                    $config_smtp['connection_config']['ssl'] = $config->mail->ssl;
+                if ( ! empty($this->_config->mail->ssl)) {
+                    $config_smtp['connection_config']['ssl'] = $this->_config->mail->ssl;
                 }
             }
 
@@ -212,7 +224,35 @@ class Mailer
             $transport->setOptions($options);
         }
         $message->setFrom($from_email, $from_name);
-        $transport->send($message);
+        try {
+            $transport->send($message);
 
+            if ( ! empty($workload->payload->queue_id)) {
+                $db = (new Db())->db;
+
+                $where = $db->quoteInto('id IN(?)', $workload->payload->queue_id);
+                $db->update('mod_queue_mails', [
+                    'date_send'  => date('Y-m-d H:i:s'),
+                    'is_error'   => 'N',
+                    'last_error' => '',
+                ], $where);
+
+                $db->closeConnection();
+            }
+
+        } catch (\Exception $e) {
+            if ( ! empty($workload->payload->queue_id)) {
+                $db = (new Db())->db;
+
+                $where = $db->quoteInto('id IN(?)', $workload->payload->queue_id);
+                $db->update('mod_queue_mails', [
+                    'is_error'   => 'Y',
+                    'importance' => 'LOW',
+                    'last_error' => $e->getMessage(),
+                ], $where);
+
+                $db->closeConnection();
+            }
+        }
     }
 }

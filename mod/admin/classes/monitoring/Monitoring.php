@@ -1,4 +1,5 @@
 <?php
+use Core2\Tool;
 
 namespace Core2;
 
