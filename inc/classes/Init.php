@@ -15,6 +15,7 @@ require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
+require_once 'Config.php';
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
@@ -75,7 +76,6 @@ if (empty($config['temp'])) {
 
 //обрабатываем общий конфиг
 try {
-    $config = new Zend_Config($config, true);
 
     if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
         $options = getopt('m:a:p:s:', array(
@@ -90,14 +90,18 @@ try {
     }
 
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
-    $config2 = new Zend_Config_Ini($conf_file, $section);
+
+    $conf     = new Core2\Config($config);
+    $config   = $conf->getData()->merge($conf->readIni($conf_file, $section));
+
+
     $conf_d = DOC_ROOT . "conf.ext.ini";
     if (file_exists($conf_d)) {
-        $config2->merge(new Zend_Config_Ini($conf_d, $section));
+        $config->merge($conf->readIni($conf_d, $section));
     }
-    $config->merge($config2);
+
 }
-catch (Zend_Config_Exception $e) {
+catch (Exception $e) {
     \Core2\Error::Exception($e->getMessage());
 }
 
@@ -110,18 +114,21 @@ if ($config->debug->on) {
 }
 
 //проверяем настройки для базы данных
-if ($config->database->adapter === 'Pdo_Mysql') {
-    $config->database->params->adapterNamespace = 'Core_Db_Adapter';
-    //подключаем собственный адаптер базы данных
-    require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
-} elseif ($config->database->adapter === 'Pdo_Pgsql') {
-    $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
-    $config->database->schema = $config->database->params->dbname;
-    $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+if ($config->database) {
+    if ($config->database->adapter === 'Pdo_Mysql') {
+        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
+        //подключаем собственный адаптер базы данных
+        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
+        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
+        $config->database->schema = $config->database->params->dbname;
+        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+    }
 }
 
 //конфиг стал только для чтения
 $config->setReadOnly();
+
 
 if (isset($config->include_path) && $config->include_path) {
     set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
@@ -183,8 +190,9 @@ Registry::set('config', $config);
 //обрабатываем конфиг ядра
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
-    $core_config = new Zend_Config_Ini($core_conf_file, 'production');
-    Registry::set('core_config', $core_config);
+    $config = new Core2\Config();
+    $core_config   = $config->readIni($core_conf_file);
+    Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
 require_once 'Db.php';
@@ -1762,6 +1770,7 @@ class Init extends \Core2\Db {
 
             return '';
         }
+
     }
 
 
