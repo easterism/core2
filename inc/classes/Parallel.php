@@ -55,7 +55,7 @@ class Parallel extends Db {
         $this->db->closeConnection();
 
         if ($this->cache->getAdapterName() !== 'Filesystem') {
-            $reg = \Zend_Registry::getInstance();
+            $reg = Registry::getInstance();
             $reg->set('cache', null);
         }
 
