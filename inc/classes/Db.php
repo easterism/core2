@@ -68,30 +68,46 @@ class Db {
 	 * @throws \Exception
 	 */
 	public function __get($k) {
+        $k_module = $k;
+        $k        = explode("|", $k);
+        $module   = isset($k[1]) ? $k[1] : 'admin';
+        $k        = $k[0];
+
 		if ($k == 'core_config') {
             $this->_core_config = Registry::get('core_config');
             return $this->_core_config;
         }
 		if ($k == 'db') {
-			$reg = Registry::getInstance();
-            if ($reg->isRegistered('invoker')) {
-                $module_config = $this->getModuleConfig($reg->get('invoker'));
-                if ($module_config && $module_config->database) {
-                    if (!isset($this->_db[$reg->get('invoker')])) {
-                        $this->_db[$reg->get('invoker')] = $this->getConnection($module_config->database);
-                    }
-                    return $this->_db[$reg->get('invoker')];
-                }
-            }
+            $reg = Registry::getInstance();
+//            if ($reg->isRegistered('invoker')) {
+//                $k_module = $k . "|" . $reg->get('invoker');
+//            }
+            if (!$reg->isRegistered($k_module)) {
+                if (!$this->config) $this->config = $reg->get('config');
+                if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
 
-			if (! $reg->isRegistered('db')) {
-				if (!$this->config) $this->config = $reg->get('config');
-				if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
-				$db = $this->establishConnection($this->config->database);
-			} else {
-				$db = $reg->get('db');
-                $this->schemaName = $reg->get('dbschema');
-			}
+                if ($module !== 'admin') {
+                    $module_config = $this->getModuleConfig($module);
+
+                    if ($module_config && $module_config->database) {
+                        $db = $this->getConnection($module_config->database);
+
+                        $reg->set($k_module, $db);
+                        return $db;
+                    } else {
+                        $reg->set($k_module, 'db');
+                        $k_module = 'db';
+                        if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                    }
+                }
+                //подключение к базе по умолчанию
+                $db = $this->establishConnection($this->config->database);
+                \Zend_Db_Table::setDefaultAdapter($db);
+                $reg->set($k_module, $db);
+
+            }
+			$db = $reg->get($k_module);
+            if ($db === 'db') $db = $reg->get('db');
 			return $db;
 		}
 		// Получение указанного кэша
@@ -188,10 +204,8 @@ class Db {
 			if (array_key_exists($k, $this->_s)) {
 				$v = $this->_s[$k];
 			} else {
-				$this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
-				$module   = explode("|", $k);
-				$model    = substr($module[0], 4);
-				$module   = !empty($module[1]) ? $module[1] : 'admin';
+
+				$model    = substr($k, 4);
 				$location = $module == 'admin'
 					? __DIR__ . "/../../mod/admin"
 					: $this->getModuleLocation($module);
@@ -208,8 +222,15 @@ class Db {
                     throw new \Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
+                $db = $this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
                 if ($module == 'admin') $model = "\Core2\Model\\$model";
-                $v            = new $model();
+                else {
+                    $module_config = $this->getModuleConfig($module);
+                    if ($module_config && $module_config->database) {
+                        $db = $this->getConnection($module_config->database);
+                    }
+                }
+                $v            = new $model($db);
                 $this->_s[$k] = $v;
 			}
 			return $v;
@@ -235,8 +256,6 @@ class Db {
     private function establishConnection(LaminasConfig $database) {
 		try {
             $db = $this->getConnection($database);
-			\Zend_Db_Table::setDefaultAdapter($db);
-			Registry::set('db', $db);
 
             //переопределяем config для нового подключения к базе
             if ($this->config->database !== $database) {
@@ -846,7 +865,7 @@ class Db {
         if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $db = $this->db;
+            $db = $this->getConnection($this->config->database);
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);
             $res    = $m->fetchAll($m->select()->order('seq'));

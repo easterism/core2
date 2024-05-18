@@ -26,8 +26,13 @@ class CommonApi extends \Core2\Acl {
      */
 	public function __construct($module) {
 		parent::__construct();
-		$this->module = $module;
-		$this->auth = \Core2\Registry::get('auth');
+        $reg     = Registry::getInstance();
+
+        $this->module = $module;
+        if (!$reg->isRegistered('invoker')) {
+            $reg->set('invoker', $this->module);
+        }
+		$this->auth = $reg->get('auth');
 	}
 
 
@@ -67,7 +72,7 @@ class CommonApi extends \Core2\Acl {
 		} else {
 			//исключение для герета базы или кеша, выполняется всегда
 			if ($k == 'db' || $k == 'cache') {
-				return parent::__get($k);
+                return parent::__get($k . "|" . $this->module);
 			}
 			// Получение экземпляра класса для работы с правами пользователей
 			elseif ($k == 'acl') {
