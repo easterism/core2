@@ -130,7 +130,7 @@ class Common extends \Core2\Acl {
     public function __get($k) {
 		//исключение для герета базы или кеша, выполняется всегда
 		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
-			return parent::__get($k);
+            return parent::__get($k . "|" . $this->module);
 		}
 		//геттер для модели
 		if (strpos($k, 'data') === 0) {
