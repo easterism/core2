@@ -55,6 +55,7 @@ class Config
         } else {
             $out = [];
             foreach ($data['production'] as $key => $value) {
+                $value = str_replace('"', '\"', $value);
                 $out[] = $key . '="' . $value . '"';
             }
             $data = implode(chr(10), $out);
