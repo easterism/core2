@@ -33,7 +33,7 @@ class Login extends \Common {
                     try {
                         if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
                             if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
-                                list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                                [$login, $password] = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                                 $user = $this->dataUsers->getUserByLogin($login);
                                 if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
                                     if ($this->auth($user)) {
@@ -826,11 +826,11 @@ class Login extends \Common {
 
 
     /**
-     * @param $data
+     * @param array $fields
+     * @param array $data
+     * @param       $role_id
      * @return false|string
      * @throws \Zend_Db_Adapter_Exception
-     * @throws \Zend_Db_Exception
-     * @throws \Exception
      */
     private function registration(array $fields, array $data, $role_id) {
 
@@ -927,20 +927,26 @@ class Login extends \Common {
 
             $user_id = $this->db->lastInsertId();
 
-            $data['name'] = preg_replace('~[ ]{2,}~', ' ', $data['name']);
+            if ( ! empty($data['name'])) {
+                $data['name'] = preg_replace('~[ ]{2,}~', ' ', $data['name']);
 
-            $name_explode = explode(' ', $data['name']);
-            $middlename   = ! empty($name_explode[2]) ? $name_explode[2] : '';
-            $lastname     = ! empty($name_explode[1]) ? $name_explode[0] : '';
-            $firstname    = $lastname ? $name_explode[1] : $name_explode[0];
+                $name_explode = explode(' ', $data['name']);
+                $middlename   = ! empty($name_explode[2]) ? $name_explode[2] : '';
+                $lastname     = ! empty($name_explode[1]) ? $name_explode[0] : '';
+                $firstname    = $lastname ? $name_explode[1] : $name_explode[0];
 
-            $this->db->insert('core_users_profile', [
-                'user_id'    => $user_id,
-                'lastname'   => $lastname,
-                'firstname'  => $firstname,
-                'middlename' => $middlename,
+                $this->db->insert('core_users_profile', [
+                    'user_id'    => $user_id,
+                    'lastname'   => $lastname,
+                    'firstname'  => $firstname,
+                    'middlename' => $middlename,
+                ]);
+            }
+
+            $this->emit('new_user', [
+                'user_id' => $user_id,
+                'form'    => $data,
             ]);
-            $this->emit('new_user', $user_id);
         }
 
 
