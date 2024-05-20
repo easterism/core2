@@ -134,9 +134,9 @@ class Db extends Table {
      */
     public function fetchRows(): array {
 
-        $this->preFetchRows();
-
         if ( ! $this->is_fetched) {
+            $this->preFetchRows();
+
             $this->is_fetched = true;
 
             if ($this->data instanceof \Zend_Db_Select) {
@@ -625,6 +625,7 @@ class Db extends Table {
                     switch ($filter_column->getType()) {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
+                        case self::FILTER_DATE_PERIOD:
                         case self::FILTER_NUMBER:
                             if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {

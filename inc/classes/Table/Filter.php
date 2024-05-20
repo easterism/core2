@@ -20,6 +20,7 @@ class Filter {
         'date_one',
         'date_month',
         'date',
+        'date_period',
         'datetime',
         'radio',
         'checkbox',
