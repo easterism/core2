@@ -89,6 +89,7 @@ abstract class Table extends Acl {
     const FILTER_TEXT_STRICT = 'text_strict';
     const FILTER_DATE_ONE    = 'date_one';
     const FILTER_DATE_MONTH  = 'date_month';
+    const FILTER_DATE_PERIOD = 'date_period';
     const FILTER_DATE        = 'date';
     const FILTER_DATETIME    = 'datetime';
     const FILTER_NUMBER      = 'number';
@@ -1017,6 +1018,66 @@ abstract class Table extends Acl {
                 if (isset($template[$template_id])) {
                     $this->session->table->search  = $template[$template_id]['search'];
                     $this->session->table->columns = $template[$template_id]['column'];
+                }
+            }
+        }
+
+
+
+        if ( ! empty($this->filter_controls)) {
+            foreach ($this->filter_controls as $key => $filter_control) {
+
+                $filter_column = $this->filter_controls[$key] ?? null;
+
+                if ($filter_column instanceof Filter) {
+                    switch ($filter_column->getType()) {
+                        case self::FILTER_DATE_PERIOD:
+                            $filter_value = $this->getFilters($key);
+
+                            if (empty($filter_value)) {
+                                $data = $filter_column->getData();
+
+                                if ( ! empty($data['periods']) && is_array($data['periods'])) {
+                                    foreach ($data['periods'] as $period) {
+                                        if ( ! empty($period['default'])) {
+                                            $period_type  = $period['type'] ?? '';
+                                            $period_count = $period['count'] ?? '';
+
+                                            $date_start = null;
+                                            $date_end   = null;
+
+                                            switch ($period_type) {
+                                                case 'days':
+                                                    if ($period_count >= 0) {
+                                                        $date_start = date('Y-m-d', strtotime("-{$period_count} days"));
+                                                        $date_end   = date('Y-m-d');
+                                                    }
+                                                    break;
+
+                                                case 'month':
+                                                    if ($period_count >= 0) {
+                                                        $date_start = date('Y-m-01', strtotime("-{$period_count} month"));
+                                                        $date_end   = date('Y-m-d');
+                                                    }
+                                                    break;
+
+                                                case 'year':
+                                                    if ($period_count >= 0) {
+                                                        $date_start = date('Y-01-01', strtotime("-{$period_count} year"));
+                                                        $date_end   = date('Y-m-d');
+                                                    }
+                                                    break;
+                                            }
+
+                                            if ($date_start || $date_end) {
+                                                $this->setFilter($key, [$date_start, $date_end]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                    }
                 }
             }
         }
