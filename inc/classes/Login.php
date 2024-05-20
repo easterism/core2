@@ -832,7 +832,7 @@ class Login extends \Common {
      * @throws \Zend_Db_Exception
      * @throws \Exception
      */
-    private function registration(array $fields, sarray $data, $role_id) {
+    private function registration(array $fields, array $data, $role_id) {
 
         $this->emit('reg_data', $data);
 
