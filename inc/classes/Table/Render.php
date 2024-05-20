@@ -66,6 +66,8 @@ class Render extends Acl {
             return '';
         }
 
+        $show_scripts_daterangepicker = false;
+
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
         $tpl->assign('[THEME_SRC]',         $this->theme_src);
         $tpl->assign('[RESOURCE]',          $this->table['resource']);
@@ -612,6 +614,97 @@ class Render extends Acl {
                             $tpl->filter_controls->filter_control->date->assign("[ATTR]",        $attributes_str);
                             break;
 
+                        case 'date_period' :
+                            if ( ! empty($filter['title'])) {
+                                $tpl->filter_controls->filter_control->date_period->title->assign('[TITLE]', $filter['title']);
+                            }
+
+                            $data = $filter['data'] ?? [];
+
+                            if ( ! empty($control_value['all'])) {
+                                $date_start = '';
+                                $date_end   = '';
+                                $value      = '';
+
+                            } else {
+                                $date_start = ! empty($control_value[0]) && trim($control_value[0]) ? date('Y-m-d', strtotime($control_value[0])) : '';
+                                $date_end   = ! empty($control_value[1]) && trim($control_value[1]) ? date('Y-m-d', strtotime($control_value[1])) : '';
+
+                                $date_format_start = ! empty($control_value[0]) && trim($control_value[0]) ? date('d.m.Y', strtotime($control_value[0])) : '';
+                                $date_format_end   = ! empty($control_value[1]) && trim($control_value[1]) ? date('d.m.Y', strtotime($control_value[1])) : '';
+
+                                $value = $date_format_start && $date_format_end
+                                    ? "{$date_format_start} - {$date_format_end}"
+                                    : '';
+                            }
+
+                            $tpl->filter_controls->filter_control->date_period->assign("[KEY]",         $key);
+                            $tpl->filter_controls->filter_control->date_period->assign("[VALUE_START]", $date_start);
+                            $tpl->filter_controls->filter_control->date_period->assign("[VALUE_END]",   $date_end);
+                            $tpl->filter_controls->filter_control->date_period->assign("[VALUE]",       $value);
+                            $tpl->filter_controls->filter_control->date_period->assign("[ATTR]",        $attributes_str);
+
+                            if ( ! empty($data['periods']) && is_array($data['periods'])) {
+                                foreach ($data['periods'] as $key2 => $period) {
+                                    $checked      = false;
+                                    $period_type  = $period['type'] ?? '';
+                                    $period_count = $period['count'] ?? '';
+
+                                    switch ($period_type) {
+                                        case 'all':
+                                            $checked = empty($date_start) && empty($date_end);
+                                            break;
+
+                                        case 'days':
+                                            if ($period_count >= 0) {
+                                                $period_start = date('Y-m-d', strtotime("-{$period_count} days"));
+                                                $period_end   = date('Y-m-d');
+
+                                                $checked = $period_start == $date_start && $period_end == $date_end;
+
+                                            } else {
+                                                $checked = empty($date_start) && empty($date_end);
+                                            }
+                                            break;
+
+                                        case 'month':
+                                            if ($period_count >= 0) {
+                                                $period_start = date('Y-m-01', strtotime("-{$period_count} month"));
+                                                $period_end   = date('Y-m-d');
+
+                                                $checked = $period_start == $date_start && $period_end == $date_end;
+
+                                            } else {
+                                                $checked = empty($date_start) && empty($date_end);
+                                            }
+                                            break;
+
+                                        case 'year':
+                                            if ($period_count >= 0) {
+                                                $period_start = date('Y-01-01', strtotime("-{$period_count} year"));
+                                                $period_end   = date('Y-m-d');
+
+                                                $checked = $period_start == $date_start && $period_end == $date_end;
+
+                                            } else {
+                                                $checked = empty($date_start) && empty($date_end);
+                                            }
+                                            break;
+                                    }
+
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[PERIOD]",  $key2);
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[TITLE]",   $period['title'] ?? '');
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[TYPE]",    $period_type);
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[COUNT]",   $period_count);
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[CHECKED]", $checked ? 'checked' : '');
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->assign("[ACTIVE]",  $checked ? 'active' : '');
+                                    $tpl->filter_controls->filter_control->date_period->periods->period->reassign();
+                                }
+                            }
+
+                            $show_scripts_daterangepicker = true;
+                            break;
+
                         case 'datetime' :
                             if ( ! empty($filter['title'])) {
                                 $tpl->filter_controls->filter_control->datetime->title->assign('[TITLE]', $filter['title']);
@@ -931,6 +1024,10 @@ class Render extends Acl {
 
         } else {
             $tpl->touchBlock('no_rows');
+        }
+
+        if ($show_scripts_daterangepicker) {
+            $tpl->touchBlock('script_daterangepicker');
         }
 
         return $this->minify($tpl->render());
