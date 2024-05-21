@@ -573,4 +573,18 @@ if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'fun
 	worker.port.start();
 	worker.port.postMessage("start");
 	worker.port.postMessage("sse-open");
+
+	document.addEventListener(
+		"Core2-Fact",
+		(e) => {
+			e.detail.forEach(function (data){
+				const e = JSON.parse(data);
+				console.log(e)
+				if (e.element) {
+					$("#" + e.element.selector).text(e.element.text);
+				}
+			})
+		},
+		false,
+	);
 }
