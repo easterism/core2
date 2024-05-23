@@ -153,7 +153,8 @@ class ModAjax extends ajaxFunc {
 		if ( ! $refId) {
 			//TODO add the new module tab
 		} else {
-			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
+            $this->fact->elementText("#module-{$module_id} span.module-title", $data['control']['m_name']);
+//			$this->response->script("$('#module_{$module_id} span span').text('{$data['control']['m_name']}');");
 		}
 		$this->done($data);
 		return $this->response;

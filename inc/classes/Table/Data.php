@@ -112,6 +112,7 @@ class Data extends Table {
 
                     switch ($filter_column->getType()) {
                         case 'date':
+                        case 'date_periods':
                         case 'datetime':
                             if (is_array($filter_value)) {
                                 if ($filter_value[0] && ! $filter_value[1]) {
