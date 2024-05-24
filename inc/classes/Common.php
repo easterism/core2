@@ -84,15 +84,6 @@ class Common extends \Core2\Acl {
 
 
     /**
-     * @param string $k
-     * @return bool
-     */
-	public function __isset($k) {
-		return isset($this->_p[$k]);
-	}
-
-
-    /**
      * Ищет перевод для строки $str
      * @param string $str
      * @param string $module
@@ -128,149 +119,141 @@ class Common extends \Core2\Acl {
      * @throws Exception
      */
     public function __get($k) {
+        $reg = Registry::getInstance();
+        if ($reg->isRegistered($k)) { //для стандартных объектов
+            return $reg->get($k);
+        }
+        if ($reg->isRegistered($k . "|")) { //подстараховка от случайной перезаписи ключа
+            return $reg->get($k . "|");
+        }
+
 		//исключение для герета базы или кеша, выполняется всегда
 		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
-            return parent::__get($k . "|" . $this->module);
+            return parent::__get($k);
 		}
 		//геттер для модели
 		if (strpos($k, 'data') === 0) {
-			return parent::__get($k . "|" . $this->module);
+			return parent::__get($k);
 		}
-        if (strpos($k, 'worker') === 0) {
+        elseif (strpos($k, 'worker') === 0) {
             return parent::__get($k);
         }
 
 		$v = NULL;
 
-		if (array_key_exists($k, $this->_p)) {
-			$v = $this->_p[$k];
-		} else {
-			// Получение экземпляра класса для работы с правами пользователей
-			if ($k == 'acl') {
-				$v = $this->{$k} = Registry::get('acl');
-			}
-			elseif ($k === 'moduleConfig') {
 
-			    $module_config = $this->getModuleConfig($this->module);
+        if ($k === 'moduleConfig') {
 
-			    if ($module_config === false) {
-                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
-                } else {
-                    $v = $this->{$k} = $module_config;
+            $module_config = $this->getModuleConfig($this->module);
+
+            if ($module_config === false) {
+                \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+            } else {
+                $v = $module_config;
+            }
+        }
+        // Получение экземпляра контроллера указанного модуля
+        elseif (strpos($k, 'mod') === 0) {
+            $module = strtolower(substr($k, 3));
+            if ($module === 'admin') {
+                require_once(DOC_ROOT . 'core2/inc/CoreController.php');
+                $v         = new CoreController();
+            }
+            elseif ($location = $this->getModuleLocation($module)) {
+                if (!$this->isModuleActive($module)) {
+                    throw new Exception("Модуль \"{$module}\" не активен");
                 }
-			}
-			// Получение экземпляра контроллера указанного модуля
-			elseif (strpos($k, 'mod') === 0) {
-				$module = strtolower(substr($k, 3));
-				if ($module === 'admin') {
-					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
-					$v         = $this->modAdmin = new CoreController();
-					$v->module = $module;
-				}
-                elseif ($location = $this->getModuleLocation($module)) {
-					if (!$this->isModuleActive($module)) {
-						throw new Exception("Модуль \"{$module}\" не активен");
-					}
 
-					$cl              = ucfirst($k) . 'Controller';
-					$controller_file = $location . '/' . $cl . '.php';
+                $cl              = ucfirst($k) . 'Controller';
+                $controller_file = $location . '/' . $cl . '.php';
 
-					if (!file_exists($controller_file)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
-					}
+                if (!file_exists($controller_file)) {
+                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
+                }
 
+                $autoload_file = $location . "/vendor/autoload.php";
+                if (file_exists($autoload_file)) {
+                    require_once($autoload_file);
+                }
+
+                require_once($controller_file);
+
+                if (!class_exists($cl)) {
+                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
+                }
+
+                $v = new $cl();
+                // $v->module = $module;
+
+            } else {
+                throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
+            }
+        }
+
+        // Получение экземпляра плагина для указанного модуля
+        elseif (strpos($k, 'plugin') === 0) {
+            $plugin = ucfirst(substr($k, 6));
+            $module = $this->module;
+            $location = $this->getModuleLocation($module);
+            $plugin_file = "{$location}/Plugins/{$plugin}.php";
+            if (!file_exists($plugin_file)) {
+                throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден."), $plugin));
+            }
+            require_once("CommonPlugin.php");
+            require_once($plugin_file);
+            $temp = "\\" . $module . "\\Plugins\\" . $plugin;
+            $v = new $temp();
+            $v->setModule($this->module);
+        }
+
+        // Получение экземпляра api класса указанного модуля
+        elseif (strpos($k, 'api') === 0) {
+            $module = substr($k, 3);
+            if ($k == 'api') {
+                $module = $this->module;
+            }
+
+            if ($this->isModuleActive($module)) {
+                $location = $module == 'Admin'
+                    ? DOC_ROOT . "core2/mod/admin"
+                    : $this->getModuleLocation($module);
+
+                $module     = ucfirst($module);
+                $module_api = "Mod{$module}Api";
+
+                if ( ! file_exists("{$location}/{$module_api}.php")) {
+                    return new stdObject();
+
+                } else {
                     $autoload_file = $location . "/vendor/autoload.php";
+
                     if (file_exists($autoload_file)) {
                         require_once($autoload_file);
                     }
 
-					require_once($controller_file);
+                    require_once "CommonApi.php";
+                    require_once "{$location}/{$module_api}.php";
 
-					if (!class_exists($cl)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
-					}
-
-					$v = $this->{$k} = new $cl();
-                    // $v->module = $module;
-
-				} else {
-					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
-				}
-			}
-
-			// Получение экземпляра плагина для указанного модуля
-			elseif (strpos($k, 'plugin') === 0) {
-                $plugin = ucfirst(substr($k, 6));
-                $module = $this->module;
-                $location = $this->getModuleLocation($this->module);
-                $plugin_file = "{$location}/Plugins/{$plugin}.php";
-                if (!file_exists($plugin_file)) {
-                    throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден."), $plugin));
-                }
-                require_once("CommonPlugin.php");
-                require_once($plugin_file);
-                $temp = "\\" . $module . "\\Plugins\\" . $plugin;
-                $v = $this->{$k} = new $temp();
-                $v->setModule($this->module);
-            }
-
-			// Получение экземпляра api класса указанного модуля
-			elseif (strpos($k, 'api') === 0) {
-                $module = substr($k, 3);
-                if ($k == 'api') {
-                    $module = $this->module;
-                }
-
-                if ($this->isModuleActive($module)) {
-                    $location = $module == 'Admin'
-                        ? DOC_ROOT . "core2/mod/admin"
-                        : $this->getModuleLocation($module);
-
-                    $module     = ucfirst($module);
-                    $module_api = "Mod{$module}Api";
-
-                    if ( ! file_exists("{$location}/{$module_api}.php")) {
+                    $api = new $module_api();
+                    if ( ! is_subclass_of($api, 'CommonApi')) {
                         return new stdObject();
-
-                    } else {
-                        $autoload_file = $location . "/vendor/autoload.php";
-
-                        if (file_exists($autoload_file)) {
-                            require_once($autoload_file);
-                        }
-
-                        require_once "CommonApi.php";
-                        require_once "{$location}/{$module_api}.php";
-
-                        $api = new $module_api();
-                        if ( ! is_subclass_of($api, 'CommonApi')) {
-                            return new stdObject();
-                        }
-
-                        $v = $this->{$k} = $api;
                     }
-                } else {
-                    return new stdObject();
+
+                    $v = $api;
                 }
-			}
-			else {
-				//$v = $this->{$k} = new \Laminas\Stdlib\ArrayObject();
-			}
-		}
+            } else {
+                return new stdObject();
+            }
+        }
+        else {
+            //$v = new \Laminas\Stdlib\ArrayObject();
+        }
+
+        $reg->set($k . "|", $v);
 
 		return $v;
 	}
 
-
-    /**
-     * @param string $k
-     * @param mixed  $v
-     * @return $this
-     */
-	public function __set($k, $v) {
-		$this->_p[$k] = $v;
-		return $this;
-	}
 
 	
 	/**
