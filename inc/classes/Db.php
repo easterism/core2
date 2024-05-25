@@ -86,8 +86,8 @@ class Db {
                     $module_config = $this->getModuleConfig($module);
 
                     if ($module_config && $module_config->database) {
+                        // у этого модуля собственный адаптер
                         $db = $this->establishConnection($module_config->database);
-
                         $reg->set($k_module, $db);
                         return $db;
                     } else {
