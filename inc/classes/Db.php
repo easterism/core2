@@ -91,15 +91,17 @@ class Db {
                         $reg->set($k_module, $db);
                         return $db;
                     } else {
-                        $db = $reg->get('db|admin');
                         $reg->set($k_module, 'db'); //храним в реестре только указание, что $k_module будет использовать подключение по умолчанию
-                        return $db;
+                        if ($reg->isRegistered('db|admin')) {
+                            $db = $reg->get('db|admin');
+                            return $db;
+                        }
                     }
                 }
-                //подключение к базе по умолчанию (всегда происходит раньше других)
+                //подключение к базе по умолчанию (выполняется 1 раз)
                 $db = $this->establishConnection($this->config->database);
                 \Zend_Db_Table::setDefaultAdapter($db);
-                $reg->set($k_module, $db);
+                $reg->set('db|admin', $db);
 
             }
 			$db = $reg->get($k_module);
@@ -854,7 +856,7 @@ class Db {
         if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $db = $this->getConnection($this->config->database);
+            $db = $this->db;
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);
             $res    = $m->fetchAll($m->select()->order('seq'));
