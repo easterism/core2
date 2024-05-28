@@ -505,6 +505,47 @@ class Tool {
     }
 
 
+    /**
+     * Сортировка массивов по набору полей
+     * @param array $data
+     * @param array $fields
+     * @return array
+     */
+    public static function multisort(array $data, array $fields): array {
+
+        $args = [];
+
+        foreach ($fields as $field) {
+
+            if ( ! isset($field['field']) ||
+                 ! isset($field['order']) ||
+                 ! is_string($field['field']) ||
+                 ! is_string($field['order'])
+            ) {
+                continue;
+            }
+
+            $args[] = array_map(function($row) use($field) {
+                return is_array($row) ? ($row[$field['field']] ?? null) : null;
+            }, $data);
+
+            if ($field['order'] === 'asc') {
+                $args[] = SORT_ASC;
+            } else {
+                $args[] = SORT_DESC;
+            }
+
+            $args[] = $field['flag'] ?? SORT_REGULAR;
+        }
+
+        $args[] = &$data;
+
+        call_user_func_array("array_multisort", $args);
+
+        return $data;
+    }
+
+
 	/**
 	 * Проверка на то, является ли клиентское устройство мобильным
 	 * @return bool
