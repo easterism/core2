@@ -101,9 +101,9 @@ class Search {
 
 
     /**
-     * @return array
+     * @return string
      */
-    public function getValueType(): array {
+    public function getValueType(): string {
         return $this->value_type;
     }
 
