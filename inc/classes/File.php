@@ -99,11 +99,15 @@ class File extends \Common {
 
         $filename_encode = rawurlencode($res2['filename']);
 
+        $content = $this->getContent($table, $id);
+        if (!$content) {
+            throw new \Exception('Download error!', 400);
+        }
+
         header("Content-Disposition: filename=\"{$res2['filename']}\"; filename*=utf-8''{$filename_encode}");
         header("Content-Type: " . $res2['type']);
         header('Content-Length: ' . $res2['filesize']);
 
-        $content = $this->getContent($table, $id);
         $this->content = $content;
     }
 
