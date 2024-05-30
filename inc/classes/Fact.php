@@ -16,10 +16,11 @@ class Fact {
      * @var id for System V IPC
      */
     private $shm_id;
+    private $shm_public;
 
-    private $messages = ['public' => []];
+    private $messages = ['global' => []];
 
-    private $topic = 'public';
+    private $topic = 'global';
 
     const TEXT = 1;
 
@@ -30,7 +31,7 @@ class Fact {
         $user_key = $auth->LIVEID;
         if (!$user_key) $user_key = $auth->ID;
 //        if (!$user_key) $user_key = -1;
-        $this->shm_id = ftok($eventFile, 't') + crc32($user_key); //у каждого юзера своя очередь
+        $this->shm_id     = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($user_key)); //у аждого юзера своя очередь
     }
 
     public function __get($v)
@@ -42,14 +43,15 @@ class Fact {
 
     /**
      * @param mixed $text
+     * @param bool  $is_public
      * @return void
      */
-    public function message(mixed $text): void {
+    public function message(mixed $text, bool $is_public = false): void {
 
         if (is_object($text)) $text = serialize($text);
 
         //каждый раз получаем id очереди заново, потому что она может быть очищена
-        $q = msg_get_queue($this->shm_id);
+        $q = !$is_public ? msg_get_queue($this->shm_id) : msg_get_queue($this->shm_public);
 
         if (! msg_send($q, self::TEXT, json_encode([$this->topic => $text]), false, true, $msg_err)) {
             $this->log->error($msg_err);
@@ -59,8 +61,33 @@ class Fact {
             $this->messages[$this->topic][] = $text;
         }
 
-        $this->topic = 'public';
+        $this->topic = 'global';
     }
+
+
+    /**
+     * Установка текста в указанный селектор на странице
+     * @param string $selector
+     * @param string $text
+     * @param bool   $is_public
+     * @return void
+     */
+    public function elementText(string $selector, string $text, bool $is_public = false): void {
+
+        $text = json_encode(['element' => ['selector' => $selector, 'text' => $text]]);
+        $q    = ! $is_public ? msg_get_queue($this->shm_id) : msg_get_queue($this->shm_public);
+
+        if ( ! msg_send($q, self::TEXT, json_encode([$this->topic => $text]), false, true, $msg_err)) {
+            $this->log->error($msg_err);
+        };
+
+        if ( ! in_array($text, $this->messages[$this->topic])) {
+            $this->messages[$this->topic][] = $text;
+        }
+
+        $this->topic = 'global';
+    }
+
 
     /**
      * получаем список всех фактов, которые были добавлены в этом сеансе

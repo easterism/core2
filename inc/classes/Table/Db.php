@@ -182,8 +182,11 @@ class Db extends Table {
                     $this->search_controls[$key] instanceof Search &&
                     ! empty($value)
                 ) {
-                    $field = $this->search_controls[$key]->getField();
-                    $type  = $this->search_controls[$key]->getType();
+                    $search_field = $this->search_controls[$key];
+
+                    $field      = $search_field->getField();
+                    $type       = $search_field->getType();
+                    $value_type = $search_field->getValueType();
 
                     if (strpos($field, '/*ADD_SEARCH*/') !== false) {
                         $field = str_replace("/*ADD_SEARCH*/", "ADD_SEARCH", $field);
@@ -213,12 +216,18 @@ class Db extends Table {
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
                         case self::SEARCH_SELECT2:
+                            $type = null;
+
+                            if ($value_type == $search_field::TYPE_INT) {
+                                $type = \Zend_Db::INT_TYPE;
+                            }
+
                             if (strpos($field, 'ADD_SEARCH') !== false) {
-                                $quoted_value = $this->db->quote($value);
+                                $quoted_value = $this->db->quote($value, $type);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
                             } else {
-                                $select->where("{$field} = ?", $value);
+                                $select->where("{$field} = ?", $value, $type);
                             }
                             break;
 
