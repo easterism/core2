@@ -102,17 +102,16 @@ class Acl extends Db {
 
 
 			if ($auth->ROLE !== -1) {
-				$roles = $this->db->fetchAll("
-                    SELECT id, 
-                           name, 
+				$role = $this->db->fetchRow("
+                    SELECT name, 
                            access
 					FROM core_roles
-					WHERE is_active_sw = 'Y'
+					WHERE id=? AND is_active_sw = 'Y'
 					ORDER BY position DESC
-                ");
+                ", $auth->ROLEID);
 
 				$i = 1;
-				foreach ($roles as $role) {
+				if ($role) {
 					$roleName = $role['name'];
 					if (self::INHER_ROLES == 'Y') {
 						if ($i == 1) {
