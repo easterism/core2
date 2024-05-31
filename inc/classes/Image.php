@@ -372,8 +372,8 @@ class Image {
                     $newy = $y;
                 }
 
-                $new_img = imagecreatetruecolor($newx, $newy);
-                imagecopyresampled($new_img, $image, 0, 0, 0, 0, $newx, $newy, $x, $y);
+                $new_img = imagecreatetruecolor((int)$newx, (int)$newy);
+                imagecopyresampled($new_img, $image, 0, 0, 0, 0, (int)$newx, (int)$newy, $x, $y);
 
                 switch ($type) {
                     case 'jpeg':
