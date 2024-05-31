@@ -125,6 +125,7 @@ class Acl extends Db {
 					}
 
 					$access = unserialize($role['access']);
+
                     if ( ! empty($access)) {
                         foreach ($access as $type => $data) {
                             if (strpos($type, 'default') === false) {
