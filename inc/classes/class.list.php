@@ -54,6 +54,7 @@ class listTable extends initList {
     private $service_content    = array();
     private $show_templates     = false;
     private $_db;
+    private $acl;
 
 
     /**
