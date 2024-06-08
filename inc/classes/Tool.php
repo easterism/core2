@@ -1,5 +1,5 @@
 <?php
-
+namespace Core2;
 
 /**
  * Class Tool
@@ -141,7 +141,7 @@ class Tool {
      */
     public static function log($text) {
 
-    	$cnf = Zend_Registry::get('config');
+    	$cnf = Registry::get('config');
     	if ($cnf->log->on && $cnf->log->path) {
 			$f = fopen($cnf->log->path, 'a');
 			if (is_array($text) || is_object($text)) {
@@ -160,10 +160,10 @@ class Tool {
      * @param $text
      */
     public static function fb($text) {
-		$firephp = FirePHP::getInstance(true);
+		$firephp = \FirePHP::getInstance(true);
 		try {
 			$firephp->fb($text);
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			\Core2\Error::Exception($e->getMessage());
     	}
     }
@@ -177,7 +177,7 @@ class Tool {
      */
     public static function commafy($number, string $separator = ';psbn&'): string {
 
-        if (empty($number)) {
+        if (is_null($number)) {
             return '';
         }
 
@@ -387,9 +387,7 @@ class Tool {
      */
     public static function printCss(string $src): void {
 
-        $src = self::addSrcHash($src);
-
-        echo '<link href="' . $src . '" type="text/css" rel="stylesheet" />';
+        echo self::getCss($src);
     }
 
 
@@ -400,14 +398,36 @@ class Tool {
      */
     public static function printJs(string $src, $chachable = false): void {
 
+        echo self::getJs($src, $chachable);
+    }
+
+
+    /**
+     * link to CSS file
+     * @param string $src - CSS filename
+     * @return string
+     */
+    public static function getCss(string $src): string {
+
         $src = self::addSrcHash($src);
 
-        if ($chachable) {
-            //помещаем скрипт в head
-            echo "<script type=\"text/javascript\">jsToHead('$src')</script>";
-        } else {
-            echo '<script type="text/javascript" src="' . $src . '"></script>';
-        }
+        return '<link href="' . $src . '" type="text/css" rel="stylesheet" />';
+    }
+
+
+    /**
+     * link to JS file
+     * @param string $src - JS filename
+     * @param bool   $chachable
+     * @return string
+     */
+    public static function getJs(string $src, $chachable = false): string {
+
+        $src = self::addSrcHash($src);
+
+        return $chachable
+            ? "<script type=\"text/javascript\">jsToHead('{$src}')</script>"
+            : "<script type=\"text/javascript\" src=\"{$src}\"></script>";
     }
 
 
@@ -435,8 +455,8 @@ class Tool {
 
     /**
      * Форматирование временного диапазона
-     * @param DateTime $date_start
-     * @param DateTime $date_end
+     * @param \DateTime $date_start
+     * @param \DateTime $date_end
      * @param string   $format
      * @return string
      */

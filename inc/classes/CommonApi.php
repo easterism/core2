@@ -1,12 +1,12 @@
 <?php
 require_once 'Acl.php';
 
+use Core2\Registry;
 
 /**
  * Class CommonApi
  * @property StdClass        $acl
  * @property CoreController  $modAdmin
- * @property Zend_Config_Ini $moduleConfig
  */
 class CommonApi extends \Core2\Acl {
 
@@ -15,8 +15,7 @@ class CommonApi extends \Core2\Acl {
      */
 	protected $auth;
 
-	private $module;
-	private $_p = array();
+    protected $module;
 
 
     /**
@@ -25,8 +24,13 @@ class CommonApi extends \Core2\Acl {
      */
 	public function __construct($module) {
 		parent::__construct();
-		$this->module = $module;
-		$this->auth = \Core2\Registry::get('auth');
+        $reg     = Registry::getInstance();
+
+        $this->module = $module;
+        if (!$reg->isRegistered('invoker')) {
+            $reg->set('invoker', $this->module);
+        }
+		$this->auth = $reg->get('auth');
 	}
 
 
@@ -41,15 +45,6 @@ class CommonApi extends \Core2\Acl {
 
 
     /**
-     * @param string $k
-     * @return bool
-     */
-	public function __isset($k) {
-		return isset($this->_p[$k]);
-	}
-
-
-    /**
      * Автоматическое подключение других модулей
      * инстансы подключенных объектов хранятся в массиве $_p
      *
@@ -58,116 +53,82 @@ class CommonApi extends \Core2\Acl {
      * @throws Exception
      */
     public function __get($k) {
+        $reg = Registry::getInstance();
+        if ($reg->isRegistered($k)) { //для стандартных объектов
+            return $reg->get($k);
+        }
+        if ($reg->isRegistered($k . "|")) { //подстараховка от случайной перезаписи ключа
+            return $reg->get($k . "|");
+        }
+
+        //исключение для герета базы или кеша, выполняется всегда
+        if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+            return parent::__get($k);
+        }
+        //геттер для модели
+        if (strpos($k, 'data') === 0) {
+            return parent::__get($k);
+        }
+        elseif (strpos($k, 'worker') === 0) {
+            return parent::__get($k);
+        }
 
 		$v = NULL;
 
-		if (array_key_exists($k, $this->_p)) {
-			$v = $this->_p[$k];
-		} else {
-			//исключение для герета базы или кеша, выполняется всегда
-			if ($k == 'db' || $k == 'cache') {
-				return parent::__get($k);
-			}
-			// Получение экземпляра класса для работы с правами пользователей
-			elseif ($k == 'acl') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
-			}
-            elseif ($k == 'modAdmin') {
-                require_once(DOC_ROOT . 'core2/inc/CoreController.php');
-                $v = $this->{$k} = new CoreController();
-                $v->module = 'admin';
-            }
-			// Получение экземпляра модели текущего модуля
-			elseif (strpos($k, 'data') === 0) {
-                return parent::__get($k . "|" . $this->module);
-			}
-            elseif (strpos($k, 'api') === 0) {
-                $module = substr($k, 3);
 
-                if ($this->isModuleActive($module)) {
-                    $location = $module == 'Admin'
-                        ? DOC_ROOT . "core2/mod/admin"
-                        : $this->getModuleLocation($module);
+        if ($k == 'modAdmin') {
+            require_once(DOC_ROOT . 'core2/inc/CoreController.php');
+            $v = new CoreController();
+        }
+        elseif (strpos($k, 'api') === 0) {
+            $module = substr($k, 3);
 
-                    $module     = ucfirst($module);
-                    $module_api = "Mod{$module}Api";
+            if ($this->isModuleActive($module)) {
+                $location = $module == 'Admin'
+                    ? DOC_ROOT . "core2/mod/admin"
+                    : $this->getModuleLocation($module);
 
-                    if ( ! file_exists("{$location}/{$module_api}.php")) {
-                        return new stdObject();
+                $module     = ucfirst($module);
+                $module_api = "Mod{$module}Api";
 
-                    } else {
-                        $autoload_file = $location . "/vendor/autoload.php";
-
-                        if (file_exists($autoload_file)) {
-                            require_once($autoload_file);
-                        }
-
-                        require_once "{$location}/{$module_api}.php";
-
-                        $api = new $module_api();
-                        if ( ! is_subclass_of($api, 'CommonApi')) {
-                            return new stdObject();
-                        }
-
-                        $v = $this->{$k} = $api;
-                    }
-                } else {
+                if ( ! file_exists("{$location}/{$module_api}.php")) {
                     return new stdObject();
-                }
-            }
-            elseif ($k === 'moduleConfig') {
-                $module_loc = $this->getModuleLocation($this->module);
-                $conf_file  = "{$module_loc}/conf.ini";
-                if (is_file($conf_file)) {
-                    $config_glob  = new Zend_Config_Ini(DOC_ROOT . 'conf.ini');
-                    $extends_glob = $config_glob->getExtends();
 
-                    $config_mod  = new Zend_Config_Ini($conf_file);
-                    $extends_mod = $config_mod->getExtends();
-                    $section_mod = ! empty($_SERVER['SERVER_NAME']) &&
-                                   array_key_exists($_SERVER['SERVER_NAME'], $extends_mod) &&
-                                   array_key_exists($_SERVER['SERVER_NAME'], $extends_glob)
-                        ? $_SERVER['SERVER_NAME']
-                        : 'production';
+                } else {
+                    $autoload_file = $location . "/vendor/autoload.php";
 
-                    $config_mod = new Zend_Config_Ini($conf_file, $section_mod, true);
-
-                    $conf_ext = $module_loc . "/conf.ext.ini";
-                    if (file_exists($conf_ext)) {
-                        $config_mod_ext  = new Zend_Config_Ini($conf_ext);
-                        $extends_mod_ext = $config_mod_ext->getExtends();
-
-                        $section_ext = ! empty($_SERVER['SERVER_NAME']) &&
-                                       array_key_exists($_SERVER['SERVER_NAME'], $extends_glob) &&
-                                       array_key_exists($_SERVER['SERVER_NAME'], $extends_mod_ext)
-                                ? $_SERVER['SERVER_NAME']
-                                : 'production';
-                        $config_mod->merge(new Zend_Config_Ini($conf_ext, $section_ext));
+                    if (file_exists($autoload_file)) {
+                        require_once($autoload_file);
                     }
 
+                    require_once "{$location}/{$module_api}.php";
 
-                    $config_mod->setReadOnly();
-                    $v = $this->{$k} = $config_mod;
-                } else {
-                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+                    $api = new $module_api();
+                    if ( ! is_subclass_of($api, 'CommonApi')) {
+                        return new stdObject();
+                    }
+
+                    $v = $api;
                 }
+            } else {
+                return new stdObject();
             }
-			else {
-				$v = $this->{$k} = $this;
-			}
-		}
+        }
+        elseif ($k === 'moduleConfig') {
 
+            $module_config = $this->getModuleConfig($this->module);
+
+            if ($module_config === false) {
+                \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+            } else {
+                $v = $module_config;
+            }
+        }
+        else {
+            $v = $this;
+        }
+        $reg->set($k . "|", $v);
 		return $v;
 	}
 
-
-    /**
-     * @param string $k
-     * @param mixed  $v
-     * @return $this
-     */
-	public function __set($k, $v) {
-		$this->_p[$k] = $v;
-		return $this;
-	}
 }

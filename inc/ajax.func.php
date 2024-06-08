@@ -82,11 +82,13 @@ class ajaxFunc extends Common {
 	protected function ajaxValidate($data, $fields) {
 
 		$order_fields = $this->getSessForm($data['class_id']);
+
         if ( ! isset($order_fields['mainTableId'])) {
             $msg = $this->translate->tr('Ошибка сохранения. Пожалуйста, обратитесь к администратору');
             $this->response->script("CoreUI.notice.create('$msg', 'danger');");
             return true;
         }
+
 		$control  = $data['control']; //данные полей формы
 		$script   = "for(var i = 0; i < document.getElementById('{$order_fields['mainTableId']}_mainform').elements.length; i++){document.getElementById('{$order_fields['mainTableId']}_mainform').elements[i].classList.remove('reqField')};";
 		$req      = array();
@@ -131,7 +133,12 @@ class ajaxFunc extends Common {
             $params = explode(",", $val);
 
             if (in_array("req", $params) && ! array_key_exists($field, $control)) {
-                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>$field $val";
+                $this->error[] = "- {$this->translate->tr('Ошибка сохранения. Обратитесь к администратору.')}<br/>";
+                $this->sendErrorMessage("Ошибка сохранения формы. Нет обязательного поля: {$field}", [
+                    'session_data' => $order_fields,
+                    'data'         => $data,
+                    'fields'       => $fields,
+                ]);
                 break;
             }
 
@@ -508,6 +515,199 @@ class ajaxFunc extends Common {
 
 		return $last_insert_id;
 	}
+
+
+    /**
+     * Сохранение данных формы через модель
+     * @param Zend_Db_Table_Abstract $model
+     * @param array                  $data
+     * @param bool|true              $inTrans
+     * @return Zend_Db_Table_Row_Abstract|null
+     * @throws Zend_Db_Table_Exception
+     */
+    protected function saveDataModel(Zend_Db_Table_Abstract $model, array $data, bool $inTrans = true):? \Zend_Db_Table_Row_Abstract {
+
+        if ( ! $inTrans) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $order_fields = $this->getSessForm($data['class_id']);
+
+            if (count($this->error)) {
+                throw new Exception("Form error", 500);
+            }
+
+            $authNamespace = new SessionContainer('Auth');
+            $control       = [];
+            $fileFlag      = [];
+            $fileFlagDel   = [];
+
+            $table = $model->info()['name'];
+
+            if ( ! $table) {
+                throw new Exception("Ошибка обработки таблицы", 500);
+            }
+
+            $table_quoted = $this->db->quoteIdentifier($table);
+            $explain      = $this->db->fetchAll("EXPLAIN {$table_quoted}");
+
+            if ( ! $explain || ! is_array($explain)) {
+                throw new Exception("Ошибка обработки таблицы", 500);
+            }
+
+
+            foreach ($data['control'] as $key => $value) {
+
+                if ( ! is_array($value)) $value = trim((string)$value);
+                if (substr($key, -3) == '%re') continue;
+                if (substr($key, -4) == '%tru') continue;
+                if (substr($key, 0, 9) == 'filesdel|') {
+                    $fileFlagDel[substr($key, 9)] = $value;
+                    continue;
+                }
+                if (strpos($key, 'files|') === 0) {
+                    $field_id            = substr($key, 6);
+                    $fileFlag[$field_id] = [
+                        'data' => $value,
+                    ];
+
+                    if (isset($order_fields[$field_id.'|maxWidth'])) {
+                        $fileFlag[$field_id]['max_width'] = $order_fields[$field_id.'|maxWidth'];
+                    }
+                    if (isset($order_fields[$field_id.'|maxHeight'])) {
+                        $fileFlag[$field_id]['max_height'] = $order_fields[$field_id.'|maxHeight'];
+                    }
+                    if (isset($order_fields[$field_id.'|check_width'])) {
+                        $fileFlag[$field_id]['check_width'] = $order_fields[$field_id.'|check_width'];
+                    }
+                    if (isset($order_fields[$field_id.'|check_height'])) {
+                        $fileFlag[$field_id]['check_height'] = $order_fields[$field_id.'|check_height'];
+                    }
+                    continue;
+                }
+
+
+                if ($value !== '0' && $value !== 0 && $value !== 0.0 && empty($value)) {
+                    $data['control'][$key] = null;
+                } elseif (is_array($value)) {
+                    $data['control'][$key] = implode(",", $value);
+                }
+
+
+                $control[$key] = $data['control'][$key];
+                if (isset($data['control'][$key . '%tru'])) {
+                    $is_tru = false;
+                    foreach ($explain as $va) {
+                        if ($va['Field'] == $key . '_tru') {
+                            $control[$key . '_tru'] = $data['control'][$key . '%tru'] ?: new Zend_Db_Expr('NULL');
+                            $is_tru = true;
+                            break;
+                        }
+                    }
+                    if (!$is_tru) {
+                        $control[$key] .= ' - ' . $data['control'][$key . '%tru'];
+                    }
+                }
+            }
+
+            foreach ($explain as $value) {
+                if ($value['Field'] == 'lastuser') {
+                    $control['lastuser'] = (int) $authNamespace->ID;
+                    if ($control['lastuser'] == -1) $control['lastuser'] = new Zend_Db_Expr('NULL');
+                }
+                if ($value['Field'] == 'author' && !$order_fields['refid'] && empty($control['author'])) {
+                    $control['author'] = $authNamespace->NAME;
+                }
+            }
+
+            if ( ! $order_fields['refid']) {
+                $row = $model->createRow($control);
+
+                $last_insert_id = $row->save();
+
+                if ($fileFlag) {
+                    $this->saveFile($table, $last_insert_id, $fileFlag);
+                }
+
+            } else {
+                // CHECK IF THE RECORD WAS CHANGED
+                $this->checkTheSame($table, $data);
+
+                $last_insert_id = $order_fields['refid'];
+                $key_name       = $this->db->quoteIdentifier($order_fields['keyField']);
+
+                $row = $model->fetchRow(
+                    $model->select($last_insert_id)->where("{$key_name} = ?", $last_insert_id)
+                );
+
+
+                //Проверка доступа
+                if ($this->checkAcl($order_fields['resId'], 'edit_owner') &&
+                    ! $this->checkAcl($order_fields['resId'], 'edit_all') &&
+                    $row &&
+                    isset($row?->author) &&
+                    $authNamespace->NAME != $row->author
+                ) {
+                    throw new Exception($this->translate->tr('Вам разрешено редактировать только собственные данные.'));
+                }
+
+
+                if ( ! empty($control)) {
+                    $row->setFromArray($control);
+                    $row->save();
+                }
+
+                if ($fileFlag) {
+                    if ($fileFlagDel) {
+                        foreach ($fileFlagDel as $value) {
+                            $value = explode(",", $value);
+                            $ids   = [];
+
+                            foreach ($value as $inid) {
+                                $inid = (int)$inid;
+                                if ($inid) $ids[] = $inid;
+                            }
+
+                            if ( ! empty($ids)) {
+                                $table_name = $this->db->quoteIdentifier("{$table}_files");
+                                $where = $this->db->quoteInto('id IN(?)', $ids);
+                                $this->db->query("
+                                    DELETE FROM {$table_name}
+                                    WHERE refid = ?
+                                      AND {$where}
+                                ", $last_insert_id);
+                            }
+                        }
+                    }
+                    $this->saveFile($table, $last_insert_id, $fileFlag);
+                }
+            }
+
+            if ( ! $inTrans) {
+                $this->db->commit();
+            }
+
+        } catch (Exception $e) {
+            if ( ! $inTrans) {
+                $this->db->rollback();
+            } else {
+                throw $e;
+            }
+
+            $msg = $e->getMessage();
+            if ($msg) {
+                $this->error[] = $msg;
+            }
+
+            $this->displayError($data);
+            return null;
+        }
+
+        $this->last_insert_id = $last_insert_id;
+
+        return $row;
+    }
 
 
 	/**

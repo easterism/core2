@@ -211,7 +211,7 @@ class Image {
         Tools::logToFile('xxx', 'max_height='.$max_height);*/
 
         if (!$max_width && !$max_height) {
-            throw new Exception("Нулевой размер картинки!");
+            throw new \Exception("Нулевой размер картинки!");
         }
         if (file_exists($savepath) && is_file($savepath) && $savepath !== '.') {
             unlink($savepath);
@@ -225,12 +225,12 @@ class Image {
         $w = $data[0];
         $h = $data[1];
         $img = $this->imageCreateFromFile($filename, $type);
-        if (!$img) throw new Exception("Не могу создать картинку!");
+        if (!$img) throw new \Exception("Не могу создать картинку!");
 
         // resize
         if ($crop) {
-            if (!$max_width || !$max_height) throw new Exception("Размер картинки задан не верно!");
-            if ($w < $max_width or $h < $max_height) throw new Exception("Картинка слишком маленькая!");
+            if (!$max_width || !$max_height) throw new \Exception("Размер картинки задан не верно!");
+            if ($w < $max_width or $h < $max_height) throw new \Exception("Картинка слишком маленькая!");
             $ratio = max($max_width / $w, $max_height / $h);
             $h = $max_height / $ratio;
             $x = ($w - $max_width / $ratio) / 2;
@@ -242,7 +242,7 @@ class Image {
             }
             $max_width = $w * $ratio;
             $max_height = $h * $ratio;
-            if ($w < $max_width && $h < $max_height) throw new Exception("Картинка слишком маленькая!");
+            if ($w < $max_width && $h < $max_height) throw new \Exception("Картинка слишком маленькая!");
             $x = 0;
         }
         if ($ratio == 1) {

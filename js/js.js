@@ -325,8 +325,8 @@ var load = function (url, data, id, callback) {
 				}
 				var t = locData.title.main;
 				if (locData.title.module) {
-					t += ' - ' + locData.title.module;
-					if (locData.title.smodule) t += ' - ' + locData.title.smodule;
+					t = locData.title.module + ' - ' + t;
+					if (locData.title.smodule) t = locData.title.smodule + ' - ' + t;
 				}
 				document.title = t;
 			}
@@ -547,16 +547,21 @@ if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'fun
 	worker.port.addEventListener(
 		"message",
 		function(e) {
-			var evt = e.data.event;
+			const evt = e.data.event;
 			switch (e.data.type) {
 				case 'modules':
 					for (i in evt) {
-						document.dispatchEvent(new CustomEvent(i, {detail: evt[i]}));
+						document.dispatchEvent(new CustomEvent(i, {'detail': evt[i]}));
+					}
+					break;
+				case 'Core2':
+					for (i in evt) {
+						document.dispatchEvent(new CustomEvent("Core2", {'detail': evt[i]}));
 					}
 					break;
 
-				case 'Core2':
-					document.dispatchEvent(new CustomEvent("Core2", {detail: evt}));
+				default:
+					console.log(e.data);
 					break;
 			}
 		},
@@ -568,4 +573,18 @@ if (window.hasOwnProperty('SharedWorker') && typeof window.SharedWorker === 'fun
 	worker.port.start();
 	worker.port.postMessage("start");
 	worker.port.postMessage("sse-open");
+
+	document.addEventListener(
+		"Core2-Fact",
+		(e) => {
+			e.detail.forEach(function (data){
+				const e = JSON.parse(data);
+				console.log(e)
+				if (e.element) {
+					$("#" + e.element.selector).text(e.element.text);
+				}
+			})
+		},
+		false,
+	);
 }

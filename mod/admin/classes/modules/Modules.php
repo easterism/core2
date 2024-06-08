@@ -772,7 +772,7 @@ class Modules extends \Common  {
     public function getTableGitlab(): string {
 
         $table = new Table\Data("{$this->resId}xxx_gitlab");
-        $table->hideCheckboxes();
+        $table->showCheckboxes(false);
         $table->setAjax();
 
         $modules = $this->getGitlabModules();
@@ -863,7 +863,7 @@ class Modules extends \Common  {
             }
 
             if ( ! empty($modules)) {
-                $modules = \Tool::arrayMultisort($modules, 'date', SORT_DESC);
+                $modules = Tool::arrayMultisort($modules, 'date', SORT_DESC);
             }
 
             $this->cache->save($modules, $gitlab_cache_key);

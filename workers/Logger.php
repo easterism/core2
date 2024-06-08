@@ -1,13 +1,11 @@
 <?php
 namespace Core2;
 
-require_once __DIR__ . '/../inc/classes/Zend_Registry.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
 require_once __DIR__ . '/../inc/classes/Log.php';
 require_once __DIR__ . '/../inc/classes/Error.php';
 require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 
-use Core2\Log;
 
 class Logger
 {
@@ -17,8 +15,6 @@ class Logger
     public function __construct()
     {
         $this->_config = Registry::get('config');
-        \Zend_Registry::set('config', $this->_config);
-        \Zend_Registry::set('core_config',  Registry::get('core_config'));
 
         if (isset($this->_config->log) &&
             $this->_config->log &&

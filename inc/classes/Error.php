@@ -100,16 +100,18 @@ class Error {
 			$trace = $exception->getTraceAsString();
 			$str = date('d-m-Y H:i:s') . ' ERROR: ' . $message . "\n" . $trace . "\n\n\n";
 			if ($cnf->debug->firephp) {
-				\Tool::fb($str);
+				Tool::fb($str);
 			} else {
                 self::Exception("<PRE>{$str}</PRE>", $code);
 			}
 
 		} else {
+            error_log("{$message} \n " . $exception->getTraceAsString());
+
 			if (substr($message, 0, 8) == 'SQLSTATE') {
 			    $message = 'Ошибка базы данных';
-                //TODO вести журнал
             }
+
             self::Exception($message, $code);
 		}
 	}
@@ -146,8 +148,8 @@ class Error {
 	 */
 	private static function getConfig() {
 		// Zend_Registry MUST present
-        if (\Zend_Registry::isRegistered('config')) {
-            return \Zend_Registry::get('config');
+        if (Registry::isRegistered('config')) {
+            return Registry::get('config');
 		}
 		return null;
 	}

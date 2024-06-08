@@ -134,9 +134,9 @@ class Db extends Table {
      */
     public function fetchRows(): array {
 
-        $this->preFetchRows();
-
         if ( ! $this->is_fetched) {
+            $this->preFetchRows();
+
             $this->is_fetched = true;
 
             if ($this->data instanceof \Zend_Db_Select) {
@@ -191,6 +191,8 @@ class Db extends Table {
 
                     switch ($type) {
                         case self::SEARCH_TEXT:
+                        case self::SEARCH_AUTOCOMPLETE:
+                        case self::SEARCH_AUTOCOMPLETE_TABLE:
                             $value = trim($value);
 
                             if (strpos($field, '%ADD_SEARCH%') !== false) {
@@ -506,7 +508,7 @@ class Db extends Table {
 
         $select = new Table\Db\Select($query);
 
-        $db = $this->_db ? $this->_db : $this->db;
+        $db = $this->_db ?: $this->db;
 
         if ( ! empty($this->session->table) && ! empty($this->session->table->search)) {
             foreach ($this->session->table->search as $key => $search_value) {
@@ -582,6 +584,8 @@ class Db extends Table {
                             break;
 
                         case self::SEARCH_TEXT:
+                        case self::SEARCH_AUTOCOMPLETE:
+                        case self::SEARCH_AUTOCOMPLETE_TABLE:
                             if (is_string($search_value)) {
                                 $search_value = trim($search_value);
 
@@ -621,6 +625,7 @@ class Db extends Table {
                     switch ($filter_column->getType()) {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
+                        case self::FILTER_DATE_PERIOD:
                         case self::FILTER_NUMBER:
                             if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {

@@ -9,6 +9,7 @@ namespace Core2;
  * @subpackage I18n
  */
 use Laminas\I18n\Translator\Translator;
+use Laminas\Config\Config as LaminasConfig;
 
 class I18n {
 
@@ -21,9 +22,9 @@ class I18n {
 
 
     /**
-     * @param \Zend_Config $config
+     * @param Config $config
      */
-	public function __construct(\Zend_Config $config) {
+	public function __construct(LaminasConfig $config) {
 
         if (isset($config->translate) && $config->translate->on) {
             try {
@@ -34,7 +35,7 @@ class I18n {
                 if ($config->translate->adapter == 'gettext') {
                     $content = "core2/translations/$lng.mo";
                 } else {
-                    Error::Exception("Адаптер перевода не поддерживается");
+                    Error::Exception("Translation adapter not supported");
                 }
                 $this->locale = $lng;
                 $this->setup(array(
@@ -43,11 +44,11 @@ class I18n {
                         'domain' => 'core2',
                         'locale'  => $lng
                 ));
-            } catch (\Zend_Translate_Exception $e) {
+            } catch (\Exception $e) {
                 Error::Exception($e->getMessage());
             }
         }
-        \Zend_Registry::set('translate', $this);
+        Registry::set('translate', $this);
 	}
 
 
@@ -116,25 +117,27 @@ class I18n {
                     break;
                 }
             }
+            $config = new Config();
             if ($goit) {
-                $config = new \Zend_Config_Ini($location . "/conf.ini", $_SERVER['SERVER_NAME']);
+                $ini = $config->readIni($location . "/conf.ini", $_SERVER['SERVER_NAME']);
             } else {
-                $config = new \Zend_Config_Ini($location . "/conf.ini", 'production');
+                $ini = $config->readIni($location . "/conf.ini", 'production');
             }
+            $config = $config->getData();
             if (isset($config->translate) && $config->translate->on) {
                 $lng = $this->getLocale();
                 if ($config->translate->adapter == 'gettext') {
                     $content = $location . "/translations/$lng.mo";
                 } else {
-                    Error::Exception("Адаптер перевода модуля не поддерживается");
+                    Error::Exception("Module's translation adapter not supported");
                 }
                 try {
                     $this->translate->addTranslationFile($config->translate->adapter, $content, $domain, $config->translate->locale);
                     unset($translate_second);
-                } catch (\Zend_Translate_Exception $e) {
+                } catch (\Exception $e) {
                     Error::Exception($e->getMessage());
                 }
-                \Zend_Registry::set('translate', $this);
+                Registry::set('translate', $this);
             }
         }
     }

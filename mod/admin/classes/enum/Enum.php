@@ -15,7 +15,21 @@ class Enum extends \Common {
 
     private $app = "index.php?module=admin&action=enum";
     private $html;
+    private $_id;
+    private $_row;
 
+    public function __construct(int $id = 0)
+    {
+        parent::__construct();
+        $this->_id = $id;
+
+        if ($this->_id) {
+            $this->_row = $this->dataEnum->find($this->_id)->current();
+            if (!$this->_row || $this->_row->parent_id) {
+                throw new \Exception(404);
+            }
+        }
+    }
 
     /**
      * @throws \Zend_Db_Adapter_Exception
@@ -63,10 +77,10 @@ class Enum extends \Common {
     }
 
     /**
-     *
-     * @param $enum_id
+     * Редактирование справочника
      */
-    public function editEnum($enum_id) {
+    public function editEnum() {
+
         $edit = new \editTable('enum');
         //$edit->firstColWidth = 200;
         $edit->SQL = $this->db->quoteInto("
@@ -77,7 +91,7 @@ class Enum extends \Common {
 				FROM core_enum
 				WHERE id = ?
 				  AND parent_id IS NULL
-			", $enum_id);
+			", $this->_id);
         $edit->addControl($this->translate->tr("Название справочника:"), "TEXT", "maxlength=\"255\" size=\"60\"", "", "", true);
         $edit->addControl($this->translate->tr("Идентификатор:"), "PROTECTED");
         $list_custom = "";
@@ -86,7 +100,7 @@ class Enum extends \Common {
         $tpl->fillDropDown('yyy', $enums, '');
         $custom_field = $tpl->render();
 
-        $res           = $this->dataEnum->find($enum_id)->current()->custom_field;
+        $res           = $this->_row->custom_field;
         $custom_fields = $res ? unserialize(base64_decode($res)) : [];
 
         if (is_array($custom_fields) && $custom_fields) {
@@ -112,7 +126,7 @@ class Enum extends \Common {
         $custom = '<div id="xxx">' . $list_custom . '</div>
 			<div><span id="new_attr" class="newFieldEnum btn btn-link btn-sm" onclick="en.newEnumField()">' . $this->translate->tr("Новое поле") . '</span></div>';
         $edit->addControl($this->translate->tr("Дополнительные поля:"), "CUSTOM", $custom);
-        $edit->addButtonSwitch('is_active_sw', $this->dataEnum->exists("is_active_sw = 'Y' AND id=?", $enum_id));
+        $edit->addButtonSwitch('is_active_sw', $this->dataEnum->exists("is_active_sw = 'Y' AND id=?", $this->_id));
 
         $edit->back = $this->app;
         $edit->addButton($this->translate->tr("Вернуться к списку справочников"), "load('$this->app')");
@@ -141,8 +155,9 @@ class Enum extends \Common {
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Exception
      */
-    public function newEnumValue($enum_id) {
-        $res = $this->dataEnum->find($enum_id)->current()->custom_field;
+    public function newEnumValue() {
+
+        $res = $this->_row->custom_field;
         $custom_fields = $res ? unserialize(base64_decode($res)) : [];
         $edit = new \editTable('enumxxxur');
 
@@ -205,10 +220,10 @@ class Enum extends \Common {
         $edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N");
         $edit->selectSQL[] = array('Y' => 'вкл.', 'N' => 'выкл.');
         $edit->addControl($this->translate->tr("Статус:"), "RADIO", "", "", "Y");
-        $edit->addControl("", "HIDDEN", "", "", $enum_id, true);
+        $edit->addControl("", "HIDDEN", "", "", $this->_id, true);
 
-        $edit->back = $this->app . "&edit=" . $enum_id;
-        $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$enum_id}')");
+        $edit->back = $this->app . "&edit=" . $this->_id;
+        $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$this->_id}')");
         $edit->save("xajax_saveEnumValue(xajax.getFormValues(this.id))");
         ob_start();
         $edit->showTable();
@@ -223,10 +238,10 @@ class Enum extends \Common {
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Exception
      */
-    public function editEnumValue($enum_id, $value_id) {
+    public function editEnumValue($value_id) {
 
-        $add           = (int)$value_id;
-        $res           = $this->dataEnum->find($enum_id)->current()->custom_field;
+        $add           = (int) $value_id;
+        $res           = $this->_row->custom_field;
         $custom_fields = $res ? unserialize(base64_decode($res)) : [];
         $edit          = new \editTable('enumxxxur');
 
@@ -311,10 +326,10 @@ class Enum extends \Common {
 
         $edit->addControl($this->translate->tr("По умолчанию:"), "RADIO", "", "", "N"); $edit->selectSQL[] = ['Y' => 'да', 'N' => 'нет'];
         $edit->addControl($this->translate->tr("Статус:"), "RADIO", "", "", "Y"); $edit->selectSQL[] = ['Y' => 'вкл.', 'N' => 'выкл.'];
-        $edit->addControl("", "HIDDEN", "", "", $enum_id, true);
+        $edit->addControl("", "HIDDEN", "", "", $this->_id, true);
 
-        $edit->back = $this->app . "&edit=" . $enum_id;
-        $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$enum_id}')");
+        $edit->back = $this->app . "&edit=" . $this->_id;
+        $edit->addButton($this->translate->tr("Отменить"), "load('{$this->app}&edit={$this->_id}')");
         $edit->save("xajax_saveEnumValue(xajax.getFormValues(this.id))");
 
         return $edit->render();
@@ -326,13 +341,13 @@ class Enum extends \Common {
      * @return false|string
      * @throws \Exception
      */
-    public function listEnumValues($enum_id) {
+    public function listEnumValues() {
 
-        $res = $this->dataEnum->find($enum_id)->current()->custom_field;
+        $res = $this->_row->custom_field;
         $custom_fields = $res ? unserialize(base64_decode($res)) : [];
 
         //ENUM dtl list
-        $list = new \listTable('enumxxx3'.$enum_id);
+        $list = new \listTable('enumxxx3' . $this->_id);
         $list->table = "core_enum";
         $list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
 
@@ -368,8 +383,8 @@ class Enum extends \Common {
         $list->paintCondition	= "'TCOL_03' == 'N'";
         $list->paintColor		= "ffffee";
 
-        $list->addURL 			= $this->app . "&edit=$enum_id&newvalue";
-        $list->editURL 			= $this->app . "&edit=$enum_id&editvalue=TCOL_00";
+        $list->addURL 			= $this->app . "&edit={$this->_id}&newvalue";
+        $list->editURL 			= $this->app . "&edit={$this->_id}&editvalue=TCOL_00";
         $list->deleteKey		= "core_enum.id";
 
         $list->getData();

@@ -3,6 +3,7 @@ require_once('class.ini.php');
 require_once('Templater3.php');
 
 use Laminas\Session\Container as SessionContainer;
+use Core2\Tool;
 
 /**
  * Class listTable
@@ -53,6 +54,7 @@ class listTable extends initList {
     private $service_content    = array();
     private $show_templates     = false;
     private $_db;
+    private $acl;
 
 
     /**
@@ -406,11 +408,11 @@ class listTable extends initList {
                             if ($next['type'] == 'date') {
                                 try {
                                     if ($search_value[0]) {
-                                        $dt = new DateTime($search_value[0]);
+                                        $dt = new \DateTime($search_value[0]);
                                         $search_value[0] = $dt->format("Y-m-d");
                                     }
                                     if ($search_value[1]) {
-                                        $dt = new DateTime($search_value[1]);
+                                        $dt = new \DateTime($search_value[1]);
                                         $search_value[1] = $dt->format("Y-m-d");
                                     }
                                 } catch (Exception $e) {
@@ -436,7 +438,8 @@ class listTable extends initList {
                                     $search .= " AND " . $replace;
                                 }
 
-                            } elseif ($next['type'] == 'number') {
+                            }
+                            elseif ($next['type'] == 'number') {
                                 try {
                                     if ( ! empty($search_value[0]) && ! is_numeric($search_value[0])) {
                                         throw new Exception($this->_('Некорректно указан параметр числового поиска'));
@@ -476,7 +479,8 @@ class listTable extends initList {
                                     } else {
                                         $search .= " AND " . str_replace("ADD_SEARCH", $search_value, $next['field']);
                                     }
-                                } elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
+                                }
+                                elseif (in_array($next['type'], ['checkbox', 'checkbox2', 'multilist', 'multilist2'])) {
                                     if (is_array($search_value)) {
                                         foreach ($search_value as $k => $val) {
                                             if (!$val) unset($search_value[$k]);
@@ -501,7 +505,8 @@ class listTable extends initList {
                                         }
                                     }
 
-                                } elseif ($next['type'] == 'text_strict') {
+                                }
+                                elseif ($next['type'] == 'text_strict') {
                                     $search_value = trim($search_value);
                                     $search_value = preg_replace('~[\s]{2,}~', ' ', $search_value);
 
@@ -1023,7 +1028,7 @@ class listTable extends initList {
 
         
         // DATA HEADER первая строка таблицы
-        $tpl = new Templater("core2/html/" . THEME . "/list/headerHead.tpl");
+        $tpl = new Templater2("core2/html/" . THEME . "/list/headerHead.html");
         $tpl->assign('{main_table_id}', $this->main_table_id);
         $tpl->assign('{resource}',      $this->resource);
         $tpl->assign('isAjax',          $this->ajax);
@@ -1039,7 +1044,7 @@ class listTable extends initList {
         $columnsToReplace = [];
 
         if ($eh) { // добавляем дополнительные строки в шапку таблицы
-            $cell = $tpl->getBlock('extracell');
+//            $cell = $tpl->getBlock('extracell');
             $tpl->assign('{ROWSPAN}', $eh + 1);
 
             foreach ($this->extraHeaders as $k => $cols) {
@@ -1051,15 +1056,19 @@ class listTable extends initList {
                     if ( ! isset($span['col'])) $span['col'] = 1;
                     if ( ! isset($span['row'])) $span['row'] = 1;
 
-                    $temp .= str_replace(
-                        ['{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'],
-                        [$caption, $span['col'], $span['row'],],
-                        $cell
-                    );
+//                    $temp .= str_replace(
+//                        ['{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'],
+//                        [$caption, $span['col'], $span['row'],],
+//                        $cell
+//                    );
+                    $tpl->extrahead->extracell->assign('{CAPTION}', $caption);
+                    $tpl->extrahead->extracell->assign('{COLSPAN}', $span['col']);
+                    $tpl->extrahead->extracell->assign('{ROWSPAN2}', $span['row']);
+                    $tpl->extrahead->extracell->reassign();
                 }
             }
-            $tpl->replaceBlock('extracell', $temp);
-            $tpl->touchBlock('extrahead');
+//            $tpl->replaceBlock('extracell', $temp);
+//            $tpl->touchBlock('extrahead');
 
         } else {
             $tpl->assign('{ROWSPAN}', 1);
@@ -1104,6 +1113,11 @@ class listTable extends initList {
                     $value['width'], ($key + 1), $value['name'], $img, ''],
                     $cell
                 );
+//                $tpl->cell->assign('{WIDTH}', $value['width']);
+//                $tpl->cell->assign('{ORDER_VALUE}', $key + 1);
+//                $tpl->cell->assign('{CAPTION}', $value['name']);
+//                $tpl->cell->assign('{ORDER_TYPE}', $img);
+//                $tpl->cell->assign('{COLSPAN}', '');
 
             } else {
                 $temp .= str_replace(
@@ -1427,7 +1441,7 @@ class listTable extends initList {
 
         if (!$this->noFooter) {
             // FOOTER ROW
-            $tpl   = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
+            $tpl   = new Templater2("core2/html/" . THEME . "/list/footerx_controls.html");
             $count = ceil($this->recordCount / $this->recordsPerPage);
 
             //PAGINATION
@@ -1440,20 +1454,16 @@ class listTable extends initList {
             $tpl->assign('[IDD]', 'pagin_' . $this->resource);
             $tpl->assign('[ID]', $this->resource);
             if ($count > 1) {
-                $tpl->touchBlock('pages');
-                $tpl->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
+                $tpl->pages->assign('{GO_TO_PAGE}', "listx.goToPage(this, '$this->resource', $this->ajax)");
 
                 if ($this->sessData[$pagePOST] > 1) {
-                    $tpl->touchBlock('pages2');
-                    $tpl->assign('{BACK}', $this->sessData[$pagePOST] - 1);
+                    $tpl->pages2->assign('{BACK}', $this->sessData[$pagePOST] - 1);
                 }
                 if ($this->sessData[$pagePOST] < $count) {
-                    $tpl->touchBlock('pages3');
-                    $tpl->assign('{FORW}', $this->sessData[$pagePOST] + 1);
+                    $tpl->pages3->assign('{FORW}', $this->sessData[$pagePOST] + 1);
                 }
                 $tpl->assign('{GO_TO}', "listx.pageSw(this, '$this->resource', $this->ajax)");
-                $tpl->touchBlock('recordsPerPage');
-                $tpl->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
+                $tpl->recordsPerPage->assign('{SWITCH_CO}', "listx.countSw(this, '$this->resource', $this->ajax)");
                 $opts    = array();
                 $notoall = false;
                 for ($k = 0; $k < $count - 1; $k++) {
@@ -1467,8 +1477,9 @@ class listTable extends initList {
                 if (!$notoall) {
                     $opts[1000] = $this->classText['PAGIN_ALL'];
                 }
-                $tpl->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
-                $tpl->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
+
+                $tpl->recordsPerPage->fillDropDown("footerSelectCount", $opts, $this->sessData[$countPOST]);
+                $tpl->recordsPerPage->assign('footerSelectCount', $this->main_table_id . 'footerSelectCount');
             }
             $tplRoot->footer->assign('[FOOTER]', $tpl->parse()); // побликуем footer
         }

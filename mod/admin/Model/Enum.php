@@ -41,7 +41,6 @@ class Enum extends \Zend_Db_Table_Abstract {
             }
         }
 
-
         $select = $this->select()
             ->from($this->_name, ['max_seq' => new \Zend_Db_Expr('MAX(seq)')])
             ->where('parent_id = ?', $enum->id);
@@ -60,6 +59,29 @@ class Enum extends \Zend_Db_Table_Abstract {
         ]);
 
         return (int)$data->save();
+    }
+
+
+    /**
+     * Обновление custom_field в одной записи справочника
+     * @param int   $item_id
+     * @param array $custom_fields
+     * @throws \Zend_Db_Table_Exception
+     */
+    public function setCustomFields(int $item_id, array $custom_fields = []): void {
+
+        $custom_fields_fill = [];
+        $enum_item = $this->find($item_id)->current();
+
+        foreach ($custom_fields as $key => $value) {
+            $value = is_scalar($value) ? (string)$value : '';
+            $custom_fields_fill[] = $value === ''
+                ? "{$key}"
+                : "{$key}::{$value}";
+        }
+
+        $enum_item->custom_field = $custom_fields_fill ? implode(':::', $custom_fields_fill) : null;
+        $enum_item->save();
     }
 
 

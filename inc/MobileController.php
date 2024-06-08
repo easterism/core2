@@ -600,7 +600,7 @@ class MobileController extends Common {
         }
         elseif ($context == 'thumbid') {
             if (!empty($_GET['size'])) {
-                $f->setImgSize($_GET['size']);
+                $f->setThumbSize($_GET['size']);
             }
             $f->handleThumb($table, $id);
         }

@@ -19,7 +19,7 @@ class Templater2 {
 	function __construct($tpl = '') { 
 		if ($tpl) $this->loadTemplate($tpl);
         //добавляем плагин по умолчанию
-        $this->addPlugin("tr", Zend_Registry::get('translate'));
+        $this->addPlugin("tr", \Core2\Registry::get('translate'));
 	}
 
     public function addPlugin($title, $obj)
@@ -314,6 +314,21 @@ class Templater2 {
      */
 	public function render() {
         return $this->parse();
+    }
+
+    /**
+     * заменяет блок $block значением $value
+     * @param $block
+     * @param $value
+     * @param $html
+     * @return array|mixed|string|string[]
+     */
+    public function replaceBlock($block, $value, $html = '') {
+        if (!$html) {
+            $html = $this->html;
+        }
+        $this->blocks[$block]['REPLACE'] = $value;
+        return str_replace("<!--$block-->", $value, $html);
     }
 
 }

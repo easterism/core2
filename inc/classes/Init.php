@@ -5,7 +5,7 @@ header('Content-Type: text/html; charset=utf-8');
 define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
 define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
-$autoload = DOC_ROOT . "core2/vendor/autoload.php";
+$autoload = __DIR__ . "/../../vendor/autoload.php";
 if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
@@ -14,8 +14,8 @@ require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
-require_once 'Zend_Registry.php'; //DEPRECATED
-require_once 'Registry.php'; //DEPRECATED
+require_once 'Registry.php';
+require_once 'Config.php';
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
@@ -24,11 +24,19 @@ use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Registry;
+use Core2\Tool;
+
+if ( ! empty($_SERVER['REQUEST_URI'])) {
+    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+        \Core2\Error::Exception("File not found", 404);
+    }
+}
 
 $conf_file = DOC_ROOT . "conf.ini";
 
 if (!file_exists($conf_file)) {
-    \Core2\Error::Exception("conf.ini is missing.");
+    \Core2\Error::Exception("conf.ini is missing.", 404);
 }
 $config = [
     'system'       => ['name' => 'CORE2'],
@@ -45,7 +53,8 @@ $config = [
             'charset' => 'utf8',
         ],
         'driver_options'=> [
-            \PDO::ATTR_TIMEOUT => 3,
+            \PDO::ATTR_TIMEOUT => 'ss',
+            \PDO::ATTR_PERSISTENT => true,
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
@@ -68,7 +77,6 @@ if (empty($config['temp'])) {
 
 //обрабатываем общий конфиг
 try {
-    $config = new Zend_Config($config, true);
 
     if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
         $options = getopt('m:a:p:s:', array(
@@ -83,14 +91,18 @@ try {
     }
 
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
-    $config2 = new Zend_Config_Ini($conf_file, $section);
+
+    $conf     = new Core2\Config($config);
+    $config   = $conf->getData()->merge($conf->readIni($conf_file, $section));
+
+
     $conf_d = DOC_ROOT . "conf.ext.ini";
     if (file_exists($conf_d)) {
-        $config2->merge(new Zend_Config_Ini($conf_d, $section));
+        $config->merge($conf->readIni($conf_d, $section));
     }
-    $config->merge($config2);
+
 }
-catch (Zend_Config_Exception $e) {
+catch (Exception $e) {
     \Core2\Error::Exception($e->getMessage());
 }
 
@@ -103,18 +115,21 @@ if ($config->debug->on) {
 }
 
 //проверяем настройки для базы данных
-if ($config->database->adapter === 'Pdo_Mysql') {
-    $config->database->params->adapterNamespace = 'Core_Db_Adapter';
-    //подключаем собственный адаптер базы данных
-    require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
-} elseif ($config->database->adapter === 'Pdo_Pgsql') {
-    $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
-    $config->database->schema = $config->database->params->dbname;
-    $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+if ($config->database) {
+    if ($config->database->adapter === 'Pdo_Mysql') {
+        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
+        //подключаем собственный адаптер базы данных
+        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
+    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
+        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
+        $config->database->schema = $config->database->params->dbname;
+        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+    }
 }
 
 //конфиг стал только для чтения
 $config->setReadOnly();
+
 
 if (isset($config->include_path) && $config->include_path) {
     set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
@@ -133,17 +148,17 @@ if ( ! empty($config->theme)) {
 ) {
     define('THEME', $config->system->theme->name);
 
-} else {
-    //define('THEME', 'default');
 }
-if (defined('THEME')) {
-    $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
-    if (!file_exists($theme_model)) {
-        \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
-    }
-    $tpls = file_get_contents($theme_model);
-    \Core2\Theme::set(THEME, $tpls);
+
+if (!defined('THEME')) define('THEME', 'default');
+
+$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+if (!file_exists($theme_model)) {
+    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
+$tpls = file_get_contents($theme_model);
+\Core2\Theme::set(THEME, $tpls);
+
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -171,18 +186,18 @@ if ($config->session) {
 }
 
 //сохраняем конфиг
-Zend_Registry::set('config', $config);
+Registry::set('config', $config);
 
 //обрабатываем конфиг ядра
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
-    $core_config = new Zend_Config_Ini($core_conf_file, 'production');
-    Zend_Registry::set('core_config', $core_config);
+    $config = new Core2\Config();
+    $core_config   = $config->readIni($core_conf_file);
+    Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
 require_once 'Db.php';
 require_once 'Common.php';
-require_once 'Templater.php'; //DEPRECATED
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
 require_once 'Login.php';
@@ -237,7 +252,6 @@ class Init extends \Core2\Db {
             $this->detectWebService();
 
             if ($this->is_rest || $this->is_soap) {
-                Zend_Registry::set('auth', new StdClass()); //DEPRECATED
                 Registry::set('auth', new StdClass());
                 return;
             }
@@ -246,14 +260,12 @@ class Init extends \Core2\Db {
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
                 $this->auth = $auth;
-                Zend_Registry::set('auth', $this->auth); //DEPRECATED
                 Registry::set('auth', $this->auth);
                 return; //выходим, если авторизация состоялась
             }
 
             if (PHP_SAPI === 'cli') {
                 $this->is_cli = true;
-                Zend_Registry::set('auth', new StdClass());  //DEPRECATED
                 Registry::set('auth', new StdClass());
                 return;
             }
@@ -280,7 +292,6 @@ class Init extends \Core2\Db {
                     $this->closeSession('Y');
                 }
             }
-            Zend_Registry::set('auth', $this->auth);  //DEPRECATED
             Registry::set('auth', $this->auth);
         }
 
@@ -305,16 +316,16 @@ class Init extends \Core2\Db {
 
                 $this->checkWebservice();
 
-                require_once DOC_ROOT . 'core2/inc/Interfaces/Delete.php'; //FIXME delete me
+                require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
 
-                $route = $this->routeParse();
-                if (isset($matches['module'])) { //DEPRECATED
-                    //for webservice < 2.6.0
-                    $route['version'] = $matches['version'];
-                } else {
-                    unset($route['module']);
-                    $route['version'] = $matches['version'];
+                $route            = $this->routeParse();
+                $route['version'] = $matches['version'];
+
+                if ( ! empty($matches['module'])) {
+                    $route['module'] = $matches['module'];
+                    $route['action'] = $matches['action'];
                 }
+
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route);
             }
@@ -395,7 +406,7 @@ class Init extends \Core2\Db {
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
             if (
-                empty($_GET['module']) &&
+                empty($_GET['module']) && empty($route['api']) &&
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
@@ -405,7 +416,8 @@ class Init extends \Core2\Db {
                     return $this->getMenuMobile();
                 }
                 return $this->getMenu();
-            } else {
+            }
+            else {
                 if (!empty($_POST)) {
                     //может ли xajax обработать запрос
                     $xajax = new xajax();
@@ -421,7 +433,7 @@ class Init extends \Core2\Db {
                 if ($this->deleteAction()) return '';
                 if ($this->switchAction()) return '';
 
-                $module = $route['module'];
+                $module = !empty($route['api']) ? $route['api'] : $route['module'];
                 if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
                 $action = $route['action'];
                 $this->setContext($module, $action);
@@ -460,10 +472,12 @@ class Init extends \Core2\Db {
                         }
                     } else {
                         $submodule_id = $module . '_' . $action;
+                        if ( ! $this->isModuleActive($submodule_id)) {
+                            throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
+                        }
                         $mods = $this->getSubModule($submodule_id);
 
                         //TODO перенести проверку субмодуля в контроллер модуля
-                        if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }
@@ -474,7 +488,7 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if (\Zend_Registry::get('route')['params'] || !\Zend_Registry::get('route')['query']) {
+                        if (!empty($route['api'])) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
                         }
@@ -606,7 +620,7 @@ class Init extends \Core2\Db {
                 if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
                     list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                     $user = $this->dataUsers->getUserByLogin($login);
-                    if (!$user || $user['u_pass'] !== \Tool::pass_salt(md5($password))) {
+                    if (!$user || $user['u_pass'] !== Tool::pass_salt(md5($password))) {
                         header("Location: " . DOC_PATH . "auth");
                         return;
                     }
@@ -672,7 +686,6 @@ class Init extends \Core2\Db {
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
                 ], 500);
             }
-            Zend_Registry::set('auth', new StdClass()); //DEPRECATED
             Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
@@ -864,7 +877,7 @@ class Init extends \Core2\Db {
         private function requireController($location, $modController) {
             $controller_path = $location . "/" . $modController . ".php";
             if (!file_exists($controller_path)) {
-                throw new Exception($this->translate->tr("Модуль не существует") . ": " . $location, 404);
+                throw new Exception($this->translate->tr("Модуль не найден") . ": " . $modController, 404);
             }
             $autoload = $location . "/vendor/autoload.php";
             if (file_exists($autoload)) { //подключаем автозагрузку если есть
@@ -981,7 +994,7 @@ class Init extends \Core2\Db {
                                 $module_js_list = $modController->topJs()
                             ) {
                                 foreach ($module_js_list as $k => $module_js) {
-                                    $modules_js[] = \Tool::addSrcHash($module_js);
+                                    $modules_js[] = Tool::addSrcHash($module_js);
                                 }
                             }
 
@@ -989,7 +1002,7 @@ class Init extends \Core2\Db {
                                 $module_css_list = $modController->topCss()
                             ) {
                                 foreach ($module_css_list as $k => $module_css) {
-                                    $modules_css[] = \Tool::addSrcHash($module_css);
+                                    $modules_css[] = Tool::addSrcHash($module_css);
                                 }
                             }
 
@@ -1568,7 +1581,7 @@ class Init extends \Core2\Db {
                     }
                 }
             }
-            \Zend_Registry::set('route', $route);
+            Registry::set('route', $route);
             return $route;
         }
 
@@ -1760,6 +1773,7 @@ class Init extends \Core2\Db {
 
             return '';
         }
+
     }
 
 
@@ -1775,22 +1789,22 @@ class Init extends \Core2\Db {
  * @throws Zend_Exception
  */
 function post($func, $loc, $data) {
-    $route      = \Zend_Registry::get('route');
+    $route      = Registry::get('route');
     if ($loc) {
         parse_str($loc, $route);
         $route['query'] = $_SERVER['QUERY_STRING'];
     }
-    $translate = Zend_Registry::get('translate');
+    $translate = Registry::get('translate');
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
     $acl = new \Core2\Acl();
 
-    \Core2\Registry::set('context', array($route['module'], $route['action']));
+    Registry::set('context', array($route['module'], $route['action']));
 
     if ($route['module'] == 'admin') {
-        require_once DOC_ROOT . 'core2/mod/admin/ModAjax.php';
+        require_once __DIR__ . "/../../mod/admin/ModAjax.php";
         $auth = Registry::get('auth');
         if ( ! $auth->ADMIN) throw new Exception(911);
 

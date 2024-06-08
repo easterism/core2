@@ -2,6 +2,9 @@
 require_once 'Acl.php';
 require_once 'Emitter.php';
 
+use Core2\Registry;
+use Core2\Emitter;
+use Core2\Tool;
 
 /**
  * Class Common
@@ -56,7 +59,7 @@ class Common extends \Core2\Acl {
 //        }
 
 		parent::__construct();
-        $reg     = \Core2\Registry::getInstance();
+        $reg     = Registry::getInstance();
 		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
 
         if ($mod_name) {
@@ -77,15 +80,6 @@ class Common extends \Core2\Acl {
 			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
-	}
-
-
-    /**
-     * @param string $k
-     * @return bool
-     */
-	public function __isset($k) {
-		return isset($this->_p[$k]);
 	}
 
 
@@ -112,7 +106,7 @@ class Common extends \Core2\Acl {
      * @throws Zend_Exception
      */
     public function getInvoker() {
-        return \Core2\Registry::get('invoker');
+        return Registry::get('invoker');
     }
 
 
@@ -121,153 +115,145 @@ class Common extends \Core2\Acl {
      * инстансы подключенных объектов хранятся в массиве $_p
      *
      * @param string $k
-     * @return Common|null|Zend_Db_Adapter_Abstract|Zend_Config_Ini|CoreController|mixed
+     * @return Common|null|Zend_Db_Adapter_Abstract|CoreController|mixed
      * @throws Exception
      */
     public function __get($k) {
+        $reg = Registry::getInstance();
+        if ($reg->isRegistered($k)) { //для стандартных объектов
+            return $reg->get($k);
+        }
+        if ($reg->isRegistered($k . "|")) { //подстараховка от случайной перезаписи ключа
+            return $reg->get($k . "|");
+        }
+
 		//исключение для герета базы или кеша, выполняется всегда
 		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
-			return parent::__get($k);
+            return parent::__get($k);
 		}
 		//геттер для модели
 		if (strpos($k, 'data') === 0) {
-			return parent::__get($k . "|" . $this->module);
+			return parent::__get($k);
 		}
-        if (strpos($k, 'worker') === 0) {
+        elseif (strpos($k, 'worker') === 0) {
             return parent::__get($k);
         }
 
 		$v = NULL;
 
-		if (array_key_exists($k, $this->_p)) {
-			$v = $this->_p[$k];
-		} else {
-			// Получение экземпляра класса для работы с правами пользователей
-			if ($k == 'acl') {
-				$v = $this->{$k} = Zend_Registry::getInstance()->get('acl');
-			}
-			elseif ($k === 'moduleConfig') {
 
-			    $module_config = $this->getModuleConfig($this->module);
+        if ($k === 'moduleConfig') {
 
-			    if ($module_config === false) {
-                    \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
-                } else {
-                    $v = $this->{$k} = $module_config;
+            $module_config = $this->getModuleConfig($this->module);
+
+            if ($module_config === false) {
+                \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+            } else {
+                $v = $module_config;
+            }
+        }
+        // Получение экземпляра контроллера указанного модуля
+        elseif (strpos($k, 'mod') === 0) {
+            $module = strtolower(substr($k, 3));
+            if ($module === 'admin') {
+                require_once(DOC_ROOT . 'core2/inc/CoreController.php');
+                $v         = new CoreController();
+            }
+            elseif ($location = $this->getModuleLocation($module)) {
+                if (!$this->isModuleActive($module)) {
+                    throw new Exception("Модуль \"{$module}\" не активен");
                 }
-			}
-			// Получение экземпляра контроллера указанного модуля
-			elseif (strpos($k, 'mod') === 0) {
-				$module = strtolower(substr($k, 3));
-				if ($module === 'admin') {
-					require_once(DOC_ROOT . 'core2/inc/CoreController.php');
-					$v         = $this->modAdmin = new CoreController();
-					$v->module = $module;
-				}
-                elseif ($location = $this->getModuleLocation($module)) {
-					if (!$this->isModuleActive($module)) {
-						throw new Exception("Модуль \"{$module}\" не активен");
-					}
 
-					$cl              = ucfirst($k) . 'Controller';
-					$controller_file = $location . '/' . $cl . '.php';
+                $cl              = ucfirst($k) . 'Controller';
+                $controller_file = $location . '/' . $cl . '.php';
 
-					if (!file_exists($controller_file)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
-					}
+                if (!file_exists($controller_file)) {
+                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
+                }
 
+                $autoload_file = $location . "/vendor/autoload.php";
+                if (file_exists($autoload_file)) {
+                    require_once($autoload_file);
+                }
+
+                require_once($controller_file);
+
+                if (!class_exists($cl)) {
+                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
+                }
+
+                $v = new $cl();
+                // $v->module = $module;
+
+            } else {
+                throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
+            }
+        }
+
+        // Получение экземпляра плагина для указанного модуля
+        elseif (strpos($k, 'plugin') === 0) {
+            $plugin = ucfirst(substr($k, 6));
+            $module = $this->module;
+            $location = $this->getModuleLocation($module);
+            $plugin_file = "{$location}/Plugins/{$plugin}.php";
+            if (!file_exists($plugin_file)) {
+                throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден."), $plugin));
+            }
+            require_once("CommonPlugin.php");
+            require_once($plugin_file);
+            $temp = "\\" . $module . "\\Plugins\\" . $plugin;
+            $v = new $temp();
+            $v->setModule($this->module);
+        }
+
+        // Получение экземпляра api класса указанного модуля
+        elseif (strpos($k, 'api') === 0) {
+            $module = substr($k, 3);
+            if ($k == 'api') {
+                $module = $this->module;
+            }
+
+            if ($this->isModuleActive($module)) {
+                $location = $module == 'Admin'
+                    ? DOC_ROOT . "core2/mod/admin"
+                    : $this->getModuleLocation($module);
+
+                $module     = ucfirst($module);
+                $module_api = "Mod{$module}Api";
+
+                if ( ! file_exists("{$location}/{$module_api}.php")) {
+                    return new stdObject();
+
+                } else {
                     $autoload_file = $location . "/vendor/autoload.php";
+
                     if (file_exists($autoload_file)) {
                         require_once($autoload_file);
                     }
 
-					require_once($controller_file);
+                    require_once "CommonApi.php";
+                    require_once "{$location}/{$module_api}.php";
 
-					if (!class_exists($cl)) {
-						throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден класс контроллера."), $module));
-					}
-
-					$v = $this->{$k} = new $cl();
-                    // $v->module = $module;
-
-				} else {
-					throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" не найден"), $module));
-				}
-			}
-
-			// Получение экземпляра плагина для указанного модуля
-			elseif (strpos($k, 'plugin') === 0) {
-                $plugin = ucfirst(substr($k, 6));
-                $module = $this->module;
-                $location = $this->getModuleLocation($this->module);
-                $plugin_file = "{$location}/Plugins/{$plugin}.php";
-                if (!file_exists($plugin_file)) {
-                    throw new Exception(sprintf($this->translate->tr("Плагин \"%s\" не найден."), $plugin));
-                }
-                require_once("CommonPlugin.php");
-                require_once($plugin_file);
-                $temp = "\\" . $module . "\\Plugins\\" . $plugin;
-                $v = $this->{$k} = new $temp();
-                $v->setModule($this->module);
-            }
-
-			// Получение экземпляра api класса указанного модуля
-			elseif (strpos($k, 'api') === 0) {
-                $module = substr($k, 3);
-                if ($k == 'api') {
-                    $module = $this->module;
-                }
-
-                if ($this->isModuleActive($module)) {
-                    $location = $module == 'Admin'
-                        ? DOC_ROOT . "core2/mod/admin"
-                        : $this->getModuleLocation($module);
-
-                    $module     = ucfirst($module);
-                    $module_api = "Mod{$module}Api";
-
-                    if ( ! file_exists("{$location}/{$module_api}.php")) {
+                    $api = new $module_api();
+                    if ( ! is_subclass_of($api, 'CommonApi')) {
                         return new stdObject();
-
-                    } else {
-                        $autoload_file = $location . "/vendor/autoload.php";
-
-                        if (file_exists($autoload_file)) {
-                            require_once($autoload_file);
-                        }
-
-                        require_once "CommonApi.php";
-                        require_once "{$location}/{$module_api}.php";
-
-                        $api = new $module_api();
-                        if ( ! is_subclass_of($api, 'CommonApi')) {
-                            return new stdObject();
-                        }
-
-                        $v = $this->{$k} = $api;
                     }
-                } else {
-                    return new stdObject();
+
+                    $v = $api;
                 }
-			}
-			else {
-				//$v = $this->{$k} = new \Laminas\Stdlib\ArrayObject();
-			}
-		}
+            } else {
+                return new stdObject();
+            }
+        }
+        else {
+            //$v = new \Laminas\Stdlib\ArrayObject();
+        }
+
+        $reg->set($k . "|", $v);
 
 		return $v;
 	}
 
-
-    /**
-     * @param string $k
-     * @param mixed  $v
-     * @return $this
-     */
-	public function __set($k, $v) {
-		$this->_p[$k] = $v;
-		return $this;
-	}
 
 	
 	/**
@@ -299,7 +285,8 @@ class Common extends \Core2\Acl {
 	 * @param string $href   CSS filename
      * @throws \Exception
 	 */
-	protected function printCssModule($module, $href) {
+	protected function printCssModule($module, $href): void {
+
         $src_mod = $this->getModuleLoc($module);
         Tool::printCss($src_mod . $href);
 	}
@@ -314,19 +301,17 @@ class Common extends \Core2\Acl {
 	protected function getCssModule(string $module, string $href): string {
 
         $src_mod = $this->getModuleLoc($module);
-        ob_start();
-        Tool::printCss($src_mod . $href);
-        return ob_get_clean();
+        return Tool::getCss($src_mod . $href);
 	}
 
 
 	/**
-	 * 
 	 * Print link to JS file
 	 * @param string $src - JS filename
 	 * @param bool   $chachable
 	 */
-	protected function printJs($src, $chachable = false) {
+	protected function printJs($src, $chachable = false): void {
+
         Tool::printJs($src, $chachable);
 	}
 
@@ -338,7 +323,8 @@ class Common extends \Core2\Acl {
 	 * @param bool   $chachable
      * @throws \Exception
 	 */
-	protected function printJsModule($module, $src, $chachable = false) {
+	protected function printJsModule($module, $src, $chachable = false): void {
+
 		$src_mod = $this->getModuleLoc($module);
         Tool::printJs($src_mod . $src, $chachable);
 	}
@@ -355,9 +341,7 @@ class Common extends \Core2\Acl {
 	protected function getJsModule(string $module, string $src, bool $chachable = false): string {
 
         $src_mod = $this->getModuleLoc($module);
-        ob_start();
-        Tool::printJs($src_mod . $src, $chachable);
-        return ob_get_clean();
+        return Tool::getJs($src_mod . $src, $chachable);
 	}
 
 
@@ -368,7 +352,7 @@ class Common extends \Core2\Acl {
      * @return array
      */
 	protected function emit($event_name, $data = []) {
-	    $em = new \Core2\Emitter($this, $this->module);
+	    $em = new Emitter($this, $this->module);
         $em->addEvent($event_name, $data);
         return $em->emit();
     }

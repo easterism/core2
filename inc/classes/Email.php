@@ -207,7 +207,7 @@ class Email extends Db {
 
         try {
             if (empty($this->mail_data['from'])) {
-                $config = \Zend_Registry::get('config');
+                $config = Registry::get('config');
 
                 if ($config->mail &&
                     $config->mail->username &&
@@ -407,23 +407,24 @@ class Email extends Db {
      * @return bool Успешна или нет отправка
      * @throws \Zend_Exception
      */
-    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '') {
+    public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '', array $queue_id = null) {
 
         $w = $this->workerAdmin->doBackground('Mailer', [
-            'from'  => $from,
-            'to'    => $to,
-            'subj'  => $subj,
-            'body'  => $body,
-            'cc'    => $cc,
-            'bcc'   => $bcc,
-            'files' => serialize($files),
-            'reply' => $reply,
+            'from'     => $from,
+            'to'       => $to,
+            'subj'     => $subj,
+            'body'     => $body,
+            'cc'       => $cc,
+            'bcc'      => $bcc,
+            'files'    => serialize($files),
+            'reply'    => $reply,
+            'queue_id' => $queue_id,
         ]);
         if ($w) {
             return;
         }
 
-        $config = \Zend_Registry::get('config');
+        $config = Registry::get('config');
 
         $message = new Mail\Message();
         $message->setEncoding('UTF-8');
@@ -607,6 +608,15 @@ class Email extends Db {
         }
         $message->setFrom($from_email, $from_name);
         $transport->send($message);
+
+        if ($queue_id) {
+            $where = $this->db->quoteInto('id IN(?)', $queue_id);
+            $this->db->update('mod_queue_mails', [
+                'date_send'  => date('Y-m-d H:i:s'),
+                'is_error'   => 'N',
+                'last_error' => '',
+            ], $where);
+        }
 
         return true;
     }
