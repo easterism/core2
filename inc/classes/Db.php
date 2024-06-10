@@ -613,8 +613,8 @@ class Db {
 	 * @param string $module_id
 	 * @return string
 	 */
-	final public function isModuleActive($module_id): bool {
-        $id = explode("_", $module_id);
+	final public function isModuleActive(string $module_id): bool {
+        $id = explode("_", strtolower($module_id));
         $mod = $this->getModule($id[0]);
         if (!$mod) return false;
         if (!empty($id[1])) {
