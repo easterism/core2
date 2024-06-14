@@ -188,7 +188,6 @@ class WorkerClient {
                 'module'    => $this->module,
                 'doc_root'  => DOC_ROOT,
                 'context'   => Registry::get('context'),
-                'translate' => serialize(Registry::get('translate')),
                 'worker'    => $worker
             ];
         }

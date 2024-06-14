@@ -11,6 +11,13 @@ require_once __DIR__ . '/../inc/classes/Core_Db_Adapter_Pdo_Mysql.php';
 class Workhorse
 {
 
+    private $_config;
+
+    public function __construct()
+    {
+        $this->_config = Registry::get('config');
+
+    }
 
     public function run($job, &$log) {
 
@@ -24,7 +31,6 @@ class Workhorse
         $_SERVER = get_object_vars($workload->server);
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
-            $config = unserialize($workload->config);
             Registry::set('context',     $workload->context);
             Registry::set('auth',        $workload->auth);
 
@@ -65,7 +71,7 @@ class Workhorse
                 $error = $e->getMessage();
             }
 
-            $db = new Db($config);
+            $db = new Db($this->_config);
             $db->db->update("core_worker_jobs", [
                 'time_finish' =>  (new \DateTime())->format("Y-m-d H:i:s"),
                 'status'    =>    'finish',
