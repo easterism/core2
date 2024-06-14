@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace Core2;
 
 require_once "Cache.php";
@@ -19,7 +20,7 @@ use Core2\Config as CoreConfig;
  * @property Log                       $log
  * @property Fact                      $fact
  * @property \CoreController           $modAdmin
- * @property \Session                  $dataSession
+ * @property Model\Session             $dataSession
  * @property LaminasConfig             $core_config
  * @property WorkerClient              $workerAdmin
  */
@@ -54,9 +55,6 @@ class Db {
 			$this->config = $config;
 		}
 
-		if ( ! $config) {
-		    return false;
-        }
 	}
 
 	/**
