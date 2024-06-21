@@ -201,20 +201,24 @@ class Acl extends Db {
 				}
 			}
 			$this->cache->setItem($key, $acl);
-			$this->cache->setItem($key . 'availRes', $resources);
-			$this->cache->setItem($key . 'availSubRes', $resources2);
 
 			$this->cache->setTags($key, array("role" . $auth->ROLEID));
-			$this->cache->setTags($key . 'availRes', array("role" . $auth->ROLEID));
-			$this->cache->setTags($key . 'availSubRes', array("role" . $auth->ROLEID));
 
 		}
 		else {
 			$acl = $this->cache->getItem($key);
-			$resources = $this->cache->getItem($key . 'availRes');
-			$resources2 = $this->cache->getItem($key . 'availSubRes');
 		}
 
+        $res = $acl->getResources();
+        $resources = [];
+        $resources2 = [];
+        foreach ($res as $re) {
+            if (strpos($re, '_')) {
+                $resources2[] = $re;
+            } else {
+                $resources[] = $re;
+            }
+        }
 		$registry->set('acl', $acl);
 		$registry->set('availRes', $resources);
 		$registry->set('availSubRes', $resources2);

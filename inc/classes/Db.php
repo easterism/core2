@@ -352,28 +352,18 @@ class Db {
 	 * @param string $resId
 	 * @return array
 	 */
-	public function getModuleName($resId) {
-		if ( ! ($this->cache->hasItem('module_name'))) {
-			$res = $this->db->fetchAll("
-                    SELECT m.m_name,
-                           sm.sm_name,
-                           m.module_id, 
-                           sm.sm_key
-                    FROM core_modules AS m
-                        LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id");
-            $data = [];
-            foreach ($res as $re) {
-                $data[$re['module_id']] = [$re['m_name']];
-            }
-            foreach ($res as $re) {
-                if ($re['sm_key']) $data[$re['module_id'] . "_" . $re['sm_key']] = [$re['m_name'], $re['sm_name']];
-            }
-            $this->cache->setItem('module_name', $data);
-		} else {
-            $data = $this->cache->getItem('module_name');
+	public function getModuleName(string $resId): array {
+        $module_id = explode('_', $resId);
+        $module = $this->getModule($module_id[0]);
+        if (!$module) return [];
+
+        $data = [$module['m_name']];
+		if (!empty($module_id[1])) {
+            if (!isset($module['submodules']) || !isset($module['submodules'][$module_id[1]])) return []; //модуль есть а субмодуля нет
+
+            $data[] = $module['submodules'][$module_id[1]]['sm_name'];
 		}
-		$res = isset($data[$resId]) ? $data[$resId] : [];
-		return $res;
+		return $data;
 	}
 
 
@@ -623,27 +613,15 @@ class Db {
 	 * @param string $module_id
 	 * @return string
 	 */
-	final public function isModuleActive($module_id) {
-        $is = $this->isModuleInstalled($module_id);
-        return $is && isset($is['visible']) && $is['visible'] === 'Y' ? true : false;
-	}
-
-
-	/**
-	 * Определяет, является ли субмодуль активным
-	 * Если модуль не активен, то все его субмодели НЕ активны, в независимости от значения в БД
-	 * @param $submodule_id
-	 *
-	 * @return string
-	 */
-	final public function isSubModuleActive($submodule_id) {
-        $mod = $this->getSubModule($submodule_id);
-		if ($mod) {
-			$is = 1;
-		} else {
-			$is = 0;
-		}
-		return $is;
+	final public function isModuleActive(string $module_id): bool {
+        $id = explode("_", strtolower($module_id));
+        $mod = $this->getModule($id[0]);
+        if (!$mod) return false;
+        if (!empty($id[1])) {
+            if (empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
+                $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+        }
+        return true;
 	}
 
 
@@ -652,18 +630,16 @@ class Db {
      * @param string $submodule_id
      * @return array|false
      */
-    public function getSubModule(string $submodule_id) {
+    final public function getSubModule(string $submodule_id): array {
 
         $this->getAllModules();
         $id = explode("_", $submodule_id);
 
         if (empty($id[1]) ||
             empty($this->_modules[$id[0]]) ||
-            $this->_modules[$id[0]]['visible'] !== 'Y' ||
-            empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
-            $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y'
+            empty($this->_modules[$id[0]]['submodules'][$id[1]])
         ) {
-            return false;
+            return [];
         }
 
         $submodule = $this->_modules[$id[0]]['submodules'][$id[1]];
@@ -673,6 +649,7 @@ class Db {
             'm_name'    => $this->_modules[$id[0]]['m_name'],
             'sm_path'   => $submodule['sm_path'],
             'sm_name'   => $submodule['sm_name'],
+            'visible'   => $submodule['visible'],
             'module_id' => $id[0],
             'is_system' => $this->_modules[$id[0]]['is_system'],
             'sm_id'     => $id[1],
@@ -770,8 +747,9 @@ class Db {
 	/**
 	 * @param string $module_id
 	 */
-	final public function getModule($module_id) {
-
+	final public function getModule(string $module_id): array {
+        $this->getAllModules();
+        return isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
 	}
 
 
