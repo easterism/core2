@@ -48,6 +48,7 @@ class Workhorse
             $handler = $job->handle();
             $db->db->insert("core_worker_jobs", [
                 'id'      =>    $id,
+                'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
                 'handler' =>    $handler,
                 'status'  =>    'start',
             ]);
