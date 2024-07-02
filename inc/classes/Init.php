@@ -53,7 +53,8 @@ $config = [
             'charset' => 'utf8',
         ],
         'driver_options'=> [
-            \PDO::ATTR_TIMEOUT => 3,
+            \PDO::ATTR_TIMEOUT => 'ss',
+            \PDO::ATTR_PERSISTENT => true,
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
@@ -147,17 +148,17 @@ if ( ! empty($config->theme)) {
 ) {
     define('THEME', $config->system->theme->name);
 
-} else {
-    //define('THEME', 'default');
 }
-if (defined('THEME')) {
-    $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
-    if (!file_exists($theme_model)) {
-        \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
-    }
-    $tpls = file_get_contents($theme_model);
-    \Core2\Theme::set(THEME, $tpls);
+
+if (!defined('THEME')) define('THEME', 'default');
+
+$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+if (!file_exists($theme_model)) {
+    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
+$tpls = file_get_contents($theme_model);
+\Core2\Theme::set(THEME, $tpls);
+
 
 //сохраняем параметры сессии
 if ($config->session) {
@@ -471,10 +472,12 @@ class Init extends \Core2\Db {
                         }
                     } else {
                         $submodule_id = $module . '_' . $action;
+                        if ( ! $this->isModuleActive($submodule_id)) {
+                            throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
+                        }
                         $mods = $this->getSubModule($submodule_id);
 
                         //TODO перенести проверку субмодуля в контроллер модуля
-                        if (!$mods) throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
                             throw new Exception(911);
                         }

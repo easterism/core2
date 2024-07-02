@@ -43,6 +43,7 @@ class editTable extends initEdit {
      * @var string
      */
     private $action = '';
+    private $acl;
 
     private $tpl_control = [
         'xfile_upload'   => __DIR__ . '/../../html/' . THEME . '/html/edit/file_upload.html',

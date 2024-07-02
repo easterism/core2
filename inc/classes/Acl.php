@@ -113,17 +113,16 @@ class Acl extends Db {
 
 
 			if ($auth->ROLE !== -1) {
-				$roles = $this->db->fetchAll("
-                    SELECT id, 
-                           name, 
+				$role = $this->db->fetchRow("
+                    SELECT name, 
                            access
 					FROM core_roles
-					WHERE is_active_sw = 'Y'
+					WHERE id=? AND is_active_sw = 'Y'
 					ORDER BY position DESC
-                ");
+                ", $auth->ROLEID);
 
 				$i = 1;
-				foreach ($roles as $role) {
+				if ($role) {
 					$roleName = $role['name'];
 					if (self::INHER_ROLES == 'Y') {
 						if ($i == 1) {
@@ -136,6 +135,7 @@ class Acl extends Db {
 					}
 
 					$access = unserialize($role['access']);
+
                     if ( ! empty($access)) {
                         foreach ($access as $type => $data) {
                             if ( ! str_contains($type, 'default')) {
@@ -231,20 +231,24 @@ class Acl extends Db {
 				}
 			}
 			$this->cache->setItem($key, $acl);
-			$this->cache->setItem($key . 'availRes', $resources);
-			$this->cache->setItem($key . 'availSubRes', $resources2);
 
 			$this->cache->setTags($key, array("role" . $auth->ROLEID));
-			$this->cache->setTags($key . 'availRes', array("role" . $auth->ROLEID));
-			$this->cache->setTags($key . 'availSubRes', array("role" . $auth->ROLEID));
 
 		}
 		else {
 			$acl = $this->cache->getItem($key);
-			$resources = $this->cache->getItem($key . 'availRes');
-			$resources2 = $this->cache->getItem($key . 'availSubRes');
 		}
 
+        $res = $acl->getResources();
+        $resources = [];
+        $resources2 = [];
+        foreach ($res as $re) {
+            if (strpos($re, '_')) {
+                $resources2[] = $re;
+            } else {
+                $resources[] = $re;
+            }
+        }
 		$registry->set('acl', $acl);
 		$registry->set('availRes', $resources);
 		$registry->set('availSubRes', $resources2);

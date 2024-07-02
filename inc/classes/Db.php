@@ -35,11 +35,9 @@ class Db {
      */
     private $_core_config;
 
-    private $_s         = array();
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
-    private $_db = [];
     private $_counter = 0;
     private string $schemaName = 'public';
 
@@ -68,17 +66,15 @@ class Db {
 	 * @throws \Exception
 	 */
 	public function __get($k) {
-        $k_module = $k;
-        $k        = explode("|", $k);
-        $module   = isset($k[1]) ? $k[1] : 'admin';
-        $k        = $k[0];
+        $reg      = Registry::getInstance();
+        $module = isset($this->module) ? $this->module : 'admin';
+        $k_module = $k . "|" . $module;
 
 		if ($k == 'core_config') {
-            $this->_core_config = Registry::get('core_config');
+            if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
             return $this->_core_config;
         }
 		if ($k == 'db') {
-            $reg = Registry::getInstance();
 //            if ($reg->isRegistered('invoker')) {
 //                $k_module = $k . "|" . $reg->get('invoker');
 //            }
@@ -90,29 +86,31 @@ class Db {
                     $module_config = $this->getModuleConfig($module);
 
                     if ($module_config && $module_config->database) {
-                        $db = $this->getConnection($module_config->database);
-
+                        // у этого модуля собственный адаптер
+                        $db = $this->establishConnection($module_config->database);
                         $reg->set($k_module, $db);
                         return $db;
                     } else {
-                        $reg->set($k_module, 'db');
-                        $k_module = 'db';
-                        if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                        $reg->set($k_module, 'db'); //храним в реестре только указание, что $k_module будет использовать подключение по умолчанию
+                        if ($reg->isRegistered('db|admin')) {
+                            $db = $reg->get('db|admin');
+                            return $db;
+                        }
                     }
                 }
-                //подключение к базе по умолчанию
+                //подключение к базе по умолчанию (выполняется 1 раз)
                 $db = $this->establishConnection($this->config->database);
                 \Zend_Db_Table::setDefaultAdapter($db);
-                $reg->set($k_module, $db);
+                $reg->set('db|admin', $db);
 
             }
 			$db = $reg->get($k_module);
-            if ($db === 'db') $db = $reg->get('db');
+            if ($db === 'db') $db = $reg->get('db|admin');
 			return $db;
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-			$reg = Registry::getInstance();
+            $k = $k . '|';
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
@@ -145,42 +143,34 @@ class Db {
 
                 $v = new Cache($adapter, $adapter_name);
 				$reg->set($k, $v);
-			} else {
+			}
+            else {
 				$v = $reg->get($k);
 			}
 			return $v;
 		}
 		// Получение экземпляра переводчика
         elseif ($k == 'translate') {
-			if (array_key_exists($k, $this->_s)) {
-				$v = $this->_s[$k];
-			} else {
-				$v = Registry::get('translate');
-				$this->_s[$k] = $v;
-			}
-			return $v;
+			return $reg->get($k);
 		}
 		// Получение экземпляра логера
 		elseif ($k == 'log') {
-			if (array_key_exists($k, $this->_s)) {
-				$v = $this->_s[$k];
-			} else {
-				$v = new Log();
-				$this->_s[$k] = $v;
-			}
+            $k = $k . '|';
+            if (!$reg->isRegistered($k)) {
+                $v = new Log();
+                $reg->set($k, $v);
+            } else {
+                $v = $reg->get($k);
+            }
 			return $v;
 		}
         // Получение экземпляра воркера
         elseif (strpos($k, 'worker') === 0) {
-            if (array_key_exists('worker', $this->_s)) {
-                $v = $this->_s['worker'];
-            } else {
-//                if ($this->db->getTransactionLevel()) {
-//                    throw new \Exception($this->translate->tr("You can't use worker until database is on transaction."));
-//                }
-//                $this->db->closeConnection();
+            if (!$reg->isRegistered('worker|')) {
                 $v = new WorkerClient();
-                $this->_s['worker'] = $v;
+                $reg->set('worker|', $v);
+            } else {
+                $v = $reg->get('worker|');
             }
 
             $module = substr($k, 6);
@@ -201,8 +191,8 @@ class Db {
         }
 		// Получение экземпляра модели текущего модуля
 		elseif (strpos($k, 'data') === 0) {
-			if (array_key_exists($k, $this->_s)) {
-				$v = $this->_s[$k];
+            if ($reg->isRegistered($k)) {
+                $v = $reg->get($k);
 			} else {
 
 				$model    = substr($k, 4);
@@ -224,24 +214,25 @@ class Db {
 				require_once($location . "/Model/$model.php");
                 $db = $this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
                 if ($module == 'admin') $model = "\Core2\Model\\$model";
-                else {
-                    $module_config = $this->getModuleConfig($module);
-                    if ($module_config && $module_config->database) {
-                        $db = $this->getConnection($module_config->database);
-                    }
-                }
+//                else {
+//                    $module_config = $this->getModuleConfig($module);
+//                    if ($module_config && $module_config->database) {
+//                        $db = $this->getConnection($module_config->database);
+//                    }
+//                }
                 $v            = new $model($db);
-                $this->_s[$k] = $v;
+                $reg->set($k, $v);
 			}
 			return $v;
 		}
         // Получение экземпляра регистратора фактов
         elseif ($k == 'fact') {
-            if (array_key_exists($k, $this->_s)) {
-                $v = $this->_s[$k];
-            } else {
+            $k = $k . '|';
+            if (!$reg->isRegistered($k)) {
                 $v = new Fact();
-                $this->_s[$k] = $v;
+                $reg->set($k, $v);
+            } else {
+                $v = $reg->get($k);
             }
             return $v;
         }
@@ -361,28 +352,18 @@ class Db {
 	 * @param string $resId
 	 * @return array
 	 */
-	public function getModuleName($resId) {
-		if ( ! ($this->cache->hasItem('module_name'))) {
-			$res = $this->db->fetchAll("
-                    SELECT m.m_name,
-                           sm.sm_name,
-                           m.module_id, 
-                           sm.sm_key
-                    FROM core_modules AS m
-                        LEFT JOIN core_submodules AS sm ON sm.m_id = m.m_id");
-            $data = [];
-            foreach ($res as $re) {
-                $data[$re['module_id']] = [$re['m_name']];
-            }
-            foreach ($res as $re) {
-                if ($re['sm_key']) $data[$re['module_id'] . "_" . $re['sm_key']] = [$re['m_name'], $re['sm_name']];
-            }
-            $this->cache->setItem('module_name', $data);
-		} else {
-            $data = $this->cache->getItem('module_name');
+	public function getModuleName(string $resId): array {
+        $module_id = explode('_', $resId);
+        $module = $this->getModule($module_id[0]);
+        if (!$module) return [];
+
+        $data = [$module['m_name']];
+		if (!empty($module_id[1])) {
+            if (!isset($module['submodules']) || !isset($module['submodules'][$module_id[1]])) return []; //модуль есть а субмодуля нет
+
+            $data[] = $module['submodules'][$module_id[1]]['sm_name'];
 		}
-		$res = isset($data[$resId]) ? $data[$resId] : [];
-		return $res;
+		return $data;
 	}
 
 
@@ -632,27 +613,15 @@ class Db {
 	 * @param string $module_id
 	 * @return string
 	 */
-	final public function isModuleActive($module_id) {
-        $is = $this->isModuleInstalled($module_id);
-        return $is && isset($is['visible']) && $is['visible'] === 'Y' ? true : false;
-	}
-
-
-	/**
-	 * Определяет, является ли субмодуль активным
-	 * Если модуль не активен, то все его субмодели НЕ активны, в независимости от значения в БД
-	 * @param $submodule_id
-	 *
-	 * @return string
-	 */
-	final public function isSubModuleActive($submodule_id) {
-        $mod = $this->getSubModule($submodule_id);
-		if ($mod) {
-			$is = 1;
-		} else {
-			$is = 0;
-		}
-		return $is;
+	final public function isModuleActive(string $module_id): bool {
+        $id = explode("_", strtolower($module_id));
+        $mod = $this->getModule($id[0]);
+        if (!$mod) return false;
+        if (!empty($id[1])) {
+            if (empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
+                $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+        }
+        return true;
 	}
 
 
@@ -661,18 +630,16 @@ class Db {
      * @param string $submodule_id
      * @return array|false
      */
-    public function getSubModule(string $submodule_id) {
+    final public function getSubModule(string $submodule_id): array {
 
         $this->getAllModules();
         $id = explode("_", $submodule_id);
 
         if (empty($id[1]) ||
             empty($this->_modules[$id[0]]) ||
-            $this->_modules[$id[0]]['visible'] !== 'Y' ||
-            empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
-            $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y'
+            empty($this->_modules[$id[0]]['submodules'][$id[1]])
         ) {
-            return false;
+            return [];
         }
 
         $submodule = $this->_modules[$id[0]]['submodules'][$id[1]];
@@ -682,6 +649,7 @@ class Db {
             'm_name'    => $this->_modules[$id[0]]['m_name'],
             'sm_path'   => $submodule['sm_path'],
             'sm_name'   => $submodule['sm_name'],
+            'visible'   => $submodule['visible'],
             'module_id' => $id[0],
             'is_system' => $this->_modules[$id[0]]['is_system'],
             'sm_id'     => $id[1],
@@ -779,8 +747,9 @@ class Db {
 	/**
 	 * @param string $module_id
 	 */
-	final public function getModule($module_id) {
-
+	final public function getModule(string $module_id): array {
+        $this->getAllModules();
+        return isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
 	}
 
 
@@ -865,7 +834,7 @@ class Db {
         if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $db = $this->getConnection($this->config->database);
+            $db = $this->db;
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);
             $res    = $m->fetchAll($m->select()->order('seq'));
