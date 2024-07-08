@@ -36,7 +36,7 @@ class Workhorse
 
             $db = new Db();
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
-            if ($in_job) {
+            if ($in_job && $in_job['status'] !== 'finish') {
                 //задача уже обрабатывается
                 return;
             }
@@ -45,12 +45,14 @@ class Workhorse
 
             $controller = $this->requireController($workload->module, $workload->location);
 
-            $handler = $job->handle();
-            $db->db->insert("core_worker_jobs", [
-                'id'      =>    $id,
-                'handler' =>    $handler,
-                'status'  =>    'start',
-            ]);
+            if (!$in_job) {
+                $db->db->insert("core_worker_jobs", [
+                    'id' => $id,
+                    'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
+                    'handler' => $job->handle(),
+                    'status' => 'start',
+                ]);
+            }
             $db->db->closeConnection();
 
             define("DOC_ROOT", $workload->doc_root);
