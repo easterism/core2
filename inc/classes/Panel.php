@@ -329,7 +329,7 @@ class Panel {
         $tpl->assign('[WRAPPER_TYPE]', $wrapper_type);
 
         if ( ! empty($this->tabs)) {
-            $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
+            $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"min-width:{$this->tabs_width}px;width:{$this->tabs_width}px\"" : '');
 
             $tabs_load_count = [];
 
