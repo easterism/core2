@@ -282,19 +282,6 @@ class Panel {
             $tpl->content_top->assign('[CONTENT]', $this->content);
 
         } else {
-            $styles = "";
-
-            if ($this->tabs_width) {
-                $margin_width = $this->tabs_width - 1;
-
-                switch ($this->position) {
-                    case self::POSITION_LEFT:  $styles = "style=\"margin-left:{$margin_width}px\""; break;
-                    case self::POSITION_RIGHT: $styles = "style=\"margin-right:{$margin_width}px\""; break;
-                    default: $styles = "";
-                }
-            }
-
-            $tpl->content_bottom->assign('[STYLES]',  $styles);
             $tpl->content_bottom->assign('[CONTENT]', $this->content);
         }
 
