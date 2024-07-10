@@ -1381,17 +1381,33 @@ class WorkerManager {
 
         $thisWorker->setTimeout(5000);
 
+        $connected = false;
+
         foreach ($this->servers as $s) {
-            $this->toLog("Adding server $s", self::LOG_LEVEL_WORKER_INFO);
+            $this->toLog("Adding server $s", self::LOG_LEVEL_PROC_INFO);
             // see: https://bugs.php.net/bug.php?id=63041
-            try {
-                $thisWorker->addServers($s);
-            } catch (\GearmanException $e) {
-                if ($e->getMessage() !== 'Failed to set exception option') {
-                    throw $e;
+            $c = new \GearmanClient();
+            $c->addServers($s);
+            //проверяем, отвечает ли сервер
+            if (@$c->ping('ping')) {
+                try {
+                    $thisWorker->addServers($s);
+                } catch (\GearmanException $e) {
+                    if ($e->getMessage() !== 'Failed to set exception option') {
+                        continue; //это баг старых версий
+                    }
                 }
+                $connected = true;
             }
+
         }
+
+        if (!$connected) {
+            $this->toLog("Job server not connected! waiting...", self::LOG_LEVEL_PROC_INFO);
+            $this->stop_work = true;
+            return;
+        }
+
         $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
         $dd = trim($dd, '-');
         foreach ($worker_list as $w) {
@@ -1425,11 +1441,11 @@ class WorkerManager {
 
             }
 
-            if ($died > 2) {
+            if ($died == 1) {
                 //сервер не отвечает слишком долго
                 if (array_search("127.0.0.1", $this->servers) || array_search("127.0.0.1:4730", $this->servers)) {
                     //попытаемся перезапустить локальный сервер если он есть
-                    $this->toLog("!!! Restarting job server !!!", self::LOG_LEVEL_WORKER_INFO);
+                    $this->toLog("!!! Restarting job server !!!", self::LOG_LEVEL_INFO);
                     $this->stop_work = true;
                     exec('sudo systemctl restart gearman-job-server.service');
                 } else {
