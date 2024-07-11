@@ -28,16 +28,17 @@ class Login extends \Common {
 
         if (isset($route['api'])) {
             header('HTTP/1.1 401 Unauthorized');
-            if (!$route['action'] && $this->core_config->auth) {
+            if ($this->core_config->auth) {
+                //значит возможна авторизация по заданной схеме
                 if ($this->core_config->auth->scheme == 'basic') {
                     try {
-                        if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+                        if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
                             if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
                                 list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                                 $user = $this->dataUsers->getUserByLogin($login);
                                 if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
                                     if ($this->auth($user)) {
-                                        header("Location: " . DOC_PATH);
+                                        header("Location: " . $_SERVER['REQUEST_URI']);
                                         return;
                                     }
                                 }
