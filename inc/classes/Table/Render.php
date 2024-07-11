@@ -657,38 +657,41 @@ class Render extends Acl {
 
                                         case 'days':
                                             if ($period_count >= 0) {
-                                                $period_start = date('Y-m-d', strtotime("-{$period_count} days"));
-                                                $period_end   = date('Y-m-d');
-
-                                                $checked = $period_start == $date_start && $period_end == $date_end;
+                                                $period_start = date('Y-m-d');
+                                                $period_end   = date('Y-m-d', strtotime("{$period_count} days"));
 
                                             } else {
-                                                $checked = empty($date_start) && empty($date_end);
+                                                $period_start = date('Y-m-d', strtotime("{$period_count} days"));
+                                                $period_end   = date('Y-m-d');
                                             }
+
+                                            $checked = $period_start == $date_start && $period_end == $date_end;
                                             break;
 
                                         case 'month':
-                                            if ($period_count >= 0) {
-                                                $period_start = date('Y-m-01', strtotime("-{$period_count} month"));
-                                                $period_end   = date('Y-m-d');
-
-                                                $checked = $period_start == $date_start && $period_end == $date_end;
+                                            if ($period_count > 0) {
+                                                $period_start = date('Y-m-d');
+                                                $period_end   = date('Y-m-t', strtotime("{$period_count} month"));
 
                                             } else {
-                                                $checked = empty($date_start) && empty($date_end);
+                                                $period_start = date('Y-m-01', strtotime("{$period_count} month"));
+                                                $period_end   = date('Y-m-d');
                                             }
+
+                                            $checked = $period_start == $date_start && $period_end == $date_end;
                                             break;
 
                                         case 'year':
-                                            if ($period_count >= 0) {
-                                                $period_start = date('Y-01-01', strtotime("-{$period_count} year"));
-                                                $period_end   = date('Y-m-d');
-
-                                                $checked = $period_start == $date_start && $period_end == $date_end;
+                                            if ($period_count > 0) {
+                                                $period_start = date('Y-m-d');
+                                                $period_end   = date('Y-12-31', strtotime("{$period_count} year"));
 
                                             } else {
-                                                $checked = empty($date_start) && empty($date_end);
+                                                $period_start = date('Y-01-01', strtotime("{$period_count} year"));
+                                                $period_end   = date('Y-m-d');
                                             }
+
+                                            $checked = $period_start == $date_start && $period_end == $date_end;
                                             break;
                                     }
 

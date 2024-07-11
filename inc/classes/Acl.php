@@ -34,39 +34,50 @@ class Acl extends Db {
 
 
     /**
-     * @throws \Exception
+     * @return void
      */
-	public function setupAcl() {
+	public function setupAcl(): void {
 
 		$registry 	= Registry::getInstance();
 		$registry->set('addRes', $this->addRes);
 		$auth 		= $registry->get('auth');
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
-//        $this->cache->clean($key);
+        // $this->cache->clean($key);
 
-		if (!($this->cache->hasItem($key))) {
+        if ( ! $this->cache->hasItem($key)) {
 			$acl = new LaminasAcl();
-			$SQL = "SELECT *
-					  FROM (
-						(SELECT module_id, m.seq, m.access_default, m.access_add
-						  FROM core_modules AS m
-						  WHERE visible='Y'
-						  ORDER BY seq)
-						UNION ALL
-						(SELECT CONCAT(m.module_id, '_', s.sm_key) AS module_id, m.seq, s.access_default, s.access_add
-							FROM core_submodules AS s
-								 INNER JOIN core_modules AS m ON m.m_id = s.m_id AND m.visible='Y'
-							WHERE sm_id > 0 AND s.visible='Y'
-						   ORDER BY m.seq, s.seq)
-					   ) AS a ORDER BY 2";
-			$res = $this->db->fetchAll($SQL);
+			$res = $this->db->fetchAll("
+			    SELECT *
+                FROM (
+                    (SELECT module_id, 
+                            m.seq, 
+                            m.access_default, 
+                            m.access_add
+                     FROM core_modules AS m
+                     WHERE visible = 'Y'
+                     ORDER BY seq)
+                    
+                    UNION ALL
+                    
+                    (SELECT CONCAT(m.module_id, '_', s.sm_key) AS module_id, 
+                            m.seq, 
+                            s.access_default, 
+                            s.access_add
+                     FROM core_submodules AS s
+                         INNER JOIN core_modules AS m ON m.m_id = s.m_id AND m.visible = 'Y'
+                     WHERE sm_id > 0 
+                       AND s.visible = 'Y'
+                     ORDER BY m.seq, s.seq)
+                ) AS a 
+                ORDER BY 2
+			");
 			// ADD ALL AVAILABLE RESOURCES
-			$resources = array();
-			$resources2 = array();
-			$access_default = array();
+            $modules        = [];
+            $submodules     = [];
+            $access_default = [];
 
-			// Если не назначена роль, добавляем виртуальную роль в ACL
+            // Если не назначена роль, добавляем виртуальную роль в ACL
 			if ($auth->ROLE === -1) {
 				$acl->addRole(new Role($auth->ROLE));
 			}
@@ -83,8 +94,8 @@ class Acl extends Db {
 					if ($temp && is_array($temp)) $access_default[$data['module_id']] += $temp;
 				}
 				$mod2 = explode('_', $data['module_id']);
-				if (!in_array($mod2[0], $resources)) {
-					$resources[] = $mod2[0];
+				if (!in_array($mod2[0], $modules)) {
+					$modules[] = $mod2[0];
 					$acl->addResource(new Resource($mod2[0]));
 				}
 			}
@@ -93,8 +104,8 @@ class Acl extends Db {
 			foreach ($res as $data) {
 				$mod2 = explode('_', $data['module_id']);
 				if (!empty($mod2[1])) {
-					if (!in_array($data['module_id'], $resources2)) {
-						$resources2[] = $data['module_id'];
+					if (!in_array($data['module_id'], $submodules)) {
+						$submodules[] = $data['module_id'];
 						$acl->addResource(new Resource($data['module_id']), $mod2[0]);
 					}
 				}
@@ -106,7 +117,8 @@ class Acl extends Db {
                     SELECT name, 
                            access
 					FROM core_roles
-					WHERE id=? AND is_active_sw = 'Y'
+					WHERE id = ? 
+					  AND is_active_sw = 'Y'
 					ORDER BY position DESC
                 ", $auth->ROLEID);
 
@@ -126,42 +138,61 @@ class Acl extends Db {
 					$access = unserialize($role['access']);
 
                     if ( ! empty($access)) {
-                        foreach ($access as $type => $data) {
-                            if (strpos($type, 'default') === false) {
+                        foreach ($access as $type => $resources) {
+                            if ( ! str_contains($type, 'default')) {
 
-                                foreach ($resources2 as $availSubRes) {
-                                    if (!empty($data[str_replace('_', '-', $availSubRes)])) {
-                                        $acl->allow($roleName, $availSubRes, $type);
+                                foreach ($modules as $module) {
+                                    if ( ! empty($resources[$module])) {
+                                        $acl->allow($roleName, $module, $type);
                                     } else {
-                                        $acl->deny($roleName, $availSubRes, $type);
+                                        $acl->deny($roleName, $module, $type);
                                     }
                                 }
-                                foreach ($resources as $availRes) {
-                                    if (!empty($data[$availRes])) {
-                                        $acl->allow($roleName, $availRes, $type);
+                                foreach ($submodules as $submodule) {
+                                    if ( ! empty($resources[str_replace('_', '-', $submodule)])) {
+                                        $acl->allow($roleName, $submodule, $type);
                                     } else {
-                                        $acl->deny($roleName, $availRes, $type);
+                                        $acl->deny($roleName, $submodule, $type);
                                     }
                                 }
                             }
                         }
-                        foreach ($access as $type => $data) {
-                            if (strpos($type, 'default') !== false) {
 
+                        foreach ($access as $type => $recourses) {
+                            if (str_contains($type, 'default')) {
                                 $type = explode('_', $type);
-                                $type = !empty($type[1]) ? $type[0] : 'access';
+                                $type = ! empty($type[1]) ? $type[0] : 'access';
 
-                                foreach ($data as $res => $on) {
+                                foreach ($recourses as $res => $on) {
                                     $res = str_replace('-', '_', $res);
-                                    if (!empty($access_default[$res])) {
-                                        if (isset($access_default[$res][$type]) && $access_default[$res][$type] === 'on') $acl->allow($roleName, $res, $type); // если в настройках модуля установлен access
+                                    if ( ! empty($access_default[$res])) {
+                                        if (isset($access_default[$res][$type]) && $access_default[$res][$type] === 'on') {
+                                            // если в настройках модуля установлен access
+                                            $acl->allow($roleName, $res, $type);
+                                        }
 
-                                        if (isset($access_default[$res][$type . "_all"]) && $access_default[$res][$type . "_all"] === 'on') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля установлен all
-                                        elseif (isset($access_default[$res][$type . "_owner"]) && $access_default[$res][$type . "_owner"] === 'on') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля установлен owner
+                                        if (isset($access_default[$res][$type . "_all"]) &&
+                                            $access_default[$res][$type . "_all"] === 'on'
+                                        ) {
+                                            // если в настройках модуля установлен all
+                                            $acl->allow($roleName, $res, $type . "_all");
+
+                                        } elseif (isset($access_default[$res][$type . "_owner"]) &&
+                                                  $access_default[$res][$type . "_owner"] === 'on'
+                                        ) {
+                                            // если в настройках модуля установлен owner
+                                            $acl->allow($roleName, $res, $type . "_owner");
+                                        }
 
                                         if (isset($access_default[$res][$type])) {
-                                            if ($access_default[$res][$type] === 'all') $acl->allow($roleName, $res, $type . "_all"); // если в настройках модуля для кастомного правила установлен all
-                                            elseif ($access_default[$res][$type] === 'owner') $acl->allow($roleName, $res, $type . "_owner"); // если в настройках модуля для кастомного правила установлен owner
+                                            if ($access_default[$res][$type] === 'all') {
+                                                // если в настройках модуля для кастомного правила установлен all
+                                                $acl->allow($roleName, $res, $type . "_all");
+
+                                            } elseif ($access_default[$res][$type] === 'owner') {
+                                                // если в настройках модуля для кастомного правила установлен owner
+                                                $acl->allow($roleName, $res, $type . "_owner");
+                                            }
                                         }
                                     }
                                 }
@@ -193,9 +224,11 @@ class Acl extends Db {
 						}
 					}
 				}
+
+                // TODO Непонятный кусок кода. Зачем использовать переменную из другого цикла?
 				if ( ! empty($data) && $data['access_default']) {
-					$access = unserialize(base64_decode($data['access_default']));
-					foreach ($access as $type => $f) {
+					$access_default = unserialize(base64_decode($data['access_default']));
+					foreach ($access_default as $type => $f) {
 						$acl->allow($auth->ROLE, $data['module_id'], $type);
 					}
 				}
@@ -209,20 +242,21 @@ class Acl extends Db {
 			$acl = $this->cache->getItem($key);
 		}
 
-        $res = $acl->getResources();
-        $resources = [];
-        $resources2 = [];
+        $res        = $acl->getResources();
+        $modules    = [];
+        $submodules = [];
+
         foreach ($res as $re) {
             if (strpos($re, '_')) {
-                $resources2[] = $re;
+                $submodules[] = $re;
             } else {
-                $resources[] = $re;
+                $modules[] = $re;
             }
         }
-		$registry->set('acl', $acl);
-		$registry->set('availRes', $resources);
-		$registry->set('availSubRes', $resources2);
 
+		$registry->set('acl', $acl);
+		$registry->set('availRes', $modules);
+		$registry->set('availSubRes', $submodules);
 	}
 
 

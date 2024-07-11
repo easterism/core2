@@ -513,34 +513,52 @@ class Tool {
      */
     public static function multisort(array $data, array $fields): array {
 
-        $args = [];
+        $sort_fields = [];
 
-        foreach ($fields as $field) {
+        foreach ($fields as $name => $field) {
+            if (is_string($name) && $name) {
+                if (is_array($field)) {
+                    $order = in_array(($field[0] ?? null), ['desc', SORT_DESC]) ? SORT_DESC : SORT_ASC;
+                    $flag  = $field[1] ?? SORT_REGULAR;
 
-            if ( ! isset($field['field']) ||
-                 ! isset($field['order']) ||
-                 ! is_string($field['field']) ||
-                 ! is_string($field['order'])
-            ) {
-                continue;
-            }
+                } else {
+                    $order = in_array($field, ['desc', SORT_DESC]) ? SORT_DESC : SORT_ASC;
+                    $flag  = SORT_REGULAR;
+                }
 
-            $args[] = array_map(function($row) use($field) {
-                return is_array($row) ? ($row[$field['field']] ?? null) : null;
-            }, $data);
+                $sort_fields[] = [
+                    'field' => $name,
+                    'order' => $order,
+                    'flag'  => $flag,
+                ];
 
-            if ($field['order'] === 'asc') {
-                $args[] = SORT_ASC;
             } else {
-                $args[] = SORT_DESC;
+                if (is_array($field) && ! empty($field['field'])) {
+                    $sort_fields[] = [
+                        'field' => $field['field'],
+                        'order' => in_array(($field['order'] ?? null), ['desc', SORT_DESC]) ? SORT_DESC : SORT_ASC,
+                        'flag'  => $field['flag'] ?? SORT_REGULAR,
+                    ];
+                }
             }
-
-            $args[] = $field['flag'] ?? SORT_REGULAR;
         }
 
-        $args[] = &$data;
+        if ( ! empty($sort_fields)) {
+            $args = [];
 
-        call_user_func_array("array_multisort", $args);
+            foreach ($sort_fields as $field) {
+                $args[] = array_map(function($row) use($field) {
+                    return is_array($row) ? ($row[$field['field']] ?? null) : null;
+                }, $data);
+
+                $args[] = $field['order'] === SORT_DESC ? SORT_DESC : SORT_ASC;
+                $args[] = $field['flag'] ?? SORT_REGULAR;
+            }
+
+            $args[] = &$data;
+
+            call_user_func_array("array_multisort", $args);
+        }
 
         return $data;
     }

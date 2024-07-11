@@ -1404,6 +1404,7 @@ class WorkerManager {
         register_shutdown_function(array($this, 'fatal_handler'));
 
         $start = time();
+        $died = 0;
 
         while (!$this->stop_work) {
 
@@ -1415,8 +1416,24 @@ class WorkerManager {
 
                 if (!@$thisWorker->wait()) {
                     if ($thisWorker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
+                        # We are not connected to any servers, so wait a bit before
+                        # trying to reconnect.
+                        $died++;
                         sleep(5);
                     }
+                }
+
+            }
+
+            if ($died > 2) {
+                //сервер не отвечает слишком долго
+                if (array_search("127.0.0.1", $this->servers) || array_search("127.0.0.1:4730", $this->servers)) {
+                    //попытаемся перезапустить локальный сервер если он есть
+                    $this->toLog("!!! Restarting job server !!!", self::LOG_LEVEL_WORKER_INFO);
+                    $this->stop_work = true;
+                    exec('sudo systemctl restart gearman-job-server.service');
+                } else {
+                    //TODO вдруг можно перезапустить не локальные серверы
                 }
             }
 
@@ -1605,7 +1622,7 @@ class WorkerManager {
             $errfile = $error["file"];
             $errline = $error["line"];
             $errstr  = $error["message"];
-            $trace   = print_r(debug_backtrace( false ), true);
+            $trace   = print_r(debug_backtrace(), true);
             if ($this->verbose == self::LOG_LEVEL_DEBUG) echo $errstr . chr(10);
             $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_WORKER_INFO);
         }

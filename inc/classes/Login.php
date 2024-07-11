@@ -834,7 +834,14 @@ class Login extends \Common {
      */
     private function registration(array $fields, array $data, $role_id) {
 
-        $this->emit('reg_data', $data);
+        try {
+            $this->emit('reg_data', $data);
+        } catch (\Exception $e) {
+            return json_encode([
+                'status'        => 'error',
+                'error_message' => $e->getMessage(),
+            ]);
+        }
 
         if (!$fields || !$role_id) return;
 

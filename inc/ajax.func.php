@@ -103,7 +103,7 @@ class ajaxFunc extends Common {
 
 		foreach ($control as $field => $val) {
 			if (!is_array($val)) {
-				$control[$field] = is_string($val) ? trim($val) : "";
+				$control[$field] = is_string($val) || is_numeric($val) ? trim((string)$val) : "";
 
 				if (isset($control[$field . "%re"]) && $val !== $control[$field . "%re"]) {
 					$script .= "document.getElementById('" . $order_fields['mainTableId'] . $field . "2').className='reqField';";
