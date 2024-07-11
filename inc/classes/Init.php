@@ -250,13 +250,6 @@ class Init extends \Core2\Db {
          */
         public function checkAuth() {
 
-            $this->detectWebService();
-
-            if ($this->is_rest || $this->is_soap) {
-                Registry::set('auth', new StdClass());
-                return;
-            }
-
             // проверяем, есть ли в запросе токен авторизации
             $auth = $this->checkToken();
             if ($auth) { //произошла авторизация по токену
@@ -460,7 +453,8 @@ class Init extends \Core2\Db {
                         throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
                     }
 
-                } else {
+                }
+                else {
                     if ($action == 'index') {
                         $_GET['action'] = "index";
 
@@ -489,12 +483,12 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if (!empty($route['api'])) {
+                        if ($this->auth->MOBILE) {
+                            $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
+                        }
+                        elseif (!empty($route['api'])) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
-                        }
-                        elseif ($this->auth->MOBILE) {
-                            $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
                         }
                         else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
@@ -620,15 +614,39 @@ class Init extends \Core2\Db {
             if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer') === 0) {
                     $token = $_SERVER['HTTP_AUTHORIZATION'];
+                    //TODO сделать поддержку других видов авторизации
+                    if (!$token) return;
+                    //TODO заменить модуль webservice на модуль auth
+                    $this->setContext('webservice');
+                    $this->checkWebservice();
+                    $webservice_controller = new ModWebserviceController();
+                    //требуется webservice 2.6.0
+                    return $webservice_controller->dispatchJwtToken($token);
                 }
-                //TODO сделать поддержку других видов авторизации
-                if (!$token) return;
-                //TODO заменить модуль webservice на модуль auth
-                $this->setContext('webservice');
-                $this->checkWebservice();
-                $webservice_controller = new ModWebserviceController();
-                //требуется webservice 2.6.0
-                return $webservice_controller->dispatchJwtToken($token);
+                if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Basic') === 0) {
+                    $core_config = Registry::get('core_config');
+                    if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                        //http basic auth allowed
+                        list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                        $user = $this->dataUsers->getUserByLogin($login);
+                        if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
+                            $auth = new \StdClass();
+
+                            $auth->LIVEID = 0;
+
+                            $auth->ID = (int)$user['u_id'];
+                            $auth->NAME = $user['u_login'];
+                            $auth->EMAIL = $user['email'];
+                            $auth->LN = $user['lastname'];
+                            $auth->FN = $user['firstname'];
+                            $auth->MN = $user['middlename'];
+                            $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
+                            $auth->ROLE = $user['role'];
+                            $auth->ROLEID = (int)$user['role_id'];
+                            return $auth;
+                        }
+                    }
+                }
             }
             elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
                 //DEPRECATED в будущих версиях авторизоваться с таким токеном будет нельзя
