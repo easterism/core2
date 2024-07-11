@@ -43,7 +43,7 @@ class Acl extends Db {
 		$auth 		= $registry->get('auth');
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
-//        $this->cache->clean($key);
+//        $this->cache->clean($key); //исползуй это, если кеш сломался
 
 		if (!($this->cache->hasItem($key))) {
 			$acl = new LaminasAcl();
@@ -129,13 +129,6 @@ class Acl extends Db {
                         foreach ($access as $type => $data) {
                             if (strpos($type, 'default') === false) {
 
-                                foreach ($resources2 as $availSubRes) {
-                                    if (!empty($data[str_replace('_', '-', $availSubRes)])) {
-                                        $acl->allow($roleName, $availSubRes, $type);
-                                    } else {
-                                        $acl->deny($roleName, $availSubRes, $type);
-                                    }
-                                }
                                 foreach ($resources as $availRes) {
                                     if (!empty($data[$availRes])) {
                                         $acl->allow($roleName, $availRes, $type);
@@ -143,6 +136,15 @@ class Acl extends Db {
                                         $acl->deny($roleName, $availRes, $type);
                                     }
                                 }
+
+                                foreach ($resources2 as $availSubRes) {
+                                    if (!empty($data[str_replace('_', '-', $availSubRes)])) {
+                                        $acl->allow($roleName, $availSubRes, $type);
+                                    } else {
+                                        $acl->deny($roleName, $availSubRes, $type);
+                                    }
+                                }
+
                             }
                         }
                         foreach ($access as $type => $data) {
