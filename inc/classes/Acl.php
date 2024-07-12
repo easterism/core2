@@ -138,9 +138,14 @@ class Acl extends Db {
                                 }
 
                                 foreach ($resources2 as $availSubRes) {
+                                    list($res, $subres) = explode("_", $availSubRes);
                                     if (!empty($data[str_replace('_', '-', $availSubRes)])) {
                                         $acl->allow($roleName, $availSubRes, $type);
                                     } else {
+                                        $acl->deny($roleName, $availSubRes, $type);
+                                    }
+                                    if ($type == 'access' && empty($data[$res])) {
+                                        //закрываем доступ, если основной ресурс не досупен
                                         $acl->deny($roleName, $availSubRes, $type);
                                     }
                                 }
