@@ -483,7 +483,7 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if ($this->auth->MOBILE) {
+                        if (!empty($this->auth->MOBILE)) {
                             $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
                         }
                         elseif (!empty($route['api'])) {
