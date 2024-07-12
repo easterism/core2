@@ -9,12 +9,16 @@ namespace Core2\Classes\Table;
  */
 class Search {
 
-    private $caption = '';
-    private $field   = '';
-    private $type    = '';
-    private $data    = [];
-    private $out     = '';
-    private $attr    = [];
+    private $caption    = '';
+    private $field      = '';
+    private $type       = '';
+    private $data       = [];
+    private $out        = '';
+    private $attr       = [];
+    private $value_type = self::TYPE_STRING;
+
+    const TYPE_STRING = 'string';
+    const TYPE_INT    = 'int';
 
     protected $available_types = [
         'text',
@@ -92,6 +96,24 @@ class Search {
      */
     public function setData(array $data): Search {
         $this->data = $data;
+        return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getValueType(): string {
+        return $this->value_type;
+    }
+
+
+    /**
+     * @param string $type
+     * @return $this
+     */
+    public function setValueType(string $type): Search {
+        $this->value_type = $type;
         return $this;
     }
 

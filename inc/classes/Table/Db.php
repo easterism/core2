@@ -182,8 +182,10 @@ class Db extends Table {
                     $this->search_controls[$key] instanceof Search &&
                     ! empty($value)
                 ) {
-                    $field = $this->search_controls[$key]->getField();
-                    $type  = $this->search_controls[$key]->getType();
+                    $search_field = $this->search_controls[$key];
+
+                    $field = $search_field->getField();
+                    $type  = $search_field->getType();
 
                     if (strpos($field, '/*ADD_SEARCH*/') !== false) {
                         $field = str_replace("/*ADD_SEARCH*/", "ADD_SEARCH", $field);
@@ -213,12 +215,18 @@ class Db extends Table {
                         case self::SEARCH_TEXT_STRICT:
                         case self::SEARCH_SELECT:
                         case self::SEARCH_SELECT2:
+                            $type = null;
+
+                            if ($search_field->getValueType() == $search_field::TYPE_INT) {
+                                $type = \Zend_Db::INT_TYPE;
+                            }
+
                             if (strpos($field, 'ADD_SEARCH') !== false) {
-                                $quoted_value = $this->db->quote($value);
+                                $quoted_value = $this->db->quote($value, $type);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
 
                             } else {
-                                $select->where("{$field} = ?", $value);
+                                $select->where("{$field} = ?", $value, $type);
                             }
                             break;
 
@@ -558,8 +566,14 @@ class Db extends Table {
                         case self::SEARCH_RADIO:
                         case self::SEARCH_SELECT:
                         case self::SEARCH_SELECT2:
+                            $type = null;
+
+                            if ($search_column->getValueType() === $search_column::TYPE_INT) {
+                                $type = \Zend_Db::INT_TYPE;
+                            }
+
                             if ($search_value != '') {
-                                $quoted_value = $db->quote($search_value);
+                                $quoted_value = $db->quote($search_value, $type);
 
                                 if (strpos($search_field, 'ADD_SEARCH') !== false) {
                                     $select->addWhere(str_replace("ADD_SEARCH", $quoted_value, $search_field));

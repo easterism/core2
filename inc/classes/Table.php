@@ -1049,21 +1049,33 @@ abstract class Table extends Acl {
                                             switch ($period_type) {
                                                 case 'days':
                                                     if ($period_count >= 0) {
-                                                        $date_start = date('Y-m-d', strtotime("-{$period_count} days"));
+                                                        $date_start = date('Y-m-d');
+                                                        $date_end   = date('Y-m-d', strtotime("{$period_count} days"));
+
+                                                    } else {
+                                                        $date_start = date('Y-m-d', strtotime("{$period_count} days"));
                                                         $date_end   = date('Y-m-d');
                                                     }
                                                     break;
 
                                                 case 'month':
-                                                    if ($period_count >= 0) {
-                                                        $date_start = date('Y-m-01', strtotime("-{$period_count} month"));
+                                                    if ($period_count > 0) {
+                                                        $date_start = date('Y-m-d');
+                                                        $date_end   = date('Y-m-t', strtotime("{$period_count} month"));
+
+                                                    } else {
+                                                        $date_start = date('Y-m-01', strtotime("{$period_count} month"));
                                                         $date_end   = date('Y-m-d');
                                                     }
                                                     break;
 
                                                 case 'year':
-                                                    if ($period_count >= 0) {
-                                                        $date_start = date('Y-01-01', strtotime("-{$period_count} year"));
+                                                    if ($period_count > 0) {
+                                                        $date_start = date('Y-m-d');
+                                                        $date_end   = date('Y-12-31', strtotime("{$period_count} year"));
+
+                                                    } else {
+                                                        $date_start = date('Y-01-01', strtotime("{$period_count} year"));
                                                         $date_end   = date('Y-m-d');
                                                     }
                                                     break;

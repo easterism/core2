@@ -808,11 +808,11 @@ class Login extends \Common {
 
 
     /**
-     * @param $data
+     * @param array $fields
+     * @param array $data
+     * @param       $role_id
      * @return false|string
      * @throws \Zend_Db_Adapter_Exception
-     * @throws \Zend_Db_Exception
-     * @throws \Exception
      */
     private function registration(array $fields, array $data, $role_id) {
 

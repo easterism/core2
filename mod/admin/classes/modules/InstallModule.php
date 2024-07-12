@@ -120,6 +120,9 @@ class InstallModule extends \Common {
     private $db;
 
     private $repos = [];
+    private $modListNames = [];
+
+    private $repo_url = '';
 
 
     /**
