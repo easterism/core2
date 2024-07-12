@@ -13,6 +13,9 @@ class Panel {
     const POSITION_RIGHT  = 3;
     const POSITION_BOTTOM = 4;
 
+    const SIDE_LEFT  = 'left';
+    const SIDE_RIGHT = 'right';
+
     const TYPE_TABS  = 10;
     const TYPE_PILLS = 20;
     const TYPE_STEPS = 30;
@@ -312,11 +315,11 @@ class Panel {
             $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
 
             $tabs_load_count = [];
+            $tabs_side       = false;
 
             foreach ($this->tabs as $tab) {
 
                 if ($tab['type'] == 'tab') {
-
                     $tab_count = null;
 
                     if (isset($tab['options']['count'])) {
@@ -329,13 +332,25 @@ class Panel {
                         ];
                     }
 
+                    $class = [];
+
+                    if ( ! empty($tab['options']['side']) && is_string($tab['options']['side']) && ! $tabs_side) {
+                        $tabs_side = true;
+                        $class[]   = "panel-tab-side-{$tab['options']['side']}";
+                    }
+
                     if (isset($tab['options']['disabled']) && $tab['options']['disabled']) {
                         $tpl->tabs->elements->tab_disabled->assign('[ID]',    $tab['id']);
                         $tpl->tabs->elements->tab_disabled->assign('[TITLE]', $tab['title']);
+                        $tpl->tabs->elements->tab_disabled->assign('[CLASS]', implode(' ', $class));
 
                     } else {
-                        $url   = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
-                        $class = $this->active_tab == $tab['id'] ? 'active' : '';
+                        $url = (strpos($tab['url'], "#") !== false ? $tab['url'] . "&" : $tab['url'] . "#") . "{$this->resource}={$tab['id']}";
+
+                        if ($this->active_tab == $tab['id']) {
+                            $class[] = 'active';
+                        }
+
 
                         if (isset($tab['options']['onclick']) && $tab['options']['onclick']) {
                             $onclick = $tab['options']['onclick'];
@@ -351,7 +366,7 @@ class Panel {
                         $title = $tab_count !== null ? "{$tab['title']} ({$tab_count})" : $tab['title'];
 
                         $tpl->tabs->elements->tab->assign('[ID]',      $tab['id']);
-                        $tpl->tabs->elements->tab->assign('[CLASS]',   $class);
+                        $tpl->tabs->elements->tab->assign('[CLASS]',   implode(' ', $class));
                         $tpl->tabs->elements->tab->assign('[TITLE]',   $title);
                         $tpl->tabs->elements->tab->assign('[ONCLICK]', $onclick);
                         $tpl->tabs->elements->tab->assign('[URL]',     $url);
