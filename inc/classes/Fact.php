@@ -43,6 +43,7 @@ class Fact {
 
     /**
      * @param mixed $text
+     * @param bool  $is_public
      * @return void
      */
     public function message(mixed $text, bool $is_public = false): void {
@@ -63,8 +64,16 @@ class Fact {
         $this->topic = 'global';
     }
 
-    public function elementText(string $selector, string $text, bool $is_public = false)
-    {
+
+    /**
+     * Установка текста в указанный селектор на странице
+     * @param string $selector
+     * @param string $text
+     * @param bool   $is_public
+     * @return void
+     */
+    public function elementText(string $selector, string $text, bool $is_public = false): void {
+
         $text = json_encode(['element' => ['selector' => $selector, 'text' => $text]]);
         $q = !$is_public ? msg_get_queue($this->shm_id) : msg_get_queue($this->shm_public);
         if (! msg_send($q, self::TEXT, json_encode([$this->topic => $text]), false, true, $msg_err)) {

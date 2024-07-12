@@ -814,9 +814,16 @@ class Login extends \Common {
      * @throws \Zend_Db_Exception
      * @throws \Exception
      */
-    private function registration(array $fields, sarray $data, $role_id) {
+    private function registration(array $fields, array $data, $role_id) {
 
-        $this->emit('reg_data', $data);
+        try {
+            $this->emit('reg_data', $data);
+        } catch (\Exception $e) {
+            return json_encode([
+                'status'        => 'error',
+                'error_message' => $e->getMessage(),
+            ]);
+        }
 
         if (!$fields || !$role_id) return;
 
@@ -909,20 +916,26 @@ class Login extends \Common {
 
             $user_id = $this->db->lastInsertId();
 
-            $data['name'] = preg_replace('~[ ]{2,}~', ' ', $data['name']);
+            if ( ! empty($data['name'])) {
+                $data['name'] = preg_replace('~[ ]{2,}~', ' ', $data['name']);
 
-            $name_explode = explode(' ', $data['name']);
-            $middlename   = ! empty($name_explode[2]) ? $name_explode[2] : '';
-            $lastname     = ! empty($name_explode[1]) ? $name_explode[0] : '';
-            $firstname    = $lastname ? $name_explode[1] : $name_explode[0];
+                $name_explode = explode(' ', $data['name']);
+                $middlename   = ! empty($name_explode[2]) ? $name_explode[2] : '';
+                $lastname     = ! empty($name_explode[1]) ? $name_explode[0] : '';
+                $firstname    = $lastname ? $name_explode[1] : $name_explode[0];
 
-            $this->db->insert('core_users_profile', [
-                'user_id'    => $user_id,
-                'lastname'   => $lastname,
-                'firstname'  => $firstname,
-                'middlename' => $middlename,
+                $this->db->insert('core_users_profile', [
+                    'user_id'    => $user_id,
+                    'lastname'   => $lastname,
+                    'firstname'  => $firstname,
+                    'middlename' => $middlename,
+                ]);
+            }
+
+            $this->emit('new_user', [
+                'user_id' => $user_id,
+                'form'    => $data,
             ]);
-            $this->emit('new_user', $user_id);
         }
 
 
