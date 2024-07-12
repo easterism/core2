@@ -20,19 +20,23 @@ class Panel {
     const TYPE_PILLS = 20;
     const TYPE_STEPS = 30;
 
-    protected $active_tab  = '';
-    protected $title       = '';
-    protected $tabs_width  = 0;
-    protected $description = '';
-    protected $content     = '';
-    protected $resource    = '';
-    protected $tabs        = [];
-    protected $back_url    = '';
-    protected $is_ajax     = false;
+    const WRAPPER_TYPE_CARD = 'card';
+    const WRAPPER_TYPE_NONE = 'none';
+
+    protected $active_tab     = '';
+    protected $title          = '';
+    protected $tabs_width     = 0;
+    protected $description    = '';
+    protected $content        = '';
+    protected $resource       = '';
+    protected $tabs           = [];
+    protected $back_url       = '';
+    protected $is_ajax        = false;
     protected $is_collapsible = false;
-    protected $position    = self::POSITION_TOP;
-    protected $type        = self::TYPE_TABS;
-    protected $controls    = [];
+    protected $position       = self::POSITION_TOP;
+    protected $type           = self::TYPE_TABS;
+    protected $controls       = [];
+    protected $wrapper_type   = self::WRAPPER_TYPE_CARD;
 
 
     /**
@@ -217,6 +221,28 @@ class Panel {
 
 
     /**
+     * Установка правила для отображения обертки в панели
+     * @param string $type
+     * @return Panel
+     */
+    public function setWrapperType(string $type): self {
+
+        $this->wrapper_type = $type;
+        return $this;
+    }
+
+
+    /**
+     * Получение правила для отображения обертки в панели
+     * @return string
+     */
+    public function getWrapperType(): string {
+
+        return $this->wrapper_type;
+    }
+
+
+    /**
      * Установка активного таба по умолчанию
      * @param string $tab_id
      */
@@ -259,19 +285,6 @@ class Panel {
             $tpl->content_top->assign('[CONTENT]', $this->content);
 
         } else {
-            $styles = "";
-
-            if ($this->tabs_width) {
-                $margin_width = $this->tabs_width - 1;
-
-                switch ($this->position) {
-                    case self::POSITION_LEFT:  $styles = "style=\"margin-left:{$margin_width}px\""; break;
-                    case self::POSITION_RIGHT: $styles = "style=\"margin-right:{$margin_width}px\""; break;
-                    default: $styles = "";
-                }
-            }
-
-            $tpl->content_bottom->assign('[STYLES]',  $styles);
             $tpl->content_bottom->assign('[CONTENT]', $this->content);
         }
 
@@ -311,8 +324,15 @@ class Panel {
         }
         $tpl->assign('[POSITION]', $position_name);
 
+        switch ($this->wrapper_type) {
+            case self::WRAPPER_TYPE_CARD : $wrapper_type = 'default'; break;
+            case self::WRAPPER_TYPE_NONE : $wrapper_type = 'none'; break;
+            default : throw new Exception('Invalid position'); break;
+        }
+        $tpl->assign('[WRAPPER_TYPE]', $wrapper_type);
+
         if ( ! empty($this->tabs)) {
-            $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"width:{$this->tabs_width}px\"" : '');
+            $tpl->tabs->assign('[STYLES]', $this->tabs_width ? "style=\"min-width:{$this->tabs_width}px;width:{$this->tabs_width}px\"" : '');
 
             $tabs_load_count = [];
             $tabs_side       = false;
