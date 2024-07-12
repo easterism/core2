@@ -40,6 +40,9 @@ class WorkerClient {
                     return new \stdObject();
                 }
             } catch (\GearmanException $e) {
+                (new Log())->error($e->getMessage());
+                return new \stdObject();
+            } catch (\Exception $e) {
                 return new \stdObject();
             }
 
@@ -117,11 +120,11 @@ class WorkerClient {
         if (empty($this->client)) {
             return false;
         }
-//        $success = @$this->client->ping('ping');
-//        if (!$success) {
-//            (new Log())->error("Job server return " . $this->client->returnCode());
-//            return false;
-//        }
+        $success = @$this->client->ping('ping');
+        if (!$success) {
+            (new Log())->error("Job server return " . $this->client->returnCode());
+            return false;
+        }
 
         $workload = $this->getWorkload($worker, $data);
         $worker   = $this->getWorkerName($worker);
