@@ -95,11 +95,10 @@ class Parallel extends Db {
                             unset($this->tasks[$response['id']]);
                         }
                     }
+
+                    $process_count -= count($responses);
                 }
-
-                $process_count--;
             }
-
 
             $pid = $this->startTask($task_id, $task, $socket_child, $socket_parent);
             $tasks_pid[$pid] = $pid;
