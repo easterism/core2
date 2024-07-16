@@ -81,10 +81,14 @@ class Config
             $nest = $this->stageNested($stage);
             $this->data[$section] = array_merge($prod, $nest, $origin);
         }
-        $data       = isset($this->data[$section]) ? $this->data[$section] : [];
-        $out = [];
+
+        $data = $this->data[$section] ?? [];
+        $out  = [];
+
         foreach ($data as $key => $value) {
-            $out[] = $key . '="' . $value . '"';
+            if (is_scalar($value)) {
+                $out[] = $key . '="' . $value . '"';
+            }
         }
         $data = implode(chr(10), $out);
         $this->data = [];

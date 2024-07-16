@@ -78,8 +78,9 @@ class Parallel extends Db {
                         }
 
                         $tasks_result[$response['id']] = [
-                            'buffer' => $response['buffer'],
-                            'result' => $response['result']
+                            'buffer'   => $response['buffer'],
+                            'result'   => $response['result'],
+                            'duration' => $response['duration'],
                         ];
 
                         if ($task_callback instanceof \Closure) {
@@ -98,12 +99,7 @@ class Parallel extends Db {
                     $process_count -= count($responses);
                 }
             }
-            $this->db->closeConnection();
 
-            if ($this->cache->getAdapterName() !== 'Filesystem') {
-                $reg = Registry::getInstance();
-                $reg->set('cache', null);
-            }
             $pid = $this->startTask($task_id, $task, $socket_child, $socket_parent);
             $tasks_pid[$pid] = $pid;
 
@@ -119,8 +115,9 @@ class Parallel extends Db {
                     }
 
                     $tasks_result[$response['id']] = [
-                        'buffer' => $response['buffer'],
-                        'result' => $response['result']
+                        'buffer'   => $response['buffer'],
+                        'result'   => $response['result'],
+                        'duration' => $response['duration'],
                     ];
 
                     if ($task_callback instanceof \Closure) {
@@ -141,8 +138,6 @@ class Parallel extends Db {
 
         $this->tasks = [];
 
-        //$this->db;
-
         return $tasks_result;
     }
 
@@ -161,10 +156,11 @@ class Parallel extends Db {
 
             if ( ! empty($response['id'])) {
                 $task_results[] = [
-                    'id'     => $response['id'],
-                    'pid'    => $response['pid'],
-                    'buffer' => $response['buffer'],
-                    'result' => $response['result'],
+                    'id'       => $response['id'],
+                    'pid'      => $response['pid'],
+                    'buffer'   => $response['buffer'],
+                    'result'   => $response['result'],
+                    'duration' => $response['duration'],
                 ];
 
                 pcntl_waitpid($response['pid'], $status);
@@ -200,8 +196,10 @@ class Parallel extends Db {
             ob_start();
             socket_close($socket_child);
 
+            $start = microtime(true);
+
             // Самостоятельное завершение процесса перед выходом, иначе процесс будет закрыт вместе с родителем,
-            register_shutdown_function(function () use ($task_id, $socket_parent) {
+            register_shutdown_function(function () use ($task_id, $socket_parent, $start) {
                 $buffer = ob_get_clean();
 
                 $error = error_get_last();
@@ -212,10 +210,11 @@ class Parallel extends Db {
                     ])
                 ) {
                     $this->sendSocketData($socket_parent, [
-                        'id'     => $task_id,
-                        'pid'    => posix_getpid(),
-                        'buffer' => (string)$buffer,
-                        'result' => null,
+                        'id'       => $task_id,
+                        'pid'      => posix_getpid(),
+                        'buffer'   => (string)$buffer,
+                        'duration' => round(microtime(true) - $start, 4),
+                        'result'   => null,
                     ]);
                 }
             });
@@ -232,10 +231,11 @@ class Parallel extends Db {
             }
 
             $this->sendSocketData($socket_parent, [
-                'id'     => $task_id,
-                'pid'    => posix_getpid(),
-                'buffer' => (string)ob_get_clean(),
-                'result' => $result_value,
+                'id'       => $task_id,
+                'pid'      => posix_getpid(),
+                'buffer'   => (string)ob_get_clean(),
+                'duration' => round(microtime(true) - $start, 4),
+                'result'   => $result_value,
             ]);
 
             // Завершение дочернего процесса
@@ -269,6 +269,7 @@ class Parallel extends Db {
      * @param \Socket $socket
      * @param mixed   $data
      * @return void
+     * @throws \Exception
      */
     private function sendSocketData(\Socket $socket, mixed $data): void {
 
