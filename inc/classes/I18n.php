@@ -101,7 +101,6 @@ class I18n {
      * Добавление переводов для модулей
      * @param $location
      * @param $domain
-     * @throws \Zend_Config_Exception
      */
     public function setupExtra($location, $domain) {
 

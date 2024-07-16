@@ -43,7 +43,7 @@ class Acl extends Db {
 		$auth 		= $registry->get('auth');
 
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
-//        $this->cache->clean($key); //исползуй это, если кеш сломался
+        //$this->cache->clean($key); //исползуй это, если кеш сломался
 
 		if (!($this->cache->hasItem($key))) {
 			$acl = new LaminasAcl();
