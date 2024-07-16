@@ -197,6 +197,7 @@ class Db {
 				$location = $module == 'admin'
 					? __DIR__ . "/../../mod/admin"
 					: $this->getModuleLocation($module);
+
                 $r = new \ReflectionClass(get_called_class());
                 $classLoc = $r->getFileName();
                 $classPath = strstr($classLoc, '/mod/');
@@ -401,15 +402,6 @@ class Db {
                 return;
             }
 
-            $arr = [];
-            if ( ! empty($_POST)) {
-                $arr['POST'] = $_POST;
-            }
-
-            if ( ! empty($_GET)) {
-                $arr['GET'] = $_GET;
-            }
-
             $data = [
                 'ip'             => $_SERVER['REMOTE_ADDR'],
                 'request_method' => $_SERVER['REQUEST_METHOD'],
@@ -433,17 +425,17 @@ class Db {
             }
 
             // запись данных запроса в лог
-            $w = $this->workerAdmin->doBackground('Logger', array_merge($data, ['action' => $arr]));
+            $w = $this->workerAdmin->doBackground('Logger', $data);
             if ($w) {
                 return;
             }
 
             if (isset($this->config->log) &&
                 $this->config->log &&
-                isset($this->config->log->system->writer) &&
-                $this->config->log->system->writer == 'file'
+                isset($this->config->log->access->writer) &&
+                $this->config->log->access->writer == 'file'
             ) {
-                if ( ! $this->config->log->system->file) {
+                if ( ! $this->config->log->access->file) {
                     throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
                 }
 
@@ -451,9 +443,6 @@ class Db {
                 $log->access($auth->NAME, $data['sid']);
 
             } else {
-                if ($arr) {
-                    $data['action'] = serialize($arr);
-                }
                 $this->db->insert('core_log', $data);
             }
         }
@@ -662,7 +651,7 @@ class Db {
 	 */
 	final public function isModuleInstalled($module_id) {
         $this->getAllModules();
-        $module_id = strtolower($module_id);
+        $module_id = trim(strtolower($module_id));
         $is = isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
         return $is;
 	}
@@ -676,7 +665,16 @@ class Db {
      * @throws \Exception
      */
 	final public function getModuleLocation($module_id) {
-		return DOC_ROOT . $this->getModuleLoc($module_id);
+        $config = Registry::get('config');
+        $db = $this->establishConnection($config->database);
+        $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
+        if ($mod['is_system'] === "Y") {
+            $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
+        } else {
+            $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
+        }
+		return $location;
+		//return DOC_ROOT . $this->getModuleLoc($module_id);
 	}
 
 
@@ -717,13 +715,16 @@ class Db {
         $module_id = trim(strtolower($module_id));
         if ( ! $module_id) throw new \Exception($this->translate->tr("Не определен идентификатор модуля."));
         if ( ! empty($this->_locations[$module_id])) return $this->_locations[$module_id];
+
         $module = $this->isModuleInstalled($module_id);
 
         if ( ! isset($module['location'])) {
             if ($module_id === 'admin') {
                 $loc = "core2/mod/admin";
             } else {
-                if ( !$module) throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
+                if ( !$module) {
+                    throw new \Exception($this->translate->tr("Модуль не существует") . ": " . $module_id, 404);
+                }
                 if ($module['is_system'] === "Y") {
                     $loc = "core2/mod/{$module_id}/v{$module['version']}";
                 } else {
@@ -774,7 +775,6 @@ class Db {
 
         $module_loc = $this->getModuleLocation($name);
         $conf_file  = "{$module_loc}/conf.ini";
-
         if (is_file($conf_file)) {
 
             $config    = new CoreConfig();
@@ -827,40 +827,39 @@ class Db {
      */
     private function getAllModules(): void {
         if ($this->_modules) return;
-        $key = "all_modules_" . $this->config->database->params->dbname;
+        $key2 = "all_modules_" . $this->config->database->params->dbname;
         //if (1==1) {
-        if (!($this->cache->hasItem($key))) {
+        if (!($this->cache->hasItem($key2))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $db = $this->db;
+            $config = Registry::get('config');
+            $db = $this->establishConnection($config->database);
+
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);
-            $res    = $m->fetchAll($m->select()->order('seq'));
+            $res    = $m->fetchAll($m->select()->order('seq'))->toArray();
             $sub    = $sm->fetchAll($sm->select()->order('seq'));
             $data   = [];
             foreach ($res as $val) {
-                $item = $val->toArray();
-                unset($item['uninstall']); //чтоб не смущал
-                unset($item['files_hash']); //чтоб не смущал
-                $item['submodules'] = [];
+                unset($val['uninstall']); //чтоб не смущал
+                unset($val['files_hash']); //чтоб не смущал
+                $val['submodules'] = [];
 
                 foreach ($sub as $item2) {
-                    if ($item2->m_id == $val->m_id) {
-                        $item['submodules'][$item2->sm_key] = $item2->toArray();
+                    if ($item2->m_id == $val['m_id']) {
+                        $val['submodules'][$item2->sm_key] = $item2->toArray();
                     }
                 }
-                $data[$val->module_id] = $item;
+                $data[$val['module_id']] = $val;
             }
-            $this->cache->setItem($key, $data);
+            if ($data) $this->cache->setItem($key2, $data);
+            else {
+                //такого быть не может
+                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", "такого быть не может " . $this->module);
+                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", $res);
+            }
         } else {
-            $data = $this->cache->getItem($key);
-            if (!$data || !is_array($data)) {
-                //этого не может быть!
-                if ($this->_counter > 5) throw new \Exception("Cache error", 500);
-                $this->_counter++;
-                $this->cache->remove($key);
-                $this->getAllModules();
-            }
+            $data = $this->cache->getItem($key2);
         }
         $this->_modules = $data;
     }
