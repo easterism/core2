@@ -65,13 +65,32 @@ class Log {
                 } else {
                     return new \stdClass();
                 }
+            } elseif ($name === 'logger') {
+                //Logger worker
+                $this->writer = 'file';
             } else {
+                $config = Registry::get('config');
+                if (isset($config->log) && !$config->log->on) return new \stdClass(); //юзер отключил ведение логов
+
+                $files = [];
                 if (isset($this->config->log) &&
                     isset($this->config->log->system) &&
                     ! empty($this->config->log->system->file) &&
                     is_string($this->config->log->system->file)
                 ) {
-                    $stream = new StreamHandler($this->config->log->system->file);
+                    $files[] = $this->config->log->system->file;
+                }
+                if (isset($config->log) &&
+                    isset($config->log->system) &&
+                    ! empty($config->log->system->file) &&
+                    is_string($config->log->system->file)
+                ) {
+                    if (!in_array($config->log->system->file, $files)) $files[] = $config->log->system->file;
+                }
+
+                foreach ($files as $file) {
+
+                    $stream = new StreamHandler($file);
                     //$stream->setFormatter(new NormalizerFormatter());
                     $this->log->pushHandler($stream);
                 }
@@ -79,6 +98,14 @@ class Log {
         }
         else {
             $this->config = Registry::get('config');
+            if (isset($this->config->log) &&
+                isset($this->config->log->access) &&
+                ! empty($this->config->log->access->file) &&
+                is_string($this->config->log->access->file)
+            ) {
+                $this->log->pushHandler(new StreamHandler($this->config->log->access->file, Logger::INFO));
+                $this->writer = 'file';
+            }
             $this->log    = new Logger($name);
         }
     }
@@ -150,7 +177,6 @@ class Log {
      * @param string $name
      */
     public function access($name, $sid) {
-        $this->setWriter();
         $this->log->pushProcessor(new WebProcessor());
         $this->log->info($name, array('sid' => $sid));
     }
