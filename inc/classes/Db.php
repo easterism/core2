@@ -665,14 +665,21 @@ class Db {
      * @throws \Exception
      */
 	final public function getModuleLocation($module_id) {
-        $config = Registry::get('config');
         $module_id = strtolower($module_id);
-        $db = $this->establishConnection($config->database);
-        $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
-        if ($mod['is_system'] === "Y") {
-            $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
+        $reg      = Registry::getInstance();
+        if (!$reg->isRegistered("location_ " . $module_id)) {
+
+            $config = $reg->get('config');
+            $db = $this->establishConnection($config->database);
+            $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
+            if ($mod['is_system'] === "Y") {
+                $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
+            } else {
+                $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
+            }
+            $reg->set("location_ " . $module_id, $location);
         } else {
-            $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
+            $location = $reg->get("location_ " . $module_id);
         }
 		return $location;
 		//return DOC_ROOT . $this->getModuleLoc($module_id);
