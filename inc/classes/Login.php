@@ -28,35 +28,17 @@ class Login extends \Common {
 
         if (isset($route['api'])) {
             header('HTTP/1.1 401 Unauthorized');
-            if (!$route['action'] && $this->core_config->auth) {
+            if ($this->core_config->auth) {
+                //значит возможна авторизация по заданной схеме
                 if ($this->core_config->auth->scheme == 'basic') {
-                    try {
-                        if ($route['api'] == 'auth' && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                            if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
-                                [$login, $password] = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                                $user = $this->dataUsers->getUserByLogin($login);
-                                if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
-                                    if ($this->auth($user)) {
-                                        header("Location: " . DOC_PATH);
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        //TODO log me
-                    }
-
-                    header('WWW-Authenticate: Basic realm="' . $this->core_config->auth->basic->realm . '"');
+                    $realm = $this->core_config->auth->basic->realm;
+                    header('WWW-Authenticate: Basic realm="' . $realm . '"');
                 }
                 if ($this->core_config->auth->scheme == 'digest') {
                     $realm = $this->core_config->auth->digest->realm;
                     header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
                 }
-                if ($this->core_config->auth->scheme == 'bearer') {
-                    $realm = $this->core_config->auth->bearer->realm;
-                    header('WWW-Authenticate: Digest realm="' . $realm . '",scope="' . $this->core_config->auth->bearer->scope . '"');
-                }
+
                 //TODO реализовать остальные схемы
                 return;
             }

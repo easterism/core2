@@ -98,13 +98,17 @@ class Parallel extends Db {
                     $process_count -= count($responses);
                 }
             }
+            $this->db->closeConnection();
 
+            if ($this->cache->getAdapterName() !== 'Filesystem') {
+                $reg = Registry::getInstance();
+                $reg->set('cache', null);
+            }
             $pid = $this->startTask($task_id, $task, $socket_child, $socket_parent);
             $tasks_pid[$pid] = $pid;
 
             $process_count++;
         }
-
 
         while (count($tasks_pid)) {
             if ($responses = $this->waitResponses($socket_child)) {
@@ -137,7 +141,7 @@ class Parallel extends Db {
 
         $this->tasks = [];
 
-        $this->db;
+        //$this->db;
 
         return $tasks_result;
     }
@@ -215,7 +219,6 @@ class Parallel extends Db {
                     ]);
                 }
             });
-
 
             try {
                 $result_value = $task();

@@ -38,6 +38,7 @@ class Workhorse
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job && $in_job['status'] !== 'finish') {
                 //задача уже обрабатывается
+                //TODO сделать очистку уже авполненных задач
                 return;
             }
 

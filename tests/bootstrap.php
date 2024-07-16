@@ -82,7 +82,7 @@ try {
         }
     }
 
-} catch (Zend_Config_Exception $e) {
+} catch (\Exception $e) {
     \Core2\Error::Exception($e->getMessage());
 }
 

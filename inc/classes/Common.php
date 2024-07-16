@@ -5,6 +5,7 @@ require_once 'Emitter.php';
 use Core2\Registry;
 use Core2\Emitter;
 use Core2\Tool;
+use Core2\Error;
 
 /**
  * Class Common
@@ -143,13 +144,17 @@ class Common extends \Core2\Acl {
 
 
         if ($k === 'moduleConfig') {
-
+            $km = $k . "|" . $this->module;
+            if ($reg->isRegistered($km)) {
+                return $reg->get($km);
+            }
             $module_config = $this->getModuleConfig($this->module);
 
             if ($module_config === false) {
-                \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+                Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
             } else {
-                $v = $module_config;
+                $reg->set($k . "|" . $this->module, $module_config);
+                return $module_config;
             }
         }
         // Получение экземпляра контроллера указанного модуля
@@ -160,9 +165,9 @@ class Common extends \Core2\Acl {
                 $v         = new CoreController();
             }
             elseif ($location = $this->getModuleLocation($module)) {
-                if (!$this->isModuleActive($module)) {
-                    throw new Exception("Модуль \"{$module}\" не активен");
-                }
+//                if (!$this->isModuleActive($module)) {
+//                    throw new Exception("Модуль \"{$module}\" не активен");
+//                }
 
                 $cl              = ucfirst($k) . 'Controller';
                 $controller_file = $location . '/' . $cl . '.php';

@@ -25,18 +25,19 @@ use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Registry;
 use Core2\Tool;
+use Core2\Error;
 
 if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
     if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
-        \Core2\Error::Exception("File not found", 404);
+        Error::Exception("File not found", 404);
     }
 }
 
 $conf_file = DOC_ROOT . "conf.ini";
 
 if (!file_exists($conf_file)) {
-    \Core2\Error::Exception("conf.ini is missing.", 404);
+    Error::Exception("conf.ini is missing.", 404);
 }
 $config = [
     'system'       => ['name' => 'CORE2'],
@@ -103,7 +104,7 @@ try {
 
 }
 catch (Exception $e) {
-    \Core2\Error::Exception($e->getMessage());
+    Error::Exception($e->getMessage());
 }
 
 // отладка приложения
@@ -154,7 +155,7 @@ if (!defined('THEME')) define('THEME', 'default');
 
 $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
 if (!file_exists($theme_model)) {
-    \Core2\Error::Exception("Theme '" . THEME . "' model does not exists.");
+    Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
 $tpls = file_get_contents($theme_model);
 \Core2\Theme::set(THEME, $tpls);
@@ -248,13 +249,6 @@ class Init extends \Core2\Db {
          * Общая проверка аутентификации
          */
         public function checkAuth() {
-
-            $this->detectWebService();
-
-            if ($this->is_rest || $this->is_soap) {
-                Registry::set('auth', new StdClass());
-                return;
-            }
 
             // проверяем, есть ли в запросе токен авторизации
             $auth = $this->checkToken();
@@ -459,7 +453,8 @@ class Init extends \Core2\Db {
                         throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
                     }
 
-                } else {
+                }
+                else {
                     if ($action == 'index') {
                         $_GET['action'] = "index";
 
@@ -488,12 +483,12 @@ class Init extends \Core2\Db {
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
-                        if (!empty($route['api'])) {
+                        if (!empty($this->auth->MOBILE)) {
+                            $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
+                        }
+                        elseif (!empty($route['api'])) {
                             //запрос от приложения
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
-                        }
-                        elseif ($this->auth->MOBILE) {
-                            $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
                         }
                         else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
@@ -617,25 +612,41 @@ class Init extends \Core2\Db {
 
             $token = '';
             if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
-                if (substr($_SERVER['HTTP_AUTHORIZATION'], 0, 5) == 'Basic') {
-                    list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                    $user = $this->dataUsers->getUserByLogin($login);
-                    if (!$user || $user['u_pass'] !== Tool::pass_salt(md5($password))) {
-                        header("Location: " . DOC_PATH . "auth");
-                        return;
-                    }
-                }
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer') === 0) {
                     $token = $_SERVER['HTTP_AUTHORIZATION'];
+                    //TODO сделать поддержку других видов авторизации
+                    if (!$token) return;
+                    //TODO заменить модуль webservice на модуль auth
+                    $this->setContext('webservice');
+                    $this->checkWebservice();
+                    $webservice_controller = new ModWebserviceController();
+                    //требуется webservice 2.6.0
+                    return $webservice_controller->dispatchJwtToken($token);
                 }
-                //TODO сделать поддержку других видов авторизации
-                if (!$token) return;
-                //TODO заменить модуль webservice на модуль auth
-                $this->setContext('webservice');
-                $this->checkWebservice();
-                $webservice_controller = new ModWebserviceController();
-                //требуется webservice 2.6.0
-                return $webservice_controller->dispatchJwtToken($token);
+                if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Basic') === 0) {
+                    $core_config = Registry::get('core_config');
+                    if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                        //http basic auth allowed
+                        list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                        $user = $this->dataUsers->getUserByLogin($login);
+                        if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
+                            $auth = new \StdClass();
+
+                            $auth->LIVEID = 0;
+
+                            $auth->ID = (int)$user['u_id'];
+                            $auth->NAME = $user['u_login'];
+                            $auth->EMAIL = $user['email'];
+                            $auth->LN = $user['lastname'];
+                            $auth->FN = $user['firstname'];
+                            $auth->MN = $user['middlename'];
+                            $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
+                            $auth->ROLE = $user['role'];
+                            $auth->ROLEID = (int)$user['role_id'];
+                            return $auth;
+                        }
+                    }
+                }
             }
             elseif ( ! empty($_SERVER['HTTP_CORE2M'])) {
                 //DEPRECATED в будущих версиях авторизоваться с таким токеном будет нельзя
@@ -657,7 +668,7 @@ class Init extends \Core2\Db {
         private function checkWebservice() {
 
             if ( ! $this->isModuleActive('webservice')) {
-                \Core2\Error::catchJsonException([
+                Error::catchJsonException([
                     'error_code'    => 'webservice_not_active',
                     'error_message' => $this->translate->tr('Модуль Webservice не активен')
                 ], 503);
@@ -667,7 +678,7 @@ class Init extends \Core2\Db {
             $webservice_controller_path =  $location . '/ModWebserviceController.php';
 
             if ( ! file_exists($webservice_controller_path)) {
-                \Core2\Error::catchJsonException([
+                Error::catchJsonException([
                     'error_code'    => 'webservice_not_isset',
                     'error_message' => $this->translate->tr('Модуль Webservice не существует')
                 ], 500);
@@ -681,7 +692,7 @@ class Init extends \Core2\Db {
             require_once($webservice_controller_path);
 
             if ( ! class_exists('ModWebserviceController')) {
-                \Core2\Error::catchJsonException([
+                Error::catchJsonException([
                     'error_code'    => 'webservice_broken',
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
                 ], 500);
@@ -1534,7 +1545,7 @@ class Init extends \Core2\Db {
 
             $co = count($temp2);
             if ($co) {
-                if ($co > 1 || current($temp2) === 'auth') {
+                if ($co > 1) {
                     $i = 0;
                     //если мы здесь, значит хотим вызвать API
                     foreach ($temp2 as $k => $v) {
@@ -1815,7 +1826,7 @@ function post($func, $loc, $data) {
             try {
                 return $xajax->$func($data);
             } catch (Exception $e) {
-                \Core2\Error::catchXajax($e, $res);
+                Error::catchXajax($e, $res);
             }
         } else {
             throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
@@ -1852,7 +1863,7 @@ function post($func, $loc, $data) {
                     $data['params'] = $params;
                     return $xajax->$func($data);
                 } catch (Exception $e) {
-                    \Core2\Error::catchXajax($e, $res);
+                    Error::catchXajax($e, $res);
                 }
             } else {
                 throw new BadMethodCallException($translate->tr("Метод не найден"), 60);
