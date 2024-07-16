@@ -87,7 +87,7 @@ class CommonApi extends \Core2\Acl {
                 ? DOC_ROOT . "core2/mod/admin"
                 : $this->getModuleLocation($module);
             if ($location) {
-                
+
                 $module     = ucfirst($module);
                 $module_api = "Mod{$module}Api";
 

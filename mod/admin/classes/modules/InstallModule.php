@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\RequestException;
 use Core2\Tool;
+use Core2\Registry;
 
 /**
  * Class InstallModule
@@ -1273,7 +1274,7 @@ class InstallModule extends \Common {
         $this->installPath 	= ((strtolower($mInfo['install']['module_system']) == "y" ? "core2/" : "") . "mod/{$mInfo['install']['module_id']}/v{$mInfo['install']['version']}");
 
         //ID юзера, ставящего модуль
-        $authNamespace 		= \Core2\Registry::get('auth');
+        $authNamespace 		= Registry::get('auth');
         $this->lastUser 	= $authNamespace->ID < 0 ? NULL : $authNamespace->ID;
 
         $this->module_is_off = array();
@@ -1369,7 +1370,7 @@ class InstallModule extends \Common {
             $msg = $e->getMessage();
             if ($this->config->debug->on) $msg .= $e->getTraceAsString();
             //TODO вести лог
-            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка прервана, произведен откат транзакции"), "Ошибка: {$msg}", "danger");
+            $this->addNotice($this->translate->tr("Установщик"), $this->translate->tr("Установка из репозитория прервана, произведен откат транзакции"), "Ошибка: {$msg}", "danger");
         }
         return $st . $this->printNotices(2);
     }
@@ -1433,7 +1434,7 @@ class InstallModule extends \Common {
     private function getModsListFromRepo($repo_url) {
         //проверяем есть ли ключ к репозиторию, если нет то получаем
         $repo_url = trim($repo_url);
-        if (substr_count($repo_url, "repo?apikey=") == 0) {
+        if (substr_count($repo_url, "repo/index?apikey=") == 0) {
             $api_key = $this->getRepoKey($repo_url);
             $repo_url = explode("webservice?reg_apikey=", $repo_url);
             $repo_url = $repo_url[0] . "repo?apikey={$api_key}";

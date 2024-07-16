@@ -311,17 +311,19 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
 
                 require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
+                $webservice_controller = new ModWebserviceController();
 
-                $route            = $this->routeParse();
+                $route = $this->routeParse();
+
                 $route['version'] = $matches['version'];
 
-                if ( ! empty($matches['module'])) {
+                if (!empty($matches['module'])) {
                     $route['module'] = $matches['module'];
                     $route['action'] = $matches['action'];
                 }
 
-                $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route);
+
             }
 
             // Веб-сервис (SOAP)
@@ -658,6 +660,13 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchWebToken($token);
+            }
+            elseif (isset($_GET['apikey'])) {
+                //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
+                // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
+                $this->checkWebservice();
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchApi($_GET['apikey']);
             }
         }
 
