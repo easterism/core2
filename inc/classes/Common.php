@@ -218,10 +218,10 @@ class Common extends \Core2\Acl {
                 $module = $this->module;
             }
 
-            if ($this->isModuleActive($module)) {
-                $location = $module == 'Admin'
-                    ? DOC_ROOT . "core2/mod/admin"
-                    : $this->getModuleLocation($module);
+            $location = $module == 'Admin'
+                ? DOC_ROOT . "core2/mod/admin"
+                : $this->getModuleLocation($module);
+            if ($location) {
 
                 $module     = ucfirst($module);
                 $module_api = "Mod{$module}Api";
