@@ -1942,7 +1942,7 @@ class InstallModule extends \Common {
                 //готовим аякс запросы к репозиториям
                 foreach($mod_repos as $i => $repo_url){
                     $repo_url = trim($repo_url);
-                    if (!empty($repo_url) && substr_count($repo_url, "repo?apikey=") != 0) {
+                    if (!empty($repo_url) && substr_count($repo_url, "repo/index?apikey=") != 0) {
                         //запрашиваем список модулей из репозитория
                         $out = $this->doCurlRequestToRepo($repo_url, 'repo_list');
                         //достаём список модулей и ищем нужный
