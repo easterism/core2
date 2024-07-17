@@ -487,19 +487,20 @@ class editTable extends initEdit {
 					foreach ($controls as $key => $value) {
 						$controlGroups[$cellId]['html'][$key] = '';
 						if (!empty($value['group'])) {
-							$groups 		= true;
-							$temp = array();
-							$temp['key'] = $key;
-							$temp['collapsed'] = false;
-							$temp['name'] = $value['group'];
-							if (substr($value['group'], 0, 1) == "*") {
-								$temp['collapsed'] = true;
-								$temp['name'] = trim($value['group'], '*');
-							}
-							$controlGroups[$cellId]['group'][] = $temp;
-						}
+                            $temp              = [];
+                            $temp['key']       = $key;
+                            $temp['collapsed'] = false;
+                            $temp['name']      = $value['group'];
 
-						//преобразование массива с атрибутами в строку
+                            if (substr($value['group'], 0, 1) == "*") {
+                                $temp['collapsed'] = true;
+                                $temp['name']      = trim($value['group'], '*');
+                            }
+
+                            $controlGroups[$cellId]['group'][] = $temp;
+                        }
+
+                        //преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -1381,10 +1382,14 @@ class editTable extends initEdit {
                             if (is_array($this->selectSQL[$select])) {
                                 foreach ($this->selectSQL[$select] as $k => $v) {
                                     if (is_array($v)) {
-                                        $options_group = array_values($v);
+                                        if ( ! empty($v['title'])) {
+                                            $options[$k] = $v;
+                                        } else {
+                                            $options_group = array_values($v);
 
-                                        if (isset($options_group[2])) {
-                                            $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            if (isset($options_group[2])) {
+                                                $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            }
                                         }
                                     } else {
                                         $options[$k] = $v;
