@@ -10,6 +10,13 @@ if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
 
+if ( ! empty($_SERVER['REQUEST_URI'])) {
+    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+        Error::Exception("File not found", 404);
+    }
+}
+
 require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
@@ -27,12 +34,7 @@ use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
 
-if ( ! empty($_SERVER['REQUEST_URI'])) {
-    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
-        Error::Exception("File not found", 404);
-    }
-}
+
 
 $conf_file = DOC_ROOT . "conf.ini";
 
@@ -258,7 +260,7 @@ class Init extends \Core2\Db {
                 return; //выходим, если авторизация состоялась
             }
 
-            if (PHP_SAPI === 'cli') {
+            if (PHP_SAPI === 'cli') { //TODO авторизация тоже не помешала бы
                 $this->is_cli = true;
                 Registry::set('auth', new StdClass());
                 return;
@@ -954,7 +956,8 @@ class Init extends \Core2\Db {
             $modules        = $this->getModuleList();
 
             foreach ($modules as $module) {
-                if ( ! empty($module['sm_key'])) {
+                if ( isset($module['sm_key'])) {
+                    //пропускаем субмодули
                     continue;
                 }
 
@@ -986,6 +989,7 @@ class Init extends \Core2\Db {
                     $tpl_menu->modules->reassign();
                 }
 
+
                 if ($module_id == 'admin') {
                     continue;
                 }
@@ -995,6 +999,15 @@ class Init extends \Core2\Db {
                     $modController = "Mod" . ucfirst($module_id) . "Controller";
                     $file_path = $location . "/" . $modController . ".php";
 
+                    if (file_exists($location . "/serviceWorker.js")) {
+                        if (basename($_SERVER['REQUEST_URI']) == "$module_id.sw") {
+                            header("Pragma: public");
+                            header("Content-Type: application/javascript");
+                            header("Content-length: " . filesize($location . "/serviceWorker.js"));
+                            readfile($location . "/serviceWorker.js");
+                            die;
+                        }
+                    }
                     if (file_exists($file_path)) {
                         ob_start();
                         $autoload = $location . "/vendor/autoload.php";
@@ -1010,19 +1023,22 @@ class Init extends \Core2\Db {
                             $this->setContext($module_id);
                             $modController = new $modController();
 
-                            if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
-                                $module_js_list = $modController->topJs()
-                            ) {
-                                foreach ($module_js_list as $k => $module_js) {
-                                    $modules_js[] = Tool::addSrcHash($module_js);
+                            if (($modController instanceof TopJs || method_exists($modController, 'topJs'))) {
+                                $module_js_list = $modController->topJs();
+                                if (is_array($module_js_list)) {
+                                    foreach ($module_js_list as $val) {
+                                        $module_js = Tool::addSrcHash($val);
+                                        if (!in_array($module_js, $modules_js)) $modules_js[] = ltrim($module_js, "/");
+                                    }
                                 }
                             }
 
                             if ($modController instanceof TopCss &&
                                 $module_css_list = $modController->topCss()
                             ) {
-                                foreach ($module_css_list as $k => $module_css) {
-                                    $modules_css[] = Tool::addSrcHash($module_css);
+                                foreach ($module_css_list as $val) {
+                                    $module_css = Tool::addSrcHash($val);
+                                    if (!in_array($module_css, $modules_css)) $modules_css[] = ltrim($module_css, "/");
                                 }
                             }
 
@@ -1117,7 +1133,6 @@ class Init extends \Core2\Db {
                 }
             }
             $tpl->assign("<!--system_js-->", $system_js);
-
 
             $system_css = "";
             if (isset($this->config->system->css) && is_object($this->config->system->css)) {
