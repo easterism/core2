@@ -672,6 +672,7 @@ class Db {
             $config = $reg->get('config');
             $db = $this->establishConnection($config->database);
             $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
+            if (!$mod) return false;
             if ($mod['is_system'] === "Y") {
                 $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
             } else {
@@ -781,7 +782,9 @@ class Db {
      */
     final protected function getModuleConfig(string $name) {
 
-        $module_loc = $this->getModuleLocation($name);
+        $module_loc = $name == 'admin'
+            ? __DIR__ . "/../../mod/admin"
+            : $this->getModuleLocation($name);
         $conf_file  = "{$module_loc}/conf.ini";
         if (is_file($conf_file)) {
 
