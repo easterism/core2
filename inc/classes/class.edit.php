@@ -276,6 +276,28 @@ class editTable extends initEdit {
 
 
     /**
+     * Установка ширины для названий полей
+     * @param string|int $width
+     * @return void
+     */
+    public function setWidthLabels(string|int $width): void {
+
+        $this->firstColWidth = is_numeric($width) ? "{$width}px" : $width;
+    }
+
+
+    /**
+     * Установка данных записи
+     * @param array $record
+     * @return void
+     */
+    public function setData(array $record): void {
+
+        $this->SQL = [ $record ];
+    }
+
+
+    /**
      * @param array $options
      * @return string
      * @throws Zend_Db_Adapter_Exception
@@ -479,9 +501,7 @@ class editTable extends initEdit {
 
 		if (!empty($this->cell)) {
 			foreach ($this->cell as $cellId => $cellFields) {
-				$groups 		= false;
-				//echo "<PRE>";print_r($arr_fields);echo"</PRE>";//die();;
-				//echo "<PRE>";print_r($arr);echo"</PRE>";//die();;
+
 				$controls = $cellFields->controls[$this->main_table_id];
 				if (!empty($controls)) {
 					foreach ($controls as $key => $value) {
