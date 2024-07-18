@@ -83,11 +83,11 @@ class CommonApi extends \Core2\Acl {
         elseif (strpos($k, 'api') === 0) {
             $module = substr($k, 3);
 
-            if ($this->isModuleActive($module)) {
-                $location = $module == 'Admin'
-                    ? DOC_ROOT . "core2/mod/admin"
-                    : $this->getModuleLocation($module);
-
+            $location = $module == 'Admin'
+                ? DOC_ROOT . "core2/mod/admin"
+                : $this->getModuleLocation($module);
+            if ($location) {
+                
                 $module     = ucfirst($module);
                 $module_api = "Mod{$module}Api";
 
@@ -115,13 +115,17 @@ class CommonApi extends \Core2\Acl {
             }
         }
         elseif ($k === 'moduleConfig') {
-
+            $km = $k . "|" . $this->module;
+            if ($reg->isRegistered($km)) {
+                return $reg->get($km);
+            }
             $module_config = $this->getModuleConfig($this->module);
 
             if ($module_config === false) {
                 \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
             } else {
-                $v = $module_config;
+                $reg->set($k . "|" . $this->module, $module_config);
+                return $module_config;
             }
         }
         else {
