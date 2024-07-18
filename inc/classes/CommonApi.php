@@ -22,11 +22,14 @@ class CommonApi extends \Core2\Acl {
      * CommonApi constructor.
      * @param string $module
      */
-	public function __construct($module) {
+	public function __construct() {
+        $child_class_name = get_class($this);
+        $mod_name = preg_match('~^Mod[A-z0-9\_]+(Api)$~', $child_class_name, $matches)
+            ? substr($child_class_name, 3, -strlen($matches[1]))
+            : '';
 		parent::__construct();
         $reg     = Registry::getInstance();
-
-        $this->module = $module;
+        $this->module = strtolower($mod_name);
         if (!$reg->isRegistered('invoker')) {
             $reg->set('invoker', $this->module);
         }
@@ -134,5 +137,34 @@ class CommonApi extends \Core2\Acl {
         $reg->set($k . "|", $v);
 		return $v;
 	}
+
+    /**
+     * получени еданных из потока воода
+     * @return array|false|mixed|string|string[]
+     */
+    public function getInputBody()
+    {
+        $request_raw = file_get_contents('php://input', 'r');
+        $request_raw =  str_replace("\xEF\xBB\xBF", '', $request_raw);
+        if ( ! function_exists('getallheaders')) {
+            /**
+             * @return array
+             */
+            function getallheaders() {
+                $headers = [];
+                foreach ($_SERVER as $name => $value) {
+                    if (substr($name, 0, 5) == 'HTTP_') {
+                        $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                    }
+                }
+                return $headers;
+            }
+        }
+        $h = getallheaders();
+        if ($h['Content-Type'] == 'application/json') {
+            $request_raw = json_decode($request_raw, true);
+        }
+        return $request_raw;
+    }
 
 }

@@ -24,38 +24,10 @@ class Login extends \Common {
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    public function dispatch(Array $route) {
-
-        if (isset($route['api'])) {
-            header('HTTP/1.1 401 Unauthorized');
-            if ($this->core_config->auth) {
-                //значит возможна авторизация по заданной схеме
-                if ($this->core_config->auth->scheme == 'basic') {
-                    $realm = $this->core_config->auth->basic->realm;
-                    header('WWW-Authenticate: Basic realm="' . $realm . '"');
-                }
-                if ($this->core_config->auth->scheme == 'digest') {
-                    $realm = $this->core_config->auth->digest->realm;
-                    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid('') . '",opaque="' . md5($realm) . '"');
-                }
-
-                //TODO реализовать остальные схемы
-                return;
-            }
-
-            if ($route['api'] == 'auth' && $route['action'] == 'gcp') { //вход через google
-//                parse_str($route['query'], $request);
-//                $s = new SessionContainer('Social');
-//                $s->back = DOC_PATH;
-                $this->apiAuth->action_gcp();
-                return "{}";
-            }
-            return;
-        }
+    public function dispatch(Array $request) {
 
         //-------------регистрация, аутентификация через форму------------------
 
-        parse_str($route['query'], $request);
         if (isset($request['core'])) {
             if ($this->config->mail && $this->config->mail->server) {
 
