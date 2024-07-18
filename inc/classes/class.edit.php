@@ -1,10 +1,12 @@
 <?php
 require_once("class.ini.php");
 require_once 'Templater3.php';
+require_once __DIR__ . '/../Traits/Import.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Tool;
 use Core2\Registry;
+use Core2\Traits;
 
 $counter = 0;
 
@@ -13,6 +15,8 @@ $counter = 0;
  * @property Core2\Acl $acl
  */
 class editTable extends initEdit {
+
+    use Traits\Import;
 
     public    $selectSQL           = [];
     public    $buttons             = [];
