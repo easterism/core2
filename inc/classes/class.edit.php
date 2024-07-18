@@ -280,6 +280,17 @@ class editTable extends initEdit {
 
 
     /**
+     * Установка таблицы для формы
+     * @param string $table
+     * @return void
+     */
+    public function setTable(string $table): void {
+
+        $this->table = $table;
+    }
+
+
+    /**
      * Установка ширины для названий полей
      * @param string|int $width
      * @return void
