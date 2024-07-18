@@ -66,7 +66,13 @@ class Modules extends \Zend_Db_Table_Abstract {
 	public function getModuleList() {
 
 		$mods = $this->_db->fetchAll("
-			SELECT m.*,
+			SELECT m.m_id,
+				   m.m_name,
+				   m.module_id,
+				   m.is_system,
+				   m.is_public,
+				   m.version,
+				   m.isset_home_page,
 				   sm_id,
 				   sm_name,
 				   sm_key,
