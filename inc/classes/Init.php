@@ -1865,6 +1865,8 @@ function post($func, $loc, $data) {
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
+    if ($route['module'] == 'index.php') $route['module'] = 'admin';
+    if (!isset($route['api']) && !empty($_GET['module'])) $route['module'] = trim($_GET['module']);
 
     $acl = new \Core2\Acl();
 
