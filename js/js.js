@@ -463,9 +463,10 @@ $(function(){
 	$(window).hashchange();
 });
 
-$(window).resize(resize);
+//$(window).resize(resize);
 
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded",
+	(e) => {
 	xajax.callback.global.onRequest = function () {
 		preloader.show();
 	}
@@ -511,6 +512,52 @@ $(document).ready(function() {
 		isRTL: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ru']);
+
+	const targetNode = document.getElementById("mainContainer");
+	const config = {childList: true, subtree: true};
+	// Callback function to execute when mutations are observed
+	const callback = (mutationList, observer) => {
+		for (const mutation of mutationList) {
+			if (mutation.type === "childList" && mutation.addedNodes.length) {
+				$('a, button').each(function (){
+					if ($(this).data('hotkey')) {
+						if ($(this)[0].getAttribute('listener') !== 'true') {
+							const hotkey = $(this).data('hotkey')
+							keymaps[hotkey] = $(this)[0];
+							$(this)[0].setAttribute('listener', 'true');
+						}
+					}
+				});
+			} else if (mutation.type === "attributes") {
+				//console.log(`The ${mutation.attributeName} attribute was modified.`);
+			}
+		}
+	};
+	let keymaps= {};
+
+	addEventListener("keydown", (event) => {});
+	onkeydown = (e) => {
+		// console.log(e)
+		let key = "";
+		if (e.ctrlKey) key += "Ctrl+";
+		if (e.altKey) key += "Alt+";
+		key += e.code;
+		if (keymaps[key]) {
+			if (document.body.contains(keymaps[key])) {
+				if ($(keymaps[key])[0].nodeName == 'A') document.location = $(keymaps[key]).attr('href');
+				if ($(keymaps[key])[0].nodeName == 'BUTTON') $(keymaps[key]).click();
+			}
+		}
+	};
+
+	// Create an observer instance linked to the callback function
+	const observer = new MutationObserver(callback);
+
+	// Start observing the target node for configured mutations
+	observer.observe(targetNode, config);
+
+	// Later, you can stop observing
+	//observer.disconnect();
 
 });
 

@@ -67,7 +67,7 @@ class Acl extends Db {
 			$access_default = array();
 
 			// Если не назначена роль, добавляем виртуальную роль в ACL
-			if ($auth->ROLE === -1) {
+			if ($auth->ROLE < 0) {
 				$acl->addRole(new Role($auth->ROLE));
 			}
 

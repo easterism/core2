@@ -10,6 +10,13 @@ if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
 
+if ( ! empty($_SERVER['REQUEST_URI'])) {
+    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+        \Core2\Error::Exception("File not found", 404);
+    }
+}
+
 require_once($autoload);
 require_once("Error.php");
 require_once("Log.php");
@@ -27,12 +34,7 @@ use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
 
-if ( ! empty($_SERVER['REQUEST_URI'])) {
-    $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
-        Error::Exception("File not found", 404);
-    }
-}
+
 
 $conf_file = DOC_ROOT . "conf.ini";
 
@@ -258,7 +260,7 @@ class Init extends \Core2\Db {
                 return; //выходим, если авторизация состоялась
             }
 
-            if (PHP_SAPI === 'cli') {
+            if (PHP_SAPI === 'cli') { //TODO авторизация тоже не помешала бы
                 $this->is_cli = true;
                 Registry::set('auth', new StdClass());
                 return;
@@ -311,17 +313,19 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
 
                 require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
+                $webservice_controller = new ModWebserviceController();
 
-                $route            = $this->routeParse();
+                $route = $this->routeParse();
+
                 $route['version'] = $matches['version'];
 
-                if ( ! empty($matches['module'])) {
+                if (!empty($matches['module'])) {
                     $route['module'] = $matches['module'];
                     $route['action'] = $matches['action'];
                 }
 
-                $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchRest($route);
+
             }
 
             // Веб-сервис (SOAP)
@@ -344,31 +348,34 @@ class Init extends \Core2\Db {
             $route = $this->routeParse();
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
-                if (isset($route['module']) && $route['module'] === 'sse') {
+                if (isset($route['module'])) {
+                    if ($route['module'] === 'sse') {
 
-                    require_once 'core2/inc/Interfaces/Event.php';
+                        require_once 'core2/inc/Interfaces/Event.php';
 
-                    $this->setContext("admin", "sse");
-                    session_write_close();
-                    header("Content-Type: text/event-stream; charset=utf-8");
-                    header("X-Accel-Buffering: no");
-                    header("Cache-Control: no-cache");
+                        $this->setContext("admin", "sse");
+                        session_write_close();
+                        header("Content-Type: text/event-stream; charset=utf-8");
+                        header("X-Accel-Buffering: no");
+                        header("Cache-Control: no-cache");
 
-                    $sse = new Core2\SSE();
-                    while (1) {
+                        $sse = new Core2\SSE();
+                        while (1) {
 
-                        $sse->loop();
+                            $sse->loop();
 
-                        if ( connection_aborted() ) break;
+                            if (connection_aborted()) break;
 
-                        sleep(1);
+                            sleep(1);
+                        }
+                        return;
                     }
-                    return;
+
                 }
 
                 // LOG USER ACTIVITY
                 $logExclude = array(
-                    'module=profile&unread=1', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+                    'profile/index/unread', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
                 );
 
                 $this->logActivity($logExclude);
@@ -394,7 +401,8 @@ class Init extends \Core2\Db {
                 $login = new \Core2\Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
-                return $login->dispatch($route);
+                parse_str($route['query'], $request);
+                return $login->dispatch($request);
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -412,6 +420,7 @@ class Init extends \Core2\Db {
                 return $this->getMenu();
             }
             else {
+
                 if (!empty($_POST)) {
                     //может ли xajax обработать запрос
                     $xajax = new xajax();
@@ -428,6 +437,13 @@ class Init extends \Core2\Db {
                 if ($this->switchAction()) return '';
 
                 $module = !empty($route['api']) ? $route['api'] : $route['module'];
+                $extension = strrpos($module, '.') ? substr($module, strrpos($module, '.')) : null;
+                if ($extension) $module = substr($module, 0, strrpos($module, '.'));
+                if ($module == 'index') $module = "admin";
+                if (empty($route['api']) && !empty($_GET['module'])) {
+                    $module = $_GET['module'];
+                }
+
                 if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
                 $action = $route['action'];
                 $this->setContext($module, $action);
@@ -465,7 +481,8 @@ class Init extends \Core2\Db {
                         if ( ! $this->acl->checkAcl($module, 'access')) {
                             throw new Exception(911);
                         }
-                    } else {
+                    }
+                    else {
                         $submodule_id = $module . '_' . $action;
                         if ( ! $this->isModuleActive($submodule_id)) {
                             throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
@@ -480,6 +497,18 @@ class Init extends \Core2\Db {
 
                     if (empty($mods['sm_path'])) {
                         $location = $this->getModuleLocation($module); //определяем местоположение модуля
+                        if ($extension == ".sw") {
+                            //модуль хочет serviceWorker
+                            if (file_exists($location . "/serviceWorker.js")) {
+                                header("Pragma: public");
+                                header("Content-Type: text/javascript");
+                                header("Content-length: " . filesize($location . "/serviceWorker.js"));
+                                readfile($location . "/serviceWorker.js");
+                                die;
+                            } else {
+                                Error::Exception("File not found", 404);
+                            }
+                        }
                         if ($this->translate->isSetup()) {
                             $this->translate->setupExtra($location, $module);
                         }
@@ -488,7 +517,22 @@ class Init extends \Core2\Db {
                         }
                         elseif (!empty($route['api'])) {
                             //запрос от приложения
-                            $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
+                            header('Content-type: application/json');
+                            try {
+                                $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
+                                $this->requireController($location, $modController);
+                                $modController = new $modController();
+                                $action = "action_" . $action;
+                                if (method_exists($modController, $action)) {
+                                    $out = $modController->$action();
+                                    if (is_array($out)) $out = json_encode($out);
+                                    return $out;
+                                } else {
+                                    throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
+                                }
+                            } catch (\Exception $e) {
+                                return Error::catchJsonException($e->getMessage(), $e->getCode());
+                            }
                         }
                         else {
                             $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
@@ -658,6 +702,13 @@ class Init extends \Core2\Db {
                 $this->checkWebservice();
                 $webservice_controller = new ModWebserviceController();
                 return $webservice_controller->dispatchWebToken($token);
+            }
+            elseif (isset($_GET['apikey'])) {
+                //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
+                // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
+                $this->checkWebservice();
+                $webservice_controller = new ModWebserviceController();
+                return $webservice_controller->dispatchApi($_GET['apikey']);
             }
         }
 
@@ -945,7 +996,8 @@ class Init extends \Core2\Db {
             $modules        = $this->getModuleList();
 
             foreach ($modules as $module) {
-                if ( ! empty($module['sm_key'])) {
+                if ( isset($module['sm_key'])) {
+                    //пропускаем субмодули
                     continue;
                 }
 
@@ -977,6 +1029,7 @@ class Init extends \Core2\Db {
                     $tpl_menu->modules->reassign();
                 }
 
+
                 if ($module_id == 'admin') {
                     continue;
                 }
@@ -1001,19 +1054,22 @@ class Init extends \Core2\Db {
                             $this->setContext($module_id);
                             $modController = new $modController();
 
-                            if (($modController instanceof TopJs || method_exists($modController, 'topJs')) &&
-                                $module_js_list = $modController->topJs()
-                            ) {
-                                foreach ($module_js_list as $k => $module_js) {
-                                    $modules_js[] = Tool::addSrcHash($module_js);
+                            if (($modController instanceof TopJs || method_exists($modController, 'topJs'))) {
+                                $module_js_list = $modController->topJs();
+                                if (is_array($module_js_list)) {
+                                    foreach ($module_js_list as $val) {
+                                        $module_js = Tool::addSrcHash($val);
+                                        if (!in_array($module_js, $modules_js)) $modules_js[] = ltrim($module_js, "/");
+                                    }
                                 }
                             }
 
                             if ($modController instanceof TopCss &&
                                 $module_css_list = $modController->topCss()
                             ) {
-                                foreach ($module_css_list as $k => $module_css) {
-                                    $modules_css[] = Tool::addSrcHash($module_css);
+                                foreach ($module_css_list as $val) {
+                                    $module_css = Tool::addSrcHash($val);
+                                    if (!in_array($module_css, $modules_css)) $modules_css[] = ltrim($module_css, "/");
                                 }
                             }
 
@@ -1108,7 +1164,6 @@ class Init extends \Core2\Db {
                 }
             }
             $tpl->assign("<!--system_js-->", $system_js);
-
 
             $system_css = "";
             if (isset($this->config->system->css) && is_object($this->config->system->css)) {
@@ -1580,16 +1635,17 @@ class Init extends \Core2\Db {
                         $i++;
                     }
                 } else {
+                    //в адресе нет глубины
                     $vv  = explode("?", current($temp2));
                     if (!empty($vv[1])) {
                         parse_str($vv[1], $_GET);
                     }
                     $route['module'] = $vv[0];
-                    if (!$route['module'] || strpos($route['module'], '.')) { //DEPRECATED
+                    if (!$route['module']) { //DEPRECATED
                         // FIXME Убрать модуль и экшен по умолчанию
                         $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
-                        $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                     }
+                    $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                 }
             }
             Registry::set('route', $route);
@@ -1809,6 +1865,8 @@ function post($func, $loc, $data) {
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
+    if ($route['module'] == 'index.php') $route['module'] = 'admin';
+    if (!isset($route['api']) && !empty($_GET['module'])) $route['module'] = trim($_GET['module']);
 
     $acl = new \Core2\Acl();
 
