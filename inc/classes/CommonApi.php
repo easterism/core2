@@ -2,6 +2,7 @@
 require_once 'Acl.php';
 
 use Core2\Registry;
+use Core2\Error;
 
 /**
  * Class CommonApi
@@ -87,7 +88,7 @@ class CommonApi extends \Core2\Acl {
                 ? DOC_ROOT . "core2/mod/admin"
                 : $this->getModuleLocation($module);
             if ($location) {
-                
+
                 $module     = ucfirst($module);
                 $module_api = "Mod{$module}Api";
 
@@ -122,7 +123,7 @@ class CommonApi extends \Core2\Acl {
             $module_config = $this->getModuleConfig($this->module);
 
             if ($module_config === false) {
-                \Core2\Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
+                Error::Exception($this->_("Не найден конфигурационный файл модуля."), 500);
             } else {
                 $reg->set($k . "|" . $this->module, $module_config);
                 return $module_config;

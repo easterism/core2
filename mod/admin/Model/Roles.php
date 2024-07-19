@@ -24,4 +24,16 @@ class Roles extends \Zend_Db_Table_Abstract {
         return $res ? $res->$field : null;
 	}
 
+    /**
+     * Получение записи по Id
+     * @param int $id
+     * @return \Zend_Db_Table_Row_Abstract|null
+     */
+    public function getRowById(int $id):? \Zend_Db_Table_Row_Abstract {
+
+        $select = $this->select()->where("id = ?", $id);
+
+        return $this->fetchRow($select);
+    }
+
 }
