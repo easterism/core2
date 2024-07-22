@@ -161,7 +161,7 @@ if (!file_exists($theme_model)) {
     Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
 $tpls = file_get_contents($theme_model);
-\Core2\Theme::set(THEME, $tpls);
+\Core2\Theme::setModel(THEME, $tpls);
 
 
 //сохраняем параметры сессии
