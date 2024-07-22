@@ -23,6 +23,7 @@ require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
 require_once 'Config.php';
+require_once("HttpException.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
@@ -33,7 +34,7 @@ use Laminas\Cache\Storage;
 use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
-
+use Core2\HttpException;
 
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -226,6 +227,7 @@ class Init extends \Core2\Db {
         protected $is_rest = array();
         protected $is_soap = array();
 
+        private $route;
 
         /**
          * Init constructor.
@@ -265,30 +267,36 @@ class Init extends \Core2\Db {
                 Registry::set('auth', new StdClass());
                 return;
             }
-            //$s = SessionContainer::getDefaultManager()->sessionExists();
-            $this->auth = new SessionContainer('Auth');
 
-            if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
-                if (!$this->auth->getManager()->isValid()) {
+            //$s = SessionContainer::getDefaultManager()->sessionExists();
+            $auth = new SessionContainer('Auth');
+            if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!$auth->getManager()->isValid()) {
                     $this->closeSession('Y');
                 }
                 //is user active right now
-                if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
-                    if ($this->auth->LIVEID) {
-                        $row = $this->dataSession->find($this->auth->LIVEID)->current();
+                if ($auth->ID == -1) { //это root
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                }
+                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
+                    if ($auth->LIVEID) {
+                        $row = $this->dataSession->find($auth->LIVEID)->current();
                         if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
                             $this->closeSession();
                         }
                     }
                     $sLife = $this->getSetting('session_lifetime');
                     if ($sLife) {
-                        $this->auth->setExpirationSeconds($sLife, "accept_answer");
+                        $auth->setExpirationSeconds($sLife, "accept_answer");
                     }
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
                 } else {
                     $this->closeSession('Y');
                 }
+
             }
-            Registry::set('auth', $this->auth);
         }
 
 
@@ -304,7 +312,15 @@ class Init extends \Core2\Db {
                 return $this->cli();
             }
 
+            // Парсим маршрут
+            $route = $this->routeParse();
+            if (isset($route['api']) && !$this->auth) {
+                header('HTTP/1.1 401 Unauthorized');
+                return;
+            }
+
             $this->detectWebService();
+
 
             // Веб-сервис (REST)
             if ($matches = $this->is_rest) {
@@ -314,8 +330,6 @@ class Init extends \Core2\Db {
 
                 require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
                 $webservice_controller = new ModWebserviceController();
-
-                $route = $this->routeParse();
 
                 $route['version'] = $matches['version'];
 
@@ -343,9 +357,6 @@ class Init extends \Core2\Db {
             }
 
 
-
-            // Парсим маршрут
-            $route = $this->routeParse();
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module'])) {
@@ -412,11 +423,10 @@ class Init extends \Core2\Db {
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
-                if (!defined('THEME')) return;
-
-                if ($this->auth->MOBILE) {
+                if (empty($this->auth->init)) { //нет сессии на сервере
                     return $this->getMenuMobile();
                 }
+                if (!defined('THEME')) return;
                 return $this->getMenu();
             }
             else {
@@ -475,22 +485,26 @@ class Init extends \Core2\Db {
                         $_GET['action'] = "index";
 
                         if ( ! $this->isModuleActive($module)) {
+                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
                             throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                         }
 
                         if ( ! $this->acl->checkAcl($module, 'access')) {
+                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
                             throw new Exception(911);
                         }
                     }
                     else {
                         $submodule_id = $module . '_' . $action;
                         if ( ! $this->isModuleActive($submodule_id)) {
+                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                             throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                         }
                         $mods = $this->getSubModule($submodule_id);
 
                         //TODO перенести проверку субмодуля в контроллер модуля
                         if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
+                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
                             throw new Exception(911);
                         }
                     }
@@ -517,7 +531,7 @@ class Init extends \Core2\Db {
                         }
                         elseif (!empty($route['api'])) {
                             //запрос от приложения
-                            header('Content-type: application/json');
+                            header('Content-type: application/json; charset="utf-8"');
                             try {
                                 $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
                                 $this->requireController($location, $modController);
@@ -530,6 +544,12 @@ class Init extends \Core2\Db {
                                 } else {
                                     throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                                 }
+                            } catch (HttpException $e) {
+                                return Error::catchJsonException([
+                                        'msg' => $e->getMessage(),
+                                        'code' => $e->getErrorCode()
+                                    ], $e->getCode() ?: 500);
+
                             } catch (\Exception $e) {
                                 return Error::catchJsonException($e->getMessage(), $e->getCode());
                             }
@@ -663,31 +683,51 @@ class Init extends \Core2\Db {
                     //TODO заменить модуль webservice на модуль auth
                     $this->setContext('webservice');
                     $this->checkWebservice();
-                    $webservice_controller = new ModWebserviceController();
-                    //требуется webservice 2.6.0
-                    return $webservice_controller->dispatchJwtToken($token);
+                    try {
+                        $webservice_controller = new ModWebserviceApi();
+                        //требуется webservice 2.6.0
+                        return $webservice_controller->dispatchJwtToken($token);
+                    } catch (HttpException $e) {
+                        return Error::catchJsonException([
+                            'msg' => $e->getMessage(),
+                            'code' => $e->getErrorCode()
+                        ], $e->getCode() ?: 500);
+
+                    } catch (\Exception $e) {
+                        return Error::catchJsonException($e->getMessage(), $e->getCode());
+                    }
                 }
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Basic') === 0) {
                     $core_config = Registry::get('core_config');
                     if ($core_config->auth && $core_config->auth->scheme == 'basic') {
                         //http basic auth allowed
-                        list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                        $user = $this->dataUsers->getUserByLogin($login);
-                        if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
-                            $auth = new \StdClass();
+                        try {
+                            list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                            $user = $this->dataUsers->getUserByLogin($login);
+                            if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
+                                $auth = new \StdClass();
 
-                            $auth->LIVEID = 0;
+                                $auth->LIVEID = 0;
 
-                            $auth->ID = (int)$user['u_id'];
-                            $auth->NAME = $user['u_login'];
-                            $auth->EMAIL = $user['email'];
-                            $auth->LN = $user['lastname'];
-                            $auth->FN = $user['firstname'];
-                            $auth->MN = $user['middlename'];
-                            $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
-                            $auth->ROLE = $user['role'];
-                            $auth->ROLEID = (int)$user['role_id'];
-                            return $auth;
+                                $auth->ID = (int)$user['u_id'];
+                                $auth->NAME = $user['u_login'];
+                                $auth->EMAIL = $user['email'];
+                                $auth->LN = $user['lastname'];
+                                $auth->FN = $user['firstname'];
+                                $auth->MN = $user['middlename'];
+                                $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
+                                $auth->ROLE = $user['role'];
+                                $auth->ROLEID = (int)$user['role_id'];
+                                return $auth;
+                            }
+                        } catch (HttpException $e) {
+                            return Error::catchJsonException([
+                                'msg' => $e->getMessage(),
+                                'code' => $e->getErrorCode()
+                            ], $e->getCode() ?: 500);
+
+                        } catch (\Exception $e) {
+                            return Error::catchJsonException($e->getMessage(), $e->getCode());
                         }
                     }
                 }
@@ -727,8 +767,9 @@ class Init extends \Core2\Db {
 
             $location = $this->getModuleLocation('webservice');
             $webservice_controller_path =  $location . '/ModWebserviceController.php';
+            $webservice_controller_api =  $location . '/ModWebserviceApi.php';
 
-            if ( ! file_exists($webservice_controller_path)) {
+            if ( ! file_exists($webservice_controller_path) || ! file_exists($webservice_controller_api)) {
                 Error::catchJsonException([
                     'error_code'    => 'webservice_not_isset',
                     'error_message' => $this->translate->tr('Модуль Webservice не существует')
@@ -741,6 +782,7 @@ class Init extends \Core2\Db {
             }
 
             require_once($webservice_controller_path);
+            require_once($webservice_controller_api);
 
             if ( ! class_exists('ModWebserviceController')) {
                 Error::catchJsonException([
@@ -1648,6 +1690,7 @@ class Init extends \Core2\Db {
                     $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                 }
             }
+            $this->route = $route;
             Registry::set('route', $route);
             return $route;
         }
@@ -1770,11 +1813,11 @@ class Init extends \Core2\Db {
                     $data['required_location'] = true; //требовать геолокацию для работы
                 }
             }
-
-            return json_encode([
-                'status' => 'success',
-                'data'   => $data,
-            ] + $data); // Для совместимости с разными приложениями
+            return json_encode($data);
+//            return json_encode([
+//                'status' => 'success',
+//                'data'   => $data,
+//            ] + $data); // Для совместимости с разными приложениями
         }
 
 

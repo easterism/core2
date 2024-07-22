@@ -73,7 +73,7 @@ class Common extends \Core2\Acl {
         }
 
         $this->path      = 'mod/' . $this->module . '/';
-        $this->auth      = $reg->get('auth');
+        if ($reg->isRegistered('auth')) $this->auth = $reg->get('auth');
         $this->resId     = $this->module;
 		$this->actionURL = "?module=" . $this->module;
 

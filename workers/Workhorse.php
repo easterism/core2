@@ -29,9 +29,13 @@ class Workhorse
             return;
         }
         $_SERVER = get_object_vars($workload->server);
+        // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
+        define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+        define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
-            Registry::set('context',     $workload->context);
+            Registry::set('context', [strtolower($workload->module)]);
             Registry::set('auth',        $workload->auth);
 
             $db = new Db();
@@ -41,8 +45,6 @@ class Workhorse
                 //TODO сделать очистку уже авполненных задач
                 return;
             }
-
-
 
             $controller = $this->requireController($workload->module, $workload->location);
 
@@ -56,14 +58,13 @@ class Workhorse
             }
             $db->db->closeConnection();
 
-            define("DOC_ROOT", $workload->doc_root);
             $modWorker = new $controller();
             $action = $workload->worker;
 
             if (!method_exists($modWorker, $action)) {
                 throw new \Exception("Method does not exists: {$action}", 404);
             }
-            $log[] = "Run $controller->$action";
+            $log[] = "Run $controller->$action in context " . $workload->module;
 
             $error = null;
             $out   = null;
