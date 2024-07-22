@@ -684,9 +684,9 @@ class Init extends \Core2\Db {
                     $this->setContext('webservice');
                     $this->checkWebservice();
                     try {
-                        $webservice_controller = new ModWebserviceApi();
+                        $webservice_api = new ModWebserviceApi();
                         //требуется webservice 2.6.0
-                        return $webservice_controller->dispatchJwtToken($token);
+                        return $webservice_api->dispatchToken($token);
                     } catch (HttpException $e) {
                         return Error::catchJsonException([
                             'msg' => $e->getMessage(),
@@ -740,15 +740,16 @@ class Init extends \Core2\Db {
                 if (!$token) return;
                 $this->setContext('webservice');
                 $this->checkWebservice();
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchWebToken($token);
+                $webservice_api = new ModWebserviceApi();
+                return $webservice_api->dispatchWebToken($token);
             }
-            elseif (isset($_GET['apikey'])) {
+            elseif (isset($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
+                $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? $_SERVER['HTTP_CORE2_APIKEY'] : $_GET['apikey'];
                 //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
                 // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
                 $this->checkWebservice();
                 $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchApi($_GET['apikey']);
+                return $webservice_controller->dispatchApi($apikey);
             }
         }
 
