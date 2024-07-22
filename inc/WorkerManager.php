@@ -1499,8 +1499,12 @@ class WorkerManager {
         } else {
             $func = $job_name;
         }
-        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists("\Core2\\" . $func, false)) {
 
+        //имя воркера с учетом хоста
+        $job_name_log = $this->getRealJobName($job_name);
+
+        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists("\Core2\\" . $func, false)) {
+            //инициализация воркеров
             if (!isset($this->functions[$job_name])) {
                 $this->toLog("Function $func is not a registered job name");
                 return;
@@ -1519,12 +1523,8 @@ class WorkerManager {
                 $this->toLog("Function $func not found");
                 return;
             }
-
+            $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
         }
-        $job_name_log = $this->getRealJobName($job_name);
-
-        $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
-//        $this->toLog("($h) Workload: $w", self::LOG_LEVEL_DEBUG);
 
         $log = array();
 
@@ -1640,7 +1640,7 @@ class WorkerManager {
             $errstr  = $error["message"];
             $trace   = print_r(debug_backtrace(), true);
             if ($this->verbose == self::LOG_LEVEL_DEBUG) echo $errstr . chr(10);
-            $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_WORKER_INFO);
+            $this->toLog($errstr . chr(10) . $trace, self::LOG_LEVEL_PROC_INFO);
         }
     }
 }

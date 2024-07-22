@@ -185,16 +185,13 @@ class WorkerClient {
             'server'   => $_SERVER,
             'auth'     => $auth_data,
             'payload'  => $data,
-            'doc_root'  => DOC_ROOT,
         ];
 
         if ($this->module !== 'Admin') {
-            $workload += [
+            $workload = array_merge($workload, [
                 'module'    => $this->module,
-                'doc_root'  => DOC_ROOT,
-                'context'   => Registry::get('context'),
                 'worker'    => $worker
-            ];
+            ]);
         }
         return json_encode($workload);
     }
