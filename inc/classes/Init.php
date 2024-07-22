@@ -227,6 +227,7 @@ class Init extends \Core2\Db {
         protected $is_rest = array();
         protected $is_soap = array();
 
+        private $route;
 
         /**
          * Init constructor.
@@ -266,30 +267,36 @@ class Init extends \Core2\Db {
                 Registry::set('auth', new StdClass());
                 return;
             }
-            //$s = SessionContainer::getDefaultManager()->sessionExists();
-            $this->auth = new SessionContainer('Auth');
 
-            if ( ! empty($this->auth->ID) && $this->auth->ID > 0) {
-                if (!$this->auth->getManager()->isValid()) {
+            //$s = SessionContainer::getDefaultManager()->sessionExists();
+            $auth = new SessionContainer('Auth');
+            if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!$auth->getManager()->isValid()) {
                     $this->closeSession('Y');
                 }
                 //is user active right now
-                if ($this->isUserActive($this->auth->ID) && isset($this->auth->accept_answer) && $this->auth->accept_answer === true) {
-                    if ($this->auth->LIVEID) {
-                        $row = $this->dataSession->find($this->auth->LIVEID)->current();
+                if ($auth->ID == -1) { //это root
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                }
+                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
+                    if ($auth->LIVEID) {
+                        $row = $this->dataSession->find($auth->LIVEID)->current();
                         if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
                             $this->closeSession();
                         }
                     }
                     $sLife = $this->getSetting('session_lifetime');
                     if ($sLife) {
-                        $this->auth->setExpirationSeconds($sLife, "accept_answer");
+                        $auth->setExpirationSeconds($sLife, "accept_answer");
                     }
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
                 } else {
                     $this->closeSession('Y');
                 }
+
             }
-            Registry::set('auth', $this->auth);
         }
 
 
@@ -305,7 +312,15 @@ class Init extends \Core2\Db {
                 return $this->cli();
             }
 
+            // Парсим маршрут
+            $route = $this->routeParse();
+            if (isset($route['api']) && !$this->auth) {
+                header('HTTP/1.1 401 Unauthorized');
+                return;
+            }
+
             $this->detectWebService();
+
 
             // Веб-сервис (REST)
             if ($matches = $this->is_rest) {
@@ -315,8 +330,6 @@ class Init extends \Core2\Db {
 
                 require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
                 $webservice_controller = new ModWebserviceController();
-
-                $route = $this->routeParse();
 
                 $route['version'] = $matches['version'];
 
@@ -344,9 +357,6 @@ class Init extends \Core2\Db {
             }
 
 
-
-            // Парсим маршрут
-            $route = $this->routeParse();
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module'])) {
@@ -1680,6 +1690,7 @@ class Init extends \Core2\Db {
                     $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
                 }
             }
+            $this->route = $route;
             Registry::set('route', $route);
             return $route;
         }
@@ -1897,6 +1908,8 @@ function post($func, $loc, $data) {
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
+    if ($route['module'] == 'index.php') $route['module'] = 'admin';
+    if (!isset($route['api']) && !empty($_GET['module'])) $route['module'] = trim($_GET['module']);
 
     $acl = new \Core2\Acl();
 
