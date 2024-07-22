@@ -59,7 +59,7 @@ class CoreController extends Common implements File {
      * @param string $k
      * @param array  $arg
      */
-    public function __call ($k, $arg) {
+    public function __call($k, $arg) {
 		if ( ! method_exists($this, $k)) {
             return;
         }

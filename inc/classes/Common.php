@@ -73,7 +73,7 @@ class Common extends \Core2\Acl {
         }
 
         $this->path      = 'mod/' . $this->module . '/';
-        $this->auth      = $reg->get('auth');
+        if ($reg->isRegistered('auth')) $this->auth = $reg->get('auth');
         $this->resId     = $this->module;
 		$this->actionURL = "?module=" . $this->module;
 
@@ -213,7 +213,7 @@ class Common extends \Core2\Acl {
 
         // Получение экземпляра api класса указанного модуля
         elseif (strpos($k, 'api') === 0) {
-            $module = substr($k, 3);
+            $module = strtolower(substr($k, 3));
             if ($k == 'api') {
                 $module = $this->module;
             }

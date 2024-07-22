@@ -2,7 +2,7 @@
 namespace Core2;
 
 use Laminas\Session\Container as SessionContainer;
-use Core2\Tool;
+
 class Monitoring extends \Common
 {
 
@@ -348,7 +348,7 @@ class Monitoring extends \Common
                     $dataForList[$i][] = $i;
                     $dataForList[$i][] = $file;
                     $dataForList[$i][] = date("Y-m-d H:i:s", filectime($zipFolder . "/" . $file));
-                    $dataForList[$i][] = '<a href="index.php?module=admin&action=monitoring&tab_admin_monitoring=4&download='.$file.'"><img src="core2/html/'.THEME.'/img/templates_button.png" border="0"/></a>';
+                    $dataForList[$i][] = '<a href="index.php?module=admin&action=monitoring&tab_monitoring=4&download='.$file.'"><img src="core2/html/'.THEME.'/img/templates_button.png" border="0"/></a>';
 
                 }
         }
@@ -411,7 +411,10 @@ class Monitoring extends \Common
     private function getLogsData($type, $search, $limit_lines = null) {
 
         if ($type == 'file') {
-            $handle = fopen($this->config->log->system->file, "r");
+            if (!is_file($this->config->log->access->file)) {
+                throw new Exception("Файл журнала не найден");
+            }
+            $handle = fopen($this->config->log->access->file, "r");
             $count_lines = 0;
             while (!feof($handle)) {
                 fgets($handle, 4096);
