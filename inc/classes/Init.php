@@ -768,7 +768,7 @@ class Init extends \Core2\Db {
 
             $location = $this->getModuleLocation('webservice');
             $webservice_controller_path =  $location . '/ModWebserviceController.php';
-            $webservice_controller_api =  $location . '/ModWebserviceApi.php';
+            $webservice_controller_api  =  $location . '/ModWebserviceApi.php';
 
             if ( ! file_exists($webservice_controller_path) || ! file_exists($webservice_controller_api)) {
                 Error::catchJsonException([
