@@ -748,8 +748,8 @@ class Init extends \Core2\Db {
                 //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
                 // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
                 $this->checkWebservice();
-                $webservice_controller = new ModWebserviceController();
-                return $webservice_controller->dispatchApi($apikey);
+                $webservice_controller = new ModWebserviceApi();
+                return $webservice_controller->dispatchApikey($apikey);
             }
         }
 
