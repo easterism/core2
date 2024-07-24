@@ -217,7 +217,7 @@ class Init extends \Core2\Db {
         /**
          * @var StdClass|Zend_Session_Namespace
          */
-        protected $auth;
+        private $auth;
 
         /**
          * @var \Core2\Acl
@@ -316,11 +316,14 @@ class Init extends \Core2\Db {
             $route = $this->routeParse();
             if (isset($route['api']) && !$this->auth) {
                 header('HTTP/1.1 401 Unauthorized');
+                $core_config = Registry::get('core_config');
+                if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                    header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+                }
                 return;
             }
 
             $this->detectWebService();
-
 
             // Веб-сервис (REST)
             if ($matches = $this->is_rest) {
@@ -740,16 +743,36 @@ class Init extends \Core2\Db {
                 if (!$token) return;
                 $this->setContext('webservice');
                 $this->checkWebservice();
-                $webservice_api = new ModWebserviceApi();
-                return $webservice_api->dispatchWebToken($token);
+                try {
+                    $webservice_api = new ModWebserviceApi();
+                    return $webservice_api->dispatchWebToken($token);
+                } catch (HttpException $e) {
+                    return Error::catchJsonException([
+                        'msg' => $e->getMessage(),
+                        'code' => $e->getErrorCode()
+                    ], $e->getCode() ?: 500);
+
+                } catch (\Exception $e) {
+                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                }
             }
-            elseif (isset($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
+            elseif (!empty($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
                 $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? $_SERVER['HTTP_CORE2_APIKEY'] : $_GET['apikey'];
                 //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
                 // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
                 $this->checkWebservice();
-                $webservice_controller = new ModWebserviceApi();
-                return $webservice_controller->dispatchApikey($apikey);
+                try {
+                    $webservice_api = new ModWebserviceApi();
+                    return $webservice_api->dispatchApikey(trim($apikey));
+                } catch (HttpException $e) {
+                    return Error::catchJsonException([
+                        'msg' => $e->getMessage(),
+                        'code' => $e->getErrorCode()
+                    ], $e->getCode() ?: 500);
+
+                } catch (\Exception $e) {
+                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                }
             }
         }
 
@@ -791,7 +814,6 @@ class Init extends \Core2\Db {
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
                 ], 500);
             }
-            Registry::set('auth', new StdClass()); //Необходимо для правильной работы контроллера
         }
 
 
