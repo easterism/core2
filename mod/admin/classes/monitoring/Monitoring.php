@@ -412,7 +412,7 @@ class Monitoring extends \Common
 
         if ($type == 'file') {
             if (!is_file($this->config->log->access->file)) {
-                throw new Exception("Файл журнала не найден");
+                throw new \Exception("Файл журнала не найден");
             }
             $handle = fopen($this->config->log->access->file, "r");
             $count_lines = 0;
