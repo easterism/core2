@@ -24,7 +24,7 @@ class ClickHouse extends \Common {
     private function getDb() {
 
         if (!$conf = $this->moduleConfig->clickhouse) {
-            throw new \Exception('Не заполнены настройки для подключения к Clickhouse');
+            throw new \Exception('Не заполнены настройки для подключения к Clickhouse ' . $this->module);
         }
         $db = new Client($conf->toArray());
         $db->settings()->https();
