@@ -867,7 +867,6 @@ class Db {
             else {
                 //такого быть не может
                 Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", "такого быть не может " . $this->module);
-                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", $res);
             }
         } else {
             $data = $this->cache->getItem($key2);
