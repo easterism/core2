@@ -1,4 +1,19 @@
 var ro = {
+	accessAll : function () {
+		let access 	     = $("input[id^='access_']");
+		let all_role 	 = $("input[id*='all_']");
+		let owner_role 	 = $("input[id*='owner_']");
+		let default_role = $("input[id*='default_']");
+
+		access.prop('checked', true);
+		access.prop("disabled", false);
+		all_role.prop('checked', true);
+		all_role.prop('disabled', false);
+		owner_role.prop('checked', false);
+		owner_role.prop('disabled', true);
+		default_role.prop('checked', false);
+		default_role.prop('disabled', false);
+	},
 	checkToAll : function (obj) {
 		var i = obj.id.split("_");
 		var obj2 = document.getElementById(i[0] + "_owner_" + i[2]);
@@ -65,42 +80,47 @@ var ro = {
 	}
 };
 $(document).ready(function() {
-	let clicks = 0;
+	let clicks      = 0;
 	let module_name = '';
+
 	$('.roleModulesClick').click(function(){
 		clicks += 1;
-		let this_id 		= $(this).parent('.roleModules').attr('id');
-		let access_role 	= $('#access_'+ this_id);
-		let all_role 		= $("input[id$='all_"+ this_id +"']");
-		let owner_role 		= $("input[id$='owner_"+ this_id +"']");
-		let default_role 	= $("input[id$='default_"+ this_id +"']");
+
+		let this_id 	 = $(this).parent('.roleModules').attr('id');
+		let access_role  = $('#access_'+ this_id);
+		let all_role 	 = $("input[id$='all_"+ this_id +"']");
+		let owner_role 	 = $("input[id$='owner_"+ this_id +"']");
+		let default_role = $("input[id$='default_"+ this_id +"']");
 
 		if (module_name !== this_id){
 			clicks = 1;
 		}
+
 		module_name = this_id;
 
-		if ( clicks === 1 ){
+		if (clicks === 1) {
 			access_role.prop('checked', true);
-			access_role.prop("disabled",false);
+			access_role.prop("disabled", false);
 			all_role.prop('checked', true);
+			all_role.prop('disabled', false);
 			owner_role.prop('disabled', true);
 			owner_role.prop('checked', true);
-		} else if ( clicks === 2 ){
+			default_role.prop('checked', false);
+			default_role.prop('disabled', false);
+
+		} else if (clicks === 2) {
 			all_role.prop('checked', false);
 			owner_role.prop('checked', true);
 			owner_role.prop('disabled', false);
-		} else if ( clicks === 3 ){
+
+		} else if (clicks === 3) {
 			access_role.prop('checked', false);
 			owner_role.prop('checked', false);
 			default_role.prop('checked', true);
-		} else if ( clicks === 4 ){
+
+		} else if (clicks === 4) {
 			default_role.prop('checked', false);
-		}
-		if (clicks === 4 ){
 			clicks = 0;
 		}
-
 	});
-
 });
