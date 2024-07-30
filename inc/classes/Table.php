@@ -104,6 +104,7 @@ abstract class Table extends Acl {
     const COLUMN_MONEY    = 'money';
     const COLUMN_STATUS   = 'status';
     const COLUMN_SWITCH   = 'switch';
+    const COLUMN_SORT     = 'sort';
 
 
     /**
