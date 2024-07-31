@@ -103,10 +103,10 @@ class Log {
                 ! empty($this->config->log->access->file) &&
                 is_string($this->config->log->access->file)
             ) {
+                $this->log    = new Logger($name);
                 $this->log->pushHandler(new StreamHandler($this->config->log->access->file, Logger::INFO));
                 $this->writer = 'file';
             }
-            $this->log    = new Logger($name);
         }
     }
 

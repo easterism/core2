@@ -57,10 +57,14 @@ class Db extends Table {
 
     /**
      * @param string $table
+     * @return void
      */
-    public function setTable(string $table) {
+    public function setTable(string $table): void {
+
         $this->table      = $table;
         $this->table_name = $table;
+
+        $this->session->table->name = $this->table;
 
         // Из class.list
         // Нужно для удаления
@@ -72,10 +76,15 @@ class Db extends Table {
         }
     }
 
-    public function setDatabase($db)
-    {
+
+    /**
+     * @param $db
+     * @return void
+     */
+    public function setDatabase($db) {
         $this->_db = $db;
     }
+
 
     /**
      * @param string $key
@@ -743,7 +752,8 @@ class Db extends Table {
 
 
         if (empty($this->table)) {
-            $this->table = $select->getTable();
+            $this->table                = $select->getTable();
+            $this->session->table->name = $this->table;
         }
 
         //проверка наличия полей для последовательности и автора

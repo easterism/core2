@@ -34,7 +34,7 @@ class CommonApi extends \Core2\Acl {
         if (!$reg->isRegistered('invoker')) {
             $reg->set('invoker', $this->module);
         }
-		$this->auth = $reg->get('auth');
+		$this->auth = $reg->isRegistered('auth') ? $reg->get('auth') : null;
 	}
 
 

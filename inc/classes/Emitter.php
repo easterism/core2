@@ -43,15 +43,10 @@ class Emitter {
     public function emit() {
 
         $mods = $this->that->modAdmin->dataModules->getIds();
-        $auth = Registry::get('auth');
         $out  = [];
 
         foreach ($mods as $id => $mod) {
-            if ( ! empty($auth->MOBILE) && $auth->MOBILE) {
-                $modController = "Mobile" . ucfirst($mod) . "Controller";
-            } else {
-                $modController = "Mod" . ucfirst($mod) . "Controller";
-            }
+            $modController = "Mod" . ucfirst($mod) . "Controller";
 
             $location = $this->that->getModuleLocation($mod);
 
