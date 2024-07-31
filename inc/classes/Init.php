@@ -1831,7 +1831,7 @@ class Init extends \Core2\Db {
                 'id'          => $this->auth->ID,
                 'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
                 'login'       => $this->auth->NAME,
-                'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'avatar'      => "https://www.gravatar.com/avatar/" . ($this->auth->EMAIL ? md5(strtolower(trim($this->auth->EMAIL))) : ''),
                 'required_location' => false,
                 'modules'     => $modsList
             ];
