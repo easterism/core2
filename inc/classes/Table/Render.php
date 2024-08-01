@@ -67,6 +67,7 @@ class Render extends Acl {
         }
 
         $show_scripts_daterangepicker = false;
+        $isset_sort_column            = false;
 
         $tpl = new \Templater3($this->theme_location . '/html/table.html');
         $tpl->assign('[THEME_SRC]',         $this->theme_src);
@@ -753,6 +754,10 @@ class Render extends Acl {
                             : "text-align:right;";
                     }
 
+                    if ($column['type'] == 'sort') {
+                        $isset_sort_column = true;
+                    }
+
 
                     $column_attributes = [];
                     if ( ! empty($column['attr'])) {
@@ -959,6 +964,11 @@ class Render extends Acl {
                                     $tpl->rows->row->col->default->assign('[VALUE]', $img);
                                     break;
 
+                                case 'sort':
+                                    $content = "<i class=\"table-row-sortable fa fa-bars\" data-id=\"{$row_id}\" style=\"cursor: ns-resize\"></i>";
+                                    $tpl->rows->row->col->default->assign('[VALUE]', $content);
+                                    break;
+
                                 case 'switch':
                                     $cell['attr']['onclick'] = "event.cancelBubble = true;";
 
@@ -1031,6 +1041,10 @@ class Render extends Acl {
 
         if ($show_scripts_daterangepicker) {
             $tpl->touchBlock('script_daterangepicker');
+        }
+
+        if ($isset_sort_column) {
+            $tpl->touchBlock('sort_rows');
         }
 
         return $this->minify($tpl->render());

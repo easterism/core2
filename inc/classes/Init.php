@@ -12,7 +12,7 @@ if (!file_exists($autoload)) {
 
 if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html'])) {
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html', 'env'])) {
         \Core2\Error::Exception("File not found", 404);
     }
 }
@@ -129,7 +129,11 @@ if ($config->database) {
         $config->database->schema = $config->database->params->dbname;
         $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
     }
+    if (empty($config->database->params->dbname)) {
+        Error::Exception('No database found!');
+    }
 }
+
 
 //конфиг стал только для чтения
 $config->setReadOnly();
@@ -161,7 +165,7 @@ if (!file_exists($theme_model)) {
     Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
 $tpls = file_get_contents($theme_model);
-\Core2\Theme::set(THEME, $tpls);
+\Core2\Theme::setModel(THEME, $tpls);
 
 
 //сохраняем параметры сессии
