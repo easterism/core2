@@ -394,9 +394,9 @@ class WorkerManager {
                 'adapter' => 'Pdo_Mysql',
                 'params'  => [
                     'charset' => 'utf8',
-                ],
-                'driver_options'=> [
-                    \PDO::ATTR_TIMEOUT => 3,
+                    'driver_options'=> [
+                        \PDO::ATTR_TIMEOUT => 3,
+                    ]
                 ],
                 'isDefaultTableAdapter'      => true,
                 'caseFolding'                => true,
