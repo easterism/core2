@@ -19,14 +19,13 @@ class Workhorse
 
     }
 
-    public function run($job, &$log) {
+    public function run(\GearmanJob $job, &$log) {
 
         $id = $job->unique();
 
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
-            return;
         }
         $_SERVER = get_object_vars($workload->server);
         // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
@@ -36,14 +35,15 @@ class Workhorse
         //$workload_size = $job->workloadSize();
         if (!empty($workload->module) && !empty($workload->location) && !empty($workload->worker)) {
             Registry::set('context', [strtolower($workload->module)]);
-            Registry::set('auth',        $workload->auth);
+            Registry::set('auth',  $workload->auth);
 
             $db = new Db();
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job && $in_job['status'] !== 'finish') {
                 //задача уже обрабатывается
                 //TODO сделать очистку уже авполненных задач
-                return;
+                $log[] = "Job {$job->handle()} already in progress";
+                return false;
             }
 
             $controller = $this->requireController($workload->module, $workload->location);
@@ -58,19 +58,20 @@ class Workhorse
             }
             $db->db->closeConnection();
 
-            $modWorker = new $controller();
-            $action = $workload->worker;
-
-            if (!method_exists($modWorker, $action)) {
-                throw new \Exception("Method does not exists: {$action}", 404);
-            }
-            $log[] = "Run $controller->$action in context " . $workload->module;
-
             $error = null;
             $out   = null;
             try {
+                $modWorker = new $controller();
+                $action = $workload->worker;
+
+                if (!method_exists($modWorker, $action)) {
+                    throw new \Exception("Method does not exists: {$action}", 404);
+                }
+                $log[] = "Run $controller->$action in context " . $workload->module;
+
                 //выполнение задачи
                 $out = $modWorker->$action($job, $workload->payload);
+
             } catch (\Exception $e) {
                 $error = $e->getMessage();
             }
@@ -87,12 +88,11 @@ class Workhorse
 
             $log[] = "Finish $controller->$action";
 
-            return $out;
+            return $out ?: true; //только не false
             //}
             //throw new Exception("Worker is broken: " . $action, 500);
         }
         throw new \Exception("Workhorse can't find worker", 500);
-        return;
     }
 
     /**

@@ -1503,11 +1503,10 @@ class WorkerManager {
         //имя воркера с учетом хоста
         $job_name_log = $this->getRealJobName($job_name);
 
-        if (empty($objects[$job_name]) && !function_exists($func) && !class_exists("\Core2\\" . $func, false)) {
+        if (empty($objects[$job_name]) && !class_exists("\Core2\\" . $func, false)) {
             //инициализация воркеров
             if (!isset($this->functions[$job_name])) {
                 $this->toLog("Function $func is not a registered job name");
-                return;
             }
 
             require_once $this->functions[$job_name]["path"];
@@ -1518,10 +1517,6 @@ class WorkerManager {
                 $ns_func = "\Core2\\$func";
                 $objects[$job_name] = new $ns_func();
 
-            } elseif (!function_exists($func)) {
-
-                $this->toLog("Function $func not found");
-                return;
             }
             $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
         }
@@ -1537,18 +1532,17 @@ class WorkerManager {
             try {
                 $job->sendData('start');
                 $result = $objects[$job_name]->run($job, $log);
-                $job->sendComplete('done');
+                if ($result) $job->sendComplete('done');
                 $log[] = "Finish Job: $job_name_log";
             } catch (\Exception $e) {
                 $this->toLog($e->getMessage(), self::LOG_LEVEL_WORKER_INFO);
                 $job->sendException($e->getMessage());
                 $job->sendFail();
             }
-        } elseif (function_exists($func)) {
-            $this->toLog("($h) Calling function for $job_name_log.", self::LOG_LEVEL_DEBUG);
-            $result = $func($job, $log);
         } else {
             $this->toLog("($h) FAILED to find a function or class for $job_name_log.", self::LOG_LEVEL_INFO);
+            $job->sendException("Object $job_name_log not found");
+            $job->sendFail();
         }
 
         if (!empty($log)) {
