@@ -1424,6 +1424,13 @@ class editTable extends initEdit {
 
                                             if (isset($options_group[2])) {
                                                 $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            } else {
+                                                foreach ($v as $item) {
+                                                    if ( ! empty($item['title'])) {
+                                                        $options[$k] = $v;
+                                                        break;
+                                                    }
+                                                }
                                             }
                                         }
                                     } else {
@@ -1471,10 +1478,21 @@ class editTable extends initEdit {
                             if (is_array($this->selectSQL[$select])) {
                                 foreach ($this->selectSQL[$select] as $k => $v) {
                                     if (is_array($v)) {
-                                        $options_group = array_values($v);
+                                        if ( ! empty($v['title'])) {
+                                            $options[$k] = $v;
+                                        } else {
+                                            $options_group = array_values($v);
 
-                                        if (isset($options_group[2])) {
-                                            $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            if (isset($options_group[2])) {
+                                                $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            } else {
+                                                foreach ($v as $item) {
+                                                    if ( ! empty($item['title'])) {
+                                                        $options[$k] = $v;
+                                                        break;
+                                                    }
+                                                }
+                                            }
                                         }
                                     } else {
                                         $options[$k] = $v;
