@@ -36,7 +36,6 @@ class Db {
      */
     private $_core_config;
 
-    private $_settings  = array();
     private $_locations = array();
     private $_counter = 0;
     private string $schemaName = 'public';
@@ -107,7 +106,7 @@ class Db {
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-            $k = $k . '|';
+            //$k = $k . '|';
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
@@ -454,7 +453,7 @@ class Db {
 	 */
 	public function getSetting($code) {
 		$this->getAllSettings();
-		return isset($this->_settings[$code]) ? $this->_settings[$code]['value'] : false;
+		return isset(Registry::get("_settings")[$code]) ? Registry::get("_settings")[$code]['value'] : false;
 	}
 
 
@@ -464,8 +463,9 @@ class Db {
 	 */
 	public function getCustomSetting($code) {
 		$this->getAllSettings();
-		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_custom_sw'] == 'Y') {
-			return $this->_settings[$code]['value'];
+        $sett = Registry::get("_settings");
+		if (isset($sett[$code]) && $sett[$code]['is_custom_sw'] == 'Y') {
+			return $sett[$code]['value'];
 		}
 		return false;
 	}
@@ -477,8 +477,9 @@ class Db {
 	 */
 	public function getPersonalSetting($code) {
 		$this->getAllSettings();
-		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_personal_sw'] == 'Y') {
-			return $this->_settings[$code]['value'];
+        $sett = Registry::get("_settings");
+		if (isset($sett[$code]) && $sett[$code]['is_personal_sw'] == 'Y') {
+			return $sett[$code]['value'];
 		}
 		return false;
 	}
@@ -813,6 +814,8 @@ class Db {
 	 * Получение всех включенных настроек системы
 	 */
 	private function getAllSettings(): void {
+        $reg      = Registry::getInstance();
+        if ($reg->isRegistered("_settings")) return;
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
@@ -830,7 +833,7 @@ class Db {
 		} else {
 			$is = $this->cache->getItem($key);
 		}
-		$this->_settings = $is;
+        $reg->set("_settings", $is);
 	}
 
     /**
