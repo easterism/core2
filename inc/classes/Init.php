@@ -55,10 +55,11 @@ $config = [
         'adapter' => 'Pdo_Mysql',
         'params'  => [
             'charset' => 'utf8',
-        ],
-        'driver_options'=> [
-            \PDO::ATTR_TIMEOUT => 'ss',
-            \PDO::ATTR_PERSISTENT => true,
+            'driver_options'=> [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ]
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
@@ -1836,7 +1837,7 @@ class Init extends \Core2\Db {
                 'id'          => $this->auth->ID,
                 'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
                 'login'       => $this->auth->NAME,
-                'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'avatar'      => "https://www.gravatar.com/avatar/" . ($this->auth->EMAIL ? md5(strtolower(trim($this->auth->EMAIL))) : ''),
                 'required_location' => false,
                 'modules'     => $modsList
             ];

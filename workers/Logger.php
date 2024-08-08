@@ -53,13 +53,12 @@ class Logger
 
     }
 
-    public function run($job, &$log)
+    public function run(\GearmanJob $job, &$log)
     {
 
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
-            return;
         }
 
         $_SERVER = get_object_vars($workload->server);
@@ -92,9 +91,9 @@ class Logger
                     throw new \Exception($e->getMessage(), $e->getCode());
                 }
             }
-            return;
         } else {
             //TODO лог системы
         }
+        return true;
     }
 }
