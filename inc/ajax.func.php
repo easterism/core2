@@ -899,7 +899,7 @@ class ajaxFunc extends Common {
                             'use_path_style_endpoint' => true
                         ]);
                         //$listResponse = $client->listBuckets();
-                        $key = "$table|$last_insert_id|$hash";
+                        $key = "{$table}/{$last_insert_id}/{$hash}";
                         $client->putObject([
                             'Bucket' => $s3->bucket,
                             'Key' => $key,
