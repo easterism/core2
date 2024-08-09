@@ -55,10 +55,11 @@ $config = [
         'adapter' => 'Pdo_Mysql',
         'params'  => [
             'charset' => 'utf8',
-        ],
-        'driver_options'=> [
-            \PDO::ATTR_TIMEOUT => 'ss',
-            \PDO::ATTR_PERSISTENT => true,
+            'driver_options'=> [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ]
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
@@ -230,6 +231,7 @@ class Init extends \Core2\Db {
         protected $is_cli = false;
         protected $is_rest = array();
         protected $is_soap = array();
+        private $is_xajax;
 
         private $route;
 
@@ -327,42 +329,51 @@ class Init extends \Core2\Db {
                 return;
             }
 
-            $this->detectWebService();
+            if (!empty($_POST)) {
+                //может ли xajax обработать запрос
+                $xajax = new xajax();
+                if ($xajax->canProcessRequest()) {
+                    $this->is_xajax = $xajax;
+                }
+            }
 
-            // Веб-сервис (REST)
-            if ($matches = $this->is_rest) {
-                $this->setContext('webservice');
+            if (!$this->is_xajax) {
+                $this->detectWebService();
 
-                $this->checkWebservice();
+                // Веб-сервис (REST)
+                if ($matches = $this->is_rest) {
+                    $this->setContext('webservice');
 
-                require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
-                $webservice_controller = new ModWebserviceController();
+                    $this->checkWebservice();
 
-                $route['version'] = $matches['version'];
+                    require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
+                    $webservice_controller = new ModWebserviceController();
 
-                if (!empty($matches['module'])) {
-                    $route['module'] = $matches['module'];
-                    $route['action'] = $matches['action'];
+                    $route['version'] = $matches['version'];
+
+                    if (!empty($matches['module'])) {
+                        $route['module'] = $matches['module'];
+                        $route['action'] = $matches['action'];
+                    }
+
+                    return $webservice_controller->dispatchRest($route);
+
                 }
 
-                return $webservice_controller->dispatchRest($route);
+                // Веб-сервис (SOAP)
+                if ($matches = $this->is_soap) {
+                    $this->setContext('webservice');
+                    $this->checkWebservice();
 
+                    $webservice_controller = new ModWebserviceController();
+
+                    $version = $matches['version'];
+                    $action = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
+                    $module_name = $matches['module'];
+
+                    return $webservice_controller->dispatchSoap($module_name, $action, $version);
+                }
             }
-
-            // Веб-сервис (SOAP)
-            if ($matches = $this->is_soap) {
-                $this->setContext('webservice');
-                $this->checkWebservice();
-
-                $webservice_controller = new ModWebserviceController();
-
-                $version     = $matches['version'];
-                $action      = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
-                $module_name = $matches['module'];
-
-                return $webservice_controller->dispatchSoap($module_name, $action, $version);
-            }
-
 
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
@@ -413,6 +424,13 @@ class Init extends \Core2\Db {
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
 
+                if ($this->is_xajax) {
+                    //может ли xajax обработать запрос
+                    $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
+                    $xajax->processRequest();
+                    return;
+                }
+
             }
             else {
 
@@ -437,18 +455,6 @@ class Init extends \Core2\Db {
                 return $this->getMenu();
             }
             else {
-
-                if (!empty($_POST)) {
-                    //может ли xajax обработать запрос
-                    $xajax = new xajax();
-                    if ($xajax->canProcessRequest()) {
-//                    $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
-//                    $xajax->configure('errorHandler', true);
-                        $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-                        $xajax->processRequest();
-                        return;
-                    }
-                }
 
                 if ($this->deleteAction()) return '';
                 if ($this->switchAction()) return '';
@@ -1128,7 +1134,7 @@ class Init extends \Core2\Db {
                                 if (is_array($module_js_list)) {
                                     foreach ($module_js_list as $val) {
                                         $module_js = Tool::addSrcHash($val);
-                                        if (!in_array($module_js, $modules_js)) $modules_js[] = ltrim($module_js, "/");
+                                        if (!in_array($module_js, $modules_js)) $modules_js[] = $module_js;
                                     }
                                 }
                             }
@@ -1138,7 +1144,7 @@ class Init extends \Core2\Db {
                             ) {
                                 foreach ($module_css_list as $val) {
                                     $module_css = Tool::addSrcHash($val);
-                                    if (!in_array($module_css, $modules_css)) $modules_css[] = ltrim($module_css, "/");
+                                    if (!in_array($module_css, $modules_css)) $modules_css[] = $module_css;
                                 }
                             }
 
@@ -1710,7 +1716,7 @@ class Init extends \Core2\Db {
                         parse_str($vv[1], $_GET);
                     }
                     $route['module'] = $vv[0];
-                    if (!$route['module']) { //DEPRECATED
+                    if (!$route['module'] || $route['module'] == 'index.php') { //DEPRECATED
                         // FIXME Убрать модуль и экшен по умолчанию
                         $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
                     }
@@ -1831,7 +1837,7 @@ class Init extends \Core2\Db {
                 'id'          => $this->auth->ID,
                 'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
                 'login'       => $this->auth->NAME,
-                'avatar'      => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth->EMAIL))),
+                'avatar'      => "https://www.gravatar.com/avatar/" . ($this->auth->EMAIL ? md5(strtolower(trim($this->auth->EMAIL))) : ''),
                 'required_location' => false,
                 'modules'     => $modsList
             ];
@@ -1935,8 +1941,6 @@ function post($func, $loc, $data) {
     $res       = new xajaxResponse();
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
-    if ($route['module'] == 'index.php') $route['module'] = 'admin';
-    if (!isset($route['api']) && !empty($_GET['module'])) $route['module'] = trim($_GET['module']);
 
     $acl = new \Core2\Acl();
 
