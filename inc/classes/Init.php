@@ -31,10 +31,15 @@ use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
+use Core2\Acl;
+use Core2\Db;
+use Core2\I18n;
+use Core2\Login;
 use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
 use Core2\HttpException;
+use Core2\Theme;
 
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -57,7 +62,7 @@ $config = [
             'charset' => 'utf8',
             'driver_options'=> [
                 PDO::ATTR_TIMEOUT => 5,
-                PDO::ATTR_PERSISTENT => true,
+//                PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ]
         ],
@@ -146,7 +151,7 @@ if (isset($config->include_path) && $config->include_path) {
 
 //подключаем мультиязычность
 require_once 'I18n.php';
-$translate = new \Core2\I18n($config);
+$translate = new I18n($config);
 
 //устанавливаем шкурку
 if ( ! empty($config->theme)) {
@@ -166,7 +171,7 @@ if (!file_exists($theme_model)) {
     Error::Exception("Theme '" . THEME . "' model does not exists.");
 }
 $tpls = file_get_contents($theme_model);
-\Core2\Theme::set(THEME, $tpls);
+Theme::set(THEME, $tpls);
 
 
 //сохраняем параметры сессии
@@ -201,7 +206,6 @@ Registry::set('config', $config);
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
     $config = new Core2\Config();
-    $core_config   = $config->readIni($core_conf_file);
     Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
@@ -217,7 +221,7 @@ require_once 'SSE.php';
  * Class Init
  * @property Modules $dataModules
  */
-class Init extends \Core2\Db {
+class Init extends Db {
 
         /**
          * @var StdClass|Zend_Session_Namespace
@@ -225,9 +229,9 @@ class Init extends \Core2\Db {
         private $auth;
 
         /**
-         * @var \Core2\Acl
+         * @var Core2\Acl
          */
-        protected $acl;
+        private $acl;
         protected $is_cli = false;
         protected $is_rest = array();
         protected $is_soap = array();
@@ -407,9 +411,7 @@ class Init extends \Core2\Db {
                 require_once 'core2/inc/Interfaces/Subscribe.php';
                 require_once 'core2/inc/Interfaces/Switches.php';
 
-                // TODO move ACL to auth
-                // найти способ для запросов с токеном без пользователя
-                $this->acl = new \Core2\Acl();
+                $this->acl = new Acl();
                 $this->acl->setupAcl();
 
                 if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
@@ -417,7 +419,7 @@ class Init extends \Core2\Db {
             }
             else {
 
-                $login = new \Core2\Login();
+                $login = new Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
                 parse_str($route['query'], $request);
@@ -1036,11 +1038,11 @@ class Init extends \Core2\Db {
             $xajax->processRequest(); //DEPRECATED
 
             if (Tool::isMobileBrowser()) {
-                $tpl_file      = \Core2\Theme::get("indexMobile");
-                $tpl_file_menu = \Core2\Theme::get("menuMobile");
+                $tpl_file      = Theme::get("indexMobile");
+                $tpl_file_menu = Theme::get("menuMobile");
             } else {
-                $tpl_file      = \Core2\Theme::get("index");
-                $tpl_file_menu = \Core2\Theme::get("menu");
+                $tpl_file      = Theme::get("index");
+                $tpl_file_menu = Theme::get("menu");
             }
 
             $tpl      = new Templater3($tpl_file);
@@ -1261,7 +1263,7 @@ class Init extends \Core2\Db {
             $html = '';
             switch ($navigate_item['type']) {
                 case 'divider':
-                    $html = file_get_contents(\Core2\Theme::get("html-navigation-divider"));
+                    $html = file_get_contents(Theme::get("html-navigation-divider"));
                     break;
 
                 case 'link':
@@ -1272,7 +1274,7 @@ class Init extends \Core2\Db {
                         ? $navigate_item['onclick']
                         : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-link"));
+                    $tpl = new Templater3(Theme::get("html-navigation-link"));
                     $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                     $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1283,7 +1285,7 @@ class Init extends \Core2\Db {
                     break;
 
                 case 'dropdown':
-                    $tpl = new Templater3(\Core2\Theme::get("html-navigation-dropdown"));
+                    $tpl = new Templater3(Theme::get("html-navigation-dropdown"));
                     $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                     $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
                     $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
@@ -1939,7 +1941,7 @@ function post($func, $loc, $data) {
     if ($route['module'] == 'index.php') $route['module'] = 'admin';
     if (!isset($route['api']) && !empty($_GET['module'])) $route['module'] = trim($_GET['module']);
 
-    $acl = new \Core2\Acl();
+    $acl = new Acl();
 
     Registry::set('context', array($route['module'], $route['action']));
 
@@ -1972,8 +1974,7 @@ function post($func, $loc, $data) {
             }
         }
 
-        $db        = new \Core2\Db;
-        $location  = $db->getModuleLocation($route['module']);
+        $location  = $acl->getModuleLocation($route['module']);
         $file_path = $location . "/ModAjax.php";
 
         if (file_exists($file_path)) {

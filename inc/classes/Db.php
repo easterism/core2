@@ -39,7 +39,6 @@ class Db {
     private $_settings  = array();
     private $_locations = array();
     private $_modules = array();
-    private $_counter = 0;
     private string $schemaName = 'public';
 
     /**
