@@ -1422,7 +1422,7 @@ class editTable extends initEdit {
                                         } else {
                                             $options_group = array_values($v);
 
-                                            if (isset($options_group[2])) {
+                                            if (isset($options_group[2]) && is_scalar($options_group[2])) {
                                                 $options[$options_group[2]][$options_group[0]] = $options_group[1];
                                             } else {
                                                 foreach ($v as $item) {
@@ -1483,7 +1483,7 @@ class editTable extends initEdit {
                                         } else {
                                             $options_group = array_values($v);
 
-                                            if (isset($options_group[2])) {
+                                            if (isset($options_group[2]) && is_scalar($options_group[2])) {
                                                 $options[$options_group[2]][$options_group[0]] = $options_group[1];
                                             } else {
                                                 foreach ($v as $item) {
@@ -1563,7 +1563,7 @@ class editTable extends initEdit {
                                     if (is_array($v)) {
                                         $options_group = array_values($v);
 
-                                        if (isset($options_group[2])) {
+                                        if (isset($options_group[2]) && is_scalar($options_group[2])) {
                                             $select_options[$options_group[2]][$options_group[0]] = $options_group[1];
 
                                             if (isset($row_tags[$options_group[0]])) {
