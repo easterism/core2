@@ -57,7 +57,6 @@ $config = [
             'charset' => 'utf8',
             'driver_options'=> [
                 PDO::ATTR_TIMEOUT => 5,
-                PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ]
         ],
