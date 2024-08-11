@@ -23,14 +23,12 @@ class Mailer
     /**
      * @param \GearmanJob $job
      * @param array       $log
-     * @return void
      */
-    public function run(\GearmanJob $job, array &$log): void {
+    public function run(\GearmanJob $job, array &$log) {
 
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
-            return;
         }
         $_SERVER = get_object_vars($workload->server);
 
@@ -254,5 +252,6 @@ class Mailer
                 $db->closeConnection();
             }
         }
+        return true;
     }
 }

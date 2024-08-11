@@ -65,6 +65,26 @@ class Config
         return $data;
     }
 
+    /**
+     * получаем список всех секций
+     * @param $filename
+     * @return array
+     */
+    public function getExtends($filename)
+    {
+        $reader = new Reader\Ini();
+        $reader->setProcessSections(true);
+        $reader->setNestSeparator(':');
+        $sections = array_keys($reader->fromFile($filename));
+        $res = [];
+        foreach ($sections as $section) {
+            if ($section !== 'production') {
+                $res[] = trim($section);
+            }
+        }
+        return $res;
+    }
+
     private function stageSection($section)
     {
         if (!isset($this->data['production'])) throw new \Exception("production section not found", 404);

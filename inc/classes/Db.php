@@ -36,9 +36,7 @@ class Db {
      */
     private $_core_config;
 
-    private $_settings  = array();
     private $_locations = array();
-    private $_modules = array();
     private $_counter = 0;
     private string $schemaName = 'public';
 
@@ -108,7 +106,7 @@ class Db {
 		}
 		// Получение указанного кэша
 		if ($k == 'cache') {
-            $k = $k . '|';
+            //$k = $k . '|';
 			if (!$reg->isRegistered($k)) {
                 if (!$this->_core_config) $this->_core_config = $reg->get('core_config');
                 $options = $this->_core_config->cache->options ? $this->_core_config->cache->options->toArray() : [];
@@ -455,7 +453,7 @@ class Db {
 	 */
 	public function getSetting($code) {
 		$this->getAllSettings();
-		return isset($this->_settings[$code]) ? $this->_settings[$code]['value'] : false;
+		return isset(Registry::get("_settings")[$code]) ? Registry::get("_settings")[$code]['value'] : false;
 	}
 
 
@@ -465,8 +463,9 @@ class Db {
 	 */
 	public function getCustomSetting($code) {
 		$this->getAllSettings();
-		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_custom_sw'] == 'Y') {
-			return $this->_settings[$code]['value'];
+        $sett = Registry::get("_settings");
+		if (isset($sett[$code]) && $sett[$code]['is_custom_sw'] == 'Y') {
+			return $sett[$code]['value'];
 		}
 		return false;
 	}
@@ -478,8 +477,9 @@ class Db {
 	 */
 	public function getPersonalSetting($code) {
 		$this->getAllSettings();
-		if (isset($this->_settings[$code]) && $this->_settings[$code]['is_personal_sw'] == 'Y') {
-			return $this->_settings[$code]['value'];
+        $sett = Registry::get("_settings");
+		if (isset($sett[$code]) && $sett[$code]['is_personal_sw'] == 'Y') {
+			return $sett[$code]['value'];
 		}
 		return false;
 	}
@@ -605,8 +605,8 @@ class Db {
         $mod = $this->getModule($id[0]);
         if (!$mod) return false;
         if (!empty($id[1])) {
-            if (empty($this->_modules[$id[0]]['submodules'][$id[1]]) ||
-                $this->_modules[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+            if (empty(Registry::get("_modules")[$id[0]]['submodules'][$id[1]]) ||
+                Registry::get("_modules")[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
         }
         return true;
 	}
@@ -621,24 +621,25 @@ class Db {
 
         $this->getAllModules();
         $id = explode("_", $submodule_id);
+        $_mods = Registry::get("_modules");
 
         if (empty($id[1]) ||
-            empty($this->_modules[$id[0]]) ||
-            empty($this->_modules[$id[0]]['submodules'][$id[1]])
+            empty($_mods[$id[0]]) ||
+            empty($_mods[$id[0]]['submodules'][$id[1]])
         ) {
             return [];
         }
 
-        $submodule = $this->_modules[$id[0]]['submodules'][$id[1]];
+        $submodule = $_mods[$id[0]]['submodules'][$id[1]];
 
         return [
-            'm_id'      => $this->_modules[$id[0]]['m_id'],
-            'm_name'    => $this->_modules[$id[0]]['m_name'],
+            'm_id'      => $_mods[$id[0]]['m_id'],
+            'm_name'    => $_mods[$id[0]]['m_name'],
             'sm_path'   => $submodule['sm_path'],
             'sm_name'   => $submodule['sm_name'],
             'visible'   => $submodule['visible'],
             'module_id' => $id[0],
-            'is_system' => $this->_modules[$id[0]]['is_system'],
+            'is_system' => $_mods[$id[0]]['is_system'],
             'sm_id'     => $id[1],
         ];
     }
@@ -652,7 +653,7 @@ class Db {
 	final public function isModuleInstalled($module_id) {
         $this->getAllModules();
         $module_id = trim(strtolower($module_id));
-        $is = isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
+        $is = isset(Registry::get("_modules")[$module_id]) ? Registry::get("_modules")[$module_id] : [];
         return $is;
 	}
 
@@ -694,7 +695,7 @@ class Db {
 	 */
 	final public function getModuleVersion($module_id) {
         $this->getAllModules();
-        $version = isset($this->_modules[$module_id]) ? $this->_modules[$module_id]['version'] : '';
+        $version = isset(Registry::get("_modules")[$module_id]) ? Registry::get("_modules")[$module_id]['version'] : '';
 		return $version;
 	}
 
@@ -743,7 +744,9 @@ class Db {
                     }
                 }
             }
-            $this->_modules[$module_id]['location'] = $loc;
+            $_mods = Registry::get("_modules");
+            $_mods[$module_id]['location'] = $loc;
+            Registry::set("_modules", $_mods);
         } else {
             $loc = $module['location'];
         }
@@ -757,7 +760,7 @@ class Db {
 	 */
 	final public function getModule(string $module_id): array {
         $this->getAllModules();
-        return isset($this->_modules[$module_id]) ? $this->_modules[$module_id] : [];
+        return isset(Registry::get("_modules")[$module_id]) ? Registry::get("_modules")[$module_id] : [];
 	}
 
 
@@ -811,6 +814,8 @@ class Db {
 	 * Получение всех включенных настроек системы
 	 */
 	private function getAllSettings(): void {
+        $reg      = Registry::getInstance();
+        if ($reg->isRegistered("_settings")) return;
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
@@ -828,7 +833,7 @@ class Db {
 		} else {
 			$is = $this->cache->getItem($key);
 		}
-		$this->_settings = $is;
+        $reg->set("_settings", $is);
 	}
 
     /**
@@ -837,13 +842,14 @@ class Db {
      * @return void
      */
     private function getAllModules(): void {
-        if ($this->_modules) return;
+        $reg      = Registry::getInstance();
+        if ($reg->isRegistered("_modules")) return;
         $key2 = "all_modules_" . $this->config->database->params->dbname;
         //if (1==1) {
         if (!($this->cache->hasItem($key2))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
-            $config = Registry::get('config');
+            $config = $reg->get('config');
             $db = $this->establishConnection($config->database);
 
             $m            = new Model\Modules($db);
@@ -867,12 +873,11 @@ class Db {
             else {
                 //такого быть не может
                 Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", "такого быть не может " . $this->module);
-                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", $res);
             }
         } else {
             $data = $this->cache->getItem($key2);
         }
-        $this->_modules = $data;
+        $reg->set("_modules", $data);
     }
 
 }

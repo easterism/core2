@@ -146,7 +146,7 @@ class CommonApi extends \Core2\Acl {
     public function getInputBody()
     {
         $request_raw = file_get_contents('php://input', 'r');
-        $request_raw =  str_replace("\xEF\xBB\xBF", '', $request_raw);
+        $request_raw = str_replace("\xEF\xBB\xBF", '', $request_raw);
         if ( ! function_exists('getallheaders')) {
             /**
              * @return array
