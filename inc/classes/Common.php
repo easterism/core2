@@ -390,7 +390,7 @@ class Common extends \Core2\Acl {
                 $data_msg .= '<pre>' . $data->getTraceAsString() . '</pre>';
 
             } else {
-                $data_msg = '<pre>' . json_encode($data, JSON_PRETTY_PRINT) . '</pre>';
+                $data_msg = '<pre>' . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
             }
         }
 
