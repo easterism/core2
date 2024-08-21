@@ -34,7 +34,6 @@ class Error {
 				echo $msg;
 			}
 		}
-		die;
 	}
 
 	/**
