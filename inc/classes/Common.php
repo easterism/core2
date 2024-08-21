@@ -213,7 +213,7 @@ class Common extends \Core2\Acl {
 
         // Получение экземпляра api класса указанного модуля
         elseif (strpos($k, 'api') === 0) {
-            $module = substr($k, 3);
+            $module = strtolower(substr($k, 3));
             if ($k == 'api') {
                 $module = $this->module;
             }

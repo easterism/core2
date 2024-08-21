@@ -1,10 +1,12 @@
 <?php
 require_once("class.ini.php");
 require_once 'Templater3.php';
+require_once __DIR__ . '/../Traits/Import.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Tool;
 use Core2\Registry;
+use Core2\Traits;
 
 $counter = 0;
 
@@ -13,6 +15,8 @@ $counter = 0;
  * @property Core2\Acl $acl
  */
 class editTable extends initEdit {
+
+    use Traits\Import;
 
     public    $selectSQL           = [];
     public    $buttons             = [];
@@ -38,6 +42,51 @@ class editTable extends initEdit {
     private   $uniq_class_id       = '';
 
 
+    const TYPE_TEXT           = 'text';
+    const TYPE_NUMBER         = 'number';
+    const TYPE_NUMBER_RANGE   = 'number_range';
+    const TYPE_MONEY          = 'money';
+    const TYPE_TEXTAREA       = 'textarea';
+    const TYPE_FCK            = 'fck';
+    const TYPE_PASSWORD       = 'password';
+    const TYPE_RADIO          = 'radio';
+    const TYPE_RADIO2         = 'radio2';
+    const TYPE_CHECKBOX       = 'checkbox';
+    const TYPE_CHECKBOX2      = 'checkbox2';
+    const TYPE_SELECT         = 'select';
+    const TYPE_SELECT2        = 'select2';
+    const TYPE_MULTILIST      = 'multilist';
+    const TYPE_MULTILIST2     = 'multilist2';
+    const TYPE_MULTILIST3     = 'multilist3';
+    const TYPE_MULTISELECT2   = 'multiselect2';
+    const TYPE_TAGS           = 'tags';
+    const TYPE_DATASET        = 'dataset';
+    const TYPE_FILE           = 'file';
+    const TYPE_XFILE          = 'xfile';
+    const TYPE_XFILE_AUTO     = 'xfile_auto';
+    const TYPE_XFILES         = 'xfiles';
+    const TYPE_XFILES_AUTO    = 'xfiles_auto';
+    const TYPE_LINK           = 'link';
+    const TYPE_PROTECTED      = 'protected';
+    const TYPE_CUSTOM         = 'custom';
+    const TYPE_DATE           = 'date';
+    const TYPE_DATE2          = 'date2';
+    const TYPE_DATETIME       = 'datetime';
+    const TYPE_DATETIME2      = 'datetime2';
+    const TYPE_DATETIME_LOCAL = 'datetime_local';
+    const TYPE_DATE_WEEK      = 'date_week';
+    const TYPE_DATE_MONTH     = 'date_month';
+    const TYPE_DATE_RANGE     = 'daterange';
+    const TYPE_TIME           = 'time';
+    const TYPE_COLOR          = 'color';
+    const TYPE_COORDINATES    = 'coordinates';
+    const TYPE_SWITCH         = 'switch';
+    const TYPE_COMBOBOX       = 'combobox';
+    const TYPE_MODAL          = 'modal';
+    const TYPE_MODAL2         = 'modal2';
+    const TYPE_MODAL_LIST     = 'modal_list';
+
+
     /**
      * form action attribute
      * @var string
@@ -58,6 +107,7 @@ class editTable extends initEdit {
         'color'          => __DIR__ . '/../../html/' . THEME . '/html/edit/color.html',
         'modal'          => __DIR__ . '/../../html/' . THEME . '/html/edit/modal_list.html',
         'modal2'         => __DIR__ . '/../../html/' . THEME . '/html/edit/modal2.html',
+        'coordinates'    => __DIR__ . '/../../html/' . THEME . '/html/edit/coordinates.html',
     ];
 
 
@@ -86,7 +136,8 @@ class editTable extends initEdit {
 
     /**
      * @param string $data
-     * @return cell|Zend_Db_Adapter_Abstract
+     * @return cell|mixed
+     * @throws Zend_Exception
      */
 	public function __get($data) {
         if ($data === 'db' || $data === 'cache' || $data === 'translate') {
@@ -225,6 +276,39 @@ class editTable extends initEdit {
     public function setLeaveChecking(bool $leave_checking): void {
 
         $this->form_leave_checking = $leave_checking;
+    }
+
+
+    /**
+     * Установка таблицы для формы
+     * @param string $table
+     * @return void
+     */
+    public function setTable(string $table): void {
+
+        $this->table = $table;
+    }
+
+
+    /**
+     * Установка ширины для названий полей
+     * @param string|int $width
+     * @return void
+     */
+    public function setWidthLabels(string|int $width): void {
+
+        $this->firstColWidth = is_numeric($width) ? "{$width}px" : $width;
+    }
+
+
+    /**
+     * Установка данных записи
+     * @param array $record
+     * @return void
+     */
+    public function setData(array $record): void {
+
+        $this->SQL = [ $record ];
     }
 
 
@@ -432,27 +516,26 @@ class editTable extends initEdit {
 
 		if (!empty($this->cell)) {
 			foreach ($this->cell as $cellId => $cellFields) {
-				$groups 		= false;
-				//echo "<PRE>";print_r($arr_fields);echo"</PRE>";//die();;
-				//echo "<PRE>";print_r($arr);echo"</PRE>";//die();;
+
 				$controls = $cellFields->controls[$this->main_table_id];
 				if (!empty($controls)) {
 					foreach ($controls as $key => $value) {
 						$controlGroups[$cellId]['html'][$key] = '';
 						if (!empty($value['group'])) {
-							$groups 		= true;
-							$temp = array();
-							$temp['key'] = $key;
-							$temp['collapsed'] = false;
-							$temp['name'] = $value['group'];
-							if (substr($value['group'], 0, 1) == "*") {
-								$temp['collapsed'] = true;
-								$temp['name'] = trim($value['group'], '*');
-							}
-							$controlGroups[$cellId]['group'][] = $temp;
-						}
+                            $temp              = [];
+                            $temp['key']       = $key;
+                            $temp['collapsed'] = false;
+                            $temp['name']      = $value['group'];
 
-						//преобразование массива с атрибутами в строку
+                            if (substr($value['group'], 0, 1) == "*") {
+                                $temp['collapsed'] = true;
+                                $temp['name']      = trim($value['group'], '*');
+                            }
+
+                            $controlGroups[$cellId]['group'][] = $temp;
+                        }
+
+                        //преобразование массива с атрибутами в строку
 						$attrs = $this->setAttr($value['in']);
 
 						$sqlKey = $key + 1;
@@ -666,6 +749,30 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[FIELD]',      $field, $tpl);
                                 $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
                                 $tpl = str_replace('[ATTRIBUTES]', $value['in'], $tpl);
+
+                                $controlGroups[$cellId]['html'][$key] .= $tpl;
+                            }
+                        }
+						elseif ($value['type'] == 'coordinates') {
+                            if ($this->readOnly) {
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'];
+
+                            } else {
+                                $this->scripts['coordinates'] = true;
+
+                                $settings = is_array($value['in']) ? $value['in'] : [];
+
+                                $tpl = file_get_contents($this->tpl_control['coordinates']);
+                                $tpl = str_replace('[FIELD_ID]',   $fieldId, $tpl);
+                                $tpl = str_replace('[FIELD]',      $field, $tpl);
+                                $tpl = str_replace('[VALUE]',      $value['default'], $tpl);
+                                $tpl = str_replace('[ATTRIBUTES]', $settings['attr'] ?? '', $tpl);
+                                $tpl = str_replace('[APIKEY]',     $settings['apikey'] ?? '', $tpl);
+                                $tpl = str_replace('[WIDTH]',      $settings['width'] ?? 400, $tpl);
+                                $tpl = str_replace('[HEIGHT]',     $settings['height'] ?? 200, $tpl);
+                                $tpl = str_replace('[ZOOM]',       $settings['zoom'] ?? 7, $tpl);
+                                $tpl = str_replace('[CENTER_LAT]', ! empty($settings['center']) && ! empty($settings['center']['lat']) ? $settings['center']['lat'] : '53.908045', $tpl);
+                                $tpl = str_replace('[CENTER_LNG]', ! empty($settings['center']) && ! empty($settings['center']['lng']) ? $settings['center']['lng'] : '27.507411', $tpl);
 
                                 $controlGroups[$cellId]['html'][$key] .= $tpl;
                             }
@@ -1310,10 +1417,14 @@ class editTable extends initEdit {
                             if (is_array($this->selectSQL[$select])) {
                                 foreach ($this->selectSQL[$select] as $k => $v) {
                                     if (is_array($v)) {
-                                        $options_group = array_values($v);
+                                        if ( ! empty($v['title'])) {
+                                            $options[$k] = $v;
+                                        } else {
+                                            $options_group = array_values($v);
 
-                                        if (isset($options_group[2])) {
-                                            $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            if (isset($options_group[2])) {
+                                                $options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            }
                                         }
                                     } else {
                                         $options[$k] = $v;

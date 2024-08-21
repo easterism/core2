@@ -136,7 +136,7 @@ class File extends \Common {
                         ]);
                         //$listResponse = $client->listBuckets();
                         $key = $s[2];
-                        if (isset($s[3])) $key = "{$s[2]}|{$s[3]}|{$s[4]}";
+                        if (isset($s[3])) $key .= "|{$s[3]}|{$s[4]}";
                         $object  = $client->getObject(['Bucket' => $s[1], 'Key' => $key]);
                         $content = $object['Body']->getContents();
 

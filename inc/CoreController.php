@@ -467,40 +467,75 @@ class CoreController extends Common implements File {
     }
 
 
-	/**
-	 * Обновление последовательности записей
-	 */
-	public function action_seq () {
-        if (empty($_POST['id'])) return '{}';
+    /**
+     * Обновление последовательности записей
+     * @return string
+     */
+	public function action_seq(): string {
+
+        if (empty($_POST['id']) || ! is_string($_POST['id'])) {
+            return '{}';
+        }
+
 		$this->db->beginTransaction();
 		try {
-            $ss = new SessionContainer('Search');
-            $tbl_id = "main_" . $_POST['id'];
-            $tmp = $ss->$tbl_id;
-            if ($tmp && !empty($tmp['order'])) {
+            $resource       = $_POST['id'];
+            $session_search = new SessionContainer('Search');
+
+            $search_list = $session_search?->{"main_{$resource}"};
+
+            if ($search_list && ! empty($search_list['order'])) {
                 throw new \Exception($this->translate->tr("Ошибка! Сначала переключитесь на сортировку по умолчанию."));
             }
-			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
-			$tbl = $arr[0];
-            $id = "id";
-            // исключение для списка модулей
-            if ($tbl == 'core_modules') $id = 'm_id';
-            $sql = "SELECT $id AS id, seq FROM `$tbl` WHERE $id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC";
-			$res = $this->db->fetchPairs($sql);
-			if ($res) {
-				$values = array_values($res);
-				foreach ($_POST['data'] as $k => $val) {
-					$where = $this->db->quoteInto("$id=?", $val);
-					$this->db->update($tbl, array('seq' => $values[$k]), $where);
-				}
+
+            // Получение названия таблицы из сессии, если это возможно
+            $session_table = new SessionContainer($resource);
+            $session_list  = new SessionContainer('List');
+
+            if ($session_table?->table?->name) {
+                $table_name = $session_table->table->name;
+
+            } elseif ( ! empty($session_list->{$resource}) &&
+                       ! empty($session_list->{$resource}->deleteKey)
+            ) {
+                $table_name = explode('.', $session_list->{$resource}->deleteKey);
+                $table_name = $table_name ? current($table_name) : null;
+            }
+
+            if (empty($table_name)) {
+                preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
+                $table_name = $arr[0];
+            }
+
+            $id_name          = $table_name == 'core_modules' ? 'm_id' : "id";
+            $table_name_quote = $this->db->quoteIdentifier($table_name);
+            $where            = $this->db->quoteInto("{$id_name} IN (?)", $_POST['data']);
+
+			$rows = $this->db->fetchPairs("
+                SELECT {$id_name} AS id, 
+                       seq 
+                FROM {$table_name_quote}
+                WHERE $where 
+                ORDER BY seq ASC
+            ");
+
+			if ($rows) {
+				$rows_seq = array_values($rows);
+
+				foreach ($_POST['data'] as $k => $row_id) {
+					$where = $this->db->quoteInto("{$id_name} = ?", $row_id);
+                    $this->db->update($table_name, ['seq' => $rows_seq[$k]], $where);
+                }
 			}
+
 			$this->db->commit();
             return '{}';
+
 		} catch (Exception $e) {
 			$this->db->rollback();
-            return json_encode(array('error' => $e->getMessage()));
-		}
-	}
+            return json_encode(['error' => $e->getMessage()]);
+        }
+    }
 
 
 	/**
