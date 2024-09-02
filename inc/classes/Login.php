@@ -1180,9 +1180,6 @@ class Login extends \Common {
 
             $this->setContext($module_name);
             $mod_controller = new $mod_controller_name();
-            if ( ! ($mod_controller instanceof Auth)) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не поддерживает дополнительную авторизацию'), $module_name));
-            }
 
             $user_id = $mod_controller->authLdap($login, $password);
             $user    = $this->dataUsers->getUserById($user_id);
