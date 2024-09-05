@@ -37,8 +37,6 @@ class Db {
     private $_core_config;
 
     private $_locations = array();
-    private $_modules = array();
-    private $_counter = 0;
     private string $schemaName = 'public';
 
     /**
@@ -873,7 +871,6 @@ class Db {
             if ($data) $this->cache->setItem($key2, $data);
             else {
                 //такого быть не может
-                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", "такого быть не может " . $this->module);
             }
         } else {
             $data = $this->cache->getItem($key2);

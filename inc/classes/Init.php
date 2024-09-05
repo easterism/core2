@@ -1040,7 +1040,6 @@ class Init extends Db {
             $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
             $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
 //            $xajax->configure('errorHandler', true);
-            $xajax->processRequest(); //DEPRECATED
 
             if (Tool::isMobileBrowser()) {
                 $tpl_file      = Theme::get("indexMobile");
@@ -1357,7 +1356,22 @@ class Init extends Db {
 			$mods = array();
 			$tmp  = array();
             foreach ($res as $data) {
-				if ($this->acl->checkAcl($data['module_id'], 'access')) {
+				if (isset($tmp[$data['m_id']]) || $this->acl->checkAcl($data['module_id'], 'access')) {
+                    //чтобы модуль отображался в меню, нужно еще людое из правил просмотри или чтения
+                    $types = array(
+                        'list_all',
+                        'read_all',
+                        'list_owner',
+                        'read_owner',
+                    );
+                    $forMenu = false;
+                    foreach ($types as $type) {
+                        if ($this->acl->checkAcl($data['module_id'], $type)) {
+                            $forMenu = true;
+                            break;
+                        }
+                    }
+                    if (!$forMenu) continue;
                     if ($data['sm_key']) {
                         if ($this->acl->checkAcl($data['module_id'] . '_' . $data['sm_key'], 'access')) {
                             $tmp[$data['m_id']][] = $data;
