@@ -368,14 +368,10 @@ class WorkerManager {
         $this->config['file'] = __DIR__ . "/../conf.ini";
         if (isset($this->config['file'])) {
             if (file_exists($this->config['file'])) {
-                $core_config = $this->parse_config($this->config['file']);
-                Registry::set('core_config', (new Config($core_config))->getData());
-                if (isset($core_config['gearman'])) {
-                    $this->config = $core_config['gearman'];
-                    $this->config['functions'] = [];
-                    if (!empty($config['gearman']['functions'])) {
-                        $this->config['functions'] = $core_config['gearman']['functions'];
-                    };
+                $core_config = (new Config())->readIni($this->config['file'], 'production');
+                Registry::set('core_config', $core_config);
+                if (isset($core_config->gearman)) {
+                    $this->config = $core_config->gearman->toArray();
                 }
             }
             else {
@@ -414,13 +410,11 @@ class WorkerManager {
         }
 
         try {
-            $config2 = $this->parse_config($opts["c"], $section);
 
-            if (isset($config2['database']['params'])) {
-                $params = array_merge($config['database'], $config2['database']);
-                $config2['database'] = $params;
-            }
-            Registry::set('config', (new Config($config2))->getData());
+            $conf     = new Config($config);
+            $config   = $conf->getData()->merge($conf->readIni($opts["c"], $section));
+
+            Registry::set('config', ($config));
         }
         catch (\Exception $e) {
             $this->show_help($e->getMessage());
@@ -630,144 +624,6 @@ class WorkerManager {
     }
 
 
-    /**
-     * Parses INI file adding extends functionality via ":base" postfix on namespace.
-     * @param string $file
-     * @param string $section
-     * @return array
-     * @throws \Exception
-     */
-    protected function parse_config(string $file, string $section = 'production'): array {
-
-        $this->toLog("Loading configuration from $file");
-        $config  = parse_ini_file($file, true);
-        $config  = $this->resolveNestedSections($config);
-
-        foreach ($config as $namespace => $properties) {
-            if (is_array($properties) && $namespace == $section) {
-                // overwrite / set current namespace values
-                foreach ($properties as $key => $val) {
-                    $config[$namespace] = $this->_processKey($config[$namespace], $key, $val);
-                    unset($config[$namespace][$key]);
-                }
-            }
-        }
-
-        if (empty($config)) {
-            $this->show_help("No configuration found in $file");
-        }
-
-        if ( ! isset($config[$section])) {
-            $this->show_help("No section $section found in $file");
-        }
-
-        return $config[$section];
-    }
-
-
-    /**
-     * Добавляет возможность наследования секций
-     * @param array       $config
-     * @param string|null $section
-     * @return array
-     */
-    private function resolveNestedSections(array $config, string $section = null): array {
-
-        foreach ($config as $namespace => $section_content) {
-            if ( ! str_contains($namespace, ':')) {
-                if ($section) {
-                    if ($namespace == $section) {
-                        $config[$namespace] = $section_content;
-                    }
-
-                } else {
-                    $config[$namespace] = $section_content;
-                }
-            }
-        }
-
-        foreach ($config as $namespace => $section_content) {
-            if (str_contains($namespace, ':')) {
-                @list($name, $extends) = explode(':', $namespace);
-                $name    = trim($name);
-                $extends = trim((string)$extends);
-
-
-                if ($extends) {
-                    if ($section) {
-                        if ($name == $section) {
-                            $config[$namespace] = $section_content;
-
-                            if (isset($config[$extends])) {
-                                $config[$name] = array_merge($config[$extends], $section_content);
-
-                            } else {
-                                $nested_section = $this->resolveNestedSections($config, $extends);
-                                $config[$name]  = $nested_section[$extends] ?? [];
-                            }
-                        }
-
-                    } else {
-                        if (isset($config[$extends])) {
-                            $config[$name] = array_merge($config[$extends], $section_content);
-
-                        } else {
-                            $nested_section = $this->resolveNestedSections($config, $extends);
-                            $config[$name]  = $nested_section[$extends] ?? [];
-                        }
-                    }
-
-                    unset($config[$namespace]);
-
-                } else {
-                    if ($section) {
-                        if ($namespace == $section) {
-                            $config[$namespace] = $section_content;
-                        }
-
-                    } else {
-                        $config[$name] = $section_content;
-                    }
-                }
-            }
-        }
-
-        return $config;
-    }
-
-
-    /**
-     * @param $config
-     * @param $key
-     * @param $value
-     * @return array
-     * @throws \Exception
-     */
-    protected function _processKey($config, $key, $value)
-    {
-        if (strpos($key, '.') !== false) {
-            $pieces = explode('.', $key, 2);
-            if (strlen($pieces[0]) && strlen($pieces[1])) {
-                if (!isset($config[$pieces[0]])) {
-                    if ($pieces[0] === '0' && !empty($config)) {
-                        // convert the current values in $config into an array
-                        $config = array($pieces[0] => $config);
-                    } else {
-                        $config[$pieces[0]] = array();
-                    }
-                } elseif (!is_array($config[$pieces[0]])) {
-                    throw new \Exception("Cannot create sub-key for '{$pieces[0]}' as key already exists");
-                }
-                $config[$pieces[0]] = $this->_processKey($config[$pieces[0]], $pieces[1], $value);
-            } else {
-                throw new \Exception("Invalid key '$key'");
-            }
-        } else {
-            $config[$key] = $value;
-        }
-        return $config;
-    }
-
 
     /**
      * Helper function to load and filter worker files
@@ -861,6 +717,8 @@ class WorkerManager {
                 }
             }
         }
+//        echo "<PRE>";print_r($this->config);echo "</PRE>";//die;
+//        echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
     }
 
     /**
@@ -1379,33 +1237,15 @@ class WorkerManager {
         $thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
         $thisWorker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
 
-        $thisWorker->setTimeout(5000);
-
         $connected = false;
 
         foreach ($this->servers as $s) {
             $this->toLog("Adding server $s", self::LOG_LEVEL_PROC_INFO);
-            // see: https://bugs.php.net/bug.php?id=63041
-            $c = new \GearmanClient();
-            $c->addServers($s);
-            //проверяем, отвечает ли сервер
-            if (@$c->ping('ping')) {
-                try {
-                    $thisWorker->addServers($s);
-                } catch (\GearmanException $e) {
-                    if ($e->getMessage() !== 'Failed to set exception option') {
-                        continue; //это баг старых версий
-                    }
-                }
-                $connected = true;
+            try {
+                $thisWorker->addServers($s);
+            } catch (\GearmanException $e) {
+                //если сервер недоступен
             }
-
-        }
-
-        if (!$connected) {
-            $this->toLog("Job server not connected! waiting...", self::LOG_LEVEL_PROC_INFO);
-            $this->stop_work = true;
-            return;
         }
 
         $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
@@ -1416,6 +1256,7 @@ class WorkerManager {
             $this->toLog("Adding job $w ; timeout: " . $timeout, self::LOG_LEVEL_WORKER_INFO);
             $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
         }
+        $thisWorker->setTimeout(5000); //столько воркер будет ждять задачу от сервера
 
         register_shutdown_function(array($this, 'fatal_handler'));
 
@@ -1431,27 +1272,18 @@ class WorkerManager {
                 if ($thisWorker->returnCode() == GEARMAN_SUCCESS) continue;
 
                 if (!@$thisWorker->wait()) {
+                    //воркер в состоянии ожидания задачи от job-сервера
                     if ($thisWorker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
-                        # We are not connected to any servers, so wait a bit before
-                        # trying to reconnect.
+                        //после ожидания выяснилось, что сервер не отвечает
+                        //ждем еще 5 сек
+                        $this->toLog('Failed to connect to Gearman Gerver.'. PHP_EOL, self::LOG_LEVEL_WORKER_INFO);
                         $died++;
                         sleep(5);
                     }
                 }
 
             }
-
-            if ($died == 1) {
-                //сервер не отвечает слишком долго
-                if (array_search("127.0.0.1", $this->servers) || array_search("127.0.0.1:4730", $this->servers)) {
-                    //попытаемся перезапустить локальный сервер если он есть
-                    $this->toLog("!!! Restarting job server !!!", self::LOG_LEVEL_INFO);
-                    $this->stop_work = true;
-                    exec('sudo systemctl restart gearman-job-server.service');
-                } else {
-                    //TODO вдруг можно перезапустить не локальные серверы
-                }
-            }
+//            if ($thisWorker->returnCode() !== GEARMAN_TIMEOUT) echo $thisWorker->error().PHP_EOL;
 
             /**
              * Check the running time of the current child. If it has
@@ -1486,6 +1318,7 @@ class WorkerManager {
 //        $w = $job->workload();
 
         $h = $job->handle();
+//        echo "<PRE>";print_r($job->returnCode());echo "</PRE>\n";//die;
 
 //        echo $h . chr(10);//die;
 //        echo $job->unique() .chr(10);//die;
@@ -1528,22 +1361,32 @@ class WorkerManager {
          */
         $result = null;
         if (isset($objects[$job_name])) {
+//            echo $job_name_log.PHP_EOL;
             $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
             try {
-                $job->sendData('start');
+                $job->sendData($this->pid_file);
                 $result = $objects[$job_name]->run($job, $log);
-                if ($result) $job->sendComplete('done');
-                $log[] = "Finish Job: $job_name_log";
+                if ($result && $job->handle()) {
+                    $job->sendComplete('done');
+                    $log[] = "Finish Job: $job_name_log";
+                }
+                else {
+                    $job->sendFail();
+//                    echo "!!!FAIL $job_name_log \n";
+                }
             } catch (\Exception $e) {
                 $this->toLog($e->getMessage(), self::LOG_LEVEL_WORKER_INFO);
                 $job->sendException($e->getMessage());
                 $job->sendFail();
             }
-        } else {
+        }
+        else {
             $this->toLog("($h) FAILED to find a function or class for $job_name_log.", self::LOG_LEVEL_INFO);
             $job->sendException("Object $job_name_log not found");
             $job->sendFail();
         }
+
+//        echo "<PRE>";print_r($job->returnCode());echo "</PRE>\n";//die;
 
         if (!empty($log)) {
             foreach ($log as $l) {

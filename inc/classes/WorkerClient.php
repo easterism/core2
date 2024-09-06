@@ -28,6 +28,7 @@ class WorkerClient {
 
             try {
                 $c = new \GearmanClient();
+                $c->setTimeout(500);
                 if (defined('GEARMAN_CLIENT_NON_BLOCKING')) {
                     $c->addOptions(GEARMAN_CLIENT_NON_BLOCKING);
                 }

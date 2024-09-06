@@ -55,11 +55,12 @@ class Logger
 
     public function run(\GearmanJob $job, &$log)
     {
-
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
         }
+        $workload_size = $job->workloadSize();
+        $job->sendStatus(1, $workload_size);
 
         $_SERVER = get_object_vars($workload->server);
 
