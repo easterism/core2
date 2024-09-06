@@ -7,8 +7,9 @@ require_once 'Tool.php';
 use Laminas\Session\Container as SessionContainer;
 
 /**
- * @property Model\Users        $dataUsers
- * @property \ModAuthController $modAuth
+ * Class Login
+ * @package Core2
+ * @property \Users           $dataUsers
  */
 class Login extends \Common {
 
@@ -1122,7 +1123,7 @@ class Login extends \Common {
             return $res;
 
         } else {
-            $logo       = Theme::getModel()["logo"] ?? '';
+            $logo       = Theme::get("logo") ?? '';
             $theme_path = 'core2/html/' . THEME;
             $theme_dir  = DOC_ROOT . $theme_path;
 
