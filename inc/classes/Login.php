@@ -587,7 +587,6 @@ class Login extends \Common {
 
         $authNamespace->LDAP = $user['LDAP'] ?? false;
 
-
         //регенерация сессии для предотвращения угона
         if ( ! ($authNamespace->init)) {
             $authNamespace->getManager()->regenerateId();
@@ -1123,7 +1122,7 @@ class Login extends \Common {
             return $res;
 
         } else {
-            $logo       = Theme::get("logo") ?? '';
+            $logo       = Theme::getModel()["logo"] ?? '';
             $theme_path = 'core2/html/' . THEME;
             $theme_dir  = DOC_ROOT . $theme_path;
 

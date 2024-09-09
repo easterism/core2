@@ -65,7 +65,7 @@ class CommonApi extends \Core2\Acl {
             return $reg->get($k . "|");
         }
 
-        //исключение для герета базы или кеша, выполняется всегда
+        //исключение для гетера базы или кеша, выполняется всегда
         if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
         }
