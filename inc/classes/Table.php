@@ -61,6 +61,7 @@ abstract class Table extends Acl {
     protected $max_height               = null;
     protected $is_ajax                  = false;
     protected $is_round_calc            = false;
+    protected $head_top                 = false;
 
 
     /**
@@ -354,6 +355,18 @@ abstract class Table extends Acl {
         }
 
         $this->session->table->filter[$nmbr_field] = $value_field;
+    }
+
+
+    /**
+     * Установка прижатия шапки таблицы к верху страницы
+     * @param bool $is_top
+     * @return $this
+     */
+    public function setHeadTop(bool $is_top = true): self {
+
+        $this->head_top = $is_top;
+        return $this;
     }
 
 
@@ -841,6 +854,9 @@ abstract class Table extends Acl {
         }
         if ( ! empty($this->is_ajax)) {
             $data['isAjax'] = $this->is_ajax;
+        }
+        if ( ! empty($this->head_top)) {
+            $data['head_top'] = $this->head_top;
         }
         if ( ! empty($this->is_round_calc)) {
             $data['isRoundCalc']       = $this->is_round_calc;

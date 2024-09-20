@@ -77,6 +77,10 @@ class Render extends Acl {
         $tpl->assign('[CLASS_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? 'coreui-table-limit-height' : '');
         $tpl->assign('[STYLE_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? "max-height: {$this->table['max_height']}px;" : '');
 
+        if ( ! empty($this->table['head_top'])) {
+            $tpl->touchBlock('script_head_top');
+        }
+
         if ( ! empty($this->table['show'])) {
             if ( ! empty($this->table['show']['toolbar'])) {
                 if (count($this->table['records']) == 0 && $this->table['currentPage'] == 1) {
