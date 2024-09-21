@@ -216,6 +216,7 @@ class Login extends \Common {
                         ]);
 
                     } catch (\Exception $e) {
+
                         return json_encode([
                             'status'        => 'error',
                             'error_message' => $e->getMessage(),
@@ -232,12 +233,10 @@ class Login extends \Common {
         if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
 
             if ( ! empty($request['module'])) {
-                http_response_code(403);
-                return '';
+                throw new \Exception('expired');
             }
         }
 
-        return $this->getPageLogin();
     }
 
 
@@ -275,7 +274,7 @@ class Login extends \Common {
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    private function getPageLogin() {
+    public function getPageLogin() {
 
         $tpl  = new \Templater2(Theme::get("login"));
         $logo = $this->getSystemLogo();

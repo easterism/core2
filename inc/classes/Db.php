@@ -818,9 +818,9 @@ class Db {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
-            $v            = new Model\Settings($this->db);
+            $v   = new Model\Settings($this->db);
 			$res = $v->fetchAll($v->select()->where("visible='Y'"))->toArray();
-            $is = array();
+            $is  = array();
             foreach ($res as $item) {
                 $is[$item['code']] = array(
 					'value' => $item['value'],

@@ -27,6 +27,7 @@ require_once("HttpException.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
+use Laminas\Session\Storage\SessionStorage;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
@@ -153,52 +154,6 @@ if (isset($config->include_path) && $config->include_path) {
 require_once 'I18n.php';
 $translate = new I18n($config);
 
-//устанавливаем шкурку
-if ( ! empty($config->theme)) {
-    define('THEME', $config->theme);
-
-} elseif ( ! empty($config->system->theme) &&
-           ! empty($config->system->theme->name)
-) {
-    define('THEME', $config->system->theme->name);
-
-}
-
-if (!defined('THEME')) define('THEME', 'default');
-
-$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
-if (!file_exists($theme_model)) {
-    Error::Exception("Theme '" . THEME . "' model does not exists.");
-}
-$tpls = file_get_contents($theme_model);
-Theme::setModel(THEME, $tpls);
-
-
-//сохраняем параметры сессии
-if ($config->session) {
-    $sess_config = new SessionConfig();
-    $sess_config->setOptions($config->session);
-    $sess_manager = new SessionManager($sess_config);
-    $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
-    if ($config->session->phpSaveHandler) {
-        $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
-        if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
-        if ($config->session->savePath) $options['server'] = $config->session->savePath;
-
-        if ($config->session->saveHandler === 'memcached') {
-            $adapter  = new Storage\Adapter\Memcached($options);
-            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-        }
-        elseif ($config->session->phpSaveHandler === 'redis') {
-            $adapter  = new Storage\Adapter\Redis($options);
-            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-        }
-    }
-
-    //сохраняем менеджер сессий
-    SessionContainer::setDefaultManager($sess_manager);
-}
-
 //сохраняем конфиг
 Registry::set('config', $config);
 
@@ -278,34 +233,62 @@ class Init extends Db {
                 return;
             }
 
-            //$s = SessionContainer::getDefaultManager()->sessionExists();
-            $auth = new SessionContainer('Auth');
-            if (!empty($auth->ID) && is_int($auth->ID)) {
-                if (!$auth->getManager()->isValid()) {
-                    $this->closeSession('Y');
-                }
-                //is user active right now
-                if ($auth->ID == -1) { //это root
-                    $this->auth = $auth;
-                    Registry::set('auth', $this->auth);
-                }
-                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
-                    if ($auth->LIVEID) {
-                        $row = $this->dataSession->find($auth->LIVEID)->current();
-                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
-                            $this->closeSession();
-                        }
+            $config = Registry::get('config');
+
+            //сохраняем параметры сессии
+            if ($config->session) {
+                $sess_config = new SessionConfig();
+                $sess_config->setOptions($config->session);
+                $sess_manager = new SessionManager($sess_config);
+                $sess_manager->setStorage(new SessionStorage());
+
+                $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
+                if ($config->session->phpSaveHandler) {
+                    $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
+                    if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
+                    if ($config->session->savePath) $options['server'] = $config->session->savePath;
+
+                    if ($config->session->saveHandler === 'memcached') {
+                        $adapter = new Storage\Adapter\Memcached($options);
+                        $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                    } elseif ($config->session->phpSaveHandler === 'redis') {
+                        $adapter = new Storage\Adapter\Redis($options);
+//                        $sess_manager->getStorage()->markImmutable();
+                        $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                     }
-                    $sLife = $this->getSetting('session_lifetime');
-                    if ($sLife) {
-                        $auth->setExpirationSeconds($sLife, "accept_answer");
-                    }
-                    $this->auth = $auth;
-                    Registry::set('auth', $this->auth);
-                } else {
-                    $this->closeSession('Y');
                 }
 
+                //сохраняем менеджер сессий
+                SessionContainer::setDefaultManager($sess_manager);
+
+                $auth = new SessionContainer('Auth');
+                if (!empty($auth->ID) && is_int($auth->ID)) {
+                    if (!$auth->getManager()->isValid()) {
+                        $this->closeSession('Y');
+                    }
+                    //is user active right now
+                    if ($auth->ID == -1) { //это root
+                        $this->auth = $auth;
+                        Registry::set('auth', $this->auth);
+                    }
+                    if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
+                        if ($auth->LIVEID) {
+                            $row = $this->dataSession->find($auth->LIVEID)->current();
+                            if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
+                                $this->closeSession();
+                            }
+                        }
+                        $sLife = $this->getSetting('session_lifetime');
+                        if ($sLife) {
+                            $auth->setExpirationSeconds($sLife, "accept_answer");
+                        }
+                        $this->auth = $auth;
+                        Registry::set('auth', $this->auth);
+                    } else {
+                        $this->closeSession('Y');
+                    }
+
+                }
             }
         }
 
@@ -435,12 +418,18 @@ class Init extends Db {
 
             }
             else {
-
                 $login = new Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
                 parse_str($route['query'], $request);
-                return $login->dispatch($request);
+                $response = $login->dispatch($request); //TODO переделать на API
+                if (!$response) {
+                    //запись сессии не происходит
+                    SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+                    $this->setupSkin();
+                    $response = $login->getPageLogin();
+                }
+                return $response;
             }
 
             //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -453,6 +442,7 @@ class Init extends Db {
                 if (empty($this->auth->init)) { //нет сессии на сервере
                     return $this->getMenuMobile();
                 }
+                $this->setupSkin();
                 if (!defined('THEME')) return;
                 return $this->getMenu();
             }
@@ -475,6 +465,7 @@ class Init extends Db {
 
                 if ($this->fileAction()) return '';
 
+                $this->setupSkin();
                 if ($module === 'admin') {
 
                     if ($this->auth->MOBILE) {
@@ -1876,10 +1867,36 @@ class Init extends Db {
          * @param string $action
          */
         private function setContext($module, $action = 'index') {
-            $registry     = \Core2\Registry::getInstance();
+            $registry     = Registry::getInstance();
             //$registry 	= new ServiceManager();
             //$registry->setAllowOverride(true);
             $registry->set('context', array($module, $action));
+        }
+
+        /**
+         * устанавливаем шкурку
+         * @return void
+         */
+        private function setupSkin()
+        {
+            $config = Registry::get('config');
+            if ( ! empty($config->theme)) {
+                define('THEME', $config->theme);
+
+            } elseif ( ! empty($config->system->theme) &&
+                ! empty($config->system->theme->name)
+            ) {
+                define('THEME', $config->system->theme->name);
+            }
+
+            if (!defined('THEME')) define('THEME', 'default');
+
+            $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+            if (!file_exists($theme_model)) {
+                Error::Exception("Theme '" . THEME . "' model does not exists.");
+            }
+            $tpls = file_get_contents($theme_model);
+            Theme::setModel(THEME, $tpls);
         }
 
 
