@@ -233,25 +233,23 @@ class Init extends Db {
                 return;
             }
 
-            $config = Registry::get('config');
-
             //сохраняем параметры сессии
-            if ($config->session) {
+            if ($this->config->session) {
                 $sess_config = new SessionConfig();
-                $sess_config->setOptions($config->session);
+                $sess_config->setOptions($this->config->session);
                 $sess_manager = new SessionManager($sess_config);
                 $sess_manager->setStorage(new SessionStorage());
 
                 $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
-                if ($config->session->phpSaveHandler) {
+                if ($this->config->session->phpSaveHandler) {
                     $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
-                    if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
-                    if ($config->session->savePath) $options['server'] = $config->session->savePath;
+                    if ($this->config->session->remember_me_seconds) $options['ttl'] = $this->config->session->remember_me_seconds;
+                    if ($this->config->session->savePath) $options['server'] = $this->config->session->savePath;
 
-                    if ($config->session->saveHandler === 'memcached') {
+                    if ($this->config->session->saveHandler === 'memcached') {
                         $adapter = new Storage\Adapter\Memcached($options);
                         $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-                    } elseif ($config->session->phpSaveHandler === 'redis') {
+                    } elseif ($this->config->session->phpSaveHandler === 'redis') {
                         $adapter = new Storage\Adapter\Redis($options);
 //                        $sess_manager->getStorage()->markImmutable();
                         $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
@@ -1879,14 +1877,13 @@ class Init extends Db {
          */
         private function setupSkin()
         {
-            $config = Registry::get('config');
-            if ( ! empty($config->theme)) {
-                define('THEME', $config->theme);
+            if ( ! empty($this->config->theme)) {
+                define('THEME', $this->config->theme);
 
-            } elseif ( ! empty($config->system->theme) &&
-                ! empty($config->system->theme->name)
+            } elseif ( ! empty($this->config->system->theme) &&
+                ! empty($this->config->system->theme->name)
             ) {
-                define('THEME', $config->system->theme->name);
+                define('THEME', $this->config->system->theme->name);
             }
 
             if (!defined('THEME')) define('THEME', 'default');

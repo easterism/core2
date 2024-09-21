@@ -2365,8 +2365,6 @@ $controlGroups[$cellId]['html'][$key] .= "
             //есль ли у юзера еще одна открытая эта же форма, то в сессии ничего не изменится
             if ($already_opened) $sess_form->{$this->uniq_class_id} = $already_opened;
 
-            echo "<PRE>";print_r($this->uniq_class_id);echo "</PRE>";//die;
-            echo "<PRE>";print_r($sess_form->{$this->uniq_class_id});echo "</PRE>";//die;
             $this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
 		$this->HTML .= 	"</div></div>";
