@@ -360,6 +360,7 @@ class editTable extends initEdit {
      * @throws Zend_Db_Adapter_Exception
      * @throws Zend_Exception
      * @throws Exception
+     * @SuppressWarnings(PHPMD:StaticAccess)
      */
 	public function makeTable() {
 		if (!$this->isSaved) {
