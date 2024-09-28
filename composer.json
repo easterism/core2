@@ -53,6 +53,9 @@
     "ext-pdo": "*",
     "ext-xml": "*"
   },
+  "require-dev": {
+    "phpmd/phpmd" : "@stable"
+  },
   "scripts": {
     "post-update-cmd": [
       "mkdir -m 0777 -p vendor/belhard/xajax/xajax_js/deferred"
