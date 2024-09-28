@@ -65,17 +65,19 @@ $config = [
                 PDO::ATTR_TIMEOUT => 5,
 //                PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ],
+            'options' => [
+                'caseFolding'                => false,
+                'autoQuoteIdentifiers'       => true,
+                'allowSerialization'         => true,
+                'autoReconnectOnUnserialize' => true
             ]
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
             'enabled' => false,
             'class'   => 'Zend_Db_Profiler_Firebug',
-        ],
-        'caseFolding'                => true,
-        'autoQuoteIdentifiers'       => true,
-        'allowSerialization'         => true,
-        'autoReconnectOnUnserialize' => true,
+        ]
     ],
 ];
 // определяем путь к темповой папке
@@ -238,7 +240,7 @@ class Init extends Db {
                 $sess_config = new SessionConfig();
                 $sess_config->setOptions($this->config->session);
                 $sess_manager = new SessionManager($sess_config);
-                $sess_manager->setStorage(new SessionStorage());
+                //$sess_manager->setStorage(new SessionStorage());
 
                 $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
                 if ($this->config->session->phpSaveHandler) {
@@ -423,9 +425,13 @@ class Init extends Db {
                 $response = $login->dispatch($request); //TODO переделать на API
                 if (!$response) {
                     //запись сессии не происходит
-                    SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+                    //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
                     $this->setupSkin();
                     $response = $login->getPageLogin();
+                    $blockNamespace = new SessionContainer('Block');
+                    if (empty($blockNamespace->blocked)) {
+                        SessionContainer::getDefaultManager()->destroy();
+                    }
                 }
                 return $response;
             }
