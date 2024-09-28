@@ -10,15 +10,17 @@ if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
 
+require_once($autoload);
+require_once("Error.php");
+
 if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html', 'env'])) {
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'env'])) {
         \Core2\Error::Exception("File not found", 404);
+        die;
     }
 }
 
-require_once($autoload);
-require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
@@ -65,17 +67,19 @@ $config = [
                 PDO::ATTR_TIMEOUT => 5,
 //                PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ],
+            'options' => [
+                'caseFolding'                => false,
+                'autoQuoteIdentifiers'       => true,
+                'allowSerialization'         => true,
+                'autoReconnectOnUnserialize' => true
             ]
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
             'enabled' => false,
             'class'   => 'Zend_Db_Profiler_Firebug',
-        ],
-        'caseFolding'                => true,
-        'autoQuoteIdentifiers'       => true,
-        'allowSerialization'         => true,
-        'autoReconnectOnUnserialize' => true,
+        ]
     ],
 ];
 // определяем путь к темповой папке
@@ -168,8 +172,8 @@ require_once 'Db.php';
 require_once 'Common.php';
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
-require_once 'Login.php';
 require_once 'SSE.php';
+require_once 'Cli.php';
 
 
 /**
@@ -238,7 +242,7 @@ class Init extends Db {
                 $sess_config = new SessionConfig();
                 $sess_config->setOptions($this->config->session);
                 $sess_manager = new SessionManager($sess_config);
-                $sess_manager->setStorage(new SessionStorage());
+                //$sess_manager->setStorage(new SessionStorage());
 
                 $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
                 if ($this->config->session->phpSaveHandler) {
@@ -300,7 +304,8 @@ class Init extends Db {
         public function dispatch() {
 
             if ($this->is_cli || PHP_SAPI === 'cli') {
-                return $this->cli();
+                $cli = new \Core2\Cli();
+                return $cli->run();
             }
 
             // Парсим маршрут
@@ -363,7 +368,17 @@ class Init extends Db {
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module'])) {
-                    if ($route['module'] === 'sse') {
+                    if (isset($route['api']) && $route['api'] === 'swagger') {
+                        if ($route['action'] == 'core2.html') {
+                            //генерация свагера для общего API
+                            require_once "Swagger.php";
+                            $schema = new \Core2\Swagger();
+                            $html = $schema->render();
+                            header("Cache-Control: no-cache");
+                            return $html;
+                        }
+                    }
+                    elseif ($route['module'] === 'sse') {
 
                         require_once 'core2/inc/Interfaces/Event.php';
 
@@ -416,16 +431,22 @@ class Init extends Db {
 
             }
             else {
+                require_once 'Login.php';
+
                 $login = new Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
                 parse_str($route['query'], $request);
                 $response = $login->dispatch($request); //TODO переделать на API
                 if (!$response) {
-                    //запись сессии не происходит
-                    SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+                    //Immutable блокирует запись сессии
+                    //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
                     $this->setupSkin();
                     $response = $login->getPageLogin();
+                    $blockNamespace = new SessionContainer('Block');
+                    if (empty($blockNamespace->blocked)) {
+                        SessionContainer::getDefaultManager()->destroy();
+                    }
                 }
                 return $response;
             }
@@ -437,6 +458,8 @@ class Init extends Db {
                 ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
                 trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
             ) {
+                require_once 'Navigation.php';
+
                 if (empty($this->auth->init)) { //нет сессии на сервере
                     return $this->getMenuMobile();
                 }
@@ -1139,7 +1162,12 @@ class Init extends Db {
                             }
 
                             if (THEME !== 'default') {
-                                $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
+                                $navi = new \Core2\Navigation(); //TODO переделать для обработки всех модулей сразу
+                                $navi->setModuleNavigation($module['module_id']);
+                                if ($modController instanceof Navigation) {
+                                    $modController->navigationItems($navi);
+                                }
+                                $navigate_items[$module_id] = $navi->toArray();
                             }
                         }
                         ob_clean();
@@ -1163,6 +1191,7 @@ class Init extends Db {
             }
 
             if ( ! empty($navigate_items)) {
+                $navi = new \Core2\Navigation();
                 foreach ($navigate_items as $module_name => $items) {
                     if ( ! empty($items)) {
                         foreach ($items as $item) {
@@ -1172,7 +1201,7 @@ class Init extends Db {
                                 case 'profile':
                                     if ($tpl_menu->issetBlock('navigate_item_profile')) {
                                         $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $module_name);
-                                        $tpl_menu->navigate_item_profile->assign('[HTML]',        $this->renderNavigateItem($item));
+                                        $tpl_menu->navigate_item_profile->assign('[HTML]',        $navi->renderNavigateItem($item));
                                         $tpl_menu->navigate_item_profile->reassign();
                                     }
                                     break;
@@ -1181,7 +1210,7 @@ class Init extends Db {
                                 default:
                                     if ($tpl_menu->issetBlock('navigate_item')) {
                                         $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
-                                        $tpl_menu->navigate_item->assign('[HTML]',        $this->renderNavigateItem($item));
+                                        $tpl_menu->navigate_item->assign('[HTML]',        $navi->renderNavigateItem($item));
                                         $tpl_menu->navigate_item->reassign();
                                     }
                                     break;
@@ -1241,99 +1270,6 @@ class Init extends Db {
             return $tpl->render();
         }
 
-
-        /**
-         * @param $navigate_item
-         * @return string
-         * @throws Exception
-         */
-        private function renderNavigateItem($navigate_item) {
-
-            if (empty($navigate_item['type'])) {
-                return '';
-            }
-
-            $html = '';
-            switch ($navigate_item['type']) {
-                case 'divider':
-                    $html = file_get_contents(Theme::get("html-navigation-divider"));
-                    break;
-
-                case 'link':
-                    $link = ! empty($navigate_item['link'])
-                        ? $navigate_item['link']
-                        : '#';
-                    $on_click = ! empty($navigate_item['onclick'])
-                        ? $navigate_item['onclick']
-                        : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
-
-                    $tpl = new Templater3(Theme::get("html-navigation-link"));
-                    $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
-                    $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
-                    $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
-                    $tpl->assign('[ID]',      ! empty($navigate_item['id']) ? $navigate_item['id'] : '');
-                    $tpl->assign('[LINK]',    $link);
-                    $tpl->assign('[ONCLICK]', $on_click);
-                    $html = $tpl->render();
-                    break;
-
-                case 'dropdown':
-                    $tpl = new Templater3(Theme::get("html-navigation-dropdown"));
-                    $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
-                    $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
-                    $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
-
-                    if ( ! empty($navigate_item['items'])) {
-                        foreach ($navigate_item['items'] as $list_item) {
-
-                            switch ($list_item['type']) {
-                                case 'link':
-                                    $link = ! empty($list_item['link'])
-                                        ? $list_item['link']
-                                        : '#';
-                                    $on_click = ! empty($list_item['onclick'])
-                                        ? $list_item['onclick']
-                                        : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
-
-                                    $tpl->item->link->assign('[TITLE]',   ! empty($list_item['title']) ? $list_item['title'] : '');
-                                    $tpl->item->link->assign('[ICON]',    ! empty($list_item['icon']) ? $list_item['icon'] : '');
-                                    $tpl->item->link->assign('[CLASS]',   ! empty($list_item['class']) ? $list_item['class'] : '');
-                                    $tpl->item->link->assign('[ID]',      ! empty($list_item['id']) ? $list_item['id'] : '');
-                                    $tpl->item->link->assign('[LINK]',    $link);
-                                    $tpl->item->link->assign('[ONCLICK]', $on_click);
-                                    break;
-
-                                case 'file':
-                                    $on_change = ! empty($list_item['onchange'])
-                                        ? $list_item['onchange']
-                                        : "";
-
-                                    $tpl->item->file->assign('[TITLE]',    ! empty($list_item['title']) ? $list_item['title'] : '');
-                                    $tpl->item->file->assign('[ICON]',     ! empty($list_item['icon']) ? $list_item['icon'] : '');
-                                    $tpl->item->file->assign('[CLASS]',    ! empty($list_item['class']) ? $list_item['class'] : '');
-                                    $tpl->item->file->assign('[ID]',       ! empty($list_item['id']) ? $list_item['id'] : '');
-                                    $tpl->item->file->assign('[ONCHANGE]', $on_change);
-                                    break;
-
-                                case 'divider':
-                                    $tpl->item->touchBlock('divider');
-                                    break;
-
-                                case 'header':
-                                    $tpl->item->header->assign('[TITLE]', ! empty($list_item['title']) ? $list_item['title'] : '');
-                                    break;
-                            }
-
-                            $tpl->item->reassign();
-                        }
-                    }
-
-                    $html = $tpl->render();
-                    break;
-            }
-
-            return $html;
-        }
 
 
         /**
@@ -1414,241 +1350,6 @@ class Init extends Db {
         }
 
 
-        /**
-         * @param $name
-         * @param $mod_controller
-         * @return array
-         * @throws Zend_Config_Exception
-         */
-        private function getModuleNavigation($name, $mod_controller): array {
-
-            require_once 'Navigation.php';
-
-            $config_module = $this->getModuleConfig($name);
-            $navigation    = new Core2\Navigation();
-
-            if ( ! empty($config_module) &&
-                 ! empty($config_module->system) &&
-                 ! empty($config_module->system->nav)
-            ) {
-                $navigations = $config_module->system->nav->toArray();
-
-                if ( ! empty($navigations)) {
-                    foreach ($navigations as $key => $nav) {
-                        if ( ! empty($nav['type'])) {
-                            $nav['position'] = $nav['position'] ?? '';
-
-                            switch ($nav['type']) {
-                                case 'link':
-                                    $nav['title'] = $nav['title'] ?? '';
-                                    $nav['link']  = $nav['link'] ?? '#';
-
-                                    $nav_link = $navigation->addLink($nav['title'], $nav['link'], $nav['position']);
-
-                                    if ( ! empty($nav['icon'])) {
-                                        $nav_link->setIcon($nav['icon']);
-                                    }
-                                    if ( ! empty($nav['id'])) {
-                                        $nav_link->setId($nav['id']);
-                                    }
-                                    if ( ! empty($nav['class'])) {
-                                        $nav_link->setClass($nav['class']);
-                                    }
-                                    if ( ! empty($nav['onclick'])) {
-                                        $nav_link->setOnClick($nav['onclick']);
-                                    }
-                                    break;
-
-                                case 'divider':
-                                    $navigation->addDivider($nav['position']);
-                                    break;
-
-                                case 'dropdown':
-                                    $nav['title'] = $nav['title'] ?? '';
-                                    $nav['items'] = $nav['items'] ?? [];
-
-                                    $nav_list = $navigation->addDropdown($nav['title'], $nav['position']);
-
-                                    if ( ! empty($nav['icon'])) {
-                                        $nav_list->setIcon($nav['icon']);
-                                    }
-                                    if ( ! empty($nav['class'])) {
-                                        $nav_list->setClass($nav['class']);
-                                    }
-
-                                    if ( ! empty($nav['items'])) {
-                                        foreach ($nav['items'] as $item) {
-
-                                            switch ($item['type']) {
-                                                case 'link':
-                                                    $item['title'] = $item['title'] ?? '';
-                                                    $item['link']  = $item['link'] ?? '#';
-
-                                                    $item_link = $nav_list->addLink($item['title'], $item['link']);
-
-                                                    if ( ! empty($item['id'])) {
-                                                        $item_link->setId($item['id']);
-                                                    }
-                                                    if ( ! empty($item['class'])) {
-                                                        $item_link->setClass($item['class']);
-                                                    }
-                                                    if ( ! empty($item['icon'])) {
-                                                        $item_link->setIcon($item['icon']);
-                                                    }
-                                                    if ( ! empty($item['onclick'])) {
-                                                        $item_link->setOnClick($item['onclick']);
-                                                    }
-                                                    break;
-
-                                                case 'header':
-                                                    $item['title'] = $item['title'] ?? '';
-                                                    $nav_list->addHeader($item['title']);
-                                                    break;
-
-                                                case 'divider':
-                                                    $nav_list->addDivider();
-                                                    break;
-
-                                                case 'file':
-                                                    $item['title'] = $item['title'] ?? '';
-                                                    $item_file = $nav_list->addFile($item['title']);
-
-                                                    if ( ! empty($item['id'])) {
-                                                        $item_file->setId($item['id']);
-                                                    }
-                                                    if ( ! empty($item['class'])) {
-                                                        $item_file->setClass($item['class']);
-                                                    }
-                                                    if ( ! empty($item['icon'])) {
-                                                        $item_file->setIcon($item['icon']);
-                                                    }
-                                                    if ( ! empty($item['onchange'])) {
-                                                        $item_file->setOnChange($item['onchange']);
-                                                    }
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ($mod_controller instanceof Navigation) {
-                $mod_controller->navigationItems($navigation);
-            }
-
-            return $navigation->toArray();
-        }
-
-
-        /**
-         * Cli
-         * @return string
-         * @throws Exception
-         */
-        private function cli() {
-
-	        $options = getopt('m:a:p:s:h', array(
-	            'module:',
-	            'action:',
-	            'param:',
-	            'section:',
-	            'help',
-	        ));
-
-
-	        if (empty($options) || isset($options['h']) || isset($options['help'])) {
-	            return implode(PHP_EOL, array(
-	                'Core 2',
-	                'Usage: php index.php [OPTIONS]',
-	                'Optional arguments:',
-	                "   -m    --module    Module name",
-	                "   -a    --action    Cli method name",
-	                "   -p    --param     Parameter in method",
-	                "   -s    --section   Section name in config file",
-					"   -h    --help      Help info",
-					"Examples of usage:",
-	                "php index.php --module cron --action run",
-	                "php index.php --module cron --action run --section site.com",
-	                "php index.php --module cron --action runJob --param 123\n",
-	            ));
-	        }
-
-	        if ((isset($options['m']) || isset($options['module'])) &&
-	            (isset($options['a']) || isset($options['action']))
-	        ) {
-	            $module = isset($options['module']) ? $options['module'] : $options['m'];
-	            $action = isset($options['action']) ? $options['action'] : $options['a'];
-                $this->setContext($module, $action);
-	            $params = isset($options['param'])
-	                ? $options['param']
-	                : (isset($options['p']) ? $options['p'] : false);
-	            $params = $params === false
-	                ? array()
-	                : (is_array($params) ? $params : array($params));
-
-	            try {
-	                $this->db; // FIXME хак
-
-	                if ( ! $this->isModuleInstalled($module)) {
-	                    throw new Exception("Module '$module' not found");
-	                }
-
-	                if ( ! $this->isModuleActive($module)) {
-	                    throw new Exception("Module '$module' does not active");
-	                }
-
-	                $location     = $this->getModuleLocation($module);
-	                $mod_cli      = 'Mod' . ucfirst(strtolower($module)) . 'Cli';
-	                $mod_cli_path = "{$location}/{$mod_cli}.php";
-
-	                if ( ! file_exists($mod_cli_path)) {
-	                    throw new Exception(sprintf($this->_("File '%s' does not exists"), $mod_cli_path));
-	                }
-
-	                require_once $mod_cli_path;
-
-	                if ( ! class_exists($mod_cli)) {
-	                    throw new Exception(sprintf($this->_("Class '%s' not found"), $mod_cli));
-	                }
-
-
-                    $all_class_methods = get_class_methods($mod_cli);
-                    if ($parent_class = get_parent_class($mod_cli)) {
-                        $parent_class_methods = get_class_methods($parent_class);
-                        $self_methods = array_diff($all_class_methods, $parent_class_methods);
-                    } else {
-                        $self_methods = $all_class_methods;
-                    }
-
-	                if (array_search($action, $self_methods) === false) {
-	                    throw new Exception(sprintf($this->_("Cli method '%s' not found in class '%s'"), $action, $mod_cli));
-	                }
-
-                    $autoload_file = $location . "/vendor/autoload.php";
-                    if (file_exists($autoload_file)) {
-                        require_once($autoload_file);
-                    }
-
-	                $mod_instance = new $mod_cli();
-	                $result = call_user_func_array(array($mod_instance, $action), $params);
-
-	                if (is_scalar($result)) {
-	                    return (string)$result . PHP_EOL;
-	                }
-
-	            } catch (\Exception $e) {
-	                $message = $e->getMessage();
-	                return $message . PHP_EOL;
-	            }
-
-	        }
-
-			return PHP_EOL;
-		}
 
 
         /**

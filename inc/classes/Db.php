@@ -666,21 +666,14 @@ class Db {
      */
 	final public function getModuleLocation($module_id) {
         $module_id = strtolower($module_id);
-        $reg      = Registry::getInstance();
-        if (!$reg->isRegistered("location_ " . $module_id)) {
+        $this->getAllModules();
 
-            $config = $reg->get('config');
-            $db = $this->establishConnection($config->database);
-            $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
-            if (!$mod) return false;
-            if ($mod['is_system'] === "Y") {
-                $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
-            } else {
-                $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
-            }
-            $reg->set("location_ " . $module_id, $location);
+        $mod = Registry::get("_modules")[$module_id];
+        if (!$mod) return false;
+        if ($mod['is_system'] === "Y") {
+            $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
         } else {
-            $location = $reg->get("location_ " . $module_id);
+            $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
         }
 		return $location;
 		//return DOC_ROOT . $this->getModuleLoc($module_id);
@@ -850,6 +843,8 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $config = $reg->get('config');
             $db = $this->establishConnection($config->database);
+            \Zend_Db_Table::setDefaultAdapter($db);
+            $reg->set('db|admin', $db);
 
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);

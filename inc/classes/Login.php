@@ -614,7 +614,7 @@ class Login extends \Common {
 
             $login = trim($login);
 
-            $this->getConnection($this->config->database);
+//            $this->getConnection($this->config->database);
 
             if ($login === 'root') {
                 $user = $this->getUserRoot();
