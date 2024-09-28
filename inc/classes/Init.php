@@ -10,15 +10,17 @@ if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
 
+require_once($autoload);
+require_once("Error.php");
+
 if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html', 'env'])) {
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'env'])) {
         \Core2\Error::Exception("File not found", 404);
+        die;
     }
 }
 
-require_once($autoload);
-require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
@@ -366,7 +368,17 @@ class Init extends Db {
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module'])) {
-                    if ($route['module'] === 'sse') {
+                    if (isset($route['api']) && $route['api'] === 'swagger') {
+                        if ($route['action'] == 'core2.html') {
+                            //генерация свагера для общего API
+                            require_once "Swagger.php";
+                            $schema = new \Core2\Swagger();
+                            $html = $schema->render();
+                            header("Cache-Control: no-cache");
+                            return $html;
+                        }
+                    }
+                    elseif ($route['module'] === 'sse') {
 
                         require_once 'core2/inc/Interfaces/Event.php';
 
