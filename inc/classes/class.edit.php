@@ -1553,6 +1553,7 @@ class editTable extends initEdit {
 
                             if ( ! is_array($value['default'])) {
                                 $value['default'] = $value['default'] ? explode(",", $value['default']) : [];
+                                $value['default'] = array_combine(array_values($value['default']), array_values($value['default']));
                             }
 
                             $select_options = [];
@@ -1565,17 +1566,17 @@ class editTable extends initEdit {
                                         $options_group = array_values($v);
 
                                         if (isset($options_group[2]) && is_scalar($options_group[2])) {
-                                            $select_options[$options_group[2]][$options_group[0]] = $options_group[1];
+                                            $select_options[$options_group[2]][$options_group[1]] = $options_group[1];
 
-                                            if (isset($row_tags[$options_group[0]])) {
-                                                unset($row_tags[$options_group[0]]);
+                                            if (isset($row_tags[$options_group[1]])) {
+                                                unset($row_tags[$options_group[1]]);
                                             }
                                         }
                                     } else {
-                                        $select_options[$k] = $v;
+                                        $select_options[$v] = $v;
 
-                                        if (isset($row_tags[$k])) {
-                                            unset($row_tags[$k]);
+                                        if (isset($row_tags[$v])) {
+                                            unset($row_tags[$v]);
                                         }
                                     }
                                 }
