@@ -7,8 +7,9 @@ require_once 'Tool.php';
 use Laminas\Session\Container as SessionContainer;
 
 /**
- * @property Model\Users        $dataUsers
- * @property \ModAuthController $modAuth
+ * Class Login
+ * @package Core2
+ * @property \Users           $dataUsers
  */
 class Login extends \Common {
 
@@ -215,6 +216,7 @@ class Login extends \Common {
                         ]);
 
                     } catch (\Exception $e) {
+
                         return json_encode([
                             'status'        => 'error',
                             'error_message' => $e->getMessage(),
@@ -231,12 +233,10 @@ class Login extends \Common {
         if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
 
             if ( ! empty($request['module'])) {
-                http_response_code(403);
-                return '';
+                throw new \Exception('expired');
             }
         }
 
-        return $this->getPageLogin();
     }
 
 
@@ -274,7 +274,7 @@ class Login extends \Common {
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    private function getPageLogin() {
+    public function getPageLogin() {
 
         $tpl  = new \Templater2(Theme::get("login"));
         $logo = $this->getSystemLogo();
@@ -586,7 +586,6 @@ class Login extends \Common {
 
         $authNamespace->LDAP = $user['LDAP'] ?? false;
 
-
         //регенерация сессии для предотвращения угона
         if ( ! ($authNamespace->init)) {
             $authNamespace->getManager()->regenerateId();
@@ -615,7 +614,7 @@ class Login extends \Common {
 
             $login = trim($login);
 
-            $this->getConnection($this->config->database);
+//            $this->getConnection($this->config->database);
 
             if ($login === 'root') {
                 $user = $this->getUserRoot();

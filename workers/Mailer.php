@@ -2,6 +2,7 @@
 namespace Core2;
 
 require_once __DIR__ . '/../inc/classes/Error.php';
+require_once __DIR__ . '/../inc/classes/Db.php';
 
 use Laminas\Mail;
 use Laminas\Mail\Transport;

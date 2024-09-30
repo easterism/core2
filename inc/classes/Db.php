@@ -37,7 +37,6 @@ class Db {
     private $_core_config;
 
     private $_locations = array();
-    private $_counter = 0;
     private string $schemaName = 'public';
 
     /**
@@ -667,21 +666,14 @@ class Db {
      */
 	final public function getModuleLocation($module_id) {
         $module_id = strtolower($module_id);
-        $reg      = Registry::getInstance();
-        if (!$reg->isRegistered("location_ " . $module_id)) {
+        $this->getAllModules();
 
-            $config = $reg->get('config');
-            $db = $this->establishConnection($config->database);
-            $mod = $db->fetchRow("SELECT * FROM core_modules WHERE module_id=?", $module_id);
-            if (!$mod) return false;
-            if ($mod['is_system'] === "Y") {
-                $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
-            } else {
-                $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
-            }
-            $reg->set("location_ " . $module_id, $location);
+        $mod = Registry::get("_modules")[$module_id];
+        if (!$mod) return false;
+        if ($mod['is_system'] === "Y") {
+            $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
         } else {
-            $location = $reg->get("location_ " . $module_id);
+            $location = DOC_ROOT . "mod/{$module_id}/v{$mod['version']}";
         }
 		return $location;
 		//return DOC_ROOT . $this->getModuleLoc($module_id);
@@ -819,9 +811,9 @@ class Db {
 		$key = "all_settings_" . $this->config->database->params->dbname;
 		if (!($this->cache->hasItem($key))) {
             require_once(__DIR__ . "/../../mod/admin/Model/Settings.php");
-            $v            = new Model\Settings($this->db);
+            $v   = new Model\Settings($this->db);
 			$res = $v->fetchAll($v->select()->where("visible='Y'"))->toArray();
-            $is = array();
+            $is  = array();
             foreach ($res as $item) {
                 $is[$item['code']] = array(
 					'value' => $item['value'],
@@ -851,6 +843,8 @@ class Db {
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
             $config = $reg->get('config');
             $db = $this->establishConnection($config->database);
+            \Zend_Db_Table::setDefaultAdapter($db);
+            $reg->set('db|admin', $db);
 
             $m            = new Model\Modules($db);
             $sm           = new Model\SubModules($db);
@@ -872,7 +866,6 @@ class Db {
             if ($data) $this->cache->setItem($key2, $data);
             else {
                 //такого быть не может
-                Tool::logToFile("/var/www/next.avtoprom.tech/logs/xxx.log", "такого быть не может " . $this->module);
             }
         } else {
             $data = $this->cache->getItem($key2);

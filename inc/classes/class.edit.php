@@ -7,6 +7,7 @@ use Laminas\Session\Container as SessionContainer;
 use Core2\Tool;
 use Core2\Registry;
 use Core2\Traits;
+use Core2\Theme;
 
 $counter = 0;
 
@@ -37,7 +38,6 @@ class editTable extends initEdit {
     private   $isSaved             = false;
     private   $form_leave_checking = false;
     private   $scripts             = [];
-    private   $sess_form           = '';
     private   $sess_form_custom    = [];
     private   $uniq_class_id       = '';
 
@@ -85,7 +85,7 @@ class editTable extends initEdit {
     const TYPE_MODAL          = 'modal';
     const TYPE_MODAL2         = 'modal2';
     const TYPE_MODAL_LIST     = 'modal_list';
-
+    const THEME_HTML        = 'core2/html/' . THEME;
 
     /**
      * form action attribute
@@ -129,7 +129,7 @@ class editTable extends initEdit {
 		foreach ($this->types as $acl_type) {
 			$this->acl->$acl_type = $this->checkAcl($this->resource, $acl_type);
 		}
-        $this->setTemplateControl('xfile', \Core2\Theme::get("html-edit-files"));
+        $this->setTemplateControl('xfile', Theme::get("html-edit-files"));
         //TODO заполнить остальные шаблоны из модели шкурки (или прописать напрямую из \Core2\Theme)
     }
 
@@ -360,6 +360,7 @@ class editTable extends initEdit {
      * @throws Zend_Db_Adapter_Exception
      * @throws Zend_Exception
      * @throws Exception
+     * @SuppressWarnings(PHPMD:StaticAccess)
      */
 	public function makeTable() {
 		if (!$this->isSaved) {
@@ -653,7 +654,7 @@ class editTable extends initEdit {
 							if ($this->readOnly) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
-								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\">";
+                                $controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"text\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\" onkeypress=\"return checkInt(event);\" onpaste=\"return commaReplace(event);\" >";
 							}
 						}
 						elseif ($value['type'] == 'number_range') { // только цифры
@@ -842,7 +843,7 @@ class editTable extends initEdit {
                                 $this->scripts['date2'] = true;
 								$options = is_array($value['in']) ? json_encode($value['in']) : '{}';
                                 $tpl = file_get_contents($this->tpl_control['date2']);
-                                $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
                                 $tpl = str_replace('[OPTIONS]',   $options,                  $tpl);
@@ -870,7 +871,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['datetime2'] = true;
                                 $tpl = file_get_contents($this->tpl_control['datetime2']);
-                                $tpl = str_replace('[THEME_DIR]', 'core2/html/' . THEME,     $tpl);
+                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,     $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
                                 $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);
@@ -912,7 +913,7 @@ class editTable extends initEdit {
                                     : "'{$options['url']}'";
 
                                 $tpl = new Templater3($this->tpl_control['modal2']);
-                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
+                                $tpl->assign('[THEME_DIR]', self::THEME_HTML);
                                 $tpl->assign('[TITLE]',     $options['title']);
                                 $tpl->assign('[TEXT]',      $options['text']);
                                 $tpl->assign('[VALUE]',     $options['value']);
@@ -999,7 +1000,7 @@ class editTable extends initEdit {
                                     : "'{$options['url']}'";
 
                                 $tpl = new Templater3($this->tpl_control['modal']);
-                                $tpl->assign('[THEME_DIR]', 'core2/html/' . THEME);
+                                $tpl->assign('[THEME_DIR]', self::THEME_HTML);
                                 $tpl->assign('[TITLE]',     $options['title']);
                                 $tpl->assign('[VALUE]',     $options['value']);
                                 $tpl->assign('[URL]',       $url);
@@ -1459,7 +1460,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-select2"));
+                                $tpl = new Templater3(Theme::get("html-edit-select2"));
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', $attrs);
@@ -1525,7 +1526,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['select2'] = true;
 
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multiselect2"));
+                                $tpl = new Templater3(Theme::get("html-edit-multiselect2"));
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', $attrs);
@@ -1598,7 +1599,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['tags'] = true;
 
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-tags"));
+                                $tpl = new Templater3(Theme::get("html-edit-tags"));
                                 $tpl->assign('[FIELD_ID]',     $fieldId);
                                 $tpl->assign('[FIELD]',        $field);
                                 $tpl->assign('[ATTRIBUTES]',   $options['attr']);
@@ -1651,8 +1652,8 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['multiselect2'] = true;
 
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multilist2"));
-                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl = new Templater3(Theme::get("html-edit-multilist2"));
+                                $tpl->assign('[THEME_PATH]', self::THEME_HTML);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', str_replace(['"', "'"], ['!::', '!:'], $attrs));
@@ -1715,8 +1716,8 @@ class editTable extends initEdit {
                                 $controlGroups[$cellId]['html'][$key] .= implode('<br>', $options_out);
 
                             } else {
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-multilist3"));
-                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl = new Templater3(Theme::get("html-edit-multilist3"));
+                                $tpl->assign('[THEME_PATH]', self::THEME_HTML);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[ATTRIBUTES]', str_replace(['"', "'"], ['!::', '!:'], $attrs));
@@ -1838,8 +1839,8 @@ class editTable extends initEdit {
                                     }
                                 }
 
-                                $tpl = new Templater3(\Core2\Theme::get("html-edit-dataset"));
-                                $tpl->assign('[THEME_PATH]', 'core2/html/' . THEME);
+                                $tpl = new Templater3(Theme::get("html-edit-dataset"));
+                                $tpl->assign('[THEME_PATH]', self::THEME_HTML);
                                 $tpl->assign('[FIELD_ID]',   $fieldId);
                                 $tpl->assign('[FIELD]',      $field);
                                 $tpl->assign('[OPTIONS]',    addslashes(json_encode($value['in'])));
@@ -2261,25 +2262,25 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printJs("core2/js/control_datetimepicker.js", true);
                 }
                 if (isset($this->scripts['color'])) {
-                    Tool::printCss("core2/html/" . THEME . "/css/bootstrap-colorpicker.min.css");
-                    Tool::printJs("core2/html/" . THEME . "/js/bootstrap-colorpicker.min.js", true);
+                    Tool::printCss(self::THEME_HTML . "/css/bootstrap-colorpicker.min.css");
+                    Tool::printJs(self::THEME_HTML . "/js/bootstrap-colorpicker.min.js", true);
                 }
                 if (isset($this->scripts['multiselect2']) ||
                     isset($this->scripts['select2']) ||
                     isset($this->scripts['tags'])
                 ) {
-                    Tool::printCss("core2/html/" . THEME . "/css/select2.min.css");
-                    Tool::printCss("core2/html/" . THEME . "/css/select2.bootstrap.css");
-                    Tool::printJs("core2/html/" . THEME . "/js/select2.min.js", true);
-                    Tool::printJs("core2/html/" . THEME . "/js/select2.ru.min.js", true);
+                    Tool::printCss(self::THEME_HTML . "/css/select2.min.css");
+                    Tool::printCss(self::THEME_HTML . "/css/select2.bootstrap.css");
+                    Tool::printJs(self::THEME_HTML . "/js/select2.min.js", true);
+                    Tool::printJs(self::THEME_HTML . "/js/select2.ru.min.js", true);
                 }
                 if (isset($this->scripts['modal2'])) {
                     Tool::printJs("core2/js/bootstrap.modal.min.js", true);
-                    Tool::printCss("core2/html/" . THEME . "/css/bootstrap.modal.min.css");
+                    Tool::printCss(self::THEME_HTML . "/css/bootstrap.modal.min.css");
                 }
                 if (isset($this->scripts['upload'])) {
-                    Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload.css");
-                    Tool::printCss("core2/html/" . THEME . "/fileupload/jquery.fileupload-ui.css");
+                    Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload.css");
+                    Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload-ui.css");
                     Tool::printJs("core2/js/tmpl.min.js", true);
                     Tool::printJs("core2/js/load-image.min.js", true);
                     Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload.js", true);
@@ -2350,9 +2351,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 
 		if (!$this->readOnly) {
 
-            $this->sess_form = new SessionContainer('Form');
+            $sess_form = new SessionContainer('Form');
             //$this->uniq_class_id .= "|$refid";
-            $already_opened = $this->sess_form->{$this->uniq_class_id};
+            $already_opened = $sess_form->{$this->uniq_class_id};
             //CUSTOM session fields
             if (!$refid) $refid = 0;
             $sess_data = isset($already_opened[$refid]) ? $already_opened[$refid] : [];
@@ -2364,7 +2365,7 @@ $controlGroups[$cellId]['html'][$key] .= "
             }
             $already_opened[$refid] = $sess_data;
             //есль ли у юзера еще одна открытая эта же форма, то в сессии ничего не изменится
-            $this->sess_form->{$this->uniq_class_id} = $already_opened;
+            if ($already_opened) $sess_form->{$this->uniq_class_id} = $already_opened;
 
             $this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}

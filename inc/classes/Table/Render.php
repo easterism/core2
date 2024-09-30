@@ -16,7 +16,7 @@ class Render extends Acl {
     /**
      * @var SessionContainer
      */
-    protected $session        = null;
+    private $session        = null;
     protected $theme_src      = '';
     protected $theme_location = '';
     protected $date_mask      = "d.m.Y";

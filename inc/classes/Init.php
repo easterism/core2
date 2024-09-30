@@ -10,15 +10,17 @@ if (!file_exists($autoload)) {
     \Core2\Error::Exception("Composer autoload is missing.");
 }
 
+require_once($autoload);
+require_once("Error.php");
+
 if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'html', 'env'])) {
+    if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'env'])) {
         \Core2\Error::Exception("File not found", 404);
+        die;
     }
 }
 
-require_once($autoload);
-require_once("Error.php");
 require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
@@ -27,14 +29,20 @@ require_once("HttpException.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
+use Laminas\Session\Storage\SessionStorage;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
+use Core2\Acl;
+use Core2\Db;
+use Core2\I18n;
+use Core2\Login;
 use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
 use Core2\HttpException;
+use Core2\Theme;
 
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -57,18 +65,21 @@ $config = [
             'charset' => 'utf8',
             'driver_options'=> [
                 PDO::ATTR_TIMEOUT => 5,
+//                PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ],
+            'options' => [
+                'caseFolding'                => false,
+                'autoQuoteIdentifiers'       => true,
+                'allowSerialization'         => true,
+                'autoReconnectOnUnserialize' => true
             ]
         ],
         'isDefaultTableAdapter' => true,
         'profiler'              => [
             'enabled' => false,
             'class'   => 'Zend_Db_Profiler_Firebug',
-        ],
-        'caseFolding'                => true,
-        'autoQuoteIdentifiers'       => true,
-        'allowSerialization'         => true,
-        'autoReconnectOnUnserialize' => true,
+        ]
     ],
 ];
 // определяем путь к темповой папке
@@ -145,53 +156,7 @@ if (isset($config->include_path) && $config->include_path) {
 
 //подключаем мультиязычность
 require_once 'I18n.php';
-$translate = new \Core2\I18n($config);
-
-//устанавливаем шкурку
-if ( ! empty($config->theme)) {
-    define('THEME', $config->theme);
-
-} elseif ( ! empty($config->system->theme) &&
-           ! empty($config->system->theme->name)
-) {
-    define('THEME', $config->system->theme->name);
-
-}
-
-if (!defined('THEME')) define('THEME', 'default');
-
-$theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
-if (!file_exists($theme_model)) {
-    Error::Exception("Theme '" . THEME . "' model does not exists.");
-}
-$tpls = file_get_contents($theme_model);
-\Core2\Theme::setModel(THEME, $tpls);
-
-
-//сохраняем параметры сессии
-if ($config->session) {
-    $sess_config = new SessionConfig();
-    $sess_config->setOptions($config->session);
-    $sess_manager = new SessionManager($sess_config);
-    $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
-    if ($config->session->phpSaveHandler) {
-        $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
-        if ($config->session->remember_me_seconds) $options['ttl'] = $config->session->remember_me_seconds;
-        if ($config->session->savePath) $options['server'] = $config->session->savePath;
-
-        if ($config->session->saveHandler === 'memcached') {
-            $adapter  = new Storage\Adapter\Memcached($options);
-            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-        }
-        elseif ($config->session->phpSaveHandler === 'redis') {
-            $adapter  = new Storage\Adapter\Redis($options);
-            $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-        }
-    }
-
-    //сохраняем менеджер сессий
-    SessionContainer::setDefaultManager($sess_manager);
-}
+$translate = new I18n($config);
 
 //сохраняем конфиг
 Registry::set('config', $config);
@@ -200,7 +165,6 @@ Registry::set('config', $config);
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
     $config = new Core2\Config();
-    $core_config   = $config->readIni($core_conf_file);
     Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
@@ -208,15 +172,15 @@ require_once 'Db.php';
 require_once 'Common.php';
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
-require_once 'Login.php';
 require_once 'SSE.php';
+require_once 'Cli.php';
 
 
 /**
  * Class Init
  * @property Modules $dataModules
  */
-class Init extends \Core2\Db {
+class Init extends Db {
 
     /**
      * @var StdClass|Zend_Session_Namespace
@@ -224,9 +188,9 @@ class Init extends \Core2\Db {
     private $auth;
 
     /**
-     * @var \Core2\Acl
+     * @var Core2\Acl
      */
-    protected $acl;
+    private $acl;
     protected $is_cli = false;
     protected $is_rest = array();
     protected $is_soap = array();
@@ -273,34 +237,60 @@ class Init extends \Core2\Db {
             return;
         }
 
-        //$s = SessionContainer::getDefaultManager()->sessionExists();
-        $auth = new SessionContainer('Auth');
-        if (!empty($auth->ID) && is_int($auth->ID)) {
-            if (!$auth->getManager()->isValid()) {
-                $this->closeSession('Y');
-            }
-            //is user active right now
-            if ($auth->ID == -1) { //это root
-                $this->auth = $auth;
-                Registry::set('auth', $this->auth);
-            }
-            if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
-                if ($auth->LIVEID) {
-                    $row = $this->dataSession->find($auth->LIVEID)->current();
-                    if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
-                        $this->closeSession();
-                    }
+        //сохраняем параметры сессии
+        if ($this->config->session) {
+            $sess_config = new SessionConfig();
+            $sess_config->setOptions($this->config->session);
+            $sess_manager = new SessionManager($sess_config);
+            //$sess_manager->setStorage(new SessionStorage());
+
+            $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
+            if ($this->config->session->phpSaveHandler) {
+                $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
+                if ($this->config->session->remember_me_seconds) $options['ttl'] = $this->config->session->remember_me_seconds;
+                if ($this->config->session->savePath) $options['server'] = $this->config->session->savePath;
+
+                if ($this->config->session->saveHandler === 'memcached') {
+                    $adapter = new Storage\Adapter\Memcached($options);
+                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                } elseif ($this->config->session->phpSaveHandler === 'redis') {
+                    $adapter = new Storage\Adapter\Redis($options);
+//                        $sess_manager->getStorage()->markImmutable();
+                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 }
-                $sLife = $this->getSetting('session_lifetime');
-                if ($sLife) {
-                    $auth->setExpirationSeconds($sLife, "accept_answer");
-                }
-                $this->auth = $auth;
-                Registry::set('auth', $this->auth);
-            } else {
-                $this->closeSession('Y');
             }
 
+            //сохраняем менеджер сессий
+            SessionContainer::setDefaultManager($sess_manager);
+
+            $auth = new SessionContainer('Auth');
+            if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!$auth->getManager()->isValid()) {
+                    $this->closeSession('Y');
+                }
+                //is user active right now
+                if ($auth->ID == -1) { //это root
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                }
+                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
+                    if ($auth->LIVEID) {
+                        $row = $this->dataSession->find($auth->LIVEID)->current();
+                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
+                            $this->closeSession();
+                        }
+                    }
+                    $sLife = $this->getSetting('session_lifetime');
+                    if ($sLife) {
+                        $auth->setExpirationSeconds($sLife, "accept_answer");
+                    }
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                } else {
+                    $this->closeSession('Y');
+                }
+
+            }
         }
     }
 
@@ -314,7 +304,8 @@ class Init extends \Core2\Db {
     public function dispatch() {
 
         if ($this->is_cli || PHP_SAPI === 'cli') {
-            return $this->cli();
+            $cli = new \Core2\Cli();
+            return $cli->run();
         }
 
         // Парсим маршрут
@@ -377,7 +368,17 @@ class Init extends \Core2\Db {
         if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
             if (isset($route['module'])) {
-                if ($route['module'] === 'sse') {
+                if (isset($route['api']) && $route['api'] === 'swagger') {
+                    if ($route['action'] == 'core2.html') {
+                        //генерация свагера для общего API
+                        require_once "Swagger.php";
+                        $schema = new \Core2\Swagger();
+                        $html = $schema->render();
+                        header("Cache-Control: no-cache");
+                        return $html;
+                    }
+                }
+                elseif ($route['module'] === 'sse') {
 
                     require_once 'core2/inc/Interfaces/Event.php';
 
@@ -416,9 +417,7 @@ class Init extends \Core2\Db {
             require_once 'core2/inc/Interfaces/Subscribe.php';
             require_once 'core2/inc/Interfaces/Switches.php';
 
-            // TODO move ACL to auth
-            // найти способ для запросов с токеном без пользователя
-            $this->acl = new \Core2\Acl();
+            $this->acl = new Acl();
             $this->acl->setupAcl();
 
             if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
@@ -432,12 +431,24 @@ class Init extends \Core2\Db {
 
         }
         else {
+            require_once 'Login.php';
 
-            $login = new \Core2\Login();
+            $login = new Login();
             $login->setSystemName($this->getSystemName());
             $login->setFavicon($this->getSystemFavicon());
             parse_str($route['query'], $request);
-            return $login->dispatch($request);
+            $response = $login->dispatch($request); //TODO переделать на API
+            if (!$response) {
+                //Immutable блокирует запись сессии
+                //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+                $this->setupSkin();
+                $response = $login->getPageLogin();
+                $blockNamespace = new SessionContainer('Block');
+                if (empty($blockNamespace->blocked)) {
+                    SessionContainer::getDefaultManager()->destroy();
+                }
+            }
+            return $response;
         }
 
         //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
@@ -447,9 +458,12 @@ class Init extends \Core2\Db {
             ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
+            require_once 'Navigation.php';
+
             if (empty($this->auth->init)) { //нет сессии на сервере
                 return $this->getMenuMobile();
             }
+            $this->setupSkin();
             if (!defined('THEME')) return;
             return $this->getMenu();
         }
@@ -472,6 +486,7 @@ class Init extends \Core2\Db {
 
             if ($this->fileAction()) return '';
 
+            $this->setupSkin();
             if ($module === 'admin') {
 
                 if ($this->auth->MOBILE) {
@@ -1067,14 +1082,13 @@ class Init extends \Core2\Db {
         $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
         $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
 //            $xajax->configure('errorHandler', true);
-        $xajax->processRequest(); //DEPRECATED
 
         if (Tool::isMobileBrowser()) {
-            $tpl_file      = \Core2\Theme::get("indexMobile");
-            $tpl_file_menu = \Core2\Theme::get("menuMobile");
+            $tpl_file      = Theme::get("indexMobile");
+            $tpl_file_menu = Theme::get("menuMobile");
         } else {
-            $tpl_file      = \Core2\Theme::get("index");
-            $tpl_file_menu = \Core2\Theme::get("menu");
+            $tpl_file      = Theme::get("index");
+            $tpl_file_menu = Theme::get("menu");
         }
 
         $tpl      = new Templater3($tpl_file);
@@ -1178,7 +1192,12 @@ class Init extends \Core2\Db {
                         }
 
                         if (THEME !== 'default') {
-                            $navigate_items[$module_id] = $this->getModuleNavigation($module['module_id'], $modController);
+                            $navi = new \Core2\Navigation(); //TODO переделать для обработки всех модулей сразу
+                            $navi->setModuleNavigation($module['module_id']);
+                            if ($modController instanceof Navigation) {
+                                $modController->navigationItems($navi);
+                            }
+                            $navigate_items[$module_id] = $navi->toArray();
                         }
                     }
                     ob_clean();
@@ -1202,6 +1221,7 @@ class Init extends \Core2\Db {
         }
 
         if ( ! empty($navigate_items)) {
+            $navi = new \Core2\Navigation();
             foreach ($navigate_items as $module_name => $items) {
                 if ( ! empty($items)) {
                     foreach ($items as $item) {
@@ -1211,7 +1231,7 @@ class Init extends \Core2\Db {
                             case 'profile':
                                 if ($tpl_menu->issetBlock('navigate_item_profile')) {
                                     $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $this->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $navi->renderNavigateItem($item));
                                     $tpl_menu->navigate_item_profile->reassign();
                                 }
                                 break;
@@ -1220,7 +1240,7 @@ class Init extends \Core2\Db {
                             default:
                                 if ($tpl_menu->issetBlock('navigate_item')) {
                                     $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item->assign('[HTML]',        $this->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item->assign('[HTML]',        $navi->renderNavigateItem($item));
                                     $tpl_menu->navigate_item->reassign();
                                 }
                                 break;
@@ -1281,99 +1301,6 @@ class Init extends \Core2\Db {
     }
 
 
-    /**
-     * @param $navigate_item
-     * @return string
-     * @throws Exception
-     */
-    private function renderNavigateItem($navigate_item) {
-
-        if (empty($navigate_item['type'])) {
-            return '';
-        }
-
-        $html = '';
-        switch ($navigate_item['type']) {
-            case 'divider':
-                $html = file_get_contents(\Core2\Theme::get("html-navigation-divider"));
-                break;
-
-            case 'link':
-                $link = ! empty($navigate_item['link'])
-                    ? $navigate_item['link']
-                    : '#';
-                $on_click = ! empty($navigate_item['onclick'])
-                    ? $navigate_item['onclick']
-                    : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
-
-                $tpl = new Templater3(\Core2\Theme::get("html-navigation-link"));
-                $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
-                $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
-                $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
-                $tpl->assign('[ID]',      ! empty($navigate_item['id']) ? $navigate_item['id'] : '');
-                $tpl->assign('[LINK]',    $link);
-                $tpl->assign('[ONCLICK]', $on_click);
-                $html = $tpl->render();
-                break;
-
-            case 'dropdown':
-                $tpl = new Templater3(\Core2\Theme::get("html-navigation-dropdown"));
-                $tpl->assign('[TITLE]', ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
-                $tpl->assign('[ICON]',  ! empty($navigate_item['icon'])  ? $navigate_item['icon']  : '');
-                $tpl->assign('[CLASS]', ! empty($navigate_item['class']) ? $navigate_item['class'] : '');
-
-                if ( ! empty($navigate_item['items'])) {
-                    foreach ($navigate_item['items'] as $list_item) {
-
-                        switch ($list_item['type']) {
-                            case 'link':
-                                $link = ! empty($list_item['link'])
-                                    ? $list_item['link']
-                                    : '#';
-                                $on_click = ! empty($list_item['onclick'])
-                                    ? $list_item['onclick']
-                                    : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
-
-                                $tpl->item->link->assign('[TITLE]',   ! empty($list_item['title']) ? $list_item['title'] : '');
-                                $tpl->item->link->assign('[ICON]',    ! empty($list_item['icon']) ? $list_item['icon'] : '');
-                                $tpl->item->link->assign('[CLASS]',   ! empty($list_item['class']) ? $list_item['class'] : '');
-                                $tpl->item->link->assign('[ID]',      ! empty($list_item['id']) ? $list_item['id'] : '');
-                                $tpl->item->link->assign('[LINK]',    $link);
-                                $tpl->item->link->assign('[ONCLICK]', $on_click);
-                                break;
-
-                            case 'file':
-                                $on_change = ! empty($list_item['onchange'])
-                                    ? $list_item['onchange']
-                                    : "";
-
-                                $tpl->item->file->assign('[TITLE]',    ! empty($list_item['title']) ? $list_item['title'] : '');
-                                $tpl->item->file->assign('[ICON]',     ! empty($list_item['icon']) ? $list_item['icon'] : '');
-                                $tpl->item->file->assign('[CLASS]',    ! empty($list_item['class']) ? $list_item['class'] : '');
-                                $tpl->item->file->assign('[ID]',       ! empty($list_item['id']) ? $list_item['id'] : '');
-                                $tpl->item->file->assign('[ONCHANGE]', $on_change);
-                                break;
-
-                            case 'divider':
-                                $tpl->item->touchBlock('divider');
-                                break;
-
-                            case 'header':
-                                $tpl->item->header->assign('[TITLE]', ! empty($list_item['title']) ? $list_item['title'] : '');
-                                break;
-                        }
-
-                        $tpl->item->reassign();
-                    }
-                }
-
-                $html = $tpl->render();
-                break;
-        }
-
-        return $html;
-    }
-
 
     /**
      * Получаем список доступных модулей
@@ -1384,7 +1311,22 @@ class Init extends \Core2\Db {
         $mods = array();
         $tmp  = array();
         foreach ($res as $data) {
-            if ($this->acl->checkAcl($data['module_id'], 'access')) {
+            if (isset($tmp[$data['m_id']]) || $this->acl->checkAcl($data['module_id'], 'access')) {
+                //чтобы модуль отображался в меню, нужно еще людое из правил просмотри или чтения
+                $types = array(
+                    'list_all',
+                    'read_all',
+                    'list_owner',
+                    'read_owner',
+                );
+                $forMenu = false;
+                foreach ($types as $type) {
+                    if ($this->acl->checkAcl($data['module_id'], $type)) {
+                        $forMenu = true;
+                        break;
+                    }
+                }
+                if (!$forMenu) continue;
                 if ($data['sm_key']) {
                     if ($this->acl->checkAcl($data['module_id'] . '_' . $data['sm_key'], 'access')) {
                         $tmp[$data['m_id']][] = $data;
@@ -1889,10 +1831,35 @@ class Init extends \Core2\Db {
      * @param string $action
      */
     private function setContext($module, $action = 'index') {
-        $registry     = \Core2\Registry::getInstance();
+        $registry     = Registry::getInstance();
         //$registry 	= new ServiceManager();
         //$registry->setAllowOverride(true);
         $registry->set('context', array($module, $action));
+    }
+
+    /**
+     * устанавливаем шкурку
+     * @return void
+     */
+    private function setupSkin()
+    {
+        if ( ! empty($this->config->theme)) {
+            define('THEME', $this->config->theme);
+
+        } elseif ( ! empty($this->config->system->theme) &&
+            ! empty($this->config->system->theme->name)
+        ) {
+            define('THEME', $this->config->system->theme->name);
+        }
+
+        if (!defined('THEME')) define('THEME', 'default');
+
+        $theme_model = __DIR__ . "/../../html/" . THEME . "/model.json";
+        if (!file_exists($theme_model)) {
+            Error::Exception("Theme '" . THEME . "' model does not exists.");
+        }
+        $tpls = file_get_contents($theme_model);
+        Theme::setModel(THEME, $tpls);
     }
 
 
@@ -1945,7 +1912,6 @@ class Init extends \Core2\Db {
 
         return '';
     }
-
 }
 
 
@@ -1971,7 +1937,7 @@ function post($func, $loc, $data) {
 
     if (empty($route['module'])) throw new Exception($translate->tr("Модуль не найден"), 404);
 
-    $acl = new \Core2\Acl();
+    $acl = new Acl();
 
     Registry::set('context', array($route['module'], $route['action']));
 
@@ -2004,8 +1970,7 @@ function post($func, $loc, $data) {
             }
         }
 
-        $db        = new \Core2\Db;
-        $location  = $db->getModuleLocation($route['module']);
+        $location  = $acl->getModuleLocation($route['module']);
         $file_path = $location . "/ModAjax.php";
 
         if (file_exists($file_path)) {

@@ -24,6 +24,7 @@ class Workhorse
         $id = $job->unique();
 
         $workload = json_decode($job->workload());
+//        echo "<PRE>";print_r($workload);echo "</PRE>";die;
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
         }
@@ -45,6 +46,9 @@ class Workhorse
                 $log[] = "Job {$job->handle()} already in progress";
                 return false;
             }
+
+            $workload_size = $job->workloadSize();
+            $job->sendStatus(0, $workload_size);
 
             $controller = $this->requireController($workload->module, $workload->location);
 
@@ -72,6 +76,7 @@ class Workhorse
                 //выполнение задачи
                 $out = $modWorker->$action($job, $workload->payload);
 
+                $job->sendStatus($workload_size, $workload_size);
             } catch (\Exception $e) {
                 $error = $e->getMessage();
             }
