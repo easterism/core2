@@ -649,9 +649,15 @@ class Init extends Db {
                 }
 
 
-                $log->{$function_log}('request', [$request_method, round($total_time, 5), count($sql_queries), $connection_id, $query_string]);
-                $log->{$function_log}('  | max slow', $max_slow);
-                $log->{$function_log}('  | queries ', $sql_queries);
+                $log->{$function_log}('request', [
+                    'method'        => $request_method,
+                    'time'          => round($total_time, 5),
+                    'count'         => count($sql_queries),
+                    'connection_id' => $connection_id,
+                    'request'       => $query_string,
+                    'max_slow'      => $max_slow,
+                    'queries'       => $sql_queries,
+                ]);
             }
         }
     }
