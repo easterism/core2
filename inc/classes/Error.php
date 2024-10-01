@@ -121,25 +121,24 @@ class Error {
      *
 	 * @param $exception
 	 */
-	public static function catchDbException($exception) {
-		$code = $exception->getCode();
-		if ($code == 1044) {
-			$message = 'Нет доступа к базе данных.';
-		} elseif ($code == 2002) {
-			$message = 'Не верный адрес базы данных.';
-		} elseif ($code == 1049) {
-			$message = 'Нет соединения с базой данных.';
-		} else {
-			$cnf = self::getConfig();
-			if ($cnf && $cnf->debug->on) {
-				$message = $exception->getMessage(); //TODO вести журнал
-			} else {
-				$message = "Ошибка базы данных!";
-			}
-		}
-		self::Exception($message, $code);
+    public static function catchDbException($exception) {
+        $code = $exception->getCode();
+        if ($code == 1044) {
+            $message = 'Нет доступа к базе данных.';
+        } elseif ($code == 2002) {
+            $message = 'Не верный адрес базы данных.';
+        } elseif ($code == 1049) {
+            $message = 'Нет соединения с базой данных.';
+        } else {
+            $message = "Ошибка базы данных!";
+        }
+        $cnf = self::getConfig();
+        if ($cnf && $cnf->debug->on) {
+            $message .= $exception->getMessage(); //TODO вести журнал
+        }
+        self::Exception($message, $code);
 
-	}
+    }
 
 	/**
 	 * Получаем экземпляр конфига
