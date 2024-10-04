@@ -1629,13 +1629,12 @@ class Init extends Db {
     private function routeParse() {
         $temp  = explode("/", DOC_PATH);
         $temp2 = explode("/", $_SERVER['REQUEST_URI']);
-        $i = -1;
         foreach ($temp as $k => $v) {
-            if ($temp2[$k] == $v) {
-                $i++;
+            if (isset($temp2[$k]) && $temp2[$k] == $v) {
                 unset($temp2[$k]);
             }
         }
+
         reset($temp2);
         $api = false; //TODO переделать на $this->is_rest
         if (current($temp2) === 'api') {
