@@ -15,7 +15,12 @@ class Error {
      * @return string|void
      */
 	public static function Exception($msg, $code = 0) {
+        $msg = trim($msg);
 		$isXajax = self::isXajax();
+        json_decode($msg, true);
+        if (\JSON_ERROR_NONE === json_last_error()) {
+            header('Content-type: application/json; charset="utf-8"');
+        }
 		if ($isXajax) {
 			header('Content-type: application/json; charset="utf-8"');
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
@@ -121,25 +126,24 @@ class Error {
      *
 	 * @param $exception
 	 */
-	public static function catchDbException($exception) {
-		$code = $exception->getCode();
-		if ($code == 1044) {
-			$message = 'Нет доступа к базе данных.';
-		} elseif ($code == 2002) {
-			$message = 'Не верный адрес базы данных.';
-		} elseif ($code == 1049) {
-			$message = 'Нет соединения с базой данных.';
-		} else {
-			$cnf = self::getConfig();
-			if ($cnf && $cnf->debug->on) {
-				$message = $exception->getMessage(); //TODO вести журнал
-			} else {
-				$message = "Ошибка базы данных!";
-			}
-		}
-		self::Exception($message, $code);
+    public static function catchDbException($exception) {
+        $code = $exception->getCode();
+        if ($code == 1044) {
+            $message = 'Нет доступа к базе данных.';
+        } elseif ($code == 2002) {
+            $message = 'Не верный адрес базы данных.';
+        } elseif ($code == 1049) {
+            $message = 'Нет соединения с базой данных.';
+        } else {
+            $message = "Ошибка базы данных!";
+        }
+        $cnf = self::getConfig();
+        if ($cnf && $cnf->debug->on) {
+            $message .= $exception->getMessage(); //TODO вести журнал
+        }
+        self::Exception($message, $code);
 
-	}
+    }
 
 	/**
 	 * Получаем экземпляр конфига
