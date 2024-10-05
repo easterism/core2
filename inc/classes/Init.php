@@ -715,13 +715,13 @@ class Init extends Db {
                         //требуется webservice 2.6.0
                         return $webservice_api->dispatchToken($token);
                     } catch (HttpException $e) {
-                        return Error::catchJsonException([
+                        throw new \Exception(json_encode([
                             'msg' => $e->getMessage(),
                             'code' => $e->getErrorCode()
-                        ], $e->getCode() ?: 500);
+                        ]), $e->getCode() ?: 500);
 
                     } catch (\Exception $e) {
-                        return Error::catchJsonException($e->getMessage(), $e->getCode());
+                        throw new \Exception($e->getMessage(), $e->getCode());
                     }
                 }
                 if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Basic') === 0) {
@@ -748,13 +748,13 @@ class Init extends Db {
                                 return $auth;
                             }
                         } catch (HttpException $e) {
-                            return Error::catchJsonException([
+                            throw new \Exception(json_encode([
                                 'msg' => $e->getMessage(),
                                 'code' => $e->getErrorCode()
-                            ], $e->getCode() ?: 500);
+                            ]), $e->getCode() ?: 500);
 
                         } catch (\Exception $e) {
-                            return Error::catchJsonException($e->getMessage(), $e->getCode());
+                            throw new \Exception($e->getMessage(), $e->getCode());
                         }
                     }
                 }
@@ -771,13 +771,13 @@ class Init extends Db {
                     $webservice_api = new ModWebserviceApi();
                     return $webservice_api->dispatchWebToken($token);
                 } catch (HttpException $e) {
-                    return Error::catchJsonException([
+                    throw new \Exception(json_encode([
                         'msg' => $e->getMessage(),
                         'code' => $e->getErrorCode()
-                    ], $e->getCode() ?: 500);
+                    ]), $e->getCode() ?: 500);
 
                 } catch (\Exception $e) {
-                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                    throw new \Exception($e->getMessage(), $e->getCode());
                 }
             }
             elseif (!empty($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
@@ -789,13 +789,13 @@ class Init extends Db {
                     $webservice_api = new ModWebserviceApi();
                     return $webservice_api->dispatchApikey(trim($apikey));
                 } catch (HttpException $e) {
-                    return Error::catchJsonException([
+                    throw new \Exception(json_encode([
                         'msg' => $e->getMessage(),
                         'code' => $e->getErrorCode()
-                    ], $e->getCode() ?: 500);
+                    ]), $e->getCode() ?: 500);
 
                 } catch (\Exception $e) {
-                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                    throw new \Exception($e->getMessage(), $e->getCode());
                 }
             }
         }
@@ -807,10 +807,10 @@ class Init extends Db {
         private function checkWebservice() {
 
             if ( ! $this->isModuleActive('webservice')) {
-                Error::catchJsonException([
+                throw new \Exception(json_encode([
                     'error_code'    => 'webservice_not_active',
                     'error_message' => $this->translate->tr('Модуль Webservice не активен')
-                ], 503);
+                ]), 503);
             }
 
             $location = $this->getModuleLocation('webservice');
@@ -818,10 +818,10 @@ class Init extends Db {
             $webservice_controller_api  =  $location . '/ModWebserviceApi.php';
 
             if ( ! file_exists($webservice_controller_path) || ! file_exists($webservice_controller_api)) {
-                Error::catchJsonException([
+                throw new \Exception(json_encode([
                     'error_code'    => 'webservice_not_isset',
                     'error_message' => $this->translate->tr('Модуль Webservice не существует')
-                ], 500);
+                ]), 500);
             }
 
             $autoload = $location . "/vendor/autoload.php";
@@ -833,10 +833,10 @@ class Init extends Db {
             require_once($webservice_controller_api);
 
             if ( ! class_exists('ModWebserviceController')) {
-                Error::catchJsonException([
+                throw new \Exception(json_encode([
                     'error_code'    => 'webservice_broken',
                     'error_message' => $this->translate->tr('Модуль Webservice сломан')
-                ], 500);
+                ]), 500);
             }
         }
 

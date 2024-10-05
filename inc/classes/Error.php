@@ -15,7 +15,12 @@ class Error {
      * @return string|void
      */
 	public static function Exception($msg, $code = 0) {
+        $msg = trim($msg);
 		$isXajax = self::isXajax();
+        json_decode($msg, true);
+        if (\JSON_ERROR_NONE === json_last_error()) {
+            header('Content-type: application/json; charset="utf-8"');
+        }
 		if ($isXajax) {
 			header('Content-type: application/json; charset="utf-8"');
 			//echo '<?xml version="1.0" encoding="utf-8"><xjx><cmd n="js">alert(\'' . $msg . '\');top.document.location=\'index.php\';</cmd></xjx>';
