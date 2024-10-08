@@ -436,12 +436,12 @@ class Init extends Db {
             $login = new Login();
             $login->setSystemName($this->getSystemName());
             $login->setFavicon($this->getSystemFavicon());
+            $this->setupSkin();
             parse_str($route['query'], $request);
             $response = $login->dispatch($request); //TODO переделать на API
             if (!$response) {
                 //Immutable блокирует запись сессии
                 //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
-                $this->setupSkin();
                 $response = $login->getPageLogin();
                 $blockNamespace = new SessionContainer('Block');
                 if (empty($blockNamespace->blocked)) {
