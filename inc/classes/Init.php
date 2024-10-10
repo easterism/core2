@@ -371,8 +371,8 @@ class Init extends Db {
                     if (isset($route['api']) && $route['api'] === 'swagger') {
                         if ($route['action'] == 'core2.html') {
                             //генерация свагера для общего API
-                            require_once "Swagger.php";
-                            $schema = new \Core2\Swagger();
+                            require_once "OpenApiSpec.php";
+                            $schema = new \Core2\OpenApiSpec();
                             $html = $schema->render();
                             header("Cache-Control: no-cache");
                             return $html;

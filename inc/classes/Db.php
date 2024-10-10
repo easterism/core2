@@ -286,7 +286,7 @@ class Db {
      */
 	protected function getConnection(LaminasConfig $database) {
         if ($database->adapter === 'Pdo_Mysql') {
-            $this->schemaName = $database->params->dbname;
+            $this->schemaName = $database->params->dbname ? $database->params->dbname : '';
         }
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
