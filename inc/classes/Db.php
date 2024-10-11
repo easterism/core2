@@ -668,7 +668,7 @@ class Db {
         $module_id = strtolower($module_id);
         $this->getAllModules();
 
-        $mod = Registry::get("_modules")[$module_id];
+        $mod = Registry::get("_modules")[$module_id] ?? null;
         if (!$mod) return false;
         if ($mod['is_system'] === "Y") {
             $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";
