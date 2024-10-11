@@ -286,7 +286,7 @@ class Db {
      */
 	protected function getConnection(LaminasConfig $database) {
         if ($database->adapter === 'Pdo_Mysql') {
-            $this->schemaName = $database->params->dbname;
+            $this->schemaName = $database->params->dbname ? $database->params->dbname : '';
         }
         elseif ($database->adapter === 'Pdo_Pgsql') {
             $this->schemaName = $database->schema;
@@ -668,7 +668,7 @@ class Db {
         $module_id = strtolower($module_id);
         $this->getAllModules();
 
-        $mod = Registry::get("_modules")[$module_id];
+        $mod = Registry::get("_modules")[$module_id] ?? null;
         if (!$mod) return false;
         if ($mod['is_system'] === "Y") {
             $location = __DIR__ . "/../../mod/{$module_id}/v{$mod['version']}";

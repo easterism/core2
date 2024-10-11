@@ -25,10 +25,7 @@ class Common extends \Core2\Acl {
 	protected $actionURL;
 	protected $resId;
 
-    /**
-     * @var Zend_Config_Ini
-     */
-	private $_p = array();
+    private $emitents = array();
 	private $AR = array(
         'module',
         'action'
@@ -354,12 +351,13 @@ class Common extends \Core2\Acl {
      * Порождает событие для модулей, реализующих интерфейс Subscribe
      * @param string $event_name
      * @param array $data
-     * @param string $module_override
+     * @param string $module_override принудительный id модуля-инициатора события
      * @return array
      */
 	protected function emit($event_name, $data = [], $module_override = '') {
         $module = $module_override ?: $this->module;
-	    $em = new Emitter($this, $module);
+	    if (!in_array($module, $this->emitents)) $this->emitents[$module] = new Emitter($this, $module);
+        $em = $this->emitents[$module];
         $em->addEvent($event_name, $data);
         return $em->emit();
     }

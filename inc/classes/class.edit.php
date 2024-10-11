@@ -85,7 +85,7 @@ class editTable extends initEdit {
     const TYPE_MODAL          = 'modal';
     const TYPE_MODAL2         = 'modal2';
     const TYPE_MODAL_LIST     = 'modal_list';
-    const THEME_HTML        = 'core2/html/' . THEME;
+    const THEME_HTML          = 'core2/html/' . THEME;
 
     /**
      * form action attribute
@@ -843,7 +843,7 @@ class editTable extends initEdit {
                                 $this->scripts['date2'] = true;
 								$options = is_array($value['in']) ? json_encode($value['in']) : '{}';
                                 $tpl = file_get_contents($this->tpl_control['date2']);
-                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,     $tpl);
+                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,          $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
                                 $tpl = str_replace('[OPTIONS]',   $options,                  $tpl);
@@ -871,7 +871,7 @@ class editTable extends initEdit {
                             } else {
                                 $this->scripts['datetime2'] = true;
                                 $tpl = file_get_contents($this->tpl_control['datetime2']);
-                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,     $tpl);
+                                $tpl = str_replace('[THEME_DIR]', self::THEME_HTML,          $tpl);
                                 $tpl = str_replace('[NAME]',      'control[' . $field . ']', $tpl);
                                 $tpl = str_replace('[DATE]',      $value['default'],         $tpl);
                                 $tpl = str_replace('[KEY]',       crc32(uniqid('', true)),   $tpl);

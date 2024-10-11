@@ -972,7 +972,7 @@ class CoreController extends Common implements File {
             $app = "index.php?module=admin&action=monitoring";
             $monitor = new \Core2\Monitoring();
 
-            $tab = new tabs('monitoring');
+            $tab = new tabs('admin_monitoring');
 
             $tab->addTab($this->translate->tr("Активные пользователи"), $app, 170);
             $tab->addTab($this->translate->tr("История посещений"),     $app, 170);
