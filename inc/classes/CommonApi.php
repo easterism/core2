@@ -17,6 +17,7 @@ class CommonApi extends \Core2\Acl {
 	protected $auth;
 
     protected $module;
+
     protected $route;
 
 
@@ -36,7 +37,7 @@ class CommonApi extends \Core2\Acl {
             $reg->set('invoker', $this->module);
         }
 		$this->auth = $reg->isRegistered('auth') ? $reg->get('auth') : null;
-        $this->route = $reg->get('route');
+        $this->route = $reg->isRegistered('route') ? $reg->get('route') : null;
 	}
 
 
