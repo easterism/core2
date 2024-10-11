@@ -6,12 +6,28 @@ use OpenApi\Attributes as OAT;
 
 #[OAT\Info(
     version: '2.9.0',
-    description: '',
+    description: 'Common API',
     title: 'CORE2',
     contact: new OAT\Contact(
         name: 'mister easter',
         email: 'easter.by@gmail.com'
     )
+)]
+#[OAT\Server(url: SERVER)]
+#[OAT\Components(securitySchemes: [
+        new OAT\SecurityScheme(
+            type: "http",
+            securityScheme: "bearerAuth",
+            scheme: "bearer",
+            in: "header",
+            bearerFormat: "JWT"
+        ),
+        new OAT\SecurityScheme(
+            type: "http",
+            securityScheme: "basicAuth",
+            scheme: "basic",
+        )
+    ]
 )]
 class OpenApiSpec extends Db
 {
@@ -29,6 +45,7 @@ class OpenApiSpec extends Db
                 $this->_apis[] = $location . "/$modController.php";
             }
         }
+        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME']);
     }
 
     public function render()
