@@ -436,12 +436,12 @@ class Init extends Db {
                 $login = new Login();
                 $login->setSystemName($this->getSystemName());
                 $login->setFavicon($this->getSystemFavicon());
+                $this->setupSkin();
                 parse_str($route['query'], $request);
                 $response = $login->dispatch($request); //TODO переделать на API
                 if (!$response) {
                     //Immutable блокирует запись сессии
                     //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
-                    $this->setupSkin();
                     $response = $login->getPageLogin();
                     $blockNamespace = new SessionContainer('Block');
                     if (empty($blockNamespace->blocked)) {
@@ -617,6 +617,7 @@ class Init extends Db {
 
                 if ($log->getWriter()) {
                     $sql_queries = $this->db->fetchAll("show profiles");
+                $connection_id = $this->db->fetchOne("SELECT CONNECTION_ID()");
                     $total_time  = 0;
                     $max_slow    = [];
 
@@ -633,8 +634,13 @@ class Init extends Db {
                         }
                     }
 
-                    $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
-                    $query_string   = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+                $request_method = PHP_SAPI === 'cli'
+                    ? 'CLI'
+                    : ( ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none');
+
+                $query_string = PHP_SAPI === 'cli'
+                    ? ($this->getPidCommand(posix_getpid()) ?: '-')
+                    : ( ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '');
 
                     if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
                         $function_log = 'warning';
@@ -643,11 +649,41 @@ class Init extends Db {
                     }
 
 
-                    $log->{$function_log}('request', [$request_method, round($total_time, 5), count($sql_queries), $query_string]);
-                    $log->{$function_log}('  | max slow', $max_slow);
-                    $log->{$function_log}('  | queries ', $sql_queries);
+                $log->{$function_log}('request', [
+                    'method'        => $request_method,
+                    'time'          => round($total_time, 5),
+                    'count'         => count($sql_queries),
+                    'connection_id' => $connection_id,
+                    'request'       => $query_string,
+                    'max_slow'      => $max_slow,
+                    'queries'       => $sql_queries,
+                ]);
+            }
                 }
             }
+
+
+    /**
+     * @param int $pid
+     * @return string|null
+     */
+    private function getPidCommand(int $pid):? string {
+
+        $output = [];
+        $cmd    = sprintf("ps -p %d -o command", $pid);
+        exec($cmd, $output);
+
+        $result = null;
+
+        if ( ! empty($output[1])) {
+            $line = $output[1];
+
+            if (preg_match("~(?P<command>.+)$~", $line, $matches)) {
+                $result = $matches['command'];
+            }
+        }
+
+        return $result;
         }
 
 
@@ -1358,10 +1394,8 @@ class Init extends Db {
         private function routeParse() {
             $temp  = explode("/", DOC_PATH);
             $temp2 = explode("/", $_SERVER['REQUEST_URI']);
-            $i = -1;
             foreach ($temp as $k => $v) {
-                if ($temp2[$k] == $v) {
-                    $i++;
+            if (isset($temp2[$k]) && $temp2[$k] == $v) {
                     unset($temp2[$k]);
                 }
             }
