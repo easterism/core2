@@ -4,10 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
-    name="description"
-    content="SwaggerUI"
-  />
-  <title>SwaggerUI</title>
+      name="description"
+      content="Core2 SwaggerUI"/>
+  <title>Core2 SwaggerUI</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
 </head>
 <body>
@@ -17,14 +16,15 @@
 <script>
   window.onload = () => {
     window.ui = SwaggerUIBundle({
-      url: "v1.0/schema.json",
-      spec: {"openapi": "3.0.0"},
+      urls: [
+        {"url":"../../openapi/core2.json", "name":"Common API"},
+      ],
       dom_id: '#swagger-ui',
       presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        layout: "StandaloneLayout",
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIStandalonePreset
+      ],
+      layout: "StandaloneLayout",
     });
   };
 </script>
