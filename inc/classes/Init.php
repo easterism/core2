@@ -368,13 +368,13 @@ class Init extends Db {
             if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
 
                 if (isset($route['module'])) {
-                    if (isset($route['api']) && $route['api'] === 'swagger') {
-                        if ($route['action'] == 'core2.html') {
+                    if (isset($route['api']) && $route['api'] === 'openapi') {
+                        if ($route['action'] == 'core2.json') {
                             //генерация свагера для общего API
                             require_once "OpenApiSpec.php";
+                            header("Cache-Control: no-cache");
                             $schema = new \Core2\OpenApiSpec();
                             $html = $schema->render();
-                            header("Cache-Control: no-cache");
                             return $html;
                         }
                     }
@@ -493,6 +493,10 @@ class Init extends Db {
                         require_once 'core2/inc/MobileController.php';
                         $core = new MobileController();
                     } else {
+                        if (!empty($route['api'])) {
+                            //api для функций ядра в разработке
+                            throw new Exception(404, 404);
+                        }
                         require_once 'core2/inc/CoreController.php';
                         $core = new CoreController();
                     }
