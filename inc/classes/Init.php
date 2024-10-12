@@ -1557,12 +1557,16 @@ class Init extends Db {
             //проверяем наличие контроллера для core2m в модулях
             foreach ($modsList as $k => $data) {
                 $location      = $this->getModuleLocation($data['module_id']);
-                $modController = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
-                if ( ! file_exists($location . "/$modController.php")) {
+                if ($this->auth->MOBILE) { //признак того, что мы в core2m
+                    $controller = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
+                } else {
+                    $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
+                }
+                if ( ! file_exists($location . "/$controller.php")) {
                     unset($modsList[$k]); //FIXME если это не выполнится, core2m не будет работать!
                 } else {
-                    require_once $location . "/$modController.php";
-                    $r = new \ReflectionClass($modController);
+                    require_once $location . "/$controller.php";
+                    $r = new \ReflectionClass($controller);
                     $submodules = []; //должен быть массивом!
                     foreach ($data['submodules'] as $s => $submodule) {
                         $method = 'action_' . $submodule['sm_key'];
