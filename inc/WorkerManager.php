@@ -414,6 +414,10 @@ class WorkerManager {
             $conf     = new Config($config);
             $config   = $conf->getData()->merge($conf->readIni($opts["c"], $section));
 
+            $tz = $config->system->timezone;
+            if (!empty($tz)) {
+                date_default_timezone_set($tz);
+            }
             Registry::set('config', ($config));
         }
         catch (\Exception $e) {

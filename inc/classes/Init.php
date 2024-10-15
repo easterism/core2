@@ -1578,6 +1578,9 @@ class Init extends Db {
                         $submodules[] = $submodule;
                     }
                     $modsList[$k]['submodules'] = $submodules;
+                    if (!$submodules && !$r->hasMethod('action_index')) { //нет методов, доступных извне
+                        unset($modsList[$k]);
+                    }
                 }
             }
             $data = [

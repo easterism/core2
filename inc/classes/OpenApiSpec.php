@@ -41,6 +41,7 @@ class OpenApiSpec extends Db
         path: '/',
         operationId: 'getModules',
         summary: 'Данные для главного меню',
+        tags: ['core2'],
         responses: [
             new OAT\Response(
                 response: 200,
@@ -70,11 +71,12 @@ class OpenApiSpec extends Db
         parent::__construct();
         $mods     = $this->dataModules->getModuleList();
         foreach ($mods as $k => $data) {
+            if (isset($this->_apis[$data['module_id']])) continue;
             $location      = $this->getModuleLocation($data['module_id']);
             $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
             if ( file_exists($location . "/$controller.php")) {
                 require_once $location . "/$controller.php";
-                $this->_apis[] = $location . "/$controller.php";
+                $this->_apis[$data['module_id']] = $location . "/$controller.php";
             }
         }
         define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
