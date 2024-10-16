@@ -17,7 +17,7 @@ if ( ! empty($_SERVER['REQUEST_URI'])) {
     $f = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
     if (!empty($f[1]) && in_array($f[1], ['txt', 'js', 'css', 'env'])) {
         \Core2\Error::Exception("File not found", 404);
-        die;
+        exit();
     }
 }
 
@@ -116,6 +116,16 @@ try {
         $config->merge($conf->readIni($conf_d, $section));
     }
 
+    if (empty($_SERVER['HTTPS'])) {
+        if (isset($config->system) && ! empty($config->system->https)) {
+            header('Location: https://' . $_SERVER['SERVER_NAME']);
+            exit();
+        }
+    }
+    $tz = $config->system->timezone;
+    if (!empty($tz)) {
+        date_default_timezone_set($tz);
+    }
 }
 catch (Exception $e) {
     Error::Exception($e->getMessage());
@@ -182,461 +192,442 @@ require_once 'Cli.php';
  */
 class Init extends Db {
 
-        /**
-         * @var StdClass|Zend_Session_Namespace
-         */
-        private $auth;
+    /**
+     * @var StdClass|Zend_Session_Namespace
+     */
+    private $auth;
 
-        /**
-         * @var Core2\Acl
-         */
-        private $acl;
-        protected $is_cli = false;
-        protected $is_rest = array();
-        protected $is_soap = array();
-        private $is_xajax;
+    /**
+     * @var Core2\Acl
+     */
+    private $acl;
+    protected $is_cli = false;
+    protected $is_rest = array();
+    protected $is_soap = array();
+    private $is_xajax;
 
-        private $route;
-
-        /**
-         * Init constructor.
-         */
-		public function __construct() {
-
-			parent::__construct();
-
-			if (empty($_SERVER['HTTPS'])) {
-				if (isset($this->config->system) && ! empty($this->config->system->https)) {
-					header('Location: https://' . $_SERVER['SERVER_NAME']);
-				}
-			}
-
-			$tz = $this->config->system->timezone;
-			if (!empty($tz)) {
-				date_default_timezone_set($tz);
-			}
-		}
+    private $route;
 
 
-        /**
-         * Общая проверка аутентификации
-         */
-        public function checkAuth() {
+    /**
+     * Общая проверка аутентификации
+     */
+    public function checkAuth() {
 
-            // проверяем, есть ли в запросе токен авторизации
-            $auth = $this->checkToken();
-            if ($auth) { //произошла авторизация по токену
-                $this->auth = $auth;
-                Registry::set('auth', $this->auth);
-                return; //выходим, если авторизация состоялась
-            }
+        // проверяем, есть ли в запросе токен авторизации
+        $auth = $this->checkToken();
+        if ($auth) { //произошла авторизация по токену
+            $this->auth = $auth;
+            Registry::set('auth', $this->auth);
+            return; //выходим, если авторизация состоялась
+        }
 
-            if (PHP_SAPI === 'cli') { //TODO авторизация тоже не помешала бы
-                $this->is_cli = true;
-                Registry::set('auth', new StdClass());
-                return;
-            }
+        if (PHP_SAPI === 'cli') { //TODO авторизация тоже не помешала бы
+            $this->is_cli = true;
+            Registry::set('auth', new StdClass());
+            return;
+        }
 
-            //сохраняем параметры сессии
-            if ($this->config->session) {
-                $sess_config = new SessionConfig();
-                $sess_config->setOptions($this->config->session);
-                $sess_manager = new SessionManager($sess_config);
-                //$sess_manager->setStorage(new SessionStorage());
+        //сохраняем параметры сессии
+        if ($this->config->session) {
+            $sess_config = new SessionConfig();
+            $sess_config->setOptions($this->config->session);
+            $sess_manager = new SessionManager($sess_config);
+            //$sess_manager->setStorage(new SessionStorage());
 
-                $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
-                if ($this->config->session->phpSaveHandler) {
-                    $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
-                    if ($this->config->session->remember_me_seconds) $options['ttl'] = $this->config->session->remember_me_seconds;
-                    if ($this->config->session->savePath) $options['server'] = $this->config->session->savePath;
+            $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
+            if ($this->config->session->phpSaveHandler) {
+                $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
+                if ($this->config->session->remember_me_seconds) $options['ttl'] = $this->config->session->remember_me_seconds;
+                if ($this->config->session->savePath) $options['server'] = $this->config->session->savePath;
 
-                    if ($this->config->session->saveHandler === 'memcached') {
-                        $adapter = new Storage\Adapter\Memcached($options);
-                        $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
-                    } elseif ($this->config->session->phpSaveHandler === 'redis') {
-                        $adapter = new Storage\Adapter\Redis($options);
+                if ($this->config->session->saveHandler === 'memcached') {
+                    $adapter = new Storage\Adapter\Memcached($options);
+                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                } elseif ($this->config->session->phpSaveHandler === 'redis') {
+                    $adapter = new Storage\Adapter\Redis($options);
 //                        $sess_manager->getStorage()->markImmutable();
-                        $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
+                }
+            }
+
+            //сохраняем менеджер сессий
+            SessionContainer::setDefaultManager($sess_manager);
+
+            $auth = new SessionContainer('Auth');
+            if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!$auth->getManager()->isValid()) {
+                    $this->closeSession('Y');
+                }
+                //is user active right now
+                if ($auth->ID == -1) { //это root
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                }
+                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
+                    if ($auth->LIVEID) {
+                        $row = $this->dataSession->find($auth->LIVEID)->current();
+                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
+                            $this->closeSession();
+                        }
                     }
+                    $sLife = $this->getSetting('session_lifetime');
+                    if ($sLife) {
+                        $auth->setExpirationSeconds($sLife, "accept_answer");
+                    }
+                    $this->auth = $auth;
+                    Registry::set('auth', $this->auth);
+                } else {
+                    $this->closeSession('Y');
                 }
 
-                //сохраняем менеджер сессий
-                SessionContainer::setDefaultManager($sess_manager);
+            }
+        }
+    }
 
-                $auth = new SessionContainer('Auth');
-                if (!empty($auth->ID) && is_int($auth->ID)) {
-                    if (!$auth->getManager()->isValid()) {
-                        $this->closeSession('Y');
-                    }
-                    //is user active right now
-                    if ($auth->ID == -1) { //это root
-                        $this->auth = $auth;
-                        Registry::set('auth', $this->auth);
-                    }
-                    if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
-                        if ($auth->LIVEID) {
-                            $row = $this->dataSession->find($auth->LIVEID)->current();
-                            if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
-                                $this->closeSession();
-                            }
-                        }
-                        $sLife = $this->getSetting('session_lifetime');
-                        if ($sLife) {
-                            $auth->setExpirationSeconds($sLife, "accept_answer");
-                        }
-                        $this->auth = $auth;
-                        Registry::set('auth', $this->auth);
-                    } else {
-                        $this->closeSession('Y');
-                    }
 
-                }
+    /**
+     * The main dispatcher
+     *
+     * @return mixed|string
+     * @throws Exception
+     */
+    public function dispatch() {
+
+        if ($this->is_cli || PHP_SAPI === 'cli') {
+            $cli = new \Core2\Cli();
+            return $cli->run();
+        }
+
+        // Парсим маршрут
+        $route = $this->routeParse();
+        if (isset($route['api']) && !$this->auth) {
+            header('HTTP/1.1 401 Unauthorized');
+            $core_config = Registry::get('core_config');
+            if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+            }
+            return;
+        }
+
+        if (!empty($_POST)) {
+            //может ли xajax обработать запрос
+            $xajax = new xajax();
+            if ($xajax->canProcessRequest()) {
+                $this->is_xajax = $xajax;
             }
         }
 
+        if (!$this->is_xajax) {
+            $this->detectWebService();
 
-        /**
-         * The main dispatcher
-         *
-         * @return mixed|string
-         * @throws Exception
-         */
-        public function dispatch() {
+            // Веб-сервис (REST)
+            if ($matches = $this->is_rest) {
+                $this->setContext('webservice');
 
-            if ($this->is_cli || PHP_SAPI === 'cli') {
-                $cli = new \Core2\Cli();
-                return $cli->run();
-            }
+                $this->checkWebservice();
 
-            // Парсим маршрут
-            $route = $this->routeParse();
-            if (isset($route['api']) && !$this->auth) {
-                header('HTTP/1.1 401 Unauthorized');
-                $core_config = Registry::get('core_config');
-                if ($core_config->auth && $core_config->auth->scheme == 'basic') {
-                    header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
-                }
-                return;
-            }
+                require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
+                $webservice_controller = new ModWebserviceController();
 
-            if (!empty($_POST)) {
-                //может ли xajax обработать запрос
-                $xajax = new xajax();
-                if ($xajax->canProcessRequest()) {
-                    $this->is_xajax = $xajax;
-                }
-            }
+                $route['version'] = $matches['version'];
 
-            if (!$this->is_xajax) {
-                $this->detectWebService();
-
-                // Веб-сервис (REST)
-                if ($matches = $this->is_rest) {
-                    $this->setContext('webservice');
-
-                    $this->checkWebservice();
-
-                    require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
-                    $webservice_controller = new ModWebserviceController();
-
-                    $route['version'] = $matches['version'];
-
-                    if (!empty($matches['module'])) {
-                        $route['module'] = $matches['module'];
-                        $route['action'] = $matches['action'];
-                    }
-
-                    return $webservice_controller->dispatchRest($route);
-
+                if (!empty($matches['module'])) {
+                    $route['module'] = $matches['module'];
+                    $route['action'] = $matches['action'];
                 }
 
-                // Веб-сервис (SOAP)
-                if ($matches = $this->is_soap) {
-                    $this->setContext('webservice');
-                    $this->checkWebservice();
+                return $webservice_controller->dispatchRest($route);
 
-                    $webservice_controller = new ModWebserviceController();
-
-                    $version = $matches['version'];
-                    $action = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
-                    $module_name = $matches['module'];
-
-                    return $webservice_controller->dispatchSoap($module_name, $action, $version);
-                }
             }
 
-            if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+            // Веб-сервис (SOAP)
+            if ($matches = $this->is_soap) {
+                $this->setContext('webservice');
+                $this->checkWebservice();
 
-                if (isset($route['module'])) {
-                    if (isset($route['api']) && $route['api'] === 'openapi') {
-                        if ($route['action'] == 'core2.json') {
-                            //генерация свагера для общего API
-                            require_once "OpenApiSpec.php";
-                            header("Cache-Control: no-cache");
-                            $schema = new \Core2\OpenApiSpec();
-                            $html = $schema->render();
-                            return $html;
-                        }
-                    }
-                    elseif ($route['module'] === 'sse') {
+                $webservice_controller = new ModWebserviceController();
 
-                        require_once 'core2/inc/Interfaces/Event.php';
+                $version = $matches['version'];
+                $action = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
+                $module_name = $matches['module'];
 
-                        $this->setContext("admin", "sse");
-                        session_write_close();
-                        header("Content-Type: text/event-stream; charset=utf-8");
-                        header("X-Accel-Buffering: no");
+                return $webservice_controller->dispatchSoap($module_name, $action, $version);
+            }
+        }
+
+        if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+
+            if (isset($route['module'])) {
+                if (isset($route['api']) && $route['api'] === 'openapi') {
+                    if ($route['action'] == 'core2.json') {
+                        //генерация свагера для общего API
+                        require_once "OpenApiSpec.php";
                         header("Cache-Control: no-cache");
-
-                        $sse = new Core2\SSE();
-                        while (1) {
-
-                            $sse->loop();
-
-                            if (connection_aborted()) break;
-
-                            sleep(1);
-                        }
-                        return;
+                        $schema = new \Core2\OpenApiSpec();
+                        $html = $schema->render();
+                        return $html;
                     }
-
                 }
+                elseif ($route['module'] === 'sse') {
 
-                // LOG USER ACTIVITY
-                $logExclude = array(
-                    'profile/index/unread', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
-                );
+                    require_once 'core2/inc/Interfaces/Event.php';
 
-                $this->logActivity($logExclude);
-                //TODO CHECK DIRECT REQUESTS except iframes
+                    $this->setContext("admin", "sse");
+                    session_write_close();
+                    header("Content-Type: text/event-stream; charset=utf-8");
+                    header("X-Accel-Buffering: no");
+                    header("Cache-Control: no-cache");
 
-                require_once 'Zend_Session_Namespace.php'; //DEPRECATED
-                require_once 'core2/inc/classes/Acl.php';
-                require_once 'core2/inc/Interfaces/Delete.php';
-                require_once 'core2/inc/Interfaces/File.php';
-                require_once 'core2/inc/Interfaces/Subscribe.php';
-                require_once 'core2/inc/Interfaces/Switches.php';
+                    $sse = new Core2\SSE();
+                    while (1) {
 
-                $this->acl = new Acl();
-                $this->acl->setupAcl();
+                        $sse->loop();
 
-                if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+                        if (connection_aborted()) break;
 
-                if ($this->is_xajax) {
-                    //может ли xajax обработать запрос
-                    $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-                    $xajax->processRequest();
+                        sleep(1);
+                    }
                     return;
                 }
 
             }
-            else {
-                require_once 'Login.php';
 
-                $login = new Login();
-                $login->setSystemName($this->getSystemName());
-                $login->setFavicon($this->getSystemFavicon());
-                $this->setupSkin();
-                parse_str($route['query'], $request);
-                $response = $login->dispatch($request); //TODO переделать на API
-                if (!$response) {
-                    //Immutable блокирует запись сессии
-                    //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
-                    $response = $login->getPageLogin();
-                    $blockNamespace = new SessionContainer('Block');
-                    if (empty($blockNamespace->blocked)) {
-                        SessionContainer::getDefaultManager()->destroy();
-                    }
-                }
-                return $response;
+            // LOG USER ACTIVITY
+            $logExclude = array(
+                'profile/index/unread', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+            );
+
+            $this->logActivity($logExclude);
+            //TODO CHECK DIRECT REQUESTS except iframes
+
+            require_once 'Zend_Session_Namespace.php'; //DEPRECATED
+            require_once 'core2/inc/classes/Acl.php';
+            require_once 'core2/inc/Interfaces/Delete.php';
+            require_once 'core2/inc/Interfaces/File.php';
+            require_once 'core2/inc/Interfaces/Subscribe.php';
+            require_once 'core2/inc/Interfaces/Switches.php';
+
+            $this->acl = new Acl();
+            $this->acl->setupAcl();
+
+            if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
+            if ($this->is_xajax) {
+                //может ли xajax обработать запрос
+                $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
+                $xajax->processRequest();
+                return;
             }
 
-            //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
+        }
+        else {
+            require_once 'Login.php';
 
-            if (
-                empty($_GET['module']) && empty($route['api']) &&
-                ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
-                trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
-            ) {
-                require_once 'Navigation.php';
-
-                if (empty($this->auth->init)) { //нет сессии на сервере
-                    return $this->getMenuMobile();
+            $login = new Login();
+            $login->setSystemName($this->getSystemName());
+            $login->setFavicon($this->getSystemFavicon());
+            $this->setupSkin();
+            parse_str($route['query'], $request);
+            $response = $login->dispatch($request); //TODO переделать на API
+            if (!$response) {
+                //Immutable блокирует запись сессии
+                //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+                $response = $login->getPageLogin();
+                $blockNamespace = new SessionContainer('Block');
+                if (empty($blockNamespace->blocked)) {
+                    SessionContainer::getDefaultManager()->destroy();
                 }
-                $this->setupSkin();
-                if (!defined('THEME')) return;
-                return $this->getMenu();
+            }
+            return $response;
+        }
+
+        //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
+
+        if (
+            empty($_GET['module']) && empty($route['api']) &&
+            ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
+            trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
+        ) {
+            require_once 'Navigation.php';
+
+            if (empty($this->auth->init)) { //нет сессии на сервере
+                return $this->getMenuMobile();
+            }
+            $this->setupSkin();
+            if (!defined('THEME')) return;
+            return $this->getMenu();
+        }
+        else {
+
+            if ($this->deleteAction()) return '';
+            if ($this->switchAction()) return '';
+
+            $module = !empty($route['api']) ? $route['api'] : $route['module'];
+            $extension = strrpos($module, '.') ? substr($module, strrpos($module, '.')) : null;
+            if ($extension) $module = substr($module, 0, strrpos($module, '.'));
+            if ($module == 'index') $module = "admin";
+            if (empty($route['api']) && !empty($_GET['module'])) {
+                $module = $_GET['module'];
+            }
+
+            if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
+            $action = $route['action'];
+            $this->setContext($module, $action);
+
+            if ($this->fileAction()) return '';
+
+            $this->setupSkin();
+            if ($module === 'admin') {
+
+                if ($this->auth->MOBILE) {
+                    require_once 'core2/inc/MobileController.php';
+                    $core = new MobileController();
+                } else {
+                    if (!empty($route['api'])) {
+                        //api для функций ядра в разработке
+                        throw new Exception(404, 404);
+                    }
+                    require_once 'core2/inc/CoreController.php';
+                    $core = new CoreController();
+                }
+                if (empty($_GET['action'])) {
+                    $_GET['action'] = 'index';
+                }
+                $action = "action_" . $action;
+                if (method_exists($core, $action)) {
+                    return $core->$action();
+                } else {
+                    throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
+                }
+
             }
             else {
+                if ($action == 'index') {
+                    $_GET['action'] = "index";
 
-                if ($this->deleteAction()) return '';
-                if ($this->switchAction()) return '';
-
-                $module = !empty($route['api']) ? $route['api'] : $route['module'];
-                $extension = strrpos($module, '.') ? substr($module, strrpos($module, '.')) : null;
-                if ($extension) $module = substr($module, 0, strrpos($module, '.'));
-                if ($module == 'index') $module = "admin";
-                if (empty($route['api']) && !empty($_GET['module'])) {
-                    $module = $_GET['module'];
-                }
-
-                if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
-                $action = $route['action'];
-                $this->setContext($module, $action);
-
-                if ($this->fileAction()) return '';
-
-                $this->setupSkin();
-                if ($module === 'admin') {
-
-                    if ($this->auth->MOBILE) {
-                        require_once 'core2/inc/MobileController.php';
-                        $core = new MobileController();
-                    } else {
-                        if (!empty($route['api'])) {
-                            //api для функций ядра в разработке
-                            throw new Exception(404, 404);
-                        }
-                        require_once 'core2/inc/CoreController.php';
-                        $core = new CoreController();
-                    }
-                    if (empty($_GET['action'])) {
-                        $_GET['action'] = 'index';
-                    }
-                    $action = "action_" . $action;
-                    if (method_exists($core, $action)) {
-                        return $core->$action();
-                    } else {
-                        throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
+                    if ( ! $this->isModuleActive($module)) {
+                        if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
+                        throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                     }
 
+                    if ( ! $this->acl->checkAcl($module, 'access')) {
+                        if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
+                        throw new Exception(911);
+                    }
                 }
                 else {
-                    if ($action == 'index') {
-                        $_GET['action'] = "index";
+                    $submodule_id = $module . '_' . $action;
+                    if ( ! $this->isModuleActive($submodule_id)) {
+                        if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
+                        throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
+                    }
+                    $mods = $this->getSubModule($submodule_id);
 
-                        if ( ! $this->isModuleActive($module)) {
-                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Модуль %s не существует"), $action), 404);
-                            throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
+                    //TODO перенести проверку субмодуля в контроллер модуля
+                    if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
+                        if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
+                        throw new Exception(911);
+                    }
+                }
+
+                if (empty($mods['sm_path'])) {
+                    $location = $this->getModuleLocation($module); //определяем местоположение модуля
+                    if ($extension == ".sw") {
+                        //модуль хочет serviceWorker
+                        if (file_exists($location . "/serviceWorker.js")) {
+                            header("Pragma: public");
+                            header("Content-Type: text/javascript");
+                            header("Content-length: " . filesize($location . "/serviceWorker.js"));
+                            readfile($location . "/serviceWorker.js");
+                            die;
+                        } else {
+                            Error::Exception("File not found", 404);
                         }
+                    }
+                    if ($this->translate->isSetup()) {
+                        $this->translate->setupExtra($location, $module);
+                    }
+                    if (!empty($this->auth->MOBILE)) {
+                        $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
+                    }
+                    elseif (!empty($route['api'])) {
+                        //запрос от приложения
+                        header('Content-type: application/json; charset="utf-8"');
+                        try {
+                            $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
+                            $this->requireController($location, $modController);
+                            $modController = new $modController();
+                            $action = "action_" . $action;
+                            if (method_exists($modController, $action)) {
+                                $out = $modController->$action();
+                                if (is_array($out)) $out = json_encode($out);
+                                return $out;
+                            } else {
+                                throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
+                            }
+                        } catch (HttpException $e) {
+                            return Error::catchJsonException([
+                                    'msg' => $e->getMessage(),
+                                    'code' => $e->getErrorCode()
+                                ], $e->getCode() ?: 500);
 
-                        if ( ! $this->acl->checkAcl($module, 'access')) {
-                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
-                            throw new Exception(911);
+                        } catch (\Exception $e) {
+                            return Error::catchJsonException($e->getMessage(), $e->getCode());
                         }
                     }
                     else {
-                        $submodule_id = $module . '_' . $action;
-                        if ( ! $this->isModuleActive($submodule_id)) {
-                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
-                            throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
-                        }
-                        $mods = $this->getSubModule($submodule_id);
-
-                        //TODO перенести проверку субмодуля в контроллер модуля
-                        if ($mods['sm_id'] && !$this->acl->checkAcl($submodule_id, 'access')) {
-                            if (!empty($route['api'])) return Error::catchJsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
-                            throw new Exception(911);
-                        }
+                        $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
                     }
 
-                    if (empty($mods['sm_path'])) {
-                        $location = $this->getModuleLocation($module); //определяем местоположение модуля
-                        if ($extension == ".sw") {
-                            //модуль хочет serviceWorker
-                            if (file_exists($location . "/serviceWorker.js")) {
-                                header("Pragma: public");
-                                header("Content-Type: text/javascript");
-                                header("Content-length: " . filesize($location . "/serviceWorker.js"));
-                                readfile($location . "/serviceWorker.js");
-                                die;
-                            } else {
-                                Error::Exception("File not found", 404);
-                            }
-                        }
-                        if ($this->translate->isSetup()) {
-                            $this->translate->setupExtra($location, $module);
-                        }
-                        if (!empty($this->auth->MOBILE)) {
-                            $modController = "Mobile" . ucfirst(strtolower($module)) . "Controller";
-                        }
-                        elseif (!empty($route['api'])) {
-                            //запрос от приложения
-                            header('Content-type: application/json; charset="utf-8"');
-                            try {
-                                $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
-                                $this->requireController($location, $modController);
-                                $modController = new $modController();
-                                $action = "action_" . $action;
-                                if (method_exists($modController, $action)) {
-                                    $out = $modController->$action();
-                                    if (is_array($out)) $out = json_encode($out);
-                                    return $out;
-                                } else {
-                                    throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
-                                }
-                            } catch (HttpException $e) {
-                                return Error::catchJsonException([
-                                        'msg' => $e->getMessage(),
-                                        'code' => $e->getErrorCode()
-                                    ], $e->getCode() ?: 500);
-
-                            } catch (\Exception $e) {
-                                return Error::catchJsonException($e->getMessage(), $e->getCode());
-                            }
-                        }
-                        else {
-                            $modController = "Mod" . ucfirst(strtolower($module)) . "Controller";
-                        }
-
-                        $this->requireController($location, $modController);
-                        $modController = new $modController();
-                        $action = "action_" . $action;
-                        if (method_exists($modController, $action)) {
-                            $out = $modController->$action();
-                            return $out;
-                        } else {
-                            throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
-                        }
+                    $this->requireController($location, $modController);
+                    $modController = new $modController();
+                    $action = "action_" . $action;
+                    if (method_exists($modController, $action)) {
+                        $out = $modController->$action();
+                        return $out;
                     } else {
-                        return "<script>loadExt('{$mods['sm_path']}')</script>";
+                        throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
                     }
+                } else {
+                    return "<script>loadExt('{$mods['sm_path']}')</script>";
                 }
             }
-            return '';
         }
+        return '';
+    }
 
 
-        /**
-         *
-         */
-        public function __destruct() {
+    /**
+     *
+     */
+    public function __destruct() {
 
-            if ($this->config &&
-                $this->config->system &&
-                $this->config->system->profile &&
-                $this->config->system->profile->on
-            ) {
-                $log = new \Core2\Log('profile');
+        if ($this->config &&
+            $this->config->system &&
+            $this->config->system->profile &&
+            $this->config->system->profile->on
+        ) {
+            $log = new \Core2\Log('profile');
 
-                if ($log->getWriter()) {
-                    $sql_queries = $this->db->fetchAll("show profiles");
+            if ($log->getWriter()) {
+                $sql_queries = $this->db->fetchAll("show profiles");
                 $connection_id = $this->db->fetchOne("SELECT CONNECTION_ID()");
-                    $total_time  = 0;
-                    $max_slow    = [];
+                $total_time  = 0;
+                $max_slow    = [];
 
-                    if ( ! empty($sql_queries)) {
-                        foreach ($sql_queries as $k => $sql_query) {
+                if ( ! empty($sql_queries)) {
+                    foreach ($sql_queries as $k => $sql_query) {
 
-                            if ( ! empty($sql_query['Duration'])) {
-                                $total_time += $sql_query['Duration'];
+                        if ( ! empty($sql_query['Duration'])) {
+                            $total_time += $sql_query['Duration'];
 
-                                if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
-                                    $max_slow = $sql_query;
-                                }
+                            if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
+                                $max_slow = $sql_query;
                             }
                         }
                     }
+                }
 
                 $request_method = PHP_SAPI === 'cli'
                     ? 'CLI'
@@ -663,8 +654,8 @@ class Init extends Db {
                     'queries'       => $sql_queries,
                 ]);
             }
-                }
-            }
+        }
+    }
 
 
     /**
