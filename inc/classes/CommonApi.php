@@ -187,11 +187,12 @@ class CommonApi extends \Core2\Acl {
             case 'PUT':
             case 'PATCH':
             case 'DELETE':
-                if (strpos($h['Content-Type'], 'application/x-www-form-urlencoded') === 0) {
-                    parse_str($request_raw, $request_raw);
-                }
-                else if (strpos($h['Content-Type'], 'application/json') === 0) {
-                    $request_raw = json_decode($request_raw, true);
+                if (isset($h['Content-Type'])) {
+                    if (strpos($h['Content-Type'], 'application/x-www-form-urlencoded') === 0) {
+                        parse_str($request_raw, $request_raw);
+                    } else if (strpos($h['Content-Type'], 'application/json') === 0) {
+                        $request_raw = json_decode($request_raw, true);
+                    }
                 }
                 break;
             default:
