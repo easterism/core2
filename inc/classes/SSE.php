@@ -43,7 +43,6 @@ class SSE extends \Common {
                 }
             }
         }
-        $this->db->closeConnection();
         set_time_limit(0);
     }
 
@@ -82,34 +81,39 @@ class SSE extends \Common {
         $data = [];
 
         foreach ($this->_events as $path => $event) {
-            if ($event->check()) {
-                //TODO реализовать не блокирующий вызов
-                $path = str_replace("\\", "-" , $path);
+            try {
+                if ($event->check()) {
+                    //TODO реализовать не блокирующий вызов
+                    $path = str_replace("\\", "-", $path);
 
-                ob_start();
-                $msgs = $event->dispatch();
+                    ob_start();
+                    $msgs = $event->dispatch();
 
-                $data[$path] = ob_get_clean();
+                    $data[$path] = ob_get_clean();
 
-                if ($data[$path] || ($msgs && is_array($msgs))) {
-                    if ($data[$path]) {
-                        echo "event: modules\n",
-                        'data: ', json_encode([$path => $data[$path]]), "\n\n";
-                        $this->doFlush();
-                    }
-                    if ($msgs) {
-                        foreach ($msgs as $topic => $msg) {
-                            if ($topic !== 'global') $topic = "-{$topic}";
-                            else $topic = '';
-
+                    if ($data[$path] || ($msgs && is_array($msgs))) {
+                        if ($data[$path]) {
                             echo "event: modules\n",
-                            'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                            'data: ', json_encode([$path => $data[$path]]), "\n\n";
                             $this->doFlush();
+                        }
+                        if ($msgs) {
+                            foreach ($msgs as $topic => $msg) {
+                                if ($topic !== 'global') $topic = "-{$topic}";
+                                else $topic = '';
+
+                                echo "event: modules\n",
+                                'data: ', json_encode([$path . $topic => $msg]), "\n\n";
+                                $this->doFlush();
+                            }
                         }
                     }
                 }
+            } catch (\Exception $e) {
+
             }
         }
+        if ($this->db->isConnected()) $this->db->closeConnection();
 
         if ($data) {
             echo "event: Core2\n",
