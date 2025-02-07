@@ -93,6 +93,18 @@ if (empty($config['temp'])) {
 //обрабатываем общий конфиг
 try {
 
+    if (PHP_SAPI === 'cli') { //определяем имя секции для cli режима
+        $options = getopt('m:a:p:s:', array(
+            'module:',
+            'action:',
+            'param:',
+            'section:'
+        ));
+        if (( ! empty($options['section']) && is_string($options['section'])) || ( ! empty($options['s']) && is_string($options['s']))) {
+            $_SERVER['SERVER_NAME'] = ! empty($options['section']) ? $options['section'] : $options['s'];
+        }
+    }
+
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
 
     $conf     = new Core2\Config($config);
@@ -104,7 +116,7 @@ try {
         $config->merge($conf->readIni($conf_d, $section));
     }
 
-    if (empty($_SERVER['HTTPS'])) {
+    if (empty($_SERVER['HTTPS']) && PHP_SAPI !== 'cli') {
         if (isset($config->system) && ! empty($config->system->https)) {
             header('Location: https://' . $_SERVER['SERVER_NAME']);
             exit(); // TODO нужно убрать
@@ -171,6 +183,8 @@ require_once 'Common.php';
 require_once 'Templater2.php'; //DEPRECATED
 require_once 'Templater3.php';
 require_once 'SSE.php';
+require_once 'Cli.php';
+
 
 /**
  * Class Init
@@ -187,6 +201,7 @@ class Init extends Db {
      * @var Core2\Acl
      */
     private $acl;
+    protected $is_cli = false;
     protected $is_rest = array();
     protected $is_soap = array();
     private $is_xajax;
@@ -205,6 +220,12 @@ class Init extends Db {
             $this->auth = $auth;
             Registry::set('auth', $this->auth);
             return; //выходим, если авторизация состоялась
+        }
+
+        if (PHP_SAPI === 'cli') { //TODO авторизация тоже не помешала бы
+            $this->is_cli = true;
+            Registry::set('auth', new StdClass());
+            return;
         }
 
         //сохраняем параметры сессии
@@ -272,6 +293,11 @@ class Init extends Db {
      * @throws Exception
      */
     public function dispatch() {
+
+        if ($this->is_cli || PHP_SAPI === 'cli') {
+            $cli = new \Core2\Cli();
+            return $cli->run();
+        }
 
         // Парсим маршрут
         $route = $this->routeParse();
@@ -620,9 +646,13 @@ class Init extends Db {
                     }
                 }
 
-                $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
+                $request_method = PHP_SAPI === 'cli'
+                    ? 'CLI'
+                    : ( ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none');
 
-                $query_string = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+                $query_string = PHP_SAPI === 'cli'
+                    ? ($this->getPidCommand(posix_getpid()) ?: '-')
+                    : ( ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '');
 
                 if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
                     $function_log = 'warning';
@@ -728,31 +758,51 @@ class Init extends Db {
                 //TODO заменить модуль webservice на модуль auth
                 $this->setContext('webservice');
                 $this->checkWebservice();
-                $webservice_api = new ModWebserviceApi();
-                //требуется webservice 2.6.0
-                return $webservice_api->dispatchToken($token);
+                try {
+                    $webservice_api = new ModWebserviceApi();
+                    //требуется webservice 2.6.0
+                    return $webservice_api->dispatchToken($token);
+                } catch (HttpException $e) {
+                    throw new \Exception(json_encode([
+                        'msg' => $e->getMessage(),
+                        'code' => $e->getErrorCode()
+                    ]), $e->getCode() ?: 500);
+
+                } catch (\Exception $e) {
+                    throw new \Exception($e->getMessage(), $e->getCode());
+                }
             }
             if (strpos($_SERVER['HTTP_AUTHORIZATION'], 'Basic') === 0) {
                 $core_config = Registry::get('core_config');
                 if ($core_config->auth && $core_config->auth->scheme == 'basic') {
                     //http basic auth allowed
-                    list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
-                    $user = $this->dataUsers->getUserByLogin($login);
-                    if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
-                        $auth = new \StdClass();
+                    try {
+                        list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                        $user = $this->dataUsers->getUserByLogin($login);
+                        if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
+                            $auth = new \StdClass();
 
-                        $auth->LIVEID = 0;
+                            $auth->LIVEID = 0;
 
-                        $auth->ID = (int)$user['u_id'];
-                        $auth->NAME = $user['u_login'];
-                        $auth->EMAIL = $user['email'];
-                        $auth->LN = $user['lastname'];
-                        $auth->FN = $user['firstname'];
-                        $auth->MN = $user['middlename'];
-                        $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
-                        $auth->ROLE = $user['role'];
-                        $auth->ROLEID = (int)$user['role_id'];
-                        return $auth;
+                            $auth->ID = (int)$user['u_id'];
+                            $auth->NAME = $user['u_login'];
+                            $auth->EMAIL = $user['email'];
+                            $auth->LN = $user['lastname'];
+                            $auth->FN = $user['firstname'];
+                            $auth->MN = $user['middlename'];
+                            $auth->ADMIN = $user['is_admin_sw'] == 'Y' ? true : false;
+                            $auth->ROLE = $user['role'];
+                            $auth->ROLEID = (int)$user['role_id'];
+                            return $auth;
+                        }
+                    } catch (HttpException $e) {
+                        throw new \Exception(json_encode([
+                            'msg' => $e->getMessage(),
+                            'code' => $e->getErrorCode()
+                        ]), $e->getCode() ?: 500);
+
+                    } catch (\Exception $e) {
+                        throw new \Exception($e->getMessage(), $e->getCode());
                     }
                 }
             }
@@ -765,8 +815,18 @@ class Init extends Db {
             if (!$token) return;
             $this->setContext('webservice');
             $this->checkWebservice();
-            $webservice_api = new ModWebserviceApi();
-            return $webservice_api->dispatchWebToken($token);
+            try {
+                $webservice_api = new ModWebserviceApi();
+                return $webservice_api->dispatchWebToken($token);
+            } catch (HttpException $e) {
+                throw new \Exception(json_encode([
+                    'msg' => $e->getMessage(),
+                    'code' => $e->getErrorCode()
+                ]), $e->getCode() ?: 500);
+
+            } catch (\Exception $e) {
+                throw new \Exception($e->getMessage(), $e->getCode());
+            }
         }
         elseif (!empty($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
             $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? $_SERVER['HTTP_CORE2_APIKEY'] : $_GET['apikey'];
@@ -922,9 +982,7 @@ class Init extends Db {
         $tpl_menu->assign('<!--CURRENT_USER_LN-->',    $this->auth->LN ? htmlspecialchars($this->auth->LN) : "");
         $img = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))) . "?&s=28&d=mm";
         $row = $this->dataUsersProfile->getRowByUserId($this->auth->ID);
-        if ($row && isset($row->avatar) && $row->avatar) {
-            $img = "data:image/png;base64, {$row->avatar}";
-        }
+        if ($row && $row->avatar) $img = "data:image/png;base64, {$row->avatar}";
         $tpl_menu->assign('[GRAVATAR_URL]', $img);
 
 
