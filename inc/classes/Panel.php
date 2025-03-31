@@ -1,7 +1,10 @@
 <?php
+namespace Core2;
 
 require_once 'Templater3.php';
 
+use Templater3;
+use Exception;
 
 /**
  * Class Panel
@@ -277,7 +280,7 @@ class Panel {
      */
     public function render(): string {
 
-        $tpl = new Templater3(DOC_ROOT . "/core2/html/" . THEME . '/html/panel.html');
+        $tpl = new Templater3(__DIR__ . "/../../html/" . THEME . '/html/panel.html');
 
         $tpl->assign('[RESOURCE]', $this->resource);
 

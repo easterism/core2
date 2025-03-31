@@ -1408,7 +1408,7 @@ class editTable extends initEdit {
 							}
 							$select++;
 						}
-						elseif ($value['type'] == 'select' || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
+						elseif ($value['type'] == self::TYPE_SELECT || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
                             $temp = [];
 
                             if (is_array($this->selectSQL[$select])) {
@@ -1460,7 +1460,8 @@ class editTable extends initEdit {
 
 
                                 $controlGroups[$cellId]['html'][$key] .= $out;
-                            } else {
+                            }
+                            else {
                                 $controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
                                 $group                                = "";
                                 foreach ($temp as $row) {
@@ -1492,7 +1493,7 @@ class editTable extends initEdit {
                             }
                             $select++;
 
-                        } elseif ($value['type'] == 'select2') {
+                        } elseif ($value['type'] == self::TYPE_SELECT2) {
                             $options = [];
 
                             if (is_array($this->selectSQL[$select])) {
