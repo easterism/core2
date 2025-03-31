@@ -17,8 +17,8 @@ use Core2\Classes\Table;
 
 /**
  * Class Modules
- * @property \SubModules $dataSubModules
- * @property \Modules    $dataModules
+ * @property SubModules $dataSubModules
+ * @property Modules    $dataModules
  */
 class Modules extends \Common  {
 

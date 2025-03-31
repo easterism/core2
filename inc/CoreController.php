@@ -19,7 +19,8 @@ require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
 use Core2\InstallModule as Install;
-
+use Core2\Panel;
+use Core2\Modules;
 
 /**
  * @property Core2\Model\Enum         $dataEnum
@@ -165,7 +166,7 @@ class CoreController extends Common implements File {
                             throw new Exception('Некорректный http метод');
                         }
                         header("Content-Type: application/json");
-                        (new \Core2\Modules())->gitlabClean();
+                        (new Modules())->gitlabClean();
                         return json_encode([
                             'status' => 'success'
                         ]);
@@ -187,7 +188,7 @@ class CoreController extends Common implements File {
             try {
                 switch ($_GET['page']) {
                     case 'table_gitlab':
-                        return (new \Core2\Modules())->getTableGitlab();
+                        return (new Modules())->getTableGitlab();
                         break;
                 }
 
@@ -239,8 +240,8 @@ class CoreController extends Common implements File {
 
 
         $base_url = "index.php?module=admin&action=modules";
-        $mods     = new Core2\Modules();
-        $panel    = new \Panel('tab');
+        $mods     = new Modules();
+        $panel    = new Panel('tab');
         $panel->setTitle($this->_("Модули"));
 
         ob_start();
