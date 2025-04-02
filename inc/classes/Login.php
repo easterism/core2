@@ -81,6 +81,21 @@ class Login extends \Common {
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
         }
+        elseif ($uri == 'restore_complete') {
+            $auth = $this->isModuleInstalled('auth');
+            if (!$auth) {
+                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+            }
+            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                //субмдуль регистрациивыключен
+                throw new \Exception($this->_('Восстановление пароля недоступно'), 403);
+            }
+            $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
+            $tpl  = new \Templater3();
+            $tpl->setTemplate($form_html);
+            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+            return $html;
+        }
         else {
             return $this->getPageLogin();
         }
