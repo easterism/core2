@@ -2354,9 +2354,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 							$modal++;
 						}
 
-						if (!empty($value['out'])) {
-							$controlGroups[$cellId]['html'][$key] .= str_replace("[VAL]", $value['default'], $value['out']);
-						}
+                        if ( ! empty($value['out'])) {
+                            $controlGroups[$cellId]['html'][$key] .= $value['out'];
+                        }
 						$controlGroups[$cellId]['html'][$key] .= '</td></tr></table>';
 					}
 				}
