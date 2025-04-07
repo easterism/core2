@@ -660,8 +660,12 @@ class Init extends Acl {
         // Веб-сервис (REST)
         if ($is_rest) {
             $route['version'] = $is_rest['version'];
+            $route['query'] = $_SERVER['QUERY_STRING'];
+            $route['params'] = [];
             if (!empty($is_rest['module'])) {
                 $route['module'] = $is_rest['module'];
+            }
+            if (!empty($is_rest['action'])) {
                 $route['action'] = $is_rest['action'];
             }
             $res = $webservice_controller->dispatchRest($route);
