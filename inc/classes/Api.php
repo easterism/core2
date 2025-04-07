@@ -64,6 +64,19 @@ class Api extends Acl
                 $coreController = new ModAdminApi();
                 $action         = "action_" . $action;
                 if (method_exists($coreController, $action)) {
+                    if (str_starts_with(self::$route['query'], 'core_') && str_contains(self::$route['query'], '.')) {
+                        //удаляют запись из таблицы
+                        $route = self::$route;
+                        $query = explode('=', $route['query']);
+                        $route['params'] = [
+                            '_resource' => key($route['params']),
+                            '_field' => $query[0],
+                            '_value' => $query[1]
+                        ];
+                        $route['query'] = '';
+                        Registry::set('route', $route);
+                        $coreController = new ModAdminApi(); //в контролер будет передан новый роутинг
+                    }
                     $out = $coreController->$action();
 
                     if (is_array($out)) {
