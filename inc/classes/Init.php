@@ -457,6 +457,10 @@ class Init extends Acl {
 
             }
             else {
+                if (in_array($module, ['registration', 'registration_complete', 'restore', 'restore_complete'])) {
+                    header("Location: index.php");
+                    return '';
+                }
                 $this->checkModule($module, $action);
                 $location = $this->getModuleLocation($module); //определяем местоположение модуля
 
