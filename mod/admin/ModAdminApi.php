@@ -7,6 +7,9 @@ use Laminas\Session\Container as SessionContainer;
 use OpenApi\Attributes as OAT;
 use Core2\Switches;
 
+/**
+ * @property \Core2\Model\Users $dataUsers
+ */
 class ModAdminApi extends CommonApi
 {
     public function action_index()
@@ -33,10 +36,39 @@ class ModAdminApi extends CommonApi
         }
     }
 
+    public function action_users()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                if (!$this->auth->ADMIN) throw new Exception("Доступ запрещен", 911);
+                if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
+                    //это удаление из UI
+                    if (empty($params['_resource'])) throw new Exception("Не удалось определить местоположение данных для удаления.");
+                    if (empty($params['_field'])) throw new Exception("Не удалось определить источник для удаления.");
+                    if (empty($params['_value'])) throw new Exception("Не удалось определить объекты для удаления.");
+                    $ids = explode(",", $params['_value']);
+                    foreach ($ids as $id) {
+
+                        $user = $this->dataUsers->find($id)->current();
+                        if ($user) {
+                            $user->delete();
+                            $this->emit("delete_user", ['id' => $id]);
+                        }
+                    }
+                    return ['loc' => "index.php?module=admin&action=users"];
+                }
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
     public function action_acl()
     {
         $params = $this->route['params'];
-        if (!$params || !key($params)) throw new \Exception('Error: empty params', 400);
+        if (!$params || !key($params)) throw new Exception('Error: empty params', 400);
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'GET':
                 $resource = strtolower(key($params));
@@ -51,7 +83,7 @@ class ModAdminApi extends CommonApi
                 }
                 break;
             default:
-                throw new \Exception('Error: method not handled', 405);
+                throw new Exception('Error: method not handled', 405);
         }
     }
 
