@@ -824,7 +824,7 @@ class Db extends Table {
 
         //проверка наличия полей для последовательности и автора
         if ($this->table) {
-            $table_columns = $this->db->describeTable(trim($this->table, '`'));
+            $table_columns = $db->describeTable(trim($this->table, '`'));
             if (!$this->primary_key) $this->setPrimaryKey('id');
             if (isset($table_columns['seq'])) {
                 $this->records_seq = true;

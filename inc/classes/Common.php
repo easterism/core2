@@ -15,7 +15,6 @@ use Core2\Error;
  */
 class Common extends \Core2\Acl {
 
-	protected $module;
 	protected $path;
 
     /**
@@ -36,44 +35,20 @@ class Common extends \Core2\Acl {
      */
 	public function __construct() {
 
-        $child_class_name = get_class($this);
-
-        if ($child_class_name == 'CoreController') {
-            $mod_name = 'admin';
-        } else {
-            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
-                ? substr($child_class_name, 3, -strlen($matches[1]))
-                : '';
-        }
-//        if (!$mod_name) {
-//            $r = new \ReflectionClass($child_class_name);
-//            $classLoc = $r->getFileName();
-//            $classPath = strstr($classLoc, '/mod/');
-//            if ($classPath) {
-//                $classPath = substr($classPath, 5);
-//                $mod_name  = substr($classPath, 0, strpos($classPath, "/"));
-//            }
-//        }
-
 		parent::__construct();
         $reg     = Registry::getInstance();
-		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
 
-        if ($mod_name) {
-            $this->module = strtolower($mod_name);
-            if (!$reg->isRegistered('invoker')) {
-                $reg->set('invoker', $this->module);
-            }
-        } else {
-			$this->module = ! empty($context[0]) ? $context[0] : '';
+        if ($this->module && !$reg->isRegistered('invoker')) {
+            $reg->set('invoker', $this->module);
         }
 
         $this->path      = 'mod/' . $this->module . '/';
         if ($reg->isRegistered('auth')) $this->auth = $reg->get('auth');
         $this->resId     = $this->module;
-		$this->actionURL = "?module=" . $this->module;
+        $this->actionURL = "?module=" . $this->module;
 
-		if ( ! empty($context[1]) && $context[1] !== 'index') {
+        $context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
+        if ( ! empty($context[1]) && $context[1] !== 'index') {
 			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
