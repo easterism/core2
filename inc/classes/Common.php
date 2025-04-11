@@ -38,10 +38,6 @@ class Common extends \Core2\Acl {
 		parent::__construct();
         $reg     = Registry::getInstance();
 
-        if ($this->module && !$reg->isRegistered('invoker')) {
-            $reg->set('invoker', $this->module);
-        }
-
         $this->path      = 'mod/' . $this->module . '/';
         if ($reg->isRegistered('auth')) $this->auth = $reg->get('auth');
         $this->resId     = $this->module;
@@ -78,7 +74,7 @@ class Common extends \Core2\Acl {
      * @throws Zend_Exception
      */
     public function getInvoker() {
-        return Registry::get('invoker');
+        return $this->module;
     }
 
 

@@ -28,9 +28,7 @@ class CommonApi extends \Core2\Acl {
 	public function __construct() {
         parent::__construct();
         $reg     = Registry::getInstance();
-        if ($this->module && !$reg->isRegistered('invoker')) {
-            $reg->set('invoker', $this->module);
-        }
+
 		$this->auth  = $reg->isRegistered('auth') ? $reg->get('auth') : null;
         $this->route = $reg->isRegistered('route') ? $reg->get('route') : null;
         if ($this->route && $this->route['query']) {
