@@ -76,7 +76,10 @@ class Db {
 	 */
 	public function __get($k) {
         $reg      = Registry::getInstance();
-        $module = isset($this->module) ? $this->module : 'admin';
+        $module   = $this->module;
+        if ($reg->isRegistered('context')) $module = current($reg->get('context'));
+        if (!$module) $module = 'admin';
+
         $k_module = $k . "|" . $module;
 
 		if ($k == 'core_config') {
