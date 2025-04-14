@@ -12,7 +12,8 @@ use Laminas\Permissions\Acl\Resource\GenericResource as Resource;
  * Class Acl
  */
 class Acl extends Db {
-	
+
+
 	const INHER_ROLES = 'N';
 	protected $addRes = array();
 	protected $types = array(

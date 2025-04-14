@@ -18,8 +18,6 @@ class CommonApi extends \Core2\Acl {
      */
 	protected $auth;
 
-    protected $module;
-
     protected $route;
 
 
@@ -28,17 +26,10 @@ class CommonApi extends \Core2\Acl {
      * @param string $module
      */
 	public function __construct() {
-        $child_class_name = get_class($this);
-        $mod_name = preg_match('~^Mod[A-z0-9\_]+(Api)$~', $child_class_name, $matches)
-            ? substr($child_class_name, 3, -strlen($matches[1]))
-            : '';
-		parent::__construct();
+        parent::__construct();
         $reg     = Registry::getInstance();
-        $this->module = strtolower($mod_name);
-        if (!$reg->isRegistered('invoker')) {
-            $reg->set('invoker', $this->module);
-        }
-		$this->auth = $reg->isRegistered('auth') ? $reg->get('auth') : null;
+
+		$this->auth  = $reg->isRegistered('auth') ? $reg->get('auth') : null;
         $this->route = $reg->isRegistered('route') ? $reg->get('route') : null;
         if ($this->route && $this->route['query']) {
             parse_str($this->route['query'], $this->route['query']);

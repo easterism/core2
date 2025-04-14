@@ -892,7 +892,7 @@ class Init extends Acl {
         $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
         $tpl_menu->assign('<!--CURRENT_USER_FN-->',    $this->auth->FN ? htmlspecialchars($this->auth->FN) : "");
         $tpl_menu->assign('<!--CURRENT_USER_LN-->',    $this->auth->LN ? htmlspecialchars($this->auth->LN) : "");
-        $img = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))) . "?&s=28&d=mm";
+        $img = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))) . "?s=28&d=identicon";
         $row = $this->dataUsersProfile->getRowByUserId($this->auth->ID);
         if ($row && isset($row->avatar) && $row->avatar) {
             $img = "data:image/png;base64, {$row->avatar}";

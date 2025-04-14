@@ -30,6 +30,7 @@ class Db {
      * @var LaminasConfig
      */
     protected $config;
+    protected $module;
 
     /**
      * @var LaminasConfig
@@ -44,13 +45,27 @@ class Db {
      * @param null $config
      */
 	public function __construct($config = null) {
-
+        $reg     = Registry::getInstance();
 	    if (is_null($config)) {
-			$this->config = Registry::get('config');
+			$this->config = $reg->get('config');
 		} else {
 			$this->config = $config;
 		}
+        $child_class_name = get_class($this);
 
+        if ($child_class_name == 'CoreController') {
+            $mod_name = 'admin';
+        } else {
+            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
+                ? substr($child_class_name, 3, -strlen($matches[1]))
+                : '';
+        }
+        if ($mod_name) {
+            $this->module = strtolower($mod_name);
+        } else {
+            $context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
+            $this->module = ! empty($context[0]) ? $context[0] : '';
+        }
 	}
 
 	/**
@@ -61,7 +76,10 @@ class Db {
 	 */
 	public function __get($k) {
         $reg      = Registry::getInstance();
-        $module = isset($this->module) ? $this->module : 'admin';
+        $module   = $this->module;
+        if ($reg->isRegistered('context')) $module = current($reg->get('context'));
+        if (!$module) $module = 'admin';
+
         $k_module = $k . "|" . $module;
 
 		if ($k == 'core_config') {
