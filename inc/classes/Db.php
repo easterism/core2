@@ -294,12 +294,6 @@ class Db {
 			    if ($database->sql_mode) {
 			        $db->query("SET SESSION sql_mode = ?", $database->sql_mode);
                 }
-
-                //set profiler
-                if ($this->_core_config && $this->_core_config->profile && $this->_core_config->profile->on) {
-                    $db->query("set profiling=1");
-                    $db->query("set profiling_history_size = 100");
-                }
             }
             elseif ($database->adapter === 'Pdo_Pgsql') {
                 $db->query("SET search_path TO $this->schemaName");
