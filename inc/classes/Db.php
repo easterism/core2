@@ -56,7 +56,7 @@ class Db {
         if ($child_class_name == 'CoreController') {
             $mod_name = 'admin';
         } else {
-            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
+            $mod_name = preg_match('~^Mod[A-z0-9_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
                 ? substr($child_class_name, 3, -strlen($matches[1]))
                 : '';
         }
@@ -77,8 +77,6 @@ class Db {
 	public function __get($k) {
         $reg      = Registry::getInstance();
         $module   = $this->module;
-        if ($reg->isRegistered('context')) $module = current($reg->get('context'));
-        if (!$module) $module = 'admin';
 
         $k_module = $k . "|" . $module;
 
@@ -275,7 +273,7 @@ class Db {
      * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(LaminasConfig $database) {
+    private function establishConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
 		try {
             $db = $this->getConnection($database);
 
@@ -304,13 +302,13 @@ class Db {
             elseif ($database->adapter === 'Pdo_Pgsql') {
                 $db->query("SET search_path TO $this->schemaName");
             }
-            return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }
-	}
+        return $db;
+    }
 
     /**
      * получаем соединение с базой данных
@@ -682,9 +680,9 @@ class Db {
 	/**
      * Проверяем, установлен ли модуль
 	 * @param string $module_id
-	 * @return string
+	 * @return array
 	 */
-	final public function isModuleInstalled($module_id) {
+	final public function isModuleInstalled($module_id):array {
         $this->getAllModules();
         $module_id = trim(strtolower($module_id));
         if (!Registry::isRegistered("_modules")) return [];

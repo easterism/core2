@@ -135,7 +135,6 @@ class Common extends \Core2\Acl {
                 if (!$this->isModuleActive($module)) {
                     throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" отключен."), $module));
                 }
-
                 $cl              = ucfirst($k) . 'Controller';
                 $controller_file = $location . '/' . $cl . '.php';
 
