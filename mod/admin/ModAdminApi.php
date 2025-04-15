@@ -83,6 +83,28 @@ class ModAdminApi extends CommonApi
         }
     }
 
+    public function action_roles()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                foreach ($ids as $id) {
+
+                    $role = $this->dataRoles->find($id)->current();
+                    if ($role) {
+                        $role->delete();
+                        $this->emit("delete_role", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=roles"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
     /**
      * проверка параметров удаления
      * @param array $params
