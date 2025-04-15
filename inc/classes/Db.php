@@ -11,6 +11,7 @@ use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
+use Exception;
 
 /**
  * Class Db
@@ -88,7 +89,7 @@ class Db {
             if (!$reg->isRegistered('db2')) {
                 $db = $this->establishConnection($this->config->database2);
                 if (!$db) {
-                    throw new \Exception("Database replica not connected");
+                    throw new Exception("Database replica not connected");
                 }
                 $reg->set('db2', $db);
             }
@@ -104,7 +105,7 @@ class Db {
 
                 $db = $this->establishConnection($this->config->database);
                 if (!$db) {
-                    throw new \Exception("Database not connected");
+                    throw new Exception("Database not connected");
                 }
                 \Zend_Db_Table::setDefaultAdapter($db);
                 $reg->set('db|admin', $db);
@@ -238,7 +239,7 @@ class Db {
                     $location  = $this->getModuleLocation($module);
                 }
 				if (!file_exists($location . "/Model/$model.php")) {
-                    throw new \Exception($this->translate->tr("Модель $model не найдена."));
+                    throw new Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
                 $db = $this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию

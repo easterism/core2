@@ -65,7 +65,7 @@ class Api extends Acl
                 $action         = "action_" . $action;
                 if (method_exists($coreController, $action)) {
                     if (str_starts_with(self::$route['query'], 'core_') && str_contains(self::$route['query'], '.')) {
-                        //удаляют запись из таблицы
+                        //удаляют запись из интерфейса модуля Админ
                         $route = self::$route;
                         $query = explode('=', $route['query']);
                         $route['params'] = [
