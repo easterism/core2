@@ -813,4 +813,23 @@ class Tool {
         return $str = iconv("UTF-8", "UTF-8//IGNORE", strtr($string, $replace));
     }
 
+    /**
+     * возвращает float значение строки
+     * @param $str
+     * @return float
+     */
+    public static function float($str): float {
+        $str = preg_replace("/[^0-9,.]/", "", $str);
+        if (str_contains($str, ",")) {
+            $str = str_replace(".", "", $str);
+            $str = str_replace(",", ".", $str);
+        }
+
+        if (preg_match("/([0-9.]+)/", $str, $match)) {
+            return floatval($match[0]);
+        } else {
+            return floatval($str);
+        }
+
+    }
 }
