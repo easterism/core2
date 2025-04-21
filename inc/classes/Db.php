@@ -54,7 +54,7 @@ class Db {
 		}
         $child_class_name = get_class($this);
 
-        if ($child_class_name == 'CoreController') {
+        if ($child_class_name == 'CoreController' || $child_class_name == 'Db') {
             $mod_name = 'admin';
         } else {
             $mod_name = preg_match('~^Mod[A-z0-9_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
@@ -274,7 +274,7 @@ class Db {
      * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
+    private function establishConnection(LaminasConfig $database) {
 		try {
             $db = $this->getConnection($database);
 
@@ -303,12 +303,13 @@ class Db {
             elseif ($database->adapter === 'Pdo_Pgsql') {
                 $db->query("SET search_path TO $this->schemaName");
             }
+            return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
+            echo "<PRE>";print_r($database->toArray());echo "</PRE>";//die;
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }
-        return $db;
     }
 
     /**
@@ -318,7 +319,7 @@ class Db {
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-	protected function getConnection(LaminasConfig $database) {
+	protected function getConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
         if ($database->adapter === 'Pdo_Mysql') {
             $this->schemaName = $database->params->dbname ? $database->params->dbname : '';
         }
@@ -467,7 +468,7 @@ class Db {
                 $this->config->log->access->writer == 'file'
             ) {
                 if ( ! $this->config->log->access->file) {
-                    throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
+                    throw new Exception($this->translate->tr('Не задан файл журнала запросов'));
                 }
 
                 $log = new Log('access');

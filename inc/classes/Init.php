@@ -741,7 +741,7 @@ class Init extends Acl {
             return $webservice_api->dispatchWebToken($token);
         }
         elseif (!empty($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
-            $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? $_SERVER['HTTP_CORE2_APIKEY'] : $_GET['apikey'];
+            $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? trim($_SERVER['HTTP_CORE2_APIKEY']) : trim($_GET['apikey']);
             //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
             // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
             $this->checkWebservice();
