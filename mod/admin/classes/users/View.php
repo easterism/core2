@@ -171,12 +171,13 @@ class View extends \Common {
         ");
 
         $description_admin = "<br><small class=\"text-muted\">полный доступ</small>";
+        $user_email_req    = (bool)$this->moduleConfig?->user?->email?->req;
 
         if ( ! $user) {
             $edit->addControl("Логин", "TEXT", "maxlength=\"60\" style=\"width:385px\"", "", "", true);
         }
 
-        $edit->addControl("Email",              "TEXT", "maxlength=\"60\" style=\"width:385px\"", "", "");
+        $edit->addControl("Email",              "TEXT", "maxlength=\"60\" style=\"width:385px\"", "", "", $user_email_req);
         $edit->addControl($this->_("Роль"),     "LIST", "style=\"width:385px\"", "", "", true); $edit->selectSQL[] = ['' => '--'] + $role_list;
         $edit->addControl($this->_("Фамилия"),  "TEXT", "maxlength=\"20\" style=\"width:385px\"", "", "");
         $edit->addControl($this->_("Имя"),      "TEXT", "maxlength=\"20\" style=\"width:385px\"", "", "", true);

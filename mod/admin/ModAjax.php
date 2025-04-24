@@ -487,12 +487,15 @@ class ModAjax extends ajaxFunc {
             $auth_conf = $this->getModuleConfig('auth');
             $is_auth_certificate_on = $auth_conf?->auth && $auth_conf?->auth?->x509 && $auth_conf?->auth?->x509?->on;
         }
-        $is_auth_pass_on        = true;
-        $is_auth_ldap_on        = $this->config->ldap && $this->config->ldap->active;
+
+        $is_auth_pass_on = true;
+        $is_auth_ldap_on = $this->config->ldap && $this->config->ldap->active;
+        $config          = $this->getModuleConfig('admin');
+        $user_email_req  = $config?->user?->email?->req;
 
         $refid  = $this->getSessFormField($data['class_id'], 'refid');
         $fields = [
-            'email'           => 'email',
+            'email'           => $user_email_req ? 'email,req' : 'email',
             'role_id'         => 'req',
             'visible'         => 'req',
             'firstname'       => 'req',
