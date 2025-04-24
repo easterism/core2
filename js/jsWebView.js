@@ -65,13 +65,12 @@ var preloader = {
 	},
 	qs : function(url) {
 		//PARSE query string
-		var qs = new QueryString(url);
+		const qs = new URLSearchParams(url);
 
-		var keys = qs.keys();
 		url = {};
 		//PREPARE location and hash
-		for (var k in keys) {
-			url[keys[k]] = qs.value(keys[k]);
+		for (const key of searchParams.keys()) {
+			url[key] = qs.get(key);
 		}
 		return url;
 	},

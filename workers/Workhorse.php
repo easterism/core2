@@ -18,19 +18,18 @@ class Workhorse
         $this->_config = Registry::get('config');
     }
 
-    public function run(\GearmanJob $job, &$log) {
+    public function run(\GearmanJob|Job $job, &$log) {
 
         $id = $job->unique();
 
         $workload = json_decode($job->workload());
-//        echo "<PRE>";print_r($workload);echo "</PRE>";die;
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
         }
         $_SERVER = get_object_vars($workload->server);
         // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-        define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
-        define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+        if (!defined("DOC_ROOT")) define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+        if (!defined("DOC_PATH")) define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
 
         //$workload_size = $job->workloadSize();
 
@@ -49,6 +48,7 @@ class Workhorse
             $job->sendStatus(0, 100);
 
             $controller = $this->requireController($workload->module, $workload->location);
+            $action     = $workload->worker;
 
             if (!$in_job) {
                 $db->db->insert("core_worker_jobs", [
@@ -56,6 +56,7 @@ class Workhorse
                     'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
                     'handler' => $job->handle(),
                     'status' => 'start',
+                    'executor' => "$controller->$action",
                 ]);
             }
             $db->db->closeConnection();
@@ -64,7 +65,6 @@ class Workhorse
             $out   = null;
 
             $modWorker = new $controller();
-            $action = $workload->worker;
 
             if (!method_exists($modWorker, $action)) {
                 throw new \Exception("Method does not exists: {$action}", 404);
@@ -73,7 +73,7 @@ class Workhorse
             $job->sendStatus(1, 100);
             //выполнение задачи
             $out = $modWorker->$action($job, $workload->payload);
-
+            unset($modWorker);
             $job->sendStatus(100, 100);
 
             $db = new Db($this->_config);

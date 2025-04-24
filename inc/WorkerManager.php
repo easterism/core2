@@ -21,7 +21,7 @@ namespace Core2;
 
 require_once "classes/Registry.php";
 require_once "classes/Config.php";
-
+require_once "classes/Job.php";
 
 declare(ticks = 1);
 error_reporting(E_ALL | E_STRICT);
@@ -423,7 +423,7 @@ class WorkerManager {
         catch (\Exception $e) {
             $this->show_help($e->getMessage());
         }
-
+        
         /**
          * command line opts always override config file
          */
@@ -796,7 +796,7 @@ class WorkerManager {
                     $mtime = filemtime($func['path']);
                     $max_time = max($max_time, $mtime);
                     $this->toLog("{$func['path']} - $mtime $last_check_time", self::LOG_LEVEL_CRAZY);
-                    if ($last_check_time!=0 && $mtime > $last_check_time) {
+                    if ($last_check_time != 0 && $mtime > $last_check_time) {
                         $this->toLog("New code found. Sending SIGHUP", self::LOG_LEVEL_PROC_INFO);
                         posix_kill($this->parent_pid, SIGHUP);
                         break;
@@ -936,7 +936,7 @@ class WorkerManager {
                     $this->toLog("Adjusted max run time to {$this->max_run_time} seconds", self::LOG_LEVEL_DEBUG);
                 }
 
-                $this->start_lib_worker($worker_list, $timeouts);
+                $this->start_lib_worker2($worker_list, $timeouts);
 
                 $this->toLog("Child exiting", self::LOG_LEVEL_WORKER_INFO);
 
@@ -1309,6 +1309,238 @@ class WorkerManager {
 
     }
 
+    private function start_lib_worker2($worker_list, $timeouts = array()) {
+//        ob_implicit_flush(true);
+        $worker = null;
+        foreach ($this->servers as $s) {
+            $this->toLog("Adding server $s", self::LOG_LEVEL_PROC_INFO);
+
+            $worker = stream_socket_client("tcp://$s", $errno, $errstr, 2);
+            if (!$worker) {
+                continue;
+            }
+            break;
+        }
+        if (!$worker) {
+            $this->toLog("Failed to connect to server $s", self::LOG_LEVEL_PROC_INFO);
+            die("Failed to connect to server: $errstr ($errno)\n");
+        }
+        //stream_set_read_buffer($worker, 0);
+        //stream_set_chunk_size($worker, 8192);
+        //stream_set_blocking($worker, true);
+
+        $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
+        $dd = trim($dd, '-');
+
+        register_shutdown_function(array($this, 'fatal_handler'));
+
+        $objects = [];
+        foreach ($worker_list as $w) {
+            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : 0);
+            $w_full = $dd . "-" . $w;
+            echo "Adding job $w_full\n";
+            $this->toLog("Adding job $w_full ; timeout: " . $timeout, self::LOG_LEVEL_PROC_INFO);
+            require_once $this->functions[$w]['path'];
+            $func = "\\Core2\\" . $this->functions[$w]['name'];
+            $objects[$w_full] = new $func();
+
+            $request = "\0REQ" . // Магическое число (запрос)
+                pack('N', 1) . //CAN_DO
+                pack('N', strlen($w_full)) .
+                $w_full;
+            fwrite($worker, $request);
+
+        }
+
+
+        $start = time();
+        $tick = time();
+        $buffer = '';
+
+        while (!$this->stop_work) {
+
+            $request = "\0REQ" . // Магическое число (запрос)
+                //pack('N', 9) . //GRAB_JOB
+                pack('N', 30) . //GRAB_JOB_UNIQ
+                pack('N', 0);
+            if (fwrite($worker, $request) === false) {
+                $this->toLog("Server FAILED GRAB_JOB_UNIQ", self::LOG_LEVEL_PROC_INFO);
+                $this->stop_work = true;
+            }
+
+            // Читаем данные от сервера
+            $data = fread($worker, 20480);
+
+//            echo "Received data: " . bin2hex($data) . "\n"; // Вывод сырых данных для отладки
+
+            if (strpos($data, "\0RES") === 0) {
+                $array = unpack("Nmagic/Ntype/Nlength/Z*job", $data);
+                $type  = $array['type'];
+
+                if ($type !== 10) { //NO_JOB
+                    $job   = trim($array['job']);
+                    $length = strlen($job) + 12; //длина названия job + начальные 12 байт
+                    $array  = unpack("@$length/a*", $data);
+                    $body   = trim($array[1]);
+//                    echo "LENGTH: " . strlen($data) . "\n";
+//                    echo "JOB: $job\n";
+//                    echo "TYPE: $type\n";
+//                    echo "BODY: $body\n";
+
+                    if ($type === 6) { //NOOP
+                        echo "WAKEUP!\n";
+                    }
+                    elseif ($type === 11 || $type === 31 || $type === 40) { //JOB_ASSIGN JOB_ASSIGN_UNIQ JOB_ASSIGN_ALL
+                        // Парсим задачу
+                        foreach ($objects as $function => $runner) {
+                            if (strpos($body, $function) === 0) break;
+                            $function = '';
+                        }
+                        if (!empty($objects[$function])) { //узнали функцию
+                            $unique = '';
+                            $payload = trim(substr($body, strlen($function)));
+
+                            if (strpos($payload, "{") !== 0) {
+                                //значит есть уникальный id задачи
+                                $unique = substr($payload, 0, strpos($payload, "{"));
+                                $payload = substr($payload, strpos($payload, "{"));
+                            }
+                            if (!str_ends_with($payload, "}|")) {
+                                //забрали не все занные
+                                echo "EXTRA $job\n";
+                                $this->toLog("EXTRA data for job $job", self::LOG_LEVEL_WORKER_INFO);
+                                $request = "\0REQ" . // Магическое число (запрос)
+                                    //pack('N', 9) . //GRAB_JOB
+                                    pack('N', 30) . //GRAB_JOB_UNIQ
+                                    pack('N', 0);
+                                $send = fwrite($worker, $request);
+                                if (!$send) {
+                                    break;
+                                }
+                                // Читаем данные от сервера
+                                $data = fread($worker, 20480);
+                                if ($data === false) {
+                                    echo "Error reading from server\n";
+                                    break;
+                                }
+                                $payload .= $data;
+                            }
+
+                            $json = preg_replace('/[[:cntrl:]]/', '', substr($payload, 0, -1));
+                            $payload = json_decode($json);
+
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                // Выполняем задачу
+                                $result = "";
+                                $log = array();
+//                                $f = fopen("/home/easter/job.log", "a");
+//                                fwrite($f, $this->pid . " " . $job . "\n");
+
+                                try {
+                                    $result = $objects[$function]->run(new Job($job, $payload, $unique), $log);
+                                    foreach ($log as $item) {
+                                        $this->toLog("Function $function said: $item", self::LOG_LEVEL_WORKER_INFO);
+                                    }
+                                    $request = "\0REQ" . // Магическое число (запрос)
+                                        pack('N', 13) . //WORK_COMPLETE
+                                        pack('N', strlen($job) + strlen($result) + 1) .
+                                        $job . "\0" .
+                                        $result;
+                                    fwrite($worker, $request);
+
+                                    //echo "Worker completed job: $job with result: $result\n";
+
+                                } catch (\Exception $e) {
+                                    $msg = $e->getMessage();
+                                    $request = "\0REQ" . // Магическое число (запрос)
+                                        pack('N', 25) . //WORK_EXCEPTION
+                                        pack('N', strlen($job) + strlen($msg) + 1) .
+                                        $job . "\0" .
+                                        $msg;
+                                    fwrite($worker, $request);
+                                    //echo "Worker FAILED job: $job with exception: $msg \n\n";
+                                    $this->toLog("Worker FAILED job (extra): $job with exception: $msg", self::LOG_LEVEL_WORKER_INFO);
+                                }
+
+                            }
+                            else {
+                                $msg = json_last_error_msg();
+                                $request = "\0REQ" . // Магическое число (запрос)
+                                    pack('N', 25) . //WORK_EXCEPTION
+                                    pack('N', strlen($job) + strlen($msg) + 1) .
+                                    $job . "\0" .
+                                    $msg;
+                                fwrite($worker, $request);
+                                echo "Worker FAILED job: $job with exception: $msg \n\n" . strlen($data) . "\n\n$function\n\n$json\n\n";
+                                $this->toLog("Worker FAILED job: $job with exception: $msg", self::LOG_LEVEL_WORKER_INFO);
+                            }
+                        }
+                        else {
+                            // не смогли распознать задачу (такого быть не может)
+                            $request = "\0REQ" . // Магическое число (запрос)
+                                pack('N', 14) . //WORK_FAIL
+                                pack('N', strlen($job)) .
+                                $job;
+                            fwrite($worker, $request);
+                            echo "Function FAILED: $body \n";
+                            $this->toLog("Function FAILED: $function", self::LOG_LEVEL_WORKER_INFO);
+                        }
+                    } else {
+                        //неизвестный код ответа
+                        $request = "\0REQ" . // Магическое число (запрос)
+                            pack('N', 14) . //WORK_FAIL
+                            pack('N', strlen($job)) .
+                            $job;
+                        fwrite($worker, $request);
+                        echo "Worker TYPE: $type FAILED job: $job \n";
+                        $this->toLog("Worker TYPE $type FAILED: $data", self::LOG_LEVEL_WORKER_INFO);
+                    }
+
+                } else {
+                    //if (time() - $tick > 10) {
+                    //    $tick = time();
+//                        $request = "\0REQ" . // Магическое число (запрос)
+//                            pack('N', 4) . //PRE_SLEEP
+//                            pack('N', 0);
+//                        fwrite($worker, $request);
+                        //echo "Worker TYPE: $type \n";
+                        //TODO подсчитывать время отсутствия задач и осводождать ресурсы при долгом простое
+                        usleep(5000);
+                    //}
+                }
+
+            }
+            else {
+                if ($data) {
+                    echo "Server FAILED job: $data \n";
+                    $this->toLog("Server FAILED job: $data", self::LOG_LEVEL_WORKER_INFO);
+                }
+            }
+
+            /**
+             * Check the running time of the current child. If it has
+             * been too long, stop working.
+             */
+            if ($this->max_run_time > 0 && time() - $start > $this->max_run_time) {
+                $this->toLog("Been running too long, exiting", self::LOG_LEVEL_WORKER_INFO);
+                $this->stop_work = true;
+            }
+
+            if (!empty($this->config["max_runs_per_worker"]) && $this->job_execution_count >= $this->config["max_runs_per_worker"]) {
+                $this->toLog("Ran $this->job_execution_count jobs which is over the maximum({$this->config['max_runs_per_worker']}), exiting", self::LOG_LEVEL_WORKER_INFO);
+                $this->stop_work = true;
+            }
+
+        }
+
+        if ($worker) {
+            $request = "\0REQ" . // Магическое число (запрос)
+                pack('N', 3) . //RESET_ABILITIES
+                pack('N', 0);
+            fwrite($worker, $request);
+        }
+    }
+
     /**
      * Wrapper function handler for all registered functions
      * This allows us to do some nice logging when jobs are started/finished
@@ -1445,13 +1677,16 @@ class WorkerManager {
 
         //$dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
         //$dd = trim($dd, '-');
-
         foreach ($this->functions as $func => $props) {
+            if (!file_exists($props["path"])) {
+                $this->toLog("File {$props["path"]} not found!");
+                posix_kill($this->pid, SIGUSR2);
+                exit();
+            }
             require_once $props["path"];
-            $real_func = $this->prefix.$func;
-            if (!function_exists($real_func) &&
-                (!class_exists("\Core2\\" . $real_func) || !method_exists("\Core2\\" . $real_func, "run"))) {
-                $this->toLog("Function $real_func not found in ".$props["path"]);
+            $real_func = $this->prefix . $func;
+            if (!class_exists("\\Core2\\" . $real_func) || !method_exists("\\Core2\\" . $real_func, "run")) {
+                $this->toLog("Class $real_func not found in " . $props["path"]);
                 posix_kill($this->pid, SIGUSR2);
                 exit();
             }

@@ -19,7 +19,7 @@ class Emitter extends Db {
      */
     public function __construct() {
         parent::__construct();
-
+        $this->module = 'admin';
         $mods = $this->dataModules->getIds();
         $out  = [];
 

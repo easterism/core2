@@ -232,9 +232,9 @@ class Monitoring extends \Common
             $this->config->log->system->writer == 'file'
         ) {
             if (!$this->config->log->system->file) {
-                echo \Alert::getDanger($this->translate->tr('Не задан путь к файлу журнала'));
+                echo Alert::getDanger($this->translate->tr('Не задан путь к файлу журнала'));
             } elseif (!file_exists($this->config->log->system->file)) {
-                echo \Alert::getDanger($this->translate->tr('Отсутствует файл журнала'));
+                echo Alert::getDanger($this->translate->tr('Отсутствует файл журнала'));
             } else {
                 $data = $this->getLogsData('file', $search, $lines);
             }
@@ -385,7 +385,7 @@ class Monitoring extends \Common
                 $data = $this->getLogsData('file', $search);
                 $body = $data['body'];
             } else {
-                return \Alert::getDanger($this->translate->tr("Не задан путь к файлу журнала"));
+                return Alert::getDanger($this->translate->tr("Не задан путь к файлу журнала"));
             }
         } else {
             $data = $this->getLogsData('db', $search);

@@ -407,21 +407,6 @@ class Email extends Db {
      */
     public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '', array $queue_id = null) {
 
-
-        $w = $this->workerAdmin->doBackground('Mailer', [
-            'from'     => $from,
-            'to'       => $to,
-            'subj'     => $subj,
-            'body'     => $body,
-            'cc'       => $cc,
-            'bcc'      => $bcc,
-            'files'    => serialize($files),
-            'reply'    => $reply,
-            'queue_id' => $queue_id,
-        ]);
-        if ($w) {
-            return;
-        }
         if ($files) {
             foreach ($files as $i => $file) {
                 $ext = PHPMailer::mb_pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -431,6 +416,21 @@ class Email extends Db {
                 $files[$i] = ['name' => $file['name'], 'file' => $uploadfile];
             }
         }
+        $w = $this->workerAdmin->doBackground('Mailer', [
+            'from'     => $from,
+            'to'       => $to,
+            'subj'     => $subj,
+            'body'     => $body,
+            'cc'       => $cc,
+            'bcc'      => $bcc,
+            'files'    => $files,
+            'reply'    => $reply,
+            'queue_id' => $queue_id,
+        ]);
+        if ($w) {
+            return;
+        }
+
 
         $config = Registry::get('config');
 

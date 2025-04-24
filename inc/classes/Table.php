@@ -731,7 +731,6 @@ abstract class Table extends Acl {
      * @throws \Exception
      */
     public function render(): string {
-
         $render = new Render($this->toArray());
         $render->setLocutions($this->locutions);
         return $render->render();

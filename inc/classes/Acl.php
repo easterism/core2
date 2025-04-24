@@ -12,7 +12,8 @@ use Laminas\Permissions\Acl\Resource\GenericResource as Resource;
  * Class Acl
  */
 class Acl extends Db {
-	
+
+
 	const INHER_ROLES = 'N';
 	protected $addRes = array();
 	protected $types = array(
@@ -31,7 +32,6 @@ class Acl extends Db {
 			'edit_default',
 			'delete_default'
 		);
-
 
     /**
      * @throws \Exception
@@ -327,22 +327,24 @@ class Acl extends Db {
 	 * @param $type
 	 * @return bool
 	 */
-	public function checkAcl($source, $type = 'access') {
+	public function checkAcl($source, $type = 'access'): bool {
 
         $registry = Registry::getInstance();
 
-        if (($xxx = strrpos($source, 'xxx')) > 0) {
-			$source = substr($source, 0, $xxx); //TODO SHOULD BE FIX
-		}
-
-        if (($index = strrpos($source, '_index')) > 0) {
-			$source = substr($source, 0, $index); //TODO SHOULD BE FIX
-		}
-
         $acl  = $registry->get('acl');
+        if (!$acl) return false;
         $auth = $registry->get('auth');
 
-		if ($auth->NAME == 'root' || $auth->ADMIN) {
+        if (($xxx = strrpos($source, 'xxx')) > 0) {
+            $source = substr($source, 0, $xxx); //TODO SHOULD BE FIX
+        }
+
+        if (($index = strrpos($source, '_index')) > 0) {
+            $source = substr($source, 0, $index); //TODO SHOULD BE FIX
+        }
+
+
+        if ($auth->NAME == 'root' || $auth->ADMIN) {
 			return true;
 
 		} elseif (in_array($source, $registry->get('availRes'))) {

@@ -70,16 +70,6 @@ class Error {
             ]);
 
         }
-        elseif ($exception instanceof JsonException) {
-            $code = $exception->getCode() ?: 500;
-            self::setResponseCode($code);
-            header('Content-type: application/json; charset="utf-8"');
-            echo json_encode([
-                'status'  => 'error',
-                'msg'  => $exception->getMessage(),
-            ]);
-
-        }
         else {
             $cnf     = self::getConfig();
             $message = $exception->getMessage();
@@ -161,7 +151,7 @@ class Error {
             $message = "Ошибка базы данных!";
         }
         $cnf = self::getConfig();
-        if ($cnf && $cnf->debug->on) {
+        if ($cnf && !empty($cnf->debug) && $cnf->debug->on) {
             $message .= $exception->getMessage(); //TODO вести журнал
         }
         self::Exception($message, $code);
@@ -232,7 +222,7 @@ class Error {
 	public static function catchJsonException($out = [], $code = 0) {
 
 	    if (!$out) $out = [];
-        if (!is_array($out)) $out = trim($out) ? ["msg" => $out] : [];
+        if (!is_array($out)) $out = trim($out) ? ["msg" => htmlspecialchars($out)] : [];
 
         self::setResponseCode($code);
 
@@ -241,7 +231,7 @@ class Error {
 		$error_data = ['status' => 'error'];
         $error_data += $out;
 
-		return self::Exception(json_encode($error_data), $code);
+		return json_encode($error_data);
 	}
 
 

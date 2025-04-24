@@ -20,12 +20,13 @@ class Mailer
 
 
     /**
-     * @param \GearmanJob $job
+     * @param \GearmanJob|Job $job
      * @param array       $log
      */
-    public function run(\GearmanJob $job, array &$log) {
+    public function run(\GearmanJob|Job $job, array &$log) {
 
         $workload = json_decode($job->workload());
+
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
         }
@@ -38,22 +39,12 @@ class Mailer
         $body   = $workload->payload->body;
         $bcc    = $workload->payload->bcc;
         $cc     = $workload->payload->cc;
-        $files  = unserialize($workload->payload->files);
+        $files  = $workload->payload->files; //StdObject
 
         $mail   = new PHPMailer();
         $mail->CharSet  = "UTF-8";
         $mail->Encoding = 'base64';
         //$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-
-        if ($files) {
-            foreach ($files as $i => $file) {
-                $ext = PHPMailer::mb_pathinfo($file['name'], PATHINFO_EXTENSION);
-
-                $uploadfile = tempnam(sys_get_temp_dir(), hash('sha256', $file['name'])) . '.' . $ext;
-                file_put_contents($uploadfile, $file['content']);
-                $files[$i] = ['name' => $file['name'], 'file' => $uploadfile];
-            }
-        }
 
 
         // DEPRECATED
@@ -178,7 +169,7 @@ class Mailer
         if ( ! empty($files)) {
             foreach ($files as $file) {
 
-                $mail->addAttachment($file['file'], $file['name']);
+                $mail->addAttachment($file->file, $file->name);
             }
         }
 
@@ -187,7 +178,6 @@ class Mailer
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
         //$mail->msgHTML(file_get_contents('contents.html'), __DIR__);
-
 
         if ( ! empty($this->_config->mail->server)) {
             $mail->isSMTP();
@@ -247,7 +237,8 @@ class Mailer
             }
             if (!$isSent) throw new \Exception($mail->ErrorInfo);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             if ( ! empty($workload->payload->queue_id)) {
                 $db = (new Db())->db;
 

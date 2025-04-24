@@ -132,7 +132,7 @@ class WorkerClient {
 
         if (!$workload) return false; //TODO log me
 
-        $jh = $this->client->doBackground($worker, json_encode($workload), $unique);
+        $jh = $this->client->doBackground($worker, json_encode($workload) . "|", $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
             (new Log())->error("Job server return " . $this->client->returnCode());
@@ -156,7 +156,7 @@ class WorkerClient {
 
         if (!$workload) return false; //TODO log me
 
-        $jh = $this->client->doHighBackground($worker, json_encode($workload), $unique);
+        $jh = $this->client->doHighBackground($worker, json_encode($workload) . "|", $unique);
 
         if ( ! defined("GEARMAN_SUCCESS") || $this->client->returnCode() != GEARMAN_SUCCESS) {
             (new Log())->error("Job server return " . $this->client->returnCode());

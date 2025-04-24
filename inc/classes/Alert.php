@@ -1,5 +1,5 @@
 <?php
-//namespace Core2;
+namespace Core2;
 
 /**
  * Контекстные сообщения

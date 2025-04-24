@@ -55,7 +55,7 @@ class Logger
 
     }
 
-    public function run(\GearmanJob $job, &$log)
+    public function run(\GearmanJob|Job $job, &$log)
     {
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
@@ -67,6 +67,7 @@ class Logger
         $_SERVER = get_object_vars($workload->server);
 
         $data = get_object_vars($workload->payload); //данные для сохранения в базу
+
         if (isset($data['sid'])) {
             if ($this->_access_files) {
                 foreach ($this->_access_files as $access_file) {
@@ -77,9 +78,11 @@ class Logger
 
             } else {
                 $data = get_object_vars($workload->payload);
-                if ($data['action']) {
-                    $data['action'] = serialize($data['action']);
+                if (empty($data['action'])) {
+                    throw new \Exception("No Logger action specified");
                 }
+                $data['action'] = serialize($data['action']);
+
                 //$log[] = "Соединяемся с базой...";
                 $mysql = (new Db())->db;
                 try {

@@ -347,7 +347,7 @@ class Enum extends \Common {
         $custom_fields = $res ? unserialize(base64_decode($res)) : [];
 
         //ENUM dtl list
-        $list = new \listTable('enumxxx3' . $this->_id);
+        $list = new \listTable('enumxxx3');
         $list->table = "core_enum";
         $list->addSearch($this->translate->tr('Значение'), 'name', 'TEXT');
 

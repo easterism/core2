@@ -12,3 +12,5 @@ mod/admin/conf.ext.ini
 composer\.phar
 
 phpstan-baseline.neon
+
+gen/

@@ -11,6 +11,7 @@ use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
+use Exception;
 
 /**
  * Class Db
@@ -30,6 +31,7 @@ class Db {
      * @var LaminasConfig
      */
     protected $config;
+    protected $module;
 
     /**
      * @var LaminasConfig
@@ -42,16 +44,29 @@ class Db {
     /**
      * Db constructor.
      * @param null $config
-     * @throws \Zend_Exception
      */
 	public function __construct($config = null) {
-
+        $reg     = Registry::getInstance();
 	    if (is_null($config)) {
-			$this->config = Registry::get('config');
+			$this->config = $reg->get('config');
 		} else {
 			$this->config = $config;
 		}
+        $child_class_name = get_class($this);
 
+        if ($child_class_name == 'CoreController') {
+            $mod_name = 'admin';
+        } else {
+            $mod_name = preg_match('~^Mod[A-z0-9_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
+                ? substr($child_class_name, 3, -strlen($matches[1]))
+                : '';
+        }
+        if ($mod_name) {
+            $this->module = strtolower($mod_name);
+        } else {
+            $context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
+            $this->module = ! empty($context[0]) ? $context[0] : '';
+        }
 	}
 
 	/**
@@ -62,7 +77,8 @@ class Db {
 	 */
 	public function __get($k) {
         $reg      = Registry::getInstance();
-        $module = isset($this->module) ? $this->module : 'admin';
+        $module   = $this->module;
+
         $k_module = $k . "|" . $module;
 
 		if ($k == 'core_config') {
@@ -73,7 +89,7 @@ class Db {
             if (!$reg->isRegistered('db2')) {
                 $db = $this->establishConnection($this->config->database2);
                 if (!$db) {
-                    throw new \Exception("Database replica not connected");
+                    throw new Exception("Database replica not connected");
                 }
                 $reg->set('db2', $db);
             }
@@ -89,7 +105,7 @@ class Db {
 
                 $db = $this->establishConnection($this->config->database);
                 if (!$db) {
-                    throw new \Exception("Database not connected");
+                    throw new Exception("Database not connected");
                 }
                 \Zend_Db_Table::setDefaultAdapter($db);
                 $reg->set('db|admin', $db);
@@ -223,7 +239,7 @@ class Db {
                     $location  = $this->getModuleLocation($module);
                 }
 				if (!file_exists($location . "/Model/$model.php")) {
-                    throw new \Exception($this->translate->tr("Модель $model не найдена."));
+                    throw new Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
                 $db = $this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
@@ -258,7 +274,7 @@ class Db {
      * @param LaminasConfig $database
      * @return \Zend_Db_Adapter_Abstract
      */
-    private function establishConnection(LaminasConfig $database) {
+    private function establishConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
 		try {
             $db = $this->getConnection($database);
 
@@ -277,23 +293,17 @@ class Db {
 			    if ($database->sql_mode) {
 			        $db->query("SET SESSION sql_mode = ?", $database->sql_mode);
                 }
-
-                //set profiler
-                if ($this->_core_config && $this->_core_config->profile && $this->_core_config->profile->on) {
-                    $db->query("set profiling=1");
-                    $db->query("set profiling_history_size = 100");
-                }
             }
             elseif ($database->adapter === 'Pdo_Pgsql') {
                 $db->query("SET search_path TO $this->schemaName");
             }
-            return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }
-	}
+        return $db;
+    }
 
     /**
      * получаем соединение с базой данных
@@ -665,9 +675,9 @@ class Db {
 	/**
      * Проверяем, установлен ли модуль
 	 * @param string $module_id
-	 * @return string
+	 * @return array
 	 */
-	final public function isModuleInstalled($module_id) {
+	final public function isModuleInstalled($module_id):array {
         $this->getAllModules();
         $module_id = trim(strtolower($module_id));
         if (!Registry::isRegistered("_modules")) return [];
@@ -863,29 +873,47 @@ class Db {
 
     /**
      * Список всех модулей
-     *
      * @return void
      */
     private function getAllModules(): void {
-        $reg      = Registry::getInstance();
-        if ($reg->isRegistered("_modules")) return;
+
+        $reg = Registry::getInstance();
+
+        if ($reg->isRegistered("_modules")) {
+            return;
+        }
+
         $key2 = "all_modules_" . $this->config->database->params->dbname;
+
         //if (1==1) {
-        if (!($this->cache->hasItem($key2))) {
+        if ($this->cache->hasItem($key2)) {
+            $data = $this->cache->getItem($key2);
+        }
+
+        if (empty($data)) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
+
             $config = $reg->get('config');
-            if (!$config->database) return;
+            if ( ! $config->database) {
+                return;
+            }
+
             $db = $this->establishConnection($config->database);
-            if (!($db instanceof \Zend_Db_Adapter_Abstract)) return;
+
+            if ( ! ($db instanceof \Zend_Db_Adapter_Abstract)) {
+                return;
+            }
+
             \Zend_Db_Table::setDefaultAdapter($db);
             $reg->set('db|admin', $db);
 
-            $m            = new Model\Modules($db);
-            $sm           = new Model\SubModules($db);
-            $res    = $m->fetchAll($m->select()->order('seq'))->toArray();
-            $sub    = $sm->fetchAll($sm->select()->order('seq'));
-            $data   = [];
+            $m    = new Model\Modules($db);
+            $sm   = new Model\SubModules($db);
+            $res  = $m->fetchAll($m->select()->order('seq'))->toArray();
+            $sub  = $sm->fetchAll($sm->select()->order('seq'));
+            $data = [];
+
             foreach ($res as $val) {
                 unset($val['uninstall']); //чтоб не смущал
                 unset($val['files_hash']); //чтоб не смущал
@@ -898,14 +926,12 @@ class Db {
                 }
                 $data[$val['module_id']] = $val;
             }
-            if ($data) $this->cache->setItem($key2, $data);
-            else {
-                //такого быть не может
+
+            if ($data) {
+                $this->cache->setItem($key2, $data);
             }
-        } else {
-            $data = $this->cache->getItem($key2);
         }
+
         $reg->set("_modules", $data);
     }
-
 }
