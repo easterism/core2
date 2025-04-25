@@ -5,6 +5,7 @@ require_once 'Templater3.php';
 require_once 'Tool.php';
 
 use Laminas\Session\Container as SessionContainer;
+use Exception;
 
 /**
  * Class Login
@@ -359,7 +360,7 @@ class Login extends \Common {
                     if ((function_exists('ctype_print') ? ! ctype_print($password) : true) ||
                         strlen($password) < 1
                     ) {
-                        throw new \Exception($this->_("Ошибка пароля!"));
+                        throw new Exception($this->_("Ошибка пароля!"));
                     }
 
                     $user           = $this->getUserLdap($login, $password);
@@ -372,12 +373,12 @@ class Login extends \Common {
             }
 
             if ( ! $user) {
-                throw new \Exception($this->translate->tr("Нет такого пользователя"));
+                throw new Exception($this->translate->tr("Нет такого пользователя"));
             }
 
 
             if ($user['u_pass'] !== Tool::pass_salt($password)) {
-                throw new \Exception($this->translate->tr("Неверный пароль"));
+                throw new Exception($this->translate->tr("Неверный пароль"));
             }
 
             $this->auth($user);

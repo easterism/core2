@@ -8,14 +8,10 @@ require_once 'Db.php';
  */
 class Emitter extends Db {
 
-    private $events = [];
     private $subscribers = [];
-
 
     /**
      * Emitter constructor.
-     * @param \Common $that
-     * @param         $module_id
      */
     public function __construct() {
         parent::__construct();
@@ -47,6 +43,9 @@ class Emitter extends Db {
 
     /**
      * ищет событие у подписчиков
+     * @param string $module
+     * @param string $event_name
+     * @param $data
      * @return array результат от всех подписчиков
      * @throws \Zend_Exception
      * @throws \Exception

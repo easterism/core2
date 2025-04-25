@@ -13,10 +13,11 @@ self.addEventListener(
                     } else {
                         e.source.postMessage("worker already inited");
                     }
-                } else if (ev.data === "sse-open") {
+                }
+                else if (ev.data === "sse-open") {
                     e.source.postMessage("SSE init");
 
-                    var that = e.source;
+                    const that = e.source;
                     if (eventSrc === null) {
                         eventSrc  = new EventSource('../../sse');
                         e.source.postMessage("SSE " + eventSrc.readyState);
@@ -48,7 +49,8 @@ self.addEventListener(
                         }
                     }, false);
 
-                }  else if (ev.data === "sse-close") {
+                }
+                else if (ev.data === "sse-close") {
                     eventSrc.close();
                     that.postMessage('SSE closed')
                     eventSrc = null;

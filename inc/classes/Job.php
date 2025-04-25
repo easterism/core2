@@ -54,7 +54,9 @@ class Job
      *        a fraction
      * @return bool
      */
-    public function sendStatus($numerator, $denominator) {}
+    public function sendStatus($numerator, $denominator) {
+
+    }
 
     /**
      * Sends result data and the complete status update for this job.
