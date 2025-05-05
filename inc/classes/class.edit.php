@@ -73,6 +73,7 @@ class editTable extends initEdit {
     const TYPE_CUSTOM         = 'custom';
     const TYPE_DATE           = 'date';
     const TYPE_DATE2          = 'date2';
+    const TYPE_DATE3          = 'date3';
     const TYPE_DATETIME       = 'datetime';
     const TYPE_DATETIME2      = 'datetime2';
     const TYPE_DATETIME_LOCAL = 'datetime_local';
@@ -703,7 +704,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'datetime_local') {
+						elseif ($value['type'] == self::TYPE_DATE3) {
+							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"date\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == self::TYPE_DATETIME_LOCAL) {
 							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
