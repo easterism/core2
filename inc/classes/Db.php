@@ -306,7 +306,6 @@ class Db {
             return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
-            echo "<PRE>";print_r($database->toArray());echo "</PRE>";//die;
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }

@@ -29,13 +29,11 @@ require_once("Router.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
-use Laminas\Session\Storage\SessionStorage;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Acl;
-use Core2\Db;
 use Core2\I18n;
 use Core2\Login;
 use Core2\Registry;
