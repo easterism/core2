@@ -297,10 +297,11 @@ abstract class Table extends Acl {
 
     /**
      * Установка количества строк на странице
-     * @param int $count
+     * @param int  $count
+     * @param bool $force
      * @throws Exception
      */
-    public function setRecordsPerPage(int $count) {
+    public function setRecordsPerPage(int $count, bool $force = false): void {
 
         if ($count < 0) {
             throw new Exception('Задано некорректное значение');
@@ -308,7 +309,7 @@ abstract class Table extends Acl {
 
         $this->records_per_page_default = $count;
 
-        if ( ! isset($this->session->table->records_per_page)) {
+        if ( ! isset($this->session->table->records_per_page) || $force) {
             $this->records_per_page = $count === 0 ? 1000000000 : $count;
         }
     }
