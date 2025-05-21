@@ -5,9 +5,10 @@ namespace Core2;
  * Class SSE
  * @package Core2
  */
-class SSE extends \Common {
+class SSE extends Db {
 
     private $_events = [];
+    private $_has_content = false;
 
     public function __construct()
     {
@@ -16,8 +17,9 @@ class SSE extends \Common {
         //события ядра
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         require_once $eventFile;
-        $user_key = $this->auth->LIVEID;
-        if (!$user_key) $user_key = $this->auth->ID;
+        $auth = Registry::get('auth');
+        $user_key = $auth->LIVEID;
+        if (!$user_key) $user_key = $auth->ID;
 //        if (!$user_key) $user_key = -1;
         $shm_key = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($user_key)); //у каждого юзера своя очередь
         if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
@@ -46,6 +48,33 @@ class SSE extends \Common {
         set_time_limit(0);
     }
 
+    public function run()
+    {
+        $core_config = Registry::get('core_config');
+        $exec_limit = 600;
+        $usleep_time = 500000;
+        if (!empty($core_config->sse->exec_limit)) {
+            $exec_limit = (int)$core_config->sse->exec_limit;
+        }
+        if (!empty($core_config->sse->sleep_time)) {
+            $usleep_time = $core_config->sse->sleep_time * 1000000;
+        }
+        while ($exec_limit > 0) {
+            if (connection_status() != 0){
+                break;
+            }
+            $this->loop();
+
+            if (connection_aborted()) {
+                break;
+            }
+            $sec = $usleep_time / 1000000;
+            $exec_limit -= $sec;
+            if ($usleep_time > 1000000) sleep((int) $sec); //usleep may not be supported
+            else usleep($usleep_time);
+        }
+    }
+
     /**
      * @return void
      */
@@ -66,6 +95,7 @@ class SSE extends \Common {
         // Flush all buffers.
         do {
             $flushed = @ob_end_flush();
+            if ($flushed) $this->_has_content = true;
         } while ($flushed);
 
         @ob_flush();
@@ -73,7 +103,7 @@ class SSE extends \Common {
     }
 
 
-    public function loop() {
+    private function loop() {
 
         //модуль должен иметь папку events
         //в папке events каждый клас должен иметь namespace Core2\Mod\<Module_id>
@@ -121,7 +151,13 @@ class SSE extends \Common {
                 'data: ' . json_encode(["done" => array_keys($data)]),
                 "\n\n";
         }
-
         $this->doFlush();
+    }
+
+    public function __destruct()
+    {
+        if ($this->db->isConnected()) {
+            $this->db->closeConnection();
+        }
     }
 }

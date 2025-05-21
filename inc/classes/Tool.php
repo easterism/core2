@@ -281,7 +281,7 @@ class Tool {
 	public static function declNum($number, $titles, $only_text = false) {
 
 		$cases = array(2, 0, 1, 1, 1, 2);
-		$num = abs($number);
+		$num = abs((int)$number);
 
 		$text = $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]];
 
