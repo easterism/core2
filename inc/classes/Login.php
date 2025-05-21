@@ -6,6 +6,7 @@ require_once 'Tool.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Exception;
+use Templater3;
 
 /**
  * Class Login
@@ -23,7 +24,7 @@ class Login extends \Common {
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Db_Exception
      * @throws \Zend_Exception
-     * @throws \Exception
+     * @throws Exception
      */
     public function dispatch(array $route) {
 
@@ -36,14 +37,14 @@ class Login extends \Common {
         if ($uri == 'registration') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->_('Регистрация недоступна'), 403);
             }
             $form_html = $this->modAuth->getPageRegistration();
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -51,18 +52,18 @@ class Login extends \Common {
         elseif ($uri == 'registration_complete') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->_('Регистрация недоступна'), 403);
             }
             if (!isset($query['key'])) {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Ключ не передан'), 400);
+                throw new Exception($this->_('Ключ не передан'), 400);
             }
             $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -70,14 +71,14 @@ class Login extends \Common {
         elseif ($uri == 'restore') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Восстановление пароля недоступно'), 403);
+                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
             }
             $form_html = $this->modAuth->getPageRestore();
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -89,10 +90,10 @@ class Login extends \Common {
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Восстановление пароля недоступно'), 403);
+                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
             }
             $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -149,7 +150,7 @@ class Login extends \Common {
     public function setSystemName($system_name) {
 
         if ( ! is_scalar($system_name)) {
-            throw new \Exception('Incorrect system name');
+            throw new Exception('Incorrect system name');
         }
 
         $this->system_name = $system_name;
@@ -163,7 +164,7 @@ class Login extends \Common {
     public function setFavicon(Array $favicon) {
 
         if ( ! is_array($favicon)) {
-            throw new \Exception('Incorrect favicon');
+            throw new Exception('Incorrect favicon');
         }
 
         $this->favicon = $favicon;
@@ -178,7 +179,7 @@ class Login extends \Common {
      */
     private function getPageLogin() :string {
 
-        $tpl  = new \Templater2(Theme::get("login"));
+        $tpl  = new Templater3(Theme::get("login"));
         $logo = $this->getSystemLogo();
 
         if ($logo) {
