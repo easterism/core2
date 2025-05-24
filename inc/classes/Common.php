@@ -321,21 +321,6 @@ class Common extends \Core2\Acl {
 
 
     /**
-     * Порождает событие для модулей, реализующих интерфейс Subscribe
-     * @param string $event_name
-     * @param array $data
-     * @param string $module_override принудительный id модуля-инициатора события
-     * @return array
-     */
-	protected function emit($event_name, $data = [], $module_override = '') {
-        $module = $module_override ?: $this->module;
-        $reg    = Registry::getInstance();
-        $em     = $reg->isRegistered('emitter') ? $reg->get('emitter') : new Emitter();
-        return $em->emit($module, $event_name, $data);
-    }
-
-
-    /**
      * @param string          $message
      * @param array|Exception $data
      * @return bool
