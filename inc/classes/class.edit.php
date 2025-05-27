@@ -850,6 +850,15 @@ class editTable extends initEdit {
 
                                 $settings = is_array($value['in']) ? $value['in'] : [];
 
+                                $input_address = null;
+
+                                if ( ! empty($settings['input_address_id'])) {
+                                    if ( ! is_array($settings['input_address_id'])) {
+                                        $settings['input_address_id'] = [ $settings['input_address_id'] ];
+                                    }
+                                    $input_address = json_encode($settings['input_address_id'], JSON_UNESCAPED_UNICODE);
+                                }
+
                                 $tpl = file_get_contents($this->tpl_control[self::TYPE_COORDINATES]);
                                 $tpl = str_replace('[FIELD_ID]',         $fieldId, $tpl);
                                 $tpl = str_replace('[FIELD]',            $field, $tpl);
@@ -859,7 +868,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[WIDTH]',            $settings['width'] ?? 400, $tpl);
                                 $tpl = str_replace('[HEIGHT]',           $settings['height'] ?? 200, $tpl);
                                 $tpl = str_replace('[ZOOM]',             $settings['zoom'] ?? 7, $tpl);
-                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $settings['input_address_id'] ?? '', $tpl);
+                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $input_address ?: "''", $tpl);
                                 $tpl = str_replace('[CENTER_LAT]',       ! empty($settings['center']) && ! empty($settings['center']['lat']) ? $settings['center']['lat'] : '53.908045', $tpl);
                                 $tpl = str_replace('[CENTER_LNG]',       ! empty($settings['center']) && ! empty($settings['center']['lng']) ? $settings['center']['lng'] : '27.507411', $tpl);
 
