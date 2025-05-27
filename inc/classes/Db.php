@@ -86,6 +86,17 @@ class Db {
             return $this->_core_config;
         }
 		if ($k === 'db2') {
+            if ($module !== 'admin') {
+                if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                $module_config = $this->getModuleConfig($module);
+
+                if ($module_config && $module_config->database2) {
+                    // у этого модуля собственный адаптер
+                    $db = $this->establishConnection($module_config->database2);
+                    $reg->set($k_module, $db);
+                    return $db;
+                }
+            }
             if (!$reg->isRegistered('db2')) {
                 $db = $this->establishConnection($this->config->database2);
                 if (!$db) {
@@ -93,8 +104,7 @@ class Db {
                 }
                 $reg->set('db2', $db);
             }
-            $db = $reg->get('db2');
-            return $db;
+            return $reg->get('db2');
         }
 		if ($k === 'db') {
 //            if ($reg->isRegistered('invoker')) {

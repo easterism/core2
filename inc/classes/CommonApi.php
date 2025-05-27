@@ -65,7 +65,7 @@ class CommonApi extends \Core2\Acl {
         }
 
         //исключение для гетера базы или кеша, выполняется всегда
-        if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+        if (in_array($k, ['db', 'db2', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
         }
         //геттер для модели
