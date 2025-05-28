@@ -868,7 +868,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[WIDTH]',            $settings['width'] ?? 400, $tpl);
                                 $tpl = str_replace('[HEIGHT]',           $settings['height'] ?? 200, $tpl);
                                 $tpl = str_replace('[ZOOM]',             $settings['zoom'] ?? 7, $tpl);
-                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $input_address ?: "''", $tpl);
+                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $input_address ?: "[]", $tpl);
                                 $tpl = str_replace('[CENTER_LAT]',       ! empty($settings['center']) && ! empty($settings['center']['lat']) ? $settings['center']['lat'] : '53.908045', $tpl);
                                 $tpl = str_replace('[CENTER_LNG]',       ! empty($settings['center']) && ! empty($settings['center']['lng']) ? $settings['center']['lng'] : '27.507411', $tpl);
 
