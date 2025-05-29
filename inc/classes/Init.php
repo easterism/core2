@@ -981,12 +981,24 @@ class Init extends Acl {
                         }
 
                         if (THEME !== 'default') {
-                            $navi = new \Core2\Navigation(); //TODO переделать для обработки всех модулей сразу
-                            $navi->setModuleNavigation($module['module_id']);
+                            $nav = new \Core2\Navigation(); //TODO переделать для обработки всех модулей сразу
+                            $nav->setModuleNavigation($module['module_id']);
+
                             if ($modController instanceof Navigation) {
-                                $modController->navigationItems($navi);
+                                $modController->navigationItems($nav);
                             }
-                            $navigate_items[$module_id] = $navi->toArray();
+
+                            foreach ($nav->toArray() as $item) {
+
+                                $item['position'] = ! empty($item['position']) ? $item['position'] : 'main';
+
+                                if (empty($navigate_items[$item['position']])) {
+                                    $navigate_items[$item['position']] = [];
+                                }
+
+                                $item['module_name'] = $module_id;
+                                $navigate_items[$item['position']][] = $item;
+                            }
                         }
                     }
                     ob_clean();
@@ -1010,17 +1022,23 @@ class Init extends Acl {
         }
 
         if ( ! empty($navigate_items)) {
-            $navi = new \Core2\Navigation();
-            foreach ($navigate_items as $module_name => $items) {
+            $nav = new \Core2\Navigation();
+            foreach ($navigate_items as $position => $items) {
+                $navigate_items[$position] = \Core2\Tool::multisort($items, [
+                    'seq'    => SORT_DESC,
+                    'serial' => SORT_ASC
+                ]);
+            }
+
+            foreach ($navigate_items as $position => $items) {
                 if ( ! empty($items)) {
                     foreach ($items as $item) {
-                        $position = ! empty($item['position']) ? $item['position'] : '';
 
                         switch ($position) {
                             case 'profile':
                                 if ($tpl_menu->issetBlock('navigate_item_profile')) {
-                                    $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $navi->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $item['module_name']);
+                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $nav->renderNavigateItem($item));
                                     $tpl_menu->navigate_item_profile->reassign();
                                 }
                                 break;
@@ -1028,8 +1046,8 @@ class Init extends Acl {
                             case 'main':
                             default:
                                 if ($tpl_menu->issetBlock('navigate_item')) {
-                                    $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item->assign('[HTML]',        $navi->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item->assign('[MODULE_NAME]', $item['module_name']);
+                                    $tpl_menu->navigate_item->assign('[HTML]',        $nav->renderNavigateItem($item));
                                     $tpl_menu->navigate_item->reassign();
                                 }
                                 break;

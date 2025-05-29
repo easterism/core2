@@ -22,6 +22,11 @@ class Navigation extends Db {
      */
     private $_items = [];
 
+    /**
+     * @var int
+     */
+    private static int $serial = 0;
+
 
     /**
      * Добавление ссылки
@@ -99,7 +104,10 @@ class Navigation extends Db {
 
         if ( ! empty($this->_items)) {
             foreach ($this->_items as $item) {
-                $data[] = $item->toArray();
+                $item_array = $item->toArray();
+                $item_array['serial'] = self::$serial++;
+
+                $data[] = $item_array;
             }
         }
 
@@ -109,9 +117,8 @@ class Navigation extends Db {
 
     /**
      * @param $name
-     * @param $mod_controller
-     * @return array
-     * @throws Zend_Config_Exception
+     * @return void
+     * @throws \Exception
      */
     public function setModuleNavigation($name): void {
 
@@ -127,6 +134,7 @@ class Navigation extends Db {
                 foreach ($navigations as $key => $nav) {
                     if ( ! empty($nav['type'])) {
                         $nav['position'] = $nav['position'] ?? '';
+                        $nav['seq']      = (int)($nav['seq'] ?? 10);
 
                         switch ($nav['type']) {
                             case 'link':
@@ -134,6 +142,7 @@ class Navigation extends Db {
                                 $nav['link']  = $nav['link'] ?? '#';
 
                                 $nav_link = $this->addLink($nav['title'], $nav['link'], $nav['position']);
+                                $nav_link->setSeq($nav['seq']);
 
                                 if ( ! empty($nav['icon'])) {
                                     $nav_link->setIcon($nav['icon']);
@@ -150,7 +159,8 @@ class Navigation extends Db {
                                 break;
 
                             case 'divider':
-                                $this->addDivider($nav['position']);
+                                $nav_divider = $this->addDivider($nav['position']);
+                                $nav_divider->setSeq($nav['seq']);
                                 break;
 
                             case 'dropdown':
@@ -158,6 +168,7 @@ class Navigation extends Db {
                                 $nav['items'] = $nav['items'] ?? [];
 
                                 $nav_list = $this->addDropdown($nav['title'], $nav['position']);
+                                $nav_list->setSeq($nav['seq']);
 
                                 if ( ! empty($nav['icon'])) {
                                     $nav_list->setIcon($nav['icon']);
@@ -230,11 +241,11 @@ class Navigation extends Db {
 
 
     /**
-     * @param $navigate_item
+     * @param array $navigate_item
      * @return string
-     * @throws Exception
+     * @throws \Exception
      */
-    public function renderNavigateItem($navigate_item) {
+    public function renderNavigateItem(array $navigate_item): string {
 
         if (empty($navigate_item['type'])) {
             return '';
