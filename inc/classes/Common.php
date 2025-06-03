@@ -96,7 +96,7 @@ class Common extends \Core2\Acl {
         }
 
 		//исключение для герета базы или кеша, выполняется всегда
-		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+		if (in_array($k, ['db', 'db2', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
 		}
 		//геттер для модели
@@ -318,21 +318,6 @@ class Common extends \Core2\Acl {
         $src_mod = $this->getModuleLoc($module);
         return Tool::getJs($src_mod . $src, $chachable);
 	}
-
-
-    /**
-     * Порождает событие для модулей, реализующих интерфейс Subscribe
-     * @param string $event_name
-     * @param array $data
-     * @param string $module_override принудительный id модуля-инициатора события
-     * @return array
-     */
-	protected function emit($event_name, $data = [], $module_override = '') {
-        $module = $module_override ?: $this->module;
-        $reg    = Registry::getInstance();
-        $em     = $reg->isRegistered('emitter') ? $reg->get('emitter') : new Emitter();
-        return $em->emit($module, $event_name, $data);
-    }
 
 
     /**

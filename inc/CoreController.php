@@ -21,6 +21,7 @@ use Core2\Mod\Admin;
 use Core2\InstallModule as Install;
 use Core2\Panel;
 use Core2\Modules;
+use Core2\Alert;
 
 /**
  * @property Core2\Model\Enum         $dataEnum

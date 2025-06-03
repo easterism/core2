@@ -331,7 +331,7 @@ class Acl extends Db {
 
         $registry = Registry::getInstance();
 
-        $acl  = $registry->get('acl');
+        $acl  = $registry->isRegistered('acl') ? $registry->get('acl') : null;
         if (!$acl) return false;
         $auth = $registry->get('auth');
 

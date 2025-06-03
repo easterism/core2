@@ -37,7 +37,7 @@ class Workhorse
             Registry::set('context', [strtolower($workload->module)]);
             Registry::set('auth',  $workload->auth);
 
-            $db = new Db();
+            $db = new Db($this->_config);
             $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
             if ($in_job && $in_job['status'] !== 'finish') {
                 //задача уже обрабатывается
@@ -59,7 +59,6 @@ class Workhorse
                     'executor' => "$controller->$action",
                 ]);
             }
-            $db->db->closeConnection();
 
             $error = null;
             $out   = null;
@@ -72,11 +71,22 @@ class Workhorse
             $log[] = "Run $controller->$action in context " . $workload->module;
             $job->sendStatus(1, 100);
             //выполнение задачи
-            $out = $modWorker->$action($job, $workload->payload);
+            try {
+                $out = $modWorker->$action($job, $workload->payload);
+                if ($modWorker instanceof Db) {
+                    if ($modWorker->db->isConnected()) $modWorker->db->closeConnection();
+                };
+            } catch (\Exception $e) {
+                if ($modWorker instanceof Db) {
+                    if ($modWorker->db->isConnected()) $modWorker->db->closeConnection();
+                };
+                $error = $e->getMessage();
+            }
+
+            //$modWorker->db->closeConnection();
             unset($modWorker);
             $job->sendStatus(100, 100);
 
-            $db = new Db($this->_config);
             $db->db->update("core_worker_jobs", [
                 'time_finish' =>  (new \DateTime())->format("Y-m-d H:i:s"),
                 'status'    =>    'finish',
@@ -85,6 +95,8 @@ class Workhorse
                 'data'      =>    $out,
             ], $db->db->quoteInto('id = ?', $id));
             $db->db->closeConnection();
+
+            if ($error) throw new \Exception($error, $e->getCode());
 
             $log[] = "Finish $controller->$action";
 

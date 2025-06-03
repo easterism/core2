@@ -173,6 +173,8 @@ class Api extends Acl
             }
             $mods = $this->getSubModule($submodule_id);
 
+            if ($module == 'auth') return; //API вызовы в модуль auth нельзя проверить на доступ
+
             //TODO перенести проверку субмодуля в контроллер модуля
             if ($mods['sm_id'] && !$this->checkAcl($submodule_id)) {
                 $msg = $this->translate->tr("Доступ закрыт!");

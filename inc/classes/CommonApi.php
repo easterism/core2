@@ -65,7 +65,7 @@ class CommonApi extends \Core2\Acl {
         }
 
         //исключение для гетера базы или кеша, выполняется всегда
-        if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+        if (in_array($k, ['db', 'db2', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
         }
         //геттер для модели
@@ -209,18 +209,6 @@ class CommonApi extends \Core2\Acl {
         return $request_raw;
     }
 
-    /**
-     * Порождает событие для модулей, реализующих интерфейс Subscribe
-     * @param string $event_name
-     * @param array $data
-     * @param string $module_override принудительный id модуля-инициатора события
-     * @return array
-     */
-    protected function emit($event_name, $data = [], $module_override = '') {
-        $module = $module_override ?: $this->module;
-        $reg    = Registry::getInstance();
-        $em     = $reg->isRegistered('emitter') ? $reg->get('emitter') : new Emitter();
-        return $em->emit($module, $event_name, $data);
-    }
+
 
 }

@@ -29,13 +29,11 @@ require_once("Router.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
-use Laminas\Session\Storage\SessionStorage;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Acl;
-use Core2\Db;
 use Core2\I18n;
 use Core2\Login;
 use Core2\Registry;
@@ -315,14 +313,7 @@ class Init extends Acl {
                     header("Cache-Control: no-cache");
 
                     $sse = new Core2\SSE();
-                    while (1) {
-
-                        $sse->loop();
-
-                        if (connection_aborted()) break;
-
-                        sleep(1);
-                    }
+                    $sse->run();
                     return '';
                 }
             }
@@ -352,6 +343,9 @@ class Init extends Acl {
                     $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
                     $xajax->processRequest();
                     return '';
+                }
+                else {
+                    unset($xajax);
                 }
             }
 
@@ -399,7 +393,7 @@ class Init extends Acl {
         //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
         if (
-            empty($_GET['module']) && empty($route['api']) &&
+            empty($_GET['module']) && empty($route['api']) && empty($_POST) &&
             ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
@@ -435,6 +429,7 @@ class Init extends Acl {
             if ($this->fileAction()) return '';
 
             $this->setupSkin();
+
             if ($module === 'admin') {
 
                 if (!empty($this->auth->MOBILE)) {

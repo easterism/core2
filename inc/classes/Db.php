@@ -86,6 +86,17 @@ class Db {
             return $this->_core_config;
         }
 		if ($k === 'db2') {
+            if ($module !== 'admin') {
+                if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                $module_config = $this->getModuleConfig($module);
+
+                if ($module_config && $module_config->database2) {
+                    // у этого модуля собственный адаптер
+                    $db = $this->establishConnection($module_config->database2);
+                    $reg->set($k_module, $db);
+                    return $db;
+                }
+            }
             if (!$reg->isRegistered('db2')) {
                 $db = $this->establishConnection($this->config->database2);
                 if (!$db) {
@@ -93,8 +104,7 @@ class Db {
                 }
                 $reg->set('db2', $db);
             }
-            $db = $reg->get('db2');
-            return $db;
+            return $reg->get('db2');
         }
 		if ($k === 'db') {
 //            if ($reg->isRegistered('invoker')) {
@@ -300,7 +310,6 @@ class Db {
             return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
-            echo "<PRE>";print_r($database->toArray());echo "</PRE>";//die;
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }
@@ -934,5 +943,33 @@ class Db {
         }
 
         $reg->set("_modules", $data);
+    }
+
+    /**
+     * Порождает событие для модулей, реализующих интерфейс Subscribe
+     * @param string $event_name
+     * @param array $data
+     * @param string $module_override принудительный id модуля-инициатора события
+     * @return array
+     */
+    protected function emit($event_name, $data = [], $module_override = '') {
+        $module = $module_override ?: $this->module;
+        $reg    = Registry::getInstance();
+        if (!$reg->isRegistered('emitter')) $reg->set('emitter', new Emitter());
+        return $reg->get('emitter')->sync($module, $event_name, $data);
+    }
+
+    /**
+     * Порождает асинхронное событие для модулей, реализующих интерфейс Subscribe
+     * @param $event_name
+     * @param $data
+     * @param $module_override
+     * @return void
+     */
+    protected function aemit($event_name, $data = [], $module_override = ''): void {
+        $module = $module_override ?: $this->module;
+        $reg    = Registry::getInstance();
+        if (!$reg->isRegistered('emitter')) $reg->set('emitter', new Emitter());
+        $reg->get('emitter')->async($module, $event_name, $data);
     }
 }
