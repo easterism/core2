@@ -120,6 +120,7 @@ class LdapAuth extends Db {
 		}
 	}
 
+
     /**
      * @param string $login
      * @return void
@@ -158,11 +159,6 @@ class LdapAuth extends Db {
 
 		$options = current($options);
 
-		//$options['accountCanonicalForm'] = 2;
-		//$options['bindRequiresDn'] = true;
-		//$options['username'] = 'AIS-LdapRead';
-		//$options['password'] = 'AIS-LdapRead@1';
-
         $user_id = $this->db->fetchOne("
             SELECT `u_id` 
             FROM `core_users`
@@ -194,10 +190,16 @@ class LdapAuth extends Db {
 
 
             if ( ! empty($data['mail']) && ! empty($data['mail'][0])) {
-                $where = $this->db->quoteInto('u_id = ?', $user_id);
-                $this->db->update('core_users', [
-                    'email' => $data['mail'][0]
-                ], $where);
+                $user = $this->modAdmin->dataUsers->fetchRow(
+                    $this->modAdmin->dataUsers->select()
+                        ->where('email = ?', $data['mail'][0])
+                );
+
+                if ( ! $user || $user->id != $user_id) {
+                    $user = $this->modAdmin->dataUsers->find($user_id)->current();
+                    $user->email = $data['mail'][0];
+                    $user->save();
+                }
             }
 
             $profile_id = $this->db->fetchOne("
