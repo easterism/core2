@@ -190,15 +190,19 @@ class LdapAuth extends Db {
 
 
             if ( ! empty($data['mail']) && ! empty($data['mail'][0])) {
-                $user = $this->modAdmin->dataUsers->fetchRow(
-                    $this->modAdmin->dataUsers->select()
-                        ->where('email = ?', $data['mail'][0])
-                );
+                $isset_email = $this->db->fetchOne("
+                    SELECT 1
+                    FROM core_users 
+                    WHERE email = ?
+                ", [
+                    $data['mail'][0]
+                ]);
 
-                if ( ! $user || $user->id != $user_id) {
-                    $user = $this->modAdmin->dataUsers->find($user_id)->current();
-                    $user->email = $data['mail'][0];
-                    $user->save();
+                if ( ! $isset_email) {
+                    $where = $this->db->quoteInto('id = ?', $user_id);
+                    $this->db->update('core_users_profile', [
+                        'email' => $data['mail'][0],
+                    ], $where);
                 }
             }
 
