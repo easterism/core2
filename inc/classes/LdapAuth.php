@@ -200,7 +200,7 @@ class LdapAuth extends Db {
 
                 if ( ! $isset_email) {
                     $where = $this->db->quoteInto('id = ?', $user_id);
-                    $this->db->update('core_users_profile', [
+                    $this->db->update('core_users', [
                         'email' => $data['mail'][0],
                     ], $where);
                 }
