@@ -54,6 +54,7 @@ class Eventer
             if ($res) {
                 $log[] = is_scalar($res) ? $res : json_encode($res);
             }
+            unset($controller);
             return true;
         }
     }
