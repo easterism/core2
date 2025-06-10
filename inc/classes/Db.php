@@ -466,7 +466,10 @@ class Db {
             }
 
             // запись данных запроса в лог
-            $w = $this->workerAdmin->doBackground('Logger', $data);
+            $w = $this->workerAdmin->doBackground('Logger', [
+                'user_id' => $data['user_id'],
+                'sid' => $data['sid'],
+            ]);
             if ($w) {
                 return;
             }
