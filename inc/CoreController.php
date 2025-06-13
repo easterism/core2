@@ -616,6 +616,7 @@ class CoreController extends Common implements File {
             if ($errors && is_array($errors)) {
                 $i     = 1;
                 $limit = 100;
+
                 foreach ($errors as $error) {
                     if ($i >= $limit) {
                         break;
