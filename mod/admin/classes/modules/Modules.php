@@ -350,12 +350,7 @@ class Modules extends \Common  {
 
                 echo "<h3>Доступные модули из репозитория - " . $repo . ":</h3>";
 
-                echo "<div id=\"repo_{$i}\"> Подключаемся...</div>";
-                echo "<script type=\"text\/javascript\" language=\"javascript\">";
-                echo    "$(document).ready(function () {";//ассинхронно получаем списки из репозитория
-                echo        "window.setTimeout(modules.repo({$i}), 1);";
-                echo    "});";
-                echo "</script>";
+                echo "<div class=\"repo_avail\" id=\"repo_{$i}\" data-index=\"{$i}\"> Подключаемся...</div>";
                 echo "<br><br><br>";
             }
         }
