@@ -40,12 +40,19 @@ self.addEventListener(
                         that.postMessage("SSE open");
                     }, false);
                     eventSrc.addEventListener('error', function (event) {
-                        if (event.eventPhase === eventSrc.CLOSED) {
-                            // Соединение было закрыто
-                            that.postMessage('ERROR: SSE connection closed')
-                            eventSrc = null;
-                        } else {
-                            that.postMessage('ERROR: SSE unknown error occurred');
+                        if (eventSrc) {
+                            if (event.eventPhase === eventSrc.CLOSED) {
+                                // Соединение было закрыто
+                                that.postMessage('ERROR: SSE connection closed')
+                                eventSrc = null;
+                            } else {
+                                eventSrc.close();
+                                eventSrc = null;
+                                // setTimeout(() => {
+                                //     eventSrc = new EventSource('../../sse');
+                                // }, 5000); // Переподключение через 5 секунд
+                                // that.postMessage('ERROR: SSE unknown error occurred');
+                            }
                         }
                     }, false);
 

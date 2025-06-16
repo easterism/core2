@@ -150,8 +150,8 @@ class SSE extends Db {
             echo "event: Core2\n",
                 'data: ' . json_encode(["done" => array_keys($data)]),
                 "\n\n";
+            $this->doFlush();
         }
-        $this->doFlush();
     }
 
     public function __destruct()

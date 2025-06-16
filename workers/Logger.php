@@ -67,7 +67,12 @@ class Logger
         $_SERVER = get_object_vars($workload->server);
 
         $data = get_object_vars($workload->payload); //данные для сохранения в базу
-
+        $data += [
+            'ip'             => $_SERVER['REMOTE_ADDR'],
+            'request_method' => $_SERVER['REQUEST_METHOD'],
+            'remote_port'    => $_SERVER['REMOTE_PORT'],
+            'query'          => $_SERVER['QUERY_STRING'],
+        ];
         if (isset($data['sid'])) {
             if ($this->_access_files) {
                 foreach ($this->_access_files as $access_file) {
