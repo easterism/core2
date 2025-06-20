@@ -272,7 +272,7 @@ class CoreController extends Common implements File {
             echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
 
         } else {
-            $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/mod.js", true);
             $this->printJs("core2/mod/admin/assets/js/gl.js");
 
             if (isset($_GET['edit'])) {
@@ -616,6 +616,7 @@ class CoreController extends Common implements File {
             if ($errors && is_array($errors)) {
                 $i     = 1;
                 $limit = 100;
+
                 foreach ($errors as $error) {
                     if ($i >= $limit) {
                         break;

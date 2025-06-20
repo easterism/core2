@@ -2,7 +2,7 @@ var modules = {
     'repo': function (repo_id) {
         $.ajax({url:'index.php?module=admin&action=modules&getModsListFromRepo=' + repo_id})
 		.done(function(data, textStatus){
-			if(textStatus == 'success') {
+			if (textStatus == 'success') {
 				$("#repo_" + repo_id).html(data);
 			}
 		})
@@ -226,3 +226,9 @@ var modules = {
         }
 	}
 
+document.getElementById("main_body").addEventListener("loaded", function (e) {
+	var r = $("#main_body").find(".repo_avail");
+	$.each(r, function(key, item) {
+		modules.repo($(item).data('index'));
+	})
+});
