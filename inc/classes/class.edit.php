@@ -1928,7 +1928,7 @@ class editTable extends initEdit {
                                             }
 
 
-                                            $tpl->item->field_readonly->assign('[VALUE]', $field_value);
+                                            $tpl->item->field_readonly->assign('[VALUE]', htmlspecialchars($field_value));
                                             $tpl->item->field_readonly->reassign();
                                         }
 
@@ -2016,7 +2016,7 @@ class editTable extends initEdit {
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        $num);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      htmlspecialchars($field_value));
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
                                             $tpl->item->field->reassign();
                                         }
@@ -2063,7 +2063,7 @@ class editTable extends initEdit {
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        1);
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $item_field['default_value'] ?? '');
+                                        $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      htmlspecialchars($item_field['default_value'] ?? ''));
                                         $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
                                         $tpl->item->field->reassign();
                                     }
