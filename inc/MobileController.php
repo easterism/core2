@@ -561,7 +561,7 @@ class MobileController extends Common {
     public function action_upload() {
         require_once 'classes/FileUploader.php';
 
-        $upload_handler = new \Core2\Store\FileUploader();
+        $upload_handler = new Core2\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
@@ -591,7 +591,7 @@ class MobileController extends Common {
      */
     public function fileHandler($resource, $context, $table, $id) {
         require_once 'classes/File.php';
-        $f = new \Core2\Store\File($resource);
+        $f = new Core2\File($resource);
         if ($context == 'fileid') {
             $f->handleFile($table, $id);
         }

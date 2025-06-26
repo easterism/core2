@@ -1,5 +1,5 @@
 <?php
-namespace Core2\Store;
+namespace Core2;
 /**
  * Class Image
  *
