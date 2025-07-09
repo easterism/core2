@@ -37,55 +37,49 @@ class Monitoring extends \Common
 
     public function getOnline()
     {
-        if ( ! empty($_GET['edit'])) {
 
-
+        $sLife = $this->getSetting("session_lifetime");
+        if ( ! $sLife) {
+            $sLife = ini_get('session.gc_maxlifetime');
         }
-        else {
+        $this->printJs("core2/mod/admin/assets/js/monitor.js");
 
-            $sLife = $this->getSetting("session_lifetime");
-            if ( ! $sLife) {
-                $sLife = ini_get('session.gc_maxlifetime');
-            }
-            $this->printJs("core2/mod/admin/assets/js/monitor.js");
-
-            $list = new \listTable($this->resId);
-            $list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
-            $list->addSearch($this->translate->tr("Время входа"),                "login_time",    "DATE");
-            $list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
-            $list->addSearch("IP",                                               "ip",            "TEXT");
+        $list = new \listTable($this->resId);
+        $list->addSearch($this->translate->tr("Пользователь"),               "u_login",       "TEXT");
+        $list->addSearch($this->translate->tr("Время входа"),                "login_time",    "DATE");
+        $list->addSearch($this->translate->tr("Время последней активности"), "last_activity", "DATE");
+        $list->addSearch("IP",                                               "ip",            "TEXT");
 
 
-            $list->SQL = "SELECT id,
-								sid,
-								u_login, 
-								login_time, 
-								last_activity,
-								COALESCE(ip, 'не определен') AS ip,
-								NULL AS kick
-							FROM core_session AS s
-								 JOIN core_users AS u ON u.u_id = s.user_id
-							WHERE logout_time IS NULL
-							  AND (NOW() - last_activity > $sLife)=0 /*ADD_SEARCH*/
-						   ORDER BY login_time DESC";
+        $list->SQL = "SELECT id,
+                            sid,
+                            u_login, 
+                            login_time, 
+                            last_activity,
+                            COALESCE(ip, 'не определен') AS ip,
+                            NULL AS kick
+                        FROM core_session AS s
+                             JOIN core_users AS u ON u.u_id = s.user_id
+                        WHERE logout_time IS NULL
+                          AND (NOW() - last_activity > $sLife)=0 /*ADD_SEARCH*/
+                       ORDER BY login_time DESC";
 
-            $list->addColumn($this->translate->tr("Сессия"),                     "",   "TEXT");
-            $list->addColumn($this->translate->tr("Пользователь"),               "",   "TEXT");
-            $list->addColumn($this->translate->tr("Время входа"),                "",   "DATETIME");
-            $list->addColumn($this->translate->tr("Время последней активности"), "",   "DATETIME");
-            $list->addColumn("IP",                                               "1%", "TEXT");
-            $list->addColumn("",                                                 "1%", "BLOCK");
+        $list->addColumn($this->translate->tr("Сессия"),                     "",   "TEXT");
+        $list->addColumn($this->translate->tr("Пользователь"),               "",   "TEXT");
+        $list->addColumn($this->translate->tr("Время входа"),                "",   "DATETIME");
+        $list->addColumn($this->translate->tr("Время последней активности"), "",   "DATETIME");
+        $list->addColumn("IP",                                               "1%", "TEXT");
+        $list->addColumn("",                                                 "1%", "BLOCK");
 
-            $list->getData();
-            foreach ($list->data as $k => $val) {
-                $list->data[$k][6] = '<img src="core2/html/' . THEME . '/img/link_break.png" title="' . $this->translate->tr('выкинуть из системы') . '" onclick="kick(' . $val[0] . ')">';
-            }
-
-            $list->noCheckboxes = 'yes';
-            ob_start();
-            $list->showTable();
-            return ob_get_clean();
+        $list->getData();
+        foreach ($list->data as $k => $val) {
+            $list->data[$k][6] = '<img src="core2/html/' . THEME . '/img/link_break.png" title="' . $this->translate->tr('выкинуть из системы') . '" onclick="kick(' . $val[0] . ')">';
         }
+
+        $list->noCheckboxes = 'yes';
+        ob_start();
+        $list->showTable();
+        return ob_get_clean();
     }
 
     public function getHistory()
@@ -373,7 +367,9 @@ class Monitoring extends \Common
         $list->data = $dataForList;
         // $list->classText['ADD'] = $this->translate->tr("Сформировать архив");
         // $list->addURL 			= $app . "&tab_admin_monitoring=4&edit=0";
+        ob_start();
         $list->showTable();
+        return ob_get_clean();
     }
 
     public function downloadJournal()

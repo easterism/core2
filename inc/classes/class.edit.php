@@ -2200,6 +2200,9 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 		$('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", json_encode($options)) . ");
 		$('#fileupload-{$un}').bind('fileuploaddone', function (e, data) {
 			var f = data.response().result.files[0];
+			if (f.error) {
+			    alert(f.error)
+			}
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
@@ -2237,7 +2240,6 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 		});
 	
 	";
-
 if ( ! empty($options['maxFileSize'])) {
     $controlGroups[$cellId]['html'][$key] .= "
         $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {

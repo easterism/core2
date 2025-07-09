@@ -6,14 +6,13 @@
  * Date: 04.03.2016
  * Time: 0:58
  */
-namespace Core2\Store;
+namespace Core2;
 
 require_once(__DIR__ . "/Common.php");
 require_once(__DIR__ . "/Image.php");
 
 use Laminas\Session\Container as SessionContainer;
 use Aws\S3\S3Client;
-use Core2\Registry;
 
 class File extends \Common {
     private $content;
