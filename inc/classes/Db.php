@@ -975,7 +975,7 @@ class Db {
      * @param $module_override
      * @return void
      */
-    protected function aemit($event_name, $data = [], $module_override = ''): void {
+    protected function emitAsync($event_name, $data = [], $module_override = ''): void {
         $module = $module_override ?: $this->module;
         $reg    = Registry::getInstance();
         if (!$reg->isRegistered('emitter')) $reg->set('emitter', new Emitter());
