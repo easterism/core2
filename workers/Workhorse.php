@@ -20,13 +20,14 @@ class Workhorse
 
     public function run(\GearmanJob|Job $job, &$log) {
 
-        $id = $job->unique();
+        $handler = $job->handle();
 
         $workload = json_decode($job->workload());
         if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \InvalidArgumentException(json_last_error_msg());
         }
         $_SERVER = get_object_vars($workload->server);
+        $id = $_SERVER['SERVER_NAME'] . "|" . $job->unique();
         // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
         if (!defined("DOC_ROOT")) define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
         if (!defined("DOC_PATH")) define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
@@ -38,10 +39,9 @@ class Workhorse
             Registry::set('auth',  $workload->auth);
 
             $db = new Db($this->_config);
-            $in_job = $db->db->fetchRow("SELECT * FROM core_worker_jobs WHERE id=?", $id);
-            if ($in_job && $in_job['status'] !== 'finish') {
+            $in_job = $db->db->fetchRow("SELECT 1 FROM core_worker_jobs WHERE id=? AND status != 'finish'", $id);
+            if ($in_job) {
                 //задача уже обрабатывается
-                //TODO сделать очистку уже выполненных задач
                 $log[] = "Job {$job->handle()} already in progress";
                 return false;
             }
@@ -50,15 +50,13 @@ class Workhorse
             $controller = $this->requireController($workload->module, $workload->location);
             $action     = $workload->worker;
 
-            if (!$in_job) {
-                $db->db->insert("core_worker_jobs", [
-                    'id' => $id,
-                    'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
-                    'handler' => $job->handle(),
-                    'status' => 'start',
-                    'executor' => "$controller->$action",
-                ]);
-            }
+            $db->db->insert("core_worker_jobs", [
+                'id' => $id,
+                'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
+                'handler' => $handler,
+                'status' => 'start',
+                'executor' => "$controller->$action",
+            ]);
 
             $error = null;
             $out   = null;
@@ -93,7 +91,10 @@ class Workhorse
                 'error'     =>    $error,
                 'executor'  =>    "$controller->$action",
                 'data'      =>    $out,
-            ], $db->db->quoteInto('id = ?', $id));
+            ], [
+                $db->db->quoteInto('id = ?', $id),
+                $db->db->quoteInto('handler = ?', $handler)
+            ]);
             $db->db->closeConnection();
 
             if ($error) throw new \Exception($error, $e->getCode());
