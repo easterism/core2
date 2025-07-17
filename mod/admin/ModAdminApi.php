@@ -147,7 +147,10 @@ class ModAdminApi extends CommonApi
      */
     private function getParamsDelete(array $params): array
     {
-        if (!$this->auth->ADMIN) throw new Exception("Доступ запрещен", 911);
+        if (! $this->auth->ADMIN) {
+            $msg = $this->translate->tr("Доступ запрещен!");
+            throw new Exception($msg, 403);
+        }
         if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
             //это удаление из UI
             if (empty($params['_resource'])) throw new Exception("Не удалось определить местоположение данных для удаления.");

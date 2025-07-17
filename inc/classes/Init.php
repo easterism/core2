@@ -355,7 +355,6 @@ class Init extends Acl {
 
             $login = new Login();
             $login->setSystemName($this->getSystemName());
-            $login->setFavicon($this->getSystemFavicon());
             $this->setupSkin();
             parse_str($route['query'], $request);
             if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
@@ -796,38 +795,6 @@ class Init extends Acl {
     private function getSystemName() {
         $res = $this->config->system->name;
         return $res;
-    }
-
-    /**
-     * get favicons from conf.ini
-     * @return array
-     */
-    private function getSystemFavicon() {
-
-        $favicon_png = $this->config->system->favicon_png;
-        $favicon_ico = $this->config->system->favicon_ico;
-
-        $favicon_png = $favicon_png && is_file($favicon_png)
-            ? $favicon_png
-            : (is_file('favicon.png') ? 'favicon.png' : '');
-
-        $favicon_ico = $favicon_ico && is_file($favicon_ico)
-            ? $favicon_ico
-            : (is_file('favicon.ico') ? 'favicon.ico' : '');
-
-        if (defined('THEME')) {
-            if (!$favicon_png) {
-                $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
-            }
-            if (!$favicon_ico) {
-                $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
-            }
-        }
-
-        return [
-            'png' => $favicon_png,
-            'ico' => $favicon_ico,
-        ];
     }
 
 
