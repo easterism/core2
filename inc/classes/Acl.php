@@ -42,6 +42,8 @@ class Acl extends Db {
 		$registry->set('addRes', $this->addRes);
 		$auth 		= $registry->get('auth');
 
+        if (empty($auth->ROLEID)) return;
+
 		$key 		= 'acl_' . $auth->ROLEID . self::INHER_ROLES;
         //$this->cache->clean($key); //исползуй это, если кеш сломался
 
@@ -83,7 +85,7 @@ class Acl extends Db {
             $access_default = [];
 
             // Если не назначена роль, добавляем виртуальную роль в ACL
-			if ($auth->ROLE < 0) {
+			if ($auth->ROLEID < 0) {
 				$acl->addRole(new Role($auth->ROLE));
 			}
 
@@ -117,7 +119,7 @@ class Acl extends Db {
 			}
 
 
-			if ($auth->ROLE !== -1) {
+			if ($auth->ROLEID > 0) {
 				$role = $this->db->fetchRow("
                     SELECT name, 
                            access
@@ -195,6 +197,7 @@ class Acl extends Db {
 				}
 			}
 			else {
+                //$acl->addRole(new Role('dummy'));
 				foreach ($access_default as $res => $types) {
 					if ($types) {
 						foreach ($types as $type => $on) {
@@ -263,7 +266,9 @@ class Acl extends Db {
             $acl->addResource(new Resource($resource));
             $addRes[] = $resource;
         }
-        if ($addRes) $registry->set('addRes', $addRes);
+        if ($addRes) {
+            $registry->set('addRes', $addRes);
+        }
     }
 
 
@@ -275,7 +280,8 @@ class Acl extends Db {
 	 */
 	public function allow($role, $resource, $type = 'access') {
         $registry    = Registry::getInstance();
-        $acl         = $registry->get('acl');
+        $acl  = $registry->isRegistered('acl') ? $registry->get('acl') : null;
+        if (!$acl) throw new \Exception("Need to setup ACL");
         $this->setResource($resource);
         $acl->allow($role, $resource, $type);
 		$registry->set('acl', $acl);
@@ -331,9 +337,13 @@ class Acl extends Db {
 
         $registry = Registry::getInstance();
 
+        $auth = $registry->get('auth');
+        if ($auth->NAME == 'root' || $auth->ADMIN) {
+            return true;
+        }
+
         $acl  = $registry->isRegistered('acl') ? $registry->get('acl') : null;
         if (!$acl) return false;
-        $auth = $registry->get('auth');
 
         if (($xxx = strrpos($source, 'xxx')) > 0) {
             $source = substr($source, 0, $xxx); //TODO SHOULD BE FIX
@@ -343,12 +353,8 @@ class Acl extends Db {
             $source = substr($source, 0, $index); //TODO SHOULD BE FIX
         }
 
-
-        if ($auth->NAME == 'root' || $auth->ADMIN) {
-			return true;
-
-		} elseif (in_array($source, $registry->get('availRes'))) {
-			return $acl->isAllowed($auth->ROLE, $source, $type);
+        if (in_array($source, $registry->get('availRes'))) {
+            return $acl->isAllowed($auth->ROLE, $source, $type);
 
 		} elseif (in_array($source, $registry->get('availSubRes'))) {
 			return $acl->isAllowed($auth->ROLE, $source, $type);
