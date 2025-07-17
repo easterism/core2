@@ -371,7 +371,7 @@ class Init extends Acl {
                     throw new Exception('Referrer error');
                 }
                 $referer = parse_url($_SERVER['HTTP_REFERER']);
-                if ($referer['host'] !== $_SERVER['HTTP_HOST']) {
+                if (empty($referer['host']) || $referer['host'] !== $_SERVER['HTTP_HOST']) {
                     http_response_code(400);
                     throw new Exception('Referrer error');
                 }
@@ -638,6 +638,9 @@ class Init extends Acl {
             ];
         }
         else if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            $is_rest = $matches;
+        }
+        else if (preg_match('~rest/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
             $is_rest = $matches;
         }
         else if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
