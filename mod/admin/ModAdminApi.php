@@ -105,6 +105,40 @@ class ModAdminApi extends CommonApi
         }
     }
 
+    public function action_modules()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                if ($params['_resource'] == 'submod') {
+                    $mod_id = 0;
+                    foreach ($ids as $id) {
+                        $sm = $this->dataSubModules->find($id)->current();
+                        if ($sm) {
+                            $mod_id = $sm->m_id;
+                            $sm->delete();
+                            $this->emit("delete_submodule", ['id' => $id]);
+                        }
+                    }
+                    return ['loc' => "index.php?module=admin&action=modules&edit=$mod_id&tab=submodules"];
+                }
+                foreach ($ids as $id) {
+
+                    $mod = $this->dataModules->find($id)->current();
+                    if ($mod) {
+                        $mod->delete();
+                        $this->emit("delete_module", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=modules"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
     /**
      * проверка параметров удаления
      * @param array $params
