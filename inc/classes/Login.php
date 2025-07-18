@@ -549,6 +549,9 @@ class Login extends \Common {
             $tpl->loadTemplate(Theme::get("login-index"));
         }
 
+        if ($this->system_name) {
+            $this->setSystemName($this->config->system->name);
+        }
         $tpl->assign('{system_name}', $this->system_name);
 
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');

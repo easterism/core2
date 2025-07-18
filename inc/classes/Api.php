@@ -52,7 +52,9 @@ class Api extends Acl
                         require_once 'core2/mod/admin/ModAdminApi.php';
                         $coreController = new ModAdminApi();
                         $out = $coreController->action_index();
-                        if (is_array($out)) $out = json_encode($out);
+                        if (is_array($out)) {
+                            $out = json_encode($out);
+                        }
                         return $out;
                     }
                 }
@@ -173,7 +175,10 @@ class Api extends Acl
             }
             $mods = $this->getSubModule($submodule_id);
 
-            if ($module == 'auth') return; //API вызовы в модуль auth нельзя проверить на доступ
+            if ($module == 'auth') {
+                //API вызовы в модуль auth нельзя проверить на доступ
+                return;
+            }
 
             //TODO перенести проверку субмодуля в контроллер модуля
             if ($mods['sm_id'] && !$this->checkAcl($submodule_id)) {
