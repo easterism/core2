@@ -1,17 +1,16 @@
 <?php
-namespace Core2\Store;
+namespace Core2;
 
 require_once DOC_ROOT . "core2/inc/classes/Db.php";
 require_once DOC_ROOT . "core2/inc/classes/Image.php";
 
 use Laminas\Session\Container as SessionContainer;
-use Core2\Registry;
 
 /**
  * Class FileUploader
  * @package Store
  */
-class FileUploader extends \Core2\Db {
+class FileUploader extends Db {
 
     private $options;
 
@@ -26,15 +25,6 @@ class FileUploader extends \Core2\Db {
         $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = $config->temp . '/' . $sid;
-
-        if ( ! is_dir($upload_dir . "/thumbnail")) {
-            $old = umask(0);
-            if ( ! is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            mkdir($upload_dir . "/thumbnail", 0777);
-            umask($old);
-        }
 
         $upload_dir   .= "/";
         $this->options = [
@@ -202,6 +192,18 @@ class FileUploader extends \Core2\Db {
         if ($error) {
             return $error;
         }
+        $upload_dir = $this->options['upload_dir'];
+        if ( ! is_dir($upload_dir . "/thumbnail")) {
+            if ( ! is_dir($upload_dir)) {
+                if (@!mkdir($upload_dir, 0777, true)) {
+                    return "Can't create temporary directory";
+                };
+                chmod($upload_dir, 0777);
+            }
+            if (@!mkdir($upload_dir . "/thumbnail", 0777)) {
+                return "Can't create temporary directory thumbnail";
+            };
+        }
         if (!preg_match($this->options['accept_file_types'], $file->name)) {
             return 'acceptFileTypes';
         }
@@ -297,8 +299,8 @@ class FileUploader extends \Core2\Db {
                 //$info = $this->get_file_objects();
             }
         }
-        header('Content-type: application/json');
-        echo json_encode(array('files' => $info));
+
+        return array('files' => $info);
     }
 
     public function post() {
@@ -343,7 +345,7 @@ class FileUploader extends \Core2\Db {
         } else {
             header('Content-type: text/plain');
         }
-        echo json_encode($info);
+        return $info;
     }
 
     public function delete() {
@@ -359,7 +361,6 @@ class FileUploader extends \Core2\Db {
                 }
             }
         }
-        header('Content-type: application/json');
-        echo json_encode($success);
+        return $success;
     }
 }

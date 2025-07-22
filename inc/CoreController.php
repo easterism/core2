@@ -15,6 +15,7 @@ require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/audit/Audit.php";
 require_once DOC_ROOT . "core2/mod/admin/classes/monitoring/Monitoring.php";
 require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
+require_once 'classes/FileUploader.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
@@ -87,7 +88,7 @@ class CoreController extends Common implements File {
             parse_str(file_get_contents("php://input"), $put_vars);
             if ( ! empty($put_vars['exit'])) {
                 $this->closeSession();
-                return;
+                return '';
             }
         }
        
@@ -145,6 +146,7 @@ class CoreController extends Common implements File {
         echo "<input class=\"button\" type=\"button\" value=\"{$btn_title}\" onclick=\"AdminIndex.clearCache()\"/>";
 
         $tab->endContainer();
+        return '';
 	}
 
 
@@ -171,7 +173,6 @@ class CoreController extends Common implements File {
                         return json_encode([
                             'status' => 'success'
                         ]);
-                        break;
                 }
 
                 throw new Exception($this->_('Некорректный адрес запроса'));
@@ -190,7 +191,6 @@ class CoreController extends Common implements File {
                 switch ($_GET['page']) {
                     case 'table_gitlab':
                         return (new Modules())->getTableGitlab();
-                        break;
                 }
 
                 throw new Exception($this->_('Некорректный адрес запроса'));
@@ -436,7 +436,6 @@ class CoreController extends Common implements File {
                         return json_encode([
                             'status' => 'success',
                         ]);
-                        break;
                 }
 
             } catch (Exception $e) {
@@ -671,8 +670,7 @@ class CoreController extends Common implements File {
 
         // Используется для случая когда не нужно получать список уже загруженных файлов
         if ($table == 'core_users') {
-            echo json_encode([]);
-            return true;
+            return json_encode([]);
         }
     }
 
@@ -847,7 +845,7 @@ class CoreController extends Common implements File {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
             $app = "index.php?module=admin&action=monitoring";
-            $monitor = new \Core2\Monitoring();
+            $monitor = new Core2\Monitoring();
 
             $tab = new tabs('admin_monitoring');
 
@@ -867,7 +865,11 @@ class CoreController extends Common implements File {
                         $sess->save();
                     }
                 }
-                $out = $monitor->getOnline();
+                if ( ! empty($_GET['edit'])) {
+
+                } else {
+                    $out = $monitor->getOnline();
+                }
             }
             elseif ($tab->activeTab == 2) {
                 $out = $monitor->getHistory();
@@ -933,30 +935,32 @@ class CoreController extends Common implements File {
 	 *
 	 */
 	public function action_upload() {
-        require_once 'classes/FileUploader.php';
 
-        $upload_handler = new \Core2\Store\FileUploader();
+
+        $upload_handler = new Core2\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
         header('Content-Disposition: inline; filename="files.json"');
         header('X-Content-Type-Options: nosniff');
+        header('Content-type: application/json');
 
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'HEAD':
             case 'GET':
-                $upload_handler->get();
+                $output = $upload_handler->get();
                 //$upload_handler->getDb();
                 break;
             case 'POST':
-                $upload_handler->post();
+                $output = $upload_handler->post();
                 break;
             case 'DELETE':
-                $upload_handler->delete();
+                $output = $upload_handler->delete();
                 break;
             default:
                 header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
         }
+        return json_encode($output);
 	}
 
 
@@ -965,7 +969,7 @@ class CoreController extends Common implements File {
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
 		require_once 'classes/File.php';
-		$f = new \Core2\Store\File($resource);
+		$f = new Core2\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
 		}
