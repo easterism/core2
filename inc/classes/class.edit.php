@@ -1119,7 +1119,7 @@ class editTable extends initEdit {
 
                                                 $tpl->item->extra_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
                                                 $tpl->item->extra_field->assign('[TITLE]', $list_field['title'] ?? '');
-                                                $tpl->item->extra_field->assign('[NAME]',  $name);
+                                                $tpl->item->extra_field->assign('[NAME]',  "[$name]");
                                                 $tpl->item->extra_field->assign('[VALUE]', $item[$name] ?? '');
                                                 $tpl->item->extra_field->reassign();
                                             }
