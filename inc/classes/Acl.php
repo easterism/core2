@@ -231,8 +231,8 @@ class Acl extends Db {
                 }
 
                 foreach ($resources as $availRes) {
-                    [$res, $subres] = explode("_", $availRes);
-                    if (!$subres) {
+                    [$res, $subres] = str_contains($availRes, '_') ? explode("_", $availRes) : ['', ''];
+                    if ( ! $subres) {
                         continue;
                     }
                     if ($type == 'access' && empty($data[$res])) {
