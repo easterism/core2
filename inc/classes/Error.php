@@ -120,7 +120,7 @@ class Error {
                 }
 
             } else {
-                if ( ! in_array($message, ['911', 'Referrer error'])) {
+                if ( ! in_array($message, ['911', 'Referrer error', 'Модуль не найден', 'Токен не найден'])) {
                     error_log("{$message} \n " . $exception->getTraceAsString());
                 }
 
