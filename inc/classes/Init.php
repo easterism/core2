@@ -374,7 +374,9 @@ class Init extends Acl {
                     throw new Exception('Referrer error');
                 }
                 if (isset($_POST['login']) && isset($_POST['password'])) {
-                    return json_encode($login->enter(trim($_POST['login']), trim($_POST['password'])));
+                    return json_encode(
+                        $login->enter(trim($_POST['login']), trim($_POST['password']), $_GET['return_url'] ?? null)
+                    );
                 }
             }
 
