@@ -138,7 +138,8 @@ class Login extends \Common {
                 ) {
                     $this->checkLogin($login, $password);
 
-                    $name        = "{$login}-" . crc32(uniqid());
+                    $name        =  $_SERVER['HTTP_USER_AGENT'] ?? '';
+                    $name        =  $name ?: "{$login}-" . crc32(uniqid());
                     $token       = $this->modWebservice->webtokens()->createWebtoken($login, $name);
                     $return_url .= parse_url($return_url, PHP_URL_QUERY)
                         ? "&access_token={$token}"
