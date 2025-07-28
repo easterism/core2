@@ -11,7 +11,8 @@ use TopCss;
 use TopJs;
 
 /**
- *
+ * @property \Core2\Model\Modules      $dataModules
+ * @property \Core2\Model\UsersProfile $dataUsersProfile
  */
 class Menu extends Acl {
 
@@ -62,6 +63,8 @@ class Menu extends Acl {
         $tpl_menu->assign('<!--CURRENT_USER_FN-->',    $this->auth->FN ? htmlspecialchars($this->auth->FN) : "");
         $tpl_menu->assign('<!--CURRENT_USER_LN-->',    $this->auth->LN ? htmlspecialchars($this->auth->LN) : "");
         $img = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))) . "?s=28&d=identicon";
+
+        $this->module = 'admin';
         $row = $this->dataUsersProfile->getRowByUserId($this->auth->ID);
         if ($row && isset($row->avatar) && $row->avatar) {
             $img = "data:image/png;base64, {$row->avatar}";
@@ -346,6 +349,7 @@ class Menu extends Acl {
             'required_location' => false,
             'modules'     => $modsList
         ];
+
         if ($this->config->mobile) { //Настройки для Core2m
             if ($this->config->mobile->required && $this->config->mobile->required->location) {
                 $data['required_location'] = true; //требовать геолокацию для работы
@@ -401,8 +405,11 @@ class Menu extends Acl {
      * Получаем список доступных модулей
      * @return array
      */
-    private function getModuleList() {
+    private function getModuleList(): array {
+
+        $this->module = 'admin';
         $res  = $this->dataModules->getModuleList();
+
         $mods = array();
         $tmp  = array();
         foreach ($res as $data) {

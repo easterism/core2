@@ -32,7 +32,9 @@ use OpenApi\Attributes as OAT;
         )
     ]
 )]
-
+/**
+ * @property \Core2\Model\Modules $dataModules
+ */
 class OpenApiSpec extends Db
 {
     private $_apis = [__FILE__];
@@ -69,6 +71,7 @@ class OpenApiSpec extends Db
     public function __construct()
     {
         parent::__construct();
+        $this->module = 'admin';
         $mods     = $this->dataModules->getModuleList();
         foreach ($mods as $k => $data) {
             if (isset($this->_apis[$data['module_id']])) continue;
