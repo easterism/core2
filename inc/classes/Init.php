@@ -289,7 +289,11 @@ class Init extends Acl {
 
         if ($res = $this->detectWebService()) return $res; //устаревший вызов REST и SOAP
 
-        if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+        if (empty($_GET['system_page']) &&
+            ! empty($this->auth->ID) &&
+            ! empty($this->auth->NAME) &&
+            is_int($this->auth->ID)
+        ) {
 
             if (isset($route['module'])) {
                 if (isset($route['api']) && $route['api'] === 'openapi') {
