@@ -120,7 +120,7 @@ class Error {
                 }
 
             } else {
-                if ($message != '911') {
+                if ( ! in_array($message, ['911', 'Referrer error'])) {
                     error_log("{$message} \n " . $exception->getTraceAsString());
                 }
 
