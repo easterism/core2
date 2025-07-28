@@ -1,6 +1,8 @@
 <?php
 namespace Core2;
 
+require_once 'core2/inc/Interfaces/Event.php';
+
 /**
  * Class SSE
  * @package Core2

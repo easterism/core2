@@ -167,8 +167,6 @@ if (file_exists($core_conf_file)) {
 
 require_once 'Acl.php';
 require_once 'Common.php';
-require_once 'Templater2.php'; //DEPRECATED
-require_once 'Templater3.php';
 require_once 'SSE.php';
 
 /**
@@ -303,8 +301,6 @@ class Init extends Acl {
                     }
                 }
                 elseif ($route['module'] === 'sse') {
-
-                    require_once 'core2/inc/Interfaces/Event.php';
 
                     $this->setContext("admin", "sse");
                     session_write_close();

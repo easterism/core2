@@ -220,7 +220,7 @@ class Acl extends Db {
         }
         $resources        = $this->_acl->getResources();
         foreach ($access as $type => $data) {
-            if (strpos($type, 'default') === false) {
+            if (strpos($type, 'default') === false && is_array($resources)) {
 
                 foreach ($resources as $availRes) {
                     if (!empty($data[str_replace('_', '-', $availRes)])) {
@@ -231,10 +231,11 @@ class Acl extends Db {
                 }
 
                 foreach ($resources as $availRes) {
-                    [$res, $subres] = explode("_", $availRes);
-                    if (!$subres) {
+                    $res = explode("_", $availRes);
+                    if (empty($res[1])) {
                         continue;
                     }
+                    $res = $res[0];
                     if ($type == 'access' && empty($data[$res])) {
                         //закрываем доступ, если основной ресурс не досупен
                         $this->_acl->deny($roleName, $availRes, $type);
