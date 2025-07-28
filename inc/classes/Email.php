@@ -329,7 +329,7 @@ class Email extends Db {
 
                 }
                 else {
-                    $queue = new \modQueueController();
+                    $queue = new \ModQueueController();
                     $queue->createMail($this->mail_data, $immediately);
                 }
             }

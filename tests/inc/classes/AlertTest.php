@@ -19,13 +19,13 @@ class AlertTest extends TestCase {
     protected $alert;
 
 
-    public function setUp() {
+    public function setUp(): void {
 
         $this->alert = new \Alert();
     }
 
 
-    public function tearDown() {
+    public function tearDown(): void {
 
         $this->alert = null;
     }
@@ -55,20 +55,6 @@ class AlertTest extends TestCase {
     }
 
 
-    /**
-     * тест распечатки сообщения об успешном выполнении
-     * @group        ModStorage
-     * @group        ModStorageMain
-     * @dataProvider providerPrint
-     * @param string $str
-     */
-    public function testprintSuccess($str) {
-
-        \Alert::printSuccess($str);
-        if ( ! "<div class=\"alert alert-success\">{$str}</div>") {
-            $this->fail("{$str} is not correct");
-        }
-    }
 
 
     /** массив тестовых случаев сообщений
@@ -113,21 +99,6 @@ class AlertTest extends TestCase {
     }
 
 
-    /**
-     * тест распечатки сообщения с информацией
-     * @group        ModStorage
-     * @group        ModStorageMain
-     * @dataProvider providerGet
-     * @param string $str
-     */
-    public function testprintInfo($str) {
-
-        \Alert::printInfo($str);
-        if ( ! "<div class=\"alert alert-info\">{$str}</div>") {
-            $this->fail("{$str} is not correct");
-        }
-    }
-
 
     /**
      * тест возврата сообщения с предупреждением
@@ -145,20 +116,6 @@ class AlertTest extends TestCase {
     }
 
 
-    /**
-     * тест распечатки сообщения с предупреждением
-     * @group        ModStorage
-     * @group        ModStorageMain
-     * @dataProvider providerGet
-     * @param string $str
-     */
-    public function testprintWarning($str) {
-
-        \Alert::printWarning($str);
-        if ( ! "<div class=\"alert alert-warning\">{$str}</div>") {
-            $this->fail("{$str} is not correct");
-        }
-    }
 
 
     /**
@@ -177,18 +134,4 @@ class AlertTest extends TestCase {
     }
 
 
-    /**
-     * тест распечатки сообщения об ошибке или опасности
-     * @group        ModStorage
-     * @group        ModStorageMain
-     * @dataProvider providerGet
-     * @param string $str
-     */
-    public function testprintDanger($str) {
-
-        \Alert::printDanger($str);
-        if ( ! "<div class=\"alert alert-danger\">{$str}</div>") {
-            $this->fail("{$str} is not correct");
-        }
-    }
 } 

@@ -386,9 +386,6 @@ var loadPDF = function (url) {
 
 		preloader.hide();
         $('.pdf-panel').removeClass('hide');
-        $(window).hashchange( function() {
-            $("body").css("overflow", "");
-        });
 	});
 }
 
@@ -419,9 +416,6 @@ var loadExt = function (url) {
 
 		preloader.hide();
 		$('.ext-panel').removeClass('hidden');
-		$(window).hashchange( function() {
-			$("body").removeClass("ext-open");
-		});
 	});
 };
 
@@ -432,6 +426,11 @@ window.addEventListener(
 	() => {
 		const url = preloader.prepare(location.hash.substr(1));
 		load(url);
+		$('body > .modal-backdrop').fadeOut(function () {
+			$('body').removeClass('modal-open');
+			$(this).remove();
+		});
+		$("body").removeClass("ext-open");
 		removePDF();
 	},
 	false,

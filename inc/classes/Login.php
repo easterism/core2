@@ -44,7 +44,7 @@ class Login extends \Common {
                 throw new Exception($this->_('Регистрация недоступна'), 403);
             }
             $form_html = $this->modAuth->getPageRegistration();
-            $tpl  = new Templater3();
+            $tpl    = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -428,7 +428,7 @@ class Login extends \Common {
         if ($res = $this->config->system->logo) {
             if (is_file($res)) return "<img src='{$res}' alt='logo'>";
         }
-        $tpl       = new \Templater3(Theme::get("logo"));
+        $tpl       = new Templater3(Theme::get("logo"));
         return $tpl->render();
     }
 
@@ -538,7 +538,10 @@ class Login extends \Common {
      */
     private function getIndex() {
 
-        $tpl = new \Templater3();
+        $tpl = new Templater3();
+        if (!$this->favicon) {
+            $this->favicon = $this->getSystemFavicon();
+        }
 
         if (Tool::isMobileBrowser()) {
             $tpl->loadTemplate(Theme::get("login-indexMobile"));
@@ -546,6 +549,9 @@ class Login extends \Common {
             $tpl->loadTemplate(Theme::get("login-index"));
         }
 
+        if ($this->system_name) {
+            $this->setSystemName($this->config->system->name);
+        }
         $tpl->assign('{system_name}', $this->system_name);
 
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');
@@ -574,6 +580,39 @@ class Login extends \Common {
         }
 
         return $tpl->render();
+    }
+
+
+    /**
+     * get favicons from conf.ini
+     * @return array
+     */
+    private function getSystemFavicon(): array {
+
+        $favicon_png = $this->config->system->favicon_png;
+        $favicon_ico = $this->config->system->favicon_ico;
+
+        $favicon_png = $favicon_png && is_file($favicon_png)
+            ? $favicon_png
+            : (is_file('favicon.png') ? 'favicon.png' : '');
+
+        $favicon_ico = $favicon_ico && is_file($favicon_ico)
+            ? $favicon_ico
+            : (is_file('favicon.ico') ? 'favicon.ico' : '');
+
+        if (defined('THEME')) {
+            if (!$favicon_png) {
+                $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
+            }
+            if (!$favicon_ico) {
+                $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
+            }
+        }
+
+        return [
+            'png' => $favicon_png,
+            'ico' => $favicon_ico,
+        ];
     }
 
 }

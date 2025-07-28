@@ -33,33 +33,12 @@ class Alert {
 
     /**
      * DEPRECATED
-     * Распечатывает сообщение об успешном выполнении
-     * @param string $str
-     */
-    public static function printSuccess($str) {
-        echo self::getSuccess($str);
-    }
-
-
-    /**
-     * DEPRECATED
      * Возвращает сообщение с информацией
      * @param string $message
      * @return string
      */
     public static function getInfo($message) {
         return self::create('info', $message);
-    }
-
-
-
-    /**
-     * DEPRECATED
-     * Распечатывает сообщение с информацией
-     * @param string $str
-     */
-    public static function printInfo($str) {
-        echo self::getInfo($str);
     }
 
 
@@ -74,15 +53,6 @@ class Alert {
     }
 
 
-    /**
-     * DEPRECATED
-     * Распечатывает сообщение с предупреждением
-     * @param string $str
-     */
-    public static function printWarning($str) {
-        echo self::getWarning($str);
-    }
-
 
     /**
      * DEPRECATED
@@ -92,16 +62,6 @@ class Alert {
      */
     public static function getDanger($message) {
         return self::create('danger', $message);
-    }
-
-
-    /**
-     * DEPRECATED
-     * Распечатывает сообщение об ошибке или опасности
-     * @param string $str
-     */
-    public static function printDanger($str) {
-        echo self::getDanger($str);
     }
 
 

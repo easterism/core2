@@ -105,6 +105,40 @@ class ModAdminApi extends CommonApi
         }
     }
 
+    public function action_modules()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                if ($params['_resource'] == 'submod') {
+                    $mod_id = 0;
+                    foreach ($ids as $id) {
+                        $sm = $this->dataSubModules->find($id)->current();
+                        if ($sm) {
+                            $mod_id = $sm->m_id;
+                            $sm->delete();
+                            $this->emit("delete_submodule", ['id' => $id]);
+                        }
+                    }
+                    return ['loc' => "index.php?module=admin&action=modules&edit=$mod_id&tab=submodules"];
+                }
+                foreach ($ids as $id) {
+
+                    $mod = $this->dataModules->find($id)->current();
+                    if ($mod) {
+                        $mod->delete();
+                        $this->emit("delete_module", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=modules"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
     /**
      * проверка параметров удаления
      * @param array $params
@@ -113,7 +147,10 @@ class ModAdminApi extends CommonApi
      */
     private function getParamsDelete(array $params): array
     {
-        if (!$this->auth->ADMIN) throw new Exception("Доступ запрещен", 911);
+        if (! $this->auth->ADMIN) {
+            $msg = $this->translate->tr("Доступ запрещен!");
+            throw new Exception($msg, 403);
+        }
         if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
             //это удаление из UI
             if (empty($params['_resource'])) throw new Exception("Не удалось определить местоположение данных для удаления.");

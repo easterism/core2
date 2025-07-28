@@ -172,14 +172,28 @@ var modules = {
 	function checkToAll(obj) {
 		var i = obj.id.split("_");
 		var obj2 = document.getElementById("access_"+i[1]+"_owner");
-		if (obj.checked==true) {obj2.checked=true;obj2.disabled=true;}
-		else {obj2.checked=false;obj2.disabled=false;}
+		if (obj2) {
+			if (obj.checked == true) {
+				obj2.checked = true;
+				obj2.disabled = true;
+			} else {
+				obj2.checked = false;
+				obj2.disabled = false;
+			}
+		}
 	}
 	function subcheckToAll(obj) {
 		var i = obj.id.split("_");
 		var obj2 = document.getElementById("subaccess_"+i[1]+"_owner");
-		if (obj.checked==true) {obj2.checked=true;obj2.disabled=true;}
-		else {obj2.checked=false;obj2.disabled=false;}
+		if (obj2) {
+			if (obj.checked == true) {
+				obj2.checked = true;
+				obj2.disabled = true;
+			} else {
+				obj2.checked = false;
+				obj2.disabled = false;
+			}
+		}
 	}
 
 	function newField(container) {
