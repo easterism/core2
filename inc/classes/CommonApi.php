@@ -1,10 +1,13 @@
 <?php
 require_once 'Acl.php';
 require_once 'Emitter.php';
+require_once 'HttpException.php';
 
 use Core2\Registry;
 use Core2\Error;
 use Core2\Emitter;
+use Core2\Request;
+use Core2\Routing\Router;
 
 /**
  * Class CommonApi
@@ -210,5 +213,61 @@ class CommonApi extends \Core2\Acl {
     }
 
 
+    /**
+     * Запуск метода из роутера
+     * @param Router $router
+     * @return mixed
+     * @throws Exception
+     */
+    protected function runRouter(Router $router): mixed {
 
+        $request = new Request();
+
+        // Обнуление
+        $_GET     = [];
+        $_POST    = [];
+        $_REQUEST = [];
+        $_FILES   = [];
+        $_COOKIE  = [];
+
+
+        $route_method = $router->getRoute();
+
+        if ( ! $route_method) {
+            http_response_code(404);
+            return '';
+        }
+
+        try {
+            return $route_method->run($request);
+
+        } catch (\Core2\HttpException $e) {
+            http_response_code($e->getCode());
+
+            return [
+                'error_code'    => $e->getErrorCode(),
+                'error_message' => $e->getMessage()
+            ];
+
+        } catch (\Zend_Db_Exception $e) {
+            $this->log->error("Database error", $e);
+            $is_debug = $this->config?->system?->debug?->on || $this->auth->ADMIN;
+
+            http_response_code(500);
+            return [
+                'error_code'    => 'error',
+                'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка базы данных. Обновите страницу или попробуйте позже')
+            ];
+
+        } catch (\Exception $e) {
+            $this->log->error("Fatal error", $e);
+            $is_debug = $this->config?->system?->debug?->on || $this->auth->ADMIN;
+
+            http_response_code(500);
+            return [
+                'error_code'    => 'error',
+                'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка. Обновите страницу или попробуйте позже')
+            ];
+        }
+    }
 }

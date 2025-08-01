@@ -1,0 +1,186 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Core2",
+        "version": "1.0"
+    },
+    "servers": [],
+    "paths": {
+        "/": {
+            "get": {
+                "tags": [
+                    "Core2"
+                ],
+                "summary": "Данные для главного меню",
+                "operationId": "getModules",
+                "responses": {
+                    "200": {
+                        "description": "информация о пользователе и список доступных модулей",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "system_name": {
+                                            "title": "Название системы",
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "title": "ID текущего пользователя",
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "title": "Имя текущего пользователя",
+                                            "type": "string"
+                                        },
+                                        "login": {
+                                            "title": "Login текущего пользователя",
+                                            "type": "string"
+                                        },
+                                        "avatar": {
+                                            "title": "ссылка на аватар",
+                                            "type": "string"
+                                        },
+                                        "required_location": {
+                                            "title": "должен ли пользователь предоставить данные о местоположении",
+                                            "type": "boolean"
+                                        },
+                                        "modules": {
+                                            "title": "System admin",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized access"
+                    }
+                }
+            }
+        },
+        "/admin/index/switch/{resource}": {
+            "post": {
+                "tags": [
+                    "Админ"
+                ],
+                "description": "Переключает признак активности записи",
+                "operationId": "switchRecord",
+                "parameters": [
+                    {
+                        "name": "resource",
+                        "in": "path",
+                        "description": "ижентификатор ресурса, в котором происходит переключение",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "данные для переключения",
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "data",
+                                    "is_active",
+                                    "value"
+                                ],
+                                "properties": {
+                                    "data": {
+                                        "title": "поле базы данных с признаком для переключения",
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "title": "хначение переключателя",
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "title": "id записи, для которой происходит переключение",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Ошибка переключения"
+                    }
+                }
+            }
+        },
+        "/admin/acl/{res}/{subres}": {
+            "get": {
+                "tags": [
+                    "Админ"
+                ],
+                "summary": "Возвращает информацию о правах доступа к модулю {res} и к субмодулю {subres}",
+                "operationId": "getAccessInfo",
+                "parameters": [
+                    {
+                        "name": "res",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "subres",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "массив с правилами доступа",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {},
+        "securitySchemes": {
+            "Authorization": {
+                "type": "http",
+                "name": "Authorization",
+                "in": "header",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Вставьте jwt токен (без Bearer приставки)"
+            },
+            "Core2": {
+                "type": "apiKey",
+                "name": "Core2-Apikey",
+                "in": "header"
+            }
+        }
+    },
+    "security": [
+        {
+            "Authorization": [],
+            "Core2": []
+        }
+    ]
+}

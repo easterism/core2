@@ -1,5 +1,4 @@
 <?php
-
 namespace Core2;
 require_once 'Db.php';
 use OpenApi\Attributes as OAT;
@@ -35,8 +34,8 @@ use OpenApi\Attributes as OAT;
 /**
  * @property \Core2\Model\Modules $dataModules
  */
-class OpenApiSpec extends Db
-{
+class OpenApiSpec extends Db {
+
     private $_apis = [__FILE__];
 
     #[OAT\Get(
@@ -68,9 +67,15 @@ class OpenApiSpec extends Db
             ),
         ]
     )]
-    public function __construct()
-    {
-        parent::__construct();
+
+    /**
+     * @return string
+     * @throws \Exception
+     * @deprecated
+     */
+    public function render(): string {
+
+
         $this->module = 'admin';
         $mods     = $this->dataModules->getModuleList();
         foreach ($mods as $k => $data) {
@@ -86,10 +91,7 @@ class OpenApiSpec extends Db
         require_once $admin;
         $this->_apis[] = $admin;
         define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
-    }
 
-    public function render()
-    {
         $openapi = \OpenApi\Generator::scan($this->_apis,
             ['exclude' => ['vendor'], 'pattern' => '*.php']
         );
@@ -97,5 +99,96 @@ class OpenApiSpec extends Db
         header('Content-Type: application/json');
         echo $openapi->toJson();
         return "";
+    }
+
+
+    /**
+     * @return array
+     * @throws \Exception
+     */
+    public function getSections(): array {
+
+        $sections = [
+            [ 'name' => 'core2', 'title' => 'Core2', ]
+        ];
+
+        $mods = $this->dataModules->getModuleList();
+
+        foreach ($mods as $mod) {
+
+            if (isset($sections[$mod['module_id']])) {
+                continue;
+            }
+
+            $location   = $this->getModuleLocation($mod['module_id']);
+            $controller = "Mod" . ucfirst(strtolower($mod['module_id'])) . "Api";
+
+            if (file_exists("{$location}/{$controller}.php") && file_exists("{$location}/Api/schema.json")) {
+                $sections[$mod['module_id']] = [
+                    'name'  => $mod['module_id'],
+                    'title' => trim(strip_tags($mod['m_name']))
+                ];
+            }
+        }
+
+        return array_values($sections);
+    }
+
+
+    /**
+     * @param string $section
+     * @return array
+     * @throws \Exception
+     */
+    public function getSectionSchema(string $section): array {
+
+        $file_schema = '';
+
+        if ($section == 'core2') {
+            $file_schema = __DIR__ . '/../../schema.json';
+
+        } else {
+            $mods = $this->dataModules->getModuleList();
+
+            foreach ($mods as $mod) {
+                if ($mod['module_id'] == $section) {
+
+                    $location    = $this->getModuleLocation($mod['module_id']);
+                    $file_schema = "{$location}/Api/schema.json";
+                    break;
+                }
+            }
+        }
+
+        if (file_exists($file_schema)) {
+            $schema_content = file_get_contents($file_schema);
+            $schema         = json_decode($schema_content, true);
+
+            if ( ! is_array($schema)) {
+                return [];
+            }
+
+            $current_server = "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['HTTP_HOST']}";
+
+            $servers = [
+                [ 'url' => $current_server ]
+            ];
+
+            if ( ! empty($schema['servers']) && is_array($schema['servers'])) {
+                foreach ($schema['servers'] as $server) {
+                    if ( ! empty($server['url']) &&
+                         ! $current_server != $server['url']
+                    ) {
+                        $servers[] = $server;
+                    }
+                }
+            }
+
+            $schema['servers'] = $servers;
+
+            return $schema;
+        }
+
+        return [];
     }
 }
