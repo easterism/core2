@@ -54,19 +54,21 @@ class Error {
 		return $isXajax;
 	}
 
+
 	/**
 	 * Основной обработчик исключений
-	 *
 	 * @param \Exception $exception
 	 */
-	public static function catchException(\Exception $exception) {
+	public static function catchException(\Exception $exception): void {
 
-        if ($exception instanceof HttpException) {
+        if ($exception instanceof \Core2\HttpException ||
+            $exception instanceof \Core2\Mod\Webservice\HttpException
+        ) {
             http_response_code($exception->getCode() ?: 500);
             header('Content-type: application/json; charset="utf-8"');
             echo json_encode([
-                'msg'  => $exception->getMessage(),
-                'code' => $exception->getErrorCode(),
+                'error_message' => $exception->getMessage(),
+                'error_code'    => $exception->getErrorCode(),
             ]);
 
         }
