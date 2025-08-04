@@ -13,9 +13,6 @@ use Core2\Classes\Table;
  */
 class Db extends Table {
 
-    protected $table         = '';
-    protected $primary_key   = '';
-
     protected $query         = '';
     protected $query_result  = '';
     protected $query_params  = '';
@@ -56,44 +53,11 @@ class Db extends Table {
 
 
     /**
-     * @param string $table
-     * @return void
-     */
-    public function setTable(string $table): void {
-
-        $this->table      = $table;
-        $this->table_name = $table;
-
-        $this->session->table->name = $this->table;
-
-        // Из class.list
-        // Нужно для удаления
-        if ($this->table && $this->primary_key) {
-            $this->deleteKey = "{$this->table}.{$this->primary_key}";
-        }
-    }
-
-
-    /**
      * @param $db
      * @return void
      */
     public function setDatabase($db) {
         $this->_db = $db;
-    }
-
-
-    /**
-     * @param string $key
-     */
-    public function setPrimaryKey(string $key) {
-        $this->primary_key = $key;
-
-        // Из class.list
-        // Нужно для удаления
-        if ($this->table && $this->primary_key) {
-            $this->deleteKey = "{$this->table}.{$this->primary_key}";
-        }
     }
 
 
