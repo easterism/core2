@@ -83,7 +83,7 @@ $config_origin = [
 // определяем путь к темповой папке
 if (empty($config_origin['temp'])) {
     $config_origin['temp'] = sys_get_temp_dir();
-    if (empty($config['temp'])) {
+    if (empty($config_origin['temp'])) {
         $config_origin['temp'] = "/tmp";
     }
 }

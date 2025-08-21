@@ -431,7 +431,7 @@ class CoreController extends Common implements File {
                     // Войти под пользователем
                     case 'login_user':
                         $users = new Admin\Users\Users();
-                        $users->loginUser($_POST['user_id']);
+                        $users->loginUser((int)$_POST['user_id']);
 
                         return json_encode([
                             'status' => 'success',
@@ -458,7 +458,7 @@ class CoreController extends Common implements File {
                     $panel->setTitle($this->_("Создание нового пользователя"), '', $app);
                     $content = $view->getEdit($app);
                 } else {
-                    $user = new Admin\Users\User($_GET['edit']);
+                    $user = new Admin\Users\User((int)$_GET['edit']);
                     $panel->setTitle($user->u_login, $this->_('Редактирование пользователя'), $app);
                     $content = $view->getEdit($app, $user);
                 }

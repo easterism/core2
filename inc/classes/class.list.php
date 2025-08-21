@@ -1,5 +1,6 @@
 <?php
 require_once('class.ini.php');
+require_once('Templater2.php');
 require_once('Templater3.php');
 
 use Laminas\Session\Container as SessionContainer;
@@ -585,6 +586,17 @@ class listTable extends initList {
 
         if ($this->SQL) {
             $this->SQL = str_replace(["/*ADD_SEARCH*/", "ADD_SEARCH"], $this->search_sql, $this->SQL);
+            if ($this->roundRecordCount) {
+//                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
+                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL);
+
+                $this->recordCount = 0;
+                foreach ($expl as $value) {
+                    if ($value['rows'] > $this->recordCount) {
+                        $this->recordCount = $value['rows'];
+                    };
+                }
+            }
         }
 
         $order = isset($tmp['order']) ? $tmp['order'] : '';
@@ -630,24 +642,20 @@ class listTable extends initList {
         if ($this->SQL) {
             if ($this->roundRecordCount) {
 //                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL, $questions);
-                $expl = $db->fetchAll('EXPLAIN ' . $this->SQL);
-                $this->recordCount = 0;
-                foreach ($expl as $value) {
-                    if ($value['rows'] > $this->recordCount) {
-                        $this->recordCount = $value['rows'];
-                    };
-                }
-//                $res = $db->fetchAll($this->SQL, $questions);
                 $res = $db->fetchAll($this->SQL);
             } else {
                 if ($this->config->database->adapter === 'Pdo_Mysql') {
                     //$res = $db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6), $questions);
                     $res = $db->fetchAll("SELECT SQL_CALC_FOUND_ROWS " . substr(trim($this->SQL), 6));
-                    if (!$this->recordCount) $this->recordCount = $db->fetchOne("SELECT FOUND_ROWS()");
+                    if (!$this->recordCount) {
+                        $this->recordCount = $db->fetchOne("SELECT FOUND_ROWS()");
+                    }
                 } elseif ($this->config->database->adapter === 'Pdo_Pgsql') {
                     $this->SQL = str_replace('`', '"', $this->SQL ); //TODO find another way
                     $res = $db->fetchAll($this->SQL, $questions);
-                    $this->recordCount = $db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
+                    if (!$this->recordCount) {
+                        $this->recordCount = $db->fetchOne("SELECT COUNT(1) FROM ({$this->SQL}) AS t", $questions);
+                    }
                 }
             }
         }

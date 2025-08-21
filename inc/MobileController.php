@@ -17,6 +17,7 @@ use Laminas\Session\Container as SessionContainer;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
 use Core2\Settings as Settings;
+use Core2\Mod\Admin;
 
 /**
  * Class CoreController
@@ -237,15 +238,16 @@ class MobileController extends Common {
 	public function action_users () {
         if (!$this->auth->ADMIN) throw new Exception(911);
         //require_once 'core2/mod/ModAjax.php';
-        $user = new View();
+        $user = new Admin\Users\View();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
-        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
+
+        if (isset($_GET['edit']) && !(int)$_GET['edit']) {
             $user->create();
             $title = $this->translate->tr("Создание нового пользователя");
         }
         else if (!empty($_GET['edit'])) {
-            $user->get($_GET['edit']);
+            $user->get((int)$_GET['edit']);
             $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
         }
         $tab->beginContainer($title);

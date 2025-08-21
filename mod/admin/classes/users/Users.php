@@ -12,11 +12,11 @@ class Users extends \Common {
 
 
     /**
-     * @param $user_id
+     * @param int $user_id
      * @return bool
      * @throws \Exception
      */
-    public function loginUser($user_id): bool {
+    public function loginUser(int $user_id): bool {
 
         $user = $this->db->fetchRow("
             SELECT u.u_id,
