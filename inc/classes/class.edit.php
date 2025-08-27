@@ -1454,10 +1454,12 @@ class editTable extends initEdit {
                                 if ($value['type'] == 'multilist') {
                                     $out_array = [];
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out_array[] = $row[1];
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out_array[] = $row[1];
+                                            }
                                         }
                                     }
 
@@ -1466,11 +1468,13 @@ class editTable extends initEdit {
                                 } else {
                                     $out = '';
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out = $row[1];
-                                            break;
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out = $row[1];
+                                                break;
+                                            }
                                         }
                                     }
                                 }
