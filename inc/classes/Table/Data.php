@@ -389,18 +389,28 @@ class Data extends Table {
         switch (strtoupper($order_type)) {
             case 'ASC':
                 usort($data, function($a, $b) use ($order_field) {
+                    if (!isset($b[$order_field])) $b[$order_field] = null;
+                    if (!isset($a[$order_field])) $a[$order_field] = null;
                     if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
                         return $a[$order_field] <=> $b[$order_field];
                     }
-                    return strnatcasecmp((string)$a[$order_field], (string)$b[$order_field]);});
+                    return is_scalar($a[$order_field]) && is_scalar($b[$order_field])
+                        ? strnatcasecmp((string)$a[$order_field], (string)$b[$order_field])
+                        : 0;
+                });
                 break;
 
             case 'DESC':
                 usort($data, function($a, $b) use ($order_field) {
+                    if (!isset($b[$order_field])) $b[$order_field] = null;
+                    if (!isset($a[$order_field])) $a[$order_field] = null;
                     if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
                         return  $b[$order_field] <=> $a[$order_field];
                     }
-                    return strnatcasecmp((string)$b[$order_field], (string)$a[$order_field]);
+
+                    return is_scalar($a[$order_field]) && is_scalar($b[$order_field])
+                        ? strnatcasecmp((string)$b[$order_field], (string)$a[$order_field])
+                        : 0;
                 });
                 break;
         }
