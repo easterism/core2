@@ -1,73 +1,84 @@
-let connected = false;
+const clients = new Set();
 let eventSrc = null;
-self.addEventListener(
-    "connect",
-    (e) => {
-        e.source.addEventListener(
-            "message",
-            (ev) => {
-                if (ev.data === "start") {
-                    if (connected === false) {
-                        e.source.postMessage("worker init");
-                        connected = true;
-                    } else {
-                        e.source.postMessage("worker already inited");
-                    }
-                }
-                else if (ev.data === "sse-open") {
-                    e.source.postMessage("SSE init");
 
-                    const that = e.source;
-                    if (eventSrc === null) {
-                        eventSrc  = new EventSource('../../sse');
-                        e.source.postMessage("SSE " + eventSrc.readyState);
-                    } else {
-                        e.source.postMessage("SSE in state " + eventSrc.readyState);
-                    }
+function setupEventSource() {
+    if (eventSrc) return eventSrc;
 
-                    eventSrc.addEventListener("message", function (event) {
-                        const d = JSON.parse(event.data);
-                        if (d) {
-                            if (d['done']) {
-                                that.postMessage({type: "Core2", event: d.done});
-                            } else {
-                                that.postMessage({type: "modules", event: d});
-                            }
-                        }
-                    }, false);
+    eventSrc = new EventSource('../../sse');
 
-                    eventSrc.addEventListener('open', function (event) {
-                        that.postMessage("SSE open");
-                    }, false);
-                    eventSrc.addEventListener('error', function (event) {
-                        if (eventSrc) {
-                            if (event.eventPhase === eventSrc.CLOSED) {
-                                // Соединение было закрыто
-                                that.postMessage('ERROR: SSE connection closed')
-                                eventSrc = null;
-                            } else {
-                                eventSrc.close();
-                                eventSrc = null;
-                                // setTimeout(() => {
-                                //     eventSrc = new EventSource('../../sse');
-                                // }, 5000); // Переподключение через 5 секунд
-                                // that.postMessage('ERROR: SSE unknown error occurred');
-                            }
-                        }
-                    }, false);
-
-                }
-                else if (ev.data === "sse-close") {
-                    eventSrc.close();
-                    that.postMessage('SSE closed')
-                    eventSrc = null;
+    eventSrc.addEventListener("message", function (event) {
+        const d = JSON.parse(event.data);
+        clients.forEach(client => {
+            try {
+                if (d?.done) {
+                    client.postMessage({type: "Core2", event: d.done});
                 } else {
-                    //any other behavior
+                    client.postMessage({type: "modules", event: d});
                 }
-            },
-            false,
-        );
-        e.source.start();
-    },
-    false,
-);
+            } catch (e) {
+                // Клиент отключился
+                clients.delete(client);
+            }
+        });
+    });
+
+    eventSrc.addEventListener('open', function () {
+        clients.forEach(client => {
+            try {
+                client.postMessage("SSE open");
+            } catch (e) {
+                clients.delete(client);
+            }
+        });
+    });
+
+    eventSrc.addEventListener('error', function (event) {
+        if (eventSrc.readyState === EventSource.CLOSED) {
+            clients.forEach(client => {
+                try {
+                    client.postMessage('ERROR: SSE connection closed');
+                } catch (e) {
+                    clients.delete(client);
+                }
+            });
+            eventSrc = null;
+        }
+    });
+
+    return eventSrc;
+}
+self.addEventListener("connect", (e) => {
+    const port = e.source;
+    clients.add(port);
+
+    port.addEventListener("message", (ev) => {
+        switch (ev.data) {
+            case "start":
+                port.postMessage(clients.size === 1 ? "worker init" : "worker already inited");
+                break;
+
+            case "sse-open":
+                const es = setupEventSource();
+                port.postMessage("SSE in state " + es.readyState);
+                break;
+
+            case "sse-close":
+                if (eventSrc) {
+                    eventSrc.close();
+                    eventSrc = null;
+                }
+                port.postMessage('SSE closed');
+                break;
+        }
+    });
+
+    port.addEventListener("close", () => {
+        clients.delete(port);
+        if (clients.size === 0 && eventSrc) {
+            eventSrc.close();
+            eventSrc = null;
+        }
+    });
+
+    port.start();
+});
