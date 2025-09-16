@@ -541,7 +541,7 @@ class ModAjax extends ajaxFunc {
 
             if ( ! empty($file_certificate)) {
                 $sid        = SessionContainer::getDefaultManager()->getId();
-                $upload_dir = $this->config->temp . '/' . $sid;
+                $upload_dir = "{$this->config->temp}/core_sessions/{$sid}";
 
                 $file      = explode("###", $file_certificate);
                 $file_path = $upload_dir . '/' . $file[0];
@@ -865,7 +865,7 @@ class ModAjax extends ajaxFunc {
 
         try {
             $sid        = $this->auth->getManager()->getId();
-            $upload_dir = $this->config->temp . '/' . $sid;
+            $upload_dir = "{$this->config->temp}/core_sessions/{$sid}";
 
             $data['control'] = $this->clearData($data['control']);
 

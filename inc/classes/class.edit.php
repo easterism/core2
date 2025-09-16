@@ -2125,8 +2125,11 @@ class editTable extends initEdit {
                                 $this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
 								$ft = '';
-								$options = array('dataType' => 'json');
-								if ($auto) {
+                                $options = [
+                                    'dataType'               => 'json',
+                                    'limitConcurrentUploads' => 3,
+                                ];
+                                if ($auto) {
 									$options['autoUpload'] = true;
 								}
 								if (in_array("xfiles", $params)) {
@@ -2246,7 +2249,13 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 				$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
 			}
 		}).bind('fileuploadchange', function (e, data) {
+		    $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', true)
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
+		
+		}).bind('fileuploadalways', function (e, data) {			
+			if ($('#fileupload-{$un}').fileupload('active') === 1) {
+                $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', false)
+            }
 		});
 	
 	";
@@ -2304,11 +2313,7 @@ if (isset($options['autoUpload']) && $options['autoUpload']) {
 }
 
 $controlGroups[$cellId]['html'][$key] .= "
-    // Load existing files:
-	//$('#fileupload-{$un}').addClass('fileupload-processing');
 	$.ajax({
-		// Uncomment the following to send cross-domain cookies:
-		//xhrFields: {withCredentials: true},
 		url: 'index.php?module=$module&action=$action&filehandler={$this->table}&listid=$refid&f=$field',
 		dataType: 'json',
 		context: $('#fileupload-{$un}')[0]

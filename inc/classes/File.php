@@ -203,9 +203,9 @@ class File extends \Common {
     public function handleFileTemp($thumbName) {
         $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $config->temp . '/' . $sid;
-        $fname      = $upload_dir . "/thumbnail/" . $thumbName;
-        if (!is_file($fname)) {
+        $upload_dir = "{$config->temp}/core_sessions/{$sid}";
+        $fname      = "{$upload_dir}/thumbnail/{$thumbName}";
+        if ( ! is_file($fname)) {
             throw new \Exception(404);
         }
         if (phpversion('tidy') < 5.3) {

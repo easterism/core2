@@ -17,16 +17,26 @@ class FileUploader extends Db {
     /**
      * FileUploader constructor.
      * @param array $options
+     * @throws \Exception
      */
     function __construct($options = null) {
 
         parent::__construct();
 
-        $config     = Registry::get('config');
-        $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $config->temp . '/' . $sid;
+        $config        = Registry::get('config');
+        $sid           = SessionContainer::getDefaultManager()->getId();
+        $core_sessions = "{$config->temp}/core_sessions";
 
-        $upload_dir   .= "/";
+        if ( ! is_dir($core_sessions) && @!mkdir($core_sessions, 0777, true)) {
+            throw new \Exception("Can't create temporary session directory: {$core_sessions}");
+        }
+
+        $upload_dir = "{$core_sessions}/{$sid}/";
+
+        if ( ! is_dir($upload_dir) && @!mkdir($upload_dir, 0777, true)) {
+            throw new \Exception("Can't create temporary session directory: {$upload_dir}");
+        }
+
         $this->options = [
             'script_url'              => $_SERVER['PHP_SELF'],
             'upload_dir'              => $upload_dir,

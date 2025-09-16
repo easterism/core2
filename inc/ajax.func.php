@@ -28,7 +28,8 @@ class ajaxFunc extends Common {
 	protected $userId;
 	private $orderFields    = [];
 	private $last_insert_id = 0;
-	private $refid = 0;
+	private       $refid       = 0;
+	private array $saved_files = [];
 
 
     /**
@@ -499,7 +500,12 @@ class ajaxFunc extends Common {
 					$this->saveFile($table, $last_insert_id, $fileFlag);
 				}
 			}
-			if (!$inTrans) $this->db->commit();
+
+            if ( ! $inTrans) {
+                $this->db->commit();
+            }
+
+            $this->removeSavedFiles();
 		}
 		catch (Exception $e) {
 			if (!$inTrans) {
@@ -692,6 +698,8 @@ class ajaxFunc extends Common {
                 $this->db->commit();
             }
 
+            $this->removeSavedFiles();
+
         } catch (Exception $e) {
             if ( ! $inTrans) {
                 $this->db->rollback();
@@ -784,6 +792,23 @@ class ajaxFunc extends Common {
 
 
     /**
+     * Удаление загруженных файлов
+     * @return void
+     */
+    private function removeSavedFiles(): void {
+
+        foreach ($this->saved_files as $saved_file) {
+
+            if (file_exists($saved_file)) {
+                unlink($saved_file);
+            }
+        }
+
+        $this->saved_files = [];
+    }
+
+
+    /**
      * Сохранение файлов их XFILES
      * @param string $table - таблица для сохранения
      * @param int    $last_insert_id
@@ -794,8 +819,8 @@ class ajaxFunc extends Common {
     private function saveFile($table, $last_insert_id, $file_controls) {
 
         $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $this->config->temp . '/' . $sid;
-        $thumb_dir  = $upload_dir . '/thumbnail';
+        $upload_dir = "{$this->config->temp}/core_sessions/{$sid}";
+        $thumb_dir  = "{$upload_dir}/thumbnail";
 
         foreach ($file_controls as $field => $file_control) {
 
@@ -820,8 +845,8 @@ class ajaxFunc extends Common {
                 $content = file_get_contents($file_path);
                 $hash    = md5_file($file_path);
 
-                $file_path_thumb = $thumb_dir . '/' . $file[0];
-                $thumb_content   = new Zend_Db_Expr('NULL');
+                $file_path_thumb = "{$thumb_dir}/{$file[0]}";
+                $thumb_content   = null;
 
                 if (file_exists($file_path_thumb)) {
                     $thumb_content = file_get_contents($file_path_thumb);
@@ -952,6 +977,10 @@ class ajaxFunc extends Common {
                     'thumb'    => $thumb_content,
                     'storage'  => $key
                 ));
+
+
+                $this->saved_files[] = $file_path;
+                $this->saved_files[] = $file_path_thumb;
             }
         }
     }
