@@ -478,6 +478,7 @@ class ModAjax extends ajaxFunc {
      * @param array $data
      * @return xajaxResponse
      * @throws Zend_Exception
+     * @throws Exception
      */
 	public function saveUser(array $data): xajaxResponse {
 
@@ -547,12 +548,12 @@ class ModAjax extends ajaxFunc {
                 $file_path = $upload_dir . '/' . $file[0];
 
                 if ( ! file_exists($file_path)) {
-                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
+                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[3]));
                 }
 
                 $size = filesize($file_path);
                 if ($size !== (int)$file[1]) {
-                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[3]));
                 }
                 $dataForSave['certificate'] = base64_encode(file_get_contents($file_path));
 
@@ -887,11 +888,11 @@ class ModAjax extends ajaxFunc {
                 $f  = explode("###", $data['control']['files|name']);
                 $fn = $upload_dir . '/' . $f[0];
                 if ( ! file_exists($fn)) {
-                    throw new \Exception(sprintf($this->_("Файл %s не найден"), $f[0]));
+                    throw new \Exception(sprintf($this->_("Файл %s не найден"), $f[3]));
                 }
                 $size = filesize($fn);
                 if ($size !== (int)$f[1]) {
-                    throw new \Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $f[0]));
+                    throw new \Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $f[3]));
                 }
             }
 

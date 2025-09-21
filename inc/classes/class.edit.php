@@ -2219,7 +2219,7 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
-			edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
+			edit.xfiles['$un'][f.real_name + '###' + f.size + '###' + f.type + '###' + f.name] = f;
 			var res = [];
 			for (var k in edit.xfiles['$un']) {
 				res.push(k);
