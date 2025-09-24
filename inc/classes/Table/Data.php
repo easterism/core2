@@ -392,7 +392,8 @@ class Data extends Table {
                     if (is_numeric($a[$order_field]) && is_numeric($b[$order_field])) {
                         return $a[$order_field] <=> $b[$order_field];
                     }
-                    return is_scalar($a[$order_field]) && is_scalar($b[$order_field])
+                    return (is_scalar($a[$order_field]) || is_null($a[$order_field])) &&
+                           (is_scalar($b[$order_field]) || is_null($b[$order_field]))
                         ? strnatcasecmp((string)$a[$order_field], (string)$b[$order_field])
                         : 0;
                 });
@@ -404,7 +405,8 @@ class Data extends Table {
                         return  $b[$order_field] <=> $a[$order_field];
                     }
 
-                    return is_scalar($a[$order_field]) && is_scalar($b[$order_field])
+                    return (is_scalar($a[$order_field]) || is_null($a[$order_field])) &&
+                           (is_scalar($b[$order_field]) || is_null($b[$order_field]))
                         ? strnatcasecmp((string)$b[$order_field], (string)$a[$order_field])
                         : 0;
                 });
