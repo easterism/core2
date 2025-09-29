@@ -18,12 +18,13 @@ trait Import {
      */
     public function getFieldImport(array $options, array $data): string {
 
-        $options['field']      ??= 'import';
-        $options['fields']     ??= [];
-        $options['max_cols']   ??= 20;
-        $options['max_rows']   ??= 20;
-        $options['max_width']  ??= 900;
-        $options['max_height'] ??= 500;
+        $options['field']       ??= 'import';
+        $options['fields']      ??= [];
+        $options['rows_select'] ??= 'start';
+        $options['max_cols']    ??= 20;
+        $options['max_rows']    ??= 20;
+        $options['max_width']   ??= 900;
+        $options['max_height']  ??= 500;
 
         $styles = [];
         $styles[] = "max-width:" . (is_numeric($options['max_width']) ? "{$options['max_width']}px" : $options['max_width']);
@@ -46,6 +47,10 @@ trait Import {
 
         $tpl = new \Templater3(__DIR__ . '/../../html/' . THEME . '/html/edit/import.html');
 
+        if ($options['rows_select'] == 'checked') {
+            $tpl->touchBlock('checked_all');
+        }
+
         for ($i = 0; $i < $count_col; $i++) {
             $tpl->column->fillDropDown("select_fields-[COL_NUMBER]", ['' => '--'] + $options['fields']);
             $tpl->column->assign("[COL_NUMBER]", $i);
@@ -58,6 +63,9 @@ trait Import {
                 break;
             }
 
+            if ($options['rows_select'] == 'checked') {
+                $tpl->row->checked_row->assign('[ROW_NUMBER]', $num);
+            }
 
             $col = 0;
             foreach ($row as $cell) {
@@ -80,6 +88,7 @@ trait Import {
 
         $tpl->assign("[STYLES]",     implode(';', $styles));
         $tpl->assign("[FIELD]",      $options['field']);
+        $tpl->assign("[ROW_SELECT]", $options['rows_select']);
         $tpl->assign("[TOTAL_ROWS]", count($data));
 
         return $tpl->render();
