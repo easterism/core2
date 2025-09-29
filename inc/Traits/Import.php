@@ -32,7 +32,7 @@ trait Import {
 
         $count_col = 0;
         foreach ($data as $row) {
-            $count_cols_real = count(array_filter($row));
+            $count_cols_real = count($row);
 
             if ($count_cols_real > $count_col) {
                 $count_col = min($count_cols_real, $options['max_cols']);
