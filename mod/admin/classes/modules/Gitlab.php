@@ -119,7 +119,7 @@ class Gitlab extends \Common {
             $body = $response->getBody()->getContents();
 
             $zip = new \ZipArchive();
-            $upload_dir 	    = $this->config->temp . '/' . SessionContainer::getDefaultManager()->getId();
+            $upload_dir 	    = "{$this->config->temp}/core_sessions/" . SessionContainer::getDefaultManager()->getId();
             $destinationFolder  = $upload_dir . '/gitlab_' . uniqid() . '/';
             $fn                 = tempnam($this->config->temp, "gitlabzip");
             if (!$fn) throw new \Exception("Не удалось создать файл для установки");

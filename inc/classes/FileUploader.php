@@ -17,16 +17,26 @@ class FileUploader extends Db {
     /**
      * FileUploader constructor.
      * @param array $options
+     * @throws \Exception
      */
     function __construct($options = null) {
 
         parent::__construct();
 
-        $config     = Registry::get('config');
-        $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $config->temp . '/' . $sid;
+        $config        = Registry::get('config');
+        $sid           = SessionContainer::getDefaultManager()->getId();
+        $core_sessions = "{$config->temp}/core_sessions";
 
-        $upload_dir   .= "/";
+        if ( ! is_dir($core_sessions) && @!mkdir($core_sessions, 0777, true)) {
+            throw new \Exception("Can't create temporary session directory: {$core_sessions}");
+        }
+
+        $upload_dir = "{$core_sessions}/{$sid}/";
+
+        if ( ! is_dir($upload_dir) && @!mkdir($upload_dir, 0777, true)) {
+            throw new \Exception("Can't create temporary session directory: {$upload_dir}");
+        }
+
         $this->options = [
             'script_url'              => $_SERVER['PHP_SELF'],
             'upload_dir'              => $upload_dir,
@@ -139,7 +149,7 @@ class FileUploader extends Db {
     private function create_scaled_image($file_name, $options) {
         $file_path      = $this->options['upload_dir'] . $file_name;
         $new_file_path  = $options['upload_dir'] . $file_name;
-        list($img_width, $img_height) = @getimagesize($file_path);
+        [$img_width, $img_height] = @getimagesize($file_path);
         if (!$img_width || !$img_height) {
             return false;
         }
@@ -188,23 +198,31 @@ class FileUploader extends Db {
         return $success;
     }
 
+
+    /**
+     * @param $uploaded_file
+     * @param $file
+     * @param $error
+     * @return string
+     */
     private function has_error($uploaded_file, $file, $error) {
+
         if ($error) {
             return $error;
         }
         $upload_dir = $this->options['upload_dir'];
         if ( ! is_dir($upload_dir . "/thumbnail")) {
             if ( ! is_dir($upload_dir)) {
-                if (@!mkdir($upload_dir, 0777, true)) {
+                if (@ ! mkdir($upload_dir, 0777, true)) {
                     return "Can't create temporary directory";
                 };
                 chmod($upload_dir, 0777);
             }
-            if (@!mkdir($upload_dir . "/thumbnail", 0777)) {
+            if (@ ! mkdir($upload_dir . "/thumbnail", 0777)) {
                 return "Can't create temporary directory thumbnail";
             };
         }
-        if (!preg_match($this->options['accept_file_types'], $file->name)) {
+        if ( ! preg_match($this->options['accept_file_types'], $file->name)) {
             return 'acceptFileTypes';
         }
         if ($uploaded_file && is_uploaded_file($uploaded_file)) {
@@ -230,19 +248,35 @@ class FileUploader extends Db {
         return $error;
     }
 
+
+    /**
+     * @param $uploaded_file
+     * @param $name
+     * @param $size
+     * @param $type
+     * @param $error
+     * @return \stdClass
+     */
     private function handle_file_upload($uploaded_file, $name, $size, $type, $error) {
+
         $file = new \stdClass();
+
         // Remove path information and dots around the filename, to prevent uploading
         // into different directories or replacing hidden system files.
         // Also remove control characters and spaces (\x00..\x20) around the filename:
-        $explode_name = explode('/',stripslashes($name));
-        $file->name = trim(end($explode_name), ".\x00..\x20");
-        $file->size = intval($size);
-        $file->type = $type;
+        $explode_name = explode('/', stripslashes($name));
+        $file->name   = trim(end($explode_name), ".\x00..\x20");
+        $file->size   = intval($size);
+        $file->type   = $type;
+
         $error = $this->has_error($uploaded_file, $file, $error);
-        if (!$error && $file->name) {
-            $file_path = $this->options['upload_dir'] . $file->name;
-            $append_file = is_file($file_path) && $file->size > filesize($file_path);
+
+        if ( ! $error && $file->name) {
+            $hash            = crc32(uniqid());
+            $file->real_name = "{$hash}_{$file->name}";
+            $file_path       = "{$this->options['upload_dir']}{$file->real_name}";
+            $append_file     = is_file($file_path) && $file->size > filesize($file_path);
+
             clearstatcache();
             if ($uploaded_file && is_uploaded_file($uploaded_file)) {
                 // multipart/formdata uploads (POST method uploads)
@@ -263,26 +297,31 @@ class FileUploader extends Db {
                     $append_file ? FILE_APPEND : 0
                 );
             }
+
             $file_size = filesize($file_path);
+
             if ($file_size === $file->size) {
-                $file->url = "index.php?module=admin&filehandler=temp&tfile=" . rawurlencode($file->name);
+                $file->url = "index.php?module=admin&filehandler=temp&tfile=" . rawurlencode($file->real_name);
+
                 foreach ($this->options['image_versions'] as $version => $options) {
-                    if ($this->create_scaled_image($file->name, $options)) {
-                        $file->{$version.'_url'} = "index.php?module=admin&filehandler=temp&tfile="
-                            .rawurlencode($file->name);
+                    if ($this->create_scaled_image($file->real_name, $options)) {
+                        $file->{$version . '_url'} = "index.php?module=admin&filehandler=temp&tfile=" . rawurlencode($file->real_name);
                     }
                 }
             } else if ($this->options['discard_aborted_uploads']) {
                 unlink($file_path);
                 $file->error = 'abort';
             }
-            $file->size = $file_size;
-            $file->delete_url = 'index.php?module=admin&action=upload&file=' . rawurlencode($file->name);
-            $file->delete_type = 'DELETE';
-            $file->delete_service = $file->name . '###' . $file->size . '###' . $file->type;
+
+            $file->size           = $file_size;
+            $file->delete_url     = 'index.php?module=admin&action=upload&file=' . rawurlencode($file->real_name);
+            $file->delete_type    = 'DELETE';
+            $file->delete_service = $file->real_name . '###' . $file->size . '###' . $file->type;
+
         } else {
             $file->error = $error;
         }
+
         return $file;
     }
 
@@ -303,48 +342,49 @@ class FileUploader extends Db {
         return array('files' => $info);
     }
 
-    public function post() {
-        $upload = isset($_FILES[$this->options['param_name']]) ?
-            $_FILES[$this->options['param_name']] : array(
-                'tmp_name' => null,
-                'name' => null,
-                'size' => null,
-                'type' => null,
-                'error' => null
-            );
-        $info = array('files' => array());
+
+    /**
+     * @return array|array[]
+     */
+    public function post(): array {
+
+        $upload = $_FILES[$this->options['param_name']] ?? [
+            'tmp_name' => null,
+            'name'     => null,
+            'size'     => null,
+            'type'     => null,
+            'error'    => null
+        ];
+
+        $info = ['files' => []];
         if (is_array($upload['tmp_name'])) {
             foreach ($upload['tmp_name'] as $index => $value) {
                 $info['files'][] = $this->handle_file_upload(
                     $upload['tmp_name'][$index],
-                    isset($_SERVER['HTTP_X_FILE_NAME']) ?
-                        $_SERVER['HTTP_X_FILE_NAME'] : $upload['name'][$index],
-                    isset($_SERVER['HTTP_X_FILE_SIZE']) ?
-                        $_SERVER['HTTP_X_FILE_SIZE'] : $upload['size'][$index],
-                    isset($_SERVER['HTTP_X_FILE_TYPE']) ?
-                        $_SERVER['HTTP_X_FILE_TYPE'] : $upload['type'][$index],
+                    $_SERVER['HTTP_X_FILE_NAME'] ?? $upload['name'][$index],
+                    $_SERVER['HTTP_X_FILE_SIZE'] ?? $upload['size'][$index],
+                    $_SERVER['HTTP_X_FILE_TYPE'] ?? $upload['type'][$index],
                     $upload['error'][$index]
                 );
             }
         } else {
             $info['files'][] = $this->handle_file_upload(
                 $upload['tmp_name'],
-                isset($_SERVER['HTTP_X_FILE_NAME']) ?
-                    $_SERVER['HTTP_X_FILE_NAME'] : $upload['name'],
-                isset($_SERVER['HTTP_X_FILE_SIZE']) ?
-                    $_SERVER['HTTP_X_FILE_SIZE'] : $upload['size'],
-                isset($_SERVER['HTTP_X_FILE_TYPE']) ?
-                    $_SERVER['HTTP_X_FILE_TYPE'] : $upload['type'],
+                $_SERVER['HTTP_X_FILE_NAME'] ?? $upload['name'],
+                $_SERVER['HTTP_X_FILE_SIZE'] ?? $upload['size'],
+                $_SERVER['HTTP_X_FILE_TYPE'] ?? $upload['type'],
                 $upload['error']
             );
         }
+
         header('Vary: Accept');
         if (isset($_SERVER['HTTP_ACCEPT']) &&
-            (strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
+            str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
             header('Content-type: application/json');
         } else {
             header('Content-type: text/plain');
         }
+
         return $info;
     }
 

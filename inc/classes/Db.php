@@ -86,25 +86,29 @@ class Db {
             return $this->_core_config;
         }
 		if ($k === 'db2') {
-            if ($module !== 'admin') {
-                if ($reg->isRegistered($k_module)) return $reg->get($k_module);
-                $module_config = $this->getModuleConfig($module);
+            if ( ! $this->config?->database2) {
+                $k = 'db';
+            } else {
+                if ($module !== 'admin') {
+                    if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                    $module_config = $this->getModuleConfig($module);
 
-                if ($module_config && $module_config->database2) {
-                    // у этого модуля собственный адаптер
-                    $db = $this->establishConnection($module_config->database2);
-                    $reg->set($k_module, $db);
-                    return $db;
+                    if ($module_config && $module_config->database2) {
+                        // у этого модуля собственный адаптер
+                        $db = $this->establishConnection($module_config->database2);
+                        $reg->set($k_module, $db);
+                        return $db;
+                    }
                 }
-            }
-            if (!$reg->isRegistered('db2')) {
-                $db = $this->establishConnection($this->config->database2);
-                if (!$db) {
-                    throw new Exception("Database replica not connected");
+                if ( ! $reg->isRegistered('db2')) {
+                    $db = $this->establishConnection($this->config->database2);
+                    if ( ! $db) {
+                        throw new Exception("Database replica not connected");
+                    }
+                    $reg->set('db2', $db);
                 }
-                $reg->set('db2', $db);
+                return $reg->get('db2');
             }
-            return $reg->get('db2');
         }
 		if ($k === 'db') {
 //            if ($reg->isRegistered('invoker')) {
@@ -302,12 +306,6 @@ class Db {
 
 			    if ($database->sql_mode) {
 			        $db->query("SET SESSION sql_mode = ?", $database->sql_mode);
-                }
-
-                //set profiler
-                if ($this->_core_config && $this->_core_config->profile && $this->_core_config->profile->on) {
-                    $db->query("set profiling=1");
-                    $db->query("set profiling_history_size = 100");
                 }
             }
             elseif ($database->adapter === 'Pdo_Pgsql') {

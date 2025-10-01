@@ -75,6 +75,7 @@ class editTable extends initEdit {
     const TYPE_CUSTOM         = 'custom';
     const TYPE_DATE           = 'date';
     const TYPE_DATE2          = 'date2';
+    const TYPE_DATE3          = 'date3';
     const TYPE_DATETIME       = 'datetime';
     const TYPE_DATETIME2      = 'datetime2';
     const TYPE_DATETIME_LOCAL = 'datetime_local';
@@ -707,7 +708,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'datetime_local') {
+						elseif ($value['type'] == self::TYPE_DATE3) {
+							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"date\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == self::TYPE_DATETIME_LOCAL) {
 							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
@@ -846,6 +854,15 @@ class editTable extends initEdit {
 
                                 $settings = is_array($value['in']) ? $value['in'] : [];
 
+                                $input_address = null;
+
+                                if ( ! empty($settings['input_address_id'])) {
+                                    if ( ! is_array($settings['input_address_id'])) {
+                                        $settings['input_address_id'] = [ $settings['input_address_id'] ];
+                                    }
+                                    $input_address = json_encode($settings['input_address_id'], JSON_UNESCAPED_UNICODE);
+                                }
+
                                 $tpl = file_get_contents($this->tpl_control[self::TYPE_COORDINATES]);
                                 $tpl = str_replace('[FIELD_ID]',         $fieldId, $tpl);
                                 $tpl = str_replace('[FIELD]',            $field, $tpl);
@@ -855,7 +872,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[WIDTH]',            $settings['width'] ?? 400, $tpl);
                                 $tpl = str_replace('[HEIGHT]',           $settings['height'] ?? 200, $tpl);
                                 $tpl = str_replace('[ZOOM]',             $settings['zoom'] ?? 7, $tpl);
-                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $settings['input_address_id'] ?? '', $tpl);
+                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $input_address ?: "[]", $tpl);
                                 $tpl = str_replace('[CENTER_LAT]',       ! empty($settings['center']) && ! empty($settings['center']['lat']) ? $settings['center']['lat'] : '53.908045', $tpl);
                                 $tpl = str_replace('[CENTER_LNG]',       ! empty($settings['center']) && ! empty($settings['center']['lng']) ? $settings['center']['lng'] : '27.507411', $tpl);
 
@@ -1106,7 +1123,7 @@ class editTable extends initEdit {
 
                                                 $tpl->item->extra_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
                                                 $tpl->item->extra_field->assign('[TITLE]', $list_field['title'] ?? '');
-                                                $tpl->item->extra_field->assign('[NAME]',  $name);
+                                                $tpl->item->extra_field->assign('[NAME]',  "[$name]");
                                                 $tpl->item->extra_field->assign('[VALUE]', $item[$name] ?? '');
                                                 $tpl->item->extra_field->reassign();
                                             }
@@ -1441,10 +1458,12 @@ class editTable extends initEdit {
                                 if ($value['type'] == 'multilist') {
                                     $out_array = [];
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out_array[] = $row[1];
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out_array[] = $row[1];
+                                            }
                                         }
                                     }
 
@@ -1453,11 +1472,13 @@ class editTable extends initEdit {
                                 } else {
                                     $out = '';
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out = $row[1];
-                                            break;
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out = $row[1];
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -1873,14 +1894,20 @@ class editTable extends initEdit {
                                     $tpl = new Templater3($this->tpl_control['dataset']);
 
                                     foreach ($item_fields as $item_field) {
-                                        $tpl->title->assign('[TITLE]', $item_field['title']);
-                                        $tpl->title->reassign();
+                                        if (empty($item_field['type']) || $item_field['type'] != 'hidden') {
+                                            $tpl->title->assign('[TITLE]', $item_field['title']);
+                                            $tpl->title->reassign();
+                                        }
                                     }
 
                                     $num = 1;
                                     foreach ($datasets as $dataset) {
 
                                         foreach ($item_fields as $item_field) {
+                                            if ($item_field['type'] == 'hidden') {
+                                                continue;
+                                            }
+
                                             $field_value = '';
 
                                             if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
@@ -2026,7 +2053,7 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                        if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden', 'text_readonly'])) {
                                             $type_name = 'text';
                                         }
 
@@ -2102,8 +2129,11 @@ class editTable extends initEdit {
                                 $this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
 								$ft = '';
-								$options = array('dataType' => 'json');
-								if ($auto) {
+                                $options = [
+                                    'dataType'               => 'json',
+                                    'limitConcurrentUploads' => 3,
+                                ];
+                                if ($auto) {
 									$options['autoUpload'] = true;
 								}
 								if (in_array("xfiles", $params)) {
@@ -2193,7 +2223,7 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
-			edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
+			edit.xfiles['$un'][f.real_name + '###' + f.size + '###' + f.type + '###' + f.name] = f;
 			var res = [];
 			for (var k in edit.xfiles['$un']) {
 				res.push(k);
@@ -2223,7 +2253,13 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 				$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
 			}
 		}).bind('fileuploadchange', function (e, data) {
+		    $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', true)
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
+		
+		}).bind('fileuploadalways', function (e, data) {			
+			if ($('#fileupload-{$un}').fileupload('active') === 1) {
+                $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', false)
+            }
 		});
 	
 	";
@@ -2281,11 +2317,7 @@ if (isset($options['autoUpload']) && $options['autoUpload']) {
 }
 
 $controlGroups[$cellId]['html'][$key] .= "
-    // Load existing files:
-	//$('#fileupload-{$un}').addClass('fileupload-processing');
 	$.ajax({
-		// Uncomment the following to send cross-domain cookies:
-		//xhrFields: {withCredentials: true},
 		url: 'index.php?module=$module&action=$action&filehandler={$this->table}&listid=$refid&f=$field',
 		dataType: 'json',
 		context: $('#fileupload-{$un}')[0]
@@ -2360,10 +2392,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 							$modal++;
 						}
 
-						if (!empty($value['out'])) {
-                            $out = !is_scalar($value['default']) ? $value['out'] : str_replace("[VAL]", $value['default'], $value['out']);
-							$controlGroups[$cellId]['html'][$key] .= $out;
-						}
+                        if ( ! empty($value['out'])) {
+                            $controlGroups[$cellId]['html'][$key] .= $value['out'];
+                        }
 						$controlGroups[$cellId]['html'][$key] .= '</td></tr></table>';
 					}
 				}

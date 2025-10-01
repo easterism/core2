@@ -20,7 +20,7 @@ CoreLogin.login = function (form) {
     }
     
     $.ajax({
-        url: ".",
+        url: location.pathname + location.search,
         method: "POST",
         data: {
             login: $('[name=login]', form).val(),
@@ -44,7 +44,11 @@ CoreLogin.login = function (form) {
             if (errorMessage !== '') {
                 $('.form-main .text-danger').text(errorMessage);
             } else {
-                location.reload();
+                if (data.return_url) {
+                    location.href = data.return_url
+                } else {
+                    location.reload();
+                }
             }
         });
 };

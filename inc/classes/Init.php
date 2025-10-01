@@ -287,17 +287,26 @@ class Init extends Acl {
 
         if ($res = $this->detectWebService()) return $res; //устаревший вызов REST и SOAP
 
-        if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
+        if (empty($_GET['system_page']) &&
+            ! empty($this->auth->ID) &&
+            ! empty($this->auth->NAME) &&
+            is_int($this->auth->ID)
+        ) {
 
             if (isset($route['module'])) {
                 if (isset($route['api']) && $route['api'] === 'openapi') {
-                    if ($route['action'] == 'core2.json') {
-                        //генерация свагера для общего API
-                        require_once "OpenApiSpec.php";
-                        header("Cache-Control: no-cache");
-                        $schema = new \Core2\OpenApiSpec();
-                        $html = $schema->render();
-                        return $html;
+                    require_once "OpenApiSpec.php";
+                    $schema = new \Core2\OpenApiSpec();
+
+                    if ($route['action'] == 'sections') {
+                        header('Content-Type: application/json');
+
+                        if ( ! empty($route['params'])) {
+                            $section = key($route['params']);
+                            return json_encode($schema->getSectionSchema($section));
+                        }
+
+                        return json_encode([ 'sections' => $schema->getSections() ]);
                     }
                 }
                 elseif ($route['module'] === 'sse') {
@@ -370,7 +379,9 @@ class Init extends Acl {
                     throw new Exception('Referrer error');
                 }
                 if (isset($_POST['login']) && isset($_POST['password'])) {
-                    return json_encode($login->enter(trim($_POST['login']), trim($_POST['password'])));
+                    return json_encode(
+                        $login->enter(trim($_POST['login']), trim($_POST['password']), $_GET['return_url'] ?? null)
+                    );
                 }
             }
 
@@ -540,51 +551,48 @@ class Init extends Acl {
      */
     public function __destruct() {
 
-        if ($this->config &&
-            $this->config->system &&
-            $this->config->system->profile &&
-            $this->config->system->profile->on
+        if ($this->core_config->profile &&
+            $this->core_config->profile->on
         ) {
             $log = new Core2\Log('profile');
 
             if ($log->getWriter()) {
-                $sql_queries = $this->db->fetchAll("show profiles");
                 $connection_id = $this->db->fetchOne("SELECT CONNECTION_ID()");
-                $total_time  = 0;
-                $max_slow    = [];
+                $profiler      = $this->db->getProfiler();
+                $total_time    = $profiler->getTotalElapsedSecs();
+                $queries       = [];
+                $max_slow      = [];
 
-                if ( ! empty($sql_queries)) {
-                    foreach ($sql_queries as $k => $sql_query) {
+                foreach ($profiler->getQueryProfiles() as $query) {
+                    $time       = $query->getElapsedSecs();
+                    $query_item = [
+                        'time'  => $time,
+                        'query' => $query->getQuery(),
+                    ];
 
-                        if ( ! empty($sql_query['Duration'])) {
-                            $total_time += $sql_query['Duration'];
-
-                            if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
-                                $max_slow = $sql_query;
-                            }
-                        }
+                    if (empty($max_slow['time']) || $max_slow['time'] < $time) {
+                        $max_slow = $query_item;
                     }
+
+                    $queries[] = $query_item;
                 }
 
                 $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
-
-                $query_string = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
-
-                if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
-                    $function_log = 'warning';
-                } else {
-                    $function_log = 'info';
-                }
+                $request_uri    = ! empty($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+                $query_string   = ! empty($_SERVER['QUERY_STRING']) ? "?{$_SERVER['QUERY_STRING']}" : '';
+                $function_log   = $total_time >= 1 || count($queries) >= 100 || count($queries) == 0
+                    ? 'warning'
+                    : 'info';
 
 
                 $log->{$function_log}('request', [
                     'method'        => $request_method,
                     'time'          => round($total_time, 5),
-                    'count'         => count($sql_queries),
+                    'count'         => count($queries),
                     'connection_id' => $connection_id,
-                    'request'       => $query_string,
+                    'request'       => "{$request_uri}{$query_string}",
                     'max_slow'      => $max_slow,
-                    'queries'       => $sql_queries,
+                    'queries'       => $queries,
                 ]);
             }
         }

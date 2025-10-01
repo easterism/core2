@@ -9,9 +9,8 @@ use Exception;
 use Templater3;
 
 /**
- * Class Login
- * @package Core2
- * @property Model\Users           $dataUsers
+ * @property Model\Users              $dataUsers
+ * @property \ModWebserviceController $modWebservice
  */
 class Login extends \Common {
 
@@ -104,13 +103,15 @@ class Login extends \Common {
 
     }
 
+
     /**
-     * попытка входа в систему
-     * @param $login
-     * @param $password
+     * Попытка входа в систему
+     * @param string      $login
+     * @param string      $password
+     * @param string|null $return_url
      * @return array|string[]
      */
-    public function enter($login, $password):array
+    public function enter(string $login, string $password, string $return_url = null):array
     {
         if (empty($login)) {
             return [
@@ -127,10 +128,34 @@ class Login extends \Common {
         }
 
         try {
+            if ( ! empty($return_url) && filter_var($return_url, FILTER_VALIDATE_URL) !== false) {
+                $return_url_parse = parse_url($return_url);
+
+                if ( ! empty($return_url_parse['host']) &&
+                     $this->config?->auth?->return_url?->domains &&
+                     is_array($this->config->auth->return_url->domains->toArray()) &&
+                     in_array($return_url_parse['host'], $this->config->auth->return_url->domains->toArray())
+                ) {
+                    $this->checkLogin($login, $password);
+
+                    $name        =  $_SERVER['HTTP_USER_AGENT'] ?? '';
+                    $name        =  $name ?: "{$login}-" . crc32(uniqid());
+                    $token       = $this->modWebservice->webtokens()->createWebtoken($login, $name);
+                    $return_url .= parse_url($return_url, PHP_URL_QUERY)
+                        ? "&access_token={$token}"
+                        : "?access_token={$token}";
+
+                    return [
+                        'status'     => 'success',
+                        'return_url' => $return_url,
+                    ];
+                }
+            }
+
             $this->authLoginPassword($login, $password);
 
             return [
-                'status' => 'success'
+                'status' => 'success',
             ];
 
         } catch (\Exception $e) {
@@ -269,13 +294,6 @@ class Login extends \Common {
     }
 
 
-
-
-
-
-
-
-
     /**
      * @param array $user
      * @return bool
@@ -332,13 +350,12 @@ class Login extends \Common {
 
 
     /**
-     * Авторизация пользователя через форму
      * @param string $login
      * @param string $password
-     * @return bool
-     * @throws \Zend_Db_Exception
+     * @return array
+     * @throws Exception
      */
-    private function authLoginPassword(string $login, string $password): bool {
+    private function checkLogin(string $login, string $password): array {
 
         $blockNamespace = new SessionContainer('Block');
 
@@ -382,9 +399,7 @@ class Login extends \Common {
                 throw new Exception($this->translate->tr("Неверный пароль"));
             }
 
-            $this->auth($user);
-
-            return true;
+            return $user;
 
         } catch (\Exception $e) {
             $code = $e->getCode() > 200 && $e->getCode() < 600 ? $e->getCode() : 403;
@@ -406,6 +421,20 @@ class Login extends \Common {
         }
     }
 
+
+    /**
+     * Авторизация пользователя через форму
+     * @param string $login
+     * @param string $password
+     * @return void
+     * @throws \Zend_Db_Exception
+     * @throws Exception
+     */
+    private function authLoginPassword(string $login, string $password): void {
+
+        $user = $this->checkLogin($login, $password);
+        $this->auth($user);
+    }
 
 
     /**

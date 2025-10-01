@@ -7,25 +7,74 @@
       name="description"
       content="Core2 SwaggerUI"/>
   <title>Core2 SwaggerUI</title>
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
+  <link rel="stylesheet" href="swagger-ui.css" />
 </head>
 <body>
 <div id="swagger-ui"></div>
-<script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
-<script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js" crossorigin></script>
+<script src="swagger-ui-bundle.js" crossorigin></script>
+<script src="swagger-ui-standalone-preset.js" crossorigin></script>
 <script>
   window.onload = () => {
-    window.ui = SwaggerUIBundle({
-      urls: [
-        {"url":"../../openapi/core2.json", "name":"Common API"},
-      ],
-      dom_id: '#swagger-ui',
-      presets: [
-        SwaggerUIBundle.presets.apis,
-        SwaggerUIStandalonePreset
-      ],
-      layout: "StandaloneLayout",
-    });
+
+    fetch("../../openapi/sections")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (response) {
+        let urls = [];
+
+        if (typeof response === 'object' &&
+            Array.isArray(response.sections)
+        ) {
+
+          for (let section of response.sections) {
+            if (typeof section === 'object') {
+              urls.push({
+                "url": "../../openapi/sections/" + section.name,
+                "name": section.title
+              });
+            }
+          }
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        const primaryName  = searchParams.get("urls.primaryName");
+
+        if (primaryName) {
+          let primaryUrl = null;
+
+          for (let key = 0; key <= urls.length; key++) {
+            if (urls[key].name === primaryName) {
+              primaryUrl = urls[key];
+              urls.splice(key, 1);
+              break;
+            }
+          }
+
+          if (primaryUrl) {
+            let urlsNew = [ primaryUrl ];
+
+            for (const url of urls) {
+              urlsNew.push(url);
+            }
+
+            urls = urlsNew;
+          }
+        }
+
+        window.ui = SwaggerUIBundle({
+          urls: urls,
+          dom_id: '#swagger-ui',
+          // primaryName: primaryName || '',
+          urls_primary_name: primaryName || '',
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: "StandaloneLayout",
+          validatorUrl: false
+        });
+      });
   };
 </script>
 </body>
