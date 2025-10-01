@@ -1,6 +1,7 @@
 <?php
 require_once("class.ini.php");
 require_once 'Templater3.php';
+require_once 'Edit/Text.php';
 require_once __DIR__ . '/../Traits/Import.php';
 
 use Laminas\Session\Container as SessionContainer;
@@ -8,6 +9,7 @@ use Core2\Tool;
 use Core2\Registry;
 use Core2\Traits;
 use Core2\Theme;
+use Core2\Classes\Edit;
 
 $counter = 0;
 
@@ -600,6 +602,7 @@ class editTable extends initEdit {
 				$controls = $cellFields->controls[$this->main_table_id];
 				if (!empty($controls)) {
 					foreach ($controls as $key => $value) {
+                        $value['form_id'] = $this->main_table_id;
 						$controlGroups[$cellId]['html'][$key] = '';
 						if (!empty($value['group'])) {
                             $temp              = [];
@@ -690,6 +693,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['html'][$key] .= $attrs;
 						}
 						elseif ($value['type'] == 'text' || $value['type'] == 'edit') { // простое поле
+                            $ctrl = new Edit\Text($value);
 							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
@@ -2357,7 +2361,8 @@ $controlGroups[$cellId]['html'][$key] .= "
 						}
 
 						if (!empty($value['out'])) {
-							$controlGroups[$cellId]['html'][$key] .= str_replace("[VAL]", $value['default'], $value['out']);
+                            $out = !is_scalar($value['default']) ? $value['out'] : str_replace("[VAL]", $value['default'], $value['out']);
+							$controlGroups[$cellId]['html'][$key] .= $out;
 						}
 						$controlGroups[$cellId]['html'][$key] .= '</td></tr></table>';
 					}

@@ -584,8 +584,8 @@ class Email extends Db {
 
                 if ( ! empty($config->mail->username)) {
                     $mail->Username = $config->mail->username;
-                    $from_email = $config->mail->username;
-                    $from_name = '';
+                    //$from_email = $config->mail->username;
+                    //$from_name = '';
                 }
                 if ( ! empty($config->mail->password)) {
                     $mail->Password = $config->mail->password;
