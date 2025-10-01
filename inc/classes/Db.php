@@ -86,9 +86,6 @@ class Db {
             return $this->_core_config;
         }
 		if ($k === 'db2') {
-            if ( ! $this->config?->database2) {
-                $k = 'db';
-            } else {
                 if ($module !== 'admin') {
                     if ($reg->isRegistered($k_module)) return $reg->get($k_module);
                     $module_config = $this->getModuleConfig($module);
@@ -109,7 +106,6 @@ class Db {
                 }
                 return $reg->get('db2');
             }
-        }
 		if ($k === 'db') {
 //            if ($reg->isRegistered('invoker')) {
 //                $k_module = $k . "|" . $reg->get('invoker');
@@ -306,6 +302,12 @@ class Db {
 
 			    if ($database->sql_mode) {
 			        $db->query("SET SESSION sql_mode = ?", $database->sql_mode);
+                }
+
+                //set profiler
+                if ($this->_core_config && $this->_core_config->profile && $this->_core_config->profile->on) {
+                    $db->query("set profiling=1");
+                    $db->query("set profiling_history_size = 100");
                 }
             }
             elseif ($database->adapter === 'Pdo_Pgsql') {
