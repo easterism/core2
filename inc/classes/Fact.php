@@ -32,8 +32,14 @@ class Fact {
         if (!$user_key) $user_key = $auth->ID;
 //        if (!$user_key) $user_key = -1;
         $this->shm_id     = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($user_key)); //у аждого юзера своя очередь
+        $this->shm_public = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME']); //общая очередь
     }
 
+    /**
+     * Установка scope для сообщений
+     * @param $v
+     * @return $this
+     */
     public function __get($v)
     {
         if (!isset($this->messages[$v])) $this->messages[$v] = [];
@@ -52,7 +58,6 @@ class Fact {
 
         //каждый раз получаем id очереди заново, потому что она может быть очищена
         $q = !$is_public ? msg_get_queue($this->shm_id) : msg_get_queue($this->shm_public);
-
         if (! msg_send($q, self::TEXT, json_encode([$this->topic => $text]), false, true, $msg_err)) {
             $this->log->error($msg_err);
         };

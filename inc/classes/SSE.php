@@ -1,8 +1,6 @@
 <?php
 namespace Core2;
 
-require_once 'core2/inc/Interfaces/Event.php';
-
 /**
  * Class SSE
  * @package Core2
@@ -23,10 +21,10 @@ class SSE extends Db {
         $user_key = $auth->LIVEID;
         if (!$user_key) $user_key = $auth->ID;
 //        if (!$user_key) $user_key = -1;
+
         $shm_key = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($user_key)); //у каждого юзера своя очередь
-        if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь при запуске SSE
-        $eventClass = new MessageQueue();
-        $eventClass->setQueue(msg_get_queue($shm_key));
+        if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь юзера при запуске SSE
+        $eventClass = new MessageQueue(msg_get_queue($shm_key));
         $this->_events["Core2-Fact"] = $eventClass;
 
         //события модулей
