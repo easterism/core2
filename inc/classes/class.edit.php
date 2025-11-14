@@ -1395,41 +1395,59 @@ class editTable extends initEdit {
 							}
 							$select++;
 						}
-						elseif ($value['type'] == 'checkbox2') {
-							$temp = array();
-							if (is_array($this->selectSQL[$select])) {
-								foreach ($this->selectSQL[$select] as $k=>$v) {
-									$temp[] = array($k, $v);
-								}
-							} else {
-								$data = $this->db->fetchAll($this->replaceTCOL($arr[0], $this->selectSQL[$select]));
-								foreach ($data as $values) {
-									$temp[] = array(current($values), end($values));
-								}
-							}
-							$temp1 = is_array($value['default']) ? $value['default'] : explode(",", $value['default']);
-							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
-								foreach ($temp as $row) {
-									if (in_array($row[0], $temp1)) {
-										$controlGroups[$cellId]['html'][$key] .= "<div>{$row[1]}</div>";
-									}
-								}
-							} else {
-								foreach ($temp as $row) {
-									$controlGroups[$cellId]['html'][$key] .= "<div><label class=\"edit-checkbox2\"><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
-									if (in_array($row[0], $temp1)) {
-										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
-									}
-									$controlGroups[$cellId]['html'][$key] .= " {$attrs}/>";
-									if (is_array($row[1])) {
-										$row[1] = $row[1]['value'];
-									}
-									$controlGroups[$cellId]['html'][$key] .= $row[1] . "</label></div>";
-								}
-							}
-							$select++;
-						}
-						elseif ($value['type'] == self::TYPE_SELECT || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
+						elseif ($value['type'] == self::TYPE_CHECKBOX2) {
+                            $control_items = [];
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    $control_items[] = [$k, $v];
+                                }
+
+                            } else {
+                                $data = $this->db->fetchAll($this->replaceTCOL($arr[0], $this->selectSQL[$select]));
+                                foreach ($data as $values) {
+                                    $control_items[] = [current($values), end($values)];
+                                }
+                            }
+
+                            $selected_items = is_array($value['default'])
+                                ? $value['default']
+                                : array_map( 'trim', explode(",", $value['default']));
+
+                            if ($this->readOnly || in_array($field, $this->read_only_fields)) {
+                                foreach ($control_items as $control_item) {
+                                    if (in_array($control_item[0], $selected_items)) {
+                                        $controlGroups[$cellId]['html'][$key] .= "<div>{$control_item[1]}</div>";
+                                    }
+                                }
+
+                            } else {
+                                if (is_array($value['in']) && ! empty($value['in']['all_checked'])) {
+                                    $controlGroups[$cellId]['html'][$key] .=
+                                        "<div><label class=\"edit-checkbox2\">" .
+                                            "<input type=\"checkbox\" onchange=\"edit.checkboxAll(this, '{$field}')\"/> " . $this->_('Все') .
+                                        "</label></div>";
+                                }
+
+
+                                foreach ($control_items as $control_item) {
+                                    $checked = in_array($control_item[0], $selected_items)
+                                        ? " checked=\"checked\""
+                                        : '';
+
+                                    if (is_array($control_item[1])) {
+                                        $control_item[1] = $control_item[1]['value'];
+                                    }
+
+                                    $controlGroups[$cellId]['html'][$key] .=
+                                        "<div><label class=\"edit-checkbox2\">" .
+                                            "<input type=\"checkbox\" value=\"{$control_item[0]}\" name=\"control[{$field}][]\" {$checked} {$attrs}/>{$control_item[1]}" .
+                                        "</label></div>";
+                                }
+                            }
+
+                            $select++;
+
+                        } elseif ($value['type'] == self::TYPE_SELECT || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
                             $temp = [];
 
                             if (is_array($this->selectSQL[$select])) {
