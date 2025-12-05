@@ -379,7 +379,7 @@ class Panel {
                             $onclick = $tab['options']['onclick'];
 
                         } else {
-                            if ($this->is_ajax) {
+                            if ($this->is_ajax || !empty($tab['options']['ajax'])) {
                                 $onclick = "CoreUI.panel.loadContent('{$this->resource}', '{$tab['id']}', '{$url}', event);";
                             } else {
                                 $onclick = "if (event.button === 0 && ! event.ctrlKey) load('{$url}');";

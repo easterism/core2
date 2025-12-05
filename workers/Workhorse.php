@@ -16,6 +16,7 @@ class Workhorse
     public function __construct()
     {
         $this->_config = Registry::get('config');
+        Registry::set('worker', []);
     }
 
     public function run(\GearmanJob|Job $job, &$log) {
@@ -50,12 +51,20 @@ class Workhorse
             $controller = $this->requireController($workload->module, $workload->location);
             $action     = $workload->worker;
 
-            $db->db->insert("core_worker_jobs", [
+            $data = [
                 'id' => $id,
                 'time_start' => (new \DateTime())->format("Y-m-d H:i:s"),
                 'handler' => $handler,
                 'status' => 'start',
                 'executor' => "$controller->$action",
+            ];
+
+            $db->db->insert("core_worker_jobs", $data);
+
+            Registry::set('worker', [
+                'request' => $_SERVER['REQUEST_URI'],
+                'module' => $workload->module,
+                'action' => $action,
             ]);
 
             $error = null;
