@@ -419,7 +419,107 @@ var loadExt = function (url) {
 	});
 };
 
+/**
+ * Загружает в элемент содержимое ссылки из data-атрибута
+ * @param obj
+ * @returns {Promise<any|Awaited<null>>}
+ */
+async function fetchDataAndUpdateElement(obj) {
 
+	try {
+		const response = await fetch(elem.dataset.url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const contentType = response.headers.get('content-type');
+		if (contentType === null) return Promise.resolve(null);
+		else if (contentType.startsWith('application/json;')) {
+			//обработать json
+			return response.json();
+		}
+		else if (contentType.startsWith('text/')) {
+			// response.text()
+			// 	.then(data => {
+			// 		obj.innerHTML = data
+			// 	});
+
+			const arrayBuffer = await response.arrayBuffer(); // Get the response as an ArrayBuffer
+			const decoder = new TextDecoder('utf-8');
+			obj.innerHTML = decoder.decode(arrayBuffer);
+		}
+		else throw new Error(`Unsupported response content-type: ${contentType}`);
+	} catch (error) {
+		console.error('Error:', error);
+		obj.innerHTML = '<div class="alert alert-danger">' + error + '</div>';
+	}
+}
+
+function core2Clip(elem) {
+	const el = document.getElementById("order-code");
+	const copy_text = elem.dataset.copy;
+
+	const wrapper = document.createElement('div');
+	wrapper.className = 'copyable-wrapper';
+	elem.parentNode.insertBefore(wrapper, elem);
+	wrapper.appendChild(elem);
+
+	const copyIcon = document.createElement('span');
+	copyIcon.className = 'copy-icon';
+	copyIcon.innerHTML = '📋';
+	copyIcon.title = 'Копировать текст';
+	wrapper.appendChild(copyIcon);
+
+	copyIcon.addEventListener('click', async (e) => {
+		e.stopPropagation();
+
+		const textToCopy = elem.textContent || elem.innerText || elem.value;
+
+		try {
+			await navigator.clipboard.writeText(textToCopy);
+
+			// Визуальная обратная связь
+			const originalText = copyIcon.innerHTML;
+			copyIcon.innerHTML = '✅';
+			copyIcon.style.background = '#4CAF50';
+
+			setTimeout(() => {
+				copyIcon.innerHTML = originalText;
+				copyIcon.style.background = '';
+			}, 1500);
+
+		} catch (err) {
+			// Fallback для старых браузеров
+			console.error('Ошибка копирования:', err);
+			const textArea = document.createElement('textarea');
+			textArea.value = textToCopy;
+			textArea.style.position = 'fixed';
+			textArea.style.opacity = '0';
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+
+			try {
+				const successful = document.execCommand('copy');
+				if (successful) {
+					const originalText = copyIcon.innerHTML;
+					copyIcon.innerHTML = '✅';
+					copyIcon.style.background = '#4CAF50';
+
+					setTimeout(() => {
+						copyIcon.innerHTML = originalText;
+						copyIcon.style.background = '';
+					}, 1500);
+				}
+			} catch (err) {
+				console.error('Fallback: Ошибка копирования', err);
+				alert('Не удалось скопировать текст');
+			}
+
+			document.body.removeChild(textArea);
+		}
+	});
+
+}
 
 window.addEventListener(
 	"hashchange",
@@ -540,6 +640,10 @@ document.addEventListener("DOMContentLoaded",
 						const urls = nod.querySelectorAll("[data-url]");
 						for (const elem of urls) {
 							fetchDataAndUpdateElement(elem);
+						}
+						const cpy = nod.querySelectorAll("[data-copy]");
+						for (const elem of cpy) {
+							core2Clip(elem);
 						}
 					}
 				}
