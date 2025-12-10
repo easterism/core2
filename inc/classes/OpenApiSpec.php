@@ -71,10 +71,8 @@ class OpenApiSpec extends Db {
     /**
      * @return string
      * @throws \Exception
-     * @deprecated
      */
     public function render(): string {
-
 
         $this->module = 'admin';
         $mods     = $this->dataModules->getModuleList();
