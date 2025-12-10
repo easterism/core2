@@ -29,6 +29,7 @@ class Workhorse
         }
         $_SERVER = get_object_vars($workload->server);
         $id = $_SERVER['SERVER_NAME'] . "|" . $job->unique();
+
         // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
         if (!defined("DOC_ROOT")) define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
         if (!defined("DOC_PATH")) define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
@@ -62,9 +63,10 @@ class Workhorse
             $db->db->insert("core_worker_jobs", $data);
 
             Registry::set('worker', [
-                'request' => $_SERVER['REQUEST_URI'],
+                'request' => $_SERVER['REQUEST_URI'] ?? '',
                 'module' => $workload->module,
                 'action' => $action,
+                'job' => $id,
             ]);
 
             $error = null;
