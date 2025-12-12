@@ -7,14 +7,14 @@ require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 require_once 'Interfaces/File.php';
 
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/audit/Audit.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/monitoring/Monitoring.php";
-require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
+require_once __DIR__ . "/../mod/admin/classes/modules/InstallModule.php";
+require_once __DIR__ . "/../mod/admin/classes/settings/Settings.php";
+require_once __DIR__ . "/../mod/admin/classes/modules/Modules.php";
+require_once __DIR__ . "/../mod/admin/classes/roles/Roles.php";
+require_once __DIR__ . "/../mod/admin/classes/enum/Enum.php";
+require_once __DIR__ . "/../mod/admin/classes/audit/Audit.php";
+require_once __DIR__ . "/../mod/admin/classes/monitoring/Monitoring.php";
+require_once 'classes/Panel.php';
 require_once 'classes/FileUploader.php';
 
 use Laminas\Session\Container as SessionContainer;

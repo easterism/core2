@@ -51,7 +51,8 @@ try {
     if (( ! empty($options['config']) && is_string($options['config'])) || ( ! empty($options['c']) && is_string($options['c']))) {
         $conf_ini = ! empty($options['config']) ? $options['config'] : $options['c'];
     }
-    if (!file_exists($conf_ini)) {
+    $conf_ini = realpath($conf_ini);
+    if (!$conf_ini || !file_exists($conf_ini)) {
         throw new \Exception("Missing config file.");
     }
     define("DOC_ROOT", dirname($conf_ini) . "/");

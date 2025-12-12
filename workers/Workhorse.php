@@ -31,8 +31,12 @@ class Workhorse
         $id = $_SERVER['SERVER_NAME'] . "|" . $job->unique();
 
         // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
-        if (!defined("DOC_ROOT")) define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
-        if (!defined("DOC_PATH")) define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+        if (!defined("DOC_ROOT")) {
+            define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+        }
+        if (!defined("DOC_PATH")) {
+            define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+        }
 
         //$workload_size = $job->workloadSize();
 
