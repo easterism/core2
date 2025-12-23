@@ -1,6 +1,6 @@
 <?php
 namespace Core2;
-require_once 'Db.php';
+require_once 'Acl.php';
 use OpenApi\Attributes as OAT;
 
 #[OAT\OpenApi(
@@ -34,7 +34,7 @@ use OpenApi\Attributes as OAT;
 /**
  * @property \Core2\Model\Modules $dataModules
  */
-class OpenApiSpec extends Db {
+class OpenApiSpec extends Acl {
 
     private $_apis = [__FILE__];
 
@@ -68,6 +68,12 @@ class OpenApiSpec extends Db {
         ]
     )]
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setupAcl();
+    }
+
     /**
      * @return string
      * @throws \Exception
@@ -78,6 +84,7 @@ class OpenApiSpec extends Db {
         $mods     = $this->dataModules->getModuleList();
         foreach ($mods as $k => $data) {
             if (isset($this->_apis[$data['module_id']])) continue;
+            if (!$this->checkAcl($data['module_id'])) continue;
             $location      = $this->getModuleLocation($data['module_id']);
             $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
             if ( file_exists($location . "/$controller.php")) {
