@@ -832,4 +832,65 @@ class Tool {
         }
 
     }
+
+    /**
+     *
+     * @param array $array
+     * @param $search
+     * @param array $options -
+     * 'case_sensitive' => false,
+     * 'search_keys' => false,
+     * 'search_values' => true,
+     * 'deep_search' => false,
+     * 'regex' => false
+     * @return array
+     */
+    public static function arraySearch($array, $search, $options = []) {
+        $defaults = [
+            'case_sensitive' => false,
+            'search_keys' => false,
+            'search_values' => true,
+            'deep_search' => false,
+            'regex' => false
+        ];
+
+        $options = array_merge($defaults, $options);
+        $results = [];
+
+        $searchCallback = function($haystack) use ($search, $options) {
+            if ($options['regex']) {
+                return preg_match($search, $haystack) === 1;
+            } elseif ($options['case_sensitive']) {
+                return strpos($haystack, $search) !== false;
+            } else {
+                return stripos($haystack, $search) !== false;
+            }
+        };
+
+        foreach ($array as $key => $value) {
+            $found = false;
+
+            // Поиск в ключах
+            if ($options['search_keys'] && is_string($key)) {
+                $found = $searchCallback($key);
+            }
+
+            // Поиск в значениях
+            if (!$found && $options['search_values']) {
+                if (is_string($value)) {
+                    $found = $searchCallback($value);
+                } elseif ($options['deep_search'] && is_array($value)) {
+                    // Рекурсивный поиск во вложенных массивах
+                    $nestedResults = self::arraySearch($value, $search, $options);
+                    $found = !empty($nestedResults);
+                }
+            }
+
+            if ($found) {
+                $results[$key] = $value;
+            }
+        }
+
+        return $results;
+    }
 }
