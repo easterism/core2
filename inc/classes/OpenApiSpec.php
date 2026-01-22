@@ -79,7 +79,6 @@ class OpenApiSpec extends Acl {
      * @throws \Exception
      */
     public function render(): string {
-
         $this->module = 'admin';
         $mods     = $this->dataModules->getModuleList();
         foreach ($mods as $k => $data) {
@@ -87,9 +86,14 @@ class OpenApiSpec extends Acl {
             if (!$this->checkAcl($data['module_id'])) continue;
             $location      = $this->getModuleLocation($data['module_id']);
             $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
-            if ( file_exists($location . "/$controller.php")) {
+            $sources = [];
+            if (file_exists($location . "/$controller.php")) {
                 require_once $location . "/$controller.php";
-                $this->_apis[$data['module_id']] = $location . "/$controller.php";
+                $sources[] = $location . "/$controller.php";
+                if (is_dir($location . "/Api")) {
+                    $sources[] = $location . "/Api/";
+                }
+                $this->_apis[$data['module_id']] = $sources;
             }
         }
         $admin = 'core2/mod/admin/ModAdminApi.php';
@@ -107,93 +111,4 @@ class OpenApiSpec extends Acl {
     }
 
 
-    /**
-     * @return array
-     * @throws \Exception
-     */
-    public function getSections(): array {
-
-        $sections = [
-            [ 'name' => 'core2', 'title' => 'Core2', ]
-        ];
-
-        $mods = $this->dataModules->getModuleList();
-
-        foreach ($mods as $mod) {
-
-            if (isset($sections[$mod['module_id']])) {
-                continue;
-            }
-
-            $location   = $this->getModuleLocation($mod['module_id']);
-            $controller = "Mod" . ucfirst(strtolower($mod['module_id'])) . "Api";
-
-            if (file_exists("{$location}/{$controller}.php") && file_exists("{$location}/Api/schema.json")) {
-                $sections[$mod['module_id']] = [
-                    'name'  => $mod['module_id'],
-                    'title' => trim(strip_tags($mod['m_name']))
-                ];
-            }
-        }
-
-        return array_values($sections);
-    }
-
-
-    /**
-     * @param string $section
-     * @return array
-     * @throws \Exception
-     */
-    public function getSectionSchema(string $section): array {
-
-        $file_schema = '';
-
-        if ($section == 'core2') {
-            $file_schema = __DIR__ . '/../../schema.json';
-
-        } else {
-            $mods = $this->dataModules->getModuleList();
-
-            foreach ($mods as $mod) {
-                if ($mod['module_id'] == $section) {
-
-                    $location    = $this->getModuleLocation($mod['module_id']);
-                    $file_schema = "{$location}/Api/schema.json";
-                    break;
-                }
-            }
-        }
-
-        if (file_exists($file_schema)) {
-            $schema_content = file_get_contents($file_schema);
-            $schema         = json_decode($schema_content, true);
-
-            if ( ! is_array($schema)) {
-                return [];
-            }
-
-            $current_server = "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['HTTP_HOST']}";
-
-            $servers = [
-                [ 'url' => $current_server ]
-            ];
-
-            if ( ! empty($schema['servers']) && is_array($schema['servers'])) {
-                foreach ($schema['servers'] as $server) {
-                    if ( ! empty($server['url']) &&
-                         ! $current_server != $server['url']
-                    ) {
-                        $servers[] = $server;
-                    }
-                }
-            }
-
-            $schema['servers'] = $servers;
-
-            return $schema;
-        }
-
-        return [];
-    }
 }
