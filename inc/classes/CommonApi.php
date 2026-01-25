@@ -251,7 +251,7 @@ class CommonApi extends \Core2\Acl {
 
         } catch (\Zend_Db_Exception $e) {
             $this->log->error("Database error", $e);
-            $is_debug = $this->config?->system?->debug?->on || $this->auth->ADMIN;
+            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
 
             http_response_code(500);
             return [
@@ -261,7 +261,7 @@ class CommonApi extends \Core2\Acl {
 
         } catch (\Exception $e) {
             $this->log->error("Fatal error", $e);
-            $is_debug = $this->config?->system?->debug?->on || $this->auth->ADMIN;
+            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
 
             http_response_code(500);
             return [

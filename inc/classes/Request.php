@@ -1,6 +1,8 @@
 <?php
 namespace Core2;
 
+use Psr\Http\Message\ServerRequestInterface;
+use GuzzleHttp\Psr7\ServerRequest;
 
 /**
  *
@@ -32,11 +34,15 @@ class Request {
     const FORMAT_JSON = 'json';
     const FORMAT_FORM = 'form';
 
+    private ServerRequestInterface $request;
+    private array $cache = [];
 
-    /**
-     *
-     */
-    public function __construct() {
+    public function __construct(?ServerRequestInterface $request = null)
+    {
+        if (!$request) {
+            $request = ServerRequest::fromGlobals();
+        }
+        $this->request = $request;
 
         $this->query  = $_SERVER['QUERY_STRING'];
         $this->uri    = $_SERVER['REQUEST_URI'];
@@ -48,6 +54,23 @@ class Request {
         $this->props['COOKIE'] = $_COOKIE;
     }
 
+    public function __call($method, $args)
+    {
+        return $this->request->$method(...$args);
+    }
+
+    public function __get($property)
+    {
+        if (method_exists($this->request, $property)) {
+            return $this->request->$property();
+        }
+
+        if (method_exists($this, $property)) {
+            return $this->$property();
+        }
+
+        return null;
+    }
 
     /**
      * @return string
@@ -75,33 +98,6 @@ class Request {
         return $this->uri ?? '';
     }
 
-
-    /**
-     * @return array
-     */
-    public function getHeaders(): array {
-
-        $headers = [];
-
-        if (function_exists('getallheaders')) {
-            $headers = getallheaders();
-
-        } else {
-            foreach ($_SERVER as $name => $value) {
-                if (substr($name, 0, 5) == 'HTTP_') {
-                    $name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
-                    $headers[$name] = $value;
-
-                } else if ($name == "CONTENT_TYPE") {
-                    $headers["Content-Type"] = $value;
-                } else if ($name == "CONTENT_LENGTH") {
-                    $headers["Content-Length"] = $value;
-                }
-            }
-        }
-
-        return $headers;
-    }
 
 
     /**
@@ -146,18 +142,9 @@ class Request {
      * @return string
      */
     public function getQueryString(): string {
-
         return $this->query;
     }
 
-
-    /**
-     * @return array
-     */
-    public function getQueryParams(): array {
-
-        return $this->props['GET'] ?? [];
-    }
 
 
     /**
@@ -165,6 +152,7 @@ class Request {
      * @return mixed
      */
     public function getQuery(string $name): mixed {
+
 
         $queries = $this->props['GET'];
 
@@ -187,6 +175,37 @@ class Request {
     public function getFiles(): array {
 
         return $this->props['FILES'] ?? [];
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getFilesNormalize(): array {
+
+        $files = $this->props['FILES'] ?? [];
+
+        $files_normalized = [];
+
+        foreach ($files as $index => $file) {
+
+            if ( ! is_array($file['name'])) {
+                $files_normalized[$index][] = $file;
+                continue;
+            }
+
+            foreach ($file['name'] as $idx => $name) {
+                $files_normalized[$index][$idx] = [
+                    'name'     => $name,
+                    'type'     => $file['type'][$idx],
+                    'tmp_name' => $file['tmp_name'][$idx],
+                    'error'    => $file['error'][$idx],
+                    'size'     => $file['size'][$idx],
+                ];
+            }
+        }
+
+        return $files_normalized;
     }
 
 

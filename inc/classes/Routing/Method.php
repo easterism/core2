@@ -82,7 +82,6 @@ class Method {
 
             } else {
                 $class = new $this->action[0]($request);
-
                 if ( ! is_callable([$class, $this->action[1]])) {
                     throw new \Exception('Method not found: ' . $this->action[1]);
                 }
