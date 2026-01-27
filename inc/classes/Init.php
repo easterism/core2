@@ -303,6 +303,17 @@ class Init extends Acl {
                         $html = $schema->render();
                         return $html;
                     }
+                    if ($route['action'] == 'sections') {
+                        header('Content-Type: application/json');
+
+                        $this->setupAcl();
+                        if ( ! empty($route['params'])) {
+                            $section = key($route['params']);
+                            return json_encode($schema->getSectionSchema($section));
+                        }
+
+                        return json_encode([ 'sections' => $schema->getSections() ]);
+                    }
                 }
                 elseif ($route['module'] === 'sse') {
 
