@@ -643,16 +643,17 @@ class Db {
 
 
 	/**
+     * Проверка активности модуля
 	 * @param string $module_id
 	 * @return string
 	 */
 	final public function isModuleActive(string $module_id): bool {
         $id = explode("_", strtolower($module_id));
         $mod = $this->getModule($id[0]);
-        if (!$mod) return false;
+        if (!$mod || $mod['visible'] !== 'Y') return false;
         if (!empty($id[1])) {
-            if (empty(Registry::get("_modules")[$id[0]]['submodules'][$id[1]]) ||
-                Registry::get("_modules")[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+            if (empty($mod['submodules'][$id[1]]) ||
+                $mod['submodules'][$id[1]]['visible'] !== 'Y') return false;
         }
         return true;
 	}
