@@ -128,20 +128,13 @@ if ($config->debug->on) {
 
 //проверяем настройки для базы данных
 if ($config->database) {
-    if ($config->database->adapter === 'Pdo_Mysql') {
-        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
-        //подключаем собственный адаптер базы данных
-        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
-    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
-        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
-        $config->database->schema = $config->database->params->dbname;
-        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+    if (empty($config->database->adapter)) {
+        Error::Exception('Database adapter is empty!');
     }
     if (empty($config->database->params->dbname)) {
-        Error::Exception('No database found!');
+        Error::Exception('Database name is empty!');
     }
 }
-
 
 //конфиг стал только для чтения
 $config->setReadOnly();
