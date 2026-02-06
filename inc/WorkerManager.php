@@ -22,6 +22,7 @@ namespace Core2;
 require_once "classes/Registry.php";
 require_once "classes/Config.php";
 require_once "classes/Job.php";
+require_once "classes/Db.php";
 
 declare(ticks = 1);
 error_reporting(E_ALL | E_STRICT);
@@ -389,7 +390,7 @@ class WorkerManager {
             $_SERVER['SERVER_NAME'] = $opts["s"];
             $section = $_SERVER['SERVER_NAME'];
         }
-
+        $this->config['doc_root'] = dirname(realpath($opts["c"]));
         $config = [
             'database' => [
                 'adapter' => 'Pdo_Mysql',
@@ -725,6 +726,28 @@ class WorkerManager {
 
                 }
             }
+        }
+        if (isset($this->functions['Workhorse'])) {
+            $db = new Db();
+            $mods = $db->dataModules->getModuleList();
+            foreach ($mods as $k => $data) {
+                $location = $this->config['doc_root'] . "/mod/{$data['module_id']}/v{$data['version']}";
+                $name = "Mod" . ucfirst(strtolower($data['module_id'])) . "Worker";
+                if (!isset($this->functions[$name])) {
+                    $worker = $location . "/{$name}.php";
+                    if (file_exists($worker)) {
+                        $this->functions[$name] = [
+                            'name'  => 'Workhorse',
+                            'count' => 5,
+                            'path'  => $worker,
+                            'mod'   => $data['module_id'],
+                            'path_workhorse' => $this->functions['Workhorse']['path'],
+                            'priority' => 1
+                        ];
+                    }
+                }
+            }
+            unset($this->functions['Workhorse']);
         }
 //        echo "<PRE>";print_r($this->config);echo "</PRE>";//die;
 //        echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
@@ -1234,7 +1257,7 @@ class WorkerManager {
 
     /**
      * The way this daemon implementation starts workers.
-     *
+     * @deprecated
      * @param $worker_list
      * @param $timeouts
      * @return mixed
@@ -1345,9 +1368,16 @@ class WorkerManager {
             $w_full = $dd . "-" . $w;
             echo "Adding job $w_full\n";
             $this->toLog("Adding job $w_full ; timeout: " . $timeout, self::LOG_LEVEL_PROC_INFO);
-            require_once $this->functions[$w]['path'];
+            $horse = $this->functions[$w]['name'];
+            $path = $this->functions[$w]['path'];
+            $params = null;
+            if ($horse == 'Workhorse') {
+                $path = $this->functions[$w]['path_workhorse'];
+                $params = $this->functions[$w];
+            }
+            require_once $path;
             $func = "\\Core2\\" . $this->functions[$w]['name'];
-            $objects[$w_full] = new $func();
+            $objects[$w_full] = new $func($params);
 
             $request = "\0REQ" . // Магическое число (запрос)
                 pack('N', 1) . //CAN_DO

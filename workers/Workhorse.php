@@ -12,11 +12,15 @@ class Workhorse
 {
 
     private $_config;
+    private $_module;
+    private $_location;
 
-    public function __construct()
+    public function __construct(?array $params)
     {
         $this->_config = Registry::get('config');
-        Registry::set('worker', []);
+        $this->_module = $params['mod'];
+        $this->_location = $params['location'];
+
     }
 
     public function run(\GearmanJob|Job $job, &$log) {
