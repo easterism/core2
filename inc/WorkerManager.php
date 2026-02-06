@@ -212,6 +212,11 @@ class WorkerManager {
             $this->show_help("The function pcntl_fork was not found.");
         }
 
+        if (!function_exists("gearman_version")) {
+            $this->show_help("Gearman not installed.");
+        }
+        print gearman_version() . PHP_EOL;
+
         $this->pid = getmypid();
 
         /**
@@ -1202,7 +1207,7 @@ class WorkerManager {
             echo "ERROR:\n";
             echo "  " . wordwrap($msg, 72, "\n  ")."\n\n";
         }
-        echo "Gearman worker manager script\n\n";
+        echo "Core2 worker manager script\n\n";
         echo "USAGE:\n";
         echo "  # ".basename(__FILE__)." -h | -c CONFIG [-v] [-l LOG_FILE] [-d] [-v] [-a] [-P PID_FILE]\n\n";
         echo "OPTIONS:\n";

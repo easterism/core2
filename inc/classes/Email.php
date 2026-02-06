@@ -223,6 +223,7 @@ class Email extends Db {
 
                     $this->mail_data['from'] = "$server_name <noreply@{$server}>";
                 }
+
             }
 
             if ($this->isModuleActive('queue')) {
@@ -416,21 +417,6 @@ class Email extends Db {
                 $files[$i] = ['name' => $file['name'], 'file' => $uploadfile];
             }
         }
-        $w = $this->workerAdmin->doBackground('Mailer', [
-            'from'     => $from,
-            'to'       => $to,
-            'subj'     => $subj,
-            'body'     => $body,
-            'cc'       => $cc,
-            'bcc'      => $bcc,
-            'files'    => $files,
-            'reply'    => $reply,
-            'queue_id' => $queue_id,
-        ]);
-        if ($w) {
-            return;
-        }
-
 
         $config = Registry::get('config');
 
