@@ -193,7 +193,22 @@ class Init extends Acl {
         //сохраняем параметры сессии
         if ($this->config->session) {
             $sess_config = new SessionConfig();
-            $sess_config->setOptions($this->config->session);
+            $sess_config->setOptions([
+                'name' => $this->config->session->name ?? 'PHPSESSION',
+                'use_strict_mode' => true,
+                'use_cookies' => true,
+                'use_only_cookies' => true,
+                'cookie_httponly' => true,
+                'cookie_secure' => true,
+                'cookie_lifetime' => $this->config->session->cookie_lifetime ?? 7200,
+                'cookie_samesite' => 'Lax',
+                'gc_maxlifetime' => $this->config->session->remember_me_seconds ?? 7200,
+                'gc_probability' => 1,
+                'gc_divisor' => 100
+            ]);
+            if (!empty($this->config->session->save_path)) {
+                $sess_config->setSavePath($this->config->session->save_path);
+            }
             $sess_manager = new SessionManager($sess_config);
             //$sess_manager->setStorage(new SessionStorage());
 
@@ -207,6 +222,20 @@ class Init extends Acl {
                     $adapter = new Storage\Adapter\Memcached($options);
                     $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 } elseif ($this->config->session->phpSaveHandler === 'redis') {
+                    $options = new Storage\Adapter\RedisOptions();
+                    $options->setServer(!empty($this->config->session->options->server) ? $this->config->session->options->server->toArray() : ['host' => 'localhost', 'port' => 6379]);
+                    if (!empty($this->config->session->options->server->password)) {
+                        $options->setPassword($this->config->session->options->server->password);
+                    }
+                    $options->setDatabase(1)
+                        ->setNamespace($sess_config->getName())
+                        ->setTtl($this->config->session->options->ttl ?? $sess_config->getGcMaxlifetime());
+//                    $libOptions = [
+//                        'read_timeout' => 2.5,
+//                        'retry_interval' => 100
+//                    ];
+//                    $options->setLibOptions($libOptions);
+//                    $options->setSerializer(Redis::SERIALIZER_PHP);
                     $adapter = new Storage\Adapter\Redis($options);
 //                        $sess_manager->getStorage()->markImmutable();
                     $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
