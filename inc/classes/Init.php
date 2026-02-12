@@ -319,13 +319,14 @@ class Init extends Acl {
                 if (isset($route['api']) && $route['api'] === 'openapi') {
                     if ($route['action'] == 'core2.json') {
                         //генерация свагера для общего API
-                        require_once "OpenApiSpec.php";
+                        require_once "OpenApi.php";
                         header("Cache-Control: no-cache");
                         $schema = new \Core2\OpenApi();
                         $html = $schema->render();
                         return $html;
                     }
                     if ($route['action'] == 'sections') {
+                        require_once "OpenApiSpec.php";
                         header('Content-Type: application/json');
                         $schema = new \Core2\OpenApiSpec();
                         $this->setupAcl();
