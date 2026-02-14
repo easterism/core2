@@ -167,6 +167,18 @@ class Db {
                 //$container = null; // can be any configured PSR-11 container
 				//$sf = $container->get(StorageAdapterFactoryInterface::class);
                 if ($adapter_name == 'Filesystem') {
+//                    $options['cache_file_perm'] = 0644;    // Права доступа к файлам кэша
+//                    $options['dir_perm'] = 0755;          // Права доступа к директориям
+//                    $options['key_pattern'] = '/^[a-z0-9_]+$/i'; // Регулярное выражение для проверки ключей
+//                    $options['namespace'] = 'Core2';      // Префикс для ключей кэша
+//                    $options['ttl'] = 3600;              // Время жизни кэша (1 час)
+//                    $options['no_caching'] = false;       // Отключить кэширование (для отладки)
+//                    $options['read_control'] = true;      // Включить контроль чтения
+//                    $options['read_control_type'] = 'crc32'; // Тип контрольной суммы
+//                    $options['logging'] = false;          // Включить логирование
+//                    $options['logger'] = null;            // Объект логгера
+
+                    $options = new Storage\Adapter\FilesystemOptions($options);
                     $adapter  = new Storage\Adapter\Filesystem($options);
                 }
                 if ($adapter_name == 'Redis') {
@@ -185,7 +197,7 @@ class Db {
                 $plugin->getOptions()->setThrowExceptions(false);
                 $adapter->addPlugin($plugin);
 
-                $v = new Cache($adapter, $adapter_name);
+                $v = new Cache($adapter);
 				$reg->set($k, $v);
 			}
             else {
