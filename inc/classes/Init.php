@@ -231,7 +231,7 @@ class Init extends Acl {
                         $options->setPassword($this->config->session->options->server->password);
                     }
                     $options->setDatabase(1)
-                        ->setNamespace($sess_config->getName())
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Session")
                         ->setTtl($this->config->session->options->ttl ?? $sess_config->getGcMaxlifetime());
 //                    $libOptions = [
 //                        'read_timeout' => 2.5,
