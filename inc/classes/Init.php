@@ -199,7 +199,7 @@ class Init extends Acl {
                 'use_cookies' => true,
                 'use_only_cookies' => true,
                 'cookie_httponly' => true,
-                'cookie_secure' => true,
+                //'cookie_secure' => true,
                 'cookie_lifetime' => $this->config->session->cookie_lifetime ?? 7200,
                 'cookie_samesite' => 'Lax',
                 'gc_maxlifetime' => $this->config->session->remember_me_seconds ?? 7200,
@@ -208,6 +208,10 @@ class Init extends Acl {
             ]);
             if (!empty($this->config->session->save_path)) {
                 $sess_config->setSavePath($this->config->session->save_path);
+            }
+            if (!empty($this->config->session->cookie_secure)) {
+                //cookie работают только по HTTPS
+                $sess_config->setCookieSecure($this->config->session->cookie_secure);
             }
             $sess_manager = new SessionManager($sess_config);
             //$sess_manager->setStorage(new SessionStorage());
@@ -220,7 +224,6 @@ class Init extends Acl {
 
                 if ($this->config->session->saveHandler === 'memcached') {
                     $adapter = new Storage\Adapter\Memcached($options);
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 } elseif ($this->config->session->phpSaveHandler === 'redis') {
                     $options = new Storage\Adapter\RedisOptions();
                     $options->setServer(!empty($this->config->session->options->server) ? $this->config->session->options->server->toArray() : ['host' => 'localhost', 'port' => 6379]);
@@ -237,9 +240,9 @@ class Init extends Acl {
 //                    $options->setLibOptions($libOptions);
 //                    $options->setSerializer(Redis::SERIALIZER_PHP);
                     $adapter = new Storage\Adapter\Redis($options);
-//                        $sess_manager->getStorage()->markImmutable();
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 }
+//                $sess_manager->getStorage()->markImmutable();
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
 
             //сохраняем менеджер сессий
