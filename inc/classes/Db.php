@@ -170,9 +170,14 @@ class Db {
                     $adapter  = new Storage\Adapter\Filesystem($options);
                 }
                 if ($adapter_name == 'Redis') {
-                    $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
-                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
                     unset($options['cache_dir']);
+                    $options = new Storage\Adapter\RedisOptions($options);
+                    if (!empty($this->_core_config->cache->options->server->password)) {
+                        $options->setPassword($this->_core_config->cache->options->server->password);
+                    }
+                    $options->setDatabase(2)
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Core2")
+                        ->setTtl($this->_core_config->cache->options->ttl ?? 172800);
                     $adapter  = new Storage\Adapter\Redis($options);
                 }
                 $adapter->addPlugin(new Storage\Plugin\Serializer());

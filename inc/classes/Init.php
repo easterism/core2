@@ -289,7 +289,7 @@ class Init extends Acl {
     public function dispatch() {
 
         // Парсим маршрут
-        $route = (new Router())::$route;
+        $route = (new Router())->getRoute();
         if (isset($route['api']) && !$this->auth) {
             if ($route['api'] == 'auth') {
                 //это запросы на регистрацию, восстановление пароля или OAUTH
