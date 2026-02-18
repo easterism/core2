@@ -187,7 +187,7 @@ class Db {
                     if (!empty($this->_core_config->cache->options->server->password)) {
                         $options->setPassword($this->_core_config->cache->options->server->password);
                     }
-                    $options->setDatabase(2)
+                    $options->setDatabase(0)
                         ->setNamespace($_SERVER['SERVER_NAME'] . ":Core2")
                         ->setTtl($this->_core_config->cache->options->ttl ?? 172800);
                     $adapter  = new Storage\Adapter\Redis($options);
