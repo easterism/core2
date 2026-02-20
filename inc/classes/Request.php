@@ -86,13 +86,13 @@ class Request {
 
 
     /**
+     * @deprecated
      * @param string $name
      * @return mixed
      */
     public function getQuery(string $name): mixed {
 
-
-        $queries = $this->props['GET'];
+        $queries = $this->getQueryParams();
 
         return $queries[$name] ?? null;
     }
