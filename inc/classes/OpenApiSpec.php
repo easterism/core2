@@ -1,7 +1,7 @@
 <?php
 namespace Core2;
 require_once 'Acl.php';
-
+require_once "OpenApi.php";
 
 /**
  * @property \Core2\Model\Modules $dataModules
@@ -204,22 +204,33 @@ class OpenApiSpec extends Acl {
         $location    = $this->getModuleLocation($module_name);
         $file_schema = "{$location}/Api/schema.json";
 
+        $section_schema = [];
         if (file_exists($file_schema)) {
             $schema_content = file_get_contents($file_schema);
             $section_schema = json_decode($schema_content, true);
 
-        } else {
-            $controller      = "Mod" . ucfirst(strtolower($module_name)) . "Api";
-            $controller_path = "{$location}/{$controller}.php";
+        }
+        $controller      = "Mod" . ucfirst(strtolower($module_name)) . "Api";
+        $controller_path = "{$location}/{$controller}.php";
 
-            if (file_exists($controller_path) && $this->issetSwaggerAnnotationsInFile($controller_path)) {
-                $section_schema = (\OpenApi\Generator::scan([$controller_path, "{$location}/Api/"], ['exclude' => ['vendor'], 'pattern' => '*.php']))->toJson();
+        if (file_exists($controller_path)) {
+            require_once $controller_path;
+            $schema = (\OpenApi\Generator::scan([__DIR__ . "/OpenApi.php", $controller_path, "{$location}/Api/"],
+                ['exclude' => ['vendor'], 'pattern' => '*.php']
+            ))->toJson();
+            $schema = json_decode($schema, true);
+            if (!$section_schema) {
+                return ! empty($schema) ? $schema : [];
             }
         }
+        if (!empty($schema['paths'])) {
+            $section_schema['paths'] = array_merge($section_schema['paths'], $schema['paths']);
+        }
+        if (!empty($schema['components'])) {
+            $section_schema['components'] = array_merge($section_schema['components'], $schema['components']);
+        }
 
-        return ! empty($section_schema)
-            ? $section_schema
-            : [];
+        return $section_schema;
     }
 
 
