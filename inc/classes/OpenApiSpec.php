@@ -1,114 +1,267 @@
 <?php
 namespace Core2;
 require_once 'Acl.php';
-use OpenApi\Attributes as OAT;
 
-#[OAT\OpenApi(
-    security: [['bearerAuth' => []]]
-)]
-#[OAT\Info(
-    version: '2.9.0',
-    description: 'Common API',
-    title: 'CORE2',
-    contact: new OAT\Contact(
-        name: 'mister easter',
-        email: 'easter.by@gmail.com'
-    )
-)]
-#[OAT\Server(url: SERVER)]
-#[OAT\Components(securitySchemes: [
-        new OAT\SecurityScheme(
-            type: "http",
-            securityScheme: "bearerAuth",
-            scheme: "bearer",
-            in: "header",
-            bearerFormat: "JWT"
-        ),
-        new OAT\SecurityScheme(
-            type: "http",
-            securityScheme: "basicAuth",
-            scheme: "basic",
-        )
-    ]
-)]
+
 /**
  * @property \Core2\Model\Modules $dataModules
  */
 class OpenApiSpec extends Acl {
 
-    private $_apis = [__FILE__];
-
-    #[OAT\Get(
-        path: '/',
-        operationId: 'getModules',
-        summary: 'Данные для главного меню',
-        tags: ['core2'],
-        responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'информация о пользователе и список доступных модулей',
-                content: new OAT\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OAT\Property(property: 'system_name', type: 'string', title: 'Название системы'),
-                        new OAT\Property(property: 'id', type: 'integer', title: 'ID текущего пользователя'),
-                        new OAT\Property(property: 'name', type: 'string', title: 'Имя текущего пользователя'),
-                        new OAT\Property(property: 'login', type: 'string', title: 'Login текущего пользователя'),
-                        new OAT\Property(property: 'avatar', type: 'string', title: 'ссылка на аватар'),
-                        new OAT\Property(property: 'required_location', type: 'boolean', title: 'должен ли пользователь предоставить данные о местоположении'),
-                        new OAT\Property(property: 'modules', title: 'System admin', type: 'object'),
-                    ]
-
-                ),
-            ),
-            new OAT\Response(
-                response: 403,
-                description: 'Unauthorized access',
-            ),
-        ]
-    )]
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->setupAcl();
-    }
-
     /**
-     * @return string
+     * @return array
      * @throws \Exception
      */
-    public function render(): string {
-        $this->module = 'admin';
-        $mods     = $this->dataModules->getModuleList();
-        foreach ($mods as $k => $data) {
-            if (isset($this->_apis[$data['module_id']])) continue;
-            if (!$this->checkAcl($data['module_id'])) continue;
-            $location      = $this->getModuleLocation($data['module_id']);
-            $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
-            $sources = [];
-            if (file_exists($location . "/$controller.php")) {
-                require_once $location . "/$controller.php";
-                $sources[] = $location . "/$controller.php";
-                if (is_dir($location . "/Api")) {
-                    $sources[] = $location . "/Api/";
-                }
-                $this->_apis[$data['module_id']] = $sources;
+    public function getSections(): array {
+
+        $sections = [
+            [ 'name' => 'all', 'title' => 'Все', ],
+            [ 'name' => 'core2', 'title' => 'Core2', ]
+        ];
+
+        $modules_list = $this->dataModules->getModuleList();
+        $modules      = [];
+
+        foreach ($modules_list as $module) {
+            if ($this->checkAcl($module['module_id'])) {
+                $modules[$module['module_id']] = $module;
             }
         }
-        $admin = 'core2/mod/admin/ModAdminApi.php';
-        require_once $admin;
-        $this->_apis[] = $admin;
-        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
 
-        $openapi = \OpenApi\Generator::scan($this->_apis,
-            ['exclude' => ['vendor'], 'pattern' => '*.php']
-        );
+        foreach ($modules as $mod) {
+            $location        = $this->getModuleLocation($mod['module_id']);
+            $controller_path = "{$location}/Mod" . ucfirst(strtolower($mod['module_id'])) . "Api.php";
 
-        header('Content-Type: application/json');
-        echo $openapi->toJson();
-        return "";
+            if (file_exists($controller_path)) {
+                if (file_exists("{$location}/Api/schema.json")) {
+                    $sections[$mod['module_id']] = [
+                        'name'  => $mod['module_id'],
+                        'title' => trim(strip_tags($mod['m_name']))
+                    ];
+
+                } else {
+                    if ($this->issetSwaggerAnnotationsInFile($controller_path)) {
+                        $openapi        = \OpenApi\Generator::scan([$controller_path, "{$location}/Api/"], ['exclude' => ['vendor'], 'pattern' => '*.php']);
+                        $section_scheme = $openapi->toJson();
+
+                        if ( ! empty($section_scheme)) {
+                            $section_scheme = json_decode($section_scheme, true);
+
+                            if (count($section_scheme) > 1) {
+                                $sections[$mod['module_id']] = [
+                                    'name'  => $mod['module_id'],
+                                    'title' => trim(strip_tags($mod['m_name']))
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        return array_values($sections);
     }
 
 
+    /**
+     * @param string $section
+     * @return array
+     * @throws \Exception
+     */
+    public function getSectionSchema(string $section): array {
+
+        if ($section == 'core2') {
+            $section_schema = $this->getSchemeCore2();
+
+        } elseif ($section == 'all') {
+            $section_schema = $this->getSchemeAll();
+
+        } else {
+            $mods = $this->dataModules->getModuleList();
+
+            foreach ($mods as $mod) {
+                if ($mod['module_id'] == $section && $this->checkAcl($mod['module_id'])) {
+                    $section_schema = $this->getSchemeModule($mod['module_id']);
+                    break;
+                }
+            }
+        }
+
+
+        if ( ! empty($section_schema) && is_array($section_schema)) {
+
+            $current_server = "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['HTTP_HOST']}" . DOC_PATH;
+            $current_server = rtrim($current_server, '/');
+
+            $servers = [
+                [ 'url' => $current_server ]
+            ];
+
+            if ( ! empty($section_schema['servers']) && is_array($section_schema['servers'])) {
+                foreach ($section_schema['servers'] as $server) {
+                    if ( ! empty($server['url']) && $current_server != rtrim($server['url'], '/')) {
+                        $servers[] = $server;
+                    }
+                }
+            }
+
+            $section_schema['servers'] = $servers;
+
+            return $section_schema;
+        }
+
+        return [];
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getSchemeCore2(): array {
+
+        $schema_content = file_get_contents(__DIR__ . '/../../schema.json');
+        return json_decode($schema_content, true);
+    }
+
+
+    /**
+     * @return array
+     * @throws \Exception
+     */
+    private function getSchemeAll(): array {
+
+        $sections = [];
+        $sections[] = ['title' => 'Core2', 'scheme' => $this->getSchemeCore2()];
+
+        $mods = $this->dataModules->getModuleList();
+
+        foreach ($mods as $mod) {
+            if ($this->checkAcl($mod['module_id'])) {
+                $scheme_module = $this->getSchemeModule($mod['module_id']);
+
+                if ($scheme_module) {
+                    $sections[] = ['title' => $mod['m_name'], 'scheme' => $scheme_module];
+                }
+            }
+        }
+
+
+        $result = $sections[0]['scheme'];
+        $result['info']['title'] = $this->config->system->name;
+
+        foreach ($sections as $section) {
+
+            $scheme        = $section['scheme'];
+            $section_title = trim(strip_tags($section['title']));
+
+            if ( ! empty($scheme['components']) && ! empty($scheme['components']['schemas'])) {
+                foreach ($scheme['components']['schemas'] as $component_name => $component_schema) {
+
+                    if (empty($result['components']['schemas'][$component_name])) {
+                        $result['components']['schemas'][$component_name] = $component_schema;
+                    }
+                }
+            }
+
+            if ( ! empty($scheme['paths'])) {
+                foreach ($scheme['paths'] as $path => $path_schema) {
+
+                    if (empty($result['paths'][$path])) {
+
+                        foreach ($path_schema as $http_method => $method_scheme) {
+                            $tags = ! empty($method_scheme['tags']) ? $method_scheme['tags'] : [];
+
+                            if ( ! empty($tags[0])) {
+                                if ( ! str_starts_with($tags[0], $section_title)) {
+                                    $tags[0] = "{$section_title} - {$tags[0]}";
+                                }
+
+                            } else {
+                                $tags[0] = $section_title;
+                            }
+
+                            $path_schema[$http_method]['tags'] = $tags;
+                        }
+
+                        $result['paths'][$path] = $path_schema;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @param string $module_name
+     * @return array
+     * @throws \Exception
+     */
+    private function getSchemeModule(string $module_name): array {
+
+        $location    = $this->getModuleLocation($module_name);
+        $file_schema = "{$location}/Api/schema.json";
+
+        if (file_exists($file_schema)) {
+            $schema_content = file_get_contents($file_schema);
+            $section_schema = json_decode($schema_content, true);
+
+        } else {
+            $controller      = "Mod" . ucfirst(strtolower($module_name)) . "Api";
+            $controller_path = "{$location}/{$controller}.php";
+
+            if (file_exists($controller_path) && $this->issetSwaggerAnnotationsInFile($controller_path)) {
+                $section_schema = (\OpenApi\Generator::scan([$controller_path, "{$location}/Api/"], ['exclude' => ['vendor'], 'pattern' => '*.php']))->toJson();
+            }
+        }
+
+        return ! empty($section_schema)
+            ? $section_schema
+            : [];
+    }
+
+
+    /**
+     * @param array $schemes
+     * @return array
+     */
+    private function mergeSchemes(array $schemes): array {
+
+    }
+
+
+    /**
+     * @param string $filePath
+     * @return bool
+     */
+    private function issetSwaggerAnnotationsInFile(string $filePath): bool {
+
+        try {
+            $context  = new \OpenApi\Context(['filename' => $filePath]);
+            $analysis = new \OpenApi\Analysis([], $context);
+            $analyser = new \OpenApi\Analysers\ReflectionAnalyser();
+
+            $analysis->addAnalysis($analyser->fromFile($filePath, $context));
+
+            $operations = $analysis->getAnnotationsOfType([
+                \OpenApi\Annotations\Get::class,
+                \OpenApi\Annotations\Post::class,
+                \OpenApi\Annotations\Put::class,
+                \OpenApi\Annotations\Delete::class,
+                \OpenApi\Annotations\Patch::class,
+                \OpenApi\Annotations\Options::class,
+                \OpenApi\Annotations\Head::class,
+                \OpenApi\Annotations\Trace::class,
+            ]);
+
+            return count($operations) > 0;
+
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        return false;
+    }
 }
