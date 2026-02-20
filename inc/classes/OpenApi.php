@@ -15,7 +15,7 @@ use OpenApi\Attributes as OAT;
         email: 'easter.by@gmail.com'
     )
 )]
-#[OAT\Server(url: SERVER)]
+//#[OAT\Server(url: SERVER)]
 #[OAT\Components(securitySchemes: [
         new OAT\SecurityScheme(
             type: "http",
@@ -99,7 +99,7 @@ class OpenApi extends Acl {
         $admin = 'core2/mod/admin/ModAdminApi.php';
         require_once $admin;
         $this->_apis[] = $admin;
-        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
+        if (!defined("SERVER")) define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
 
         $openapi = \OpenApi\Generator::scan($this->_apis,
             ['exclude' => ['vendor'], 'pattern' => '*.php']
