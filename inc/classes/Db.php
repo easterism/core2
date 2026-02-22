@@ -6,6 +6,7 @@ require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
 require_once 'Fact.php';
+require_once 'Core_Db_Adapter_Pdo_Mysql.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
@@ -159,7 +160,7 @@ class Db {
                     $options = $this->config->cache->options->toArray();
                 }
                 else { //DEPRECATED
-                    if ($adapter_name == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                    if ($adapter_name == 'Filesystem' && !empty($this->config->cache)) { //если кеш задан в основном конфиге
                         $options['cache_dir'] = $this->config->cache;
                     }
                 }
@@ -489,8 +490,8 @@ class Db {
 
             // запись данных запроса в лог
             $w = $this->workerAdmin->doBackground('Logger', [
-                'user_id' => $data['user_id'],
-                'sid' => $data['sid'],
+                'user_id'  => $data['user_id'],
+                'sid'       => $data['sid'],
             ]);
             if ($w) {
                 return;
