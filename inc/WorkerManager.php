@@ -22,6 +22,8 @@ namespace Core2;
 require_once "classes/Registry.php";
 require_once "classes/Config.php";
 require_once "classes/Job.php";
+require_once "classes/Db.php";
+require_once __DIR__ . "/../workers/Workhorse.php";
 
 declare(ticks = 1);
 error_reporting(E_ALL | E_STRICT);
@@ -389,7 +391,7 @@ class WorkerManager {
             $_SERVER['SERVER_NAME'] = $opts["s"];
             $section = $_SERVER['SERVER_NAME'];
         }
-
+        $this->config['doc_root'] = dirname(realpath($opts["c"]));
         $config = [
             'database' => [
                 'adapter' => 'Pdo_Mysql',
@@ -686,7 +688,8 @@ class WorkerManager {
                         $this->functions[$function]['dedicated_only'] = true;
                         $this->functions[$function]["count"] = $this->config['functions'][$function]['dedicated_count'];
 
-                    } else {
+                    }
+                    else {
 
                         $min_count = max($this->do_all_count, 1);
                         if (!empty($this->config['functions'][$function]['count'])) {
@@ -725,6 +728,28 @@ class WorkerManager {
 
                 }
             }
+        }
+        if (isset($this->functions['Workhorse'])) {
+            $db = new Db();
+            $mods = $db->dataModules->getModuleList();
+            foreach ($mods as $k => $data) {
+                $location = $this->config['doc_root'] . "/mod/{$data['module_id']}/v{$data['version']}";
+                $name = "Mod" . ucfirst(strtolower($data['module_id'])) . "Worker";
+                if (!isset($this->functions[$name])) {
+                    $worker = $location . "/{$name}.php";
+                    if (file_exists($worker)) {
+                        $this->functions[$name] = [
+                            'name'  => 'Workhorse',
+                            'count' => 2,
+                            'path'  => $worker,
+                            'mod'   => $data['module_id'],
+                            'path_workhorse' => $this->functions['Workhorse']['path'],
+                            'priority' => 1
+                        ];
+                    }
+                }
+            }
+            unset($this->functions['Workhorse']);
         }
 //        echo "<PRE>";print_r($this->config);echo "</PRE>";//die;
 //        echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
@@ -1232,88 +1257,6 @@ class WorkerManager {
         exit();
     }
 
-    /**
-     * The way this daemon implementation starts workers.
-     *
-     * @param $worker_list
-     * @param $timeouts
-     * @return mixed
-     */
-    private function start_lib_worker($worker_list, $timeouts = array()) {
-
-        $thisWorker = new \GearmanWorker();
-
-        $thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
-        $thisWorker->addOptions(GEARMAN_WORKER_GRAB_UNIQ);
-
-        $connected = false;
-
-        foreach ($this->servers as $s) {
-            $this->toLog("Adding server $s", self::LOG_LEVEL_PROC_INFO);
-            try {
-                $thisWorker->addServers($s);
-            } catch (\GearmanException $e) {
-                //если сервер недоступен
-            }
-        }
-
-        $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
-        $dd = trim($dd, '-');
-        foreach ($worker_list as $w) {
-            $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : 0);
-            $w = $dd . "-" . $w;
-            $this->toLog("Adding job $w ; timeout: " . $timeout, self::LOG_LEVEL_WORKER_INFO);
-            $thisWorker->addFunction($w, array($this, "do_job"), $this, $timeout);
-        }
-        $thisWorker->setTimeout(5000); //столько воркер будет ждять задачу от сервера
-
-        register_shutdown_function(array($this, 'fatal_handler'));
-
-        $start = time();
-        $died = 0;
-
-        while (!$this->stop_work) {
-
-            if (@$thisWorker->work() ||
-                $thisWorker->returnCode() == GEARMAN_IO_WAIT ||
-                $thisWorker->returnCode() == GEARMAN_NO_JOBS) {
-
-                if ($thisWorker->returnCode() == GEARMAN_SUCCESS) continue;
-
-                if (!@$thisWorker->wait()) {
-                    //воркер в состоянии ожидания задачи от job-сервера
-                    if ($thisWorker->returnCode() == GEARMAN_NO_ACTIVE_FDS) {
-                        //после ожидания выяснилось, что сервер не отвечает
-                        //ждем еще 5 сек
-                        $this->toLog('Failed to connect to Gearman Gerver.'. PHP_EOL, self::LOG_LEVEL_WORKER_INFO);
-                        $died++;
-                        sleep(5);
-                    }
-                }
-
-            }
-//            if ($thisWorker->returnCode() !== GEARMAN_TIMEOUT) echo $thisWorker->error().PHP_EOL;
-
-            /**
-             * Check the running time of the current child. If it has
-             * been too long, stop working.
-             */
-            if ($this->max_run_time > 0 && time() - $start > $this->max_run_time) {
-                $this->toLog("Been running too long, exiting", self::LOG_LEVEL_WORKER_INFO);
-                $this->stop_work = true;
-            }
-
-            if (!empty($this->config["max_runs_per_worker"]) && $this->job_execution_count >= $this->config["max_runs_per_worker"]) {
-                $this->toLog("Ran $this->job_execution_count jobs which is over the maximum({$this->config['max_runs_per_worker']}), exiting", self::LOG_LEVEL_WORKER_INFO);
-                $this->stop_work = true;
-            }
-
-        }
-
-        $thisWorker->unregisterAll();
-
-    }
-
     private function start_lib_worker2($worker_list, $timeouts = array()) {
 //        ob_implicit_flush(true);
         $worker = null;
@@ -1343,11 +1286,19 @@ class WorkerManager {
         foreach ($worker_list as $w) {
             $timeout = (isset($timeouts[$w]) ? $timeouts[$w] : 0);
             $w_full = $dd . "-" . $w;
-            echo "Adding job $w_full\n";
             $this->toLog("Adding job $w_full ; timeout: " . $timeout, self::LOG_LEVEL_PROC_INFO);
-            require_once $this->functions[$w]['path'];
-            $func = "\\Core2\\" . $this->functions[$w]['name'];
-            $objects[$w_full] = new $func();
+            $horse = $this->functions[$w]['name'];
+            $path = $this->functions[$w]['path'];
+            $params = null;
+            $func = "\\Core2\\" . $w;
+            if ($horse == 'Workhorse') {
+                require_once $this->functions[$w]['path_workhorse'];
+                $params = $this->functions[$w];
+                $func = $w;
+            }
+            require_once $path;
+
+            $objects[$w_full] = new $func($params);
 
             $request = "\0REQ" . // Магическое число (запрос)
                 pack('N', 1) . //CAN_DO
@@ -1436,7 +1387,6 @@ class WorkerManager {
 
                             if (json_last_error() === JSON_ERROR_NONE) {
                                 // Выполняем задачу
-                                $result = "";
                                 $log = array();
 //                                $f = fopen("/home/easter/job.log", "a");
 //                                fwrite($f, $this->pid . " " . $job . "\n");
@@ -1446,9 +1396,13 @@ class WorkerManager {
                                     foreach ($log as $item) {
                                         $this->toLog("Function $function said: $item", self::LOG_LEVEL_WORKER_INFO);
                                     }
+                                    $result_len = 0;
+                                    if ($result) {
+                                        $result_len = strlen($result);
+                                    }
                                     $request = "\0REQ" . // Магическое число (запрос)
                                         pack('N', 13) . //WORK_COMPLETE
-                                        pack('N', strlen($job) + strlen($result) + 1) .
+                                        pack('N', strlen($job) + $result_len + 1) .
                                         $job . "\0" .
                                         $result;
                                     fwrite($worker, $request);
@@ -1546,143 +1500,13 @@ class WorkerManager {
         }
     }
 
-    /**
-     * Wrapper function handler for all registered functions
-     * This allows us to do some nice logging when jobs are started/finished
-     */
-    public function do_job($job) {
-
-        static $objects;
-
-        if ($objects === null) $objects = array();
-
-//        $w = $job->workload();
-
-        $h = $job->handle();
-//        echo "<PRE>";print_r($job->returnCode());echo "</PRE>\n";//die;
-
-//        echo $h . chr(10);//die;
-//        echo $job->unique() .chr(10);//die;
-        //TODO control handlers
-        $job_name = $job->functionName();
-        $job_name = explode("-", $job_name);
-        $job_name = end($job_name);
-
-        if ($this->prefix) {
-            $func = $this->prefix . $job_name;
-        } else {
-            $func = $job_name;
-        }
-
-        //имя воркера с учетом хоста
-        $job_name_log = $this->getRealJobName($job_name);
-
-        if (empty($objects[$job_name]) && !class_exists("\Core2\\" . $func, false)) {
-            //инициализация воркеров
-            if (!isset($this->functions[$job_name])) {
-                $this->toLog("Function $func is not a registered job name");
-            }
-
-            require_once $this->functions[$job_name]["path"];
-
-            if (class_exists("\Core2\\" . $func) && method_exists("\Core2\\" . $func, "run")) {
-
-                $this->toLog("Creating a $func object", self::LOG_LEVEL_WORKER_INFO);
-                $ns_func = "\Core2\\$func";
-                $objects[$job_name] = new $ns_func();
-
-            }
-            $this->toLog("($h) Starting Job!: $job_name_log", self::LOG_LEVEL_WORKER_INFO);
-        }
-
-        $log = array();
-
-        /**
-         * Run the real function here
-         */
-        $result = null;
-        if (isset($objects[$job_name])) {
-//            echo $job_name_log.PHP_EOL;
-            $this->toLog("($h) Calling object for $job_name_log.", self::LOG_LEVEL_DEBUG);
-            try {
-                $job->sendData($this->pid_file);
-                $result = $objects[$job_name]->run($job, $log);
-                if ($result && $job->handle()) {
-                    $job->sendComplete('done');
-                    $log[] = "Finish Job: $job_name_log";
-                }
-                else {
-                    $job->sendFail();
-//                    echo "!!!FAIL $job_name_log \n";
-                }
-            } catch (\Exception $e) {
-                $this->toLog($e->getMessage(), self::LOG_LEVEL_WORKER_INFO);
-                $job->sendException($e->getMessage());
-                $job->sendFail();
-            }
-        }
-        else {
-            $this->toLog("($h) FAILED to find a function or class for $job_name_log.", self::LOG_LEVEL_INFO);
-            $job->sendException("Object $job_name_log not found");
-            $job->sendFail();
-        }
-
-//        echo "<PRE>";print_r($job->returnCode());echo "</PRE>\n";//die;
-
-        if (!empty($log)) {
-            foreach ($log as $l) {
-
-                if (!is_scalar($l)) {
-                    $l = explode("\n", trim(print_r($l, true)));
-                } elseif (strlen($l) > 256) {
-                    $l = substr($l, 0, 256)."...(truncated)";
-                }
-
-                if (is_array($l)) {
-                    foreach ($l as $ln) {
-                        $this->toLog("($h) $ln", self::LOG_LEVEL_WORKER_INFO);
-                    }
-                } else {
-                    $this->toLog("($h) $l", self::LOG_LEVEL_WORKER_INFO);
-                }
-
-            }
-        }
-
-        $result_log = $result;
-
-        if (!is_scalar($result_log)) {
-            $result_log = explode("\n", trim(print_r($result_log, true)));
-        } elseif (strlen($result_log) > 256) {
-            $result_log = substr($result_log, 0, 256)."...(truncated)";
-        }
-
-        if (is_array($result_log)) {
-            foreach ($result_log as $ln) {
-                $this->toLog("($h) $ln", self::LOG_LEVEL_DEBUG);
-            }
-        } else {
-            $this->toLog("($h) $result_log", self::LOG_LEVEL_DEBUG);
-        }
-
-        /**
-         * Workaround for PECL bug #17114
-         * http://pecl.php.net/bugs/bug.php?id=17114
-         */
-        $type = gettype($result);
-        settype($result, $type);
-
-        $this->job_execution_count++;
-
-        return $result;
-
-    }
 
     private function validate_lib_workers() {
 
         //$dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(__DIR__)));
         //$dd = trim($dd, '-');
         foreach ($this->functions as $func => $props) {
+
             if (!file_exists($props["path"])) {
                 $this->toLog("File {$props["path"]} not found!");
                 posix_kill($this->pid, SIGUSR2);
@@ -1690,7 +1514,12 @@ class WorkerManager {
             }
             require_once $props["path"];
             $real_func = $this->prefix . $func;
-            if (!class_exists("\\Core2\\" . $real_func) || !method_exists("\\Core2\\" . $real_func, "run")) {
+
+            if (is_subclass_of($real_func, '\\Core2\\Workhorse')) {
+
+                //TODO сделать интерфейс для воркеров модулей
+            }
+            elseif (!class_exists("\\Core2\\" . $real_func) || !method_exists("\\Core2\\" . $real_func, "run")) {
                 $this->toLog("Class $real_func not found in " . $props["path"]);
                 posix_kill($this->pid, SIGUSR2);
                 exit();

@@ -184,7 +184,6 @@ class WorkerClient {
 
         $workload = [
             'timestamp' => $dt->format('U'),
-            'location' => $this->location,
             'server'   => $_SERVER,
             'auth'     => $auth_data,
             'payload'  => $data,
@@ -192,7 +191,6 @@ class WorkerClient {
 
         if ($this->module !== 'Admin') {
             $workload = array_merge($workload, [
-                'module'    => $this->module,
                 'worker'    => $worker
             ]);
         }
@@ -210,7 +208,9 @@ class WorkerClient {
     private function getWorkerName($worker) {
         $dd = str_replace(DIRECTORY_SEPARATOR, "-", dirname(dirname(dirname(__DIR__))));
         $dd = trim($dd, '-');
-        if ($this->module !== 'Admin') $worker = "Workhorse";
+        if ($this->module !== 'Admin') {
+            $worker = "Mod" . ucfirst(strtolower($this->module)) . "Worker";
+        }
         return $dd . "-" . $worker;
     }
 }

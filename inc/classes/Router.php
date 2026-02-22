@@ -1,23 +1,31 @@
 <?php
 
 namespace Core2;
+require_once "Request.php";
 
-class Router
+class Router extends Request
 {
 
-    public static $route = [];
+    private array $route = [];
 
     public function __construct() {
+        parent::__construct();
         $this->routeParse();
-        return self::$route;
     }
+
+    public function getRoute(): array
+    {
+        return $this->route;
+    }
+
 
     /**
      * Основной роутер
      */
     private function routeParse() {
         $temp  = explode("/", DOC_PATH);
-        $temp2 = explode("/", $_SERVER['REQUEST_URI']);
+        $requestUri = $this->getUri()->getPath();
+        $temp2 = explode("/", $requestUri);
         foreach ($temp as $k => $v) {
             if (isset($temp2[$k]) && $temp2[$k] == $v) {
                 unset($temp2[$k]);
@@ -85,8 +93,20 @@ class Router
                 $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
             }
         }
-        self::$route = $route;
+        $this->route = $route;
         Registry::set('route', $route);
+    }
+
+    private function getBasePath(): string
+    {
+        if (defined('DOC_PATH')) {
+            return DOC_PATH;
+        }
+
+        $scriptName = $this->request->getServerParams()['SCRIPT_NAME'] ?? '';
+        $basePath = dirname($scriptName);
+
+        return ($basePath === '/' || $basePath === '.') ? '' : $basePath;
     }
 
 }

@@ -193,7 +193,26 @@ class Init extends Acl {
         //сохраняем параметры сессии
         if ($this->config->session) {
             $sess_config = new SessionConfig();
-            $sess_config->setOptions($this->config->session);
+            $sess_config->setOptions([
+                'name' => $this->config->session->name ?? 'PHPSESSION',
+                'use_strict_mode' => true,
+                'use_cookies' => true,
+                'use_only_cookies' => true,
+                'cookie_httponly' => true,
+                //'cookie_secure' => true,
+                'cookie_lifetime' => $this->config->session->cookie_lifetime ?? 7200,
+                'cookie_samesite' => 'Lax',
+                'gc_maxlifetime' => $this->config->session->remember_me_seconds ?? 7200,
+                'gc_probability' => 1,
+                'gc_divisor' => 100
+            ]);
+            if (!empty($this->config->session->save_path)) {
+                $sess_config->setSavePath($this->config->session->save_path);
+            }
+            if (!empty($this->config->session->cookie_secure)) {
+                //cookie работают только по HTTPS
+                $sess_config->setCookieSecure($this->config->session->cookie_secure);
+            }
             $sess_manager = new SessionManager($sess_config);
             //$sess_manager->setStorage(new SessionStorage());
 
@@ -205,12 +224,25 @@ class Init extends Acl {
 
                 if ($this->config->session->saveHandler === 'memcached') {
                     $adapter = new Storage\Adapter\Memcached($options);
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 } elseif ($this->config->session->phpSaveHandler === 'redis') {
+                    $options = new Storage\Adapter\RedisOptions();
+                    $options->setServer(!empty($this->config->session->options->server) ? $this->config->session->options->server->toArray() : ['host' => 'localhost', 'port' => 6379]);
+                    if (!empty($this->config->session->options->server->password)) {
+                        $options->setPassword($this->config->session->options->server->password);
+                    }
+                    $options->setDatabase(1)
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Session")
+                        ->setTtl($this->config->session->options->ttl ?? $sess_config->getGcMaxlifetime());
+//                    $libOptions = [
+//                        'read_timeout' => 2.5,
+//                        'retry_interval' => 100
+//                    ];
+//                    $options->setLibOptions($libOptions);
+//                    $options->setSerializer(Redis::SERIALIZER_PHP);
                     $adapter = new Storage\Adapter\Redis($options);
-//                        $sess_manager->getStorage()->markImmutable();
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 }
+//                $sess_manager->getStorage()->markImmutable();
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
 
             //сохраняем менеджер сессий
@@ -257,7 +289,7 @@ class Init extends Acl {
     public function dispatch() {
 
         // Парсим маршрут
-        $route = (new Router())::$route;
+        $route = (new Router())->getRoute();
         if (isset($route['api']) && !$this->auth) {
             if ($route['api'] == 'auth') {
                 //это запросы на регистрацию, восстановление пароля или OAUTH
@@ -291,15 +323,16 @@ class Init extends Acl {
                     if ($route['action'] == 'core2.json') {
                         define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
                         //генерация свагера для общего API
-                        require_once "OpenApiSpec.php";
+                        require_once "OpenApi.php";
                         header("Cache-Control: no-cache");
-                        $schema = new \Core2\OpenApiSpec();
+                        $schema = new \Core2\OpenApi();
                         $html = $schema->render();
                         return $html;
                     }
                     if ($route['action'] == 'sections') {
+                        require_once "OpenApiSpec.php";
                         header('Content-Type: application/json');
-
+                        $schema = new \Core2\OpenApiSpec();
                         $this->setupAcl();
                         if ( ! empty($route['params'])) {
                             $section = key($route['params']);

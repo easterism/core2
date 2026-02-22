@@ -235,7 +235,10 @@ class CommonApi extends \Core2\Acl {
 
         if ( ! $route_method) {
             http_response_code(404);
-            return '';
+            return [
+                'error_code'    => 'method_not_found',
+                'error_message' => "Метод не найден: {$_SERVER['REQUEST_METHOD']} {$_SERVER['REQUEST_URI']}"
+            ];
         }
 
         try {

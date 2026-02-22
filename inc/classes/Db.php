@@ -6,6 +6,7 @@ require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
 require_once 'Fact.php';
+require_once 'Core_Db_Adapter_Pdo_Mysql.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
@@ -159,7 +160,7 @@ class Db {
                     $options = $this->config->cache->options->toArray();
                 }
                 else { //DEPRECATED
-                    if ($adapter_name == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                    if ($adapter_name == 'Filesystem' && !empty($this->config->cache)) { //если кеш задан в основном конфиге
                         $options['cache_dir'] = $this->config->cache;
                     }
                 }
@@ -167,12 +168,29 @@ class Db {
                 //$container = null; // can be any configured PSR-11 container
 				//$sf = $container->get(StorageAdapterFactoryInterface::class);
                 if ($adapter_name == 'Filesystem') {
+//                    $options['cache_file_perm'] = 0644;    // Права доступа к файлам кэша
+//                    $options['dir_perm'] = 0755;          // Права доступа к директориям
+//                    $options['key_pattern'] = '/^[a-z0-9_]+$/i'; // Регулярное выражение для проверки ключей
+//                    $options['namespace'] = 'Core2';      // Префикс для ключей кэша
+//                    $options['ttl'] = 3600;              // Время жизни кэша (1 час)
+//                    $options['no_caching'] = false;       // Отключить кэширование (для отладки)
+//                    $options['read_control'] = true;      // Включить контроль чтения
+//                    $options['read_control_type'] = 'crc32'; // Тип контрольной суммы
+//                    $options['logging'] = false;          // Включить логирование
+//                    $options['logger'] = null;            // Объект логгера
+
+                    $options = new Storage\Adapter\FilesystemOptions($options);
                     $adapter  = new Storage\Adapter\Filesystem($options);
                 }
                 if ($adapter_name == 'Redis') {
-                    $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
-                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
                     unset($options['cache_dir']);
+                    $options = new Storage\Adapter\RedisOptions($options);
+                    if (!empty($this->_core_config->cache->options->server->password)) {
+                        $options->setPassword($this->_core_config->cache->options->server->password);
+                    }
+                    $options->setDatabase(0)
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Core2")
+                        ->setTtl($this->_core_config->cache->options->ttl ?? 172800);
                     $adapter  = new Storage\Adapter\Redis($options);
                 }
                 $adapter->addPlugin(new Storage\Plugin\Serializer());
@@ -180,7 +198,7 @@ class Db {
                 $plugin->getOptions()->setThrowExceptions(false);
                 $adapter->addPlugin($plugin);
 
-                $v = new Cache($adapter, $adapter_name);
+                $v = new Cache($adapter);
 				$reg->set($k, $v);
 			}
             else {
@@ -472,8 +490,8 @@ class Db {
 
             // запись данных запроса в лог
             $w = $this->workerAdmin->doBackground('Logger', [
-                'user_id' => $data['user_id'],
-                'sid' => $data['sid'],
+                'user_id'  => $data['user_id'],
+                'sid'       => $data['sid'],
             ]);
             if ($w) {
                 return;

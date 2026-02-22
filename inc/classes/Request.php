@@ -20,11 +20,6 @@ class Request {
     private string $query = '';
 
     /**
-     * @var string
-     */
-    private string $uri = '';
-
-    /**
      * @var array
      */
     private array $props = [];
@@ -45,7 +40,6 @@ class Request {
         $this->request = $request;
 
         $this->query  = $_SERVER['QUERY_STRING'];
-        $this->uri    = $_SERVER['REQUEST_URI'];
         $this->method = strtolower($_SERVER['REQUEST_METHOD']);
 
         $this->props['GET']    = $_GET;
@@ -81,62 +75,6 @@ class Request {
     }
 
 
-    /**
-     * @return string
-     */
-    public function getUri(): string {
-
-        return mb_substr($this->uri, mb_strlen(rtrim(DOC_PATH, '/')));
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getUriOriginal(): string {
-
-        return $this->uri ?? '';
-    }
-
-
-
-    /**
-     * Проверка адреса
-     * @param string $path
-     * @return bool
-     */
-    public function isPath(string $path): bool {
-
-        $preparePath = $this->preparePath($path);
-        $uri         = preg_replace('~\?.*$~u', '', $this->getUri());
-
-        return (bool)preg_match("~{$preparePath}~u", $uri);
-    }
-
-
-    /**
-     * Поиск и получение данные из адреса
-     * @param string $path
-     * @return array|null
-     */
-    public function getPathParams(string $path):? array {
-
-        $result      = null;
-        $preparePath = $this->preparePath($path);
-        $uri         = preg_replace('~\?.*$~u', '', $this->getUri());
-
-        if (preg_match("~{$preparePath}~u", $uri, $matches)) {
-            foreach ($matches as $key => $match) {
-                if (is_numeric($key)) {
-                    unset($matches[$key]);
-                }
-            }
-            $result = $matches;
-        }
-
-        return $result;
-    }
-
 
     /**
      * @return string
@@ -148,13 +86,13 @@ class Request {
 
 
     /**
+     * @deprecated
      * @param string $name
      * @return mixed
      */
     public function getQuery(string $name): mixed {
 
-
-        $queries = $this->props['GET'];
+        $queries = $this->getQueryParams();
 
         return $queries[$name] ?? null;
     }
@@ -368,29 +306,6 @@ class Request {
             'fields' => $data,
             'files'  => $files ?: null,
         ];
-    }
-
-
-    /**
-     * Замена названия на поисковые данные
-     * @param string $path
-     * @return string
-     */
-    private function preparePath(string $path): string {
-
-        if (preg_match_all('~\{(?<name>[a-zA-Z0-9_]+)(?:|:(?<rule>[^}]+))\}~u', $path, $matches)) {
-
-            if ( ! empty($matches[0])) {
-                foreach ($matches[0] as $key => $match) {
-                    $count = 1;
-                    $name  = $matches['name'][$key];
-                    $rule  = $matches['rule'][$key] ?: '[\d\w_\-]+';
-                    $path  = str_replace($match, "(?<{$name}>{$rule})", $path, $count);
-                }
-            }
-        }
-
-        return $path;
     }
 
 
