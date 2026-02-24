@@ -1,7 +1,10 @@
 <?php
 namespace Core2;
+
 require_once 'Acl.php';
 require_once "OpenApi.php";
+
+use OpenApi\Generator;
 
 /**
  * @property \Core2\Model\Modules $dataModules
@@ -215,9 +218,11 @@ class OpenApiSpec extends Acl {
 
         if (file_exists($controller_path)) {
             require_once $controller_path;
-            $schema = (\OpenApi\Generator::scan([__DIR__ . "/OpenApi.php", $controller_path, "{$location}/Api/"],
-                ['exclude' => ['vendor'], 'pattern' => '*.php']
-            ))->toJson();
+            $scan = [__DIR__ . "/OpenApi.php", $controller_path];
+            if (is_dir("{$location}/Api")) {
+                $scan[] = "{$location}/Api/";
+            }
+            $schema = (Generator::scan($scan, ['exclude' => ['vendor'], 'pattern' => '*.php']))->toJson();
             $schema = json_decode($schema, true);
             if (!$section_schema) {
                 return ! empty($schema) ? $schema : [];
