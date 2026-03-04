@@ -44,7 +44,30 @@ class OpenApiSpec extends Acl {
 
                 } else {
                     if ($this->issetSwaggerAnnotationsInFile($controller_path)) {
-                        $openapi        = \OpenApi\Generator::scan([$controller_path, "{$location}/Api/"], ['exclude' => ['vendor'], 'pattern' => '*.php']);
+                        require_once $controller_path;
+                        $scan = [__DIR__ . "/OpenApi.php", $controller_path];
+                        $namespaces = [];
+                        if (is_dir("{$location}/Api")) {
+                            // Добавляем все PHP файлы из папки Api
+                            $apiFiles = glob("{$location}/Api/*.php");
+                            if ($apiFiles) {
+                                foreach ($apiFiles as $apiFile) {
+                                    $scan[] = $apiFile;
+                                }
+                            }
+                            // Добавляем namespace для папки Api
+                            $module_namespace = "Core2\\Mod\\" . ucfirst(strtolower($mod['module_id'])) . "\\Api";
+                            $namespaces[] = $module_namespace;
+                        }
+                        $options = [
+                            'exclude' => ['vendor'],
+                            'pattern' => '*.php',
+                            'validate' => false
+                        ];
+                        if (!empty($namespaces)) {
+                            $options['namespaces'] = $namespaces;
+                        }
+                        $openapi        = \OpenApi\Generator::scan($scan, $options);
                         $section_scheme = $openapi->toJson();
 
                         if ( ! empty($section_scheme)) {
@@ -219,10 +242,29 @@ class OpenApiSpec extends Acl {
         if (file_exists($controller_path)) {
             require_once $controller_path;
             $scan = [__DIR__ . "/OpenApi.php", $controller_path];
+            $namespaces = [];
             if (is_dir("{$location}/Api")) {
                 $scan[] = "{$location}/Api/";
+                // Добавляем все PHP файлы из папки Api
+                $apiFiles = glob("{$location}/Api/*.php");
+                if ($apiFiles) {
+                    foreach ($apiFiles as $apiFile) {
+                        require_once $apiFile;
+                    }
+                }
+                // Добавляем namespace для папки Api
+                $module_namespace = "Core2\\Mod\\" . ucfirst(strtolower($module_name)) . "\\Api";
+                $namespaces[] = $module_namespace;
             }
-            $schema = (Generator::scan($scan, ['exclude' => ['vendor'], 'pattern' => '*.php']))->toJson();
+            $options = [
+                'exclude' => ['vendor'],
+                'pattern' => '*.php',
+                'validate' => false
+            ];
+            if (!empty($namespaces)) {
+                $options['namespaces'] = $namespaces;
+            }
+            $schema = (Generator::scan($scan, $options))->toJson();
             $schema = json_decode($schema, true);
             if (!$section_schema) {
                 return ! empty($schema) ? $schema : [];
@@ -244,7 +286,7 @@ class OpenApiSpec extends Acl {
      * @return array
      */
     private function mergeSchemes(array $schemes): array {
-
+        return [];
     }
 
 

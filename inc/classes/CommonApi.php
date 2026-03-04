@@ -2,6 +2,7 @@
 require_once 'Acl.php';
 require_once 'Emitter.php';
 require_once 'HttpException.php';
+require_once 'Request.php';
 
 use Core2\Registry;
 use Core2\Error;
