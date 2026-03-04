@@ -1,30 +1,32 @@
 <?php
 namespace Core2;
 require_once 'Acl.php';
-use OpenApi\Attributes as OAT;
+use OpenApi\Attributes as OA;
+use OpenApi\Generator;
+use OpenApi\SourceFinder;
 
-#[OAT\OpenApi(
+#[OA\OpenApi(
     security: [['bearerAuth' => []]]
 )]
-#[OAT\Info(
-    version: '2.9.0',
+#[OA\Info(
+    version: '2.9.2',
     description: 'Common API',
     title: 'CORE2',
-    contact: new OAT\Contact(
+    contact: new OA\Contact(
         name: 'mister easter',
         email: 'easter.by@gmail.com'
     )
 )]
-//#[OAT\Server(url: SERVER)]
-#[OAT\Components(securitySchemes: [
-        new OAT\SecurityScheme(
+//#[OA\Server(url: SERVER)]
+#[OA\Components(securitySchemes: [
+        new OA\SecurityScheme(
             type: "http",
             securityScheme: "bearerAuth",
             scheme: "bearer",
             in: "header",
             bearerFormat: "JWT"
         ),
-        new OAT\SecurityScheme(
+        new OA\SecurityScheme(
             type: "http",
             securityScheme: "basicAuth",
             scheme: "basic",
@@ -38,30 +40,30 @@ class OpenApi extends Acl {
 
     private $_apis = [__FILE__];
 
-    #[OAT\Get(
+    #[OA\Get(
         path: '/',
         operationId: 'getModules',
         summary: 'Данные для главного меню',
         tags: ['core2'],
         responses: [
-            new OAT\Response(
+            new OA\Response(
                 response: 200,
                 description: 'информация о пользователе и список доступных модулей',
-                content: new OAT\JsonContent(
+                content: new OA\JsonContent(
                     type: 'object',
                     properties: [
-                        new OAT\Property(property: 'system_name', type: 'string', title: 'Название системы'),
-                        new OAT\Property(property: 'id', type: 'integer', title: 'ID текущего пользователя'),
-                        new OAT\Property(property: 'name', type: 'string', title: 'Имя текущего пользователя'),
-                        new OAT\Property(property: 'login', type: 'string', title: 'Login текущего пользователя'),
-                        new OAT\Property(property: 'avatar', type: 'string', title: 'ссылка на аватар'),
-                        new OAT\Property(property: 'required_location', type: 'boolean', title: 'должен ли пользователь предоставить данные о местоположении'),
-                        new OAT\Property(property: 'modules', title: 'System admin', type: 'object'),
+                        new OA\Property(property: 'system_name', type: 'string', title: 'Название системы'),
+                        new OA\Property(property: 'id', type: 'integer', title: 'ID текущего пользователя'),
+                        new OA\Property(property: 'name', type: 'string', title: 'Имя текущего пользователя'),
+                        new OA\Property(property: 'login', type: 'string', title: 'Login текущего пользователя'),
+                        new OA\Property(property: 'avatar', type: 'string', title: 'ссылка на аватар'),
+                        new OA\Property(property: 'required_location', type: 'boolean', title: 'должен ли пользователь предоставить данные о местоположении'),
+                        new OA\Property(property: 'modules', title: 'System admin', type: 'object'),
                     ]
 
                 ),
             ),
-            new OAT\Response(
+            new OA\Response(
                 response: 403,
                 description: 'Unauthorized access',
             ),
@@ -101,9 +103,7 @@ class OpenApi extends Acl {
         $this->_apis[] = $admin;
         if (!defined("SERVER")) define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
 
-        $openapi = \OpenApi\Generator::scan($this->_apis,
-            ['exclude' => ['vendor'], 'pattern' => '*.php']
-        );
+        $openapi   = (new Generator())->generate(new SourceFinder($this->_apis, ['vendor'], '*.php'));
 
         header('Content-Type: application/json');
         echo $openapi->toJson();

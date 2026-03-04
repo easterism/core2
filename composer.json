@@ -44,7 +44,7 @@
     "monolog/monolog": "2.3.3",
     "guzzlehttp/guzzle": "7.9.3",
     "phpseclib/phpseclib": "~2.0",
-    "zircote/swagger-php": "4.10.6",
+    "zircote/swagger-php": "6.*",
     "phpmailer/phpmailer": "v6.9.3",
     "predis/predis": "^2.0",
     "ext-json": "*",
