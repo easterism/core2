@@ -597,7 +597,8 @@ class ModAjax extends ajaxFunc {
             }
 
             if ( ! $is_auth_ldap_on && $is_auth_pass_on && ! empty($data['control']['u_pass'])) {
-                $dataForSave['u_pass'] = Tool::pass_salt(md5($data['control']['u_pass']));
+                $legacySecret = md5($data['control']['u_pass']);
+                $dataForSave['u_pass'] = Tool::password_hash_secure($legacySecret);
             }
 
             $mail = [];

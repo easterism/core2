@@ -211,6 +211,58 @@ class Tool {
 
 
     /**
+     * Build modern password hash for an already-normalized secret.
+     * @param string $secret
+     * @return string
+     */
+    public static function password_hash_secure(string $secret): string {
+
+        return password_hash($secret, PASSWORD_ARGON2ID);
+    }
+
+
+    /**
+     * Verify password hash (supports legacy core2 hashes).
+     * @param string $secret
+     * @param string $hash
+     * @return bool
+     */
+    public static function password_verify_secure(string $secret, string $hash): bool {
+
+        if ($hash === '') {
+            return false;
+        }
+
+        if (str_starts_with($hash, '$argon2') || str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2a$') || str_starts_with($hash, '$2b$')) {
+            return password_verify($secret, $hash) || password_verify(md5($secret), $hash);
+        }
+
+        // legacy core2 format (support both historical variants)
+        return hash_equals(self::pass_salt($secret), $hash)
+            || hash_equals(self::pass_salt(md5($secret)), $hash);
+    }
+
+
+    /**
+     * Is stored hash legacy and should be upgraded.
+     * @param string $hash
+     * @return bool
+     */
+    public static function password_needs_upgrade(string $hash): bool {
+
+        if ($hash === '') {
+            return true;
+        }
+
+        if (str_starts_with($hash, '$argon2') || str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2a$') || str_starts_with($hash, '$2b$')) {
+            return password_needs_rehash($hash, PASSWORD_ARGON2ID);
+        }
+
+        return true;
+    }
+
+
+    /**
      * Format date with russian pattern
      *
      * @param string $formatum - date pattern

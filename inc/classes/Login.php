@@ -361,8 +361,15 @@ class Login extends \Common {
             }
 
 
-            if ($user['u_pass'] !== Tool::pass_salt($password)) {
+            if ( ! Tool::password_verify_secure($password, (string)$user['u_pass'])) {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
+            }
+
+            if (Tool::password_needs_upgrade((string)$user['u_pass']) && !empty($user['u_id'])) {
+                $where = $this->db->quoteInto('u_id = ?', (int)$user['u_id']);
+                $this->db->update('core_users', [
+                    'u_pass' => Tool::password_hash_secure($password),
+                ], $where);
             }
 
             $this->auth($user);
