@@ -54,29 +54,21 @@ class Error {
 		return $isXajax;
 	}
 
+
 	/**
 	 * Основной обработчик исключений
-	 *
 	 * @param \Exception $exception
 	 */
-	public static function catchException(\Exception $exception) {
+	public static function catchException(\Exception $exception): void {
 
-        if ($exception instanceof HttpException) {
+        if ($exception instanceof \Core2\HttpException ||
+            $exception instanceof \Core2\Mod\Webservice\HttpException
+        ) {
             http_response_code($exception->getCode() ?: 500);
             header('Content-type: application/json; charset="utf-8"');
             echo json_encode([
-                'msg'  => $exception->getMessage(),
-                'code' => $exception->getErrorCode(),
-            ]);
-
-        }
-        elseif ($exception instanceof JsonException) {
-            $code = $exception->getCode() ?: 500;
-            self::setResponseCode($code);
-            header('Content-type: application/json; charset="utf-8"');
-            echo json_encode([
-                'status'  => 'error',
-                'msg'  => $exception->getMessage(),
+                'error_message' => $exception->getMessage(),
+                'error_code'    => $exception->getErrorCode(),
             ]);
 
         }
@@ -130,7 +122,7 @@ class Error {
                 }
 
             } else {
-                if ($message != '911') {
+                if ( ! in_array($message, ['911', 'Referrer error', 'Модуль не найден', 'Токен не найден'])) {
                     error_log("{$message} \n " . $exception->getTraceAsString());
                 }
 
@@ -232,7 +224,7 @@ class Error {
 	public static function catchJsonException($out = [], $code = 0) {
 
 	    if (!$out) $out = [];
-        if (!is_array($out)) $out = trim($out) ? ["msg" => $out] : [];
+        if (!is_array($out)) $out = trim($out) ? ["msg" => htmlspecialchars($out)] : [];
 
         self::setResponseCode($code);
 
@@ -241,7 +233,7 @@ class Error {
 		$error_data = ['status' => 'error'];
         $error_data += $out;
 
-		return self::Exception(json_encode($error_data), $code);
+		return json_encode($error_data);
 	}
 
 

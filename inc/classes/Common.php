@@ -15,7 +15,6 @@ use Core2\Error;
  */
 class Common extends \Core2\Acl {
 
-	protected $module;
 	protected $path;
 
     /**
@@ -36,44 +35,16 @@ class Common extends \Core2\Acl {
      */
 	public function __construct() {
 
-        $child_class_name = get_class($this);
-
-        if ($child_class_name == 'CoreController') {
-            $mod_name = 'admin';
-        } else {
-            $mod_name = preg_match('~^Mod[A-z0-9\_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
-                ? substr($child_class_name, 3, -strlen($matches[1]))
-                : '';
-        }
-//        if (!$mod_name) {
-//            $r = new \ReflectionClass($child_class_name);
-//            $classLoc = $r->getFileName();
-//            $classPath = strstr($classLoc, '/mod/');
-//            if ($classPath) {
-//                $classPath = substr($classPath, 5);
-//                $mod_name  = substr($classPath, 0, strpos($classPath, "/"));
-//            }
-//        }
-
 		parent::__construct();
         $reg     = Registry::getInstance();
-		$context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
-
-        if ($mod_name) {
-            $this->module = strtolower($mod_name);
-            if (!$reg->isRegistered('invoker')) {
-                $reg->set('invoker', $this->module);
-            }
-        } else {
-			$this->module = ! empty($context[0]) ? $context[0] : '';
-        }
 
         $this->path      = 'mod/' . $this->module . '/';
         if ($reg->isRegistered('auth')) $this->auth = $reg->get('auth');
         $this->resId     = $this->module;
-		$this->actionURL = "?module=" . $this->module;
+        $this->actionURL = "?module=" . $this->module;
 
-		if ( ! empty($context[1]) && $context[1] !== 'index') {
+        $context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
+        if ( ! empty($context[1]) && $context[1] !== 'index') {
 			$this->resId     .= '_' . $context[1];
 			$this->actionURL .= "&action=" . $context[1];
 		}
@@ -103,7 +74,7 @@ class Common extends \Core2\Acl {
      * @throws Zend_Exception
      */
     public function getInvoker() {
-        return Registry::get('invoker');
+        return $this->module;
     }
 
 
@@ -125,7 +96,7 @@ class Common extends \Core2\Acl {
         }
 
 		//исключение для герета базы или кеша, выполняется всегда
-		if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+		if (in_array($k, ['db', 'db2', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
 		}
 		//геттер для модели
@@ -164,12 +135,11 @@ class Common extends \Core2\Acl {
                 if (!$this->isModuleActive($module)) {
                     throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" отключен."), $module));
                 }
-
                 $cl              = ucfirst($k) . 'Controller';
                 $controller_file = $location . '/' . $cl . '.php';
 
                 if (!file_exists($controller_file)) {
-                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера.") . DOC_ROOT . " - " . $controller_file, $module));
+                    throw new Exception(sprintf($this->translate->tr("Модуль \"%s\" сломан. Не найден файл контроллера - %s"), $module, $controller_file));
                 }
 
                 $autoload_file = $location . "/vendor/autoload.php";
@@ -348,21 +318,6 @@ class Common extends \Core2\Acl {
         $src_mod = $this->getModuleLoc($module);
         return Tool::getJs($src_mod . $src, $chachable);
 	}
-
-
-    /**
-     * Порождает событие для модулей, реализующих интерфейс Subscribe
-     * @param string $event_name
-     * @param array $data
-     * @param string $module_override принудительный id модуля-инициатора события
-     * @return array
-     */
-	protected function emit($event_name, $data = [], $module_override = '') {
-        $module = $module_override ?: $this->module;
-        $reg    = Registry::getInstance();
-        $em     = $reg->isRegistered('emitter') ? $reg->get('emitter') : new Emitter();
-        return $em->emit($module, $event_name, $data);
-    }
 
 
     /**

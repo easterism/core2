@@ -862,7 +862,7 @@ class InstallModule extends \Common {
      * @return void
      */
     public function make_zip($data) {
-        $this->zipFile = $this->config->temp . "/" . session_id() . ".zip";
+        $this->zipFile = "{$this->config->temp}/core_sessions/" . session_id() . ".zip";
         file_put_contents($this->zipFile, $data);
     }
 

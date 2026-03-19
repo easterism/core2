@@ -6,11 +6,13 @@ require_once "Cache.php";
 require_once "Log.php";
 require_once "WorkerClient.php";
 require_once 'Fact.php';
+require_once 'Core_Db_Adapter_Pdo_Mysql.php';
 
 use Laminas\Cache\Storage;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
+use Exception;
 
 /**
  * Class Db
@@ -30,6 +32,7 @@ class Db {
      * @var LaminasConfig
      */
     protected $config;
+    protected $module;
 
     /**
      * @var LaminasConfig
@@ -42,16 +45,29 @@ class Db {
     /**
      * Db constructor.
      * @param null $config
-     * @throws \Zend_Exception
      */
 	public function __construct($config = null) {
-
+        $reg     = Registry::getInstance();
 	    if (is_null($config)) {
-			$this->config = Registry::get('config');
+			$this->config = $reg->get('config');
 		} else {
 			$this->config = $config;
 		}
+        $child_class_name = get_class($this);
 
+        if ($child_class_name == 'CoreController' || $child_class_name == 'Db') {
+            $mod_name = 'admin';
+        } else {
+            $mod_name = preg_match('~^Mod[A-z0-9_]+(Controller|Worker|Cli|Api)$~', $child_class_name, $matches)
+                ? substr($child_class_name, 3, -strlen($matches[1]))
+                : '';
+        }
+        if ($mod_name) {
+            $this->module = strtolower($mod_name);
+        } else {
+            $context = $reg->isRegistered('context') ? $reg->get('context') : ['admin'];
+            $this->module = ! empty($context[0]) ? $context[0] : '';
+        }
 	}
 
 	/**
@@ -62,7 +78,8 @@ class Db {
 	 */
 	public function __get($k) {
         $reg      = Registry::getInstance();
-        $module = isset($this->module) ? $this->module : 'admin';
+        $module   = $this->module;
+
         $k_module = $k . "|" . $module;
 
 		if ($k == 'core_config') {
@@ -70,16 +87,26 @@ class Db {
             return $this->_core_config;
         }
 		if ($k === 'db2') {
-            if (!$reg->isRegistered('db2')) {
-                $db = $this->establishConnection($this->config->database2);
-                if (!$db) {
-                    throw new \Exception("Database replica not connected");
+                if ($module !== 'admin') {
+                    if ($reg->isRegistered($k_module)) return $reg->get($k_module);
+                    $module_config = $this->getModuleConfig($module);
+
+                    if ($module_config && $module_config->database2) {
+                        // у этого модуля собственный адаптер
+                        $db = $this->establishConnection($module_config->database2);
+                        $reg->set($k_module, $db);
+                        return $db;
+                    }
                 }
-                $reg->set('db2', $db);
+                if ( ! $reg->isRegistered('db2')) {
+                    $db = $this->establishConnection($this->config->database2);
+                    if ( ! $db) {
+                        throw new Exception("Database replica not connected");
+                    }
+                    $reg->set('db2', $db);
+                }
+                return $reg->get('db2');
             }
-            $db = $reg->get('db2');
-            return $db;
-        }
 		if ($k === 'db') {
 //            if ($reg->isRegistered('invoker')) {
 //                $k_module = $k . "|" . $reg->get('invoker');
@@ -89,7 +116,7 @@ class Db {
 
                 $db = $this->establishConnection($this->config->database);
                 if (!$db) {
-                    throw new \Exception("Database not connected");
+                    throw new Exception("Database not connected");
                 }
                 \Zend_Db_Table::setDefaultAdapter($db);
                 $reg->set('db|admin', $db);
@@ -133,7 +160,7 @@ class Db {
                     $options = $this->config->cache->options->toArray();
                 }
                 else { //DEPRECATED
-                    if ($adapter_name == 'Filesystem' && $this->config->cache) { //если кеш задан в основном конфиге
+                    if ($adapter_name == 'Filesystem' && !empty($this->config->cache)) { //если кеш задан в основном конфиге
                         $options['cache_dir'] = $this->config->cache;
                     }
                 }
@@ -141,12 +168,29 @@ class Db {
                 //$container = null; // can be any configured PSR-11 container
 				//$sf = $container->get(StorageAdapterFactoryInterface::class);
                 if ($adapter_name == 'Filesystem') {
+//                    $options['cache_file_perm'] = 0644;    // Права доступа к файлам кэша
+//                    $options['dir_perm'] = 0755;          // Права доступа к директориям
+//                    $options['key_pattern'] = '/^[a-z0-9_]+$/i'; // Регулярное выражение для проверки ключей
+//                    $options['namespace'] = 'Core2';      // Префикс для ключей кэша
+//                    $options['ttl'] = 3600;              // Время жизни кэша (1 час)
+//                    $options['no_caching'] = false;       // Отключить кэширование (для отладки)
+//                    $options['read_control'] = true;      // Включить контроль чтения
+//                    $options['read_control_type'] = 'crc32'; // Тип контрольной суммы
+//                    $options['logging'] = false;          // Включить логирование
+//                    $options['logger'] = null;            // Объект логгера
+
+                    $options = new Storage\Adapter\FilesystemOptions($options);
                     $adapter  = new Storage\Adapter\Filesystem($options);
                 }
                 if ($adapter_name == 'Redis') {
-                    $options['namespace'] = $_SERVER['SERVER_NAME'] . ":Core2";
-                    if (!empty($options['database'])) $options['namespace'] .= ":" . $options['database'];
                     unset($options['cache_dir']);
+                    $options = new Storage\Adapter\RedisOptions($options);
+                    if (!empty($this->_core_config->cache->options->server->password)) {
+                        $options->setPassword($this->_core_config->cache->options->server->password);
+                    }
+                    $options->setDatabase(0)
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Core2")
+                        ->setTtl($this->_core_config->cache->options->ttl ?? 172800);
                     $adapter  = new Storage\Adapter\Redis($options);
                 }
                 $adapter->addPlugin(new Storage\Plugin\Serializer());
@@ -154,7 +198,7 @@ class Db {
                 $plugin->getOptions()->setThrowExceptions(false);
                 $adapter->addPlugin($plugin);
 
-                $v = new Cache($adapter, $adapter_name);
+                $v = new Cache($adapter);
 				$reg->set($k, $v);
 			}
             else {
@@ -223,7 +267,7 @@ class Db {
                     $location  = $this->getModuleLocation($module);
                 }
 				if (!file_exists($location . "/Model/$model.php")) {
-                    throw new \Exception($this->translate->tr("Модель $model не найдена."));
+                    throw new Exception($this->translate->tr("Модель $model не найдена."));
                 }
 				require_once($location . "/Model/$model.php");
                 $db = $this->db; ////FIXME грязный хак для того чтобы сработал сеттер базы данных. Потому что иногда его здесь еще нет, а для инициализаци модели используется адаптер базы данных по умолчанию
@@ -293,7 +337,7 @@ class Db {
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
         }
-	}
+    }
 
     /**
      * получаем соединение с базой данных
@@ -302,15 +346,20 @@ class Db {
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-	protected function getConnection(LaminasConfig $database) {
+	protected function getConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
+        $params = $database->params->toArray();
         if ($database->adapter === 'Pdo_Mysql') {
-            $this->schemaName = $database->params->dbname ? $database->params->dbname : '';
+            $params['adapterNamespace'] = 'Core_Db_Adapter';
+            require_once("Core_Db_Adapter_Pdo_Mysql.php");
+            $this->schemaName = $params['dbname'] ?? '';
         }
         elseif ($database->adapter === 'Pdo_Pgsql') {
-            $this->schemaName = $database->schema;
+            $params['adapterNamespace'] = 'Zend_Db_Adapter';
+            $params['dbname'] = $params['pgname'] ?? 'postgres';
+            $this->schemaName = $params['dbname'];
         }
         Registry::set('dbschema', $this->schemaName);
-        $db = \Zend_Db::factory($database->adapter, $database->params->toArray());
+        $db = \Zend_Db::factory($database->adapter, $params);
         $db->getConnection();
         return $db;
     }
@@ -440,7 +489,10 @@ class Db {
             }
 
             // запись данных запроса в лог
-            $w = $this->workerAdmin->doBackground('Logger', $data);
+            $w = $this->workerAdmin->doBackground('Logger', [
+                'user_id'  => $data['user_id'],
+                'sid'       => $data['sid'],
+            ]);
             if ($w) {
                 return;
             }
@@ -451,7 +503,7 @@ class Db {
                 $this->config->log->access->writer == 'file'
             ) {
                 if ( ! $this->config->log->access->file) {
-                    throw new \Exception($this->translate->tr('Не задан файл журнала запросов'));
+                    throw new Exception($this->translate->tr('Не задан файл журнала запросов'));
                 }
 
                 $log = new Log('access');
@@ -614,16 +666,17 @@ class Db {
 
 
 	/**
+     * Проверка активности модуля
 	 * @param string $module_id
 	 * @return string
 	 */
 	final public function isModuleActive(string $module_id): bool {
         $id = explode("_", strtolower($module_id));
         $mod = $this->getModule($id[0]);
-        if (!$mod) return false;
+        if (!$mod || $mod['visible'] !== 'Y') return false;
         if (!empty($id[1])) {
-            if (empty(Registry::get("_modules")[$id[0]]['submodules'][$id[1]]) ||
-                Registry::get("_modules")[$id[0]]['submodules'][$id[1]]['visible'] !== 'Y') return false;
+            if (empty($mod['submodules'][$id[1]]) ||
+                $mod['submodules'][$id[1]]['visible'] !== 'Y') return false;
         }
         return true;
 	}
@@ -665,9 +718,9 @@ class Db {
 	/**
      * Проверяем, установлен ли модуль
 	 * @param string $module_id
-	 * @return string
+	 * @return array
 	 */
-	final public function isModuleInstalled($module_id) {
+	final public function isModuleInstalled($module_id):array {
         $this->getAllModules();
         $module_id = trim(strtolower($module_id));
         if (!Registry::isRegistered("_modules")) return [];
@@ -863,29 +916,47 @@ class Db {
 
     /**
      * Список всех модулей
-     *
      * @return void
      */
     private function getAllModules(): void {
-        $reg      = Registry::getInstance();
-        if ($reg->isRegistered("_modules")) return;
+
+        $reg = Registry::getInstance();
+
+        if ($reg->isRegistered("_modules")) {
+            return;
+        }
+
         $key2 = "all_modules_" . $this->config->database->params->dbname;
+
         //if (1==1) {
-        if (!($this->cache->hasItem($key2))) {
+        if ($this->cache->hasItem($key2)) {
+            $data = $this->cache->getItem($key2);
+        }
+
+        if (empty($data)) {
             require_once(__DIR__ . "/../../mod/admin/Model/Modules.php");
             require_once(__DIR__ . "/../../mod/admin/Model/SubModules.php");
+
             $config = $reg->get('config');
-            if (!$config->database) return;
+            if ( ! $config->database) {
+                return;
+            }
+
             $db = $this->establishConnection($config->database);
-            if (!($db instanceof \Zend_Db_Adapter_Abstract)) return;
+
+            if ( ! ($db instanceof \Zend_Db_Adapter_Abstract)) {
+                return;
+            }
+
             \Zend_Db_Table::setDefaultAdapter($db);
             $reg->set('db|admin', $db);
 
-            $m            = new Model\Modules($db);
-            $sm           = new Model\SubModules($db);
-            $res    = $m->fetchAll($m->select()->order('seq'))->toArray();
-            $sub    = $sm->fetchAll($sm->select()->order('seq'));
-            $data   = [];
+            $m    = new Model\Modules($db);
+            $sm   = new Model\SubModules($db);
+            $res  = $m->fetchAll($m->select()->order('seq'))->toArray();
+            $sub  = $sm->fetchAll($sm->select()->order('seq'));
+            $data = [];
+
             foreach ($res as $val) {
                 unset($val['uninstall']); //чтоб не смущал
                 unset($val['files_hash']); //чтоб не смущал
@@ -898,14 +969,40 @@ class Db {
                 }
                 $data[$val['module_id']] = $val;
             }
-            if ($data) $this->cache->setItem($key2, $data);
-            else {
-                //такого быть не может
+
+            if ($data) {
+                $this->cache->setItem($key2, $data);
             }
-        } else {
-            $data = $this->cache->getItem($key2);
         }
+
         $reg->set("_modules", $data);
     }
 
+    /**
+     * Порождает событие для модулей, реализующих интерфейс Subscribe
+     * @param string $event_name
+     * @param array $data
+     * @param string $module_override принудительный id модуля-инициатора события
+     * @return array
+     */
+    protected function emit($event_name, $data = [], $module_override = '') {
+        $module = $module_override ?: $this->module;
+        $reg    = Registry::getInstance();
+        if (!$reg->isRegistered('emitter')) $reg->set('emitter', new Emitter());
+        return $reg->get('emitter')->sync($module, $event_name, $data);
+    }
+
+    /**
+     * Порождает асинхронное событие для модулей, реализующих интерфейс Subscribe
+     * @param $event_name
+     * @param $data
+     * @param $module_override
+     * @return void
+     */
+    protected function emitAsync($event_name, $data = [], $module_override = ''): void {
+        $module = $module_override ?: $this->module;
+        $reg    = Registry::getInstance();
+        if (!$reg->isRegistered('emitter')) $reg->set('emitter', new Emitter());
+        $reg->get('emitter')->async($module, $event_name, $data);
+    }
 }

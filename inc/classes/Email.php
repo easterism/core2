@@ -223,6 +223,7 @@ class Email extends Db {
 
                     $this->mail_data['from'] = "$server_name <noreply@{$server}>";
                 }
+
             }
 
             if ($this->isModuleActive('queue')) {
@@ -329,7 +330,7 @@ class Email extends Db {
 
                 }
                 else {
-                    $queue = new \modQueueController();
+                    $queue = new \ModQueueController();
                     $queue->createMail($this->mail_data, $immediately);
                 }
             }
@@ -407,21 +408,6 @@ class Email extends Db {
      */
     public function zendSend($from, $to, $subj, $body, $cc = '', $bcc = '', $files = [], $reply = '', array $queue_id = null) {
 
-
-        $w = $this->workerAdmin->doBackground('Mailer', [
-            'from'     => $from,
-            'to'       => $to,
-            'subj'     => $subj,
-            'body'     => $body,
-            'cc'       => $cc,
-            'bcc'      => $bcc,
-            'files'    => serialize($files),
-            'reply'    => $reply,
-            'queue_id' => $queue_id,
-        ]);
-        if ($w) {
-            return;
-        }
         if ($files) {
             foreach ($files as $i => $file) {
                 $ext = PHPMailer::mb_pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -435,6 +421,8 @@ class Email extends Db {
         $config = Registry::get('config');
 
         $mail = new PHPMailer();
+        $mail->CharSet  = "UTF-8";
+        $mail->Encoding = 'base64';
 
         // DEPRECATED
         if (is_array($from)) {
@@ -582,8 +570,8 @@ class Email extends Db {
 
                 if ( ! empty($config->mail->username)) {
                     $mail->Username = $config->mail->username;
-                    $from_email = $config->mail->username;
-                    $from_name = '';
+                    //$from_email = $config->mail->username;
+                    //$from_name = '';
                 }
                 if ( ! empty($config->mail->password)) {
                     $mail->Password = $config->mail->password;
@@ -606,6 +594,8 @@ class Email extends Db {
 
         }
         $mail->setFrom($from_email, $from_name);
+        //$mail->SMTPDebug = SMTP::DEBUG_SERVER;
+
         $isSent = true;
         if (!$mail->send()) {
             //echo 'Mailer Error: ' . $mail->ErrorInfo;

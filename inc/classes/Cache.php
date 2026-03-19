@@ -24,11 +24,10 @@ class Cache
      * @link https://docs.zendframework.com/zend-cache/storage/adapter/
      * @param $adapter
      */
-    public function __construct($adapter, $adapter_name)
+    public function __construct($adapter)
     {
         $this->adapter = $adapter;
-        $this->adapter_name = $adapter_name;
-
+        $this->adapter_name = $adapter::class;
         $this->namespace = $this->adapter->getOptions()->getNamespace();
     }
 
@@ -117,7 +116,8 @@ class Cache
      * @return string
      */
     public function getAdapterName(): string {
-        return (string)$this->adapter_name;
+        $parts = explode('\\', $this->adapter_name);
+        return (string) end($parts);
     }
 
     /**

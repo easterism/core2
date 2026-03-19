@@ -8,18 +8,14 @@ require_once 'Db.php';
  */
 class Emitter extends Db {
 
-    private $events = [];
     private $subscribers = [];
-
 
     /**
      * Emitter constructor.
-     * @param \Common $that
-     * @param         $module_id
      */
     public function __construct() {
         parent::__construct();
-
+        $this->module = 'admin';
         $mods = $this->dataModules->getIds();
         $out  = [];
 
@@ -47,11 +43,14 @@ class Emitter extends Db {
 
     /**
      * ищет событие у подписчиков
+     * @param string $module
+     * @param string $event_name
+     * @param $data
      * @return array результат от всех подписчиков
      * @throws \Zend_Exception
      * @throws \Exception
      */
-    public function emit($module, $event_name, $data): array {
+    public function sync($module, $event_name, $data): array {
 
         $out  = [];
         foreach ($this->subscribers as $mod => $controller) {
@@ -61,6 +60,20 @@ class Emitter extends Db {
         }
 //        $this->log->info(is_array($data) ? json_encode($data) : $data, ['module' => $module, 'event' => $event_name]);
         return $out;
+    }
+
+    public function async($module, $event_name, $data): void {
+
+        foreach ($this->subscribers as $mod => $controller) {
+            $w = $this->workerAdmin->doBackground('Eventer', [
+                'mod' => $mod,
+                'location' => $this->getModuleLocation($mod),
+                'context' => $module,
+                'event' => $event_name,
+                'data' => $data
+            ]);
+        }
+//        $this->log->info(is_array($data) ? json_encode($data) : $data, ['module' => $module, 'event' => $event_name]);
     }
 
 }

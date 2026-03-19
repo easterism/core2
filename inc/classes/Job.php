@@ -8,7 +8,7 @@ class Job
     private static $job;
     private static $unique;
 
-    public function __construct($job, $payload = [], $unique = '') {
+    public function __construct($job, $payload = [], $unique = null) {
         self::$job = $job;
         self::$payload = json_encode($payload);
         self::$unique = $unique;
@@ -54,7 +54,9 @@ class Job
      *        a fraction
      * @return bool
      */
-    public function sendStatus($numerator, $denominator) {}
+    public function sendStatus($numerator, $denominator) {
+
+    }
 
     /**
      * Sends result data and the complete status update for this job.

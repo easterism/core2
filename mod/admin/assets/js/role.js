@@ -17,21 +17,27 @@ var ro = {
 	checkToAll : function (obj) {
 		var i = obj.id.split("_");
 		var obj2 = document.getElementById(i[0] + "_owner_" + i[2]);
-		if (obj.checked == true) {
-			obj2.checked = true;
-			obj2.disabled = true;
+		if (obj2) {
+			if (obj.checked == true) {
+				obj2.checked = true;
+				obj2.disabled = true;
+			} else {
+				obj2.checked = false;
+				obj2.disabled = false;
+			}
 		}
-		else {obj2.checked=false;obj2.disabled=false;}
 	},
 	checkToDefault : function (obj) {
 		var i = obj.id.split("_");
 		var obj2 = document.getElementById(i[0] + "_all_" + i[2]);
 		var obj3 = document.getElementById(i[0] + "_owner_" + i[2]);
+		if (obj2 && obj3) {
 		if (obj.checked==true) {
 			obj2.disabled=true;
 			obj3.disabled=true;
 		}
 		else {obj2.disabled=false;obj3.disabled=false;}
+		}
 	},
 	checkToDefault2 : function (obj) {
 		var i = obj.id.split("_");

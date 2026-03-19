@@ -11,6 +11,7 @@ use Core2\Navigation\Dropdown\File;
  */
 class Dropdown {
 
+    private $seq      = 10;
     private $title    = '';
     private $position = '';
     private $icon     = '';
@@ -32,6 +33,25 @@ class Dropdown {
     public function setTitle(string $title): void {
 
         $this->title = $title;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getSeq(): int {
+
+        return $this->seq;
+    }
+
+
+    /**
+     * @param int $seq
+     * @return void
+     */
+    public function setSeq(int $seq): void {
+
+        $this->seq = $seq;
     }
 
 
@@ -172,6 +192,7 @@ class Dropdown {
 
         return [
             'type'     => 'dropdown',
+            'seq'      => $this->getSeq(),
             'title'    => $this->getTitle(),
             'icon'     => $this->getIcon(),
             'class'    => $this->getClass(),

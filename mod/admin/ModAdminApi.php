@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../../inc/classes/CommonApi.php';
 
 use Core2\Error;
@@ -6,6 +7,9 @@ use Laminas\Session\Container as SessionContainer;
 use OpenApi\Attributes as OAT;
 use Core2\Switches;
 
+/**
+ * @property \Core2\Model\Users $dataUsers
+ */
 class ModAdminApi extends CommonApi
 {
     public function action_index()
@@ -13,7 +17,14 @@ class ModAdminApi extends CommonApi
         $params = $this->route['params'];
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'DELETE':
-                return $this->indexDelete($this->getInputBody());
+                if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
+                    //это удаление из UI
+                    if (empty($params['_resource'])) throw new \Exception("Не удалось определить местоположение данных для удаления.");
+                    if (empty($params['_field'])) throw new \Exception("Не удалось определить источник для удаления.");
+                    if (empty($params['_value'])) throw new \Exception("Не удалось определить объекты для удаления.");
+                    return $this->indexDelete($params['_resource'], $params['_field'], explode(",", $params['_value']));
+                }
+                //здесь друдие виды удаления
                 break;
             case 'POST':
                 if (!empty($params['switch'])) {
@@ -25,16 +36,142 @@ class ModAdminApi extends CommonApi
         }
     }
 
+    public function action_users()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                foreach ($ids as $id) {
+
+                    $user = $this->dataUsers->find($id)->current();
+                    if ($user) {
+                        $user->delete();
+                        $this->emit("delete_user", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=users"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
+    public function action_enum()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                $parent_id = 0;
+                foreach ($ids as $id) {
+
+                    $enum = $this->dataEnum->find($id)->current();
+                    if ($enum) {
+                        $parent_id = $enum->parent_id;
+                        $enum->delete();
+                        $this->emit("delete_enum", ['id' => $id]);
+                    }
+                }
+                if ($parent_id) return ['loc' => "index.php?module=admin&action=enum&edit=$parent_id"];
+                return ['loc' => "index.php?module=admin&action=enum"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
+    public function action_roles()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                foreach ($ids as $id) {
+
+                    $role = $this->dataRoles->find($id)->current();
+                    if ($role) {
+                        $role->delete();
+                        $this->emit("delete_role", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=roles"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
+    public function action_modules()
+    {
+        $params = $this->route['params'];
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'DELETE':
+                $ids = $this->getParamsDelete($params);
+                if ($params['_resource'] == 'submod') {
+                    $mod_id = 0;
+                    foreach ($ids as $id) {
+                        $sm = $this->dataSubModules->find($id)->current();
+                        if ($sm) {
+                            $mod_id = $sm->m_id;
+                            $sm->delete();
+                            $this->emit("delete_submodule", ['id' => $id]);
+                        }
+                    }
+                    return ['loc' => "index.php?module=admin&action=modules&edit=$mod_id&tab=submodules"];
+                }
+                foreach ($ids as $id) {
+
+                    $mod = $this->dataModules->find($id)->current();
+                    if ($mod) {
+                        $mod->delete();
+                        $this->emit("delete_module", ['id' => $id]);
+                    }
+                }
+                return ['loc' => "index.php?module=admin&action=modules"];
+                //здесь друдие виды удаления
+                break;
+            default:
+                throw new Exception('Error: method not handled', 405);
+        }
+    }
+
+    /**
+     * проверка параметров удаления
+     * @param array $params
+     * @return array
+     * @throws Exception
+     */
+    private function getParamsDelete(array $params): array
+    {
+        if (! $this->auth->ADMIN) {
+            $msg = $this->translate->tr("Доступ запрещен!");
+            throw new Exception($msg, 403);
+        }
+        if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
+            //это удаление из UI
+            if (empty($params['_resource'])) throw new Exception("Не удалось определить местоположение данных для удаления.");
+            if (empty($params['_field'])) throw new Exception("Не удалось определить источник для удаления.");
+            if (empty($params['_value'])) throw new Exception("Не удалось определить объекты для удаления.");
+            return explode(",", $params['_value']);
+        }
+        throw new Exception('Params error', 400);
+
+    }
+
+
     public function action_acl()
     {
         $params = $this->route['params'];
-        if (!$params || !key($params)) throw new \Exception('Error: empty params', 400);
+        if (!$params || !key($params)) throw new Exception('Error: empty params', 400);
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'GET':
                 $resource = strtolower(key($params));
                 $submod = strtolower(current($params));
                 if ($submod) $resource .= "-$submod";
-
 
                 return $this->getAccessInfo($resource);
                 break;
@@ -44,7 +181,7 @@ class ModAdminApi extends CommonApi
                 }
                 break;
             default:
-                throw new \Exception('Error: method not handled', 405);
+                throw new Exception('Error: method not handled', 405);
         }
     }
 
@@ -53,61 +190,15 @@ class ModAdminApi extends CommonApi
      * @return array|bool|string|void|null
      * @throws Exception
      */
-    #[OAT\Delete(
-        path: '/admin/index/delete/{resource}',
-        operationId: 'deleteRecord',
-        description: 'Удаляет одну или несколько записей ресурса',
-        tags: ['Админ'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'resource',
-                description: 'ижентификатор ресурса, в котором происходит удаление',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(type: 'string')
-            )],
-        requestBody: new OAT\RequestBody(
-            required: true, description: 'ключ удаления и id удаляемых записей',
-            content: new OAT\MediaType(
-                mediaType: 'application/x-www-form-urlencoded',
-                schema: new OAT\Schema(
-                    type: 'object',
-                    required: ['key', 'id'],
-                    properties: [
-                        new OAT\Property(property: 'key', type: 'string', title: 'Ключ удаления'),
-                        new OAT\Property(property: 'id', type: 'array', title: 'id записей для удаления',
-                            items: new OAT\Items(type: 'integer')
-                        )
-                    ]
-                )
-            )
-        ),
-        responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'OK',
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ошибка удаления',
-            )
-        ]
-    )]
-    private function indexDelete($data)
+    private function indexDelete($resource, $field, array $values)
     {
-        $params = $this->route['params'];
         try {
-            if (!isset($params['delete'])) throw new RuntimeException("Не удалось определить местоположение данных.");
 
-            if (empty($data['key']) || empty($data['id'])) throw new RuntimeException("Не удалось определить параметры удаления");
-
-            [$table, $refid] = explode(".", $data['key']);
+            [$table, $refid] = explode(".", $field);
 
             if ( ! $table || ! $refid) {
                 throw new RuntimeException("Не удалось определить параметры удаления!");
             }
-            $resource   = $params['delete'];
-            $ids        = $data['id'];
             $admin      = false;
             if (strpos($table, 'core_') === 0) {
                 //удаление в таблицах ядра
@@ -118,7 +209,7 @@ class ModAdminApi extends CommonApi
             if (!$admin) {
 //                $resource = explode('xxx', $resource);
                 //кастомное удаление само должно проверять права на удаление
-                $custom = $this->customDelete($resource, $ids);
+                $custom = $this->customDelete($resource, $values);
                 if ($custom) return $custom;
             }
 
@@ -161,7 +252,7 @@ class ModAdminApi extends CommonApi
 
         $this->db->beginTransaction();
         try {
-            foreach ($ids as $key) {
+            foreach ($values as $key) {
                 $where = array($this->db->quoteInto("`$refid` = ?", $key));
                 if ($authorOnly) {
                     $where[] = $this->db->quoteInto("author = ?", $auth->NAME);
@@ -170,7 +261,7 @@ class ModAdminApi extends CommonApi
                 else $this->db->delete($table, $where);
             }
             $this->db->commit();
-            $this->emit('delete', [$table . "." . $refid => $ids]); //генерируем событие удаления для слушателей
+            $this->emit('delete', [$table . "." . $refid => $values]); //генерируем событие удаления для слушателей
             return true;
         } catch (Exception $e) {
             $this->db->rollBack();
@@ -382,6 +473,33 @@ class ModAdminApi extends CommonApi
     )]
     private function getAccessInfo(string $resource)
     {
+        $res = explode('-', $resource);
+        $mod = $this->getModule($res[0]);
+        if (!$mod) throw new \Exception('Error: resource not found', 404);
+        if (!empty($res[1]) && !isset($mod['submodules'][$res[1]])) throw new \Exception('Error: resource not found', 404);
+
+        if ($this->auth->ADMIN) {
+            $default = [
+                'access' => 'on',
+                'list_all' => 'on',
+                'read_all' => 'on',
+                'edit_all' => 'on',
+                'delete_all' => 'on'
+            ];
+
+            $access_add = $mod['access_add'] ? unserialize(base64_decode($mod['access_add'])) : [];
+            foreach ($access_add as $key => $item) {
+                $default[$key . "_all"] = 'on';
+            }
+            if (isset($res[1])) {
+                $access_add = $mod['submodules'][$res[1]]['access_add'] ? unserialize(base64_decode($mod['submodules'][$res[1]]['access_add'])) : [];
+                foreach ($access_add as $key => $item) {
+                    $default[$key . "_all"] = 'on';
+                }
+            }
+            return $default;
+        }
+
         $role = $this->db->fetchRow("
                     SELECT name, 
                            access
@@ -389,13 +507,18 @@ class ModAdminApi extends CommonApi
 					WHERE id=? AND is_active_sw = 'Y'
 					ORDER BY position DESC
                 ", $this->auth->ROLEID);
+
         if (!$role) throw new \Exception('Error: role not found', 404);
         $access = $role['access'] ? unserialize($role['access']) : [];
         $res = [];
         foreach ($access as $rule => $resources) {
-            if (!isset($resources[$resource])) continue;
+
+            if (!isset($resources[$resource])) {
+                continue;
+            }
             $res[$rule] = $resources[$resource];
         }
         return $res;
     }
+
 }

@@ -28,7 +28,8 @@ class ajaxFunc extends Common {
 	protected $userId;
 	private $orderFields    = [];
 	private $last_insert_id = 0;
-	private $refid = 0;
+	private       $refid       = 0;
+	private array $saved_files = [];
 
 
     /**
@@ -345,7 +346,8 @@ class ajaxFunc extends Common {
 	 * @return int|string
 	 * @throws Exception
 	 */
-	protected function saveData($data, $inTrans = true) {
+	protected function saveData(array $data, bool $inTrans = true) {
+
 		if ( ! $inTrans) {
 		    $this->db->beginTransaction();
         }
@@ -378,7 +380,10 @@ class ajaxFunc extends Common {
 			    throw new Exception("Ошибка обработки таблицы", 500);
             }
 
-			foreach ($data['control'] as $key => $value) {
+
+            $data['control'] = $this->clearData($data['control'], ['trim']);
+
+            foreach ($data['control'] as $key => $value) {
 				if ( ! is_array($value)) $value = trim((string)$value);
 				if (substr($key, -3) == '%re') continue;
 				if (substr($key, -4) == '%tru') continue;
@@ -495,7 +500,12 @@ class ajaxFunc extends Common {
 					$this->saveFile($table, $last_insert_id, $fileFlag);
 				}
 			}
-			if (!$inTrans) $this->db->commit();
+
+            if ( ! $inTrans) {
+                $this->db->commit();
+            }
+
+            $this->removeSavedFiles();
 		}
 		catch (Exception $e) {
 			if (!$inTrans) {
@@ -688,6 +698,8 @@ class ajaxFunc extends Common {
                 $this->db->commit();
             }
 
+            $this->removeSavedFiles();
+
         } catch (Exception $e) {
             if ( ! $inTrans) {
                 $this->db->rollback();
@@ -760,6 +772,43 @@ class ajaxFunc extends Common {
 
 
     /**
+     * Очистка данных
+     * @param array $data
+     * @param array $functions
+     * @return array
+     */
+    protected function clearData(array $data, array $functions = ['trim', 'strip_tags']): array {
+
+        foreach ($functions as $function) {
+            foreach ($data as $key => $item) {
+                if (is_string($item)) {
+                    $data[$key] = $function($item);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+
+    /**
+     * Удаление загруженных файлов
+     * @return void
+     */
+    private function removeSavedFiles(): void {
+
+        foreach ($this->saved_files as $saved_file) {
+
+            if (file_exists($saved_file)) {
+                unlink($saved_file);
+            }
+        }
+
+        $this->saved_files = [];
+    }
+
+
+    /**
      * Сохранение файлов их XFILES
      * @param string $table - таблица для сохранения
      * @param int    $last_insert_id
@@ -770,8 +819,8 @@ class ajaxFunc extends Common {
     private function saveFile($table, $last_insert_id, $file_controls) {
 
         $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $this->config->temp . '/' . $sid;
-        $thumb_dir  = $upload_dir . '/thumbnail';
+        $upload_dir = "{$this->config->temp}/core_sessions/{$sid}";
+        $thumb_dir  = "{$upload_dir}/thumbnail";
 
         foreach ($file_controls as $field => $file_control) {
 
@@ -786,18 +835,18 @@ class ajaxFunc extends Common {
                 $file_path = $upload_dir . '/' . $file[0];
 
                 if ( ! file_exists($file_path)) {
-                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[0]));
+                    throw new Exception(sprintf($this->_("Файл %s не найден"), $file[3]));
                 }
 
                 $size = filesize($file_path);
                 if ($size !== (int)$file[1]) {
-                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[0]));
+                    throw new Exception(sprintf($this->_("Что-то пошло не так. Размер файла %s не совпадает"), $file[3]));
                 }
                 $content = file_get_contents($file_path);
                 $hash    = md5_file($file_path);
 
-                $file_path_thumb = $thumb_dir . '/' . $file[0];
-                $thumb_content   = new Zend_Db_Expr('NULL');
+                $file_path_thumb = "{$thumb_dir}/{$file[0]}";
+                $thumb_content   = null;
 
                 if (file_exists($file_path_thumb)) {
                     $thumb_content = file_get_contents($file_path_thumb);
@@ -814,7 +863,7 @@ class ajaxFunc extends Common {
                         if ($file_control['check_width'] != $image_info[0] && $file_control['check_height'] != $image_info[1]) {
                             throw new Exception(sprintf(
                                 $this->_("Размер изображения <b>\"%s\"</b> %sx%s, а должен быть %sx%s"),
-                                $file[0],
+                                $file[3],
                                 $image_info[0],
                                 $image_info[1],
                                 $file_control['check_width'],
@@ -826,7 +875,7 @@ class ajaxFunc extends Common {
                         if ( ! empty($file_control['check_width']) && $file_control['check_width'] != $image_info[0]) {
                             throw new Exception(sprintf(
                                 $this->_("Высота изображения <b>\"%s\"</b> %spx, а должна быть %spx"),
-                                $file[0],
+                                $file[3],
                                 $image_info[0],
                                 $file_control['check_width']
                             ));
@@ -835,7 +884,7 @@ class ajaxFunc extends Common {
                         if ( ! empty($file_control['check_height']) && $file_control['check_height'] != $image_info[1]) {
                             throw new Exception(sprintf(
                                 $this->_("Ширина изображения <b>\"%s\"</b> %spx, а должна быть %spx"),
-                                $file[0],
+                                $file[3],
                                 $image_info[1],
                                 $file_control['check_height']
                             ));
@@ -888,25 +937,25 @@ class ajaxFunc extends Common {
                     // S3 storage
                     try {
                         $client = new S3Client([
-                            'region' => 'us-west-2',
-                            'version' => 'latest',
-                            'endpoint' => $s3->host,
-                            'credentials' => [
-                                'key' => $s3->access_key,
-                                'secret' => $s3->secret_key
+                            'region'                  => 'us-west-2',
+                            'version'                 => 'latest',
+                            'endpoint'                => $s3->host,
+                            'credentials'             => [
+                                'key'    => $s3->access_key,
+                                'secret' => $s3->secret_key,
                             ],
                             // Set the S3 class to use objects.dreamhost.com/bucket
                             // instead of bucket.objects.dreamhost.com
-                            'use_path_style_endpoint' => true
+                            'use_path_style_endpoint' => true,
                         ]);
                         //$listResponse = $client->listBuckets();
                         $key = "{$table}/{$last_insert_id}/{$hash}";
                         $client->putObject([
                             'Bucket' => $s3->bucket,
-                            'Key' => $key,
-                            'Body' => $content
+                            'Key'    => $key,
+                            'Body'   => $content,
                         ]);
-                        $key = "S3|{$s3->bucket}|$key";
+                        $key     = "S3|{$s3->bucket}|$key";
                         $content = null;
 
                     } catch (\Exception $e) {
@@ -917,17 +966,21 @@ class ajaxFunc extends Common {
                 }
                 //TODO add GCP here
 
-                $this->db->insert($table . '_files', array(
+                $this->db->insert($table . '_files', [
                     'refid'    => $last_insert_id,
-                    'filename' => $file[0],
+                    'filename' => $file[3],
                     'filesize' => $size,
                     'hash'     => $hash,
                     'type'     => $file[2],
                     'content'  => $content,
                     'fieldid'  => $field,
                     'thumb'    => $thumb_content,
-                    'storage'  => $key
-                ));
+                    'storage'  => $key,
+                ]);
+
+
+                $this->saved_files[] = $file_path;
+                $this->saved_files[] = $file_path_thumb;
             }
         }
     }
@@ -941,12 +994,12 @@ class ajaxFunc extends Common {
 
         if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');
-            if (!$sess_form || !$id || empty($sess_form->$id)) {
-                return array();
+            if ( ! $sess_form || ! $id || empty($sess_form->$id)) {
+                return [];
             }
-            $all_forms = $sess_form->$id;
-            $key   	= $this->refid . "_" . crc32($_SERVER['REQUEST_URI']);
-            $this->orderFields = isset($all_forms[$key]) ? $all_forms[$key] : [];
+            $all_forms         = $sess_form->$id;
+            $key               = $this->refid . "_" . crc32($_SERVER['REQUEST_URI']);
+            $this->orderFields = $all_forms[$key] ?? [];
         }
         return $this->orderFields;
     }

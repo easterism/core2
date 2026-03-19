@@ -65,9 +65,21 @@ class Logger
         $job->sendStatus(1, $workload_size);
 
         $_SERVER = get_object_vars($workload->server);
+        // Определяем DOCUMENT_ROOT (для прямых вызовов, например cron)
+        if (!defined("DOC_ROOT")) {
+            define("DOC_ROOT", dirname(str_replace("//", "/", $_SERVER['SCRIPT_FILENAME'])) . "/");
+        }
+        if (!defined("DOC_PATH")) {
+            define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
+        }
 
         $data = get_object_vars($workload->payload); //данные для сохранения в базу
-
+        $data += [
+            'ip'             => $_SERVER['REMOTE_ADDR'],
+            'request_method' => $_SERVER['REQUEST_METHOD'],
+            'remote_port'    => $_SERVER['REMOTE_PORT'],
+            'query'          => $_SERVER['QUERY_STRING'],
+        ];
         if (isset($data['sid'])) {
             if ($this->_access_files) {
                 foreach ($this->_access_files as $access_file) {
@@ -77,11 +89,6 @@ class Logger
                 }
 
             } else {
-                $data = get_object_vars($workload->payload);
-                if (empty($data['action'])) {
-                    throw new \Exception("No Logger action specified");
-                }
-                $data['action'] = serialize($data['action']);
 
                 //$log[] = "Соединяемся с базой...";
                 $mysql = (new Db())->db;

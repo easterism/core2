@@ -5,11 +5,12 @@ require_once 'Templater3.php';
 require_once 'Tool.php';
 
 use Laminas\Session\Container as SessionContainer;
+use Exception;
+use Templater3;
 
 /**
- * Class Login
- * @package Core2
- * @property Model\Users           $dataUsers
+ * @property Model\Users              $dataUsers
+ * @property \ModWebserviceController $modWebservice
  */
 class Login extends \Common {
 
@@ -22,7 +23,7 @@ class Login extends \Common {
      * @throws \Zend_Db_Adapter_Exception
      * @throws \Zend_Db_Exception
      * @throws \Zend_Exception
-     * @throws \Exception
+     * @throws Exception
      */
     public function dispatch(array $route) {
 
@@ -35,14 +36,14 @@ class Login extends \Common {
         if ($uri == 'registration') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->_('Регистрация недоступна'), 403);
             }
             $form_html = $this->modAuth->getPageRegistration();
-            $tpl  = new \Templater3();
+            $tpl    = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -50,18 +51,18 @@ class Login extends \Common {
         elseif ($uri == 'registration_complete') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->_('Регистрация недоступна'), 403);
             }
             if (!isset($query['key'])) {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Ключ не передан'), 400);
+                throw new Exception($this->_('Ключ не передан'), 400);
             }
             $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -69,14 +70,29 @@ class Login extends \Common {
         elseif ($uri == 'restore') {
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new \Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new \Exception($this->_('Восстановление пароля недоступно'), 403);
+                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
             }
             $form_html = $this->modAuth->getPageRestore();
-            $tpl  = new \Templater3();
+            $tpl  = new Templater3();
+            $tpl->setTemplate($form_html);
+            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+            return $html;
+        }
+        elseif ($uri == 'restore_complete') {
+            $auth = $this->isModuleInstalled('auth');
+            if (!$auth) {
+                throw new Exception($this->_('Модуль регистрации не найден'), 404);
+            }
+            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                //субмдуль регистрациивыключен
+                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
+            }
+            $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
+            $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
@@ -87,13 +103,15 @@ class Login extends \Common {
 
     }
 
+
     /**
-     * попытка входа в систему
-     * @param $login
-     * @param $password
+     * Попытка входа в систему
+     * @param string      $login
+     * @param string      $password
+     * @param string|null $return_url
      * @return array|string[]
      */
-    public function enter($login, $password):array
+    public function enter(string $login, string $password, string $return_url = null):array
     {
         if (empty($login)) {
             return [
@@ -110,10 +128,34 @@ class Login extends \Common {
         }
 
         try {
+            if ( ! empty($return_url) && filter_var($return_url, FILTER_VALIDATE_URL) !== false) {
+                $return_url_parse = parse_url($return_url);
+
+                if ( ! empty($return_url_parse['host']) &&
+                     $this->config?->auth?->return_url?->domains &&
+                     is_array($this->config->auth->return_url->domains->toArray()) &&
+                     in_array($return_url_parse['host'], $this->config->auth->return_url->domains->toArray())
+                ) {
+                    $this->checkLogin($login, $password);
+
+                    $name        =  $_SERVER['HTTP_USER_AGENT'] ?? '';
+                    $name        =  $name ?: "{$login}-" . crc32(uniqid());
+                    $token       = $this->modWebservice->webtokens()->createWebtoken($login, $name);
+                    $return_url .= parse_url($return_url, PHP_URL_QUERY)
+                        ? "&access_token={$token}"
+                        : "?access_token={$token}";
+
+                    return [
+                        'status'     => 'success',
+                        'return_url' => $return_url,
+                    ];
+                }
+            }
+
             $this->authLoginPassword($login, $password);
 
             return [
-                'status' => 'success'
+                'status' => 'success',
             ];
 
         } catch (\Exception $e) {
@@ -133,7 +175,7 @@ class Login extends \Common {
     public function setSystemName($system_name) {
 
         if ( ! is_scalar($system_name)) {
-            throw new \Exception('Incorrect system name');
+            throw new Exception('Incorrect system name');
         }
 
         $this->system_name = $system_name;
@@ -147,7 +189,7 @@ class Login extends \Common {
     public function setFavicon(Array $favicon) {
 
         if ( ! is_array($favicon)) {
-            throw new \Exception('Incorrect favicon');
+            throw new Exception('Incorrect favicon');
         }
 
         $this->favicon = $favicon;
@@ -162,17 +204,23 @@ class Login extends \Common {
      */
     private function getPageLogin() :string {
 
-        $tpl  = new \Templater2(Theme::get("login"));
+        $tpl  = new Templater3(Theme::get("login"));
         $logo = $this->getSystemLogo();
 
         if ($logo) {
             $tpl->logo->assign('{logo}', $logo);
         }
-
+        $danger = '';
+        if (!empty($this->config->session->cookie_secure)) {
+            //cookie работают только по HTTPS
+            $danger = $this->_("Вход возможен только по защищенному соединению.");
+        }
+        $tpl->assign('{danger}', $danger);
         if ($auth = $this->isModuleInstalled('auth')) {
             if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-            } else {
+            }
+            else {
                 $auth_config = $this->modAuth->moduleConfig->auth;
                 $reg_config = $this->modAuth->moduleConfig->registration;
                 $restore_config = $this->modAuth->moduleConfig->restore;
@@ -252,13 +300,6 @@ class Login extends \Common {
     }
 
 
-
-
-
-
-
-
-
     /**
      * @param array $user
      * @return bool
@@ -282,7 +323,7 @@ class Login extends \Common {
         }
 
         if (session_id() == 'deleted') {
-            throw new \Exception($this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени."));
+            throw new Exception($this->_("Ошибка сохранения сессии. Проверьте настройки системного времени."));
         }
 
         $authNamespace->ID    = (int)$user['u_id'];
@@ -315,19 +356,18 @@ class Login extends \Common {
 
 
     /**
-     * Авторизация пользователя через форму
      * @param string $login
      * @param string $password
-     * @return bool
-     * @throws \Zend_Db_Exception
+     * @return array
+     * @throws Exception
      */
-    private function authLoginPassword(string $login, string $password): bool {
+    private function checkLogin(string $login, string $password): array {
 
         $blockNamespace = new SessionContainer('Block');
 
         try {
             if ( ! empty($blockNamespace->blocked)) {
-                throw new \Exception($this->translate->tr("Ваш доступ временно заблокирован!"));
+                throw new Exception($this->_("Ваш доступ временно заблокирован!"));
             }
 
             $login = trim($login);
@@ -344,7 +384,7 @@ class Login extends \Common {
                     if ((function_exists('ctype_print') ? ! ctype_print($password) : true) ||
                         strlen($password) < 1
                     ) {
-                        throw new \Exception($this->_("Ошибка пароля!"));
+                        throw new Exception($this->_("Ошибка пароля!"));
                     }
 
                     $user           = $this->getUserLdap($login, $password);
@@ -357,17 +397,22 @@ class Login extends \Common {
             }
 
             if ( ! $user) {
-                throw new \Exception($this->translate->tr("Нет такого пользователя"));
+                throw new Exception($this->_("Нет такого пользователя"));
             }
 
 
-            if ($user['u_pass'] !== Tool::pass_salt($password)) {
+            if ( ! Tool::password_verify_secure($password, (string)$user['u_pass'])) {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
             }
 
-            $this->auth($user);
+            if (Tool::password_needs_upgrade((string)$user['u_pass']) && !empty($user['u_id'])) {
+                $where = $this->db->quoteInto('u_id = ?', (int)$user['u_id']);
+                $this->db->update('core_users', [
+                    'u_pass' => Tool::password_hash_secure($password),
+                ], $where);
+            }
 
-            return true;
+            $this->auth($user);
 
         } catch (\Exception $e) {
             $code = $e->getCode() > 200 && $e->getCode() < 600 ? $e->getCode() : 403;
@@ -390,6 +435,20 @@ class Login extends \Common {
     }
 
 
+    /**
+     * Авторизация пользователя через форму
+     * @param string $login
+     * @param string $password
+     * @return void
+     * @throws \Zend_Db_Exception
+     * @throws Exception
+     */
+    private function authLoginPassword(string $login, string $password): void {
+
+        $user = $this->checkLogin($login, $password);
+        $this->auth($user);
+    }
+
 
     /**
      * Установка контекста выполнения скрипта
@@ -411,7 +470,7 @@ class Login extends \Common {
         if ($res = $this->config->system->logo) {
             if (is_file($res)) return "<img src='{$res}' alt='logo'>";
         }
-        $tpl       = new \Templater3(Theme::get("logo"));
+        $tpl       = new Templater3(Theme::get("logo"));
         return $tpl->render();
     }
 
@@ -521,7 +580,10 @@ class Login extends \Common {
      */
     private function getIndex() {
 
-        $tpl = new \Templater3();
+        $tpl = new Templater3();
+        if (!$this->favicon) {
+            $this->favicon = $this->getSystemFavicon();
+        }
 
         if (Tool::isMobileBrowser()) {
             $tpl->loadTemplate(Theme::get("login-indexMobile"));
@@ -529,6 +591,9 @@ class Login extends \Common {
             $tpl->loadTemplate(Theme::get("login-index"));
         }
 
+        if ($this->system_name) {
+            $this->setSystemName($this->config->system->name);
+        }
         $tpl->assign('{system_name}', $this->system_name);
 
         $tpl->assign('favicon.png', isset($this->favicon['png']) && is_file($this->favicon['png']) ? $this->favicon['png'] : '');
@@ -557,6 +622,39 @@ class Login extends \Common {
         }
 
         return $tpl->render();
+    }
+
+
+    /**
+     * get favicons from conf.ini
+     * @return array
+     */
+    private function getSystemFavicon(): array {
+
+        $favicon_png = $this->config->system->favicon_png;
+        $favicon_ico = $this->config->system->favicon_ico;
+
+        $favicon_png = $favicon_png && is_file($favicon_png)
+            ? $favicon_png
+            : (is_file('favicon.png') ? 'favicon.png' : '');
+
+        $favicon_ico = $favicon_ico && is_file($favicon_ico)
+            ? $favicon_ico
+            : (is_file('favicon.ico') ? 'favicon.ico' : '');
+
+        if (defined('THEME')) {
+            if (!$favicon_png) {
+                $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
+            }
+            if (!$favicon_ico) {
+                $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
+            }
+        }
+
+        return [
+            'png' => $favicon_png,
+            'ico' => $favicon_ico,
+        ];
     }
 
 }

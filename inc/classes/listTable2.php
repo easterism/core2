@@ -44,26 +44,26 @@ class listTable2 extends initList {
 		$this->main_table_id 	= "main_" . $name;
 		$this->search_table_id 	= "search_" . $name;
 	}
-	
+
 	public function button($value, $img = "", $onclick = "", $style = "", $type = 'button') {
 		$id = uniqid();
 		$out = '<input type="' . $type . '" class="button" value="' . $value . '" style="' . $style . '" onclick="' . ($onclick ? $onclick : "if(document.getElementById('$id') && document.getElementById('$id').form) document.getElementById('$id').form.onsubmit()") . '"/>';
 		return $out;
 	}
-	
+
 	public function setRecordCount($value) {
 		$this->recordCount = $value;
 	}
-	
+
 	private function commafy($_, $del = ';psbn&') {
 	    return strrev( (string)preg_replace( '/(\d{3})(?=\d)(?!\d*\.)/', '$1' . $del , strrev( $_ ) ) );
 	}
-	
+
 	function addColumn($name, $width = "0%", $type, $in = "", $processing = "", $sort = true) {
-		$this->table_column[$this->main_table_id][] = array('name' => addslashes($name), 
-															'type' => strtolower($type), 
-															'in' => $in, 
-															'width' => $width, 
+		$this->table_column[$this->main_table_id][] = array('name' => addslashes($name),
+															'type' => strtolower($type),
+															'in' => $in,
+															'width' => $width,
 															'processing' => $processing,
 															'sort' => $sort);
 	}
@@ -83,7 +83,7 @@ class listTable2 extends initList {
 			'nocheck' => $nocheck
 		);
 	}
-	
+
 	public function addButtonCustom($html = '') {
 		$this->table_button[$this->main_table_id][] = array('html' => $html);
 	}
@@ -113,7 +113,7 @@ class listTable2 extends initList {
 	 * @return array
 	 */
 	public function getData() {
-		
+
 		// CHECK FOR SEARCH
 		$ss = new Zend_Session_Namespace('Search');
 		$ssi = $this->main_table_id;
@@ -133,7 +133,7 @@ class listTable2 extends initList {
 		} else {
 			$tmp[$countPOST] = $_POST[$countPOST];
 		}
-		
+
 		//SEARCH
 		if (!isset($_POST['search'])) $_POST['search'] = array();
 		if (empty($_POST['search'][$this->main_table_id]) && empty($tmp['search'])) {
@@ -169,7 +169,7 @@ class listTable2 extends initList {
 				}
 			}
 		}
-		
+
 		if (empty($_POST[$pagePOST])) {
 			$_POST[$pagePOST] = 1;
 		} else {
@@ -205,7 +205,7 @@ class listTable2 extends initList {
 				}
 			}
 		}
-		
+
 		if (!empty($_POST['search'][$this->main_table_id]) && count($this->table_search)) {
 			reset($this->table_search[$this->main_table_id]);
 			$next = current($this->table_search[$this->main_table_id]);
@@ -227,7 +227,7 @@ class listTable2 extends initList {
 								}
 							} elseif ($next['type'] == 'checkbox' || $next['type'] == 'checkbox2') {
 								if (strpos($next['field'], "ADD_SEARCH") === false) {
-									
+
 									$search .= " AND ({$next['field']}='" . implode("' OR {$next['field']}='", $search_value) . "')";
 								} else {
 									$search .= " AND " . str_replace("ADD_SEARCH", "?", $next['field']);
@@ -262,33 +262,33 @@ class listTable2 extends initList {
 				$next = next($this->table_search[$this->main_table_id]);
 			}
 		}
-		
-		
-		$idm = substr($this->SQL, strripos($this->SQL, "SELECT ") + 6); 
+
+
+		$idm = substr($this->SQL, strripos($this->SQL, "SELECT ") + 6);
 		$idm = trim($idm);
-		$idm = substr($idm, 0, strpos($idm, ","));		
-		if (preg_match("/(as|AS)/", $idm, $as)) {			
-			$idm = substr($idm, 0, strpos($idm, $as[0]));				
-		}									
-		if (preg_match("/(\[ON|OFF)\(([a-z._]+)\)\]/", $this->SQL, $mas)) {			
-			$res = explode(".", $mas[2]);			
+		$idm = substr($idm, 0, strpos($idm, ","));
+		if (preg_match("/(as|AS)/", $idm, $as)) {
+			$idm = substr($idm, 0, strpos($idm, $as[0]));
+		}
+		if (preg_match("/(\[ON|OFF)\(([a-z._]+)\)\]/", $this->SQL, $mas)) {
+			$res = explode(".", $mas[2]);
 			if (isset($res[1])) {
 				$str_repl_on = "'[ON(" .$res[0].".".$res[1].")]'";
-				$str_repl_off = "'[OFF(" .$res[0].".".$res[1].")]'";	
-				$table_data = $mas[2];					
-			} else {				
+				$str_repl_off = "'[OFF(" .$res[0].".".$res[1].")]'";
+				$table_data = $mas[2];
+			} else {
 				$str_repl_on = "'[ON(" .$res[0].")]'";
 				$str_repl_off = "'[OFF(" .$res[0].")]'";
-				$table_data = $res[0]."."."is_active_sw";	
-			}						
+				$table_data = $res[0]."."."is_active_sw";
+			}
 			$this->SQL = str_replace($str_repl_on, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
 			$this->SQL = str_replace($str_repl_off, "CONCAT_WS('','<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" onclick=\"blockList.switch_active(this, event)\" t_name = ".$table_data.".', ".$idm.",'>')", $this->SQL);
 		} else {
 			$this->SQL = str_replace("[ON]", "<img src=\"core2/html/".THEME."/img/on.png\" alt=\"on\" />", $this->SQL);
 			$this->SQL = str_replace("[OFF]", "<img src=\"core2/html/".THEME."/img/off.png\" alt=\"off\" />", $this->SQL);
-		}		
-		
-		$this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);		
+		}
+
+		$this->SQL = str_replace("ADD_SEARCH", $search, $this->SQL);
 		$order = isset($tmp['order']) ? $tmp['order'] : '';
 		if (isset($this->table_column[$this->main_table_id])) {
 			foreach ($this->table_column[$this->main_table_id] as $seq => $columns) {
@@ -304,7 +304,7 @@ class listTable2 extends initList {
 				$check 			= explode("ORDER BY", $tempSQL);
 				$lastPart 		= end($check);
 				$orderField 	= $order + 1;
-				
+
 				if (count($check) > 1 && !empty($lastPart) && strpos($lastPart, 'FROM ') === false) {
 					$tempSQL = "";
 					$co = count($check);
@@ -316,7 +316,7 @@ class listTable2 extends initList {
 				}
 				$this->SQL = $tempSQL . " ORDER BY " . $orderField . " " . $tmp['orderType'];
 			}
-			
+
 			if ($_POST[$pagePOST] == 1) {
 				$this->SQL .= " LIMIT " . $_POST[$countPOST];
 			} else if ($_POST[$pagePOST] > 1){
@@ -369,11 +369,11 @@ class listTable2 extends initList {
 						$value = array();
 						$value['type'] = '';
 					}
-					
+
 					//$sql_value = stripslashes($sql_value);
-					
+
 					if ($value['type'] == 'function') {
-						eval("\$sql_value = " . $value['processing'] . "(\$row);");
+						$sql_value = $this->safeProcessRowFunction($value['processing'] ?? '', $row, $sql_value);
 					} elseif ($value['type'] == 'html') {
 						//
 					} else {
@@ -401,8 +401,7 @@ class listTable2 extends initList {
 				}
 				foreach ($this->paintCondition as $ckey => $cvalue) {
 					$tres = $this->replaceTCOL($row, $cvalue);
-					$a = 0;
-					eval("if ($tres) \$a = 1;");
+					$a = $this->safeEvaluateCondition($tres);
 					if ($a) {
 						$this->metadata[$k] = array('paintColor' => '', 'fontColor' => '', 'fontWeight' => '');
 						if (!empty($this->paintColor[$ckey])) $this->metadata[$k]['paintColor'] = $this->paintColor[$ckey];
@@ -446,7 +445,7 @@ class listTable2 extends initList {
 
 				$nodelete = false;
 				$noauthor = true;
-				
+
 				foreach ($is as $value) {
 					if ($value['Field'] == 'is_deleted_sw') {
 						$nodelete = true;
@@ -487,7 +486,7 @@ class listTable2 extends initList {
 			unset($_POST[$this->main_table_id . "_delete"]);
 		}
 	}
-	
+
 	public function addHeader($cols) {
 		$this->extraHeaders[] = $cols;
 	}
@@ -497,7 +496,7 @@ class listTable2 extends initList {
 	 * @return void
 	 */
 	public function makeTable() {
-		
+
 		// CHECK FOR DELETE
 		$this->deleteAction();
 		if (!count($this->data) && !$this->dataAlreadyGot) {
@@ -514,7 +513,7 @@ class listTable2 extends initList {
 
 		$countPOST = 'count_' . $this->resource; //pagination record count
 		$pagePOST = 'page_' . $this->resource; //pagination page number
-		
+
 		//TABLE HEAD
 		$this->HTML .= "<div id=\"{$this->main_table_id}_error\" class=\"error" . ($this->error ? " block" : "") . "\">{$this->error}</div>";
 		$this->HTML .= "<table width=\"100%\" id=\"list{$this->resource}\" class=\"sTable\">";
@@ -676,12 +675,12 @@ class listTable2 extends initList {
 				if (isset($_POST['search'][$this->main_table_id]) && $_POST['search'][$this->main_table_id]) {
 					$next = next($_POST['search'][$this->main_table_id]);
 				}
-				
+
 				$tpl->reassignBlock('fields');
 			}
 			$this->HTML .= 	$tpl->parse();
 		}
-		
+
 		//SERVICE ROW
 		$tpl = new Templater('core2/html/' . THEME . "/list/serviceHead.tpl");
 		$tpl->assign('[TOTAL_RECORD_COUNT]', ($this->roundRecordCount ? "~" : "") . '[TOTAL_RECORD_COUNT]');
@@ -718,7 +717,7 @@ class listTable2 extends initList {
 			}
 		}
 		$serviceHeadHTML = $tpl->parse();
-		
+
 		// DATA HEADER
 		$tpl = new Templater("core2/html/" . THEME . "/list/headerHead.tpl");
 		$tpl->assign('{main_table_id}', $this->main_table_id);
@@ -742,8 +741,8 @@ class listTable2 extends initList {
 					}
 					if (!isset($span['col'])) $span['col'] = 1;
 					if (!isset($span['row'])) $span['row'] = 1;
-					$temp .= str_replace(array('{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'), 
-								array($caption, $span['col'], $span['row']), 
+					$temp .= str_replace(array('{CAPTION}', '{COLSPAN}', '{ROWSPAN2}'),
+								array($caption, $span['col'], $span['row']),
 								$cell);
 				}
 			}
@@ -770,12 +769,12 @@ class listTable2 extends initList {
 						$img = '<img src="' . $img . '" alt=""/>';
 					}
 				}
-				$temp .= str_replace(array('{WIDTH}', '{ORDER_VALUE}', '{CAPTION}', '{ORDER_TYPE}', '{COLSPAN}'), 
-									array($value['width'], ($key + 1), $value['name'], $img, ''), 
+				$temp .= str_replace(array('{WIDTH}', '{ORDER_VALUE}', '{CAPTION}', '{ORDER_TYPE}', '{COLSPAN}'),
+									array($value['width'], ($key + 1), $value['name'], $img, ''),
 									$cell);
 			} else {
-				$temp .= str_replace(array('{WIDTH}', '{CAPTION}', '{COLSPAN}'), 
-									array($value['width'], $value['name'], ''), 
+				$temp .= str_replace(array('{WIDTH}', '{CAPTION}', '{COLSPAN}'),
+									array($value['width'], $value['name'], ''),
 									$cellnosort);
 			}
 		}
@@ -790,20 +789,20 @@ class listTable2 extends initList {
 		if (!$this->extOrder) {
 			$recordNumber = ($_POST[$pagePOST] - 1) * $_POST[$countPOST];
 		}
-		
+
 		if (count($this->addSum)) {
 			$needsum = array();
 		} else {
 			$needsum = 0;
 		}
-		
+
 		//BUILD ROWS WITH DATA
 		//echo "<PRE>";print_r($this->data);echo"</PRE>";die();
 		$i = 0;
 		if (!empty($this->customSearch)) { //CHECK SEACH FOR CUSTOM FIELDS
 			$newData = array();
 			foreach ($this->data as $row) {
-			
+
 				$skip = false;
 				foreach ($this->customSearch as $field => $search_value) {
 					$search_value_trimmed = trim($search_value, '%');
@@ -827,7 +826,7 @@ class listTable2 extends initList {
 		}
 
 		foreach ($this->data as $k => $row) {
-			
+
 			if ($this->extOrder) {
 				if ($i < $_POST[$pagePOST] * $_POST[$countPOST] - $_POST[$countPOST]) {
 					$i++;
@@ -838,9 +837,9 @@ class listTable2 extends initList {
 			} else {
 				$recordNumber++;
 			}
-			
+
 			$recordClass = ""; //TODO add class
-			
+
 			$tableBodyHTML .= "<tr onmouseover=\"this.className='rowOver'\" onmouseout=\"this.className=''\"";
 			if (!empty($this->metadata[$k])) {
 				if ($this->metadata[$k]['paintColor']) {
@@ -854,10 +853,10 @@ class listTable2 extends initList {
 				}
 			}
 
-			if ($this->editURL && 
+			if ($this->editURL &&
 				($this->checkAcl($this->resource, 'edit_all') || $this->checkAcl($this->resource, 'edit_owner')
 				|| $this->checkAcl($this->resource, 'read_all') || $this->checkAcl($this->resource, 'read_owner'))) {
-				
+
 				$tres = $this->replaceTCOL($row, $this->editURL);
 				$tableBodyHTML .= ' style="cursor:pointer"';
 				if (strpos(strtolower($tres), 'javascript:') === 0) {
@@ -869,9 +868,9 @@ class listTable2 extends initList {
 			$tableBodyHTML .= " class=\"editListFields\"><td title=\"{$row[0]}\">$recordNumber</td>";
 			$c = 1;
 			$look = "";
-			
+
 			$columnCount = count($this->table_column[$this->main_table_id]);
-			
+
 			reset($row);
 			next($row);
 			for ($sql_key = 1; $sql_key <= $columnCount; $sql_key++) {
@@ -884,22 +883,22 @@ class listTable2 extends initList {
 						$needsum[$need] += $sql_value;
 					}
 				}
-				
+
 				$value = $this->table_column[$this->main_table_id][$sql_key - 1];
 				$temp = "";
 				if ($value['type'] == 'block') {
 					$temp = " onclick=\"listx.cancel(event)\"";
 				}
-				
+
 				$tableBodyHTML .= "<td width=\"{$value['width']}\"" . $temp;
 				if ($value['type'] != 'status_inline') {
-					$tableBodyHTML .= " " . $this->replaceTCOL($row, $value['in']); 
+					$tableBodyHTML .= " " . $this->replaceTCOL($row, $value['in']);
 				}
 				$tableBodyHTML .= ">";
-				
-				//RECOGNIZE TYPE 
-				//$sql_value = htmlspecialchars($sql_value); 
-				
+
+				//RECOGNIZE TYPE
+				//$sql_value = htmlspecialchars($sql_value);
+
 				if ($value['type'] == 'text' || $value['type'] == 'block' || $value['type'] == 'function') {
 					$tableBodyHTML .= $sql_value;
 				} elseif ($value['type'] == 'number') {
@@ -908,9 +907,9 @@ class listTable2 extends initList {
 					global $config;
 					if (!class_exists('FileMaster')) {
 						require_once('FileMaster.php');
-					}						
+					}
 					$tableBodyHTML .= FileMaster::getFileInfoForList($sql_value, '', 150, 150);//htmlspecialchars_decode($sql_value);
-					
+
 				} elseif ($value['type'] == 'html') {
 					$tableBodyHTML .= htmlspecialchars_decode($sql_value);
 				} else if ($value['type'] == 'date') {
@@ -918,16 +917,16 @@ class listTable2 extends initList {
 					$mm = substr($sql_value, 5, 2);
 					$yyyy = substr($sql_value, 0, 4);
 					$yy = substr($sql_value, 2, 2);
-					
+
 					$tableBodyHTML .= str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
-					
+
 				} else if ($value['type'] == 'datetime') {
 					$dd = substr($sql_value, 8, 2);
 					$mm = substr($sql_value, 5, 2);
 					$yyyy = substr($sql_value, 0, 4);
 					$yy = substr($sql_value, 2, 2);
 					$time = substr($sql_value, 11);
-					
+
 					$sql_value = str_replace(array("dd", "mm", "yyyy", "yy"), array($dd, $mm, $yyyy, $yy), strtolower($this->date_mask));
 					$tableBodyHTML .= $sql_value . ' ' . $time;
 				} else if ($value['type'] == 'datetime_human') {
@@ -974,7 +973,7 @@ class listTable2 extends initList {
 						$tableBodyHTML .= "<img src=\"core2/html/" . THEME . "/img/off.png\" alt=\"off\" $evt />";
 					}
 				}
-				
+
 				$tableBodyHTML .= "</td>";
 			}
 			if ($this->multiEdit) {
@@ -984,7 +983,7 @@ class listTable2 extends initList {
 			}
 			$tempid = $this->resource . $int_count;
 			if ($this->noCheckboxes == 'no') {
-				$tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";	
+				$tableBodyHTML .= "<td width=\"1%\"><input class=\"checkbox\" type=\"checkbox\" id=\"check{$tempid}\" name=\"check{$tempid}\" value=\"{$row[0]}\" $onclick></td>";
 			}
 			$tableBodyHTML .= "</tr>";
 			if (isset($look) && $look) {
@@ -1018,9 +1017,9 @@ class listTable2 extends initList {
 				$tableBodyHTML .= "<td colspan=100></td></tr>";
 			}
 		}
-		
+
 		$this->HTML .= str_replace('[TOTAL_RECORD_COUNT]', $this->recordCount, $serviceHeadHTML) . $headerHeadHTML . $tableBodyHTML;
-		
+
 		// FOOTER ROW
 		$tpl = new Templater("core2/html/" . THEME . "/list/footerx_controls.tpl");
 		$count = ceil($this->recordCount / $this->recordsPerPage);
@@ -1130,7 +1129,8 @@ class listTable2 extends initList {
 		if (!$tres2) $tres2 = $tres;
 		return $tres2;
 	}
-	
+
+
 	function addParams($va, $value) {
 		$this->params[$va] = $value;
 	}

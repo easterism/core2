@@ -42,10 +42,11 @@
     "phpunit/phpunit": "^9.5",
     "components/jquery": "2.1.4",
     "monolog/monolog": "2.3.3",
-    "guzzlehttp/guzzle": "7.8.1",
+    "guzzlehttp/guzzle": "7.9.3",
     "phpseclib/phpseclib": "~2.0",
-    "zircote/swagger-php": "4.10.6",
+    "zircote/swagger-php": "6.*",
     "phpmailer/phpmailer": "v6.9.3",
+    "predis/predis": "^2.0",
     "ext-json": "*",
     "ext-zip": "*",
     "ext-mbstring": "*",
@@ -53,7 +54,8 @@
     "ext-gd": "*",
     "ext-intl": "*",
     "ext-pdo": "*",
-    "ext-xml": "*"
+    "ext-xml": "*",
+    "ext-redis": "*"
   },
   "require-dev": {
     "phpmd/phpmd" : "@stable",

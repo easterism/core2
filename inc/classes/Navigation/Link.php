@@ -13,6 +13,7 @@ class Link {
     private $class    = '';
     private $position = '';
     private $onclick  = '';
+    private $seq      = 10;
 
 
     /**
@@ -66,6 +67,24 @@ class Link {
     public function setIcon(string $icon): void {
 
         $this->icon = $icon;
+    }
+
+
+    /**
+     * @param int $seq
+     */
+    public function setSeq(int $seq): void {
+
+        $this->seq = $seq;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getSeq(): int {
+
+        return $this->seq;
     }
 
 
@@ -148,6 +167,7 @@ class Link {
 
         return [
             'type'     => 'link',
+            'seq'      => $this->getSeq(),
             'position' => $this->getPosition(),
             'title'    => $this->getTitle(),
             'link'     => $this->getLink(),

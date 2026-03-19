@@ -90,7 +90,7 @@ class Config
         if (!isset($this->data['production'])) throw new \Exception("production section not found", 404);
         $prod = $this->data['production'];
         foreach ($this->data as $key => $item) {
-            if ($section !== trim($key)) continue;
+            if (!$item || $section !== trim($key)) continue;
             $stage = trim(key($item));
             $origin = current($item);
             if ($stage == 'production') { //staging production section

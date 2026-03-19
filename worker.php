@@ -1,11 +1,9 @@
 #!/usr/bin/env php
 <?php
-
-if (!function_exists("gearman_version")) {
-    print "Gearman not installed.";
+if (PHP_SAPI !== 'cli') {
+    print "Allowed for CLI only.";
     die;
 }
-print gearman_version() . PHP_EOL;
 
 $autoload = __DIR__ . "/vendor/autoload.php";
 if (!file_exists($autoload)) {

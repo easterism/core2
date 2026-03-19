@@ -6,14 +6,13 @@
  * Date: 04.03.2016
  * Time: 0:58
  */
-namespace Core2\Store;
+namespace Core2;
 
 require_once(__DIR__ . "/Common.php");
 require_once(__DIR__ . "/Image.php");
 
 use Laminas\Session\Container as SessionContainer;
 use Aws\S3\S3Client;
-use Core2\Registry;
 
 class File extends \Common {
     private $content;
@@ -83,6 +82,7 @@ class File extends \Common {
      * @throws \Exception
      */
     public function handleFile($table, $id) {
+
         $this->getFileData($table, $id);
         $res2 = $this->data;
 
@@ -91,19 +91,17 @@ class File extends \Common {
             if (!$image->checkGD()) {
                 throw new \Exception("GD not installed", 500);
             }
-        } else {
-            header("Content-Type: application/force-download");
-            header("Content-Type: application/octet-stream");
-            header("Content-Type: application/download");
+        }
+
+        $content = $this->getContent($table, $id);
+
+        if ( ! $content) {
+            throw new \Exception('Download error!', 400);
         }
 
         $filename_encode = rawurlencode($res2['filename']);
 
-        $content = $this->getContent($table, $id);
-        if (!$content) {
-            throw new \Exception('Download error!', 400);
-        }
-
+        header("Content-Type: application/download");
         header("Content-Disposition: filename=\"{$res2['filename']}\"; filename*=utf-8''{$filename_encode}");
         header("Content-Type: " . $res2['type']);
         header('Content-Length: ' . $res2['filesize']);
@@ -205,9 +203,9 @@ class File extends \Common {
     public function handleFileTemp($thumbName) {
         $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
-        $upload_dir = $config->temp . '/' . $sid;
-        $fname      = $upload_dir . "/thumbnail/" . $thumbName;
-        if (!is_file($fname)) {
+        $upload_dir = "{$config->temp}/core_sessions/{$sid}";
+        $fname      = "{$upload_dir}/thumbnail/{$thumbName}";
+        if ( ! is_file($fname)) {
             throw new \Exception(404);
         }
         if (phpversion('tidy') < 5.3) {

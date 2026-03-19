@@ -362,7 +362,7 @@ class Render extends Acl {
                         case 'text_strict' :
                         case 'match':
                             $tpl->search_container->search_field->text->assign("[KEY]",     $key);
-                            $tpl->search_container->search_field->text->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->text->assign("[VALUE]",   htmlspecialchars($control_value));
                             $tpl->search_container->search_field->text->assign("[IN_TEXT]", $attributes_str);
                             break;
 
@@ -464,7 +464,7 @@ class Render extends Acl {
                             $data = $search['data'] ?? [];
 
                             $tpl->search_container->search_field->autocomplete->assign("[KEY]",     $key);
-                            $tpl->search_container->search_field->autocomplete->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->autocomplete->assign("[VALUE]",   htmlspecialchars($control_value));
                             $tpl->search_container->search_field->autocomplete->assign("[IN_TEXT]", $attributes_str);
                             $tpl->search_container->search_field->autocomplete->assign("[URL]",     $data['url'] ?? '');
                             break;
@@ -473,7 +473,7 @@ class Render extends Acl {
                             $data = $search['data'] ?? [];
 
                             $tpl->search_container->search_field->autocomplete_table->assign("[KEY]",     $key);
-                            $tpl->search_container->search_field->autocomplete_table->assign("[VALUE]",   $control_value);
+                            $tpl->search_container->search_field->autocomplete_table->assign("[VALUE]",   htmlspecialchars($control_value));
                             $tpl->search_container->search_field->autocomplete_table->assign("[IN_TEXT]", $attributes_str);
                             $tpl->search_container->search_field->autocomplete_table->assign("[URL]",     $data['url'] ?? '');
                             break;
@@ -524,7 +524,7 @@ class Render extends Acl {
                         case 'text_strict' :
                         case 'match':
                             $tpl->filter_controls->filter_control->text->assign("[KEY]",   $key);
-                            $tpl->filter_controls->filter_control->text->assign("[VALUE]", $control_value);
+                            $tpl->filter_controls->filter_control->text->assign("[VALUE]", htmlspecialchars($control_value));
                             $tpl->filter_controls->filter_control->text->assign("[TITLE]", $filter['title'] ?? '');
                             $tpl->filter_controls->filter_control->text->assign("[ATTR]",  $attributes_str);
                             break;

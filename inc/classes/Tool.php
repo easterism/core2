@@ -211,6 +211,58 @@ class Tool {
 
 
     /**
+     * Build modern password hash for an already-normalized secret.
+     * @param string $secret
+     * @return string
+     */
+    public static function password_hash_secure(string $secret): string {
+
+        return password_hash($secret, PASSWORD_ARGON2ID);
+    }
+
+
+    /**
+     * Verify password hash (supports legacy core2 hashes).
+     * @param string $secret
+     * @param string $hash
+     * @return bool
+     */
+    public static function password_verify_secure(string $secret, string $hash): bool {
+
+        if ($hash === '') {
+            return false;
+        }
+
+        if (str_starts_with($hash, '$argon2') || str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2a$') || str_starts_with($hash, '$2b$')) {
+            return password_verify($secret, $hash) || password_verify(md5($secret), $hash);
+        }
+
+        // legacy core2 format (support both historical variants)
+        return hash_equals(self::pass_salt($secret), $hash)
+            || hash_equals(self::pass_salt(md5($secret)), $hash);
+    }
+
+
+    /**
+     * Is stored hash legacy and should be upgraded.
+     * @param string $hash
+     * @return bool
+     */
+    public static function password_needs_upgrade(string $hash): bool {
+
+        if ($hash === '') {
+            return true;
+        }
+
+        if (str_starts_with($hash, '$argon2') || str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2a$') || str_starts_with($hash, '$2b$')) {
+            return password_needs_rehash($hash, PASSWORD_ARGON2ID);
+        }
+
+        return true;
+    }
+
+
+    /**
      * Format date with russian pattern
      *
      * @param string $formatum - date pattern
@@ -281,7 +333,7 @@ class Tool {
 	public static function declNum($number, $titles, $only_text = false) {
 
 		$cases = array(2, 0, 1, 1, 1, 2);
-		$num = abs($number);
+		$num = abs((int)$number);
 
 		$text = $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]];
 
@@ -813,4 +865,84 @@ class Tool {
         return $str = iconv("UTF-8", "UTF-8//IGNORE", strtr($string, $replace));
     }
 
+    /**
+     * возвращает float значение строки
+     * @param $str
+     * @return float
+     */
+    public static function float($str): float {
+        $str = preg_replace("/[^0-9,.]/", "", $str);
+        if (str_contains($str, ",")) {
+            $str = str_replace(".", "", $str);
+            $str = str_replace(",", ".", $str);
+        }
+
+        if (preg_match("/([0-9.]+)/", $str, $match)) {
+            return floatval($match[0]);
+        } else {
+            return floatval($str);
+        }
+
+    }
+
+    /**
+     *
+     * @param array $array
+     * @param $search
+     * @param array $options -
+     * 'case_sensitive' => false,
+     * 'search_keys' => false,
+     * 'search_values' => true,
+     * 'deep_search' => false,
+     * 'regex' => false
+     * @return array
+     */
+    public static function arraySearch($array, $search, $options = []) {
+        $defaults = [
+            'case_sensitive' => false,
+            'search_keys' => false,
+            'search_values' => true,
+            'deep_search' => false,
+            'regex' => false
+        ];
+
+        $options = array_merge($defaults, $options);
+        $results = [];
+
+        $searchCallback = function($haystack) use ($search, $options) {
+            if ($options['regex']) {
+                return preg_match($search, $haystack) === 1;
+            } elseif ($options['case_sensitive']) {
+                return strpos($haystack, $search) !== false;
+            } else {
+                return stripos($haystack, $search) !== false;
+            }
+        };
+
+        foreach ($array as $key => $value) {
+            $found = false;
+
+            // Поиск в ключах
+            if ($options['search_keys'] && is_string($key)) {
+                $found = $searchCallback($key);
+            }
+
+            // Поиск в значениях
+            if (!$found && $options['search_values']) {
+                if (is_string($value)) {
+                    $found = $searchCallback($value);
+                } elseif ($options['deep_search'] && is_array($value)) {
+                    // Рекурсивный поиск во вложенных массивах
+                    $nestedResults = self::arraySearch($value, $search, $options);
+                    $found = !empty($nestedResults);
+                }
+            }
+
+            if ($found) {
+                $results[$key] = $value;
+            }
+        }
+
+        return $results;
+    }
 }

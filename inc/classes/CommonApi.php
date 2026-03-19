@@ -1,10 +1,14 @@
 <?php
 require_once 'Acl.php';
 require_once 'Emitter.php';
+require_once 'HttpException.php';
+require_once 'Request.php';
 
 use Core2\Registry;
 use Core2\Error;
 use Core2\Emitter;
+use Core2\Request;
+use Core2\Routing\Router;
 
 /**
  * Class CommonApi
@@ -18,9 +22,7 @@ class CommonApi extends \Core2\Acl {
      */
 	protected $auth;
 
-    protected $module;
-
-    protected $route;
+    protected array $route = [];
 
 
     /**
@@ -28,18 +30,11 @@ class CommonApi extends \Core2\Acl {
      * @param string $module
      */
 	public function __construct() {
-        $child_class_name = get_class($this);
-        $mod_name = preg_match('~^Mod[A-z0-9\_]+(Api)$~', $child_class_name, $matches)
-            ? substr($child_class_name, 3, -strlen($matches[1]))
-            : '';
-		parent::__construct();
+        parent::__construct();
         $reg     = Registry::getInstance();
-        $this->module = strtolower($mod_name);
-        if (!$reg->isRegistered('invoker')) {
-            $reg->set('invoker', $this->module);
-        }
-		$this->auth = $reg->isRegistered('auth') ? $reg->get('auth') : null;
-        $this->route = $reg->isRegistered('route') ? $reg->get('route') : null;
+
+		$this->auth  = $reg->isRegistered('auth') ? $reg->get('auth') : null;
+        $this->route = $reg->isRegistered('route') ? $reg->get('route') : [];
         if ($this->route && $this->route['query']) {
             parse_str($this->route['query'], $this->route['query']);
         }
@@ -74,7 +69,7 @@ class CommonApi extends \Core2\Acl {
         }
 
         //исключение для гетера базы или кеша, выполняется всегда
-        if (in_array($k, ['db', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
+        if (in_array($k, ['db', 'db2', 'cache', 'translate', 'log', 'core_config', 'fact'])) {
             return parent::__get($k);
         }
         //геттер для модели
@@ -218,18 +213,65 @@ class CommonApi extends \Core2\Acl {
         return $request_raw;
     }
 
-    /**
-     * Порождает событие для модулей, реализующих интерфейс Subscribe
-     * @param string $event_name
-     * @param array $data
-     * @param string $module_override принудительный id модуля-инициатора события
-     * @return array
-     */
-    protected function emit($event_name, $data = [], $module_override = '') {
-        $module = $module_override ?: $this->module;
-        $reg    = Registry::getInstance();
-        $em     = $reg->isRegistered('emitter') ? $reg->get('emitter') : new Emitter();
-        return $em->emit($module, $event_name, $data);
-    }
 
+    /**
+     * Запуск метода из роутера
+     * @param Router $router
+     * @return mixed
+     * @throws Exception
+     */
+    protected function runRouter(Router $router): mixed {
+
+        $request = new Request();
+
+        // Обнуление
+        $_GET     = [];
+        $_POST    = [];
+        $_REQUEST = [];
+        $_FILES   = [];
+        $_COOKIE  = [];
+
+
+        $route_method = $router->getRoute();
+
+        if ( ! $route_method) {
+            http_response_code(404);
+            return [
+                'error_code'    => 'method_not_found',
+                'error_message' => "Метод не найден: {$_SERVER['REQUEST_METHOD']} {$_SERVER['REQUEST_URI']}"
+            ];
+        }
+
+        try {
+            return $route_method->run($request);
+
+        } catch (\Core2\HttpException $e) {
+            http_response_code($e->getCode());
+
+            return [
+                'error_code'    => $e->getErrorCode(),
+                'error_message' => $e->getMessage()
+            ];
+
+        } catch (\Zend_Db_Exception $e) {
+            $this->log->error("Database error", $e);
+            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
+
+            http_response_code(500);
+            return [
+                'error_code'    => 'error',
+                'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка базы данных. Обновите страницу или попробуйте позже')
+            ];
+
+        } catch (\Exception $e) {
+            $this->log->error("Fatal error", $e);
+            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
+
+            http_response_code(500);
+            return [
+                'error_code'    => 'error',
+                'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка. Обновите страницу или попробуйте позже')
+            ];
+        }
+    }
 }

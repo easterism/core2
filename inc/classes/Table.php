@@ -64,7 +64,9 @@ abstract class Table extends Acl {
     protected $is_ajax                  = false;
     protected $is_round_calc            = false;
     protected $head_top                 = false;
-    protected $deleteKey     = '';
+    protected $deleteKey                = '';
+    protected $table                    = '';
+    protected $primary_key              = '';
 
     private bool $is_update_state  = false;
     private bool $is_initial_state = false;
@@ -297,10 +299,11 @@ abstract class Table extends Acl {
 
     /**
      * Установка количества строк на странице
-     * @param int $count
+     * @param int  $count
+     * @param bool $force
      * @throws Exception
      */
-    public function setRecordsPerPage(int $count) {
+    public function setRecordsPerPage(int $count, bool $force = false): void {
 
         if ($count < 0) {
             throw new Exception('Задано некорректное значение');
@@ -308,7 +311,7 @@ abstract class Table extends Acl {
 
         $this->records_per_page_default = $count;
 
-        if ( ! isset($this->session->table->records_per_page)) {
+        if ( ! isset($this->session->table->records_per_page) || $force) {
             $this->records_per_page = $count === 0 ? 1000000000 : $count;
         }
     }
@@ -722,6 +725,38 @@ abstract class Table extends Acl {
      */
     public function showFiltersClear(bool $is_show = true): void {
         $this->show_filters_clear = $is_show;
+    }
+
+
+    /**
+     * @param string $table
+     * @return void
+     */
+    public function setTable(string $table): void {
+
+        $this->table      = $table;
+        $this->table_name = $table;
+
+        $this->session->table->name = $this->table;
+
+        // Из class.list
+        // Нужно для удаления
+        if ($this->table && $this->primary_key) {
+            $this->deleteKey = "{$this->table}.{$this->primary_key}";
+        }
+    }
+
+    /**
+     * @param string $key
+     */
+    public function setPrimaryKey(string $key): void {
+        $this->primary_key = $key;
+
+        // Из class.list
+        // Нужно для удаления
+        if ($this->table && $this->primary_key) {
+            $this->deleteKey = "{$this->table}.{$this->primary_key}";
+        }
     }
 
 

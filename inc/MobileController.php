@@ -17,6 +17,7 @@ use Laminas\Session\Container as SessionContainer;
 use Core2\Modules as Modules;
 use Core2\Roles as Roles;
 use Core2\Settings as Settings;
+use Core2\Mod\Admin;
 
 /**
  * Class CoreController
@@ -211,12 +212,30 @@ class MobileController extends Common {
 		$this->db->beginTransaction();
 		try {
 			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($_POST['tbl']), $arr);
-			$tbl = $arr[0];
-			$res = $this->db->fetchPairs("SELECT id, seq FROM `$tbl` WHERE id IN ('" . implode("','", $_POST['data']) . "') ORDER BY seq ASC");
+			$tbl = $arr[0] ?? '';
+
+			if (empty($tbl) || !is_array($_POST['data'] ?? null)) {
+				throw new Exception($this->translate->tr('Некорректные данные запроса'));
+			}
+
+			$ids = array_values(array_unique(array_filter(array_map('intval', $_POST['data']), static function ($id) {
+				return $id > 0;
+			})));
+
+			if (empty($ids)) {
+				throw new Exception($this->translate->tr('Не выбраны записи для сортировки'));
+			}
+
+			$table = $this->db->quoteIdentifier($tbl);
+			$res = $this->db->fetchPairs("SELECT id, seq FROM {$table} WHERE id IN (?) ORDER BY seq ASC", $ids);
+
 			if ($res) {
 				$values = array_values($res);
-				foreach ($_POST['data'] as $k => $val) {
-					$where = $this->db->quoteInto('id=?', $val);
+				foreach ($ids as $k => $val) {
+					if (!array_key_exists($k, $values)) {
+						break;
+					}
+					$where = $this->db->quoteInto('id = ?', $val);
 					$this->db->update($tbl, array('seq' => $values[$k]), $where);
 				}
 			}
@@ -237,15 +256,16 @@ class MobileController extends Common {
 	public function action_users () {
         if (!$this->auth->ADMIN) throw new Exception(911);
         //require_once 'core2/mod/ModAjax.php';
-        $user = new View();
+        $user = new Admin\Users\View();
         $tab = new tabs('users');
         $title = $this->translate->tr("Справочник пользователей системы");
-        if (isset($_GET['edit']) && $_GET['edit'] === '0') {
+
+        if (isset($_GET['edit']) && !(int)$_GET['edit']) {
             $user->create();
             $title = $this->translate->tr("Создание нового пользователя");
         }
         else if (!empty($_GET['edit'])) {
-            $user->get($_GET['edit']);
+            $user->get((int)$_GET['edit']);
             $title = sprintf($this->translate->tr('Редактирование пользователя "%s"'), $user->u_login);
         }
         $tab->beginContainer($title);
@@ -561,7 +581,7 @@ class MobileController extends Common {
     public function action_upload() {
         require_once 'classes/FileUploader.php';
 
-        $upload_handler = new \Core2\Store\FileUploader();
+        $upload_handler = new Core2\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
@@ -591,7 +611,7 @@ class MobileController extends Common {
      */
     public function fileHandler($resource, $context, $table, $id) {
         require_once 'classes/File.php';
-        $f = new \Core2\Store\File($resource);
+        $f = new Core2\File($resource);
         if ($context == 'fileid') {
             $f->handleFile($table, $id);
         }
@@ -663,7 +683,8 @@ class MobileController extends Common {
 				}				
 				unset($data['control']['certificate_ta']);
 				if (!empty($data['control']['u_pass'])) {
-					$dataForSave['u_pass'] = md5($data['control']['u_pass']);
+					$legacySecret = md5($data['control']['u_pass']);
+					$dataForSave['u_pass'] = \Core2\Tool::password_hash_secure($legacySecret);
 				}
 				if ($orderFields['refid'] == 0) {
 					$dataForSave['u_login'] = $data['control']['u_login'];
@@ -706,7 +727,11 @@ class MobileController extends Common {
 				$errorNamespace->ERROR =  $e->getMessage();				
 				$errorNamespace->setExpirationHops(1);
 			}			
-			header("Location:{$_POST['back']}");			
+			$back = (string)($_POST['back'] ?? '');
+			if ( ! preg_match('~^index\.php(?:\?.*)?$~', $back)) {
+				$back = 'index.php?module=admin&action=users';
+			}
+			header("Location:{$back}");			
 		}
 	}
 

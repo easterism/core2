@@ -1,6 +1,7 @@
 <?php
 require_once("class.ini.php");
 require_once 'Templater3.php';
+require_once 'Edit/Text.php';
 require_once __DIR__ . '/../Traits/Import.php';
 
 use Laminas\Session\Container as SessionContainer;
@@ -8,6 +9,7 @@ use Core2\Tool;
 use Core2\Registry;
 use Core2\Traits;
 use Core2\Theme;
+use Core2\Classes\Edit;
 
 $counter = 0;
 
@@ -73,6 +75,7 @@ class editTable extends initEdit {
     const TYPE_CUSTOM         = 'custom';
     const TYPE_DATE           = 'date';
     const TYPE_DATE2          = 'date2';
+    const TYPE_DATE3          = 'date3';
     const TYPE_DATETIME       = 'datetime';
     const TYPE_DATETIME2      = 'datetime2';
     const TYPE_DATETIME_LOCAL = 'datetime_local';
@@ -120,11 +123,11 @@ class editTable extends initEdit {
      */
 	public function __construct($name) {
 
-		parent::__construct();
-		$this->resource 		= $name;
-		$this->main_table_id 	= "main_" . $name;
-		$this->template 		= '<div id="' . $this->main_table_id . '_default">[default]</div>';
-		$this->uniq_class_id   	= $name;
+        parent::__construct();
+        $this->resource      = $name;
+        $this->main_table_id = "main_" . $name;
+        $this->template      = '<div id="' . $this->main_table_id . '_default">[default]</div>';
+        $this->uniq_class_id = $name;
 
 		global $counter;
 		$counter = 0;
@@ -439,11 +442,14 @@ class editTable extends initEdit {
      * @SuppressWarnings(PHPMD:StaticAccess)
      */
 	public function makeTable() {
-		if (!$this->isSaved) {
-			$this->save('save.php');
-		}
+
+        if ( ! $this->isSaved) {
+            $this->save('save.php');
+        }
+
 		$authNamespace = new SessionContainer('Auth');
-		if (is_array($this->SQL)) {
+
+        if (is_array($this->SQL)) {
 			$arr = $this->SQL;
 			$current = current($arr);
 			if (!is_array($current)) {
@@ -597,6 +603,7 @@ class editTable extends initEdit {
 				$controls = $cellFields->controls[$this->main_table_id];
 				if (!empty($controls)) {
 					foreach ($controls as $key => $value) {
+                        $value['form_id'] = $this->main_table_id;
 						$controlGroups[$cellId]['html'][$key] = '';
 						if (!empty($value['group'])) {
                             $temp              = [];
@@ -687,6 +694,7 @@ class editTable extends initEdit {
 							$controlGroups[$cellId]['html'][$key] .= $attrs;
 						}
 						elseif ($value['type'] == 'text' || $value['type'] == 'edit') { // простое поле
+                            $ctrl = new Edit\Text($value);
 							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
@@ -700,7 +708,14 @@ class editTable extends initEdit {
 								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"time\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
 							}
 						}
-						elseif ($value['type'] == 'datetime_local') {
+						elseif ($value['type'] == self::TYPE_DATE3) {
+							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
+								$controlGroups[$cellId]['html'][$key] .= $value['default'];
+							} else {
+								$controlGroups[$cellId]['html'][$key] .= "<input class=\"input\" id=\"$fieldId\" type=\"date\" name=\"control[$field]\" {$attrs} value=\"{$value['default']}\">";
+							}
+						}
+						elseif ($value['type'] == self::TYPE_DATETIME_LOCAL) {
 							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
 								$controlGroups[$cellId]['html'][$key] .= $value['default'];
 							} else {
@@ -839,6 +854,15 @@ class editTable extends initEdit {
 
                                 $settings = is_array($value['in']) ? $value['in'] : [];
 
+                                $input_address = null;
+
+                                if ( ! empty($settings['input_address_id'])) {
+                                    if ( ! is_array($settings['input_address_id'])) {
+                                        $settings['input_address_id'] = [ $settings['input_address_id'] ];
+                                    }
+                                    $input_address = json_encode($settings['input_address_id'], JSON_UNESCAPED_UNICODE);
+                                }
+
                                 $tpl = file_get_contents($this->tpl_control[self::TYPE_COORDINATES]);
                                 $tpl = str_replace('[FIELD_ID]',         $fieldId, $tpl);
                                 $tpl = str_replace('[FIELD]',            $field, $tpl);
@@ -848,7 +872,7 @@ class editTable extends initEdit {
                                 $tpl = str_replace('[WIDTH]',            $settings['width'] ?? 400, $tpl);
                                 $tpl = str_replace('[HEIGHT]',           $settings['height'] ?? 200, $tpl);
                                 $tpl = str_replace('[ZOOM]',             $settings['zoom'] ?? 7, $tpl);
-                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $settings['input_address_id'] ?? '', $tpl);
+                                $tpl = str_replace('[INPUT_ADDRESS_ID]', $input_address ?: "[]", $tpl);
                                 $tpl = str_replace('[CENTER_LAT]',       ! empty($settings['center']) && ! empty($settings['center']['lat']) ? $settings['center']['lat'] : '53.908045', $tpl);
                                 $tpl = str_replace('[CENTER_LNG]',       ! empty($settings['center']) && ! empty($settings['center']['lng']) ? $settings['center']['lng'] : '27.507411', $tpl);
 
@@ -1099,7 +1123,7 @@ class editTable extends initEdit {
 
                                                 $tpl->item->extra_field->assign('[TYPE]',  $list_field['type'] ?? 'text');
                                                 $tpl->item->extra_field->assign('[TITLE]', $list_field['title'] ?? '');
-                                                $tpl->item->extra_field->assign('[NAME]',  $name);
+                                                $tpl->item->extra_field->assign('[NAME]',  "[$name]");
                                                 $tpl->item->extra_field->assign('[VALUE]', $item[$name] ?? '');
                                                 $tpl->item->extra_field->reassign();
                                             }
@@ -1371,41 +1395,59 @@ class editTable extends initEdit {
 							}
 							$select++;
 						}
-						elseif ($value['type'] == 'checkbox2') {
-							$temp = array();
-							if (is_array($this->selectSQL[$select])) {
-								foreach ($this->selectSQL[$select] as $k=>$v) {
-									$temp[] = array($k, $v);
-								}
-							} else {
-								$data = $this->db->fetchAll($this->replaceTCOL($arr[0], $this->selectSQL[$select]));
-								foreach ($data as $values) {
-									$temp[] = array(current($values), end($values));
-								}
-							}
-							$temp1 = is_array($value['default']) ? $value['default'] : explode(",", $value['default']);
-							if ($this->readOnly || in_array($field, $this->read_only_fields)) {
-								foreach ($temp as $row) {
-									if (in_array($row[0], $temp1)) {
-										$controlGroups[$cellId]['html'][$key] .= "<div>{$row[1]}</div>";
-									}
-								}
-							} else {
-								foreach ($temp as $row) {
-									$controlGroups[$cellId]['html'][$key] .= "<div><label class=\"edit-checkbox2\"><input type=\"checkbox\" value=\"{$row[0]}\" name=\"control[$field][]\"";
-									if (in_array($row[0], $temp1)) {
-										$controlGroups[$cellId]['html'][$key] .= " checked=\"checked\"";
-									}
-									$controlGroups[$cellId]['html'][$key] .= " {$attrs}/>";
-									if (is_array($row[1])) {
-										$row[1] = $row[1]['value'];
-									}
-									$controlGroups[$cellId]['html'][$key] .= $row[1] . "</label></div>";
-								}
-							}
-							$select++;
-						}
-						elseif ($value['type'] == 'select' || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
+						elseif ($value['type'] == self::TYPE_CHECKBOX2) {
+                            $control_items = [];
+                            if (is_array($this->selectSQL[$select])) {
+                                foreach ($this->selectSQL[$select] as $k => $v) {
+                                    $control_items[] = [$k, $v];
+                                }
+
+                            } else {
+                                $data = $this->db->fetchAll($this->replaceTCOL($arr[0], $this->selectSQL[$select]));
+                                foreach ($data as $values) {
+                                    $control_items[] = [current($values), end($values)];
+                                }
+                            }
+
+                            $selected_items = is_array($value['default'])
+                                ? $value['default']
+                                : array_map( 'trim', explode(",", $value['default']));
+
+                            if ($this->readOnly || in_array($field, $this->read_only_fields)) {
+                                foreach ($control_items as $control_item) {
+                                    if (in_array($control_item[0], $selected_items)) {
+                                        $controlGroups[$cellId]['html'][$key] .= "<div>{$control_item[1]}</div>";
+                                    }
+                                }
+
+                            } else {
+                                if (is_array($value['in']) && ! empty($value['in']['all_checked'])) {
+                                    $controlGroups[$cellId]['html'][$key] .=
+                                        "<div><label class=\"edit-checkbox2\">" .
+                                            "<input type=\"checkbox\" onchange=\"edit.checkboxAll(this, '{$field}')\"/> " . $this->_('Все') .
+                                        "</label></div>";
+                                }
+
+
+                                foreach ($control_items as $control_item) {
+                                    $checked = in_array($control_item[0], $selected_items)
+                                        ? " checked=\"checked\""
+                                        : '';
+
+                                    if (is_array($control_item[1])) {
+                                        $control_item[1] = $control_item[1]['value'];
+                                    }
+
+                                    $controlGroups[$cellId]['html'][$key] .=
+                                        "<div><label class=\"edit-checkbox2\">" .
+                                            "<input type=\"checkbox\" value=\"{$control_item[0]}\" name=\"control[{$field}][]\" {$checked} {$attrs}/>{$control_item[1]}" .
+                                        "</label></div>";
+                                }
+                            }
+
+                            $select++;
+
+                        } elseif ($value['type'] == self::TYPE_SELECT || $value['type'] == 'list' || $value['type'] == 'list_hidden' || $value['type'] == 'multilist') {
                             $temp = [];
 
                             if (is_array($this->selectSQL[$select])) {
@@ -1434,10 +1476,12 @@ class editTable extends initEdit {
                                 if ($value['type'] == 'multilist') {
                                     $out_array = [];
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out_array[] = $row[1];
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out_array[] = $row[1];
+                                            }
                                         }
                                     }
 
@@ -1446,18 +1490,21 @@ class editTable extends initEdit {
                                 } else {
                                     $out = '';
                                     foreach ($temp as $row) {
-                                        $real_value = explode('"', $row[0]);
-                                        $real_value = $real_value[0];
-                                        if (in_array($real_value, $value['default'])) {
-                                            $out = $row[1];
-                                            break;
+                                        if ($row[0]) {
+                                            $real_value = explode('"', $row[0]);
+                                            $real_value = $real_value[0];
+                                            if (in_array($real_value, $value['default'])) {
+                                                $out = $row[1];
+                                                break;
+                                            }
                                         }
                                     }
                                 }
 
 
                                 $controlGroups[$cellId]['html'][$key] .= $out;
-                            } else {
+                            }
+                            else {
                                 $controlGroups[$cellId]['html'][$key] .= "<select id=\"" . $fieldId . "\" name=\"control[$field]" . ($value['type'] == 'multilist' ? '[]" multiple="multiple"' : '"') . " {$attrs}>";
                                 $group                                = "";
                                 foreach ($temp as $row) {
@@ -1489,7 +1536,7 @@ class editTable extends initEdit {
                             }
                             $select++;
 
-                        } elseif ($value['type'] == 'select2') {
+                        } elseif ($value['type'] == self::TYPE_SELECT2) {
                             $options = [];
 
                             if (is_array($this->selectSQL[$select])) {
@@ -1865,14 +1912,20 @@ class editTable extends initEdit {
                                     $tpl = new Templater3($this->tpl_control['dataset']);
 
                                     foreach ($item_fields as $item_field) {
-                                        $tpl->title->assign('[TITLE]', $item_field['title']);
-                                        $tpl->title->reassign();
+                                        if (empty($item_field['type']) || $item_field['type'] != 'hidden') {
+                                            $tpl->title->assign('[TITLE]', $item_field['title']);
+                                            $tpl->title->reassign();
+                                        }
                                     }
 
                                     $num = 1;
                                     foreach ($datasets as $dataset) {
 
                                         foreach ($item_fields as $item_field) {
+                                            if ($item_field['type'] == 'hidden') {
+                                                continue;
+                                            }
+
                                             $field_value = '';
 
                                             if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
@@ -2018,7 +2071,7 @@ class editTable extends initEdit {
 
                                         $type_name = $item_field['type'] ?? 'text';
 
-                                        if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden'])) {
+                                        if ( ! in_array($type_name, ['text', 'textarea', 'select', 'select2', 'date', 'datetime', 'number', 'switch', 'hidden', 'text_readonly'])) {
                                             $type_name = 'text';
                                         }
 
@@ -2094,8 +2147,11 @@ class editTable extends initEdit {
                                 $this->HTML = str_replace('[_ACTION_]', 'index.php?module=admin&loc=core&action=upload', $this->HTML);
 								$params = explode("_", $value['type']);
 								$ft = '';
-								$options = array('dataType' => 'json');
-								if ($auto) {
+                                $options = [
+                                    'dataType'               => 'json',
+                                    'limitConcurrentUploads' => 3,
+                                ];
+                                if ($auto) {
 									$options['autoUpload'] = true;
 								}
 								if (in_array("xfiles", $params)) {
@@ -2179,10 +2235,13 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 		$('#fileupload-{$un}').fileupload(" . str_replace('"_FT_"', "/(\.|\/)($ft)$/i", json_encode($options)) . ");
 		$('#fileupload-{$un}').bind('fileuploaddone', function (e, data) {
 			var f = data.response().result.files[0];
+			if (f.error) {
+			    alert(f.error)
+			}
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.delete').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').removeClass('hide');
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
-			edit.xfiles['$un'][f.name + '###' + f.size + '###' + f.type] = f;
+			edit.xfiles['$un'][f.real_name + '###' + f.size + '###' + f.type + '###' + f.name] = f;
 			var res = [];
 			for (var k in edit.xfiles['$un']) {
 				res.push(k);
@@ -2212,11 +2271,16 @@ $controlGroups[$cellId]['html'][$key] .= "<script>
 				$('#fileupload-$fieldId div.fileupload-buttonbar input.toggle').addClass('hide');
 			}
 		}).bind('fileuploadchange', function (e, data) {
+		    $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', true)
 			$('#fileupload-$fieldId div.fileupload-buttonbar button.start').removeClass('hide');
+		
+		}).bind('fileuploadalways', function (e, data) {			
+			if ($('#fileupload-{$un}').fileupload('active') === 1) {
+                $('#{$this->main_table_id}_mainform > div.buttons-container > div.buttons-area > input[type=\"submit\"]').attr('disabled', false)
+            }
 		});
 	
 	";
-
 if ( ! empty($options['maxFileSize'])) {
     $controlGroups[$cellId]['html'][$key] .= "
         $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
@@ -2271,11 +2335,7 @@ if (isset($options['autoUpload']) && $options['autoUpload']) {
 }
 
 $controlGroups[$cellId]['html'][$key] .= "
-    // Load existing files:
-	//$('#fileupload-{$un}').addClass('fileupload-processing');
 	$.ajax({
-		// Uncomment the following to send cross-domain cookies:
-		//xhrFields: {withCredentials: true},
 		url: 'index.php?module=$module&action=$action&filehandler={$this->table}&listid=$refid&f=$field',
 		dataType: 'json',
 		context: $('#fileupload-{$un}')[0]
@@ -2350,9 +2410,9 @@ $controlGroups[$cellId]['html'][$key] .= "
 							$modal++;
 						}
 
-						if (!empty($value['out'])) {
-							$controlGroups[$cellId]['html'][$key] .= str_replace("[VAL]", $value['default'], $value['out']);
-						}
+                        if ( ! empty($value['out'])) {
+                            $controlGroups[$cellId]['html'][$key] .= $value['out'];
+                        }
 						$controlGroups[$cellId]['html'][$key] .= '</td></tr></table>';
 					}
 				}
@@ -2453,22 +2513,22 @@ $controlGroups[$cellId]['html'][$key] .= "
 			}
 		}
 
-		if (!$this->readOnly) {
-
-            $sess_form = new SessionContainer('Form');
-            //$this->uniq_class_id .= "|$refid";
+        if ( ! $this->readOnly) {
+            $sess_form      = new SessionContainer('Form');
             $already_opened = $sess_form->{$this->uniq_class_id};
             //CUSTOM session fields
-            if (!$refid) $refid = 0;
-            $refid .= "_" . crc32($_SERVER['REQUEST_URI']);
-            $sess_data = isset($already_opened[$refid]) ? $already_opened[$refid] : [];
+            $refid     = $refid ?: 0;
+            $refid    .= "_" . crc32($_SERVER['REQUEST_URI']);
+            $sess_data = $already_opened[$refid] ?? [];
+
             if ($this->sess_form_custom) {
                 foreach ($this->sess_form_custom as $key => $item) {
-                    //TODO возможно надо добавить проверку того что мы вставляем в ссессию
                     $sess_data[$key] = $item;
                 }
             }
+
             $already_opened[$refid] = $sess_data;
+
             //есль ли у юзера еще одна открытая эта же форма, то в сессии ничего не изменится
             if ($already_opened) {
                 $sess_form->{$this->uniq_class_id} = $already_opened;
@@ -2476,12 +2536,13 @@ $controlGroups[$cellId]['html'][$key] .= "
 
             $this->HTML .= $this->button($this->classText['SAVE'], "submit", "this.form.onsubmit();return false;", "button save");
 		}
-		$this->HTML .= 	"</div></div>";
-		if (!$this->readOnly) {
-			$this->HTML .= 	"</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
-		}
-		$this->HTML .= 	"</br>";
-	}
+
+        $this->HTML .= "</div></div>";
+        if ( ! $this->readOnly) {
+            $this->HTML .= "</form><script>function PrepareSave(){" . $PrepareSave . "} $onload </script>";
+        }
+        $this->HTML .= "</br>";
+    }
 
 
     /**

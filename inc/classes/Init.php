@@ -25,25 +25,22 @@ require_once("Log.php");
 require_once("Theme.php");
 require_once 'Registry.php';
 require_once 'Config.php';
-require_once("HttpException.php");
-require_once("JsonException.php");
+require_once("Router.php");
 
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
-use Laminas\Session\Storage\SessionStorage;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Session\Validator\HttpUserAgent;
 use Laminas\Cache\Storage;
 use Core2\Acl;
-use Core2\Db;
 use Core2\I18n;
 use Core2\Login;
 use Core2\Registry;
 use Core2\Tool;
 use Core2\Error;
-use Core2\HttpException;
 use Core2\Theme;
+use Core2\Router;
 
 
 $conf_file = DOC_ROOT . "conf.ini";
@@ -86,7 +83,7 @@ $config_origin = [
 // определяем путь к темповой папке
 if (empty($config_origin['temp'])) {
     $config_origin['temp'] = sys_get_temp_dir();
-    if (empty($config['temp'])) {
+    if (empty($config_origin['temp'])) {
         $config_origin['temp'] = "/tmp";
     }
 }
@@ -131,20 +128,13 @@ if ($config->debug->on) {
 
 //проверяем настройки для базы данных
 if ($config->database) {
-    if ($config->database->adapter === 'Pdo_Mysql') {
-        $config->database->params->adapterNamespace = 'Core_Db_Adapter';
-        //подключаем собственный адаптер базы данных
-        require_once($config->database->params->adapterNamespace . "_{$config->database->adapter}.php");
-    } elseif ($config->database->adapter === 'Pdo_Pgsql') {
-        $config->database->params->adapterNamespace = 'Zend_Db_Adapter';
-        $config->database->schema = $config->database->params->dbname;
-        $config->database->params->dbname = $config->database->pgname ? $config->database->pgname : 'postgres';
+    if (empty($config->database->adapter)) {
+        Error::Exception('Database adapter is empty!');
     }
     if (empty($config->database->params->dbname)) {
-        Error::Exception('No database found!');
+        Error::Exception('Database name is empty!');
     }
 }
-
 
 //конфиг стал только для чтения
 $config->setReadOnly();
@@ -168,32 +158,23 @@ if (file_exists($core_conf_file)) {
     Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
 }
 
-require_once 'Db.php';
+require_once 'Acl.php';
 require_once 'Common.php';
-require_once 'Templater2.php'; //DEPRECATED
-require_once 'Templater3.php';
 require_once 'SSE.php';
 
 /**
  * Class Init
  * @property Core2\Model\Modules $dataModules
  */
-class Init extends Db {
+class Init extends Acl {
 
     /**
      * @var StdClass|Zend_Session_Namespace
      */
     private $auth;
 
-    /**
-     * @var Core2\Acl
-     */
-    private $acl;
     protected $is_rest = array();
     protected $is_soap = array();
-    private $is_xajax;
-
-    private $route;
 
 
     /**
@@ -212,7 +193,26 @@ class Init extends Db {
         //сохраняем параметры сессии
         if ($this->config->session) {
             $sess_config = new SessionConfig();
-            $sess_config->setOptions($this->config->session);
+            $sess_config->setOptions([
+                'name' => $this->config->session->name ?? 'PHPSESSION',
+                'use_strict_mode' => true,
+                'use_cookies' => true,
+                'use_only_cookies' => true,
+                'cookie_httponly' => true,
+                //'cookie_secure' => true,
+                'cookie_lifetime' => $this->config->session->cookie_lifetime ?? 7200,
+                'cookie_samesite' => 'Lax',
+                'gc_maxlifetime' => $this->config->session->remember_me_seconds ?? 7200,
+                'gc_probability' => 1,
+                'gc_divisor' => 100
+            ]);
+            if (!empty($this->config->session->save_path)) {
+                $sess_config->setSavePath($this->config->session->save_path);
+            }
+            if (!empty($this->config->session->cookie_secure)) {
+                //cookie работают только по HTTPS
+                $sess_config->setCookieSecure($this->config->session->cookie_secure);
+            }
             $sess_manager = new SessionManager($sess_config);
             //$sess_manager->setStorage(new SessionStorage());
 
@@ -224,12 +224,25 @@ class Init extends Db {
 
                 if ($this->config->session->saveHandler === 'memcached') {
                     $adapter = new Storage\Adapter\Memcached($options);
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 } elseif ($this->config->session->phpSaveHandler === 'redis') {
+                    $options = new Storage\Adapter\RedisOptions();
+                    $options->setServer(!empty($this->config->session->options->server) ? $this->config->session->options->server->toArray() : ['host' => 'localhost', 'port' => 6379]);
+                    if (!empty($this->config->session->options->server->password)) {
+                        $options->setPassword($this->config->session->options->server->password);
+                    }
+                    $options->setDatabase(1)
+                        ->setNamespace($_SERVER['SERVER_NAME'] . ":Session")
+                        ->setTtl($this->config->session->options->ttl ?? $sess_config->getGcMaxlifetime());
+//                    $libOptions = [
+//                        'read_timeout' => 2.5,
+//                        'retry_interval' => 100
+//                    ];
+//                    $options->setLibOptions($libOptions);
+//                    $options->setSerializer(Redis::SERIALIZER_PHP);
                     $adapter = new Storage\Adapter\Redis($options);
-//                        $sess_manager->getStorage()->markImmutable();
-                    $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
                 }
+//                $sess_manager->getStorage()->markImmutable();
+                $sess_manager->setSaveHandler(new SessionHandlerCache($adapter));
             }
 
             //сохраняем менеджер сессий
@@ -276,82 +289,59 @@ class Init extends Db {
     public function dispatch() {
 
         // Парсим маршрут
-        $route = $this->routeParse();
+        $route = (new Router())->getRoute();
         if (isset($route['api']) && !$this->auth) {
             if ($route['api'] == 'auth') {
                 //это запросы на регистрацию, восстановление пароля или OAUTH
-                return $this->dispatchApi();
+                require_once 'core2/inc/classes/Api.php';
+                header('Content-type: application/json; charset="utf-8"');
+                try {
+                    return (new Core2\Api($route))->dispatchApi();
+                } catch (Exception $e) {
+                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                }
             } else {
                 header('HTTP/1.1 401 Unauthorized');
                 $core_config = Registry::get('core_config');
                 if ($core_config->auth && $core_config->auth->scheme == 'basic') {
                     header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
                 }
-                return;
+                return '';
             }
         }
 
-        if (!empty($_POST)) {
-            //может ли xajax обработать запрос
-            $xajax = new xajax();
-            if ($xajax->canProcessRequest()) {
-                $this->is_xajax = $xajax;
-            }
-        }
+        if ($res = $this->detectWebService()) return $res; //устаревший вызов REST и SOAP
 
-        if (!$this->is_xajax) {
-            $this->detectWebService();
+        if (empty($_GET['system_page']) &&
+            ! empty($this->auth->ID) &&
+            ! empty($this->auth->NAME) &&
+            is_int($this->auth->ID)
+        ) {
 
-            // Веб-сервис (REST)
-            if ($matches = $this->is_rest) {
-                $this->setContext('webservice');
-
-                $this->checkWebservice();
-
-                require_once __DIR__ . "/../../inc/Interfaces/Delete.php"; //FIXME delete me
-                $webservice_controller = new ModWebserviceController();
-
-                $route['version'] = $matches['version'];
-
-                if (!empty($matches['module'])) {
-                    $route['module'] = $matches['module'];
-                    $route['action'] = $matches['action'];
-                }
-
-                return $webservice_controller->dispatchRest($route);
-
-            }
-
-            // Веб-сервис (SOAP)
-            if ($matches = $this->is_soap) {
-                $this->setContext('webservice');
-                $this->checkWebservice();
-
-                $webservice_controller = new ModWebserviceController();
-
-                $version = $matches['version'];
-                $action = $matches['action'] == 'service.php' ? 'server' : 'wsdl';
-                $module_name = $matches['module'];
-
-                return $webservice_controller->dispatchSoap($module_name, $action, $version);
-            }
-        }
-
-        if (!empty($this->auth->ID) && !empty($this->auth->NAME) && is_int($this->auth->ID)) {
             if (isset($route['module'])) {
                 if (isset($route['api']) && $route['api'] === 'openapi') {
                     if ($route['action'] == 'core2.json') {
+                        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
                         //генерация свагера для общего API
-                        require_once "OpenApiSpec.php";
+                        require_once "OpenApi.php";
                         header("Cache-Control: no-cache");
-                        $schema = new \Core2\OpenApiSpec();
+                        $schema = new \Core2\OpenApi();
                         $html = $schema->render();
                         return $html;
                     }
+                    if ($route['action'] == 'sections') {
+                        require_once "OpenApiSpec.php";
+                        header('Content-Type: application/json');
+                        $schema = new \Core2\OpenApiSpec();
+                        $this->setupAcl();
+                        if ( ! empty($route['params'])) {
+                            $section = key($route['params']);
+                            return json_encode($schema->getSectionSchema($section));
+                        }
+                        return json_encode([ 'sections' => $schema->getSections() ]);
+                    }
                 }
                 elseif ($route['module'] === 'sse') {
-
-                    require_once 'core2/inc/Interfaces/Event.php';
 
                     $this->setContext("admin", "sse");
                     session_write_close();
@@ -360,17 +350,9 @@ class Init extends Db {
                     header("Cache-Control: no-cache");
 
                     $sse = new Core2\SSE();
-                    while (1) {
-
-                        $sse->loop();
-
-                        if (connection_aborted()) break;
-
-                        sleep(1);
-                    }
-                    return;
+                    $sse->run();
+                    return '';
                 }
-
             }
 
             // LOG USER ACTIVITY
@@ -382,22 +364,26 @@ class Init extends Db {
             //TODO CHECK DIRECT REQUESTS except iframes
 
             require_once 'Zend_Session_Namespace.php'; //DEPRECATED
-            require_once 'core2/inc/classes/Acl.php';
             require_once 'core2/inc/Interfaces/Delete.php';
             require_once 'core2/inc/Interfaces/File.php';
             require_once 'core2/inc/Interfaces/Subscribe.php';
             require_once 'core2/inc/Interfaces/Switches.php';
 
-            $this->acl = new Acl();
-            $this->acl->setupAcl();
+            $this->setupAcl();
 
             if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
 
-            if ($this->is_xajax) {
+            if (!empty($_POST)) {
                 //может ли xajax обработать запрос
-                $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-                $xajax->processRequest();
-                return;
+                $xajax = new xajax();
+                if ($xajax->canProcessRequest()) {
+                    $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
+                    $xajax->processRequest();
+                    return '';
+                }
+                else {
+                    unset($xajax);
+                }
             }
 
         }
@@ -405,32 +391,35 @@ class Init extends Db {
             require_once 'Login.php';
 
             $login = new Login();
-            $login->setSystemName($this->getSystemName());
-            $login->setFavicon($this->getSystemFavicon());
             $this->setupSkin();
             parse_str($route['query'], $request);
             if (array_key_exists('X-Requested-With', Tool::getRequestHeaders())) {
                 if ( ! empty($request['module'])) {
-                    throw new \Exception('expired');
+                    throw new Exception('expired');
                 }
             }
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ( ! empty($_POST['xjxr'])) {
-                    throw new \Exception('expired');
+                    throw new Exception('expired');
+                }
+                if (empty($_SERVER['HTTP_REFERER'])) {
+                    throw new Exception('Referrer error');
                 }
                 $referer = parse_url($_SERVER['HTTP_REFERER']);
-                if ($referer['host'] !== $_SERVER['HTTP_HOST']) {
+                if (empty($referer['host']) || $referer['host'] !== $_SERVER['HTTP_HOST']) {
                     http_response_code(400);
                     throw new Exception('Referrer error');
                 }
                 if (isset($_POST['login']) && isset($_POST['password'])) {
-                    return json_encode($login->enter(trim($_POST['login']), trim($_POST['password'])));
+                    return json_encode(
+                        $login->enter(trim($_POST['login']), trim($_POST['password']), $_GET['return_url'] ?? null)
+                    );
                 }
             }
 
             //Immutable блокирует запись сессии
             //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
-            $response = $login->dispatch($this->route);
+            $response = $login->dispatch($route);
             $blockNamespace = new SessionContainer('Block');
             if (empty($blockNamespace->blocked)) {
                 SessionContainer::getDefaultManager()->destroy();
@@ -441,23 +430,31 @@ class Init extends Db {
         //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
         if (
-            empty($_GET['module']) && empty($route['api']) &&
+            empty($_GET['module']) && empty($route['api']) && empty($_POST) &&
             ($_SERVER['REQUEST_URI'] == $_SERVER['SCRIPT_NAME'] ||
             trim($_SERVER['REQUEST_URI'], '/') == trim(str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'])), '/'))
         ) {
-            require_once 'Navigation.php';
+            require_once 'Menu.php';
 
+            $menu = new Core2\Menu();
             if (empty($this->auth->init)) { //нет сессии на сервере
-                return $this->getMenuMobile();
+                header('Content-type: application/json; charset="utf-8"');
+                return $menu->getMenuMobile();
             }
             $this->setupSkin();
-            if (!defined('THEME')) return;
-            return $this->getMenu();
+            if (!defined('THEME')) return '';
+            return $menu->getMenu();
         }
         else {
             if (!empty($route['api'])) {
                 //---запрос от приложения
-                return $this->dispatchApi();
+                require_once 'core2/inc/classes/Api.php';
+                header('Content-type: application/json; charset="utf-8"');
+                try {
+                    return (new Core2\Api($route))->dispatchApi();
+                } catch (Exception $e) {
+                    return Error::catchJsonException($e->getMessage(), $e->getCode());
+                }
             }
             $module = $route['module'];
             $extension = strrpos($module, '.') ? substr($module, strrpos($module, '.')) : null;
@@ -471,6 +468,7 @@ class Init extends Db {
             if ($this->fileAction()) return '';
 
             $this->setupSkin();
+
             if ($module === 'admin') {
 
                 if (!empty($this->auth->MOBILE)) {
@@ -493,6 +491,10 @@ class Init extends Db {
 
             }
             else {
+                if (in_array($module, ['registration', 'registration_complete', 'restore', 'restore_complete'])) {
+                    header("Location: index.php");
+                    return '';
+                }
                 $this->checkModule($module, $action);
                 $location = $this->getModuleLocation($module); //определяем местоположение модуля
 
@@ -536,52 +538,9 @@ class Init extends Db {
 
             }
         }
-        return '';
     }
 
-    private function dispatchApi() {
-        header('Content-type: application/json; charset="utf-8"');
-        try {
-            $module = $this->route['api'];
-            $action = $this->route['action'];
-            $this->setContext($module, $action);
-            if ($this->route['api'] == 'admin') {
-                require_once 'core2/mod/admin/ModAdminApi.php';
-                $coreController = new ModAdminApi();
-                $action = "action_" . $action;
-                if (method_exists($coreController, $action)) {
-                    $out = $coreController->$action();
-                    if (is_array($out)) $out = json_encode($out);
-                    return $out;
-                } else {
-                    throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
-                }
-            }
 
-            $this->checkModule($module, $action);
-
-            $location = $this->getModuleLocation($module);
-            $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
-            $this->requireController($location, $modController);
-            $modController = new $modController();
-            $action = "action_" . $action;
-            if (method_exists($modController, $action)) {
-                $out = $modController->$action();
-                if (is_array($out)) $out = json_encode($out);
-                return $out;
-            } else {
-                throw new BadMethodCallException(sprintf($this->translate->tr("Метод %s не существует"), $action), 404);
-            }
-        } catch (HttpException $e) {
-            return Error::catchJsonException([
-                'msg' => $e->getMessage(),
-                'code' => $e->getErrorCode()
-            ], $e->getCode() ?: 500);
-
-        } catch (Exception $e) {
-            return Error::catchJsonException($e->getMessage(), $e->getCode());
-        }
-    }
 
     /**
      * проверка модуля на доступность
@@ -589,36 +548,34 @@ class Init extends Db {
      * @param $action
      * @return void
      * @throws \Core2\JsonException
+     * @throws Exception
      */
     private function checkModule($module, $action): void {
         if ($action == 'index') {
             $_GET['action'] = "index";
 
             if ( ! $this->isModuleActive($module)) {
-                if (!empty($this->route['api'])) throw new Core2\JsonException(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
                 throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
             }
 
-            if ($this->acl && ! $this->acl->checkAcl($module, 'access')) {
-                if (!empty($this->route['api'])) throw new Core2\JsonException(sprintf($this->translate->tr("Доступ закрыт!"), $module), 403);
+            if (! $this->checkAcl($module, 'access')) {
                 throw new Exception(911);
             }
         }
         else {
             $submodule_id = $module . '_' . $action;
             if ( ! $this->isModuleActive($submodule_id)) {
-                if (!empty($this->route['api'])) throw new Core2\JsonException(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
                 throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
             }
             $mods = $this->getSubModule($submodule_id);
 
             //TODO перенести проверку субмодуля в контроллер модуля
-            if ($mods['sm_id'] && $this->acl && !$this->acl->checkAcl($submodule_id, 'access')) {
-                if (!empty($this->route['api'])) throw new Core2\JsonException(sprintf($this->translate->tr("Доступ закрыт!"), $action), 403);
+            if ($mods['sm_id'] && !$this->checkAcl($submodule_id, 'access')) {
                 throw new Exception(911);
             }
         }
     }
+
 
 
     /**
@@ -626,51 +583,48 @@ class Init extends Db {
      */
     public function __destruct() {
 
-        if ($this->config &&
-            $this->config->system &&
-            $this->config->system->profile &&
-            $this->config->system->profile->on
+        if ($this->core_config->profile &&
+            $this->core_config->profile->on
         ) {
-            $log = new \Core2\Log('profile');
+            $log = new Core2\Log('profile');
 
             if ($log->getWriter()) {
-                $sql_queries = $this->db->fetchAll("show profiles");
                 $connection_id = $this->db->fetchOne("SELECT CONNECTION_ID()");
-                $total_time  = 0;
-                $max_slow    = [];
+                $profiler      = $this->db->getProfiler();
+                $total_time    = $profiler->getTotalElapsedSecs();
+                $queries       = [];
+                $max_slow      = [];
 
-                if ( ! empty($sql_queries)) {
-                    foreach ($sql_queries as $k => $sql_query) {
+                foreach ($profiler->getQueryProfiles() as $query) {
+                    $time       = $query->getElapsedSecs();
+                    $query_item = [
+                        'time'  => $time,
+                        'query' => $query->getQuery(),
+                    ];
 
-                        if ( ! empty($sql_query['Duration'])) {
-                            $total_time += $sql_query['Duration'];
-
-                            if (empty($max_slow['Duration']) || $max_slow['Duration'] < $sql_query['Duration']) {
-                                $max_slow = $sql_query;
-                            }
-                        }
+                    if (empty($max_slow['time']) || $max_slow['time'] < $time) {
+                        $max_slow = $query_item;
                     }
+
+                    $queries[] = $query_item;
                 }
 
                 $request_method = ! empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'none';
-
-                $query_string = ! empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
-
-                if ($total_time >= 1 || count($sql_queries) >= 100 || count($sql_queries) == 0) {
-                    $function_log = 'warning';
-                } else {
-                    $function_log = 'info';
-                }
+                $request_uri    = ! empty($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+                $query_string   = ! empty($_SERVER['QUERY_STRING']) ? "?{$_SERVER['QUERY_STRING']}" : '';
+                $function_log   = $total_time >= 1 || count($queries) >= 100 || count($queries) == 0
+                    ? 'warning'
+                    : 'info';
 
 
                 $log->{$function_log}('request', [
                     'method'        => $request_method,
                     'time'          => round($total_time, 5),
-                    'count'         => count($sql_queries),
+                    'count'         => count($queries),
                     'connection_id' => $connection_id,
-                    'request'       => $query_string,
+                    'request'       => "{$request_uri}{$query_string}",
                     'max_slow'      => $max_slow,
-                    'queries'       => $sql_queries,
+                    'queries'       => $queries,
                 ]);
             }
         }
@@ -703,45 +657,65 @@ class Init extends Db {
 
     /**
      * Направлен ли запрос к вебсервису
-     * @todo прогнать через роутер
+     * @deprecated
      */
     private function detectWebService() {
 
-        if ($this->is_rest || $this->is_soap) {
-            return;
-        }
-
         if ( ! isset($_SERVER['REQUEST_URI'])) {
-            return;
+            return false;
         }
-
+        $is_rest = false;
+        $is_soap = false;
         $matches = [];
         if (preg_match('~api/v(?<version>\d+\.\d+)(?:/|)([^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-            $this->is_rest = [
+            $is_rest = [
                 'version' => $matches['version'],
                 'action'  => $matches[2]
             ];
-            return;
         }
-
-        // DEPRECATED
-        if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
-            $this->is_rest = $matches;
-            return;
+        else if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            $is_rest = $matches;
         }
-        // DEPRECATED
-        if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
-            $this->is_soap = [
+        else if (preg_match('~rest/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+            $is_rest = $matches;
+        }
+        else if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
+            $is_soap = [
                 'module'  => ! empty($matches[2]) ? $matches[2] : $matches[3],
                 'version' => '',
                 'action'  => ! empty($matches[2]) ? 'wsdl.xml' : 'service.php',
             ];
-            return;
         }
-        if (preg_match('~soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)/(?<action>wsdl\.xml|service\.php)~', $_SERVER['REQUEST_URI'], $matches)) {
-            $this->is_soap = $matches;
-            return;
+        else if (preg_match('~soap/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)/(?<action>wsdl\.xml|service\.php)~', $_SERVER['REQUEST_URI'], $matches)) {
+            $is_soap = $matches;
         }
+        if (!$is_rest && !$is_soap) return false;
+
+        $this->setContext('webservice');
+        $this->checkWebservice();
+        $webservice_controller = new ModWebserviceController();
+
+        // Веб-сервис (REST)
+        if ($is_rest) {
+            $route['version'] = $is_rest['version'];
+            $route['query'] = $_SERVER['QUERY_STRING'];
+            $route['params'] = [];
+            if (!empty($is_rest['module'])) {
+                $route['module'] = $is_rest['module'];
+            }
+            if (!empty($is_rest['action'])) {
+                $route['action'] = $is_rest['action'];
+            }
+            $res = $webservice_controller->dispatchRest($route);
+        }
+
+        // Веб-сервис (SOAP)
+        if ($is_soap) {
+            $action = $is_soap['action'] == 'service.php' ? 'server' : 'wsdl';
+            $res = $webservice_controller->dispatchSoap($is_soap['module'], $action, $is_soap['version']);
+        }
+        if (!$res) return true;
+        return $res;
     }
 
 
@@ -768,9 +742,9 @@ class Init extends Db {
                 $core_config = Registry::get('core_config');
                 if ($core_config->auth && $core_config->auth->scheme == 'basic') {
                     //http basic auth allowed
-                    list($login, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+                    [$login, $password] = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                     $user = $this->dataUsers->getUserByLogin($login);
-                    if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
+                    if ($user && \Core2\Tool::password_verify_secure($password, (string)$user['u_pass'])) {
                         $auth = new \StdClass();
 
                         $auth->LIVEID = 0;
@@ -801,7 +775,7 @@ class Init extends Db {
             return $webservice_api->dispatchWebToken($token);
         }
         elseif (!empty($_GET['apikey']) || !empty($_SERVER['HTTP_CORE2_APIKEY'])) {
-            $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? $_SERVER['HTTP_CORE2_APIKEY'] : $_GET['apikey'];
+            $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? trim($_SERVER['HTTP_CORE2_APIKEY']) : trim($_GET['apikey']);
             //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
             // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
             $this->checkWebservice();
@@ -851,48 +825,6 @@ class Init extends Db {
     }
 
 
-    /**
-     * Получение названия системы из conf.ini
-     * @return mixed
-     */
-    private function getSystemName() {
-        $res = $this->config->system->name;
-        return $res;
-    }
-
-    /**
-     * get favicons from conf.ini
-     * @return array
-     */
-    private function getSystemFavicon() {
-
-        $favicon_png = $this->config->system->favicon_png;
-        $favicon_ico = $this->config->system->favicon_ico;
-
-        $favicon_png = $favicon_png && is_file($favicon_png)
-            ? $favicon_png
-            : (is_file('favicon.png') ? 'favicon.png' : '');
-
-        $favicon_ico = $favicon_ico && is_file($favicon_ico)
-            ? $favicon_ico
-            : (is_file('favicon.ico') ? 'favicon.ico' : '');
-
-        if (defined('THEME')) {
-            if (!$favicon_png) {
-                $favicon_png = 'core2/html/' . THEME . '/img/favicon.png';
-            }
-            if (!$favicon_ico) {
-                $favicon_ico = 'core2/html/' . THEME . '/img/favicon.ico';
-            }
-        }
-
-        return [
-            'png' => $favicon_png,
-            'ico' => $favicon_ico,
-        ];
-    }
-
-
 
     /**
      * Проверка наличия и целостности файла контроллера
@@ -918,401 +850,7 @@ class Init extends Db {
     }
 
 
-    /**
-     * Create the top menu
-     * @return mixed|string
-     * @throws Exception
-     */
-    private function getMenu() {
 
-        $xajax = new xajax();
-        $xajax->configure('javascript URI', 'core2/vendor/belhard/xajax');
-        $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-//            $xajax->configure('errorHandler', true);
-
-        if (Tool::isMobileBrowser()) {
-            $tpl_file      = Theme::get("indexMobile");
-            $tpl_file_menu = Theme::get("menuMobile");
-        } else {
-            $tpl_file      = Theme::get("index");
-            $tpl_file_menu = Theme::get("menu");
-        }
-
-        $tpl      = new Templater3($tpl_file);
-        $tpl_menu = new Templater3($tpl_file_menu);
-
-        $tpl->assign('{system_name}', $this->getSystemName());
-
-        $favicons = $this->getSystemFavicon();
-
-        $tpl->assign('favicon.png', $favicons['png']);
-        $tpl->assign('favicon.ico', $favicons['ico']);
-
-        $tpl_menu->assign('<!--SYSTEM_NAME-->',        $this->getSystemName());
-        $tpl_menu->assign('<!--CURRENT_USER_LOGIN-->', htmlspecialchars($this->auth->NAME));
-        $tpl_menu->assign('<!--CURRENT_USER_FN-->',    $this->auth->FN ? htmlspecialchars($this->auth->FN) : "");
-        $tpl_menu->assign('<!--CURRENT_USER_LN-->',    $this->auth->LN ? htmlspecialchars($this->auth->LN) : "");
-        $img = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->auth?->EMAIL ?? ''))) . "?&s=28&d=mm";
-        $row = $this->dataUsersProfile->getRowByUserId($this->auth->ID);
-        if ($row && isset($row->avatar) && $row->avatar) {
-            $img = "data:image/png;base64, {$row->avatar}";
-        }
-        $tpl_menu->assign('[GRAVATAR_URL]', $img);
-
-
-        $modules_js     = [];
-        $modules_css    = [];
-        $navigate_items = [];
-        $modules        = $this->getModuleList();
-
-        foreach ($modules as $module) {
-            if ( isset($module['sm_key'])) {
-                //пропускаем субмодули
-                continue;
-            }
-
-            $module_id = $module['module_id'];
-
-            if ($module['is_public'] == 'Y') {
-                if ($module['isset_home_page'] == 'N') {
-                    $first_action = 'index';
-
-                    foreach ($modules as $mod) {
-                        if ( ! empty($mod['sm_id']) && $module['m_id'] == $mod['m_id']) {
-                            $first_action = $mod['sm_key'];
-                            break;
-                        }
-                    }
-
-                    $url           = "index.php?module={$module_id}&action={$first_action}";
-                    $module_action = "&action={$first_action}";
-
-                } else {
-                    $url           = "index.php?module=" . $module_id;
-                    $module_action = '';
-                }
-
-                $tpl_menu->modules->assign('[MODULE_ID]',     $module_id);
-                $tpl_menu->modules->assign('[MODULE_NAME]',   $module['m_name']);
-                $tpl_menu->modules->assign('[MODULE_ACTION]', $module_action);
-                $tpl_menu->modules->assign('[MODULE_URL]',    $url);
-                $tpl_menu->modules->reassign();
-            }
-
-
-            if ($module_id == 'admin') {
-                continue;
-            }
-
-            try {
-                $location = $this->getModuleLocation($module_id); //получение расположения модуля
-                $modController = "Mod" . ucfirst($module_id) . "Controller";
-                $file_path = $location . "/" . $modController . ".php";
-
-                if (file_exists($file_path)) {
-                    ob_start();
-                    $autoload = $location . "/vendor/autoload.php";
-
-                    if (file_exists($autoload)) {
-                        require_once $autoload;
-                    }
-
-                    require_once $file_path;
-
-                    // подключаем класс модуля
-                    if (class_exists($modController)) {
-                        $this->setContext($module_id);
-                        $modController = new $modController();
-
-                        if (($modController instanceof TopJs || method_exists($modController, 'topJs'))) {
-                            $module_js_list = $modController->topJs();
-                            if (is_array($module_js_list)) {
-                                foreach ($module_js_list as $val) {
-                                    $module_js = Tool::addSrcHash($val);
-                                    if (!in_array($module_js, $modules_js)) $modules_js[] = $module_js;
-                                }
-                            }
-                        }
-
-                        if ($modController instanceof TopCss &&
-                            $module_css_list = $modController->topCss()
-                        ) {
-                            foreach ($module_css_list as $val) {
-                                $module_css = Tool::addSrcHash($val);
-                                if (!in_array($module_css, $modules_css)) $modules_css[] = $module_css;
-                            }
-                        }
-
-                        if (THEME !== 'default') {
-                            $navi = new \Core2\Navigation(); //TODO переделать для обработки всех модулей сразу
-                            $navi->setModuleNavigation($module['module_id']);
-                            if ($modController instanceof Navigation) {
-                                $modController->navigationItems($navi);
-                            }
-                            $navigate_items[$module_id] = $navi->toArray();
-                        }
-                    }
-                    ob_clean();
-                }
-            } catch (\Exception $e) {
-                //проблемы с загрузкой модуля
-                //TODO добавить в log
-            }
-        }
-
-        foreach ($modules as $module) {
-            if ( ! empty($module['sm_key']) && $module['is_public'] === 'Y') {
-                $url = "index.php?module=" . $module['module_id'] . "&action=" . $module['sm_key'];
-
-                $tpl_menu->submodules->assign('[MODULE_ID]',      $module['module_id']);
-                $tpl_menu->submodules->assign('[SUBMODULE_ID]',   $module['sm_key']);
-                $tpl_menu->submodules->assign('[SUBMODULE_NAME]', $module['sm_name']);
-                $tpl_menu->submodules->assign('[SUBMODULE_URL]',  $url);
-                $tpl_menu->submodules->reassign();
-            }
-        }
-
-        if ( ! empty($navigate_items)) {
-            $navi = new \Core2\Navigation();
-            foreach ($navigate_items as $module_name => $items) {
-                if ( ! empty($items)) {
-                    foreach ($items as $item) {
-                        $position = ! empty($item['position']) ? $item['position'] : '';
-
-                        switch ($position) {
-                            case 'profile':
-                                if ($tpl_menu->issetBlock('navigate_item_profile')) {
-                                    $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $navi->renderNavigateItem($item));
-                                    $tpl_menu->navigate_item_profile->reassign();
-                                }
-                                break;
-
-                            case 'main':
-                            default:
-                                if ($tpl_menu->issetBlock('navigate_item')) {
-                                    $tpl_menu->navigate_item->assign('[MODULE_NAME]', $module_name);
-                                    $tpl_menu->navigate_item->assign('[HTML]',        $navi->renderNavigateItem($item));
-                                    $tpl_menu->navigate_item->reassign();
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-
-
-        if ( ! empty($this->config->system) &&
-             ! empty($this->config->system->theme) &&
-             ! empty($this->config->system->theme->bg_color) &&
-             ! empty($this->config->system->theme->text_color) &&
-             ! empty($this->config->system->theme->border_color) &&
-            $tpl_menu->issetBlock('theme_style')
-        ) {
-            $tpl_menu->theme_style->assign("[BG_COLOR]",     $this->config->system->theme->bg_color);
-            $tpl_menu->theme_style->assign("[TEXT_COLOR]",   $this->config->system->theme->text_color);
-            $tpl_menu->theme_style->assign("[BORDER_COLOR]", $this->config->system->theme->border_color);
-        }
-
-        $tpl->assign('<!--index-->', $tpl_menu->render());
-        $out = '';
-
-        if ( ! empty($modules_css)) {
-            foreach ($modules_css as $src) {
-                if ($src) $out .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
-            }
-        }
-
-        if ( ! empty($modules_js)) {
-            foreach ($modules_js as $src) {
-                if ($src) $out .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
-            }
-        }
-
-        $tpl->assign('<!--xajax-->', "<script type=\"text/javascript\">var coreTheme  ='" . THEME . "'</script>" . $xajax->getJavascript() . $out);
-
-
-        $system_js = "";
-        if (isset($this->config->system->js) && is_object($this->config->system->js)) {
-            foreach ($this->config->system->js as $src) {
-                $system_js .= "<script type=\"text/javascript\" src=\"{$src}\"></script>";
-            }
-        }
-        $tpl->assign("<!--system_js-->", $system_js);
-
-        $system_css = "";
-        if (isset($this->config->system->css) && is_object($this->config->system->css)) {
-            foreach ($this->config->system->css as $src) {
-                $system_css .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$src}\"/>";
-            }
-        }
-        $tpl->assign("<!--system_css-->", $system_css);
-
-        return $tpl->render();
-    }
-
-
-
-    /**
-     * Получаем список доступных модулей
-     * @return array
-     */
-    private function getModuleList() {
-        $res  = $this->dataModules->getModuleList();
-        $mods = array();
-        $tmp  = array();
-        foreach ($res as $data) {
-            if (isset($tmp[$data['m_id']]) || $this->acl->checkAcl($data['module_id'], 'access')) {
-                //чтобы модуль отображался в меню, нужно еще людое из правил просмотри или чтения
-                $types = array(
-                    'list_all',
-                    'read_all',
-                    'list_owner',
-                    'read_owner',
-                );
-                $forMenu = false;
-                foreach ($types as $type) {
-                    if ($this->acl->checkAcl($data['module_id'], $type)) {
-                        $forMenu = true;
-                        break;
-                    }
-                }
-                if (!$forMenu) continue;
-                if ($data['sm_key']) {
-                    if ($this->acl->checkAcl($data['module_id'] . '_' . $data['sm_key'], 'access')) {
-                        $tmp[$data['m_id']][] = $data;
-                    } else {
-                        $tmp[$data['m_id']][] = array(
-                            'm_id'            => $data['m_id'],
-                            'm_name'          => $data['m_name'],
-                            'module_id'       => $data['module_id'],
-                            'isset_home_page' => empty($data['isset_home_page']) ? 'Y' : $data['isset_home_page'],
-                            'is_public'       => $data['is_public']
-                        );
-                    }
-                } else {
-                    $tmp[$data['m_id']][] = $data;
-                }
-            }
-        }
-        unset($res);
-        foreach ($tmp as $m_id => $data) {
-            $module = current($data);
-            $mods[] = array(
-                'm_id'            => $m_id,
-                'm_name'          => $module['m_name'],
-                'module_id'       => $module['module_id'],
-                'isset_home_page' => empty($module['isset_home_page']) ? 'Y' : $module['isset_home_page'],
-                'is_public'       => $module['is_public']
-            );
-            foreach ($data as $submodule) {
-                if (empty($submodule['sm_id'])) continue;
-                $mods[] = $submodule;
-            }
-        }
-        if ($this->auth->ADMIN || $this->auth->NAME == 'root') {
-            $tmp = array(
-                'm_id'            => -1,
-                'm_name'          => $this->translate->tr('Админ'),
-                'module_id'       => 'admin',
-                'isset_home_page' => 'Y',
-                'is_public'       => 'Y'
-            );
-            $mods[] = $tmp;
-            $mods[] = array_merge($tmp, array('sm_id' => -1, 'sm_name' => $this->translate->tr('Модули'), 		'sm_key' => 'modules',    'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -2, 'sm_name' => $this->translate->tr('Конфигурация'), 'sm_key' => 'settings',   'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -3, 'sm_name' => $this->translate->tr('Справочники'),	'sm_key' => 'enum',       'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -4, 'sm_name' => $this->translate->tr('Пользователи'), 'sm_key' => 'users',      'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -5, 'sm_name' => $this->translate->tr('Роли'), 		'sm_key' => 'roles',      'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -6, 'sm_name' => $this->translate->tr('Мониторинг'), 	'sm_key' => 'monitoring', 'loc' => 'core'));
-            $mods[] = array_merge($tmp, array('sm_id' => -7, 'sm_name' => $this->translate->tr('Аудит'), 		'sm_key' => 'audit',      'loc' => 'core'));
-        }
-        return $mods;
-    }
-
-
-
-
-    /**
-     * Основной роутер
-     */
-    private function routeParse() {
-        $temp  = explode("/", DOC_PATH);
-        $temp2 = explode("/", $_SERVER['REQUEST_URI']);
-        foreach ($temp as $k => $v) {
-        if (isset($temp2[$k]) && $temp2[$k] == $v) {
-                unset($temp2[$k]);
-            }
-        }
-        reset($temp2);
-        $api = false; //TODO переделать на $this->is_rest
-        if (current($temp2) === 'api') {
-            unset($temp2[key($temp2)]);
-            $api = true;
-        } //TODO do it for SOAP
-
-        $route = array(
-            'module'  => '',
-            'action'  => 'index',
-            'params'  => array(),
-            'query'   => $_SERVER['QUERY_STRING']
-        );
-
-        $co = count($temp2);
-        if ($co) {
-            if ($co > 1) {
-                $i = 0;
-                //если мы здесь, значит хотим вызвать API
-                foreach ($temp2 as $k => $v) {
-                    if ($i == 0) {
-                        $route['api'] = strtolower($v);
-                        $_GET['module'] = $route['api']; //DEPRECATED
-                    }
-                    elseif ($i == 1) {
-                        if (!$v) $v = 'index';
-                        $vv  = explode("?", $v);
-                        $route['action'] = strtolower($vv[0]);
-                    }
-                    else {
-                        if (!ceil($i%2)) {
-                            $v = explode("?", $v);
-                            if (isset($v[1])) {
-                                $route['params'][$v[0]] = '';
-                                $_GET[$v[0]] = ''; //DEPRECATED
-                            } else {
-                                if (isset($temp2[$k + 1])) {
-                                    $vv          = explode("?", $temp2[$k + 1]);
-                                    $route['params'][$v[0]] = $vv[0];
-                                    $_GET[$v[0]] = $vv[0]; //DEPRECATED
-
-                                } else {
-                                    $route['params'][$v[0]] = '';
-                                    $_GET[$v[0]] = ''; //DEPRECATED
-                                }
-                            }
-                        }
-                    }
-                    $i++;
-                }
-            } else {
-                //в адресе нет глубины
-                $vv  = explode("?", current($temp2));
-                if (!empty($vv[1])) {
-                    parse_str($vv[1], $_GET);
-                }
-                $route['module'] = $vv[0];
-                if (!$route['module'] || $route['module'] == 'index.php') { //DEPRECATED
-                    // FIXME Убрать модуль и экшен по умолчанию
-                    $route['module'] = !empty($_GET['module']) ? $_GET['module'] : 'admin';
-                }
-                $route['action'] = !empty($_GET['action']) ? $_GET['action'] : 'index';
-            }
-        }
-        $this->route = $route;
-        Registry::set('route', $route);
-        return $route;
-    }
 
 
     /**
@@ -1367,84 +905,6 @@ class Init extends Db {
         return false;
     }
 
-
-    /**
-     * Список доступных модулей для core2m
-     * @return string
-     * @throws Exception
-     */
-    private function getMenuMobile() {
-
-        header('Content-type: application/json; charset="utf-8"');
-
-        $mods     = $this->getModuleList();
-        $modsList = [];
-
-        foreach ($mods as $data) {
-            if ($data['is_public'] == 'Y') {
-                $modsList[$data['m_id']] = [
-                    'module_id'  => $data['module_id'],
-                    'm_name'     => strip_tags($data['m_name']),
-                    'm_id'       => $data['m_id'],
-                    'submodules' => []
-                ];
-            }
-        }
-        foreach ($mods as $data) {
-            if ( ! empty($data['sm_id']) && $data['is_public'] == 'Y') {
-                $modsList[$data['m_id']]['submodules'][] = [
-                    'sm_id'   => $data['sm_id'],
-                    'sm_key'  => $data['sm_key'],
-                    'sm_name' => strip_tags($data['sm_name'])
-                ];
-            }
-        }
-
-        //проверяем наличие контроллера для core2m в модулях
-        foreach ($modsList as $k => $data) {
-            $location      = $this->getModuleLocation($data['module_id']);
-            if (isset($this->auth->MOBILE) && $this->auth->MOBILE) { //признак того, что мы в core2m
-                $controller = "Mobile" . ucfirst(strtolower($data['module_id'])) . "Controller";
-            } else {
-                $controller = "Mod" . ucfirst(strtolower($data['module_id'])) . "Api";
-            }
-            if ( ! file_exists($location . "/$controller.php")) {
-                unset($modsList[$k]); //FIXME если это не выполнится, core2m не будет работать!
-            } else {
-                require_once $location . "/$controller.php";
-                $r = new \ReflectionClass($controller);
-                $submodules = []; //должен быть массивом!
-                foreach ($data['submodules'] as $s => $submodule) {
-                    $method = 'action_' . $submodule['sm_key'];
-                    if (!$r->hasMethod($method)) continue;
-                    $submodules[] = $submodule;
-                }
-                $modsList[$k]['submodules'] = $submodules;
-                if (!$submodules && !$r->hasMethod('action_index')) { //нет методов, доступных извне
-                    unset($modsList[$k]);
-                }
-            }
-        }
-        $data = [
-            'system_name' => strip_tags($this->getSystemName()),
-            'id'          => $this->auth->ID,
-            'name'        => $this->auth->LN . ' ' . $this->auth->FN . ' ' . $this->auth->MN,
-            'login'       => $this->auth->NAME,
-            'avatar'      => "https://www.gravatar.com/avatar/" . ($this->auth->EMAIL ? md5(strtolower(trim($this->auth->EMAIL))) : ''),
-            'required_location' => false,
-            'modules'     => $modsList
-        ];
-        if ($this->config->mobile) { //Настройки для Core2m
-            if ($this->config->mobile->required && $this->config->mobile->required->location) {
-                $data['required_location'] = true; //требовать геолокацию для работы
-            }
-        }
-        return json_encode($data);
-//            return json_encode([
-//                'status' => 'success',
-//                'data'   => $data,
-//            ] + $data); // Для совместимости с разными приложениями
-    }
 
 
     /**
@@ -1506,7 +966,7 @@ class Init extends Db {
              ! empty($_POST['type_operation']) &&
             $_GET['module'] == 'billing'
         ) {
-            $this->acl->allow($this->auth->ROLE, 'billing');
+            $this->allow($this->auth->ROLE, 'billing');
             return '';
         }
 
@@ -1531,7 +991,6 @@ class Init extends Db {
                 return $billing_disable->getDisablePage();
             }
         }
-
         return '';
     }
 

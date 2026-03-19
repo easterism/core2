@@ -7,19 +7,22 @@ require_once 'classes/class.tab.php';
 require_once 'classes/Alert.php';
 require_once 'Interfaces/File.php';
 
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/InstallModule.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/settings/Settings.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/modules/Modules.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/roles/Roles.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/enum/Enum.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/audit/Audit.php";
-require_once DOC_ROOT . "core2/mod/admin/classes/monitoring/Monitoring.php";
-require_once DOC_ROOT . 'core2/inc/classes/Panel.php';
+require_once __DIR__ . "/../mod/admin/classes/modules/InstallModule.php";
+require_once __DIR__ . "/../mod/admin/classes/settings/Settings.php";
+require_once __DIR__ . "/../mod/admin/classes/modules/Modules.php";
+require_once __DIR__ . "/../mod/admin/classes/roles/Roles.php";
+require_once __DIR__ . "/../mod/admin/classes/enum/Enum.php";
+require_once __DIR__ . "/../mod/admin/classes/audit/Audit.php";
+require_once __DIR__ . "/../mod/admin/classes/monitoring/Monitoring.php";
+require_once 'classes/Panel.php';
+require_once 'classes/FileUploader.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Core2\Mod\Admin;
 use Core2\InstallModule as Install;
-
+use Core2\Panel;
+use Core2\Modules;
+use Core2\Alert;
 
 /**
  * @property Core2\Model\Enum         $dataEnum
@@ -85,7 +88,7 @@ class CoreController extends Common implements File {
             parse_str(file_get_contents("php://input"), $put_vars);
             if ( ! empty($put_vars['exit'])) {
                 $this->closeSession();
-                return;
+                return '';
             }
         }
        
@@ -143,6 +146,7 @@ class CoreController extends Common implements File {
         echo "<input class=\"button\" type=\"button\" value=\"{$btn_title}\" onclick=\"AdminIndex.clearCache()\"/>";
 
         $tab->endContainer();
+        return '';
 	}
 
 
@@ -165,11 +169,10 @@ class CoreController extends Common implements File {
                             throw new Exception('Некорректный http метод');
                         }
                         header("Content-Type: application/json");
-                        (new \Core2\Modules())->gitlabClean();
+                        (new Modules())->gitlabClean();
                         return json_encode([
                             'status' => 'success'
                         ]);
-                        break;
                 }
 
                 throw new Exception($this->_('Некорректный адрес запроса'));
@@ -187,8 +190,7 @@ class CoreController extends Common implements File {
             try {
                 switch ($_GET['page']) {
                     case 'table_gitlab':
-                        return (new \Core2\Modules())->getTableGitlab();
-                        break;
+                        return (new Modules())->getTableGitlab();
                 }
 
                 throw new Exception($this->_('Некорректный адрес запроса'));
@@ -239,8 +241,8 @@ class CoreController extends Common implements File {
 
 
         $base_url = "index.php?module=admin&action=modules";
-        $mods     = new Core2\Modules();
-        $panel    = new \Panel('tab');
+        $mods     = new Modules();
+        $panel    = new Panel('tab');
         $panel->setTitle($this->_("Модули"));
 
         ob_start();
@@ -270,7 +272,7 @@ class CoreController extends Common implements File {
             echo $install->mInstallFromRepo($_POST['repo'], $_POST['install_from_repo']);
 
         } else {
-            $this->printJs("core2/mod/admin/assets/js/mod.js");
+            $this->printJs("core2/mod/admin/assets/js/mod.js", true);
             $this->printJs("core2/mod/admin/assets/js/gl.js");
 
             if (isset($_GET['edit'])) {
@@ -429,12 +431,11 @@ class CoreController extends Common implements File {
                     // Войти под пользователем
                     case 'login_user':
                         $users = new Admin\Users\Users();
-                        $users->loginUser($_POST['user_id']);
+                        $users->loginUser((int)$_POST['user_id']);
 
                         return json_encode([
                             'status' => 'success',
                         ]);
-                        break;
                 }
 
             } catch (Exception $e) {
@@ -457,7 +458,7 @@ class CoreController extends Common implements File {
                     $panel->setTitle($this->_("Создание нового пользователя"), '', $app);
                     $content = $view->getEdit($app);
                 } else {
-                    $user = new Admin\Users\User($_GET['edit']);
+                    $user = new Admin\Users\User((int)$_GET['edit']);
                     $panel->setTitle($user->u_login, $this->_('Редактирование пользователя'), $app);
                     $content = $view->getEdit($app, $user);
                 }
@@ -614,6 +615,7 @@ class CoreController extends Common implements File {
             if ($errors && is_array($errors)) {
                 $i     = 1;
                 $limit = 100;
+
                 foreach ($errors as $error) {
                     if ($i >= $limit) {
                         break;
@@ -668,8 +670,7 @@ class CoreController extends Common implements File {
 
         // Используется для случая когда не нужно получать список уже загруженных файлов
         if ($table == 'core_users') {
-            echo json_encode([]);
-            return true;
+            return json_encode([]);
         }
     }
 
@@ -844,7 +845,7 @@ class CoreController extends Common implements File {
 		if (!$this->auth->ADMIN) throw new Exception(911);
         try {
             $app = "index.php?module=admin&action=monitoring";
-            $monitor = new \Core2\Monitoring();
+            $monitor = new Core2\Monitoring();
 
             $tab = new tabs('admin_monitoring');
 
@@ -864,7 +865,11 @@ class CoreController extends Common implements File {
                         $sess->save();
                     }
                 }
-                $out = $monitor->getOnline();
+                if ( ! empty($_GET['edit'])) {
+
+                } else {
+                    $out = $monitor->getOnline();
+                }
             }
             elseif ($tab->activeTab == 2) {
                 $out = $monitor->getHistory();
@@ -930,30 +935,32 @@ class CoreController extends Common implements File {
 	 *
 	 */
 	public function action_upload() {
-        require_once 'classes/FileUploader.php';
 
-        $upload_handler = new \Core2\Store\FileUploader();
+
+        $upload_handler = new Core2\FileUploader();
 
         header('Pragma: no-cache');
         header('Cache-Control: private, no-cache');
         header('Content-Disposition: inline; filename="files.json"');
         header('X-Content-Type-Options: nosniff');
+        header('Content-type: application/json');
 
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'HEAD':
             case 'GET':
-                $upload_handler->get();
+                $output = $upload_handler->get();
                 //$upload_handler->getDb();
                 break;
             case 'POST':
-                $upload_handler->post();
+                $output = $upload_handler->post();
                 break;
             case 'DELETE':
-                $upload_handler->delete();
+                $output = $upload_handler->delete();
                 break;
             default:
                 header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
         }
+        return json_encode($output);
 	}
 
 
@@ -962,7 +969,7 @@ class CoreController extends Common implements File {
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
 		require_once 'classes/File.php';
-		$f = new \Core2\Store\File($resource);
+		$f = new Core2\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
 		}
