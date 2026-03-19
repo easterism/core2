@@ -33,6 +33,124 @@ class initList extends \Core2\Acl {
 
 
     /**
+     * Safe function-call dispatcher for table processing callbacks.
+     * @param string $processing
+     * @param array  $row
+     * @param mixed  $fallback
+     * @return mixed
+     */
+    protected function safeProcessRowFunction(string $processing, array $row, mixed $fallback = null): mixed {
+
+        $processing = trim($processing);
+        if ($processing === '') {
+            return $fallback;
+        }
+
+        // only function/method-like names, no code fragments
+        if ( ! preg_match('/^[A-Za-z_\\\\][A-Za-z0-9_\\\\]*$/', $processing)) {
+            return $fallback;
+        }
+
+        if ( ! is_callable($processing)) {
+            return $fallback;
+        }
+
+        try {
+            return call_user_func($processing, $row);
+        } catch (\Throwable $e) {
+            return $fallback;
+        }
+    }
+
+
+    /**
+     * Safe replacement for legacy eval("if ($expr)").
+     * Accepts only a strict boolean subset.
+     * @param string $expr
+     * @return int
+     */
+    protected function safeEvaluateCondition(string $expr): int {
+
+        $expr = trim($expr);
+        if ($expr === '') {
+            return 0;
+        }
+
+        $lower = strtolower($expr);
+        if (in_array($lower, ['1', 'true', 'yes', 'on'], true)) {
+            return 1;
+        }
+        if (in_array($lower, ['0', 'false', 'no', 'off', 'null', ''], true)) {
+            return 0;
+        }
+
+        // reject anything that can contain function calls, variables, or operators not in a strict whitelist
+        if (preg_match('/[^\w\s\-\.\'"=!<>\(\)&|]/u', $expr)) {
+            return 0;
+        }
+        if (str_contains($expr, '$') || str_contains($expr, '->') || str_contains($expr, '::')) {
+            return 0;
+        }
+
+        // boolean literals with optional NOT
+        if (preg_match('/^!?\s*(true|false|1|0)$/i', $expr)) {
+            return preg_match('/^!?\s*(true|1)$/i', $expr) ? 1 : 0;
+        }
+
+        // simple binary comparator: left OP right
+        if (preg_match('/^\s*("[^"]*"|\'[^\']*\'|-?\d+(?:\.\d+)?|[\w\-\.]+)\s*(==|!=|<=|>=|<|>)\s*("[^"]*"|\'[^\']*\'|-?\d+(?:\.\d+)?|[\w\-\.]+)\s*$/u', $expr, $m)) {
+            $leftRaw  = $m[1];
+            $op       = $m[2];
+            $rightRaw = $m[3];
+
+            $left  = $this->normalizeConditionOperand($leftRaw);
+            $right = $this->normalizeConditionOperand($rightRaw);
+
+            if (is_numeric($left) && is_numeric($right)) {
+                $left  = (float)$left;
+                $right = (float)$right;
+            } else {
+                $left  = (string)$left;
+                $right = (string)$right;
+            }
+
+            return match ($op) {
+                '==' => $left == $right ? 1 : 0,
+                '!=' => $left != $right ? 1 : 0,
+                '<'  => $left <  $right ? 1 : 0,
+                '>'  => $left >  $right ? 1 : 0,
+                '<=' => $left <= $right ? 1 : 0,
+                '>=' => $left >= $right ? 1 : 0,
+                default => 0,
+            };
+        }
+
+        return 0;
+    }
+
+
+    /**
+     * @param string $value
+     * @return string|float|int
+     */
+    protected function normalizeConditionOperand(string $value): string|float|int {
+
+        $value = trim($value);
+        if ((str_starts_with($value, "\"") && str_ends_with($value, "\"")) ||
+            (str_starts_with($value, "'") && str_ends_with($value, "'"))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        if (is_numeric($value)) {
+            return str_contains($value, '.') ? (float)$value : (int)$value;
+        }
+
+        return $value;
+    }
+
+
+    /**
      * initList constructor.
      */
 	public function __construct() {

@@ -687,7 +687,7 @@ class listTable extends initList {
                     //$sql_value = stripslashes($sql_value);
                     
                     if ($value['type'] == 'function') {
-                        eval("\$sql_value = " . $value['processing'] . "(\$row);");
+                        $sql_value = $this->safeProcessRowFunction($value['processing'] ?? '', $row, $sql_value);
                     } elseif ($value['type'] == 'html') {
                         //
                     } else {
@@ -714,8 +714,7 @@ class listTable extends initList {
                 }
                 foreach ($this->paintCondition as $ckey => $cvalue) {
                     $tres = $this->replaceTCOL($row, $cvalue);
-                    $a = 0;
-                    eval("if ($tres) \$a = 1;");
+                    $a = $this->safeEvaluateCondition($tres);
                     if ($a) {
                         $this->metadata[$k] = array('paintColor' => '', 'fontColor' => '', 'fontWeight' => '');
                         if (!empty($this->paintColor[$ckey])) $this->metadata[$k]['paintColor'] = $this->paintColor[$ckey];
