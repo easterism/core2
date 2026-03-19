@@ -767,7 +767,7 @@ $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_login']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_login']['EXTRA']   = "";
 
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass'] = array();
-$DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass']['TYPE']    = "varchar(36)";
+$DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass']['TYPE']    = "varchar(255)";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass']['NULL']    = "YES";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass']['DEFAULT'] = "";
 $DB_ARRAY['TABLES']['core_users']['COLUMNS']['u_pass']['EXTRA']   = "";

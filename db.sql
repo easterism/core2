@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `core_submodules` (
 CREATE TABLE IF NOT EXISTS `core_users` (
   `u_id` int unsigned NOT NULL AUTO_INCREMENT,
   `u_login` varchar(120) NOT NULL DEFAULT '',
-  `u_pass` varchar(36) DEFAULT '',
+  `u_pass` varchar(255) DEFAULT '',
   `visible` enum('Y','N') NOT NULL DEFAULT 'N',
   `lastupdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `email` varchar(60) DEFAULT '',
