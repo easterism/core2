@@ -151,8 +151,7 @@ class Login extends \Common {
                     ];
                 }
             }
-
-            $this->authLoginPassword($login, $password);
+            $this->checkLogin($login, $password);
 
             return [
                 'status' => 'success',
@@ -361,7 +360,7 @@ class Login extends \Common {
      * @return array
      * @throws Exception
      */
-    private function checkLogin(string $login, string $password): array {
+    private function checkLogin(string $login, string $password): void {
 
         $blockNamespace = new SessionContainer('Block');
 
@@ -432,21 +431,6 @@ class Login extends \Common {
 
             throw $e;
         }
-    }
-
-
-    /**
-     * Авторизация пользователя через форму
-     * @param string $login
-     * @param string $password
-     * @return void
-     * @throws \Zend_Db_Exception
-     * @throws Exception
-     */
-    private function authLoginPassword(string $login, string $password): void {
-
-        $user = $this->checkLogin($login, $password);
-        $this->auth($user);
     }
 
 

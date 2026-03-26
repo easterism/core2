@@ -250,6 +250,13 @@ class Init extends Acl {
 
             $auth = new SessionContainer('Auth');
             if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!empty($_POST['login']) && !empty($_POST['password'])) {
+                    //попытка повторного входа
+                    return [
+                        'status'     => 'success',
+                        'return_url' => DOC_PATH,
+                    ];
+                }
                 if (!$auth->getManager()->isValid()) {
                     $this->closeSession('Y');
                 }

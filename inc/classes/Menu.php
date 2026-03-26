@@ -3,6 +3,7 @@ namespace Core2;
 
 require_once 'Acl.php';
 require_once 'Navigation.php';
+require_once 'Templater3.php';
 
 use Exception;
 use Templater3;
