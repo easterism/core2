@@ -731,16 +731,24 @@ class WorkerManager {
         }
         if (isset($this->functions['Workhorse'])) {
             $db = new Db();
-            $mods = $db->dataModules->getModuleList();
+            $select = $db->dataModules->select()->where("visible='Y'");
+            $mods = $db->dataModules->fetchAll($select);
+
             foreach ($mods as $k => $data) {
-                $location = $this->config['doc_root'] . "/mod/{$data['module_id']}/v{$data['version']}";
+                if ($data['is_system'] === "Y") {
+                    $location = __DIR__ . "/../mod/{$data['module_id']}/v{$data['version']}";
+                } else {
+                    $location = $this->config['doc_root'] . "/mod/{$data['module_id']}/v{$data['version']}";
+                }
+//                $location = $this->config['doc_root'] . "/mod/{$data['module_id']}/v{$data['version']}";
                 $name = "Mod" . ucfirst(strtolower($data['module_id'])) . "Worker";
                 if (!isset($this->functions[$name])) {
-                    $worker = $location . "/{$name}.php";
+                    $worker = realpath($location) . "/{$name}.php";
                     if (file_exists($worker)) {
+                        $co = !empty($this->functions[$name]["count"]) ? $this->functions[$name]["count"] : 2;
                         $this->functions[$name] = [
                             'name'  => 'Workhorse',
-                            'count' => 2,
+                            'count' => $co,
                             'path'  => $worker,
                             'mod'   => $data['module_id'],
                             'path_workhorse' => $this->functions['Workhorse']['path'],
@@ -751,6 +759,7 @@ class WorkerManager {
             }
             unset($this->functions['Workhorse']);
         }
+
 //        echo "<PRE>";print_r($this->config);echo "</PRE>";//die;
 //        echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
     }
