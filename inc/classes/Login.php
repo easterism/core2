@@ -4,6 +4,7 @@ namespace Core2;
 require_once 'Templater3.php';
 require_once 'Tool.php';
 
+use _PHPStan_5a70c2d68\Nette\Utils\DateTime;
 use Laminas\Session\Container as SessionContainer;
 use Exception;
 use Templater3;
@@ -33,72 +34,101 @@ class Login extends \Common {
         if (isset($query['core'])) {
             $uri = $query['core']; //FIXME DEPRECATED
         }
-        if ($uri == 'registration') {
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Регистрация недоступна'), 403);
-            }
-            $form_html = $this->modAuth->getPageRegistration();
-            $tpl    = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
-        }
-        elseif ($uri == 'registration_complete') {
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Регистрация недоступна'), 403);
-            }
-            if (!isset($query['key'])) {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Ключ не передан'), 400);
-            }
-            $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
-        }
-        elseif ($uri == 'restore') {
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
-            }
-            $form_html = $this->modAuth->getPageRestore();
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
-        }
-        elseif ($uri == 'restore_complete') {
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
-            }
-            $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
-        }
-        else {
-            return $this->getPageLogin();
+
+        switch ($uri) {
+            case 'registration':
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->_('Регистрация недоступна'), 403);
+                }
+                $form_html = $this->modAuth->getPageRegistration();
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            case 'registration_complete':
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->_('Регистрация недоступна'), 403);
+                }
+                if ( ! isset($query['key'])) {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->_('Ключ не передан'), 400);
+                }
+                $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            case 'restore':
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->_('Восстановление пароля недоступно'), 403);
+                }
+                $form_html = $this->modAuth->getPageRestore();
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            case 'restore_complete':
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмодуль регистрации выключен
+                    throw new Exception($this->_('Восстановление пароля недоступно'), 403);
+                }
+                $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            case 'change_pass':
+
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                }
+
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->_('Восстановление пароля недоступно'), 403);
+                }
+                $error_message = '';
+                if ( ! empty($_POST['password'])) {
+                    try {
+                        $this->setNewPass($_POST['password']);
+                        return json_encode(['status'  => 'success', 'message' => $this->_('Пароль успешно обновлён')]);
+                    } catch (Exception $e) {
+                         return json_encode(['status'  => 'error', 'error_message' => $e->getMessage()]);
+                    }
+                }
+
+                $form_html = $this->modAuth->getPageChangePass($error_message);
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            default:
+                return $this->getPageLogin();
         }
 
     }
@@ -404,12 +434,12 @@ class Login extends \Common {
                 throw new \Exception($this->translate->tr("Неверный пароль"));
             }
 
-            if (Tool::password_needs_upgrade((string)$user['u_pass']) && !empty($user['u_id'])) {
-                $where = $this->db->quoteInto('u_id = ?', (int)$user['u_id']);
-                $this->db->update('core_users', [
-                    'u_pass' => Tool::password_hash_secure($password),
-                ], $where);
-            }
+//            if (Tool::password_needs_upgrade((string)$user['u_pass']) && !empty($user['u_id'])) {
+//                $where = $this->db->quoteInto('u_id = ?', (int)$user['u_id']);
+//                $this->db->update('core_users', [
+//                    'u_pass' => Tool::password_hash_secure($password),
+//                ], $where);
+//            }
 
             $this->auth($user);
 
@@ -640,5 +670,36 @@ class Login extends \Common {
             'ico' => $favicon_ico,
         ];
     }
+
+    /**
+     * @param $pass
+     * @return void
+     * @throws Exception
+     */
+    private function setNewPass($pass)
+    {
+        if (empty($this->auth)) {
+            throw new Exception($this->_('Пользователь не залогинен'));
+        }
+
+        $rowUser = $this->modAdmin->dataUsers->fetchRow(
+            $this->modAdmin->dataUsers->select()
+                ->where('u_id = ?', $this->auth->ID)
+        );
+        $pass_salt = Tool::pass_salt(trim($pass));
+        if ($pass_salt == $rowUser->u_pass) {
+            throw new Exception($this->_('Пароль не должен отличаться от предыдущего'));
+        }
+        $rowUser->u_pass = $pass_salt;
+
+        if ($this->config->registry->pass_expired == 'Y' && //проставлен признак
+            $this->config->registry->pass_expired_days &&   // задано кол-во дней на устаревание пароля
+            intval($this->config->registry->pass_expired_days) > 0) {
+            $rowUser->date_expired = (new DateTime())->modify("+{$this->config->registry->pass_expired_days} days")->format('Y-m-d H:i:s');
+            $rowUser->reg_key = null;
+        }
+        $rowUser->save();
+    }
+
 
 }

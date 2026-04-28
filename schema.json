@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Core2",
-        "version": "1.0"
+        "version": "2.9.2"
     },
     "servers": [],
     "paths": {
@@ -20,34 +20,13 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "system_name": {
-                                            "title": "Название системы",
-                                            "type": "string"
-                                        },
-                                        "id": {
-                                            "title": "ID текущего пользователя",
-                                            "type": "integer"
-                                        },
-                                        "name": {
-                                            "title": "Имя текущего пользователя",
-                                            "type": "string"
-                                        },
-                                        "login": {
-                                            "title": "Login текущего пользователя",
-                                            "type": "string"
-                                        },
-                                        "avatar": {
-                                            "title": "ссылка на аватар",
-                                            "type": "string"
-                                        },
-                                        "required_location": {
-                                            "title": "должен ли пользователь предоставить данные о местоположении",
-                                            "type": "boolean"
-                                        },
-                                        "modules": {
-                                            "title": "System admin",
-                                            "type": "object"
-                                        }
+                                        "system_name": { "title": "Название системы", "type": "string" },
+                                        "id": { "title": "ID текущего пользователя", "type": "integer" },
+                                        "name": { "title": "Имя текущего пользователя", "type": "string" },
+                                        "login": { "title": "Login текущего пользователя", "type": "string" },
+                                        "avatar": { "title": "ссылка на аватар", "type": "string" },
+                                        "required_location": { "title": "должен ли пользователь предоставить данные о местоположении", "type": "boolean" },
+                                        "modules": { "title": "System admin", "type": "object" }
                                     },
                                     "type": "object"
                                 }
@@ -90,18 +69,9 @@
                                     "value"
                                 ],
                                 "properties": {
-                                    "data": {
-                                        "title": "поле базы данных с признаком для переключения",
-                                        "type": "string"
-                                    },
-                                    "is_active": {
-                                        "title": "хначение переключателя",
-                                        "type": "string"
-                                    },
-                                    "value": {
-                                        "title": "id записи, для которой происходит переключение",
-                                        "type": "string"
-                                    }
+                                    "data": { "title": "поле базы данных с признаком для переключения", "type": "string" },
+                                    "is_active": { "title": "хначение переключателя", "type": "string" },
+                                    "value": { "title": "id записи, для которой происходит переключение", "type": "string" }
                                 },
                                 "type": "object"
                             }

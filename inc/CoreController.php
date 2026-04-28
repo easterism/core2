@@ -392,10 +392,23 @@ class CoreController extends Common implements File {
 
 			if ($rows) {
 				$rows_seq = array_values($rows);
+                $records  = [];
 
-				foreach ($_POST['data'] as $k => $row_id) {
-					$where = $this->db->quoteInto("{$id_name} = ?", $row_id);
-                    $this->db->update($table_name, ['seq' => $rows_seq[$k]], $where);
+                foreach ($_POST['data'] as $k => $row_id) {
+                    $records[$row_id] = $rows_seq[$k];
+                }
+
+
+                $is_custom = $records
+                    ? $this->customSequence($resource, $records)
+                    : false;
+
+
+				if ( ! $is_custom) {
+                    foreach ($records as $row_id => $sequence) {
+                        $where = $this->db->quoteInto("{$id_name} = ?", $row_id);
+                        $this->db->update($table_name, ['seq' => $sequence], $where);
+                    }
                 }
 			}
 
@@ -1104,6 +1117,57 @@ class CoreController extends Common implements File {
 
         } catch (Exception $e) {
             echo Alert::danger($e->getMessage());
+        }
+    }
+
+
+    /**
+     * Проверка модуля на реализацию собственного удаления
+     * @param string $resource
+     * @param array  $records
+     * @return bool
+     * @throws Exception
+     */
+    private function customSequence(string $resource, array $records): bool {
+
+        $mod             = explode('xxx', $resource);
+        $mod             = explode("_", $mod[0]);
+        $controller_name = "Mod" . ucfirst(strtolower($mod[0])) . "Controller";
+
+        $this->requireController($mod[0], $controller_name);
+        $controller = new $controller_name();
+
+        return $controller instanceof Sequence
+            ? $controller->sequence($resource, $records)
+            : false;
+    }
+
+
+    /**
+     * @param string $module_name
+     * @param string $mod_controller
+     * @return void
+     * @throws Exception
+     */
+    private function requireController(string $module_name, string $mod_controller): void {
+
+        $location        = $this->getModuleLocation($module_name); //определяем местоположение модуля
+        $controller_path = $location . "/" . $mod_controller . ".php";
+
+        if ( ! file_exists($controller_path)) {
+            throw new Exception(sprintf($this->translate->tr("Модуль не найден: %s"), $mod_controller), 400);
+        }
+
+        $autoload = $location . "/vendor/autoload.php";
+
+        if (file_exists($autoload)) { //подключаем автозагрузку если есть
+            require_once $autoload;
+        }
+
+        require_once $controller_path; // подлючаем контроллер
+
+        if ( ! class_exists($mod_controller)) {
+            throw new RuntimeException(sprintf($this->translate->tr("Модуль сломан: %s"), $location));
         }
     }
 }

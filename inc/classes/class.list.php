@@ -7,7 +7,7 @@ use Laminas\Session\Container as SessionContainer;
 use Core2\Tool;
 
 /**
- * Class listTable
+ * @deprecated use - \Core2\Classes\Table\Db();
  */
 class listTable extends initList {
     public $addSum           = array();

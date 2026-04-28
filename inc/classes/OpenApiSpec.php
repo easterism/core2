@@ -4,6 +4,7 @@ namespace Core2;
 require_once 'Acl.php';
 require_once "OpenApi.php";
 
+
 use OpenApi\Generator;
 use OpenApi\SourceFinder;
 
@@ -258,15 +259,6 @@ class OpenApiSpec extends Acl {
         }
 
         return $section_schema;
-    }
-
-
-    /**
-     * @param array $schemes
-     * @return array
-     */
-    private function mergeSchemes(array $schemes): array {
-        return [];
     }
 
 

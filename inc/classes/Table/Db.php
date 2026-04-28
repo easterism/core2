@@ -668,7 +668,6 @@ class Db extends Table {
                     switch ($filter_column->getType()) {
                         case self::FILTER_DATE:
                         case self::FILTER_DATETIME:
-                        case self::FILTER_DATE_PERIOD:
                         case self::FILTER_NUMBER:
                             if (strpos($filter_field, 'ADD_SEARCH') !== false) {
                                 if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {
@@ -693,6 +692,35 @@ class Db extends Table {
                                 } elseif ( ! empty($filter_value[0]) && ! empty($filter_value[1])) {
                                     $quoted_value1 = $db->quote($filter_value[0]);
                                     $quoted_value2 = $db->quote($filter_value[1]);
+                                    $select->addWhere("{$filter_field} BETWEEN {$quoted_value1} AND {$quoted_value2}");
+                                }
+                            }
+                            break;
+
+                        case self::FILTER_DATE_PERIOD:
+                            if (strpos($filter_field, 'ADD_SEARCH') !== false) {
+                                if ( ! empty($filter_value[0]) || ! empty($filter_value[1])) {
+                                    $quoted_value1 = $db->quote($filter_value[0]);
+                                    $quoted_value2 = $db->quote($filter_value[1]);
+
+                                    $where = str_replace("ADD_SEARCH1", $quoted_value1, $filter_field);
+                                    $where = str_replace("ADD_SEARCH2", $quoted_value2, $where);
+
+                                    $select->addWhere($where);
+                                }
+
+                            } else {
+                                if ( ! empty($filter_value[0]) && empty($filter_value[1])) {
+                                    $quoted_value = $db->quote($filter_value[0]);
+                                    $select->addWhere("{$filter_field} >= {$quoted_value}");
+
+                                } elseif (empty($filter_value[0]) && ! empty($filter_value[1])) {
+                                    $quoted_value = $db->quote("{$filter_value[1]} 23:59:59");
+                                    $select->addWhere("{$filter_field} <= {$quoted_value}");
+
+                                } elseif ( ! empty($filter_value[0]) && ! empty($filter_value[1])) {
+                                    $quoted_value1 = $db->quote($filter_value[0]);
+                                    $quoted_value2 = $db->quote("{$filter_value[1]} 23:59:59");
                                     $select->addWhere("{$filter_field} BETWEEN {$quoted_value1} AND {$quoted_value2}");
                                 }
                             }
@@ -1022,20 +1050,5 @@ class Db extends Table {
     public function setCachable(bool $is = true): void
     {
         $this->cachable = $is;
-    }
-
-    /**
-     * Удаляет строку с данными
-     * иногда это нужно
-     * @param int $i
-     * @return bool
-     */
-    public function deleteRow(int $i): bool
-    {
-        if (isset($this->data_rows[$i])) {
-            unset($this->data_rows[$i]);
-            return true;
-        }
-        return false;
     }
 }

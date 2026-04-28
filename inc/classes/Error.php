@@ -106,7 +106,9 @@ class Error {
                 self::Exception('Нет такой страницы', 404);
 
             } elseif ($message == 'expired') {
-                setcookie($cnf->session->name, false);
+                if ($cnf && $cnf?->session?->name) {
+                    setcookie($cnf->session->name, false);
+                }
                 header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
                 die();
             }

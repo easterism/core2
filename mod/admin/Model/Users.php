@@ -56,7 +56,8 @@ class Users extends \Zend_Db_Table_Abstract {
                    p.middlename, 
                    u.is_admin_sw, 
                    r.name AS role, 
-                   u.role_id
+                   u.role_id,
+                   u.date_expired
             FROM `core_users` AS u
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
                 LEFT JOIN core_roles AS r ON r.id = u.role_id
@@ -87,7 +88,8 @@ class Users extends \Zend_Db_Table_Abstract {
                    p.middlename, 
                    u.is_admin_sw, 
                    r.name AS role, 
-                   u.role_id
+                   u.role_id,
+                   u.date_expired
             FROM `core_users` AS u
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
                 LEFT JOIN core_roles AS r ON r.id = u.role_id
@@ -115,7 +117,8 @@ class Users extends \Zend_Db_Table_Abstract {
                    p.middlename, 
                    u.is_admin_sw, 
                    r.name AS role, 
-                   u.role_id
+                   u.role_id,
+                   u.date_expired
             FROM `core_users` AS u
                 LEFT JOIN core_users_profile AS p ON u.u_id = p.user_id
                 LEFT JOIN core_roles AS r ON r.id = u.role_id
