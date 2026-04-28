@@ -62,14 +62,25 @@ function logout() {
 	if (confirm('Вы уверены, что хотите выйти?')) {
         preloader.show();
 
-		$.ajax({url:'index.php?module=admin', data:{"exit":1}, method:'PUT'})
-			.done(function (n) {
-                preloader.hide();
-				window.location = 'index.php';
-
-			}).fail(function (a,b,t){
+		fetch('index.php?module=admin', {
+			method: 'PUT',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+				'X-Requested-With': 'XMLHttpRequest'
+			},
+			body: new URLSearchParams({exit: 1}).toString()
+		})
+			.then(function (response) {
+				if (!response.ok) {
+					throw new Error(response.statusText || 'Request failed');
+				}
 				preloader.hide();
-				alert("Произошла ошибка: " + a.statusText);
+				window.location = 'index.php';
+			})
+			.catch(function (err) {
+				preloader.hide();
+				alert("Произошла ошибка: " + err.message);
 			});
 	}
 }
@@ -342,25 +353,40 @@ var load = function (url, data, id, callback) {
         locData['loc'] = 'index.php' + url;
 		loc = 'index.php' + url; //DEPRECATED
 		$("#pdfiframe").remove();
-		if (xhrs[locData.id]) xhrs[locData.id].abort();
+		if (xhrs[locData.id] && typeof xhrs[locData.id].abort === 'function') xhrs[locData.id].abort();
 		if (locData.data) {
 			//$(locData.id).load('index.php' + url, callback);
 			$(locData.id).load('index.php' + url, locData.data, callback);
-			//xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
+			
 		} else {
-			xhrs[locData.id] = $.ajax({url:'index.php' + url, global:false})
-				.done(function (n) {
+			var controller = new AbortController();
+			xhrs[locData.id] = controller;
+			fetch('index.php' + url, {
+				method: 'GET',
+				credentials: 'same-origin',
+				headers: {'X-Requested-With': 'XMLHttpRequest'},
+				signal: controller.signal
+			})
+				.then(function (response) {
+					if (!response.ok) {
+						var error = new Error(response.statusText || 'Request failed');
+						error.status = response.status;
+						throw error;
+					}
+					return response.text();
+				})
+				.then(function (n) {
 					$(locData.id).html(n);
 					toAnchor(locData.id);
 					callback();
 				})
-				.fail(function (a,b,t) {
-					if (a.statusText != 'abort') {
-						if (!a.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
-						else if (a.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
-						else if (a.status == 404) alert("Запрашиваемый ресурс не найден.");
-						else if (a.status == 403) document.location.reload();
-						else alert("Произошла ошибка: " + a.statusText);
+				.catch(function (err) {
+					if (err.name !== 'AbortError') {
+						if (!err.status) alert("Превышено время ожидания ответа. Проверьте соединение с Интернет.");
+						else if (err.status == 500) alert("Ой! Что-то сломалось, подождите пока мы починим.");
+						else if (err.status == 404) alert("Запрашиваемый ресурс не найден.");
+						else if (err.status == 403) document.location.reload();
+						else alert("Произошла ошибка: " + err.message);
 					}
 					preloader.hide();
 				});

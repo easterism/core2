@@ -46,7 +46,7 @@
     "phpseclib/phpseclib": "~2.0",
     "zircote/swagger-php": "6.*",
     "phpmailer/phpmailer": "v6.9.3",
-    "predis/predis": "^2.0",
+    "predis/predis": "v3.4.2",
     "ext-json": "*",
     "ext-zip": "*",
     "ext-mbstring": "*",

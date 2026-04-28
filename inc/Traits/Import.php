@@ -65,6 +65,8 @@ trait Import {
 
             if ($options['rows_select'] == 'checked') {
                 $tpl->row->checked_row->assign('[ROW_NUMBER]', $num);
+            } else {
+                $tpl->row->start_row->assign('[ROW_NUMBER]', $num);
             }
 
             $col = 0;

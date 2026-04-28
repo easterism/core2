@@ -3,6 +3,7 @@ namespace Core2;
 
 require_once 'Acl.php';
 require_once 'Navigation.php';
+require_once 'Templater3.php';
 
 use Exception;
 use Templater3;
@@ -48,8 +49,8 @@ class Menu extends Acl {
             $tpl_file_menu = Theme::get("menu");
         }
 
-        $tpl      = new Templater3($tpl_file);
-        $tpl_menu = new Templater3($tpl_file_menu);
+        $tpl      = new \Templater3($tpl_file);
+        $tpl_menu = new \Templater3($tpl_file_menu);
 
         $tpl->assign('{system_name}', $this->getSystemName());
 
@@ -213,7 +214,7 @@ class Menu extends Acl {
                             case 'profile':
                                 if ($tpl_menu->issetBlock('navigate_item_profile')) {
                                     $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $item['module_name']);
-                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $nav->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $nav->renderNavigateItem($item, 'profile'));
                                     $tpl_menu->navigate_item_profile->reassign();
                                 }
                                 break;

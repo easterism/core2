@@ -1,14 +1,21 @@
 var modules = {
     'repo': function (repo_id) {
-        $.ajax({url:'index.php?module=admin&action=modules&getModsListFromRepo=' + repo_id})
-		.done(function(data, textStatus){
-			if (textStatus == 'success') {
-				$("#repo_" + repo_id).html(data);
-			}
-		})
-		.fail(function (a,b,t){
-			$("#repo_" + repo_id).html("Фатальная ошибка!");
-		});
+        fetch('index.php?module=admin&action=modules&getModsListFromRepo=' + repo_id, {
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.text();
+        })
+        .then(function(data){
+            $("#repo_" + repo_id).html(data);
+        })
+        .catch(function () {
+            $("#repo_" + repo_id).html("Фатальная ошибка!");
+        });
     },
 
 
@@ -18,23 +25,29 @@ var modules = {
 	 */
 	updateTable: function (theme) {
 
-        $.ajax({
-			url:'index.php?module=admin&action=modules&data=cache_clean',
-			dataType: "json",
-			type: "POST",
-		})
-		.done(function(data) {
-			if (data.hasOwnProperty('status') && data.status === 'success') {
-				$(".modal .modal-body").html('<div style="text-align:center"><img src="core2/html/' + theme + '/img/load.gif"> Обновление списка</div>');
-				$(".modal .modal-body").load('index.php?module=admin&action=modules&page=table_gitlab');
+        fetch('index.php?module=admin&action=modules&data=cache_clean', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.hasOwnProperty('status') && data.status === 'success') {
+                $(".modal .modal-body").html('<div style="text-align:center"><img src="core2/html/' + theme + '/img/load.gif"> Обновление списка</div>');
+                $(".modal .modal-body").load('index.php?module=admin&action=modules&page=table_gitlab');
 
-			} else {
-				alert("Ошибка обновления списка");
-			}
-		})
-		.fail(function () {
-			alert("Не удалось обновить список");
-		});
+            } else {
+                alert("Ошибка обновления списка");
+            }
+        })
+        .catch(function () {
+            alert("Не удалось обновить список");
+        });
     },
 
     'spoiler': function (id) {
@@ -126,24 +139,32 @@ var modules = {
         }
 	},
 	checkModsUpdates: function (mods, theme) {
-        $.ajax({
-            url: "index.php?module=admin&action=modules",
-            data: {"checkModsUpdates": mods},
+        fetch('index.php?module=admin&action=modules', {
             method: 'PUT',
-            success: function(data, textStatus) {
-                if (textStatus == 'success') {
-                    data.forEach(function(item, i, arr) {
-                        var obj = $('td[title=' + item.m_id + ']');
-                        var obj_ver = obj.next().next().next();
-                        obj_ver.html(obj_ver.html() + ' <b style="color: #008000;"> Доступно обновление до v' + item.version + '</b>');
-                        var obj_do = obj.next().next().next().next().next().next();
-                        obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
-                    });
-                }
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({checkModsUpdates: mods}).toString()
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error(response.statusText || 'Request failed');
             }
-
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            alertify.error(textStatus);
+            return response.json();
+        })
+        .then(function(data) {
+            data.forEach(function(item) {
+                var obj = $('td[title=' + item.m_id + ']');
+                var obj_ver = obj.next().next().next();
+                obj_ver.html(obj_ver.html() + ' <b style="color: #008000;"> Доступно обновление до v' + item.version + '</b>');
+                var obj_do = obj.next().next().next().next().next().next();
+                obj_do.html(obj_do.html() + '<div style="display: inline-block;" onclick="modules.updateModule(\'' + item.m_name + '\', \'' + item.version + '\', \'' + item.module_id + '\');"><img src="core2/html/' + theme + '/img/box_refresh.png" border="0" title="Обновить модуль" /></div>');
+            });
+        })
+        .catch(function (err) {
+            alertify.error(err.message || 'Request failed');
         });
 	},
     /**

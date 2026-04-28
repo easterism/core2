@@ -78,6 +78,7 @@ class Render extends Acl {
         $tpl->assign('[LOCATION]',          ! empty($this->table['isAjax']) ? $_SERVER['QUERY_STRING'] . "&__{$this->table['resource']}=ajax" : $_SERVER['QUERY_STRING']);
         $tpl->assign('[CLASS_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? 'coreui-table-limit-height' : '');
         $tpl->assign('[STYLE_MAX_HEIGHT]',  ! empty($this->table['max_height']) ? "max-height: {$this->table['max_height']}px;" : '');
+        $tpl->assign('[STYLE_OVERFLOW]',    $this->table['is_overflow'] ? ';overflow:auto' : '');
 
         if ( ! empty($this->table['head_top'])) {
             $tpl->touchBlock('script_head_top');

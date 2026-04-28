@@ -93,33 +93,34 @@ try {
 
     $section = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'production';
 
-    $conf     = new Core2\Config($config_origin);
-    $config   = $conf->getData()->merge($conf->readIni($conf_file, $section));
+    $conf          = new Core2\Config($config_origin);
+    $system_config = $conf->getData()->merge($conf->readIni($conf_file, $section));
+
 
 
     $conf_d = __DIR__ . "/../../conf.ext.ini";
     if (file_exists($conf_d)) {
-        $config->merge($conf->readIni($conf_d, $section));
+        $system_config->merge($conf->readIni($conf_d, $section));
     }
 
     if (empty($_SERVER['HTTPS'])) {
-        if (isset($config->system) && ! empty($config->system->https)) {
+        if (isset($system_config->system) && ! empty($system_config->system->https)) {
             header('Location: https://' . $_SERVER['SERVER_NAME']);
             exit(); // TODO нужно убрать
         }
     }
-    $tz = $config->system->timezone;
+    $tz = $system_config->system->timezone;
     if (!empty($tz)) {
         date_default_timezone_set($tz);
     }
-    if (!$config) throw new Exception("Unable to load configuration.");
+    if (!$system_config) throw new Exception("Unable to load configuration.");
 }
 catch (Exception $e) {
     Error::Exception($e->getMessage());
 }
 
 // отладка приложения
-if ($config->debug->on) {
+if ($system_config->debug->on) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
@@ -127,43 +128,43 @@ if ($config->debug->on) {
 }
 
 //проверяем настройки для базы данных
-if ($config->database) {
-    if (empty($config->database->adapter)) {
+if ($system_config->database) {
+    if (empty($system_config->database->adapter)) {
         Error::Exception('Database adapter is empty!');
     }
-    if (empty($config->database->params->dbname)) {
+    if (empty($system_config->database->params->dbname)) {
         Error::Exception('Database name is empty!');
     }
 }
 
 //конфиг стал только для чтения
-$config->setReadOnly();
+$system_config->setReadOnly();
 
 
-if (isset($config->include_path) && $config->include_path) {
-    set_include_path(get_include_path() . PATH_SEPARATOR . $config->include_path);
+if (isset($system_config->include_path) && $system_config->include_path) {
+    set_include_path(get_include_path() . PATH_SEPARATOR . $system_config->include_path);
 }
 
 //подключаем мультиязычность
 require_once 'I18n.php';
-$translate = new I18n($config);
+$translate = new I18n($system_config);
 
 //сохраняем конфиг
-Registry::set('config', $config);
+Registry::set('config', $system_config);
 
 //обрабатываем конфиг ядра
 $core_conf_file = __DIR__ . "/../../conf.ini";
 if (file_exists($core_conf_file)) {
-    $config = new Core2\Config();
-    Registry::set('core_config', $config->readIni($core_conf_file, 'production'));
+    $core_config = new Core2\Config();
+    Registry::set('core_config', $core_config->readIni($core_conf_file, 'production'));
 }
 
 require_once 'Acl.php';
 require_once 'Common.php';
 require_once 'SSE.php';
 
+
 /**
- * Class Init
  * @property Core2\Model\Modules $dataModules
  */
 class Init extends Acl {
@@ -172,9 +173,6 @@ class Init extends Acl {
      * @var StdClass|Zend_Session_Namespace
      */
     private $auth;
-
-    protected $is_rest = array();
-    protected $is_soap = array();
 
 
     /**
@@ -320,24 +318,28 @@ class Init extends Acl {
 
             if (isset($route['module'])) {
                 if (isset($route['api']) && $route['api'] === 'openapi') {
+
                     if ($route['action'] == 'core2.json') {
-                        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
+                        define("SERVER", ( ! empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
                         //генерация свагера для общего API
                         require_once "OpenApi.php";
                         header("Cache-Control: no-cache");
                         $schema = new \Core2\OpenApi();
-                        $html = $schema->render();
+                        $html   = $schema->render();
                         return $html;
                     }
+
                     if ($route['action'] == 'sections') {
                         require_once "OpenApiSpec.php";
                         header('Content-Type: application/json');
                         $schema = new \Core2\OpenApiSpec();
                         $this->setupAcl();
+
                         if ( ! empty($route['params'])) {
                             $section = key($route['params']);
                             return json_encode($schema->getSectionSchema($section));
                         }
+
                         return json_encode([ 'sections' => $schema->getSections() ]);
                     }
                 }
@@ -352,6 +354,11 @@ class Init extends Acl {
                     $sse = new Core2\SSE();
                     $sse->run();
                     return '';
+                } elseif ($route['module'] === 'change_pass') {
+                    require_once 'Login.php';
+                    $login = new Login();
+                    $this->setupSkin();
+                    return $login->dispatch($route);
                 }
             }
 
@@ -362,6 +369,9 @@ class Init extends Acl {
 
             $this->logActivity($logExclude);
             //TODO CHECK DIRECT REQUESTS except iframes
+
+            //Проверка устаревания пароля
+            $this->checkExpired();
 
             require_once 'Zend_Session_Namespace.php'; //DEPRECATED
             require_once 'core2/inc/Interfaces/Delete.php';
@@ -537,6 +547,39 @@ class Init extends Acl {
                 }
 
             }
+        }
+    }
+
+
+    /**
+     * Проверка на устаревание пароля пользователя
+     * @return void
+     * @throws Exception
+     */
+    private function checkExpired()
+    {
+
+        if ($this->config->registry->pass_expired == 'Y') {
+            if ( ! empty($this->auth->check_expired)) {
+                return;
+            }
+
+            if ( ! empty($this->config->registry->pass_expired_exception_user_id)) {
+                $exception_ids = explode(',', $this->config->registry->pass_expired_exception_user_id);
+                if (in_array($this->auth->ID, $exception_ids)) {
+                    $this->auth->check_expired = 1;
+                    return;
+                }
+            }
+
+            $data_user = $this->dataUsers->getUserById($this->auth->ID);
+
+            if (
+                (new DateTime($data_user['date_expired'])) < (new DateTime())) {
+                header('Location: /change_pass');
+                exit;
+            }
+            $this->auth->check_expired = 1;
         }
     }
 
@@ -744,7 +787,7 @@ class Init extends Acl {
                     //http basic auth allowed
                     [$login, $password] = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                     $user = $this->dataUsers->getUserByLogin($login);
-                    if ($user && \Core2\Tool::password_verify_secure($password, (string)$user['u_pass'])) {
+                    if ($user && $user['u_pass'] === Tool::pass_salt(md5($password))) {
                         $auth = new \StdClass();
 
                         $auth->LIVEID = 0;

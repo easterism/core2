@@ -14,6 +14,20 @@ class Enum extends \Zend_Db_Table_Abstract {
 	private $_enum   = [];
 
 
+
+    /**
+     * Получение записи по Id
+     * @param int $id
+     * @return \Zend_Db_Table_Row_Abstract|null
+     */
+    public function getRowById(int $id):? \Zend_Db_Table_Row_Abstract {
+
+        return $this->fetchRow(
+            $this->select()->where("id = ?", $id)
+        );
+    }
+
+
     /**
      * Добавление записи в справочник
      * @param string $global_id

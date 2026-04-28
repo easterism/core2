@@ -159,12 +159,11 @@ class File extends \Common {
      * @throws \Exception
      */
     public function handleThumb($table, $id) {
-        $this->getFileData($table, $id);
+        $this->getThumb($table, $id);
         $res2 = $this->data;
 
         header("Content-type: {$res2['type']}");
         header("Content-Disposition: filename=\"{$res2['filename']}\"");
-
 
         if ( ! empty($res2['hash'])) {
             $etagHeader = (isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : false);
@@ -175,10 +174,19 @@ class File extends \Common {
             //check if page has changed. If not, send 304 and exit
             if ($etagHeader == $res2['hash']) {
                 header("HTTP/1.1 304 Not Modified");
-                return '';
             }
         }
 
+    }
+
+    /**
+     * @param string $table
+     * @param int    $id
+     * @return string
+     */
+    public function getThumb(string $table, int $id): string
+    {
+        $this->getFileData($table, $id);
         $quote_table_files = $this->db->quoteIdentifier($table . '_files');
         $thumb = $this->db->fetchOne("SELECT `thumb` FROM {$quote_table_files} WHERE id = ?", $id);
         //Если задан размер тамбнейла или если тамбнейла нет в базе
@@ -186,12 +194,13 @@ class File extends \Common {
             $content = $this->getContent($table, $id);
             ob_start();
             $image = new Image();
-            $image->outStringResized($content, $res2['type'], $this->imgWidth, $this->imgHeight);
+            $image->outStringResized($content, $this->data['type'], $this->imgWidth, $this->imgHeight);
             $this->content = ob_get_clean();
 
         } else {
             $this->content = $thumb;
         }
+        return $this->content;
     }
 
 

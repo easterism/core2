@@ -200,7 +200,7 @@ class Route {
                 foreach ($matches[0] as $key => $match) {
                     $count = 1;
                     $name  = $matches['name'][$key];
-                    $rule  = $matches['rule'][$key] ?: '[\d\w_\-]+';
+                    $rule  = $matches['rule'][$key] ?: '[\d]+';
                     $path  = str_replace($match, "(?<{$name}>{$rule})", $path, $count);
                 }
             }
