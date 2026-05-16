@@ -217,6 +217,7 @@ class Init extends Acl {
             //$sess_manager->setStorage(new SessionStorage());
 
             $sess_manager->getValidatorChain()->attach('session.validate', [new HttpUserAgent(), 'isValid']);
+            //$sess_manager->getValidatorChain()->attach('session.validate', [new Csrf(), 'isValid']);
             if ($this->config->session->phpSaveHandler) {
                 $options = ['namespace' => $_SERVER['SERVER_NAME'] . ":Session"];
                 if ($this->config->session->remember_me_seconds) $options['ttl'] = $this->config->session->remember_me_seconds;
@@ -250,6 +251,13 @@ class Init extends Acl {
 
             $auth = new SessionContainer('Auth');
             if (!empty($auth->ID) && is_int($auth->ID)) {
+                if (!empty($_POST['login']) && !empty($_POST['password'])) {
+                    //попытка повторного входа
+                    return [
+                        'status'     => 'success',
+                        'return_url' => DOC_PATH,
+                    ];
+                }
                 if (!$auth->getManager()->isValid()) {
                     $this->closeSession('Y');
                 }
@@ -744,7 +752,7 @@ class Init extends Acl {
                     //http basic auth allowed
                     [$login, $password] = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
                     $user = $this->dataUsers->getUserByLogin($login);
-                    if ($user && \Core2\Tool::password_verify_secure($password, (string)$user['u_pass'])) {
+                    if ($user && Tool::password_verify_secure($password, (string)$user['u_pass'])) {
                         $auth = new \StdClass();
 
                         $auth->LIVEID = 0;

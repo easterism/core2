@@ -3,15 +3,30 @@ namespace Core2;
 
 require_once __DIR__ . '/../inc/classes/Error.php';
 require_once __DIR__ . '/../inc/classes/Db.php';
+require_once __DIR__ . '/../inc/classes/RedisStreamQueue.php';
+
+use Predis\Client;
 
 class Eventer
 {
 
     private $_config;
+    private $client;
+    private $queue;
 
     public function __construct()
     {
         $this->_config = Registry::get('config');
+        $core_config = Registry::get('core_config');
+        // Инициализация Redis клиента
+        $this->client = new Client([
+            'host' => $core_config->cache->options->server->host,
+            'port' => 6379,
+            'password' => $core_config->cache->options->server->password,
+            'prefix' => $_SERVER['SERVER_NAME'] . ":Core2:Eventer"
+        ]);
+        // Создание очереди
+        $this->queue = new RedisStreamQueue($this->client, prefix: 'core2_queue');
     }
 
 
@@ -28,34 +43,15 @@ class Eventer
         }
         $_SERVER = get_object_vars($workload->server);
 
-        $mod     = $workload->payload->mod;
         $context = $workload->payload->context;
         $event  = $workload->payload->event;
-        $data   = $workload->payload->data;
+        $data   = is_object($workload->payload->data) ? get_object_vars($workload->payload->data) : $workload->payload->data;
 
-        $modController = "Mod" . ucfirst($mod) . "Controller";
+        // Добавить сообщение в очередь
+        $this->queue->push([
+            'event' => $event,
+            'data' => $data,
+        ], $context);
 
-        $location = $workload->payload->location;
-
-        $controller_path = $location . "/" . $modController . ".php";
-
-        if (file_exists($controller_path)) {
-            $autoload = $location . "/vendor/autoload.php";
-            if (file_exists($autoload)) {
-                require_once $autoload;
-            }
-            require_once $controller_path;
-
-            if ( ! in_array('Subscribe', class_implements($modController))) {
-                throw new \Exception("$modController has no Subscribe interface");
-            }
-            $controller = new $modController();
-            $res = $controller->listen($context, $event, $data);
-            if ($res) {
-                $log[] = is_scalar($res) ? $res : json_encode($res);
-            }
-            unset($controller);
-            return true;
-        }
     }
 }

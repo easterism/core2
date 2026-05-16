@@ -3,6 +3,7 @@ namespace Core2;
 
 require_once 'Acl.php';
 require_once 'Navigation.php';
+require_once 'Templater3.php';
 
 use Exception;
 use Templater3;
@@ -198,11 +199,11 @@ class Menu extends Acl {
 
         if ( ! empty($navigate_items)) {
             $nav = new Navigation();
-            foreach ($navigate_items as $position => $items) {
-                $navigate_items[$position] = \Core2\Tool::multisort($items, [
-                    'seq'    => SORT_DESC,
-                    'serial' => SORT_ASC
-                ]);
+            foreach ($navigate_items as $place => $places) {
+                uasort($places, fn($a, $b) =>
+                    $a['seq'] <=> $b['seq'] ?: $a['serial'] <=> $b['serial']
+                );
+                $navigate_items[$place] = array_values($places);
             }
 
             foreach ($navigate_items as $position => $items) {

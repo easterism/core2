@@ -64,15 +64,12 @@ class Emitter extends Db {
 
     public function async($module, $event_name, $data): void {
 
-        foreach ($this->subscribers as $mod => $controller) {
-            $w = $this->workerAdmin->doBackground('Eventer', [
-                'mod' => $mod,
-                'location' => $this->getModuleLocation($mod),
-                'context' => $module,
-                'event' => $event_name,
-                'data' => $data
-            ]);
-        }
+        $w = $this->workerAdmin->doBackground('Eventer', [
+            'context' => $module,
+            'event' => $event_name,
+            'data' => $data
+        ]);
+
 //        $this->log->info(is_array($data) ? json_encode($data) : $data, ['module' => $module, 'event' => $event_name]);
     }
 

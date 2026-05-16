@@ -371,27 +371,31 @@ class Image {
                     $newx = $x;
                     $newy = $y;
                 }
+                $newx = (int)$newx;
+                $newy = (int)$newy;
+                if ($newx && $newy) {
 
-                $new_img = imagecreatetruecolor((int)$newx, (int)$newy);
-                imagecopyresampled($new_img, $image, 0, 0, 0, 0, (int)$newx, (int)$newy, $x, $y);
+                    $new_img = imagecreatetruecolor($newx, $newy);
+                    imagecopyresampled($new_img, $image, 0, 0, 0, 0, $newx, $newy, $x, $y);
 
-                switch ($type) {
-                    case 'jpeg':
-                    case 'jpg':
-                        imagejpeg($new_img);
-                        break;
+                    switch ($type) {
+                        case 'jpeg':
+                        case 'jpg':
+                            imagejpeg($new_img);
+                            break;
 
-                    case 'png':
-                        $bg_png = imagecolorallocate($new_img, 0, 0, 0);
-                        imagecolortransparent($new_img, $bg_png);
-                        imagepng($new_img);
-                        break;
+                        case 'png':
+                            $bg_png = imagecolorallocate($new_img, 0, 0, 0);
+                            imagecolortransparent($new_img, $bg_png);
+                            imagepng($new_img);
+                            break;
 
-                    case 'gif':
-                        imagegif($new_img);
-                        break;
+                        case 'gif':
+                            imagegif($new_img);
+                            break;
+                    }
+                    imagedestroy($new_img);
                 }
-                imagedestroy($new_img);
             }
         }
     }

@@ -19,22 +19,29 @@ CoreLogin.login = function (form) {
         passValue = hex_md5(passValue);
     }
     
-    $.ajax({
-        url: location.pathname + location.search,
-        method: "POST",
-        data: {
+    fetch(location.pathname + location.search, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
             login: $('[name=login]', form).val(),
             password: passValue
-        }
+        }).toString()
     })
-        .always (function (jqXHR) {
+        .then(function (response) {
+            return response.text();
+        })
+        .then(function (response) {
             CoreLogin.loaderHide();
 
-            var response     = typeof jqXHR === 'string' ? jqXHR : jqXHR.responseText;
             var errorMessage = '';
+            var data = {};
 
             try {
-                var data = JSON.parse(response);
+                data = JSON.parse(response);
                 errorMessage = typeof data.error_message === 'string' ? data.error_message : '';
 
             } catch (err) {
@@ -50,6 +57,10 @@ CoreLogin.login = function (form) {
                     location.reload();
                 }
             }
+        })
+        .catch(function () {
+            CoreLogin.loaderHide();
+            $('.form-main .text-danger').text('Ошибка. Попробуйте позже, либо обратитесь к администратору');
         });
 };
 
