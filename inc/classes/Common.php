@@ -425,6 +425,28 @@ class Common extends \Core2\Acl {
 
 
     /**
+     * Link to JS file
+     * @param string $src JS filename
+     * @param bool   $chachable
+     * @return string
+     */
+	protected function getJs(string $src, bool $chachable = false): string {
+
+        return Tool::getJs($src, $chachable);
+	}
+
+
+    /**
+     * @param string $src
+     * @return string
+     */
+	protected function getCss(string $src): string {
+
+        return Tool::getCss($src);
+	}
+
+
+    /**
      * @param string          $message
      * @param array|Exception $data
      * @return bool
