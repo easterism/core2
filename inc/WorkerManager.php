@@ -757,6 +757,7 @@ class WorkerManager {
                     }
                 }
             }
+            unset($db);
             unset($this->functions['Workhorse']);
         }
 
@@ -1334,7 +1335,7 @@ class WorkerManager {
             }
 
             // Читаем данные от сервера
-            $data = fread($worker, 20480);
+            $data = fread($worker, 8192); //в буферизированном выводе всеравно только 1448
 
 //            echo "Received data: " . bin2hex($data) . "\n"; // Вывод сырых данных для отладки
 
@@ -1372,23 +1373,27 @@ class WorkerManager {
                             }
                             if (!str_ends_with($payload, "}|")) {
                                 //забрали не все занные
-                                echo "EXTRA $job\n";
+                                echo "EXTRA $job\n Length " . strlen($data) . " end with ..." . substr($payload, -20) . "\n";
                                 $this->toLog("EXTRA data for job $job", self::LOG_LEVEL_WORKER_INFO);
-                                $request = "\0REQ" . // Магическое число (запрос)
-                                    //pack('N', 9) . //GRAB_JOB
-                                    pack('N', 30) . //GRAB_JOB_UNIQ
-                                    pack('N', 0);
-                                $send = fwrite($worker, $request);
-                                if (!$send) {
-                                    break;
-                                }
+//                                $request = "\0REQ" . // Магическое число (запрос)
+//                                    //pack('N', 9) . //GRAB_JOB
+//                                    pack('N', 30) . //GRAB_JOB_UNIQ
+//                                    pack('N', 0);
+//                                $send = fwrite($worker, $request);
+//                                if (!$send) {
+//                                    break;
+//                                }
                                 // Читаем данные от сервера
-                                $data = fread($worker, 20480);
-                                if ($data === false) {
+                                $data_extra = fread($worker, 8192);
+                                if ($data_extra === false) {
                                     echo "Error reading from server\n";
                                     break;
                                 }
-                                $payload .= $data;
+                                $payload .= $data_extra;
+                                echo "EXTRA DATA: Length " . strlen($data_extra) . ", payload length: " . strlen($payload) . "\n";
+                            }
+                            if (!str_ends_with($payload, "}|")) {
+                                //сообщение больше размера двух буферов!
                             }
 
                             $json = preg_replace('/[[:cntrl:]]/', '', substr($payload, 0, -1));
@@ -1439,7 +1444,7 @@ class WorkerManager {
                                     $job . "\0" .
                                     $msg;
                                 fwrite($worker, $request);
-                                echo "Worker FAILED job: $job with exception: $msg \n\n" . strlen($data) . "\n\n$function\n\n$json\n\n";
+                                echo "Worker FAILED job: $job with JSON error: $msg \n\n" . "\n\n$function\n\n$json\n\n";
                                 $this->toLog("Worker FAILED job: $job with exception: $msg", self::LOG_LEVEL_WORKER_INFO);
                             }
                         }
@@ -1450,7 +1455,7 @@ class WorkerManager {
                                 pack('N', strlen($job)) .
                                 $job;
                             fwrite($worker, $request);
-                            echo "Function FAILED: $body \n";
+//                            echo "Function FAILED: $body \n";
                             $this->toLog("Function FAILED: $function", self::LOG_LEVEL_WORKER_INFO);
                         }
                     } else {
@@ -1460,7 +1465,7 @@ class WorkerManager {
                             pack('N', strlen($job)) .
                             $job;
                         fwrite($worker, $request);
-                        echo "Worker TYPE: $type FAILED job: $job \n";
+//                        echo "Worker TYPE: $type FAILED job: $job \n";
                         $this->toLog("Worker TYPE $type FAILED: $data", self::LOG_LEVEL_WORKER_INFO);
                     }
 
@@ -1480,7 +1485,7 @@ class WorkerManager {
             }
             else {
                 if ($data) {
-                    echo "Server FAILED job: $data \n";
+                    echo "Server FAILED job: $data \n\n";
                     $this->toLog("Server FAILED job: $data", self::LOG_LEVEL_WORKER_INFO);
                 }
             }
