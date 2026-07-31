@@ -16,9 +16,8 @@ class Emitter extends Db {
     public function __construct() {
         parent::__construct();
         $this->module = 'admin';
-        $mods = $this->dataModules->setAdapter($this->db)->getIds();
+        $mods = $this->db->fetchPairs("SELECT m_id, module_id FROM core_modules WHERE visible='Y'");
         $out  = [];
-
         foreach ($mods as $id => $mod) {
             $modController = "Mod" . ucfirst($mod) . "Controller";
 

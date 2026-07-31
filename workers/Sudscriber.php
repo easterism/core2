@@ -71,7 +71,7 @@ class Subscriber
                 $messageId = $message['message_id'];
 
                 // --- ЛОГИКА ОБРАБОТКИ ПОДПИСКИ ---
-                
+
                 $this->toLog("Processed message $messageId: " . json_encode($data), self::LOG_LEVEL_INFO);
 
                 // Подтверждаем успешную обработку сообщения

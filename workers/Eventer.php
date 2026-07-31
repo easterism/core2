@@ -34,7 +34,13 @@ class Eventer
         if (!defined("DOC_PATH")) {
             define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
         }
-        $this->_emitter = new Emitter();
+        Registry::set('db|admin', null);
+        Registry::set('db', null);
+        try {
+            $this->_emitter = new Emitter();
+        } catch (\Throwable $e) {
+            echo "<PRE>Eventer construct: ";print_r($e->getMessage());echo "</PRE>\n";//die;
+        }
     }
 
 
@@ -60,7 +66,10 @@ class Eventer
             'event' => $event,
             'data' => $data,
         ], $context);
-
-        $this->_emitter->sync($context, $event, $data);
+        try {
+            $this->_emitter->sync($context, $event, $data);
+        } catch (\Throwable $e) {
+            echo "run $context: ";print_r($e->getMessage());echo "\n";//die;
+        }
     }
 }
