@@ -286,7 +286,12 @@ class Log {
 
         $this->setHandlers($level);
 
-        $this->logger->{$name}($message, $context);
+        try {
+            $this->logger->{$name}($message, $context);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+        }
+
         $this->clearHandlers();
     }
 
