@@ -560,7 +560,8 @@ class editTable extends initEdit {
 								$funcName = substr($funcName[0], 6);
                                 $action = "index.php?" . $_SERVER['QUERY_STRING'];
                                 if ($this->action) $action = $this->action;
-								$func[$k] = "xajax.config['requestURI']='$action';xajax_post('$funcName', '', " . substr($fu, strpos($fu, '(', 1) + 1, -1) . ")";
+                                $action = addslashes($action);
+                                $func[$k] = "xajax.config['requestURI']='$action';xajax_post('$funcName', '', " . substr($fu, strpos($fu, '(', 1) + 1, -1) . ")";
 							}
 						}
 						$onsubmit .= implode(";", $func) . ";return;";

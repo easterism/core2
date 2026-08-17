@@ -111,7 +111,9 @@ class FileUploader extends Db {
 
     private function get_db_objects($tbl, $refid, $fieldid = '') {
 
-        //echo "<PRE>";print_r($this->options);echo "</PRE>";die;
+        if ( ! preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', (string)$tbl)) {
+            return [];
+        }
         $SQL = "SELECT * FROM `{$tbl}_files` WHERE refid=?";
         $arr = array($refid);
         if ($fieldid) {
@@ -328,8 +330,8 @@ class FileUploader extends Db {
     public function get() {
         $info = array();
         if (!empty($_GET['refid']) && !empty($_GET['tbl'])) {
-            $tbl = trim(strip_tags($_GET['tbl']));
-            $info = $this->get_db_objects($tbl, $_GET['refid'], $_GET['f']);
+            $tbl = trim(strip_tags((string)$_GET['tbl']));
+            $info = $this->get_db_objects($tbl, (string)$_GET['refid'], $_GET['f'] ?? '');
         } else {
             $file_name = isset($_GET['file']) ? basename(stripslashes($_REQUEST['file'])) : null;
             if ($file_name) {

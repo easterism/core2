@@ -111,19 +111,28 @@ class MobileController extends Common {
 			}
 
 			$res = explode('.', $_POST['data']);
-
-			preg_match('/[a-z|A-Z|0-9|_|-]+/', trim($res[0]), $arr);
-			$table_name = $arr[0];
-			$is_active = $res[1];
+			$table_name = isset($res[0]) ? $res[0] : '';
+			$is_active = isset($res[1]) ? $res[1] : '';
+			if (!preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', $table_name) || !preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', $is_active)) {
+				throw new Exception($this->translate->tr('Произошла ошибка! Не удалось получить данные'));
+			}
+			if (strpos($table_name, 'core_') === 0) {
+				if (!$this->auth->ADMIN) throw new Exception($this->translate->tr('Доступ запрещен'));
+			} else {
+				$mod = preg_match('~^mod_([a-zA-Z0-9_]+)~', $table_name, $m) ? $m[1] : $table_name;
+				if (!$this->checkAcl($mod, 'edit_all') && !$this->checkAcl($mod, 'edit_owner')) {
+					throw new Exception($this->translate->tr('Доступ запрещен'));
+				}
+			}
 			$id = isset($res[2]) ? $res[2] : 0;
 			if (!$id && !empty($_POST['value'])) {
 				$id = (int) $_POST['value'];
 			}
 			$status = $_POST['is_active'];
-			$keys_list = $this->db->fetchRow("SELECT * FROM `{$table_name}` LIMIT 1");
+			$keys_list = $this->db->fetchRow("SELECT * FROM " . $this->db->quoteIdentifier($table_name) . " LIMIT 1");
 			$keys = array_keys($keys_list);
 			$key = $keys[0];
-			$where = $this->db->quoteInto($key . "= ?", $id);
+			$where = $this->db->quoteInto($this->db->quoteIdentifier($key) . "= ?", $id);
 			$this->db->update($table_name, array($is_active => $status), $where);
 			//очистка кеша активности по всем записям таблицы
 			// используется для core_modules
@@ -146,7 +155,7 @@ class MobileController extends Common {
         $deleteKey  = $sessData['deleteKey'];
         if (!$deleteKey) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
         [$table, $refid] = explode(".", $deleteKey);
-        if (!$table || !$refid) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
+        if (!preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', (string)$table) || !preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', (string)$refid)) throw new Exception($this->translate->tr("Не удалось определить параметры удаления"), 13);
 
         if (($this->checkAcl($resource, 'delete_all') || $this->checkAcl($resource, 'delete_owner'))) {
             $authorOnly = false;
@@ -155,7 +164,7 @@ class MobileController extends Common {
             }
             $this->db->beginTransaction();
             try {
-                $is = $this->db->fetchAll("EXPLAIN `$table`");
+                $is = $this->db->fetchAll("EXPLAIN " . $this->db->quoteIdentifier($table));
 
                 $nodelete = false;
                 $noauthor = true;
@@ -177,7 +186,7 @@ class MobileController extends Common {
                 }
                 if ($nodelete) {
                     foreach ($ids as $key) {
-                        $where = array($this->db->quoteInto("`$refid` = ?", $key));
+                        $where = array($this->db->quoteInto($this->db->quoteIdentifier($refid) . " = ?", $key));
                         if ($authorOnly) {
                             $where[] = $this->db->quoteInto("author = ?", $auth->NAME);
                         }
@@ -185,7 +194,7 @@ class MobileController extends Common {
                     }
                 } else {
                     foreach ($ids as $key) {
-                        $where = array($this->db->quoteInto("`$refid` = ?", $key));
+                        $where = array($this->db->quoteInto($this->db->quoteIdentifier($refid) . " = ?", $key));
                         if ($authorOnly) {
                             $where[] = $this->db->quoteInto("author = ?", $auth->NAME);
                         }

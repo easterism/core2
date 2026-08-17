@@ -1519,13 +1519,15 @@ class listTable extends initList {
             $this->makeTable();
             $loc = $this->ajax ? $_SERVER['QUERY_STRING'] . "&__{$this->resource}=ajax" : $_SERVER['QUERY_STRING'];
             $loc = "index.php?$loc";
+            $loc_js = json_encode($loc, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+            $res_js = json_encode($this->resource, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
             echo "<script>
                 if (!listx){
                     alert('listx не найден!')
                 }
                 else {
-                    listx.loc['{$this->resource}'] = '{$loc}';
+                    listx.loc[{$res_js}] = {$loc_js};
                 }
             </script>";
             echo $this->HTML;

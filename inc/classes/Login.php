@@ -469,8 +469,10 @@ class Login extends \Common {
 
         require_once __DIR__ . '/../CoreController.php';
 
+        $root_hash = $this->core_config?->auth?->root_password_hash;
+
         $auth            = [];
-        $auth['u_pass']  = \CoreController::RP;
+        $auth['u_pass']  = $root_hash ?: \CoreController::RP;
         $auth['u_id']    = -1;
         $auth['u_login'] = 'root';
         $auth['email']   = 'easter.by@gmail.com';

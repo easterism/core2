@@ -1072,9 +1072,11 @@ class listTable2 extends initList {
 	public function showTable() {
 		if ($this->checkAcl($this->resource, 'list_all') || $this->checkAcl($this->resource, 'list_owner')) {
 			$this->makeTable();
+			$loc_js = json_encode($_SERVER['QUERY_STRING'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+			$res_js = json_encode($this->resource, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 			echo "<script>if (!listx){alert('listx не найден!')}
 				else {
-					listx.loc['{$this->resource}'] = '{$_SERVER['QUERY_STRING']}';
+					listx.loc[{$res_js}] = {$loc_js};
 				}
 			</script>";
 			echo $this->HTML;

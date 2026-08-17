@@ -38,12 +38,17 @@ class Api extends Acl
             if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
                 if (!empty(self::$route['query']) && !empty(self::$route['query']['table'])) {
                     //возможно это удаление из браузера
-                    if (str_starts_with(self::$route['query']['table'], 'mod_') && !empty(self::$route['query']['field'])) {
+                    $del_table = (string)self::$route['query']['table'];
+                    $del_field = (string)(self::$route['query']['field'] ?? '');
+                    if (str_starts_with($del_table, 'mod_') && $del_field &&
+                        preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', $del_table) &&
+                        preg_match('~^[a-zA-Z_][a-zA-Z0-9_]*$~', $del_field)
+                    ) {
                         //удаляют запись из таблицы
                         $route = self::$route;
                         $route['params'] = [
                             '_resource' => key($route['params']),
-                            '_field' => $route['query']['table'] . "." . $route['query']['field'],
+                            '_field' => $del_table . "." . $del_field,
                             '_value' => $route['query']['value']
                         ];
                         $route['query'] = '';
