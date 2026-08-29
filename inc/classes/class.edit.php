@@ -1929,7 +1929,9 @@ class editTable extends initEdit {
                                             $field_value = '';
 
                                             if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
-                                                $field_value = is_string($dataset[$item_field['code']]) || is_numeric($dataset[$item_field['code']])
+                                                $field_value = is_string($dataset[$item_field['code']]) ||
+                                                               is_numeric($dataset[$item_field['code']]) ||
+                                                               is_array($dataset[$item_field['code']])
                                                     ? $dataset[$item_field['code']]
                                                     : '';
                                             }
@@ -1940,11 +1942,20 @@ class editTable extends initEdit {
                                                 $type_name = 'text';
                                             }
 
-                                            if ($type_name == 'select') {
-                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+                                            if (in_array($type_name, ['select', 'select2'])) {
+                                                if (is_array($field_value)) {
+                                                    $field_value_result = [];
 
-                                            } elseif ($type_name == 'select2') {
-                                                $field_value = $item_field['options'][$field_value] ?? $field_value;
+                                                    foreach ($field_value as $field_value_item) {
+                                                        if (is_string($field_value_item) || is_numeric($field_value_item)) {
+                                                            $field_value_result[] = $item_field['options'][$field_value_item];
+                                                        }
+                                                    }
+                                                    $field_value = implode(', ', $field_value_result);
+
+                                                } else {
+                                                    $field_value = $item_field['options'][$field_value] ?? $field_value;
+                                                }
 
                                             }  elseif ($type_name == 'date') {
                                                 $field_value = $field_value ? date('d.m.Y', strtotime($field_value)) : '';
@@ -2015,7 +2026,9 @@ class editTable extends initEdit {
                                             $field_value = '';
 
                                             if ( ! empty($dataset) && isset($dataset[$item_field['code']])) {
-                                                $field_value = is_string($dataset[$item_field['code']]) || is_numeric($dataset[$item_field['code']])
+                                                $field_value = is_string($dataset[$item_field['code']]) ||
+                                                               is_numeric($dataset[$item_field['code']]) ||
+                                                               is_array($dataset[$item_field['code']])
                                                     ? $dataset[$item_field['code']]
                                                     : '';
                                             }
@@ -2034,9 +2047,13 @@ class editTable extends initEdit {
                                             if (($type_name == 'select' || $type_name == 'select2') && ! empty($item_field['options'])) {
 
                                                 foreach ($item_field['options'] as $option) {
+                                                    $is_selected = is_array($field_value)
+                                                        ? in_array($option['val'], $field_value)
+                                                        : $option['val'] == $field_value;
+
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[VALUE]', $option['val']);
                                                     $tpl->item->field->{"field_{$type_name}"}->option->assign('[TITLE]', $option['title']);
-                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $option['val'] == $field_value ? 'selected="selected"' : '');
+                                                    $tpl->item->field->{"field_{$type_name}"}->option->assign('[SELECTED]', $is_selected ? 'selected="selected"' : '');
                                                     $tpl->item->field->{"field_{$type_name}"}->option->reassign();
                                                 }
                                             }
@@ -2048,7 +2065,7 @@ class editTable extends initEdit {
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[FIELD]',      $field);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[NUM]',        $num);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[CODE]',       $item_field['code']);
-                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      $field_value);
+                                            $tpl->item->field->{"field_{$type_name}"}->assign('[VALUE]',      is_array($field_value) ? '' : $field_value);
                                             $tpl->item->field->{"field_{$type_name}"}->assign('[ATTRIBUTES]', $field_attributes);
                                             $tpl->item->field->reassign();
                                         }
