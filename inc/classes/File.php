@@ -158,7 +158,7 @@ class File extends \Common {
      * @param int    $id
      * @throws \Exception
      */
-    public function handleThumb($table, $id) {
+    public function handleThumb($table, int $id) {
         $this->getThumb($table, $id);
         $res2 = $this->data;
 
@@ -209,7 +209,7 @@ class File extends \Common {
      * @throws \Exception
      * @throws \Zend_Exception
      */
-    public function handleFileTemp($thumbName) {
+    public function handleFileTemp(string $thumbName) {
         $config     = Registry::get('config');
         $sid        = SessionContainer::getDefaultManager()->getId();
         $upload_dir = "{$config->temp}/core_sessions/{$sid}";

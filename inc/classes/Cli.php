@@ -90,7 +90,7 @@ class Cli extends Db
             $errline = $error["line"];
             $errstr  = $error["message"];
             $trace   = print_r(debug_backtrace(), true);
-            $this->log->error($errstr . chr(10) . $trace);
+            $this->log->error($errstr . chr(10) . $errfile . "($errline)");
         }
     }
 }

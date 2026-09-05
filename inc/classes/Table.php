@@ -313,7 +313,7 @@ abstract class Table extends Acl {
      * @param int|null $nmbr_control
      * @return mixed
      */
-    public function getSearch(int $nmbr_control = null): mixed {
+    public function getSearch(?int $nmbr_control = null): mixed {
 
         $search = null;
 
@@ -340,7 +340,7 @@ abstract class Table extends Acl {
      * @param int|null $nmbr_control
      * @return mixed
      */
-    public function getFilters(int $nmbr_control = null): mixed {
+    public function getFilters(?int $nmbr_control = null): mixed {
 
         $filter = null;
 

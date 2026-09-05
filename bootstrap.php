@@ -51,7 +51,7 @@ $cacheKey = 'core2_config_' . md5($_SERVER['SERVER_NAME'] ?? 'production');
 $system_config = $memcached->get($cacheKey);
 $configLoaded = false;
 //обрабатываем общий конфиг
-if ($system_config === false) {
+if ($system_config === false || !empty($_GET['reset_cache'])) {
     $config_origin = [
         'system'       => ['name' => 'CORE2'],
         'include_path' => '',

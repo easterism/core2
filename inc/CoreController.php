@@ -14,6 +14,7 @@ require_once __DIR__ . "/../mod/admin/classes/roles/Roles.php";
 require_once __DIR__ . "/../mod/admin/classes/enum/Enum.php";
 require_once __DIR__ . "/../mod/admin/classes/audit/Audit.php";
 require_once __DIR__ . "/../mod/admin/classes/monitoring/Monitoring.php";
+require_once 'classes/File.php';
 require_once 'classes/Panel.php';
 require_once 'classes/FileUploader.php';
 
@@ -968,7 +969,7 @@ class CoreController extends Common implements File {
 	 * обработка запросов на содержимое файлов
 	 */
 	public function fileHandler($resource, $context, $table, $id) {
-		require_once 'classes/File.php';
+
 		$f = new Core2\File($resource);
 		if ($context == 'fileid') {
 			$f->handleFile($table, $id);
@@ -977,7 +978,7 @@ class CoreController extends Common implements File {
 		    if (!empty($_GET['size'])) {
 		        $f->setThumbSize($_GET['size']);
             }
-			$f->handleThumb($table, $id);
+			$f->handleThumb($table, (int)$id);
 		}
 		elseif ($context == 'tfile') {
 			$f->handleFileTemp($id);

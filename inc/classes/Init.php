@@ -216,7 +216,8 @@ class Init extends Acl {
                     $sse = new Core2\SSE();
                     $sse->run();
                     return '';
-                } elseif ($route['module'] === 'change_pass') {
+                }
+                elseif ($route['module'] === 'change_pass') {
                     require_once 'Login.php';
                     $login = new Login();
                     $this->setupSkin();
@@ -244,6 +245,11 @@ class Init extends Acl {
             $this->setupAcl();
 
             if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
+            if (!empty($route['query']['filehandler'])) {
+                //запрос к файлу
+                return $this->fileAction($route);
+            }
 
             if (!empty($_POST)) {
                 //может ли xajax обработать запрос
@@ -333,11 +339,11 @@ class Init extends Acl {
             if ($extension) $module = substr($module, 0, strrpos($module, '.'));
             if ($module == 'index') $module = "admin";
 
-            if (!$module) throw new Exception($this->translate->tr("Модуль не найден"), 404);
+            if (!$module) {
+                throw new Exception($this->translate->tr("Модуль не найден"), 404);
+            }
             $action = $route['action'];
             $this->setContext($module, $action);
-
-            if ($this->fileAction()) return '';
 
             $this->setupSkin();
 
@@ -534,30 +540,6 @@ class Init extends Acl {
             }
         }
     }
-
-
-    /**
-     * @param int $pid
-     * @return string|null
-     */
-    private function getPidCommand(int $pid):? string {
-
-        $output = [];
-        $cmd    = sprintf("ps -p %d -o command", $pid);
-        exec($cmd, $output);
-
-        $result = null;
-
-        if ( ! empty($output[1])) {
-            $line = $output[1];
-
-            if (preg_match("~(?P<command>.+)$~", $line, $matches)) {
-                $result = $matches['command'];
-            }
-        }
-
-        return $result;
-        }
 
 
     /**
@@ -764,50 +746,46 @@ class Init extends Acl {
      * @return bool
      * @throws Exception
      */
-    private function fileAction() {
-        if (!empty($_GET['module']) && !empty($_GET['filehandler'])) {
-            $table = trim(strip_tags($_GET['filehandler']));
-            if (!$table) throw new Exception($this->translate->tr("Ошибка запроса к файловому объекту"), 400);
-            $context = '';
-            $id = 0;
-            if (isset($_GET['listid'])) {
-                $context = 'field_' . $_GET['f'];
-                $id = $_GET['listid'];
-            } else {
-                if (!empty($_GET['fileid'])) {
-                    $context = 'fileid';
-                    $id      = $_GET['fileid'];
-                } elseif (!empty($_GET['thumbid'])) {
-                    $context = 'thumbid';
-                    $id      = $_GET['thumbid'];
-                } elseif (!empty($_GET['tfile'])) {
-                    $context = 'tfile';
-                    $id      = $_GET['tfile'];
-                }
-                if (!$id) throw new Exception(404);
+    private function fileAction($route) {
+        $table = trim(strip_tags($route['query']['filehandler']));
+        if (!$table) throw new Exception($this->translate->tr("Ошибка запроса к файловому объекту"), 400);
+        $context = '';
+        $id = 0;
+        if (isset($route['query']['listid'])) {
+            $context = 'field_' . $route['query']['f'];
+            $id = $route['query']['listid'];
+        } else {
+            if (!empty($route['query']['fileid'])) {
+                $context = 'fileid';
+                $id      = $route['query']['fileid'];
+            } elseif (!empty($route['query']['thumbid'])) {
+                $context = 'thumbid';
+                $id      = $route['query']['thumbid'];
+            } elseif (!empty($route['query']['tfile'])) {
+                $context = 'tfile';
+                $id      = $route['query']['tfile'];
             }
-
-            if (!$context) throw new Exception($this->translate->tr("Не удалось определить контекст файла"), 400);
-
-            if ($_GET['module'] !== 'admin') {
-                $module          = $_GET['module'];
-                $location        = $this->getModuleLocation($module); //определяем местоположение модуля
-                $modController   = "Mod" . ucfirst(strtolower($module)) . "Controller";
-                $this->requireController($location, $modController);
-                $modController  = new $modController();
-                if ($modController instanceof File) {
-                    $res = $modController->action_filehandler($context, $table, (int) $id);
-                    if ($res) {
-                        return true;
-                    }
-                }
-            }
-            require_once 'core2/inc/CoreController.php';
-            $core = new CoreController();
-            $res = !empty($_GET['action']) ? $_GET['module'] . '_' . $_GET['action'] : $_GET['module'];
-            return $core->fileHandler($res, $context, $table, $id);
+            if (!$id) throw new Exception(404);
         }
-        return false;
+
+        if (!$context) throw new Exception($this->translate->tr("Не удалось определить контекст файла"), 400);
+
+        if ($route['module'] !== 'admin' && $context !== 'tfile') {
+            $location        = $this->getModuleLocation($route['module']); //определяем местоположение модуля
+            $modController   = "Mod" . ucfirst(strtolower($route['module'])) . "Controller";
+            $this->requireController($location, $modController);
+            $modController  = new $modController();
+            if ($modController instanceof File) {
+                $res = $modController->action_filehandler($context, $table, (int) $id);
+                if ($res) {
+                    return true;
+                }
+            }
+        }
+        require_once 'core2/inc/CoreController.php';
+        $core = new CoreController();
+        $res = $route['action'] != 'index' ? $route['module'] . '_' . $route['action'] : $route['module'];
+        return $core->fileHandler($res, $context, $table, $id);
     }
 
 
