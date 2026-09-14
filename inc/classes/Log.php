@@ -36,7 +36,7 @@ class Log {
 
         $this->logs_dir = $this?->config?->log?->dir && is_string($this->config->log->dir)
             ? $this->config->log->dir
-            : ($this?->config?->log?->system?->file ?: dirname($this->config->log->system->file));
+            : ($this?->config?->log?->system?->file ? dirname($this->config->log->system->file) : '');
 
 
         if ($name == 'access') {
