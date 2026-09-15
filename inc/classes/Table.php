@@ -97,6 +97,8 @@ abstract class Table extends Acl {
     const SEARCH_AUTOCOMPLETE_TABLE = 'autocomplete_table';
 
     const FILTER_SELECT      = 'select';
+
+    const FILTER_SELECT2     = 'select2';
     const FILTER_TEXT        = 'text';
     const FILTER_MATCH       = 'match';
     const FILTER_TEXT_STRICT = 'text_strict';

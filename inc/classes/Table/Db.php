@@ -366,6 +366,7 @@ class Db extends Table {
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
+                        case self::FILTER_SELECT2:
                             if (strpos($field, 'ADD_SEARCH') !== false) {
                                 $quoted_value = $db->quote($value);
                                 $select->where(str_replace("ADD_SEARCH", $quoted_value, $field));
@@ -827,6 +828,7 @@ class Db extends Table {
                         case self::FILTER_TEXT_STRICT:
                         case self::FILTER_RADIO:
                         case self::FILTER_SELECT:
+                        case self::FILTER_SELECT2:
                             if ($filter_value != '') {
                                 $quoted_value = $db->quote($filter_value);
 

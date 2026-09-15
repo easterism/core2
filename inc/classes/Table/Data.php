@@ -202,6 +202,7 @@ class Data extends Table {
                         case 'date_one':
                         case 'radio':
                         case 'select':
+                        case 'select2':
                         case 'text_strict':
                             if ($row[$filter_field] != $filter_value) {
                                 unset($data[$key]);

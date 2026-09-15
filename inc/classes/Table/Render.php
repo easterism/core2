@@ -764,6 +764,20 @@ class Render extends Acl {
                             $tpl->filter_controls->filter_control->select->assign("[ATTR]", $attributes_str);
                             $tpl->filter_controls->filter_control->select->fillDropDown("filter-[RESOURCE]-[KEY]", $options, $control_value);
                             break;
+
+
+                        case 'select2' :
+                            $data    = $filter['data'] ?? [];
+                            $options = ['' => ''] + $data;
+
+                            if ( ! empty($filter['title'])) {
+                                $tpl->filter_controls->filter_control->select2->title->assign('[TITLE]', $filter['title']);
+                            }
+
+                            $tpl->filter_controls->filter_control->select2->assign("[KEY]",  $key);
+                            $tpl->filter_controls->filter_control->select2->assign("[ATTR]", $attributes_str);
+                            $tpl->filter_controls->filter_control->select2->fillDropDown("filter-[RESOURCE]-[KEY]", $options, $control_value);
+                            break;
                     }
 
                     $tpl->filter_controls->filter_control->assign("[#]",    $key);
