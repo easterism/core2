@@ -983,9 +983,11 @@ abstract class Table extends Acl {
                 $template = $profile_controller->getUserData("table_template_{$this->resource}_{$hash}");
                 $template = $template ?: [];
                 $template[hash('crc32b', $template_title)] = [
-                    'title'  => $template_title,
-                    'search' => $this->session->table->search ?? [],
-                    'column' => $this->session->table->columns ?? [],
+                    'title'      => $template_title,
+                    'search'     => $this->session->table->search ?? [],
+                    'column'     => $this->session->table->columns ?? [],
+                    'order'      => $this->session->table->order ?? [],
+                    'order_type' => $this->session->table->order_type ?? [],
                 ];
 
                 $profile_controller->putUserData("table_template_{$this->resource}_{$hash}", $template);
@@ -1016,8 +1018,10 @@ abstract class Table extends Acl {
                 $template = $template ?: [];
 
                 if (isset($template[$template_id])) {
-                    $this->session->table->search  = $template[$template_id]['search'];
-                    $this->session->table->columns = $template[$template_id]['column'];
+                    $this->session->table->search     = $template[$template_id]['search'];
+                    $this->session->table->columns    = $template[$template_id]['column'];
+                    $this->session->table->order      = $template[$template_id]['order'] ?? '';
+                    $this->session->table->order_type = $template[$template_id]['order_type'] ?? '';
                 }
             }
         }

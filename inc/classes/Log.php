@@ -36,7 +36,7 @@ class Log {
 
         $this->logs_dir = $this?->config?->log?->dir && is_string($this->config->log->dir)
             ? $this->config->log->dir
-            : ($this?->config?->log?->system?->file ?: dirname($this->config->log->system->file));
+            : ($this?->config?->log?->system?->file ? dirname($this->config->log->system->file) : '');
 
 
         if ($name == 'access') {
@@ -286,7 +286,12 @@ class Log {
 
         $this->setHandlers($level);
 
-        $this->logger->{$name}($message, $context);
+        try {
+            $this->logger->{$name}($message, $context);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+        }
+
         $this->clearHandlers();
     }
 
