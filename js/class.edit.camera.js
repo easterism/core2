@@ -1,4 +1,4 @@
-(function (window, document, $) {
+(function (window, document) {
     'use strict';
 
     var state = {
@@ -9,6 +9,24 @@
     };
 
     var styleInjected = false;
+    var activeOverlay = null;
+
+    function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text != null) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function icon(name) {
+        var i = document.createElement('i');
+        i.className = 'fa ' + name;
+        return i;
+    }
 
     function injectStyle() {
         if (styleInjected || document.getElementById('core2-camera-style')) {
@@ -32,16 +50,16 @@
             '.core2-camera-shot button{position:absolute;top:2px;right:2px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:18px;height:18px;line-height:16px;font-size:12px;cursor:pointer;padding:0;}' +
             '.core2-camera-capture{display:block;margin:10px auto;padding:10px 22px;border:0;border-radius:24px;background:#d32f2f;color:#fff;font-size:15px;cursor:pointer;}' +
             '.core2-camera-hint{padding:8px 16px 0;color:#777;font-size:12px;}';
-        var el = document.createElement('style');
-        el.id = 'core2-camera-style';
-        el.type = 'text/css';
-        el.appendChild(document.createTextNode(css));
-        document.head.appendChild(el);
+        var style = document.createElement('style');
+        style.id = 'core2-camera-style';
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
     }
 
     function readDevices() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-            return $.Deferred().resolve([]).promise();
+            return Promise.resolve([]);
         }
         return navigator.mediaDevices.enumerateDevices().then(function (devices) {
             return (devices || []).filter(function (device) {
@@ -60,10 +78,9 @@
     }
 
     function ensureDevices() {
-        if (state.pending) {
-            return state.pending;
+        if (!state.pending) {
+            state.pending = readDevices().then(applyDevices);
         }
-        state.pending = readDevices().then(applyDevices);
         return state.pending;
     }
 
@@ -85,71 +102,87 @@
         return out;
     }
 
-    function closeOverlay($overlay) {
-        $overlay.remove();
-        $(document).off('keydown.core2camera');
+    function closeOverlay() {
+        if (!activeOverlay) {
+            return;
+        }
+        document.removeEventListener('keydown', activeOverlay.onKey);
+        activeOverlay.element.remove();
+        activeOverlay = null;
     }
 
     function overlayShell(title, onClose) {
         injectStyle();
-        var $overlay = $('<div class="core2-camera-overlay" role="dialog" aria-modal="true"></div>');
-        var $dialog = $('<div class="core2-camera-dialog"></div>');
-        $dialog.append($('<h4></h4>').text(title));
-        $overlay.append($dialog);
-        $('body').append($overlay);
+        closeOverlay();
+
+        var overlay = el('div', 'core2-camera-overlay');
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+
+        var dialog = el('div', 'core2-camera-dialog');
+        dialog.appendChild(el('h4', null, title));
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
 
         function requestClose() {
             if (typeof onClose === 'function') {
                 onClose();
             } else {
-                closeOverlay($overlay);
+                closeOverlay();
             }
         }
 
-        $overlay.on('click', function (e) {
-            if (e.target === $overlay[0]) {
-                requestClose();
-            }
-        });
-        $(document).on('keydown.core2camera', function (e) {
+        function onKey(e) {
             if (e.key === 'Escape' || e.keyCode === 27) {
                 requestClose();
             }
-        });
+        }
 
-        return { $overlay: $overlay, $dialog: $dialog, close: requestClose };
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                requestClose();
+            }
+        });
+        document.addEventListener('keydown', onKey);
+        activeOverlay = { element: overlay, onKey: onKey };
+
+        return { element: overlay, dialog: dialog, close: requestClose };
     }
 
     function showChooser(onFileManager, onCamera) {
         var shell = overlayShell('Выбор источника файла');
-        var $list = $('<div class="core2-camera-list"></div>');
+        var list = el('div', 'core2-camera-list');
 
-        $('<button type="button" class="core2-camera-item"></button>')
-            .append($('<i class="fa fa-folder-open"></i>'))
-            .append(document.createTextNode('Файловый менеджер'))
-            .on('click', function () {
-                closeOverlay(shell.$overlay);
-                onFileManager();
-            })
-            .appendTo($list);
+        var fileManager = el('button', 'core2-camera-item');
+        fileManager.type = 'button';
+        fileManager.appendChild(icon('fa-folder-open'));
+        fileManager.appendChild(document.createTextNode('Файловый менеджер'));
+        fileManager.addEventListener('click', function () {
+            closeOverlay();
+            onFileManager();
+        });
+        list.appendChild(fileManager);
 
         uniqueDevices().forEach(function (device, index) {
-            $('<button type="button" class="core2-camera-item"></button>')
-                .append($('<i class="fa fa-camera"></i>'))
-                .append(document.createTextNode(device.label || ('Камера ' + (index + 1))))
-                .on('click', function () {
-                    closeOverlay(shell.$overlay);
-                    onCamera(device);
-                })
-                .appendTo($list);
+            var item = el('button', 'core2-camera-item');
+            item.type = 'button';
+            item.appendChild(icon('fa-camera'));
+            item.appendChild(document.createTextNode(device.label || ('Камера ' + (index + 1))));
+            item.addEventListener('click', function () {
+                closeOverlay();
+                onCamera(device);
+            });
+            list.appendChild(item);
         });
 
-        var $actions = $('<div class="core2-camera-actions"></div>');
-        $('<button type="button" class="buttonSmall">Отмена</button>')
-            .on('click', function () { closeOverlay(shell.$overlay); })
-            .appendTo($actions);
+        var actions = el('div', 'core2-camera-actions');
+        var cancel = el('button', 'buttonSmall', 'Отмена');
+        cancel.type = 'button';
+        cancel.addEventListener('click', function () { closeOverlay(); });
+        actions.appendChild(cancel);
 
-        shell.$dialog.append($list).append($actions);
+        shell.dialog.appendChild(list);
+        shell.dialog.appendChild(actions);
     }
 
     function dataURLToBlob(dataURL) {
@@ -171,27 +204,40 @@
         var canvas = document.createElement('canvas');
 
         var shell = overlayShell('Съёмка фото', function () { cleanup(); });
-        var $dialog = shell.$dialog;
+        var dialog = shell.dialog;
 
-        var $video = $('<video class="core2-camera-video" autoplay playsinline muted></video>');
-        var $hint = $('<div class="core2-camera-hint">Сделайте один или несколько снимков</div>');
-        var $shots = $('<div class="core2-camera-shots"></div>');
-        var $capture = $('<button type="button" class="core2-camera-capture">Снять</button>');
-        var $actions = $('<div class="core2-camera-actions"></div>');
-        var $add = $('<button type="button" class="buttonSmall" disabled="disabled">Добавить</button>');
-        var $cancel = $('<button type="button" class="buttonSmall">Отмена</button>');
+        var video = document.createElement('video');
+        video.className = 'core2-camera-video';
+        video.autoplay = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('muted', '');
 
-        $actions.append($cancel).append($add);
-        $dialog.append($video).append($hint).append($shots).append($capture).append($actions);
+        var hint = el('div', 'core2-camera-hint', 'Сделайте один или несколько снимков');
+        var shots = el('div', 'core2-camera-shots');
+        var capture = el('button', 'core2-camera-capture', 'Снять');
+        capture.type = 'button';
+        var actions = el('div', 'core2-camera-actions');
+        var add = el('button', 'buttonSmall', 'Добавить');
+        add.type = 'button';
+        add.disabled = true;
+        var cancel = el('button', 'buttonSmall', 'Отмена');
+        cancel.type = 'button';
+
+        actions.appendChild(cancel);
+        actions.appendChild(add);
+        dialog.appendChild(video);
+        dialog.appendChild(hint);
+        dialog.appendChild(shots);
+        dialog.appendChild(capture);
+        dialog.appendChild(actions);
 
         function stopStream() {
             if (stream) {
                 stream.getTracks().forEach(function (track) { track.stop(); });
                 stream = null;
             }
-            if ($video.length) {
-                $video[0].srcObject = null;
-            }
+            video.srcObject = null;
         }
 
         function cleanup() {
@@ -200,37 +246,43 @@
             }
             closed = true;
             stopStream();
-            closeOverlay(shell.$overlay);
+            closeOverlay();
         }
 
         function refresh() {
-            $add.prop('disabled', captures.length === 0);
+            add.disabled = captures.length === 0;
         }
 
         function addShot(blob) {
             var url = URL.createObjectURL(blob);
-            var $shot = $('<div class="core2-camera-shot"></div>');
-            $('<img alt="">').attr('src', url).appendTo($shot);
-            $('<button type="button" title="Удалить">&times;</button>')
-                .on('click', function () {
-                    var idx = captures.indexOf(blob);
-                    if (idx !== -1) {
-                        captures.splice(idx, 1);
-                    }
-                    URL.revokeObjectURL(url);
-                    $shot.remove();
-                    refresh();
-                })
-                .appendTo($shot);
-            $shots.append($shot);
+            var shot = el('div', 'core2-camera-shot');
+            var img = document.createElement('img');
+            img.alt = '';
+            img.src = url;
+            shot.appendChild(img);
+
+            var remove = el('button');
+            remove.type = 'button';
+            remove.title = 'Удалить';
+            remove.innerHTML = '&times;';
+            remove.addEventListener('click', function () {
+                var idx = captures.indexOf(blob);
+                if (idx !== -1) {
+                    captures.splice(idx, 1);
+                }
+                URL.revokeObjectURL(url);
+                shot.remove();
+                refresh();
+            });
+            shot.appendChild(remove);
+            shots.appendChild(shot);
             refresh();
         }
 
-        $capture.on('click', function () {
+        capture.addEventListener('click', function () {
             if (!stream) {
                 return;
             }
-            var video = $video[0];
             if (!video.videoWidth || !video.videoHeight) {
                 return;
             }
@@ -248,8 +300,8 @@
             }
         });
 
-        $cancel.on('click', cleanup);
-        $add.on('click', function () {
+        cancel.addEventListener('click', cleanup);
+        add.addEventListener('click', function () {
             var result = captures.slice();
             cleanup();
             onDone(result);
@@ -274,8 +326,8 @@
                 return;
             }
             stream = s;
-            $video[0].srcObject = s;
-            var played = $video[0].play();
+            video.srcObject = s;
+            var played = video.play();
             if (played && played.catch) {
                 played.catch(function () {});
             }
@@ -287,8 +339,8 @@
     }
 
     function submitCaptures(container, captures) {
-        var $fu = $(container);
-        if (!$fu.length || typeof $fu.fileupload !== 'function') {
+        var input = container.querySelector('.fileinput-button input[type="file"]');
+        if (!input) {
             return;
         }
         var stamp = Date.now();
@@ -301,26 +353,33 @@
                 return blob;
             }
         });
-        $fu.fileupload('add', { files: files });
-        if (!$fu.fileupload('option', 'autoUpload')) {
-            $fu.find('.fileupload-buttonbar button.start').removeClass('hide');
+
+        if (typeof DataTransfer === 'undefined') {
+            alert('Браузер не поддерживает добавление снимков в форму.');
+            return;
         }
+
+        var transfer = new DataTransfer();
+        files.forEach(function (file) {
+            transfer.items.add(file);
+        });
+        input.files = transfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     function init(container) {
-        var $fu = $(container);
-        if (!$fu.length || $fu.data('core2CameraInit')) {
+        if (!container || container.dataset.core2CameraInit === '1') {
             return;
         }
-        var $input = $fu.find('.fileinput-button input[type="file"]');
-        if (!$input.length) {
+        var input = container.querySelector('.fileinput-button input[type="file"]');
+        if (!input) {
             return;
         }
-        $fu.data('core2CameraInit', true);
+        container.dataset.core2CameraInit = '1';
 
         var allowDialog = false;
 
-        $input.on('click.core2camera', function (e) {
+        input.addEventListener('click', function (e) {
             if (allowDialog) {
                 allowDialog = false;
                 return;
@@ -332,7 +391,7 @@
             showChooser(
                 function () {
                     allowDialog = true;
-                    $input[0].click();
+                    input.click();
                 },
                 function (device) {
                     openCamera(device, function (captures) {
@@ -344,9 +403,10 @@
     }
 
     function scan() {
-        $('[data-core2-camera]').each(function () {
-            init(this);
-        });
+        var nodes = document.querySelectorAll('[data-core2-camera]');
+        for (var i = 0; i < nodes.length; i++) {
+            init(nodes[i]);
+        }
     }
 
     function boot() {
@@ -354,11 +414,12 @@
         scan();
     }
 
-    $(boot);
-    $(window).on('load', scan);
-    if (document.readyState !== 'loading') {
-        window.setTimeout(boot, 0);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
     }
+    window.addEventListener('load', scan);
 
     window.Core2EditCamera = {
         init: init,
@@ -366,4 +427,4 @@
         isAvailable: function () { return state.available; },
         devices: function () { return uniqueDevices(); }
     };
-})(window, document, jQuery);
+})(window, document);
