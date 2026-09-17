@@ -17,3 +17,6 @@ gen/
 /nbproject/private/
 
 nbproject/
+
+.zed/
+.opencode/
