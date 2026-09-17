@@ -2193,6 +2193,7 @@ class editTable extends initEdit {
                                     $tpl->touchBlock('xfiles');
                                     $tpl->assign("{S}", "ы");
                                     $tpl->assign('files[]"', 'files[]" multiple');
+                                    $this->scripts['xfiles_camera'] = true;
                                 } else {
                                     $tpl->assign("{S}", "");
                                 }
@@ -2202,7 +2203,7 @@ class editTable extends initEdit {
 
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
 									<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
-									<div id="fileupload-' . $un . '">' .
+									<div id="fileupload-' . $un . '"' . ($xfile === 'xfiles' ? ' data-core2-camera="1"' : '') . '>' .
                                         $tpl->render() .
                                     '</div>';
                                 $tpl = new \Templater3($this->tpl_control['xfile_upload']);
@@ -2460,6 +2461,9 @@ $controlGroups[$cellId]['html'][$key] .= "
                     Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-video.js", true);
                     Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-validate.js", true);
                     Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-ui.js", true);
+                }
+                if (isset($this->scripts['xfiles_camera'])) {
+                    Tool::printJs("core2/js/class.edit.camera.js", true);
                 }
                 if (isset($this->scripts['modal'])) {
                     Tool::printJs("core2/vendor/belhard/simplemodal/src/jquery.simplemodal.js", true);
