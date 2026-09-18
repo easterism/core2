@@ -1641,12 +1641,12 @@ class editTable extends initEdit {
                                     if (is_array($options_value)) {
                                         foreach ($options_value as $options_value_id => $options_value_title) {
 
-                                            if ( ! empty($options_value_title['value']) &&
-                                                 in_array($options_value_title['value'], $value['default'])
-                                            ) {
-                                                $options_out[] = $options_value_title['title'] ?? '';
+                                            if ( ! empty($options_value_title['value'])) {
+                                                if (in_array($options_value_title['value'], $value['default'])) {
+                                                    $options_out[] = $options_value_title['title'] ?? '';
+                                                }
 
-                                            } elseif (in_array($options_value_id, $value['default'])) {
+                                            } elseif (in_array($options_value_id, $value['default']) && is_string($options_value_title)) {
                                                 $options_out[] = $options_value_title;
                                             }
                                         }
@@ -1923,7 +1923,7 @@ class editTable extends initEdit {
                                     foreach ($datasets as $dataset) {
 
                                         foreach ($item_fields as $item_field) {
-                                            if ($item_field['type'] == 'hidden') {
+                                            if ( ! empty($item_field['type']) && $item_field['type'] == 'hidden') {
                                                 continue;
                                             }
 
@@ -2180,6 +2180,9 @@ class editTable extends initEdit {
 									if ( ! empty($value['in']['maxFileSize'])) {
 										$options['maxFileSize'] = $value['in']['maxFileSize'];
 									}
+									if ( ! empty($value['in']['limitConcurrentUploads'])) {
+										$options['limitConcurrentUploads'] = $value['in']['limitConcurrentUploads'];
+									}
 									if ( ! empty($value['in']['acceptFileTypes'])) {
 										$ft = str_replace(",", "|", $value['in']['acceptFileTypes']);
 										$options['acceptFileTypes'] = "_FT_";
@@ -2305,11 +2308,13 @@ if ( ! empty($ft)) {
         $('#fileupload-{$un}').bind('fileuploadadd', function (e, data) {
             var acceptFileTypes = /\.($ft)$/i;
 			var fileName        = data.originalFiles[0].name || data.originalFiles[0].fileName;
+			var needTypes       = '$ft'.split('|').join(', ');		
+			
 			if (!acceptFileTypes.test(fileName)) {
 			    if ($(this).find('.files > tr').length <= 0) {
 				    $('#fileupload-$fieldId div.fileupload-buttonbar button.start').addClass('hide');
 				}
-				alert('Файл \"' + fileName + '\" имеет некорректное расширение.');
+				alert('Файл \"' + fileName + '\" имеет некорректное расширение. Доступные форматы: ' + needTypes);
 				return false;
 			}
         });
