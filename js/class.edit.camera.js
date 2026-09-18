@@ -43,13 +43,26 @@
             '.core2-camera-item:hover{background:#f0f0f0;}' +
             '.core2-camera-item i{margin-right:8px;}' +
             '.core2-camera-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid #e5e5e5;}' +
-            '.core2-camera-video{width:100%;background:#000;display:block;max-height:60vh;}' +
-            '.core2-camera-shots{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;}' +
-            '.core2-camera-shot{position:relative;width:72px;height:72px;border-radius:4px;overflow:hidden;border:1px solid #ccc;}' +
-            '.core2-camera-shot img{width:100%;height:100%;object-fit:cover;}' +
-            '.core2-camera-shot button{position:absolute;top:2px;right:2px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:18px;height:18px;line-height:16px;font-size:12px;cursor:pointer;padding:0;}' +
-            '.core2-camera-capture{display:block;margin:10px auto;padding:10px 22px;border:0;border-radius:24px;background:#d32f2f;color:#fff;font-size:15px;cursor:pointer;}' +
-            '.core2-camera-hint{padding:8px 16px 0;color:#777;font-size:12px;}';
+            '.core2-camera-fullscreen{background:#000;flex-direction:column;align-items:stretch;justify-content:flex-start;}' +
+            '.core2-camera-fullscreen video{flex:1 1 auto;width:100%;min-height:0;max-height:none;object-fit:cover;background:#000;display:block;}' +
+            '.core2-camera-close{position:absolute;top:10px;right:14px;z-index:2;width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:26px;line-height:36px;cursor:pointer;}' +
+            '.core2-camera-bottom{flex:0 0 auto;background:rgba(0,0,0,.85);padding:8px 0 14px;}' +
+            '.core2-camera-shots{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:8px;padding:0 12px;height:72px;align-items:center;scrollbar-width:thin;}' +
+            '.core2-camera-shots:empty{display:none;}' +
+            '.core2-camera-shot{position:relative;flex:0 0 auto;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.4);background:#222;}' +
+            '.core2-camera-shot img{width:100%;height:100%;object-fit:cover;display:block;}' +
+            '.core2-camera-shot.is-uploading::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.5);}' +
+            '.core2-camera-shot.is-uploading::before{content:"";position:absolute;top:50%;left:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:core2-camera-spin .8s linear infinite;z-index:1;}' +
+            '.core2-camera-shot.is-uploaded{border-color:#4caf50;}' +
+            '.core2-camera-shot.is-error{border-color:#e53935;}' +
+            '.core2-camera-shot .core2-camera-error{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;background:#e53935;border-radius:50%;width:20px;height:20px;line-height:20px;text-align:center;font-weight:bold;z-index:2;}' +
+            '.core2-camera-controls{position:relative;display:flex;align-items:center;justify-content:center;height:72px;}' +
+            '.core2-camera-capture{width:64px;height:64px;border-radius:50%;border:4px solid rgba(255,255,255,.85);background:#fff;color:#d32f2f;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}' +
+            '.core2-camera-capture:active{transform:scale(.94);}' +
+            '.core2-camera-capture:disabled{opacity:.5;cursor:default;}' +
+            '.core2-camera-done{position:absolute;right:16px;top:50%;transform:translateY(-50%);border:0;border-radius:20px;background:#d32f2f;color:#fff;font-size:14px;padding:9px 18px;cursor:pointer;}' +
+            '.core2-camera-error{color:#ff8a80;font-size:12px;}' +
+            '@keyframes core2-camera-spin{to{transform:rotate(360deg);}}';
         var style = document.createElement('style');
         style.id = 'core2-camera-style';
         style.type = 'text/css';
@@ -149,6 +162,35 @@
         return { element: overlay, dialog: dialog, close: requestClose };
     }
 
+    function fullscreenShell(onClose) {
+        injectStyle();
+        closeOverlay();
+
+        var overlay = el('div', 'core2-camera-overlay core2-camera-fullscreen');
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        document.body.appendChild(overlay);
+
+        function requestClose() {
+            if (typeof onClose === 'function') {
+                onClose();
+            } else {
+                closeOverlay();
+            }
+        }
+
+        function onKey(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                requestClose();
+            }
+        }
+
+        document.addEventListener('keydown', onKey);
+        activeOverlay = { element: overlay, onKey: onKey };
+
+        return { element: overlay, close: requestClose };
+    }
+
     function showChooser(onFileManager, onCamera) {
         var shell = overlayShell('Выбор источника файла');
         var list = el('div', 'core2-camera-list');
@@ -197,40 +239,122 @@
         return new Blob([arr], { type: mime });
     }
 
-    function openCamera(device, onDone) {
-        var stream = null;
-        var captures = [];
-        var closed = false;
-        var canvas = document.createElement('canvas');
+    function buildFile(blob, index) {
+        var name = 'photo_' + Date.now() + '_' + index + '.jpg';
+        try {
+            return new File([blob], name, { type: blob.type || 'image/jpeg' });
+        } catch (e) {
+            blob.name = name;
+            return blob;
+        }
+    }
 
-        var shell = overlayShell('Съёмка фото', function () { cleanup(); });
-        var dialog = shell.dialog;
+    function triggerUpload(container, file) {
+        if (container.getAttribute('data-core2-camera-auto') === '1') {
+            return;
+        }
+        var tries = 0;
+        var timer = window.setInterval(function () {
+            tries++;
+            var rows = container.querySelectorAll('.files .template-upload');
+            for (var i = 0; i < rows.length; i++) {
+                var nameEl = rows[i].querySelector('.name');
+                var start = rows[i].querySelector('button.start');
+                if (nameEl && start && nameEl.textContent.indexOf(file.name) !== -1 && !start.disabled) {
+                    window.clearInterval(timer);
+                    start.click();
+                    return;
+                }
+            }
+            if (tries > 60) {
+                window.clearInterval(timer);
+            }
+        }, 50);
+    }
+
+    function uploadShot(container, file) {
+        var input = container.querySelector('.fileinput-button input[type="file"]');
+        if (!input) {
+            return false;
+        }
+        if (typeof DataTransfer === 'undefined') {
+            return false;
+        }
+        var transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        triggerUpload(container, file);
+        return true;
+    }
+
+    function watchUpload(container, file, shot) {
+        var tries = 0;
+        var timer = window.setInterval(function () {
+            tries++;
+            var names = container.querySelectorAll('.files .template-download .name');
+            var done = false;
+            for (var i = 0; i < names.length; i++) {
+                if (names[i].textContent.indexOf(file.name) !== -1) {
+                    done = true;
+                    break;
+                }
+            }
+            if (done) {
+                window.clearInterval(timer);
+                shot.classList.remove('is-uploading');
+                shot.classList.add('is-uploaded');
+            } else if (tries > 160) {
+                window.clearInterval(timer);
+                shot.classList.remove('is-uploading');
+                shot.classList.add('is-error');
+                shot.appendChild(el('span', 'core2-camera-error', '!'));
+            }
+        }, 250);
+    }
+
+    function openCamera(device, container) {
+        var stream = null;
+        var closed = false;
+        var shotIndex = 0;
+        var canvas = document.createElement('canvas');
+        var orientationTimer = null;
+        var lastLandscape = window.innerWidth > window.innerHeight;
+
+        var shell = fullscreenShell(function () { cleanup(); });
+        var overlay = shell.element;
 
         var video = document.createElement('video');
         video.className = 'core2-camera-video';
         video.autoplay = true;
         video.muted = true;
         video.setAttribute('playsinline', '');
+        video.setAttribute('autoplay', '');
         video.setAttribute('muted', '');
 
-        var hint = el('div', 'core2-camera-hint', 'Сделайте один или несколько снимков');
-        var shots = el('div', 'core2-camera-shots');
-        var capture = el('button', 'core2-camera-capture', 'Снять');
-        capture.type = 'button';
-        var actions = el('div', 'core2-camera-actions');
-        var add = el('button', 'buttonSmall', 'Добавить');
-        add.type = 'button';
-        add.disabled = true;
-        var cancel = el('button', 'buttonSmall', 'Отмена');
-        cancel.type = 'button';
+        var close = el('button', 'core2-camera-close');
+        close.type = 'button';
+        close.innerHTML = '&times;';
+        close.title = 'Закрыть';
 
-        actions.appendChild(cancel);
-        actions.appendChild(add);
-        dialog.appendChild(video);
-        dialog.appendChild(hint);
-        dialog.appendChild(shots);
-        dialog.appendChild(capture);
-        dialog.appendChild(actions);
+        var bottom = el('div', 'core2-camera-bottom');
+        var shots = el('div', 'core2-camera-shots');
+        var controls = el('div', 'core2-camera-controls');
+        var capture = el('button', 'core2-camera-capture');
+        capture.type = 'button';
+        capture.title = 'Снять';
+        capture.appendChild(icon('fa-camera'));
+        capture.disabled = true;
+        var done = el('button', 'core2-camera-done', 'Готово');
+        done.type = 'button';
+
+        controls.appendChild(capture);
+        controls.appendChild(done);
+        bottom.appendChild(shots);
+        bottom.appendChild(controls);
+        overlay.appendChild(video);
+        overlay.appendChild(close);
+        overlay.appendChild(bottom);
 
         function stopStream() {
             if (stream) {
@@ -245,126 +369,127 @@
                 return;
             }
             closed = true;
+            if (orientationTimer) {
+                window.clearTimeout(orientationTimer);
+            }
+            window.removeEventListener('resize', scheduleOrientation);
+            window.removeEventListener('orientationchange', scheduleOrientation);
+            if (window.screen && window.screen.orientation && window.screen.orientation.removeEventListener) {
+                window.screen.orientation.removeEventListener('change', scheduleOrientation);
+            }
             stopStream();
             closeOverlay();
         }
 
-        function refresh() {
-            add.disabled = captures.length === 0;
-        }
-
-        function addShot(blob) {
-            var url = URL.createObjectURL(blob);
-            var shot = el('div', 'core2-camera-shot');
+        function addShot(file) {
+            var url = URL.createObjectURL(file);
+            var shot = el('div', 'core2-camera-shot is-uploading');
             var img = document.createElement('img');
             img.alt = '';
             img.src = url;
             shot.appendChild(img);
+            shots.insertBefore(shot, shots.firstChild);
+            shots.scrollLeft = 0;
 
-            var remove = el('button');
-            remove.type = 'button';
-            remove.title = 'Удалить';
-            remove.innerHTML = '&times;';
-            remove.addEventListener('click', function () {
-                var idx = captures.indexOf(blob);
-                if (idx !== -1) {
-                    captures.splice(idx, 1);
+            if (!uploadShot(container, file)) {
+                shot.classList.remove('is-uploading');
+                shot.appendChild(el('span', 'core2-camera-error', '!'));
+                return;
+            }
+            watchUpload(container, file, shot);
+        }
+
+        function startStream() {
+            var constraints = {
+                audio: false,
+                video: device && device.deviceId
+                    ? { deviceId: { exact: device.deviceId } }
+                    : true
+            };
+            navigator.mediaDevices.getUserMedia(constraints).then(function (s) {
+                if (closed) {
+                    s.getTracks().forEach(function (track) { track.stop(); });
+                    return;
                 }
-                URL.revokeObjectURL(url);
-                shot.remove();
-                refresh();
+                stream = s;
+                video.srcObject = s;
+                var played = video.play();
+                if (played && played.catch) {
+                    played.catch(function () {});
+                }
+                capture.disabled = false;
+                refreshDevices();
+            }).catch(function (err) {
+                alert('Не удалось получить доступ к камере: ' + (err && err.message ? err.message : err));
+                cleanup();
             });
-            shot.appendChild(remove);
-            shots.appendChild(shot);
-            refresh();
+        }
+
+        function reacquireStream() {
+            if (closed || !stream) {
+                return;
+            }
+            capture.disabled = true;
+            stopStream();
+            startStream();
+        }
+
+        function applyOrientation() {
+            if (closed) {
+                return;
+            }
+            var landscape = window.innerWidth > window.innerHeight;
+            if (landscape === lastLandscape) {
+                return;
+            }
+            lastLandscape = landscape;
+            overlay.classList.toggle('is-landscape', landscape);
+            overlay.classList.toggle('is-portrait', !landscape);
+            reacquireStream();
+        }
+
+        function scheduleOrientation() {
+            if (orientationTimer) {
+                window.clearTimeout(orientationTimer);
+            }
+            orientationTimer = window.setTimeout(applyOrientation, 300);
         }
 
         capture.addEventListener('click', function () {
-            if (!stream) {
-                return;
-            }
-            if (!video.videoWidth || !video.videoHeight) {
+            if (!stream || !video.videoWidth || !video.videoHeight) {
                 return;
             }
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            var index = ++shotIndex;
             if (canvas.toBlob) {
                 canvas.toBlob(function (blob) {
-                    if (blob) {
-                        addShot(blob);
+                    if (blob && !closed) {
+                        addShot(buildFile(blob, index));
                     }
                 }, 'image/jpeg', 0.92);
-            } else {
-                addShot(dataURLToBlob(canvas.toDataURL('image/jpeg', 0.92)));
+            } else if (!closed) {
+                addShot(buildFile(dataURLToBlob(canvas.toDataURL('image/jpeg', 0.92)), index));
             }
         });
 
-        cancel.addEventListener('click', cleanup);
-        add.addEventListener('click', function () {
-            var result = captures.slice();
-            cleanup();
-            onDone(result);
-        });
+        close.addEventListener('click', cleanup);
+        done.addEventListener('click', cleanup);
+        overlay.classList.add('is-portrait');
+
+        window.addEventListener('resize', scheduleOrientation);
+        window.addEventListener('orientationchange', scheduleOrientation);
+        if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
+            window.screen.orientation.addEventListener('change', scheduleOrientation);
+        }
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert('Камера недоступна в этом браузере.');
             cleanup();
             return;
         }
-
-        var constraints = {
-            audio: false,
-            video: device && device.deviceId
-                ? { deviceId: { exact: device.deviceId } }
-                : true
-        };
-
-        navigator.mediaDevices.getUserMedia(constraints).then(function (s) {
-            if (closed) {
-                s.getTracks().forEach(function (track) { track.stop(); });
-                return;
-            }
-            stream = s;
-            video.srcObject = s;
-            var played = video.play();
-            if (played && played.catch) {
-                played.catch(function () {});
-            }
-            refreshDevices();
-        }).catch(function (err) {
-            alert('Не удалось получить доступ к камере: ' + (err && err.message ? err.message : err));
-            cleanup();
-        });
-    }
-
-    function submitCaptures(container, captures) {
-        var input = container.querySelector('.fileinput-button input[type="file"]');
-        if (!input) {
-            return;
-        }
-        var stamp = Date.now();
-        var files = captures.map(function (blob, index) {
-            var name = 'photo_' + stamp + '_' + (index + 1) + '.jpg';
-            try {
-                return new File([blob], name, { type: blob.type || 'image/jpeg' });
-            } catch (e) {
-                blob.name = name;
-                return blob;
-            }
-        });
-
-        if (typeof DataTransfer === 'undefined') {
-            alert('Браузер не поддерживает добавление снимков в форму.');
-            return;
-        }
-
-        var transfer = new DataTransfer();
-        files.forEach(function (file) {
-            transfer.items.add(file);
-        });
-        input.files = transfer.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        startStream();
     }
 
     function init(container) {
@@ -394,9 +519,7 @@
                     input.click();
                 },
                 function (device) {
-                    openCamera(device, function (captures) {
-                        submitCaptures(container, captures);
-                    });
+                    openCamera(device, container);
                 }
             );
         });

@@ -2206,7 +2206,7 @@ class editTable extends initEdit {
 
 								$controlGroups[$cellId]['html'][$key] .= '<input type="hidden" id="' . $fieldId . '" name="control[files|' . $field . ']"/>
 									<input type="hidden" id="' . $fieldId . '_del" name="control[filesdel|' . $field . ']"/>
-									<div id="fileupload-' . $un . '"' . ($xfile === 'xfiles' ? ' data-core2-camera="1"' : '') . '>' .
+									<div id="fileupload-' . $un . '"' . ($xfile === 'xfiles' ? ' data-core2-camera="1"' . (!empty($options['autoUpload']) ? ' data-core2-camera-auto="1"' : '') : '') . '>' .
                                         $tpl->render() .
                                     '</div>';
                                 $tpl = new \Templater3($this->tpl_control['xfile_upload']);
