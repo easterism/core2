@@ -198,6 +198,28 @@ class Menu extends Acl {
             }
         }
 
+        // PWA: постоянный пункт панели навигации для установки приложения
+        $pwa = new Pwa();
+        if ($pwa->isEnabled() && THEME !== 'default' && $tpl_menu->issetBlock('navigate_item')) {
+            if (empty($navigate_items['main'])) {
+                $navigate_items['main'] = [];
+            }
+
+            $navigate_items['main'][] = [
+                'type'        => 'link',
+                'title'       => $pwa->getInstallTitle(),
+                'icon'        => $pwa->getInstallIcon(),
+                'link'        => '#',
+                'id'          => 'core2-pwa-install',
+                'class'       => 'core2-pwa-install',
+                'onclick'     => 'if (window.Core2Pwa) { window.Core2Pwa.install(); } return false;',
+                'position'    => 'main',
+                'seq'         => 1000,
+                'serial'      => -1,
+                'module_name' => 'pwa',
+            ];
+        }
+
         if ( ! empty($navigate_items)) {
             $nav = new Navigation();
             foreach ($navigate_items as $place => $places) {

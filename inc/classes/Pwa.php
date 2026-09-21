@@ -108,6 +108,30 @@ class Pwa
 
 
     /**
+     * Включён ли PWA.
+     */
+    public function isEnabled(): bool {
+        return !empty($this->settings['enabled']);
+    }
+
+
+    /**
+     * Заголовок пункта меню установки.
+     */
+    public function getInstallTitle(): string {
+        return (string) ($this->settings['install_title'] ?? '');
+    }
+
+
+    /**
+     * Иконка пункта меню установки (HTML).
+     */
+    public function getInstallIcon(): string {
+        return (string) ($this->settings['install_icon'] ?? '<i class="fa fa-download"></i>');
+    }
+
+
+    /**
      * @return array<string, mixed>
      */
     public function getManifest(): array {
@@ -187,29 +211,189 @@ class Pwa
 
 
     /**
-     * Скрипт регистрации service worker для конца <body>.
+     * Скрипт для конца <body>: регистрация service worker и автопредложение установки.
      */
     public function getBodyScript(): string {
-        $sw     = json_encode($this->base . 'service-worker.js', JSON_UNESCAPED_SLASHES);
-        $sw_alt = json_encode($this->base . 'service-worker', JSON_UNESCAPED_SLASHES);
-        $scope  = json_encode((string) $this->settings['scope'], JSON_UNESCAPED_SLASHES);
+        $config = [
+            'sw'         => $this->base . 'service-worker.js',
+            'swAlt'      => $this->base . 'service-worker',
+            'scope'      => (string) $this->settings['scope'],
+            'autoPrompt' => (bool) $this->settings['auto_prompt'],
+            'cooldownMs' => (int) $this->settings['prompt_cooldown_hours'] * 3600000,
+        ];
 
-        return '<script>(function(){' .
-            'if(!("serviceWorker" in navigator)){return;}' .
-            'window.addEventListener("load",function(){' .
-            'var options={scope:' . $scope . '};' .
-            'navigator.serviceWorker.register(' . $sw . ',options)' .
-            '.catch(function(){return navigator.serviceWorker.register(' . $sw_alt . ',options);})' .
-            '.catch(function(e){console.warn("PWA service worker registration failed",e);});' .
-            '});' .
-            '})();</script>';
+        $json = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return '<script>(function(){var CORE2_PWA=' . ($json === false ? '{}' : $json) . ';' . $this->getInstallScript() . '})();</script>';
+    }
+
+
+    /**
+     * Логика установки PWA: перехват beforeinstallprompt и автоматический вызов
+     * системного окна установки (на первом пользовательском действии).
+     *
+     * Пункт установки — это постоянный пункт панели навигации (см. Menu),
+     * который скрывается, если приложение уже установлено.
+     */
+    private function getInstallScript(): string {
+        return <<<'JS'
+if (!("serviceWorker" in navigator)) {
+    return;
+}
+
+var options = { scope: CORE2_PWA.scope };
+
+navigator.serviceWorker.register(CORE2_PWA.sw, options)
+    .catch(function () { return navigator.serviceWorker.register(CORE2_PWA.swAlt, options); })
+    .catch(function (e) { console.warn("PWA service worker registration failed", e); });
+
+var NAV_ITEM_ID = "core2-pwa-install";
+var deferredPrompt = null;
+var handled = false;
+var promptedKey = "core2_pwa_prompted_at";
+var installedKey = "core2_pwa_installed";
+var cooldownMs = CORE2_PWA.cooldownMs;
+
+function isInstalled() {
+    try { return localStorage.getItem(installedKey) === "1"; } catch (e) { return false; }
+}
+
+function inCooldown() {
+    try {
+        var ts = parseInt(localStorage.getItem(promptedKey) || "0", 10);
+        return ts > 0 && (Date.now() - ts) < cooldownMs;
+    } catch (e) { return false; }
+}
+
+function markPrompted() {
+    try { localStorage.setItem(promptedKey, String(Date.now())); } catch (e) {}
+}
+
+function markInstalled() {
+    try { localStorage.setItem(installedKey, "1"); } catch (e) {}
+}
+
+function isStandalone() {
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
+        return true;
+    }
+    return window.navigator.standalone === true;
+}
+
+function installedNow() {
+    return isInstalled() || isStandalone();
+}
+
+function removeNavItem() {
+    var item = document.getElementById(NAV_ITEM_ID);
+
+    if (!item) {
+        return;
+    }
+
+    var holder = item.closest ? item.closest("li") : null;
+    holder = holder || item;
+
+    if (holder.parentNode) {
+        holder.parentNode.removeChild(holder);
+    }
+}
+
+function syncNavItem() {
+    // пункт установки показываем только пока приложение не установлено
+    if (installedNow()) {
+        removeNavItem();
+    }
+}
+
+function firePrompt(force) {
+    if (!deferredPrompt || handled) {
+        return;
+    }
+    if (!force && inCooldown()) {
+        return;
+    }
+
+    handled = true;
+    var promptEvent = deferredPrompt;
+    deferredPrompt = null;
+
+    try {
+        promptEvent.prompt();
+    } catch (e) {
+        // prompt() можно вызвать только один раз и только по жесту пользователя
+        handled = false;
+        deferredPrompt = promptEvent;
+        return;
+    }
+
+    if (promptEvent.userChoice && promptEvent.userChoice.then) {
+        promptEvent.userChoice.then(function (choice) {
+            if (choice && choice.outcome === "accepted") {
+                markInstalled();
+                removeNavItem();
+            } else {
+                // пользователь отказался — предложим снова после кулдауна
+                markPrompted();
+            }
+        }, function () {
+            handled = false;
+        });
+    } else {
+        markPrompted();
+    }
+}
+
+function onFirstGesture() {
+    document.removeEventListener("pointerdown", onFirstGesture, true);
+    document.removeEventListener("touchstart", onFirstGesture, true);
+    document.removeEventListener("keydown", onFirstGesture, true);
+    firePrompt(false);
+}
+
+window.addEventListener("beforeinstallprompt", function (event) {
+    // отменяем стандартный баннер, чтобы управлять установкой самостоятельно
+    event.preventDefault();
+    deferredPrompt = event;
+
+    if (CORE2_PWA.autoPrompt && !inCooldown() && !installedNow()) {
+        // prompt() требует пользовательского действия — вызываем на первом взаимодействии
+        document.addEventListener("pointerdown", onFirstGesture, true);
+        document.addEventListener("touchstart", onFirstGesture, true);
+        document.addEventListener("keydown", onFirstGesture, true);
+    }
+});
+
+window.addEventListener("appinstalled", function () {
+    deferredPrompt = null;
+    handled = true;
+    markInstalled();
+    removeNavItem();
+});
+
+window.Core2Pwa = {
+    install: function () { firePrompt(true); },
+    isInstalled: installedNow,
+    reset: function () {
+        try {
+            localStorage.removeItem(promptedKey);
+            localStorage.removeItem(installedKey);
+        } catch (e) {}
+    }
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", syncNavItem);
+} else {
+    syncNavItem();
+}
+JS;
     }
 
 
     public function getServiceWorker(): string {
         $version = self::SERVICE_WORKER_VERSION;
         $base    = $this->base;
-        $name    = json_encode((string) $this->settings['short_name'], JSON_UNESCAPED_UNICODE);
 
         return <<<JS
 /* Core2 PWA service worker (v{$version}) */
@@ -637,6 +821,10 @@ JS;
             'orientation'      => (string) $this->cfgString('system.pwa.orientation', 'any'),
             'theme_color'      => $theme_color,
             'background_color' => $background_color,
+            'auto_prompt'      => $this->toBool($this->cfg('system.pwa.auto_prompt') ?? true),
+            'install_title'    => (string) $this->cfgString('system.pwa.install_title', 'Установить приложение'),
+            'install_icon'     => (string) $this->cfgString('system.pwa.install_icon', '<i class="fa fa-download"></i>'),
+            'prompt_cooldown_hours' => (float) $this->cfgString('system.pwa.prompt_cooldown_hours', '24'),
         ];
     }
 
@@ -647,11 +835,25 @@ JS;
      * @return mixed
      */
     private function cfg(string $path) {
-        if (!$this->core_config) {
+        $value = $this->cfgFrom($this->config, $path);
+
+        if ($value === null) {
+            $value = $this->cfgFrom($this->core_config, $path);
+        }
+
+        return $value;
+    }
+
+
+    /**
+     * @return mixed
+     */
+    private function cfgFrom(?\Laminas\Config\Config $config, string $path) {
+        if (!$config) {
             return null;
         }
 
-        $node = $this->core_config;
+        $node = $config;
 
         foreach (explode('.', $path) as $key) {
             if (!$node instanceof \Laminas\Config\Config) {
