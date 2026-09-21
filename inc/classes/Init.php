@@ -254,7 +254,8 @@ class Init extends Acl {
 
             if (!empty($route['query']['filehandler'])) {
                 //запрос к файлу
-                return $this->fileAction($route);
+                $this->fileAction($route);
+                return '';
             }
 
             if (!empty($_POST)) {

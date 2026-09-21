@@ -210,7 +210,7 @@ class Data extends Table {
                             break;
 
                         case 'checkbox':
-                            if ( ! in_array('', $filter_value) && ! in_array($row[$filter_field], $filter_value)) {
+                            if (is_array($filter_value) && ! in_array('', $filter_value) && ! in_array($row[$filter_field], $filter_value)) {
                                 unset($data[$key]);
                                 continue 2;
                             }

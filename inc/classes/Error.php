@@ -233,7 +233,7 @@ class Error {
 		$error_data = ['status' => 'error'];
         $error_data += $out;
 
-		return json_encode($error_data);
+		return json_encode($error_data, JSON_UNESCAPED_UNICODE);
 	}
 
 
