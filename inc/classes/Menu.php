@@ -4,6 +4,7 @@ namespace Core2;
 require_once 'Acl.php';
 require_once 'Navigation.php';
 require_once 'Templater3.php';
+require_once 'Pwa.php';
 
 use Exception;
 use Templater3;
@@ -214,7 +215,7 @@ class Menu extends Acl {
                             case 'profile':
                                 if ($tpl_menu->issetBlock('navigate_item_profile')) {
                                     $tpl_menu->navigate_item_profile->assign('[MODULE_NAME]', $item['module_name']);
-                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $nav->renderNavigateItem($item));
+                                    $tpl_menu->navigate_item_profile->assign('[HTML]',        $nav->renderNavigateItem($item, 'profile'));
                                     $tpl_menu->navigate_item_profile->reassign();
                                 }
                                 break;
@@ -234,17 +235,22 @@ class Menu extends Acl {
         }
 
 
-        if ( ! empty($this->config->system) &&
-             ! empty($this->config->system->theme) &&
-             ! empty($this->config->system->theme->bg_color) &&
-             ! empty($this->config->system->theme->text_color) &&
-             ! empty($this->config->system->theme->border_color) &&
-            $tpl_menu->issetBlock('theme_style')
-        ) {
-            $tpl_menu->theme_style->assign("[BG_COLOR]",     $this->config->system->theme->bg_color);
-            $tpl_menu->theme_style->assign("[TEXT_COLOR]",   $this->config->system->theme->text_color);
-            $tpl_menu->theme_style->assign("[BORDER_COLOR]", $this->config->system->theme->border_color);
+        if ($tpl_menu->issetBlock('theme_style')) {
+            if ( ! empty($this->config->system) &&
+                 ! empty($this->config->system->theme) &&
+                 ! empty($this->config->system->theme->bg_color) &&
+                 ! empty($this->config->system->theme->text_color) &&
+                 ! empty($this->config->system->theme->border_color)
+            ) {
+                $tpl_menu->theme_style->assign("[BG_COLOR]",     $this->config->system->theme->bg_color);
+                $tpl_menu->theme_style->assign("[TEXT_COLOR]",   $this->config->system->theme->text_color);
+                $tpl_menu->theme_style->assign("[BORDER_COLOR]", $this->config->system->theme->border_color);
+            }
+
+            $is_show_search_menu = (bool)$this->config?->system?->theme?->show_search;
+            $tpl_menu->theme_style->assign("[SHOW_SEARCH_MENU]", $is_show_search_menu ? "block" : "none");
         }
+
 
         $tpl->assign('<!--index-->', $tpl_menu->render());
         $out = '';
@@ -280,7 +286,7 @@ class Menu extends Acl {
         }
         $tpl->assign("<!--system_css-->", $system_css);
 
-        return $tpl->render();
+        return (new Pwa())->inject($tpl->render());
     }
 
 

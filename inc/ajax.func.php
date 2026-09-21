@@ -23,13 +23,14 @@ class ajaxFunc extends Common {
     /**
      * @var xajaxResponse
      */
-	protected $response;
-	protected $script;
-	protected $userId;
-	private $orderFields    = [];
-	private $last_insert_id = 0;
-	private       $refid       = 0;
-	private array $saved_files = [];
+    protected     $response;
+    protected     $script;
+    protected     $userId;
+    private       $orderFields    = [];
+    private       $last_insert_id = 0;
+    private       $refid          = 0;
+    private array $saved_files    = [];
+    private array $data           = [];
 
 
     /**
@@ -40,6 +41,69 @@ class ajaxFunc extends Common {
 	    $this->response = $res;
     	parent::__construct();
     }
+
+
+    /**
+     * Установка данных которые пришли из формы
+     * @param array $data
+     * @return void
+     */
+    public function setData(array $data): void {
+        $this->data = $data;
+    }
+
+
+    /**
+     * Получение id/названия формы
+     * @return string
+     */
+    public function getFormId(): string {
+        return $this->data['class_id'] ?? '';
+    }
+
+
+    /**
+     * Получение контролов, которые пришли с формы
+     * @return array
+     */
+    public function getControls(): array {
+        return $this->data['control'] ?? [];
+    }
+
+
+    /**
+     * Получение кастомных контролов, которые пришли с формы
+     * @return array
+     */
+    public function getControlsCustom(): array {
+
+        $result = [];
+
+        foreach ($this->data as $field_name => $field_value) {
+            if ( ! in_array($field_name, ['control', 'class_id', 'class_refid'])) {
+                $result[$field_name] = $field_value;
+            }
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * Получение id сохраняемого объекта
+     * @return int|null
+     */
+    public function getObjectId():? int {
+
+        $form_id = $this->getFormId();
+
+        if (empty($form_id)) {
+            return null;
+        }
+
+        return (int)$this->getSessFormField($form_id, 'refid');
+    }
+
 
     /**
      * установка id формы
@@ -337,6 +401,134 @@ class ajaxFunc extends Common {
 		$this->getSessForm($form_id);
         return isset($this->orderFields[$id]) ? $this->orderFields[$id] : null;
 	}
+
+
+	/**
+	 * Получает значение служебного поля формы
+	 * @param string $field_name
+	 * @return mixed
+	 */
+	protected function getFormField(string $field_name): mixed {
+
+        $form_id = $this->getFormId();
+
+		$this->getSessForm($form_id);
+
+        return $this->orderFields[$field_name] ?? null;
+	}
+
+
+    /**
+     * Получение ответа с ошибкой для отправки его на форму пользователю
+     * @param string $error_text
+     * @return xajaxResponse
+     */
+    protected function getErrorResponse(string $error_text): xajaxResponse {
+
+        $this->error[] = $error_text;
+        $this->displayError($this->data);
+        return $this->response;
+    }
+
+
+    /**
+     * Добавление js скрипта, который надо выполнить, на страницу пользователя
+     * @param string $script_text
+     * @return void
+     */
+    protected function addScript(string $script_text): void {
+
+        $this->response->script($script_text);
+    }
+
+
+    /**
+     * Получение ответа на страницу пользователю
+     * @return xajaxResponse
+     */
+    protected function getResponse(): xajaxResponse {
+
+        $this->done($this->data);
+        return $this->response;
+    }
+
+
+    /**
+     * Получение списка только что загруженных файлов
+     * @param string $field_name
+     * @return array
+     * @throws Exception
+     */
+    protected function getFilesUpload(string $field_name): array {
+
+        $result = [];
+
+        if ( ! empty($this->data['control']["files|{$field_name}"])) {
+            $files = explode("|", $this->data['control']["files|{$field_name}"]);
+
+            foreach ($files as $file) {
+                if ( ! $file) {
+                    continue;
+                }
+
+                $file_explode = explode('###', $file);
+
+                $sid        = SessionContainer::getDefaultManager()->getId();
+                $upload_dir = "{$this->config->temp}/core_sessions/{$sid}";
+                $thumb_dir  = "{$upload_dir}/thumbnail";
+
+
+                $file_path = "{$upload_dir}/{$file_explode[0]}";
+
+                if ( ! file_exists($file_path)) {
+                    throw new Exception($this->_("Файл %s не найден", [$file_explode[3]]));
+                }
+
+                if (filesize($file_path) !== (int)$file_explode[1]) {
+                    throw new Exception($this->_("Что-то пошло не так. Размер файла %s не совпадает", [$file_explode[3]]));
+                }
+
+                $file_path_thumb = "{$thumb_dir}/{$file_explode[0]}";
+                $thumb_path      = file_exists($file_path_thumb)
+                    ? $file_path_thumb
+                    : null;
+
+                $result[] = [
+                    'filename'   => $file_explode[3],
+                    'size'       => $file_explode[1],
+                    'mimetype'   => $file_explode[2],
+                    'filepath'   => $file_path,
+                    'thumb_path' => $thumb_path,
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * Получение списка id файлов, которые пользователь хочет удалить
+     * @param string $field_name
+     * @return array
+     */
+    protected function getFilesDelete(string $field_name): array {
+
+        $result = [];
+
+        if ( ! empty($this->data['control']["filesdel|{$field_name}"])) {
+            $files = explode(",", $this->data['control']["filesdel|{$field_name}"]);
+
+            foreach ($files as $file_id) {
+                $file_id = (int)$file_id;
+                if ($file_id) {
+                    $result[] = $file_id;
+                }
+            }
+        }
+
+        return $result;
+    }
 
 
 	/**
@@ -959,10 +1151,9 @@ class ajaxFunc extends Common {
                         $content = null;
 
                     } catch (\Exception $e) {
+                        $this->log->error('Ошибка загрузки файла в s3', $e);
                         throw new \Exception($e->getMessage());
-                        //TODO Log me!
                     }
-
                 }
                 //TODO add GCP here
 
@@ -981,16 +1172,23 @@ class ajaxFunc extends Common {
 
                 $this->saved_files[] = $file_path;
                 $this->saved_files[] = $file_path_thumb;
+
+
+                // Очищаем переменную и освобождаем память
+                // Иначе возникает ошибка с переполнением памяти на большом количестве
+                unset($content);
+                gc_collect_cycles(); // Принудительный запуск сборщика мусора
             }
         }
     }
+
 
     /**
      * Получение служебных данных формы из сессии
      * @param string $id
      * @return array
      */
-    private function getSessForm($id) : array {
+    public function getSessForm($id) : array {
 
         if (empty($this->orderFields)) {
             $sess_form = new SessionContainer('Form');

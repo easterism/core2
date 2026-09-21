@@ -18,8 +18,14 @@ require_once $autoload;
 require_once "inc/classes/Error.php";
 
 if ( ! empty($_SERVER['REQUEST_URI'])) {
-    $request_ext = explode(".", basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    if ( ! empty($request_ext[1]) && in_array($request_ext[1], ['txt', 'js', 'css', 'env'])) {
+    $request_base = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+    $request_ext  = explode(".", $request_base);
+    // service worker отдаётся ядром, остальные js/css/txt/env файлы скрываем
+    $pwa_files = ['service-worker.js', 'sw.js'];
+    if ( ! empty($request_ext[1]) &&
+         in_array($request_ext[1], ['txt', 'js', 'css', 'env']) &&
+         ! in_array($request_base, $pwa_files, true)
+    ) {
         \Core2\Error::Exception("File not found", 404);
         return;
     }
@@ -30,6 +36,7 @@ require_once "inc/classes/Theme.php";
 require_once "inc/classes/Registry.php";
 require_once "inc/classes/Config.php";
 require_once "inc/classes/Router.php";
+require_once "inc/classes/Pwa.php";
 require_once 'inc/classes/I18n.php';
 require_once 'inc/classes/Common.php';
 require_once 'inc/classes/Acl.php';

@@ -241,11 +241,12 @@ class Navigation extends Db {
 
 
     /**
-     * @param array $navigate_item
+     * @param array       $navigate_item
+     * @param string|null $position
      * @return string
      * @throws \Exception
      */
-    public function renderNavigateItem(array $navigate_item): string {
+    public function renderNavigateItem(array $navigate_item, string $position = null): string {
 
         if (empty($navigate_item['type'])) {
             return '';
@@ -265,7 +266,11 @@ class Navigation extends Db {
                     ? $navigate_item['onclick']
                     : "if (event.button === 0 && ! event.ctrlKey) load('{$link}');";
 
-                $tpl = new Templater3(Theme::get("html-navigation-link"));
+                $tpl_file = $position == 'profile'
+                    ? Theme::get("html-navigation-link-profile")
+                    : Theme::get("html-navigation-link");
+
+                $tpl = new Templater3($tpl_file);
                 $tpl->assign('[TITLE]',   ! empty($navigate_item['title']) ? $navigate_item['title'] : '');
                 $tpl->assign('[ICON]',    ! empty($navigate_item['icon']) ? $navigate_item['icon'] : '');
                 $tpl->assign('[CLASS]',   ! empty($navigate_item['class']) ? $navigate_item['class'] : '');

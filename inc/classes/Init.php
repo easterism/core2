@@ -153,6 +153,12 @@ class Init extends Acl {
         // Парсим маршрут
         $route = (new Router())->getRoute();
 
+        // Progressive Web App: manifest, service worker, offline и иконки
+        $pwa_response = (new Core2\Pwa())->dispatch($route);
+        if ($pwa_response !== null) {
+            return $pwa_response;
+        }
+
         if (isset($route['api']) && !$this->auth) {
             if ($route['api'] == 'auth') {
                 //это запросы на регистрацию, восстановление пароля или OAUTH
@@ -910,14 +916,23 @@ function post($func, $loc, $data) {
     if ($route['module'] == 'admin') {
         require_once __DIR__ . "/../../mod/admin/ModAjax.php";
         $auth = Registry::get('auth');
-        if ( ! $auth->ADMIN) throw new Exception(911);
 
-        $xajax = new ModAjax($res);
-        if (method_exists($xajax, $func)) {
-            if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
-            $xajax->setupAcl();
+        if ( ! $auth->ADMIN) {
+            throw new Exception(911);
+        }
+
+        $mod_ajax = new ModAjax($res);
+
+        if (method_exists($mod_ajax, $func)) {
+            if ( ! empty($data['class_refid'])) {
+                $mod_ajax->setRefId((int)$data['class_refid']);
+            }
+
+            $mod_ajax->setupAcl();
+
             try {
-                return $xajax->$func($data);
+                $mod_ajax->setData($data);
+                return $mod_ajax->$func($data);
             } catch (Exception $e) {
                 Error::catchXajax($e, $res);
             }
@@ -937,22 +952,31 @@ function post($func, $loc, $data) {
         }
 
         $location  = $acl->getModuleLocation($route['module']);
-        $file_path = $location . "/ModAjax.php";
+        $file_path = "{$location}/ModAjax.php";
 
         if (file_exists($file_path)) {
-            $autoload = $location . "/vendor/autoload.php";
+            $autoload = "{$location}/vendor/autoload.php";
             if (file_exists($autoload)) {
                 require_once $autoload;
             }
 
             require_once $file_path;
-            $xajax = new ModAjax($res);
-            $func = 'ax' . ucfirst($func);
-            if (method_exists($xajax, $func)) {
-                if (!empty($data['class_refid'])) $xajax->setRefId((int) $data['class_refid']);
+
+            $mod_ajax = new ModAjax($res);
+            $func     = 'ax' . ucfirst($func);
+
+            if (method_exists($mod_ajax, $func)) {
+                if ( ! empty($data['class_refid'])) {
+                    $mod_ajax->setRefId((int)$data['class_refid']);
+                }
+
                 try {
+                    // DEPRECATED
                     $data['params'] = $route['query'];
-                    return $xajax->$func($data);
+
+                    $mod_ajax->setData($data);
+                    return $mod_ajax->$func($data);
+
                 } catch (Exception $e) {
                     Error::catchXajax($e, $res);
                 }

@@ -3,6 +3,7 @@ namespace Core2;
 
 require_once 'Templater3.php';
 require_once 'Tool.php';
+require_once 'Pwa.php';
 
 use Laminas\Session\Container as SessionContainer;
 use Exception;
@@ -609,7 +610,7 @@ class Login extends \Common {
             }
         }
 
-        return $tpl->render();
+        return (new Pwa())->inject($tpl->render());
     }
 
 
