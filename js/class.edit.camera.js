@@ -496,15 +496,21 @@
         if (!container || container.dataset.core2CameraInit === '1') {
             return;
         }
-        var input = container.querySelector('.fileinput-button input[type="file"]');
-        if (!input) {
+        if (!container.querySelector('.fileinput-button input[type="file"]')) {
             return;
         }
         container.dataset.core2CameraInit = '1';
 
         var allowDialog = false;
 
-        input.addEventListener('click', function (e) {
+        container.addEventListener('click', function (e) {
+            var target = e.target;
+            if (!target || target.tagName !== 'INPUT' || target.type !== 'file') {
+                return;
+            }
+            if (!target.closest('.fileinput-button')) {
+                return;
+            }
             if (allowDialog) {
                 allowDialog = false;
                 return;
@@ -516,13 +522,13 @@
             showChooser(
                 function () {
                     allowDialog = true;
-                    input.click();
+                    target.click();
                 },
                 function (device) {
                     openCamera(device, container);
                 }
             );
-        });
+        }, true);
     }
 
     function scan() {
