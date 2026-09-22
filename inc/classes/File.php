@@ -262,7 +262,9 @@ class File extends \Common {
         }
         $res = $this->db->fetchAll($SQL, $arr);
 
-        list($module, $action) = explode("_", $this->resource);
+        $resource = explode("_", $this->resource);
+        $module = $resource[0];
+        $action = $resource[1] ?? "index";
 
         $image = new Image();
 
