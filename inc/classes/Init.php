@@ -172,9 +172,12 @@ class Init extends Acl {
                 }
             } else {
                 header('HTTP/1.1 401 Unauthorized');
-                $core_config = Registry::get('core_config');
-                if ($core_config->auth && $core_config->auth->scheme == 'basic') {
-                    header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+                $registry = Registry::getInstance();
+                if ($registry->isRegistered('core_config')) {
+                    $core_config = $registry->get('core_config');
+                    if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                        header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+                    }
                 }
                 return '';
             }
