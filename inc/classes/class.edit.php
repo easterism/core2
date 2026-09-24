@@ -447,8 +447,6 @@ class editTable extends initEdit {
             $this->save('save.php');
         }
 
-		$authNamespace = new SessionContainer('Auth');
-
         if (is_array($this->SQL)) {
 			$arr = $this->SQL;
 			$current = current($arr);
@@ -534,9 +532,12 @@ class editTable extends initEdit {
                         // Если у пользователя есть доступ на чтение = 'all', то почему нельзя показывать форму в виде $this->readOnly = true;
 						$this->noAccess();
 						return;
-					} elseif ($authNamespace->NAME !== $res['author']) {
-						$this->readOnly = true;
-					}
+					} else {
+                        $authNamespace = new SessionContainer('Auth');
+                        if ($authNamespace->NAME !== $res['author']) {
+                            $this->readOnly = true;
+                        }
+                    }
 				}
 			}
 		}
@@ -2625,7 +2626,7 @@ $controlGroups[$cellId]['html'][$key] .= "
      * @param string|null $text
      * @return editTable
      */
-	public function addSuccessNotice(string $text = null): self {
+	public function addSuccessNotice(?string $text = null): self {
 
         $text = $text ?: $this->_('Сохранено');
         $func = $this->sess_form_custom['save_success'] ?? '';

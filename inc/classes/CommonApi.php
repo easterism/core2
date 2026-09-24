@@ -272,4 +272,15 @@ class CommonApi extends \Core2\Acl {
             ];
         }
     }
+
+    public function _($str, $module = '') {
+
+        $module = $module ?: $this->module;
+
+        if ($module === 'admin') {
+            $module = 'core2';
+        }
+
+        return $this->translate->tr($str, $module);
+    }
 }
