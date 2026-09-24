@@ -262,10 +262,14 @@ class CommonApi extends \Core2\Acl {
             ];
 
         } catch (\Exception $e) {
-            $this->log->error("Fatal error", $e);
-            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
-
+            if ($e::class !== 'Exception') {
+                $this->log->error("App error", $e);
             http_response_code(500);
+
+            } else {
+                http_response_code(400);
+            }
+            $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
             return [
                 'error_code'    => 'error',
                 'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка. Обновите страницу или попробуйте позже')
@@ -273,7 +277,18 @@ class CommonApi extends \Core2\Acl {
         }
     }
 
-    public function _($str, $module = '') {
+    /**
+     * @param $str
+     * @param $data
+     * @param $module
+     * @return mixed|string
+     */
+    public function _($str, $data = [], $module = '') {
+
+        // DEPRECATED
+        if ($data && is_string($data) && ! $module) {
+            $module = $data;
+        }
 
         $module = $module ?: $this->module;
 
@@ -281,6 +296,13 @@ class CommonApi extends \Core2\Acl {
             $module = 'core2';
         }
 
-        return $this->translate->tr($str, $module);
+        $str = $this->translate->tr($str, $module);
+
+        // Замена переменных (%s) в тексте
+        if ($data && is_array($data)) {
+            $str = call_user_func_array('sprintf', [$str, ...$data]);
+        }
+
+        return $str;
     }
 }
