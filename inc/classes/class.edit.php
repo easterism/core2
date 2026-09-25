@@ -883,7 +883,7 @@ class editTable extends initEdit {
                         }
 						elseif ($value['type'] == self::TYPE_SWITCH) {
                             if ($this->readOnly || in_array($field, $this->read_only_fields)) {
-                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? $this->_('да') : $this->_('нет');
+                                $controlGroups[$cellId]['html'][$key] .= $value['default'] == 'Y' ? $this->translate->tr('да') : $this->translate->tr('нет');
 
                             } else {
                                 $color   = ! empty($value['in']['color']) ? "color-{$value['in']['color']}" : 'color-primary';
@@ -1426,7 +1426,7 @@ class editTable extends initEdit {
                                 if (is_array($value['in']) && ! empty($value['in']['all_checked'])) {
                                     $controlGroups[$cellId]['html'][$key] .=
                                         "<div><label class=\"edit-checkbox2\">" .
-                                            "<input type=\"checkbox\" onchange=\"edit.checkboxAll(this, '{$field}')\"/> " . $this->_('Все') .
+                                            "<input type=\"checkbox\" onchange=\"edit.checkboxAll(this, '{$field}')\"/> " . $this->translate->tr('Все') .
                                         "</label></div>";
                                 }
 
@@ -2628,7 +2628,7 @@ $controlGroups[$cellId]['html'][$key] .= "
      */
 	public function addSuccessNotice(?string $text = null): self {
 
-        $text = $text ?: $this->_('Сохранено');
+        $text = $text ?: $this->translate->tr('Сохранено');
         $func = $this->sess_form_custom['save_success'] ?? '';
 
         $this->setSessFormField('save_success', "{$func};CoreUI.notice.create('{$text}')");

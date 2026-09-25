@@ -41,6 +41,7 @@ require_once 'inc/classes/I18n.php';
 require_once 'inc/classes/Common.php';
 require_once 'inc/classes/Acl.php';
 require_once 'inc/classes/SSE.php';
+require_once 'inc/classes/TokenBucket.php';
 
 $conf_file = DOC_ROOT . "conf.ini";
 
@@ -74,7 +75,7 @@ if ($system_config === false || !empty($_GET['reset_cache'])) {
                 'charset'        => 'utf8',
                 'driver_options' => [
                     \PDO::ATTR_TIMEOUT => 5,
-                    //                \PDO::ATTR_PERSISTENT => true,
+                    //\PDO::ATTR_PERSISTENT => false,
                     \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 ],
                 'options'        => [
@@ -171,3 +172,4 @@ $translate = new I18n($system_config);
 //сохраняем конфиг
 Registry::set('config', $system_config);
 Registry::set('core_config', $system_config->core2);
+unset($system_config);

@@ -57,6 +57,7 @@ class Db
             $this->config = $config;
         }
         $child_class_name = get_class($this);
+//        echo "<PRE>";print_r($child_class_name);echo "</PRE>";die;
 
         if (
             $child_class_name == "CoreController" ||
@@ -101,7 +102,7 @@ class Db
             }
             return $this->_core_config;
         }
-        if ($k === "db2") {
+        if ($k === "db2") { //slave connection
             if ($module !== "admin") {
                 if ($reg->isRegistered($k_module)) {
                     return $reg->get($k_module);
@@ -704,7 +705,11 @@ class Db
      */
     public function getEnumValueById($id)
     {
-        $res = $this->db->fetchOne(
+        $db = "db";
+        if (!empty($this->config->database2)) {
+            $db = "db2";
+        }
+        $res = $this->$db->fetchOne(
             "SELECT name FROM core_enum WHERE id = ?",
             $id,
         );
@@ -718,7 +723,11 @@ class Db
      */
     public function getEnumById($id)
     {
-        $enum = $this->db->fetchRow(
+        $db = "db";
+        if (!empty($this->config->database2)) {
+            $db = "db2";
+        }
+        $enum = $this->$db->fetchRow(
             "
             SELECT id,
                    name,
@@ -759,7 +768,11 @@ class Db
         if ($id === -1) {
             return true;
         }
-        return $this->db->fetchOne(
+        $db = "db";
+        if (!empty($this->config->database2)) {
+            $db = "db2";
+        }
+        return $this->$db->fetchOne(
             "SELECT 1 FROM core_users WHERE u_id=? AND visible='Y'",
             $id,
         );

@@ -144,7 +144,10 @@ class SSE extends Db {
                 //echo $e->getMessage();
             }
         }
-        if ($this->db->isConnected()) $this->db->closeConnection();
+        $d2 = Registry::isRegistered('db|admin') ? Registry::get('db|admin') : null;
+        if ($d2 && $d2->isConnected()) {
+            $d2->closeConnection();
+        }
 
         if ($data) {
             echo "event: Core2\n",
@@ -156,8 +159,9 @@ class SSE extends Db {
 
     public function __destruct()
     {
-        if ($this->db->isConnected()) {
-            $this->db->closeConnection();
+        $d2 = Registry::isRegistered('db|admin') ? Registry::get('db|admin') : null;
+        if ($d2 && $d2->isConnected()) {
+            $d2->closeConnection();
         }
     }
 }

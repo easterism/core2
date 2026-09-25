@@ -172,9 +172,12 @@ class Init extends Acl {
                 }
             } else {
                 header('HTTP/1.1 401 Unauthorized');
-                $core_config = Registry::get('core_config');
-                if ($core_config->auth && $core_config->auth->scheme == 'basic') {
-                    header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+                $registry = Registry::getInstance();
+                if ($registry->isRegistered('core_config')) {
+                    $core_config = $registry->get('core_config');
+                    if ($core_config->auth && $core_config->auth->scheme == 'basic') {
+                        header("WWW-Authenticate: Basic realm={$core_config->auth->basic->realm}, charset=\"UTF-8\"");
+                    }
                 }
                 return '';
             }
@@ -214,12 +217,13 @@ class Init extends Acl {
                 elseif ($route['module'] === 'sse') {
 
                     $this->setContext("admin", "sse");
+                    $sse = new Core2\SSE();
+
                     session_write_close();
                     header("Content-Type: text/event-stream; charset=utf-8");
                     header("X-Accel-Buffering: no");
                     header("Cache-Control: no-cache");
 
-                    $sse = new Core2\SSE();
                     $sse->run();
                     return '';
                 }
@@ -626,6 +630,18 @@ class Init extends Acl {
                 //TODO сделать поддержку других видов авторизации
                 if (!$token) return;
                 //TODO заменить модуль webservice на модуль auth
+                $bucket = new Core2\TokenBucket(
+                    capacity: 10,
+                    refillRate: 2.0
+                );
+                if (!$bucket->consume($token)) {
+                    $retry = $bucket->getRetryAfter($token);
+                    http_response_code(429);
+                    header('Retry-After: ' . (int) ceil($retry));
+                    echo "429 Too Many Requests. Повторите через " . round($retry, 2) . " сек.\n";
+                    die;
+                }
+
                 $this->setContext('webservice');
                 $this->checkWebservice();
                 $webservice_api = new ModWebserviceApi();
@@ -672,6 +688,17 @@ class Init extends Acl {
             $apikey  = ! empty($_SERVER['HTTP_CORE2_APIKEY']) ? trim($_SERVER['HTTP_CORE2_APIKEY']) : trim($_GET['apikey']);
             //DEPRECATED ктото пытается авторизовать запрос при помощи api ключа
             // ключ проверим в webservice, если такой есть, то пропустим запрос, как если бы он авторизовался легальным способом
+            $bucket = new Core2\TokenBucket(
+                capacity: 2,        // максимум 5 запросов
+                refillRate: 1.0     // +1 запрос в секунду
+            );
+            if (!$bucket->consume($token)) {
+                $retry = $bucket->getRetryAfter($token);
+                http_response_code(429);
+                header('Retry-After: ' . (int) ceil($retry));
+                echo "429 Too Many Requests. Повторите через " . round($retry, 2) . " сек.\n";
+                die;
+            }
             $this->checkWebservice();
             $webservice_api = new ModWebserviceApi();
             return $webservice_api->dispatchApikey(trim($apikey));
