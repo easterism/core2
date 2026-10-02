@@ -9,30 +9,42 @@ class SSE extends Db {
 
     private $_events = [];
     private $_has_content = false;
+    private $_co = 0;
+    private $_counterFile = '';
 
     public function __construct()
     {
         parent::__construct();
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        $clientId = md5($ua . '|' . session_id());
+
+        $baseDir     = sys_get_temp_dir() . '/sse_clients';
+        if (!is_dir($baseDir)) {
+            @mkdir($baseDir, 0777, true);
+        }
+        $this->_counterFile = $baseDir . '/' . $clientId . '.counter';
+        $lockFile    = $baseDir . '/' . $clientId . '.lock';
+        $this->_co = $this->incrementCounter($this->_counterFile, $lockFile);
 
         //события ядра
         $eventFile = __DIR__ . "/../../mod/admin/events/MessageQueue.php";
         require_once $eventFile;
-        $auth = Registry::get('auth');
-        $user_key = $auth->LIVEID;
-        if (!$user_key) $user_key = $auth->ID;
-//        if (!$user_key) $user_key = -1;
 
-        $shm_key = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($user_key)); //у каждого юзера своя очередь
+        $shm_key = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($clientId)); //у каждого юзера своя очередь
         if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь юзера при запуске SSE
         $eventClass = new MessageQueue(msg_get_queue($shm_key));
         $this->_events["Core2-Fact"] = $eventClass;
 
         //события модулей
-        $mods = $this->db->fetchAll($this->dataModules->select()->where("visible = 'Y'"));
+        $location      = $this->getModuleLocation('dummy'); //нужно для сохранения всех модулей в реестре
+        if (!Registry::isRegistered("_modules")) {
+            return;
+        }
+        $mods = Registry::get('_modules');
         foreach ($mods as $mod) {
+            if ($mod['visible'] !== 'Y') continue;
             $location      = $this->getModuleLocation($mod['module_id']);
             if (!is_dir($location . "/events")) continue;
-
             foreach (new \DirectoryIterator($location . "/events") as $fileInfo) {
                 if ($fileInfo->isDot()) continue;
                 $eventFile = $fileInfo->getBasename('.php');
@@ -45,14 +57,17 @@ class SSE extends Db {
                 }
             }
         }
+
         set_time_limit(0);
+        ignore_user_abort(false);
     }
 
     public function run()
     {
         $core_config = Registry::get('core_config');
-        $exec_limit = 600;
+        $exec_limit = 100;
         $usleep_time = 500000;
+
         if (!empty($core_config->sse->exec_limit)) {
             $exec_limit = (int)$core_config->sse->exec_limit;
         }
@@ -63,11 +78,17 @@ class SSE extends Db {
             if (connection_status() != 0){
                 break;
             }
-            $this->loop();
+            $currentCounter = $this->readCounter($this->_counterFile);
+            if ($currentCounter > $this->_co) {
+                //echo "event: shutdown\n";
+                break;
+            }
 
             if (connection_aborted()) {
                 break;
             }
+            $this->loop();
+
             $sec = $usleep_time / 1000000;
             $exec_limit -= $sec;
             if ($usleep_time > 1000000) sleep((int) $sec); //usleep may not be supported
@@ -144,10 +165,6 @@ class SSE extends Db {
                 //echo $e->getMessage();
             }
         }
-        $d2 = Registry::isRegistered('db|admin') ? Registry::get('db|admin') : null;
-        if ($d2 && $d2->isConnected()) {
-            $d2->closeConnection();
-        }
 
         if ($data) {
             echo "event: Core2\n",
@@ -157,11 +174,33 @@ class SSE extends Db {
         }
     }
 
-    public function __destruct()
+    private function incrementCounter(string $counterFile, string $lockFile): int
     {
-        $d2 = Registry::isRegistered('db|admin') ? Registry::get('db|admin') : null;
-        if ($d2 && $d2->isConnected()) {
-            $d2->closeConnection();
+        $lock = fopen($lockFile, 'c');
+        if (!$lock) {
+            return 1;
         }
+        flock($lock, LOCK_EX);
+
+        $current = 0;
+        if (is_file($counterFile)) {
+            $current = (int)trim((string)file_get_contents($counterFile));
+        }
+        $current++;
+        file_put_contents($counterFile, (string)$current, LOCK_EX);
+
+        flock($lock, LOCK_UN);
+        fclose($lock);
+
+        return $current;
     }
+
+    private function readCounter(string $counterFile): int
+    {
+        if (!is_file($counterFile)) {
+            return 0;
+        }
+        return (int)trim((string)@file_get_contents($counterFile));
+    }
+
 }

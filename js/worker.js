@@ -1,5 +1,29 @@
 const clients = new Set();
 let eventSrc = null;
+let reconnectTimeout = null;
+const RECONNECT_DELAY = 3000;
+
+function scheduleReconnect() {
+    if (reconnectTimeout) return;
+    if (clients.size === 0) return;
+
+    reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        if (clients.size > 0 && !eventSrc) {
+            setupEventSource();
+        }
+    }, RECONNECT_DELAY);
+}
+
+function broadcast(fn) {
+    clients.forEach(client => {
+        try {
+            fn(client);
+        } catch (e) {
+            clients.delete(client);
+        }
+    });
+}
 
 function setupEventSource() {
     if (eventSrc) return eventSrc;
@@ -8,40 +32,25 @@ function setupEventSource() {
 
     eventSrc.addEventListener("message", function (event) {
         const d = JSON.parse(event.data);
-        clients.forEach(client => {
-            try {
-                if (d?.done) {
-                    client.postMessage({type: "Core2", event: d.done});
-                } else {
-                    client.postMessage({type: "modules", event: d});
-                }
-            } catch (e) {
-                // Клиент отключился
-                clients.delete(client);
+        broadcast(client => {
+            if (d?.done) {
+                client.postMessage({type: "Core2", event: d.done});
+            } else {
+                client.postMessage({type: "modules", event: d});
             }
         });
     });
 
     eventSrc.addEventListener('open', function () {
-        clients.forEach(client => {
-            try {
-                client.postMessage("SSE open");
-            } catch (e) {
-                clients.delete(client);
-            }
-        });
+        broadcast(client => client.postMessage("SSE open"));
     });
 
     eventSrc.addEventListener('error', function (event) {
-        if (eventSrc.readyState === EventSource.CLOSED) {
-            clients.forEach(client => {
-                try {
-                    client.postMessage('ERROR: SSE connection closed');
-                } catch (e) {
-                    clients.delete(client);
-                }
-            });
+        if (eventSrc && eventSrc.readyState === EventSource.CLOSED) {
+            broadcast(client => client.postMessage('ERROR: SSE connection closed'));
+            eventSrc.close();
             eventSrc = null;
+            scheduleReconnect();
         }
     });
 
@@ -74,10 +83,7 @@ self.addEventListener("connect", (e) => {
 
     port.addEventListener("close", () => {
         clients.delete(port);
-        if (clients.size === 0 && eventSrc) {
-            eventSrc.close();
-            eventSrc = null;
-        }
+        // ВАЖНО: НЕ закрываем eventSrc при уходе последнего клиента,
     });
 
     port.start();
