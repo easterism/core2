@@ -859,9 +859,14 @@ class CoreController extends Common implements File {
             if ($tab->activeTab == 1) {
                 if ( ! empty($_GET['kick'])) {
                     $sess = $this->dataSession->find($_GET['kick'])->current();
-
                     if ($sess->sid) {
-                        $sess->logout_time  = new \Zend_Db_Expr('NOW()');
+                        $m = new Memcached();
+                        $m->addServer('localhost', 11211);
+                        $m->setOption(Memcached::OPT_CONNECT_TIMEOUT, 1000);
+                        $m->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+                        $cacheKey = 'kick_' . md5($_SERVER['SERVER_NAME'] . $sess->id);
+                        $m->set($cacheKey, 1, 900);
+
                         $sess->is_kicked_sw = 'Y';
                         $sess->save();
                     }
