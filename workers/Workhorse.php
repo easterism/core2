@@ -37,7 +37,14 @@ class Workhorse extends \Common
         if (!defined("DOC_PATH")) {
             define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
         }
-        $in_job = $this->db->fetchRow("SELECT 1 FROM core_worker_jobs WHERE id=? AND status != 'finish'", $id);
+
+        try {
+            $in_job = $this->db->fetchRow("SELECT 1 FROM core_worker_jobs WHERE id=? AND status != 'finish'", $id);
+        } catch (\Throwable $e) {
+            $log[] = "Job {$job->handle()} " . $e->getMessage();
+            Registry::set("db|admin", null);
+            $in_job = $this->db->fetchRow("SELECT 1 FROM core_worker_jobs WHERE id=? AND status != 'finish'", $id);
+        }
         if ($in_job) {
             //задача уже обрабатывается
             $log[] = "Job {$job->handle()} already in progress";
