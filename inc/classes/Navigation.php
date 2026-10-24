@@ -246,7 +246,7 @@ class Navigation extends Db {
      * @return string
      * @throws \Exception
      */
-    public function renderNavigateItem(array $navigate_item, string $position = null): string {
+    public function renderNavigateItem(array $navigate_item, ?string $position = null): string {
 
         if (empty($navigate_item['type'])) {
             return '';

@@ -2,6 +2,7 @@
 namespace Core2;
 
 require_once 'Tool.php';
+require_once 'Registry.php';
 
 /**
  * Class Error
@@ -14,7 +15,7 @@ class Error {
      * @param int $code
      * @return string|void
      */
-	public static function Exception($msg, $code = 0) {
+	public static function Exception($msg, $code = 0): void {
         $msg = trim($msg);
 		$isXajax = self::isXajax();
         json_decode($msg, true);
@@ -27,12 +28,11 @@ class Error {
 			echo '{"xjxobj":[{"cmd":"al","data":"' . addslashes($msg) . '"}]}';
 		} else {
 			if (!$code) $code = 200;
-            if ($code == 403) {
-                header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+
+            if (in_array($code, [200, 400, 403, 404, 405, 500])) {
+                http_response_code($code);
             }
-            if ($code == 404) {
-                header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
-            }
+
 			if ($code == 13) { //ошибки для js объекта с наличием error
                 echo json_encode(array("error" => $msg));
 			} else {
@@ -106,7 +106,9 @@ class Error {
                 self::Exception('Нет такой страницы', 404);
 
             } elseif ($message == 'expired') {
+                if ($cnf && $cnf?->session?->name) {
                 setcookie($cnf->session->name, false);
+                }
                 header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
                 die();
             }
@@ -122,7 +124,9 @@ class Error {
                 }
 
             } else {
-                if ( ! in_array($message, ['911', 'Referrer error', 'Модуль не найден', 'Токен не найден'])) {
+                if ( ! in_array($message, ['911', 'Referrer error', 'Модуль не найден', 'Токен не найден']) &&
+                     ($code < 200 || $code >= 500)
+                ) {
                     error_log("{$message} \n " . $exception->getTraceAsString());
                 }
 
@@ -156,6 +160,9 @@ class Error {
         if ($cnf && !empty($cnf->debug) && $cnf->debug->on) {
             $message .= $exception->getMessage(); //TODO вести журнал
         }
+        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", "--------------------------");
+        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", $_SERVER['HTTP_USER_AGENT']);
+        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", $_SERVER['REQUEST_URI']);
         self::Exception($message, $code);
 
     }
@@ -188,45 +195,21 @@ class Error {
 		self::Exception($message, $code);
 	}
 
-    private static function setResponseCode($code):void
-    {
-        switch ($code) {
-            case 400:
-                header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
-                break;
-            case 403:
-                header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
-                break;
-            case 404:
-                header("{$_SERVER['SERVER_PROTOCOL']} 404 Page not found");
-                break;
-            case 500:
-                header("{$_SERVER['SERVER_PROTOCOL']} 500 Internal Server Error");
-                break;
-            case 503:
-                header("{$_SERVER['SERVER_PROTOCOL']} 503 Service Unavailable");
-                break;
-            case 415:
-                header("{$_SERVER['SERVER_PROTOCOL']} 415 Unsupported Media Type");
-                break;
-            case 405:
-                header("{$_SERVER['SERVER_PROTOCOL']} 405 Method Not Allowed");
-                break;
-
-        }
-    }
 
     /**
-     * @param array $out
+     * @param array|string $out
      * @param int $code
-     * @return string|void
+     * @return false|string
      */
-	public static function catchJsonException($out = [], $code = 0) {
+	public static function catchJsonException($out = [], $code = 0): false|string {
 
 	    if (!$out) $out = [];
         if (!is_array($out)) $out = trim($out) ? ["msg" => htmlspecialchars($out)] : [];
 
-        self::setResponseCode($code);
+
+        if (in_array($code, [400, 403, 404, 500, 503, 415, 405])) {
+            http_response_code($code);
+        }
 
 		header('Content-type: application/json; charset="utf-8"');
 
