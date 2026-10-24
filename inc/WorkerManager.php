@@ -200,6 +200,7 @@ class WorkerManager {
      * Function/Class prefix
      */
     protected $prefix = "";
+    protected $_mods = [];
 
     private $_log = "";
 
@@ -430,6 +431,10 @@ class WorkerManager {
         catch (\Exception $e) {
             $this->show_help($e->getMessage());
         }
+        $db = new Db();
+        $select = $db->dataModules->select()->where("visible='Y'");
+        $this->_mods = $db->dataModules->fetchAll($select);
+        unset($db);
         
         /**
          * command line opts always override config file
@@ -729,12 +734,10 @@ class WorkerManager {
                 }
             }
         }
+        //echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
         if (isset($this->functions['Workhorse'])) {
-            $db = new Db();
-            $select = $db->dataModules->select()->where("visible='Y'");
-            $mods = $db->dataModules->fetchAll($select);
 
-            foreach ($mods as $k => $data) {
+            foreach ($this->_mods as $k => $data) {
                 if ($data['is_system'] === "Y") {
                     $location = __DIR__ . "/../mod/{$data['module_id']}/v{$data['version']}";
                 } else {
@@ -745,7 +748,8 @@ class WorkerManager {
                 if (!isset($this->functions[$name])) {
                     $worker = realpath($location) . "/{$name}.php";
                     if (file_exists($worker)) {
-                        $co = !empty($this->functions[$name]["count"]) ? $this->functions[$name]["count"] : 2;
+                        $co = !empty($this->config['functions'][$name]['dedicated_count']) ? (int)$this->config['functions'][$name]['dedicated_count'] : 2;
+                        if ($co > 100) $co = 50; //страховка
                         $this->functions[$name] = [
                             'name'  => 'Workhorse',
                             'count' => $co,

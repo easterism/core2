@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Core2;
@@ -168,7 +167,7 @@ class Db
                 $k_module = "db|admin";
                 $db = $reg->get($k_module);
             }
-            if (!$db->isConnected()) {
+            if (!$db || !$db->isConnected()) {
                 //соединение разорвалось в процессе работы скрипта
                 if ($module !== "admin") {
                     $module_config = $this->getModuleConfig($module);
@@ -306,7 +305,8 @@ class Db
         }
         // Получение экземпляра модели текущего модуля
         elseif (strpos($k, "data") === 0) {
-            if ($reg->isRegistered($k)) {
+
+            if ($reg->isRegistered($k) && $reg->get($k)?->getAdapter()?->isConnected()) {
                 $v = $reg->get($k);
             } else {
                 $model = substr($k, 4);
