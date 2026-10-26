@@ -18,7 +18,7 @@ class ModAdminApi extends CommonApi
         switch ($_SERVER['REQUEST_METHOD']) {
             case 'DELETE':
                 if (isset($params['_resource']) && isset($params['_field']) && isset($params['_value'])) {
-                    //это удаление из UI
+                    //// fallback для уствревших модулей при удалении из браузера
                     if (empty($params['_resource'])) throw new \Exception("Не удалось определить местоположение данных для удаления.");
                     if (empty($params['_table'])) {
                         $table = explode(".", $params['_field']);
@@ -401,7 +401,7 @@ class ModAdminApi extends CommonApi
             $admin      = false;
             if (strpos($table, 'core_') === 0) {
                 //таблица ядра
-                if (!$this->auth->ADMIN) throw new RuntimeException("Доступ запрещен");
+                if (!$this->auth->ADMIN) throw new RuntimeException("Доступ запрещен", 403);
                 $admin = true;
             }
 
@@ -417,7 +417,7 @@ class ModAdminApi extends CommonApi
             if (!$admin) {
                 $edit_all   = $this->checkAcl($resource, 'edit_all');
                 $edit_owner = $this->checkAcl($resource, 'edit_owner');
-                if (!$edit_all && !$edit_owner) throw new RuntimeException("Изменение запрещено");
+                if (!$edit_all && !$edit_owner) throw new RuntimeException("Изменение запрещено", 403);
             }
 
             $table_name = $table;
@@ -436,7 +436,7 @@ class ModAdminApi extends CommonApi
 
             return ['status' => "ok"];
         } catch (RuntimeException $e) {
-            throw new Exception($this->translate->tr($e->getMessage()), 400);
+            throw new Exception($this->translate->tr($e->getMessage()), $e->getCode() ?? 400);
         } catch (Exception $e) {
             return ['status' => $e->getMessage()];
         }

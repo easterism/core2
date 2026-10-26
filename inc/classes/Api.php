@@ -3,7 +3,6 @@
 namespace Core2;
 
 require_once("HttpException.php");
-require_once("Request.php");
 
 use BadMethodCallException;
 use Exception;
@@ -37,47 +36,24 @@ class Api extends Acl
         $resource = "{$module}_{$action}";
 
         try {
-            $r = new Request();
-            switch ($r->getMethod()) {
-                case 'GET':
-                    break;
-                case 'PUT':
-                    if (!$this->checkAcl($resource, 'edit_all') && !$this->checkAcl($resource, 'edit_owner')) {
-                        throw new HttpException("Создание и обновление запрещено", 'update_not_allowed', 403);
-                    }
-                    break;
-                case 'POST':
-                    break;
-                case 'DELETE':
-                    if (!empty(self::$route['query']) && !empty(self::$route['query']['table'])) {
-                        //возможно это удаление из браузера
-                        $del_table = (string)self::$route['query']['table'];
-                        $del_field = (string)(self::$route['query']['field'] ?? '');
-                        if (str_starts_with($del_table, 'mod_') || str_starts_with($del_table, 'core_')) {
-                            //удаляют запись из таблицы
-                            $route = self::$route;
-                            $route['params'] = [
-                                '_resource' => key($route['params']),
-                                '_field' => $del_table . "." . $del_field,
-                                '_value' => $route['query']['value']
-                            ];
-                            $route['query'] = '';
-                            Registry::set('route', $route);
-                            require_once 'core2/mod/admin/ModAdminApi.php';
-                            $coreController = new ModAdminApi();
-                            $out = $coreController->action_index();
-                            if (is_array($out)) {
-                                $out = json_encode($out);
-                            }
-                            return $out;
-                        }
-                        $delete_all   = $this->checkAcl($resource, 'delete_all');
-                        $delete_owner = $this->checkAcl($resource, 'delete_owner');
-                        if (!$delete_all && !$delete_owner) throw new HttpException("Удаление запрещено", 'delete_not_allowed', 403);
-                    }
-                    break;
+            if ($_SERVER['REQUEST_METHOD'] == 'DELETE' && !empty(self::$route['query']) && !empty(self::$route['query']['table'])) {
+                //fallback для уствревших модулей при удалении из браузера
+                $del_table = (string)self::$route['query']['table'];
+                $del_field = (string)(self::$route['query']['field'] ?? '');
+                if (str_starts_with($del_table, 'mod_') || str_starts_with($del_table, 'core_')) {
+                    //удаляют запись из таблицы
+                    $route = self::$route;
+                    $route['params'] = [
+                        '_resource' => key($route['params']),
+                        '_field' => $del_table . "." . $del_field,
+                        '_value' => $route['query']['value']
+                    ];
+                    $route['query'] = '';
+                    Registry::set('route', $route);
+                    $module = 'admin';
+                    $action = 'index';
+                }
             }
-
             Registry::set('context', array($module, $action));
 
             if ($module == 'admin') {
@@ -104,8 +80,8 @@ class Api extends Acl
             $modController = "Mod" . ucfirst(strtolower($module)) . "Api";
             $this->requireController($location, $modController);
             $modController = new $modController();
-            $action        = "action_" . $action;
 
+            $action        = "action_" . $action;
             if (method_exists($modController, $action)) {
                 $out = $modController->$action();
                 if (is_array($out)) {
@@ -145,52 +121,13 @@ class Api extends Acl
             require_once $autoload;
         }
         require_once $controller_path; // подлючаем контроллер
+        if (!is_subclass_of($apiController, "CommonApi")) {
+            $msg = sprintf($this->translate->tr("Класс %s не наследует CommonApi"), $apiController);
+            throw new Exception($msg, 500);
+        }
         if (!class_exists($apiController)) {
             $msg = sprintf($this->translate->tr("Модуль %s сломан"), $location);
             throw new Exception($msg, 500);
-        }
-    }
-
-
-    /**
-     * проверка модуля на доступность
-     * @param $module
-     * @param $action
-     * @return void
-     * @throws Exception
-     */
-    public function checkModule($module, $action): void {
-        if ($action == 'index') {
-            $_GET['action'] = "index";
-
-            if ( ! $this->isModuleActive($module)) {
-                $msg = sprintf($this->translate->tr("Модуль %s не существует"), $module);
-                throw new Exception($msg, 404);
-            }
-
-            if (! $this->checkAcl($module)) {
-                $msg = $this->translate->tr("Доступ закрыт!");
-                throw new Exception($msg, 403);
-            }
-        }
-        else {
-            $submodule_id = $module . '_' . $action;
-            if ( ! $this->isModuleActive($submodule_id)) {
-                $msg = sprintf($this->translate->tr("Субмодуль %s не существует"), $action);
-                throw new Exception($msg, 404);
-            }
-            $mods = $this->getSubModule($submodule_id);
-
-            if ($module == 'auth') {
-                //API вызовы в модуль auth нельзя проверить на доступ
-                return;
-            }
-
-            //TODO перенести проверку субмодуля в контроллер модуля
-            if ($mods['sm_id'] && !$this->checkAcl($submodule_id)) {
-                $msg = $this->translate->tr("Доступ закрыт!");
-                throw new Exception($msg, 403);
-            }
         }
     }
 

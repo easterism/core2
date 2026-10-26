@@ -7,6 +7,7 @@ require_once 'Db.php';
 use Laminas\Permissions\Acl\Acl as LaminasAcl;
 use Laminas\Permissions\Acl\Role\GenericRole as Role;
 use Laminas\Permissions\Acl\Resource\GenericResource as Resource;
+use Exception;
 
 /**
  * Class Acl
@@ -402,4 +403,38 @@ class Acl extends Db {
 			return false;
 		}
 	}
+
+
+    /**
+     * проверка модуля на доступность
+     * @param $module
+     * @param $action
+     * @return void
+     * @throws Exception
+     */
+    protected function checkModule($module, $action): void {
+        if ($action == 'index') {
+            $_GET['action'] = "index";
+
+            if ( ! $this->isModuleActive($module)) {
+                throw new Exception(sprintf($this->translate->tr("Модуль %s не существует"), $module), 404);
+            }
+
+            if (! $this->checkAcl($module, 'access')) {
+                throw new Exception(911);
+            }
+        }
+        else {
+            $submodule_id = $module . '_' . $action;
+            if ( ! $this->isModuleActive($submodule_id)) {
+                throw new Exception(sprintf($this->translate->tr("Субмодуль %s не существует"), $action), 404);
+            }
+            $mods = $this->getSubModule($submodule_id);
+
+            //TODO перенести проверку субмодуля в контроллер модуля
+            if ($mods['sm_id'] && !$this->checkAcl($submodule_id, 'access')) {
+                throw new Exception(911);
+            }
+        }
+    }
 }

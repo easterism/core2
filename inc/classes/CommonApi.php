@@ -36,6 +36,7 @@ class CommonApi extends \Core2\Acl {
 
 		$this->auth  = $reg->isRegistered('auth') ? $reg->get('auth') : null;
         $this->route = $reg->isRegistered('route') ? $reg->get('route') : [];
+        $this->request = new Request();
 
 	}
 
@@ -171,7 +172,7 @@ class CommonApi extends \Core2\Acl {
         }
         $h = getallheaders();
 
-        switch ($_SERVER['REQUEST_METHOD']) {
+        switch ($this->request->getMethod()) {
             case 'GET':
                 $request_raw = null;
                 break;
