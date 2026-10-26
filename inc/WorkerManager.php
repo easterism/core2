@@ -734,6 +734,7 @@ class WorkerManager {
                 }
             }
         }
+        //echo "<PRE>";print_r($this->functions);echo "</PRE>";die;
         if (isset($this->functions['Workhorse'])) {
 
             foreach ($this->_mods as $k => $data) {

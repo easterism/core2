@@ -82,6 +82,7 @@ class Workhorse extends \Common
             $log[] = "Finish $action in context " . $this->module;
         } catch (\Exception $e) {
             $error = $e->getMessage();
+            $error .= $e->getTraceAsString();
         }
         $job->sendStatus(100, 100);
 

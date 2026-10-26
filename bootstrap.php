@@ -27,7 +27,6 @@ if ( ! empty($_SERVER['REQUEST_URI'])) {
          ! in_array($request_base, $pwa_files, true)
     ) {
         \Core2\Error::Exception("File not found", 404);
-        return;
     }
 }
 
@@ -107,11 +106,10 @@ if ($system_config === false || !empty($_GET['reset_cache'])) {
 
 
         $conf_d = __DIR__ . "/conf.ext.ini";
+        $core_conf_file = __DIR__ . "/conf.ini";
         if (file_exists($conf_d)) {
             $system_config->merge($conf->readIni($conf_d, $section));
         }
-
-        $core_conf_file = __DIR__ . "/conf.ini";
         if (file_exists($core_conf_file)) {
             $core_config = new Core2\Config();
             $system_config->core2 = $core_config->readIni($core_conf_file, 'production');
@@ -145,7 +143,6 @@ if ($system_config->debug->on) {
 if (empty($_SERVER['HTTPS'])) {
     if (isset($system_config->system) && ! empty($system_config->system->https)) {
         header('Location: https://' . $_SERVER['SERVER_NAME']);
-        return;
     }
 }
 //проверяем настройки для базы данных

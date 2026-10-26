@@ -2192,6 +2192,8 @@ class editTable extends initEdit {
                                 $max_filesize_human = Tool::formatSizeHuman($options['maxFileSize']);
 
 								$un = $fieldId;
+                                $theme_root    = defined('DOC_ROOT') ? DOC_ROOT . self::THEME_HTML : '';
+                                $native_upload = $theme_root && is_file($theme_root . '/js/core2.upload.js');
                                 $tpl = new \Templater3($this->tpl_control['files']);
                                 if ($xfile == 'xfiles') {
                                     $tpl->touchBlock('xfiles');
@@ -2210,6 +2212,29 @@ class editTable extends initEdit {
 									<div id="fileupload-' . $un . '"' . ($xfile === 'xfiles' ? ' data-core2-camera="1"' . (!empty($options['autoUpload']) ? ' data-core2-camera-auto="1"' : '') : '') . '>' .
                                         $tpl->render() .
                                     '</div>';
+
+                                if ($native_upload) {
+                                    $this->scripts['upload_native'] = true;
+
+                                    $upload_options = [
+                                        'container'         => 'fileupload-' . $un,
+                                        'un'                => $un,
+                                        'fieldId'           => $fieldId,
+                                        'multiple'          => ($xfile === 'xfiles'),
+                                        'autoUpload'        => ! empty($options['autoUpload']),
+                                        'maxFileSize'       => (int)$options['maxFileSize'],
+                                        'maxFileSizeHuman'  => $max_filesize_human,
+                                        'acceptFileTypes'   => $ft,
+                                        'idHash'            => ! empty($options['id_hash']),
+                                        'uploadUrl'         => 'index.php?module=admin&loc=core&action=upload',
+                                        'filesUrl'          => "index.php?module={$module}&action={$action}&filehandler={$this->table}&listid={$refid}&f={$field}",
+                                        'submitSelector'    => '#' . $this->main_table_id . '_mainform > div.buttons-container > div.buttons-area > input[type="submit"]',
+                                    ];
+
+                                    $controlGroups[$cellId]['html'][$key] .= '<script>Core2Upload.init(' .
+                                        json_encode($upload_options, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) .
+                                    ');</script>';
+                                } else {
                                 $tpl = new \Templater3($this->tpl_control['xfile_upload']);
                                 $controlGroups[$cellId]['html'][$key] .= '
                                     <!-- The template to display files available for upload -->
@@ -2363,6 +2388,7 @@ $controlGroups[$cellId]['html'][$key] .= "
 });
 </script>";
 
+                                }
 							}
 						}
 						elseif ($value['type'] == 'modal') {
@@ -2431,45 +2457,68 @@ $controlGroups[$cellId]['html'][$key] .= "
 			}
 
             if ($this->scripts) {
-                if (isset($this->scripts['date2'])) {
-                    Tool::printJs("core2/js/control_datepicker.js", true);
-                }
-                if (isset($this->scripts['datetime2'])) {
-                    Tool::printJs("core2/js/control_datetimepicker.js", true);
+                $theme_root = defined('DOC_ROOT') ? DOC_ROOT . self::THEME_HTML : '';
+
+                if (isset($this->scripts['date2']) || isset($this->scripts['datetime2'])) {
+                    if ($theme_root && is_file($theme_root . "/js/control_datepicker.js")) {
+                        Tool::printJs(self::THEME_HTML . "/js/control_datepicker.js", true);
+                    } else {
+                        if (isset($this->scripts['date2'])) {
+                            Tool::printJs("core2/js/control_datepicker.js", true);
+                        }
+                        if (isset($this->scripts['datetime2'])) {
+                            Tool::printJs("core2/js/control_datetimepicker.js", true);
+                        }
+                    }
                 }
                 if (isset($this->scripts['color'])) {
-                    Tool::printCss(self::THEME_HTML . "/css/bootstrap-colorpicker.min.css");
-                    Tool::printJs(self::THEME_HTML . "/js/bootstrap-colorpicker.min.js", true);
+                    if ($theme_root && is_file($theme_root . "/js/bootstrap-colorpicker.min.js")) {
+                        Tool::printCss(self::THEME_HTML . "/css/bootstrap-colorpicker.min.css");
+                        Tool::printJs(self::THEME_HTML . "/js/bootstrap-colorpicker.min.js", true);
+                    }
                 }
                 if (isset($this->scripts['multiselect2']) ||
                     isset($this->scripts['select2']) ||
                     isset($this->scripts['tags'])
                 ) {
-                    Tool::printCss(self::THEME_HTML . "/css/select2.min.css");
-                    Tool::printCss(self::THEME_HTML . "/css/select2.bootstrap.css");
-                    Tool::printJs(self::THEME_HTML . "/js/select2.min.js", true);
-                    Tool::printJs(self::THEME_HTML . "/js/select2.ru.min.js", true);
+                    if ($theme_root && is_file($theme_root . "/js/select2.min.js")) {
+                        Tool::printCss(self::THEME_HTML . "/css/select2.min.css");
+                        Tool::printCss(self::THEME_HTML . "/css/select2.bootstrap.css");
+                        Tool::printJs(self::THEME_HTML . "/js/select2.min.js", true);
+                        Tool::printJs(self::THEME_HTML . "/js/select2.ru.min.js", true);
+                    }
                 }
                 if (isset($this->scripts['modal2'])) {
-                    Tool::printJs("core2/js/bootstrap.modal.min.js", true);
-                    Tool::printCss(self::THEME_HTML . "/css/bootstrap.modal.min.css");
+                    if ($theme_root && is_file($theme_root . "/css/bootstrap.modal.min.css")) {
+                        Tool::printJs("core2/js/bootstrap.modal.min.js", true);
+                        Tool::printCss(self::THEME_HTML . "/css/bootstrap.modal.min.css");
+                    }
                 }
                 if (isset($this->scripts['upload'])) {
-                    Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload.css");
-                    Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload-ui.css");
-                    Tool::printJs("core2/js/tmpl.min.js", true);
-                    Tool::printJs("core2/js/load-image.min.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.iframe-transport.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-process.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-image.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-audio.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-video.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-validate.js", true);
-                    Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-ui.js", true);
+                    if (isset($this->scripts['upload_native'])) {
+                        Tool::printJs(self::THEME_HTML . "/js/core2.upload.js", true);
+                    } else {
+                        Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload.css");
+                        Tool::printCss(self::THEME_HTML . "/fileupload/jquery.fileupload-ui.css");
+                        Tool::printJs("core2/js/tmpl.min.js", true);
+                        Tool::printJs("core2/js/load-image.min.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.iframe-transport.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-process.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-image.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-audio.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-video.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-validate.js", true);
+                        Tool::printJs("core2/vendor/belhard/jquery-file-upload/js/jquery.fileupload-ui.js", true);
+                    }
                 }
                 if (isset($this->scripts['xfiles_camera'])) {
-                    Tool::printJs("core2/js/class.edit.camera.js", true);
+                    $camera_js = self::THEME_HTML . "/js/class.edit.camera.js";
+                    if (defined('DOC_ROOT') && is_file(DOC_ROOT . $camera_js)) {
+                        Tool::printJs($camera_js, true);
+                    } else {
+                        Tool::printJs("core2/js/class.edit.camera.js", true);
+                    }
                 }
                 if (isset($this->scripts['modal'])) {
                     Tool::printJs("core2/vendor/belhard/simplemodal/src/jquery.simplemodal.js", true);
