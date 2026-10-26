@@ -102,7 +102,8 @@ class CoreController extends Common implements File {
             try {
                 switch ($_GET['data']) {
                     case 'clear_cache':
-                        $this->cache->clearByNamespace($this->cache->getOptions()->getNamespace());
+                        $ns = $this->cache->getOptions()->getNamespace();
+                        $this->cache->clearByNamespace($ns);
                         header('Content-type: application/json; charset="utf-8"');
                         return json_encode(['status' => 'success']);
                 }

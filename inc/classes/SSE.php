@@ -11,6 +11,7 @@ class SSE extends Db {
     private $_has_content = false;
     private $_co = 0;
     private $_counterFile = '';
+    private $_queue = null;
 
     public function __construct()
     {
@@ -31,8 +32,8 @@ class SSE extends Db {
         require_once $eventFile;
 
         $shm_key = ftok($eventFile, 't') + crc32($_SERVER['SERVER_NAME'] . strval($clientId)); //у каждого юзера своя очередь
-        if ($q = msg_get_queue($shm_key)) msg_remove_queue($q); //очищаем очередь юзера при запуске SSE
-        $eventClass = new MessageQueue(msg_get_queue($shm_key));
+        $this->_queue = msg_get_queue($shm_key);
+        $eventClass = new MessageQueue($this->_queue);
         $this->_events["Core2-Fact"] = $eventClass;
 
         //события модулей
@@ -94,6 +95,7 @@ class SSE extends Db {
             if ($usleep_time > 1000000) sleep((int) $sec); //usleep may not be supported
             else usleep($usleep_time);
         }
+        msg_remove_queue($this->_queue);
     }
 
     /**

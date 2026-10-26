@@ -27,6 +27,7 @@ if ( ! empty($_SERVER['REQUEST_URI'])) {
          ! in_array($request_base, $pwa_files, true)
     ) {
         \Core2\Error::Exception("File not found", 404);
+        die;
     }
 }
 
@@ -46,6 +47,7 @@ $conf_file = DOC_ROOT . "conf.ini";
 
 if ( ! file_exists($conf_file)) {
     Error::Exception("conf.ini is missing.", 404);
+    die;
 }
 
 // Memcached для кеширования конфигурации
@@ -56,6 +58,7 @@ $memcached->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
 
 $cacheKey = 'core2_config_' . md5($_SERVER['SERVER_NAME'] ?? 'production');
 $system_config = $memcached->get($cacheKey);
+$system_config = false;
 $configLoaded = false;
 //обрабатываем общий конфиг
 if ($system_config === false || !empty($_GET['reset_cache'])) {

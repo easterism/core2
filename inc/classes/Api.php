@@ -3,6 +3,7 @@
 namespace Core2;
 
 require_once("HttpException.php");
+require_once("Request.php");
 
 use BadMethodCallException;
 use Exception;
@@ -33,33 +34,50 @@ class Api extends Acl
 
         $module = self::$route['api'];
         $action = self::$route['action'];
+        $resource = "{$module}_{$action}";
 
         try {
-            if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-                if (!empty(self::$route['query']) && !empty(self::$route['query']['table'])) {
-                    //возможно это удаление из браузера
-                    $del_table = (string)self::$route['query']['table'];
-                    $del_field = (string)(self::$route['query']['field'] ?? '');
-                    if (str_starts_with($del_table, 'mod_') || str_starts_with($del_table, 'core_')) {
-                        //удаляют запись из таблицы
-                        $route = self::$route;
-                        $route['params'] = [
-                            '_resource' => key($route['params']),
-                            '_field' => $del_table . "." . $del_field,
-                            '_value' => $route['query']['value']
-                        ];
-                        $route['query'] = '';
-                        Registry::set('route', $route);
-                        require_once 'core2/mod/admin/ModAdminApi.php';
-                        $coreController = new ModAdminApi();
-                        $out = $coreController->action_index();
-                        if (is_array($out)) {
-                            $out = json_encode($out);
-                        }
-                        return $out;
+            $r = new Request();
+            switch ($r->getMethod()) {
+                case 'GET':
+                    break;
+                case 'PUT':
+                    if (!$this->checkAcl($resource, 'edit_all') && !$this->checkAcl($resource, 'edit_owner')) {
+                        throw new HttpException("Создание и обновление запрещено", 'update_not_allowed', 403);
                     }
-                }
+                    break;
+                case 'POST':
+                    break;
+                case 'DELETE':
+                    if (!empty(self::$route['query']) && !empty(self::$route['query']['table'])) {
+                        //возможно это удаление из браузера
+                        $del_table = (string)self::$route['query']['table'];
+                        $del_field = (string)(self::$route['query']['field'] ?? '');
+                        if (str_starts_with($del_table, 'mod_') || str_starts_with($del_table, 'core_')) {
+                            //удаляют запись из таблицы
+                            $route = self::$route;
+                            $route['params'] = [
+                                '_resource' => key($route['params']),
+                                '_field' => $del_table . "." . $del_field,
+                                '_value' => $route['query']['value']
+                            ];
+                            $route['query'] = '';
+                            Registry::set('route', $route);
+                            require_once 'core2/mod/admin/ModAdminApi.php';
+                            $coreController = new ModAdminApi();
+                            $out = $coreController->action_index();
+                            if (is_array($out)) {
+                                $out = json_encode($out);
+                            }
+                            return $out;
+                        }
+                        $delete_all   = $this->checkAcl($resource, 'delete_all');
+                        $delete_owner = $this->checkAcl($resource, 'delete_owner');
+                        if (!$delete_all && !$delete_owner) throw new HttpException("Удаление запрещено", 'delete_not_allowed', 403);
+                    }
+                    break;
             }
+
             Registry::set('context', array($module, $action));
 
             if ($module == 'admin') {

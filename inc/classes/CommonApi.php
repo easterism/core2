@@ -9,6 +9,7 @@ use Core2\Error;
 use Core2\Emitter;
 use Core2\Request;
 use Core2\Routing\Router;
+use Core2\HttpException;
 
 /**
  * Class CommonApi
@@ -243,7 +244,7 @@ class CommonApi extends \Core2\Acl {
         try {
             return $route_method->run($request);
 
-        } catch (\Core2\HttpException $e) {
+        } catch (HttpException $e) {
             http_response_code($e->getCode());
 
             return [
@@ -272,7 +273,7 @@ class CommonApi extends \Core2\Acl {
             $is_debug = $this->config?->debug?->on || $this->auth->ADMIN;
             return [
                 'error_code'    => 'error',
-                'error_message' => $is_debug ? $e->getMessage() : $this->_('Ошибка. Обновите страницу или попробуйте позже')
+                'error_message' => $e->getMessage() // : $this->_('Ошибка. Обновите страницу или попробуйте позже')
             ];
         }
     }

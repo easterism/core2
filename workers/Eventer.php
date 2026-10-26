@@ -22,7 +22,7 @@ class Eventer
         // Инициализация Redis клиента
         $this->client = new Client([
             'host' => $core_config->cache->options->server->host,
-            'port' => 6379,
+            'port' => $core_config->cache->options->server->port,
             'password' => $core_config->cache->options->server->password,
             'prefix' => $_SERVER['SERVER_NAME'] . ":Core2:Eventer"
         ]);
@@ -34,8 +34,6 @@ class Eventer
         if (!defined("DOC_PATH")) {
             define("DOC_PATH", substr(DOC_ROOT, strlen(rtrim($_SERVER['DOCUMENT_ROOT'], '/'))) ? : '/');
         }
-        Registry::set('db|admin', null);
-        Registry::set('db', null);
         try {
             $this->_emitter = new Emitter();
         } catch (\Throwable $e) {

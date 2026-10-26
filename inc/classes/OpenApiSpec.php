@@ -254,19 +254,10 @@ class OpenApiSpec extends Acl {
             $section_schema['paths'] = array_merge($section_schema['paths'], $schema['paths']);
         }
         if (!empty($schema['components'])) {
-            $section_schema['components'] = array_merge($section_schema['components'], $schema['components']);
+            $section_schema['components'] = array_merge_recursive($section_schema['components'], $schema['components']);
         }
 
         return $section_schema;
-    }
-
-
-    /**
-     * @param array $schemes
-     * @return array
-     */
-    private function mergeSchemes(array $schemes): array {
-        return [];
     }
 
 

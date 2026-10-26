@@ -1,7 +1,7 @@
 <?php
 
 namespace Core2;
-require_once DOC_ROOT . 'core2/inc/classes/Common.php';
+require_once 'Common.php';
 
 use DateTime;
 use DateTimeImmutable;

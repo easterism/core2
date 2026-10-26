@@ -39,6 +39,7 @@ class Error {
 				echo $msg;
 			}
 		}
+        exit();
 	}
 
 	/**
@@ -160,9 +161,6 @@ class Error {
         if ($cnf && !empty($cnf->debug) && $cnf->debug->on) {
             $message .= $exception->getMessage(); //TODO вести журнал
         }
-        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", "--------------------------");
-        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", $_SERVER['HTTP_USER_AGENT']);
-        Tool::logToFile("/var/www/avtoprom.tech/logs/not_connected.log", $_SERVER['REQUEST_URI']);
         self::Exception($message, $code);
 
     }

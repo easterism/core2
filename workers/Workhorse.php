@@ -14,9 +14,11 @@ class Workhorse extends \Common
 
     public function __construct(?array $params)
     {
-        $this->module = strtolower($params['mod']);
-        $this->_location = dirname($params['path']);
-        Registry::set('context', [$this->module]);
+        if ($params) {
+            $this->module = strtolower($params['mod']);
+            $this->_location = dirname($params['path']);
+            Registry::set('context', [$this->module]);
+        }
         parent::__construct();
     }
 

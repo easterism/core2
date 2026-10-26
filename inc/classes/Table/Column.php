@@ -182,7 +182,7 @@ class Column {
      * @param array|null  $attr
      * @return $this
      */
-    public function setFooterTotal(?string $string, array $attr = null): Column {
+    public function setFooterTotal(?string $string, ?array $attr = null): Column {
 
         $this->footer_total      = $string;
         $this->footer_total_attr = $attr;

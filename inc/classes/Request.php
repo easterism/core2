@@ -12,11 +12,6 @@ class Request {
     /**
      * @var string
      */
-    private string $method = '';
-
-    /**
-     * @var string
-     */
     private string $query = '';
 
     /**
@@ -40,7 +35,6 @@ class Request {
         $this->request = $request;
 
         $this->query  = $_SERVER['QUERY_STRING'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
 
         $this->props['GET']    = $_GET;
         $this->props['POST']   = $_POST;
@@ -65,15 +59,6 @@ class Request {
 
         return null;
     }
-
-    /**
-     * @return string
-     */
-    public function getMethod(): string {
-
-        return $this->method ?? '';
-    }
-
 
 
     /**

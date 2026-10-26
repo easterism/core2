@@ -13,7 +13,7 @@ use Templater3;
  * @property Model\Users              $dataUsers
  * @property \ModWebserviceController $modWebservice
  */
-class Login extends \Common {
+class Login extends Db {
 
     private $system_name = '';
     private $favicon     = [];
@@ -40,72 +40,101 @@ class Login extends \Common {
         if (isset($query['core'])) {
             $uri = $query['core']; //FIXME DEPRECATED
         }
-        if ($uri == 'registration') {
+
+        switch ($uri) {
+            case 'registration':
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
             }
             $form_html = $this->modAuth->getPageRegistration();
             $tpl    = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
-        }
-        elseif ($uri == 'registration_complete') {
+
+            case 'registration_complete':
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new Exception($this->_('Регистрация недоступна'), 403);
+                throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
             }
             if (!isset($query['key'])) {
                 //субмдуль регистрациивыключен
-                throw new Exception($this->_('Ключ не передан'), 400);
+                throw new Exception($this->translate->tr('Ключ не передан'), 400);
             }
             $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
             $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
-        }
-        elseif ($uri == 'restore') {
+
+            case 'restore':
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
             }
             if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                 //субмдуль регистрациивыключен
-                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
+                throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
             }
             $form_html = $this->modAuth->getPageRestore();
             $tpl  = new Templater3();
             $tpl->setTemplate($form_html);
             $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
             return $html;
-        }
-        elseif ($uri == 'restore_complete') {
+
+            case 'restore_complete':
             $auth = $this->isModuleInstalled('auth');
             if (!$auth) {
-                throw new Exception($this->_('Модуль регистрации не найден'), 404);
+                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
             }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->_('Восстановление пароля недоступно'), 403);
-            }
-            $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
-        }
-        else {
-            return $this->getPageLogin();
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмодуль регистрации выключен
+                    throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
+                }
+                $form_html = $this->modAuth->getPageRestoreComplete($query['key']);
+                $tpl = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            case 'change_pass':
+
+                $auth = $this->isModuleInstalled('auth');
+                if ( ! $auth) {
+                    throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
+                }
+
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
+                }
+                    $error_message = '';
+                    if ( ! empty($_POST['password'])) {
+                        try {
+                            $this->setNewPass($_POST['password']);
+                            return json_encode(['status'  => 'success', 'message' => $this->translate->tr('Пароль успешно обновлён')]);
+                        } catch (Exception $e) {
+                             return json_encode(['status'  => 'error', 'error_message' => $e->getMessage()]);
+                        }
+                    }
+
+                    $form_html = $this->modAuth->getPageChangePass($error_message);
+                $tpl  = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
+
+            default:
+                return $this->getPageLogin();
         }
 
     }
@@ -118,19 +147,19 @@ class Login extends \Common {
      * @param string|null $return_url
      * @return array|string[]
      */
-    public function enter(string $login, string $password, string $return_url = null):array
+    public function enter(string $login, string $password, ?string $return_url = null):array
     {
         if (empty($login)) {
             return [
                 'status'  => 'error',
-                'error_message' => $this->_('Заполните логин')
+                'error_message' => $this->translate->tr('Заполните логин')
             ];
         }
 
         if (empty($password)) {
             return [
                 'status'  => 'error',
-                'error_message' => $this->_('Заполните пароль')
+                'error_message' => $this->translate->tr('Заполните пароль')
             ];
         }
 
@@ -147,11 +176,13 @@ class Login extends \Common {
 
                     $name        =  $_SERVER['HTTP_USER_AGENT'] ?? '';
                     $name        =  $name ?: "{$login}-" . crc32(uniqid());
-                    $token       = $this->modWebservice->webtokens()->createWebtoken($login, $name);
-                    $return_url .= parse_url($return_url, PHP_URL_QUERY)
-                        ? "&access_token={$token}"
-                        : "?access_token={$token}";
-
+                    $data = $this->apiWebservice->getJwtToken($name);
+                    if (!empty($data['token'])) {
+                        $token = $data['token'];
+                        $return_url .= parse_url($return_url, PHP_URL_QUERY)
+                            ? "&access_token={$token}"
+                            : "?access_token={$token}";
+                    }
                     return [
                         'status'     => 'success',
                         'return_url' => $return_url,
@@ -223,55 +254,57 @@ class Login extends \Common {
                 //субмдуль регистрации выключен
             }
             else {
-                $auth_config = $this->modAuth->moduleConfig->auth;
-                $reg_config = $this->modAuth->moduleConfig->registration;
-                $restore_config = $this->modAuth->moduleConfig->restore;
+                $auth_config = $this->modAuth?->moduleConfig?->auth;
+                $reg_config = $this->modAuth?->moduleConfig?->registration;
+                $restore_config = $this->modAuth?->moduleConfig?->restore;
 
-                if ($auth_config->ldap &&
-                    $auth_config->ldap->on
-                ) {
-                    $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
-                }
-
-                if ($auth_config->social) {
-                    if ($auth_config->social->fb &&
-                        $auth_config->social->fb->on &&
-                        $auth_config->social->fb->app_id &&
-                        $auth_config->social->fb->api_secret &&
-                        $auth_config->social->fb->redirect_url
+                if ($auth_config) {
+                    if ($auth_config->ldap &&
+                        $auth_config->ldap->on
                     ) {
-
-                        $tpl->social->fb->assign('[APP_ID]', $auth_config->social->fb->app_id);
-                        $tpl->social->fb->assign('[REDIRECT_URL]', $auth_config->social->fb->redirect_url);
+                        $tpl->assign("id=\"gfhjkm", "id=\"gfhjkm\" data-ldap=\"1");
                     }
 
-                    if ($auth_config->social->ok &&
-                        $auth_config->social->ok->on &&
-                        $auth_config->social->ok->app_id &&
-                        $auth_config->social->ok->public_key &&
-                        $auth_config->social->ok->secret_key &&
-                        $auth_config->social->ok->redirect_url
-                    ) {
+                    if ($auth_config->social) {
+                        if ($auth_config->social->fb &&
+                            $auth_config->social->fb->on &&
+                            $auth_config->social->fb->app_id &&
+                            $auth_config->social->fb->api_secret &&
+                            $auth_config->social->fb->redirect_url
+                        ) {
 
-                        $tpl->social->ok->assign('[APP_ID]', $auth_config->social->ok->app_id);
-                        $tpl->social->ok->assign('[REDIRECT_URL]', $auth_config->social->ok->redirect_url);
-                    }
+                            $tpl->social->fb->assign('[APP_ID]', $auth_config->social->fb->app_id);
+                            $tpl->social->fb->assign('[REDIRECT_URL]', $auth_config->social->fb->redirect_url);
+                        }
 
-                    if ($auth_config->social->vk &&
-                        $auth_config->social->vk->on &&
-                        $auth_config->social->vk->app_id &&
-                        $auth_config->social->vk->api_secret &&
-                        $auth_config->social->vk->redirect_url
-                    ) {
+                        if ($auth_config->social->ok &&
+                            $auth_config->social->ok->on &&
+                            $auth_config->social->ok->app_id &&
+                            $auth_config->social->ok->public_key &&
+                            $auth_config->social->ok->secret_key &&
+                            $auth_config->social->ok->redirect_url
+                        ) {
 
-                        $tpl->social->vk->assign('[APP_ID]', $auth_config->social->vk->app_id);
-                        $tpl->social->vk->assign('[REDIRECT_URL]', $auth_config->social->vk->redirect_url);
-                    }
+                            $tpl->social->ok->assign('[APP_ID]', $auth_config->social->ok->app_id);
+                            $tpl->social->ok->assign('[REDIRECT_URL]', $auth_config->social->ok->redirect_url);
+                        }
 
-                    if ($auth_config->social->google &&
-                        $auth_config->social->google->on
-                    ) {
-                        $tpl->social->google->assign('[OAUTH2]', $this->apiAuth->getAuthUrl('google'));
+                        if ($auth_config->social->vk &&
+                            $auth_config->social->vk->on &&
+                            $auth_config->social->vk->app_id &&
+                            $auth_config->social->vk->api_secret &&
+                            $auth_config->social->vk->redirect_url
+                        ) {
+
+                            $tpl->social->vk->assign('[APP_ID]', $auth_config->social->vk->app_id);
+                            $tpl->social->vk->assign('[REDIRECT_URL]', $auth_config->social->vk->redirect_url);
+                        }
+
+                        if ($auth_config->social->google &&
+                            $auth_config->social->google->on
+                        ) {
+                            $tpl->social->google->assign('[OAUTH2]', $this->apiAuth->getAuthUrl('google'));
+                        }
                     }
                 }
 
@@ -312,20 +345,12 @@ class Login extends \Common {
         $authNamespace = new SessionContainer('Auth');
         $authNamespace->accept_answer = true;
 
-        $session_life = $this->db->fetchOne("
-            SELECT value
-            FROM core_settings
-            WHERE visible = 'Y'
-              AND code = 'session_lifetime'
-            LIMIT 1
-        ");
-
-        if ($session_life) {
-            $authNamespace->setExpirationSeconds($session_life, "accept_answer");
-        }
+        $session_life = (int)$this->getSetting('session_lifetime');
+        if (!$session_life) $session_life = 1800; //столько будет жить сессия на сервере без активности юзера
+        $authNamespace->setExpirationSeconds($session_life, "accept_answer");
 
         if (session_id() == 'deleted') {
-            throw new Exception($this->_("Ошибка сохранения сессии. Проверьте настройки системного времени."));
+            throw new Exception($this->translate->tr("Ошибка сохранения сессии. Проверьте настройки системного времени."));
         }
 
         $authNamespace->ID    = (int)$user['u_id'];
@@ -369,7 +394,7 @@ class Login extends \Common {
 
         try {
             if ( ! empty($blockNamespace->blocked)) {
-                throw new Exception($this->_("Ваш доступ временно заблокирован!"));
+                throw new Exception($this->translate->tr("Ваш доступ временно заблокирован!"));
             }
 
             $login = trim($login);
@@ -386,7 +411,7 @@ class Login extends \Common {
                     if ((function_exists('ctype_print') ? ! ctype_print($password) : true) ||
                         strlen($password) < 1
                     ) {
-                        throw new Exception($this->_("Ошибка пароля!"));
+                        throw new Exception($this->translate->tr("Ошибка пароля!"));
                     }
 
                     $user           = $this->getUserLdap($login, $password);
@@ -399,7 +424,7 @@ class Login extends \Common {
             }
 
             if ( ! $user) {
-                throw new Exception($this->_("Нет такого пользователя"));
+                throw new Exception($this->translate->tr("Нет такого пользователя"));
             }
 
 
@@ -500,7 +525,7 @@ class Login extends \Common {
             $vendor_autoload     = "{$location}/vendor/autoload.php";
 
             if ( ! file_exists("{$location}/{$mod_controller_name}.php")) {
-                throw new \Exception(sprintf($this->_('Контроллер модуля %s не найден'), $module_name));
+                throw new \Exception(sprintf($this->translate->tr('Контроллер модуля %s не найден'), $module_name));
             }
 
             require_once "{$location}/{$mod_controller_name}.php";
@@ -516,13 +541,13 @@ class Login extends \Common {
             $user    = $this->dataUsers->getUserById($user_id);
 
             if (empty($user) || ! is_array($user)) {
-                throw new \Exception($this->_('Ошибка входа через LDAP'));
+                throw new \Exception($this->translate->tr('Ошибка входа через LDAP'));
             }
 
             return $user;
 
         } else {
-            throw new \Exception($this->_('Вход через LDAP недоступен'));
+            throw new \Exception($this->translate->tr('Вход через LDAP недоступен'));
         }
     }
 
@@ -645,5 +670,36 @@ class Login extends \Common {
             'ico' => $favicon_ico,
         ];
     }
+
+    /**
+     * @param $pass
+     * @return void
+     * @throws Exception
+     */
+    private function setNewPass($pass)
+    {
+        if (empty($this->auth)) {
+            throw new Exception($this->translate->tr('Пользователь не залогинен'));
+        }
+
+        $rowUser = $this->modAdmin->dataUsers->fetchRow(
+            $this->modAdmin->dataUsers->select()
+                ->where('u_id = ?', $this->auth->ID)
+        );
+        $pass_salt = Tool::pass_salt(trim($pass));
+        if ($pass_salt == $rowUser->u_pass) {
+            throw new Exception($this->translate->tr('Пароль не должен отличаться от предыдущего'));
+        }
+        $rowUser->u_pass = $pass_salt;
+
+        if ($this->config->registry->pass_expired == 'Y' && //проставлен признак
+            $this->config->registry->pass_expired_days &&   // задано кол-во дней на устаревание пароля
+            intval($this->config->registry->pass_expired_days) > 0) {
+            $rowUser->date_expired = (new DateTime())->modify("+{$this->config->registry->pass_expired_days} days")->format('Y-m-d H:i:s');
+            $rowUser->reg_key = null;
+        }
+        $rowUser->save();
+    }
+
 
 }

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . "/../../bootstrap.php";
+require_once 'Acl.php';
+
 use Laminas\Session\Config\SessionConfig;
 use Laminas\Session\SessionManager;
 use Laminas\Session\SaveHandler\Cache AS SessionHandlerCache;
@@ -12,8 +15,8 @@ use Core2\Tool;
 use Core2\Error;
 use Core2\Theme;
 use Core2\Router;
+use Memcached;
 
-require_once __DIR__ . "/../../bootstrap.php";
 
 /**
  * Class Init
@@ -33,7 +36,7 @@ class Init extends Acl {
     /**
      * Общая проверка аутентификации
      */
-    public function checkAuth() {
+    public function checkAuth(): void {
 
         // проверяем, есть ли в запросе токен авторизации
         $auth = $this->checkToken();
@@ -104,36 +107,37 @@ class Init extends Acl {
 
             $auth = new SessionContainer('Auth');
             if (!empty($auth->ID) && is_int($auth->ID)) {
-                if (!empty($_POST['login']) && !empty($_POST['password'])) {
-                    //попытка повторного входа
-                    return [
-                        'status'     => 'success',
-                        'return_url' => DOC_PATH,
-                    ];
-                }
+
                 if (!$auth->getManager()->isValid()) {
                     $this->closeSession('Y');
                 }
-                //is user active right now
                 if ($auth->ID == -1) { //это root
                     $this->auth = $auth;
                     Registry::set('auth', $this->auth);
                 }
-                if ($this->isUserActive($auth->ID) && isset($auth->accept_answer) && $auth->accept_answer === true) {
-                    if ($auth->LIVEID) {
-                        $row = $this->dataSession->find($auth->LIVEID)->current();
-                        if (isset($row->is_kicked_sw) && $row->is_kicked_sw == 'Y') {
-                            $this->closeSession();
+                else {
+                    //is user active right now
+                    if (isset($auth->accept_answer) && $auth->accept_answer === true) {
+                        if ($auth->LIVEID) {
+                            $memcached = new Memcached();
+                            $memcached->addServer('localhost', 11211);
+                            $memcached->setOption(Memcached::OPT_CONNECT_TIMEOUT, 1000);
+                            $memcached->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+
+                            $cacheKey = 'kick_' . md5($_SERVER['SERVER_NAME'] . $auth->LIVEID);
+                            if ($memcached->get($cacheKey)) {
+                                $this->closeSession();
+                                $memcached->delete($cacheKey);
+                            }
                         }
+//                        $sLife = 20;
+//                        $auth->setExpirationSeconds($sLife, "accept_answer");
+
+                        $this->auth = $auth;
+                        Registry::set('auth', $this->auth);
+                    } else {
+                        $this->closeSession('Y');
                     }
-                    $sLife = $this->getSetting('session_lifetime');
-                    if ($sLife) {
-                        $auth->setExpirationSeconds($sLife, "accept_answer");
-                    }
-                    $this->auth = $auth;
-                    Registry::set('auth', $this->auth);
-                } else {
-                    $this->closeSession('Y');
                 }
 
             }
@@ -157,6 +161,14 @@ class Init extends Acl {
         $pwa_response = (new Core2\Pwa())->dispatch($route);
         if ($pwa_response !== null) {
             return $pwa_response;
+        }
+
+        // OAuth2/OIDC public endpoints обслуживает Ory Hydra, а не Core2.
+        // Они должны быть проксированы nginx на публичный listener Hydra.
+        // Если запрос дошёл до Core2 — проверяем реальную доступность Hydra
+        // и отдаём внятную диагностику вместо голого 401 / редиректа на логин.
+        if ($hydra_error = $this->checkHydraPublicRequest($route)) {
+            return $hydra_error;
         }
 
         if (isset($route['api']) && !$this->auth) {
@@ -185,98 +197,7 @@ class Init extends Acl {
 
         if ($res = $this->detectWebService()) return $res; //устаревший вызов REST и SOAP
 
-        if (empty($_GET['system_page']) &&
-            ! empty($this->auth->ID) &&
-            ! empty($this->auth->NAME) &&
-            is_int($this->auth->ID)
-        ) {
-
-            if (isset($route['module'])) {
-                if (isset($route['api']) && $route['api'] === 'openapi') {
-                    if ($route['action'] == 'core2.json') {
-                        define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
-                        //генерация свагера для общего API
-                        require_once "OpenApi.php";
-                        header("Cache-Control: no-cache");
-                        $schema = new \Core2\OpenApi();
-                        $html = $schema->render();
-                        return $html;
-                    }
-                    if ($route['action'] == 'sections') {
-                        require_once "OpenApiSpec.php";
-                        header('Content-Type: application/json');
-                        $schema = new \Core2\OpenApiSpec();
-                        $this->setupAcl();
-                        if ( ! empty($route['params'])) {
-                            $section = key($route['params']);
-                            return json_encode($schema->getSectionSchema($section));
-                        }
-                        return json_encode([ 'sections' => $schema->getSections() ]);
-                    }
-                }
-                elseif ($route['module'] === 'sse') {
-
-                    $this->setContext("admin", "sse");
-                    $sse = new Core2\SSE();
-
-                    session_write_close();
-                    header("Content-Type: text/event-stream; charset=utf-8");
-                    header("X-Accel-Buffering: no");
-                    header("Cache-Control: no-cache");
-
-                    $sse->run();
-                    return '';
-                }
-                elseif ($route['module'] === 'change_pass') {
-                    require_once 'Login.php';
-                    $login = new Login();
-                    $this->setupSkin();
-                    return $login->dispatch($route);
-                }
-            }
-
-            // LOG USER ACTIVITY
-            $logExclude = array(
-                'profile/index/unread', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
-            );
-
-            $this->logActivity($logExclude);
-            //TODO CHECK DIRECT REQUESTS except iframes
-
-            //Проверка устаревания пароля
-            $this->checkExpired();
-
-            require_once 'Zend_Session_Namespace.php'; //DEPRECATED
-            require_once 'core2/inc/Interfaces/Delete.php';
-            require_once 'core2/inc/Interfaces/File.php';
-            require_once 'core2/inc/Interfaces/Subscribe.php';
-            require_once 'core2/inc/Interfaces/Switches.php';
-
-            $this->setupAcl();
-
-            if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
-
-            if (!empty($route['query']['filehandler'])) {
-                //запрос к файлу
-                $this->fileAction($route);
-                return '';
-            }
-
-            if (!empty($_POST)) {
-                //может ли xajax обработать запрос
-                $xajax = new xajax();
-                if ($xajax->canProcessRequest()) {
-                    $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
-                    $xajax->processRequest();
-                    return '';
-                }
-                else {
-                    unset($xajax);
-                }
-            }
-
-        }
-        else {
+        if (empty($this->auth->ID)) {
             require_once 'Login.php';
 
             $login = new Login();
@@ -315,6 +236,93 @@ class Init extends Acl {
             }
             return $response;
         }
+
+        if (isset($route['module'])) {
+            if (isset($route['api']) && $route['api'] === 'openapi') {
+                if ($route['action'] == 'core2.json') {
+                    define("SERVER", (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['SERVER_NAME'] . DOC_PATH);
+                    //генерация свагера для общего API
+                    require_once "OpenApi.php";
+                    header("Cache-Control: no-cache");
+                    $schema = new \Core2\OpenApi();
+                    $html = $schema->render();
+                    return $html;
+                }
+                if ($route['action'] == 'sections') {
+                    require_once "OpenApiSpec.php";
+                    header('Content-Type: application/json');
+                    $schema = new \Core2\OpenApiSpec();
+                    $this->setupAcl();
+                    if ( ! empty($route['params'])) {
+                        $section = key($route['params']);
+                        return json_encode($schema->getSectionSchema($section));
+                    }
+                    return json_encode([ 'sections' => $schema->getSections() ]);
+                }
+            }
+            elseif ($route['module'] === 'sse') {
+
+                $this->setContext("admin", "sse");
+                $sse = new Core2\SSE();
+
+                session_write_close();
+                header("Content-Type: text/event-stream; charset=utf-8");
+                header("X-Accel-Buffering: no");
+                header("Cache-Control: no-cache");
+                header('Connection: keep-alive');
+
+                $sse->run();
+                return '';
+            }
+            elseif ($route['module'] === 'change_pass') {
+                require_once 'Login.php';
+                $login = new Login();
+                $this->setupSkin();
+                return $login->dispatch($route);
+            }
+        }
+
+        // LOG USER ACTIVITY
+        $logExclude = array(
+            'profile/index/unread', //Запросы на проверку не прочитанных сообщений не будут попадать в журнал запросов
+        );
+
+        $this->logActivity($logExclude);
+        //TODO CHECK DIRECT REQUESTS except iframes
+
+        //Проверка устаревания пароля
+        $this->checkExpired();
+
+        require_once 'Zend_Session_Namespace.php'; //DEPRECATED
+        require_once 'core2/inc/Interfaces/Delete.php';
+        require_once 'core2/inc/Interfaces/File.php';
+        require_once 'core2/inc/Interfaces/Subscribe.php';
+        require_once 'core2/inc/Interfaces/Switches.php';
+
+        $this->setupAcl();
+
+        if ($you_need_to_pay = $this->checkBilling()) return $you_need_to_pay;
+
+        if (!empty($route['query']['filehandler'])) {
+            //запрос к файлу
+            $this->fileAction($route);
+            return '';
+        }
+
+        if (!empty($_POST)) {
+            //может ли xajax обработать запрос
+            $xajax = new xajax();
+            if ($xajax->canProcessRequest()) {
+                $xajax->register(XAJAX_FUNCTION, 'post'); //регистрация xajax функции post()
+                $xajax->processRequest();
+                return '';
+            }
+            else {
+                unset($xajax);
+            }
+        }
+
+
 
         //$requestDir = str_replace("\\", "/", dirname($_SERVER['REQUEST_URI']));
 
@@ -431,6 +439,103 @@ class Init extends Acl {
 
 
     /**
+     * Диагностика запросов к публичным OAuth2/OIDC эндпоинтам, которые
+     * обслуживает Ory Hydra. Если такой запрос дошёл до Core2, значит nginx
+     * не проксирует их на Hydra. Проверяем доступность Hydra и возвращаем
+     * корректную OAuth2-ошибку, вместо 401/редиректа на логин.
+     *
+     * @param array $route
+     * @return string|null JSON-ответ с ошибкой либо null, если это не Hydra-путь
+     */
+    private function checkHydraPublicRequest(array $route): ?string {
+
+        $hydra_ns = ['oauth2', '.well-known', 'userinfo'];
+
+        $is_hydra_request =
+            (isset($route['api'])    && in_array(strtolower((string)$route['api']),    $hydra_ns, true)) ||
+            (isset($route['module']) && in_array(strtolower((string)$route['module']), $hydra_ns, true));
+
+        if ( ! $is_hydra_request) {
+            return null;
+        }
+
+        // не перехватываем служебные пути (.well-known/acme-challenge и т.п.)
+        if (isset($route['api']) && strtolower((string)$route['api']) === '.well-known'
+            && strtolower((string)($route['action'] ?? '')) === 'acme-challenge'
+        ) {
+            return null;
+        }
+
+        header('Content-type: application/json; charset="utf-8"');
+
+        $module_config    = false;
+        $hydra_public_url = '';
+        $config_error     = '';
+
+        try {
+            $module_config = $this->getModuleConfig('oauth');
+
+            if ( ! $module_config || ! $module_config->hydra) {
+                $config_error = 'Модуль oauth не настроен: секция [hydra] отсутствует в mod/oauth/conf.ini.';
+            } elseif (empty($module_config->hydra->public_url)) {
+                $config_error = 'Модуль oauth не настроен: не задан hydra.public_url в mod/oauth/conf.ini.';
+            } else {
+                $hydra_public_url = (string)$module_config->hydra->public_url;
+            }
+
+        } catch (\Throwable $e) {
+            $config_error = 'Не удалось прочитать конфигурацию модуля oauth: ' . $e->getMessage();
+        }
+
+        if ($config_error !== '') {
+            http_response_code(503);
+            return json_encode([
+                'error'             => 'temporarily_unavailable',
+                'error_description' => 'OAuth2/OIDC public endpoints are served by Ory Hydra, not Core2. ' . $config_error,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        $reachable   = false;
+        $probe_error = '';
+
+        try {
+            $location = $this->getModuleLocation('oauth');
+            $hydra_class_file = $location ? $location . '/classes/Hydra/Hydra.php' : '';
+
+            if ( ! $hydra_class_file || ! is_file($hydra_class_file)) {
+                throw new \RuntimeException('класс Core2\\Mod\\Oauth\\Hydra\\Hydra не найден');
+            }
+
+            require_once $hydra_class_file;
+
+            $hydra = new \Core2\Mod\Oauth\Hydra\Hydra($module_config->hydra->toArray());
+            $hydra->publicRequest('GET', '/.well-known/openid-configuration');
+            $reachable = true;
+
+        } catch (\Throwable $e) {
+            $probe_error = $e->getMessage();
+        }
+
+        if ( ! $reachable) {
+            http_response_code(502);
+            return json_encode([
+                'error'             => 'bad_gateway',
+                'error_description' => 'Ory Hydra public endpoint is unreachable at ' . $hydra_public_url
+                    . '. Check that Hydra is running and hydra.public_url is correct. Details: ' . $probe_error,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        http_response_code(503);
+        return json_encode([
+            'error'             => 'temporarily_unavailable',
+            'error_description' => 'OAuth2/OIDC public endpoints are served by Ory Hydra, not Core2. '
+                . 'Hydra is reachable at ' . $hydra_public_url . ', but the nginx proxy is not configured. '
+                . 'Proxy /oauth2/, /.well-known/ and /userinfo to the Hydra public listener.',
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+
+    /**
      * Проверка на устаревание пароля пользователя
      * @return void
      * @throws Exception
@@ -469,7 +574,6 @@ class Init extends Acl {
      * @param $module
      * @param $action
      * @return void
-     * @throws \Core2\JsonException
      * @throws Exception
      */
     private function checkModule($module, $action): void {
@@ -571,10 +675,10 @@ class Init extends Acl {
                 'action'  => $matches[2]
             ];
         }
-        else if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+        else if (preg_match('~api/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)/(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
             $is_rest = $matches;
         }
-        else if (preg_match('~rest/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)(?:/)(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
+        else if (preg_match('~rest/(?<module>[a-zA-Z0-9_]+)/v(?<version>\d+\.\d+)/(?<action>[^?]*?)(?:/|)(?:\?|$)~', $_SERVER['REQUEST_URI'], $matches)) {
             $is_rest = $matches;
         }
         else if (preg_match('~^(wsdl_([a-zA-Z0-9_]+)\.xml|ws_([a-zA-Z0-9_]+)\.php)~', basename($_SERVER['REQUEST_URI']), $matches)) {
@@ -631,13 +735,15 @@ class Init extends Acl {
                 if (!$token) return;
                 //TODO заменить модуль webservice на модуль auth
                 $bucket = new Core2\TokenBucket(
-                    capacity: 10,
-                    refillRate: 2.0
+                    capacity: 30,
+                    refillRate: 5.0
                 );
                 if (!$bucket->consume($token)) {
                     $retry = $bucket->getRetryAfter($token);
                     http_response_code(429);
                     header('Retry-After: ' . (int) ceil($retry));
+                    $remains = $bucket->getTokens($token);
+                    header('X-RateLimit-Remaining: ' . (int) ceil($remains));
                     echo "429 Too Many Requests. Повторите через " . round($retry, 2) . " сек.\n";
                     die;
                 }
@@ -900,7 +1006,7 @@ class Init extends Acl {
             require_once($billing_page_path);
 
             if ( ! class_exists('Billing_Disable')) {
-                throw new Exception($this->_("Class Billing_Disable does not exists"));
+                throw new Exception($this->translate->tr("Class Billing_Disable does not exists"));
             }
 
             $billing_disable = new Billing_Disable();

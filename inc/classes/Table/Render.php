@@ -879,7 +879,9 @@ class Render extends Acl {
                 }
             }
 
-            foreach ($this->table['records'] as $row) {
+            $row_collapse = false;
+
+            foreach ($this->table['records'] as $key => $row) {
                 if (is_array($row) && ! empty($row['cells'])) {
                     $row_id = ! empty($row['cells']['id']) && ! empty($row['cells']['id']['value'])
                         ? $row['cells']['id']['value']
@@ -1100,6 +1102,17 @@ class Render extends Acl {
                     }
 
 
+
+                    if (isset($row['collapsed'])) {
+                        $row_collapse = (bool)$row['collapsed'];
+                    }
+
+                    if ($row_collapse) {
+                        $row['attr']['class'] = isset($row['attr']['class'])
+                            ? $row['attr']['class'] .= ' row-table-collapsed'
+                            : 'row-table-collapsed';
+                    }
+
                     if ( ! empty($row['attr'])) {
                         $attribs_string = '';
                         foreach ($row['attr'] as $name => $attr) {
@@ -1201,18 +1214,26 @@ class Render extends Acl {
 
         if ( ! empty($row['cells']) && strpos($str, 'TCOL_') !== false) {
             foreach ($row['cells'] as $field => $cell) {
-                $value = htmlspecialchars($cell['value'] ?? '');
+                if (is_scalar($cell['value'])) {
+                    $value = htmlspecialchars((string)$cell['value'] ?? '');
                 $value = addslashes($value);
                 $value = str_replace(["\n", "\t"], ' ', $value);
                 $value = trim($value);
+                } else {
+                    $value = '';
+                }
                 $str   = str_replace('[TCOL_' . strtoupper($field) . ']', $value, $str);
             }
 
             foreach ($row['cells'] as $field => $cell) {
-                $value = htmlspecialchars($cell['value'] ?? '');
+                if (is_scalar($cell['value'])) {
+                    $value = htmlspecialchars((string)$cell['value'] ?? '');
                 $value = addslashes($value);
                 $value = str_replace(["\n", "\t"], ' ', $value);
                 $value = trim($value);
+                } else {
+                    $value = '';
+                }
                 $str   = str_replace('TCOL_' . strtoupper($field), $value, $str);
             }
         }

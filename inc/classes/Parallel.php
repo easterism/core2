@@ -17,7 +17,7 @@ class Parallel extends Db {
      * @param array|null $options
      * @throws \Zend_Exception
      */
-    public function __construct(array $options = null) {
+    public function __construct(?array $options = null) {
         parent::__construct();
 
         if ( ! empty($options['pool_size'])) {
@@ -50,7 +50,7 @@ class Parallel extends Db {
      * @return array
      * @throws \Exception
      */
-    public function start(\Closure $task_callback = null): array {
+    public function start(?\Closure $task_callback = null): array {
 
         $this->closeConnections();
 

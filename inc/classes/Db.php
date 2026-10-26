@@ -14,6 +14,7 @@ use Laminas\Session\Container as SessionContainer;
 use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
 use Exception;
+use Memcached;
 
 /**
  * Class Db
@@ -117,9 +118,6 @@ class Db
             }
             if (!$reg->isRegistered("db2")) {
                 $db = $this->establishConnection($this->config->database2);
-                if (!$db) {
-                    throw new Exception("Database replica not connected");
-                }
                 $reg->set("db2", $db);
             }
             return $reg->get("db2");
@@ -132,9 +130,6 @@ class Db
                 //подключение к базе по умолчанию (выполняется 1 раз)
 
                 $db = $this->establishConnection($this->config->database);
-                if (!$db) {
-                    throw new Exception("Database not connected");
-                }
                 \Zend_Db_Table::setDefaultAdapter($db);
                 $reg->set("db|admin", $db);
             }
@@ -152,9 +147,7 @@ class Db
 
                     if ($module_config && $module_config->database) {
                         // у этого модуля собственный адаптер, сразу возвращаем его подключение
-                        $db = $this->establishConnection(
-                            $module_config->database,
-                        );
+                        $db = $this->establishConnection($module_config->database);
                         $reg->set($k_module, $db);
                         return $db;
                     } else {
@@ -174,17 +167,12 @@ class Db
                     $module_config = $this->getModuleConfig($module);
                     if ($module_config && $module_config->database) {
                         // у этого модуля собственный адаптер
-                        $db = $this->establishConnection(
-                            $module_config->database,
-                        );
+                        $db = $this->establishConnection($module_config->database);
                         $reg->set($k_module, $db);
                         return $db;
                     }
                 }
                 $db = $this->establishConnection($this->config->database);
-                if (!$db) {
-                    throw new Exception("Database not connected");
-                }
                 \Zend_Db_Table::setDefaultAdapter($db);
                 $reg->set("db|admin", $db);
             }
@@ -307,7 +295,7 @@ class Db
         // Получение экземпляра модели текущего модуля
         elseif (strpos($k, "data") === 0) {
 
-            if ($reg->isRegistered($k) && $reg->get($k)?->getAdapter()?->isConnected()) {
+            if ($reg->isRegistered($k) && $reg->get($k) && $reg->get($k)?->getAdapter()?->isConnected()) {
                 $v = $reg->get($k);
             } else {
                 $model = substr($k, 4);
@@ -319,10 +307,8 @@ class Db
                 $r = new \ReflectionClass(get_called_class());
                 $classLoc = $r->getFileName();
                 $classPath = strstr($classLoc, "/mod/");
-                if (
-                    $classPath &&
-                    strpos($classPath, dirname(strstr($location, "/mod/"))) !==
-                        0
+                if ($classPath &&
+                    strpos($classPath, dirname(strstr($location, "/mod/"))) !== 0
                 ) {
                     //происходит если модель вызывается из метода, который был вызван из другого модуля
                     $classPath = substr($classPath, 5);
@@ -370,6 +356,7 @@ class Db
      */
     private function establishConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract
     {
+        $db = null;
         try {
             $db = $this->getConnection($database);
 
@@ -403,12 +390,14 @@ class Db
             } elseif ($database->adapter === "Pdo_Pgsql") {
                 $db->query("SET search_path TO $this->schemaName");
             }
-            return $db;
         } catch (\Zend_Db_Adapter_Exception $e) {
             Error::catchDbException($e);
         } catch (\Zend_Exception $e) {
             Error::catchZendException($e);
+        } catch (\Exception $e) {
+            Error::Exception($e->getMessage(), $e->getCode());
         }
+        return $db;
     }
 
     /**
@@ -418,9 +407,7 @@ class Db
      * @return \Zend_Db_Adapter_Abstract
      * @throws \Zend_Db_Exception
      */
-    protected function getConnection(
-        LaminasConfig $database,
-    ): \Zend_Db_Adapter_Abstract {
+    protected function getConnection(LaminasConfig $database): \Zend_Db_Adapter_Abstract {
         $params = $database->params->toArray();
         if ($database->adapter === "Pdo_Mysql") {
             $params["adapterNamespace"] = "Core_Db_Adapter";
@@ -564,10 +551,18 @@ class Db
             if ($auth->LIVEID) {
                 // у юзера есть сессия
                 $data["sid"] = $auth->getManager()->getId();
-                $row = $this->dataSession->find($auth->LIVEID)->current();
-                if ($row) {
-                    $row->last_activity = new \Zend_Db_Expr("NOW()");
-                    $row->save();
+                $m = new Memcached();
+                $m->addServer('localhost', 11211);
+                $m->setOption(Memcached::OPT_CONNECT_TIMEOUT, 1000);
+                $m->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+                $cacheKey = 'act_' . md5($_SERVER['SERVER_NAME'] . $auth->LIVEID);
+                if ($m->add($cacheKey, 1, 60)) { //обновляем активность раз в минуту
+                    $row = $this->dataSession->find($auth->LIVEID)->current();
+                    if ($row) {
+                        $row->last_activity = new \Zend_Db_Expr("NOW()");
+                        $row->save();
+                        $m->delete($cacheKey);
+                    }
                 }
             } else {
                 // сессии нет, авторизовывается каждый запрос
@@ -967,8 +962,7 @@ class Db
     final public function getModule(string $module_id): array
     {
         $this->getAllModules();
-        return Registry::isRegistered("_modules") &&
-            isset(Registry::get("_modules")[$module_id])
+        return !empty(Registry::get("_modules")[$module_id])
             ? Registry::get("_modules")[$module_id]
             : [];
     }
@@ -1087,10 +1081,6 @@ class Db
             }
 
             $db = $this->establishConnection($config->database);
-
-            if (!($db instanceof \Zend_Db_Adapter_Abstract)) {
-                return;
-            }
 
             \Zend_Db_Table::setDefaultAdapter($db);
             $reg->set("db|admin", $db);
