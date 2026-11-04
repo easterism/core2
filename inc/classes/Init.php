@@ -104,8 +104,8 @@ class Init extends Acl {
 
             //сохраняем менеджер сессий
             SessionContainer::setDefaultManager($sess_manager);
-
             $auth = new SessionContainer('Auth');
+
             if (!empty($auth->ID) && is_int($auth->ID)) {
 
                 if (!$auth->getManager()->isValid()) {
@@ -151,15 +151,18 @@ class Init extends Acl {
      * @throws Exception
      */
     public function dispatch(): mixed {
-
         header('Content-Type: text/html; charset=utf-8');
-
         // Парсим маршрут
         $route = (new Router())->getRoute();
 
         // Progressive Web App: manifest, service worker, offline и иконки
         $pwa_response = (new Core2\Pwa())->dispatch($route);
+
         if ($pwa_response !== null) {
+            if (!$this->auth) {
+                //если нет сессии, уничтожаем адаптер
+                SessionContainer::getDefaultManager()->destroy();
+            }
             return $pwa_response;
         }
 
@@ -208,6 +211,7 @@ class Init extends Acl {
                     throw new Exception('expired');
                 }
             }
+
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ( ! empty($_POST['xjxr'])) {
                     throw new Exception('expired');
@@ -229,6 +233,7 @@ class Init extends Acl {
 
             //Immutable блокирует запись сессии
             //SessionContainer::getDefaultManager()->getStorage()->markImmutable();
+
             $response = $login->dispatch($route);
             $blockNamespace = new SessionContainer('Block');
             if (empty($blockNamespace->blocked)) {

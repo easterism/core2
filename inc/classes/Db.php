@@ -14,7 +14,6 @@ use Laminas\Session\Container as SessionContainer;
 use Laminas\Config\Config as LaminasConfig;
 use Core2\Config as CoreConfig;
 use Exception;
-use Memcached;
 
 /**
  * Class Db
@@ -513,12 +512,28 @@ class Db
         $auth = new SessionContainer("Auth");
 
         if ($auth && $auth->ID && $auth->LIVEID) {
-            $row = $this->dataSession->find($auth->LIVEID)->current();
+            require_once __DIR__ . '/SessionStore.php';
 
-            if ($row) {
-                $row->logout_time = new \Zend_Db_Expr("NOW()");
-                $row->is_expired_sw = $expired;
-                $row->save();
+            try {
+                (new SessionStore())->update((int)$auth->LIVEID, [
+                    'logout_time'   => date('Y-m-d H:i:s'),
+                    'last_activity' => date('Y-m-d H:i:s'),
+                    'is_expired_sw' => $expired === 'Y' ? 'Y' : 'N',
+                ]);
+            } catch (\Throwable $e) {
+                // выход из системы не должен зависеть от буфера
+            }
+
+            try {
+                $row = $this->dataSession->find($auth->LIVEID)->current();
+
+                if ($row) {
+                    $row->logout_time = new \Zend_Db_Expr("NOW()");
+                    $row->is_expired_sw = $expired;
+                    $row->save();
+                }
+            } catch (\Throwable $e) {
+                // БД может быть недоступна — данные останутся в буфере
             }
         }
 
@@ -551,18 +566,13 @@ class Db
             if ($auth->LIVEID) {
                 // у юзера есть сессия
                 $data["sid"] = $auth->getManager()->getId();
-                $m = new Memcached();
-                $m->addServer('localhost', 11211);
-                $m->setOption(Memcached::OPT_CONNECT_TIMEOUT, 1000);
-                $m->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
-                $cacheKey = 'act_' . md5($_SERVER['SERVER_NAME'] . $auth->LIVEID);
-                if ($m->add($cacheKey, 1, 60)) { //обновляем активность раз в минуту
-                    $row = $this->dataSession->find($auth->LIVEID)->current();
-                    if ($row) {
-                        $row->last_activity = new \Zend_Db_Expr("NOW()");
-                        $row->save();
-                        $m->delete($cacheKey);
-                    }
+
+                require_once __DIR__ . '/SessionStore.php';
+
+                try {
+                    (new SessionStore())->touch((int)$auth->LIVEID);
+                } catch (\Throwable $e) {
+                    // буфер недоступен — не критично
                 }
             } else {
                 // сессии нет, авторизовывается каждый запрос

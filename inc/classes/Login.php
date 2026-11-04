@@ -43,59 +43,59 @@ class Login extends Db {
 
         switch ($uri) {
             case 'registration':
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
-            }
-            $form_html = $this->modAuth->getPageRegistration();
-            $tpl    = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
+                $auth = $this->isModuleInstalled('auth');
+                if (!$auth) {
+                    throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['registration']) && $auth['submodules']['registration']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
+                }
+                $form_html = $this->modAuth->getPageRegistration();
+                $tpl    = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
 
             case 'registration_complete':
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
-            }
-            if (!isset($query['key'])) {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->translate->tr('Ключ не передан'), 400);
-            }
-            $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
+                $auth = $this->isModuleInstalled('auth');
+                if (!$auth) {
+                    throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->translate->tr('Регистрация недоступна'), 403);
+                }
+                if (!isset($query['key'])) {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->translate->tr('Ключ не передан'), 400);
+                }
+                $form_html = $this->modAuth->getPageRegistrationComplete($query['key']);
+                $tpl  = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
 
             case 'restore':
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
-            }
-            if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
-                //субмдуль регистрациивыключен
-                throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
-            }
-            $form_html = $this->modAuth->getPageRestore();
-            $tpl  = new Templater3();
-            $tpl->setTemplate($form_html);
-            $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
-            return $html;
+                $auth = $this->isModuleInstalled('auth');
+                if (!$auth) {
+                    throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
+                }
+                if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
+                    //субмдуль регистрациивыключен
+                    throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
+                }
+                $form_html = $this->modAuth->getPageRestore();
+                $tpl  = new Templater3();
+                $tpl->setTemplate($form_html);
+                $html = str_replace('<!--index -->', $tpl->render(), $this->getIndex());
+                return $html;
 
             case 'restore_complete':
-            $auth = $this->isModuleInstalled('auth');
-            if (!$auth) {
-                throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
-            }
+                $auth = $this->isModuleInstalled('auth');
+                if (!$auth) {
+                    throw new Exception($this->translate->tr('Модуль регистрации не найден'), 404);
+                }
                 if (isset($auth['submodules']['restore']) && $auth['submodules']['restore']['visible'] !== 'Y') {
                     //субмодуль регистрации выключен
                     throw new Exception($this->translate->tr('Восстановление пароля недоступно'), 403);
@@ -562,28 +562,22 @@ class Login extends Db {
 
         if ($auth && $auth->ID && $auth->ID > 0) {
 
+            require_once __DIR__ . '/SessionStore.php';
+
             $sid = $auth->getManager()->getId();
-            $sess = $this->dataSession;
-            $row = $sess->fetchRow($sess->select()
-                ->where("logout_time IS NULL AND user_id = ?", $auth->ID)
-                ->where("sid = ?", $sid)
-                ->where("ip = ?", $_SERVER['REMOTE_ADDR'])
-                ->limit(1));
 
-            if ( ! $row) {
-                $row             = $sess->createRow();
-                $row->sid        = $sid;
-                $row->login_time = new \Zend_Db_Expr('NOW()');
-                $row->user_id    = $auth->ID;
-                $row->ip         = $_SERVER['REMOTE_ADDR'];
-                $row->save();
-            }
+            $store = new SessionStore();
+            $id    = $store->save([
+                'sid'     => $sid,
+                'user_id' => (int)$auth->ID,
+                'ip'      => $_SERVER['REMOTE_ADDR'] ?? '',
+            ]);
 
-            if ( ! $row->id) {
+            if ( ! $id) {
                 throw new \Exception($this->translate->tr("Не удалось сохранить данные сессии"));
             }
 
-            return $row->id;
+            return $id;
         }
     }
 
