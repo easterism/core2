@@ -1135,14 +1135,10 @@ abstract class Table extends Acl {
     private function getTableState(): array {
 
         $table_state = [];
-
-        if ($profile_controller = $this->getProfileController()) {
-            $hash         = $this->getUniqueHash();
-            $profile_data = $profile_controller->getUserData("table_state_{$this->resource}_{$hash}");
-
-            if ($profile_data && is_array($profile_data)) {
-                $table_state = $profile_data;
-            }
+        $hash         = $this->getUniqueHash();
+        $profile_data = $this->emit("getUserData", ["table_state_{$this->resource}_{$hash}"]);
+        if ($profile_data && is_array($profile_data)) {
+            $table_state = $profile_data;
         }
 
         return $table_state;
@@ -1157,8 +1153,6 @@ abstract class Table extends Acl {
      * @throws \Zend_Db_Adapter_Exception
      */
     protected function saveTableState(): void {
-
-        if ($profile_controller = $this->getProfileController()) {
 
             $table = [];
 
@@ -1194,10 +1188,10 @@ abstract class Table extends Acl {
                 $table['order']      = $order;
                 $table['order_type'] = $order_type;
             }
-
-            $hash = $this->getUniqueHash();
-            $profile_controller->putUserData("table_state_{$this->resource}_{$hash}", $table);
-        }
+            if ($table) {
+                $hash = $this->getUniqueHash();
+                $this->emitAsync("putUserData", ["table_state_{$this->resource}_{$hash}" => $table]);
+            }
     }
 
 
